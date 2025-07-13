@@ -211,6 +211,7 @@ export const SiteDetailSchema = z.object({
   longitude: optionalNumber("Longitude must be a valid number."),
   purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required."}),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
+  remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
   accessibleRig: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(rigAccessibilityOptions).optional()),
   tsAmount: optionalNumber("TS Amount must be a valid number."),

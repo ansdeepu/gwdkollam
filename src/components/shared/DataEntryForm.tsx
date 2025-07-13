@@ -61,7 +61,7 @@ const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
 
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
-  estimateAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
+  estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
   tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
   outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
   waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
@@ -282,7 +282,7 @@ export default function DataEntryFormComponent({
                 <AccordionContent className="p-6 pt-0">
                     <div className="border-t pt-6 space-y-6">
                         <div className="grid md:grid-cols-3 gap-6">
-                            <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} readOnly={!isEditor && !!fileNoToEdit} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem><FormLabel>Name of Institution / Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter Name" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="phoneNo" render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input type="text" placeholder="Enter phone number" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="applicantAddress" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Address</FormLabel><FormControl><Textarea placeholder="Enter Full Address" className="min-h-[80px]" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
@@ -355,7 +355,7 @@ export default function DataEntryFormComponent({
                               <>
                                 <Separator className="my-4" />
                                 <h4 className="text-md font-medium text-primary mb-2">Work Implementation</h4>
-                                <div className="grid md:grid-cols-3 gap-6">
+                                <div className="grid md:grid-cols-4 gap-6">
                                     {isRigAccessibilityRequired && (
                                         <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
                                             <FormItem>
@@ -372,6 +372,7 @@ export default function DataEntryFormComponent({
                                         )}/>
                                     )}
                                     <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
