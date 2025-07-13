@@ -20,7 +20,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
       totalRemittance: 0, siteDetails: [{
         nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
-        estimateAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
+        estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
         tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
         outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
         waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
@@ -61,7 +61,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
 
 interface PageData {
   initialData: DataEntryFormData;
-  allUsers: UserProfile[];
+  allUsers: UserProfile[]; // Keep for supervisor list generation
 }
 
 export default function DataEntryPage() {
@@ -73,11 +73,13 @@ export default function DataEntryPage() {
   const { toast } = useToast();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const loadAllData = async () => {
       if (!user) return; // Wait for user profile
+      setDataLoading(true);
       
       const usersPromise = (user.role === 'editor' || user.role === 'supervisor') ? fetchAllUsers() : Promise.resolve([]);
       const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
@@ -106,6 +108,8 @@ export default function DataEntryPage() {
             allUsers: [],
           });
         }
+      } finally {
+        if(isMounted) setDataLoading(false);
       }
     };
 
@@ -167,7 +171,7 @@ export default function DataEntryPage() {
     return activeSupervisors.sort((a, b) => a.name.localeCompare(b.name));
   }, [pageData, staffMembers, user]);
   
-  const isLoading = authIsLoading || staffIsLoading || !pageData;
+  const isLoading = authIsLoading || staffIsLoading || dataLoading;
 
   if (isLoading) {
     return (
@@ -205,26 +209,28 @@ export default function DataEntryPage() {
         {permissions.description}
       </p>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>{!fileNoToEdit ? "File Data Entry Form" : "File Data Form"}</CardTitle>
-          <CardDescription>
-            {!fileNoToEdit
-                ? "Please fill in all compulsory fields accurately."
-                : `File No: ${fileNoToEdit}`
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-           <DataEntryFormComponent
-              key={fileNoToEdit || 'new-entry'} 
-              fileNoToEdit={fileNoToEdit || undefined}
-              initialData={pageData.initialData}
-              supervisorList={supervisorList}
-              userRole={user?.role}
-           />
-        </CardContent>
-      </Card>
+      {pageData && (
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>{!fileNoToEdit ? "File Data Entry Form" : "File Data Form"}</CardTitle>
+            <CardDescription>
+              {!fileNoToEdit
+                  ? "Please fill in all compulsory fields accurately."
+                  : `File No: ${fileNoToEdit}`
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+             <DataEntryFormComponent
+                key={fileNoToEdit || 'new-entry'} 
+                fileNoToEdit={fileNoToEdit || undefined}
+                initialData={pageData.initialData}
+                supervisorList={supervisorList}
+                userRole={user?.role}
+             />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
