@@ -203,7 +203,6 @@ const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
 
 
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
-const PURPOSES_REQUIRING_RIG_ACCESSIBILITY: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 
 export const SiteDetailSchema = z.object({
   nameOfSite: z.string().min(1, "Name of Site is required."),
