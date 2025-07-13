@@ -1,7 +1,7 @@
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Briefcase, UserPlus, ShieldAlert, Loader2, Expand, Search } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,9 @@ export default function EstablishmentPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  
+  const [searchTerm, setSearchTerm] = useState(""); // User's live input
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(""); // Term used for filtering after delay
   const [isFiltering, setIsFiltering] = useState(false);
   const [filteredStaff, setFilteredStaff] = useState<StaffMember[]>([]);
 
@@ -115,33 +117,42 @@ export default function EstablishmentPage() {
     }
   };
   
-  // Correctly handle filtering logic with useEffect
+  // Debounce the search term to avoid excessive re-renders and filtering
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
+
+  // Handle the actual filtering logic when the debounced term changes
   useEffect(() => {
     if (staffLoadingHook) return;
     setIsFiltering(true);
-    const lowerSearchTerm = searchTerm.toLowerCase();
+    const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
     
-    // The timeout allows the UI to update and show the loader before a potentially long filtering operation blocks the main thread.
-    const timer = setTimeout(() => {
-        if (!lowerSearchTerm) {
-            setFilteredStaff(staffMembers);
-        } else {
-            const filtered = staffMembers.filter(staff => 
-                (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-                (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-                (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-                (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-                (staff.phoneNo?.includes(lowerSearchTerm)) ||
-                (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-                (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-            );
-            setFilteredStaff(filtered);
-        }
-        setIsFiltering(false);
-    }, 50); // 50ms delay is usually enough for the UI to update.
-
-    return () => clearTimeout(timer); // Cleanup the timeout
-  }, [searchTerm, staffMembers, staffLoadingHook]);
+    // Using requestAnimationFrame to ensure the loader is shown before a potentially long filtering operation
+    requestAnimationFrame(() => {
+      if (!lowerSearchTerm) {
+          setFilteredStaff(staffMembers);
+      } else {
+          const filtered = staffMembers.filter(staff => 
+              (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.phoneNo?.includes(lowerSearchTerm)) ||
+              (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+              (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+          );
+          setFilteredStaff(filtered);
+      }
+      setIsFiltering(false);
+    });
+  }, [debouncedSearchTerm, staffMembers, staffLoadingHook]);
 
 
   const activeStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Active'), [filteredStaff]);
@@ -218,7 +229,7 @@ export default function EstablishmentPage() {
           <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle>Active Staff Members</CardTitle>
-                <CardDescription>List of currently active staff members. {searchTerm && `(Filtered by search: "${searchTerm}")`}</CardDescription>
+                <CardDescription>List of currently active staff members. {debouncedSearchTerm && `(Filtered by search: "${debouncedSearchTerm}")`}</CardDescription>
             </CardHeader>
             <CardContent>
               <StaffTable
@@ -229,7 +240,7 @@ export default function EstablishmentPage() {
                 isViewer={!canManage}
                 onImageClick={handleOpenImageModal}
                 isLoading={isFiltering}
-                searchActive={!!searchTerm}
+                searchActive={!!debouncedSearchTerm}
               />
             </CardContent>
           </Card>
@@ -239,7 +250,7 @@ export default function EstablishmentPage() {
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle>Transferred Staff Members</CardTitle>
-                    <CardDescription>List of staff members marked as transferred. {searchTerm && `(Filtered by search: "${searchTerm}")`}</CardDescription>
+                    <CardDescription>List of staff members marked as transferred. {debouncedSearchTerm && `(Filtered by search: "${debouncedSearchTerm}")`}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <TransferredStaffTable
@@ -248,7 +259,7 @@ export default function EstablishmentPage() {
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
                         isLoading={isFiltering}
-                        searchActive={!!searchTerm}
+                        searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
             </Card>
@@ -258,7 +269,7 @@ export default function EstablishmentPage() {
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle>Retired Staff Members</CardTitle>
-                    <CardDescription>List of staff members marked as retired. {searchTerm && `(Filtered by search: "${searchTerm}")`}</CardDescription>
+                    <CardDescription>List of staff members marked as retired. {debouncedSearchTerm && `(Filtered by search: "${debouncedSearchTerm}")`}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <RetiredStaffTable
@@ -267,7 +278,7 @@ export default function EstablishmentPage() {
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
                         isLoading={isFiltering}
-                        searchActive={!!searchTerm}
+                        searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
             </Card>
