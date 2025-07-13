@@ -1,4 +1,1 @@
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/suggest-improvements.ts';
+// This file is intentionally left blank to disable AI functionality for debugging.
