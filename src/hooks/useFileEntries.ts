@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -264,6 +265,16 @@ export function useFileEntries(): FileEntriesState {
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) throw new Error(`File No. '${originalFileNoWhileEditing}' not found for update.`);
       const docToUpdateRef = doc(db, FILE_ENTRIES_COLLECTION, querySnapshot.docs[0].id);
+
+      // If file number is being changed, check if the new file number already exists
+      if (entryData.fileNo !== originalFileNoWhileEditing) {
+        const newFileNoQuery = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", entryData.fileNo));
+        const newFileNoSnapshot = await getDocs(newFileNoQuery);
+        if (!newFileNoSnapshot.empty) {
+          throw new Error(`Cannot rename to '${entryData.fileNo}' because this File Number already exists.`);
+        }
+      }
+
       const payload = sanitizeObjectForFirestore({ ...entryData, id: undefined, updatedAt: serverTimestamp() });
       await updateDoc(docToUpdateRef, payload);
     } else { 
