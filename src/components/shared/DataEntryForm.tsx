@@ -347,7 +347,7 @@ export default function DataEntryFormComponent({
                 </AccordionTrigger>
                 <AccordionContent className="p-6 pt-0">
                     <div className="border-t pt-6 space-y-4">
-                        <Accordion type="multiple" defaultValue={paginatedSiteFields.map((_, i) => `site-${(currentSitePage - 1) * SITES_PER_PAGE + i}`)} className="w-full space-y-2">
+                        <Accordion type="single" collapsible className="w-full space-y-2">
                             {paginatedSiteFields.map((item, index) => {
                             const absoluteIndex = (currentSitePage - 1) * SITES_PER_PAGE + index;
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[absoluteIndex]?.supervisorUid === user.uid;
