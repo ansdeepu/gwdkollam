@@ -201,6 +201,7 @@ export function useFileEntries(): FileEntriesState {
           "Work Order Issued",
           "Work in Progress",
           "Work Completed",
+          "Work Failed",
         ];
         finalEntries = entriesFromFirestore.filter(entry => {
           if (!entry.siteDetails || entry.siteDetails.length === 0) {
