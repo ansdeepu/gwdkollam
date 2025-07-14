@@ -223,7 +223,7 @@ export const SiteDetailSchema = z.object({
   yieldDischarge: z.string().optional(),
   zoneDetails: z.string().optional(),
   waterLevel: z.string().optional(),
-  drillingRemarks: z.string().optional(),
+  drillingRemarks: z.string().optional().nullable().default(""),
   pumpDetails: z.string().optional(),
   waterTankCapacity: z.string().optional(),
   noOfTapConnections: optionalNumber("Tap Connections must be a valid number."),
