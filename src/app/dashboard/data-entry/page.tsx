@@ -67,7 +67,7 @@ interface PageData {
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
   const fileNoToEdit = searchParams.get("fileNo");
-  const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
+  const { user, isLoading: authIsLoading } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
   const { toast } = useToast();
@@ -81,22 +81,46 @@ export default function DataEntryPage() {
       if (!user) return; // Wait for user profile
       setDataLoading(true);
       
-      const usersPromise = (user.role === 'editor' || user.role === 'supervisor') ? fetchAllUsers() : Promise.resolve([]);
+      const usersPromise = (user.role === 'editor' || user.role === 'supervisor') ? fetchEntryForEditing(fileNoToEdit || '') : Promise.resolve(null);
       const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
       
       try {
-        const [usersResult, entryResult] = await Promise.all([usersPromise, entryPromise]);
+        const entryResult = await entryPromise;
+        const allUsersResult: UserProfile[] = (user.role === 'editor') ? await useAuth().fetchAllUsers() : [];
 
         if (isMounted) {
           if (fileNoToEdit && !entryResult) {
             toast({ title: "Error", description: `File No. ${fileNoToEdit} not found.`, variant: "destructive" });
           }
+
+          let finalEntryData = entryResult;
+          // ** NEW: Filter site details if the user is a supervisor **
+          if (finalEntryData && user.role === 'supervisor' && user.uid) {
+              const assignedSites = finalEntryData.siteDetails?.filter(
+                  site => site.supervisorUid === user.uid
+              );
+
+              // If supervisor opens a file with no sites assigned to them, treat as not found.
+              if (!assignedSites || assignedSites.length === 0) {
+                  finalEntryData = null; // Clear the entry data
+                  toast({
+                      title: "Access Restricted",
+                      description: "You do not have any sites assigned to you in this file.",
+                      variant: "default"
+                  });
+              } else {
+                  finalEntryData = {
+                      ...finalEntryData,
+                      siteDetails: assignedSites,
+                  };
+              }
+          }
           
-          const finalInitialData = mapEntryToFormValues(entryResult);
+          const finalInitialData = mapEntryToFormValues(finalEntryData);
           
           setPageData({
             initialData: finalInitialData,
-            allUsers: usersResult,
+            allUsers: allUsersResult,
           });
         }
       } catch (error) {
@@ -118,7 +142,7 @@ export default function DataEntryPage() {
     }
     
     return () => { isMounted = false; };
-  }, [fileNoToEdit, authIsLoading, user, fetchAllUsers, fetchEntryForEditing, toast]);
+  }, [fileNoToEdit, authIsLoading, user, fetchEntryForEditing, toast]);
 
 
   const permissions = useMemo(() => {
