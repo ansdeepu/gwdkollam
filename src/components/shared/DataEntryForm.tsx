@@ -516,7 +516,7 @@ export default function DataEntryFormComponent({
                                                             <Popover>
                                                                 <PopoverTrigger asChild>
                                                                     <FormControl>
-                                                                        <Button variant="outline" className={cn("w-full text-left font-normal", !field.value && "text-muted-foreground")} disabled={!isEditor}>
+                                                                        <Button variant="outline" className={cn("w-full text-left font-normal", !field.value && "text-muted-foreground")} disabled={!isSiteEditable}>
                                                                             {field.value ? format(new Date(field.value), "dd/MM/yyyy") : <span>Pick a date</span>}
                                                                             <CalendarIcon className="ml-auto h-4 w-4" />
                                                                         </Button>
@@ -524,7 +524,7 @@ export default function DataEntryFormComponent({
                                                                 </PopoverTrigger>
                                                                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent>
                                                             </Popover>
-                                                            {isEditor && field.value && (
+                                                            {isSiteEditable && field.value && (
                                                                 <Button variant="ghost" size="icon" className="h-9 w-9" type="button" onClick={() => field.onChange(null)} aria-label="Clear date">
                                                                     <X className="h-4 w-4" />
                                                                 </Button>
