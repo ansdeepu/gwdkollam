@@ -509,7 +509,30 @@ export default function DataEntryFormComponent({
                                             <Separator className="my-4" />
                                             <h4 className="text-md font-medium text-primary mb-2">Work Status</h4>
                                             <div className="grid md:grid-cols-3 gap-6">
-                                                <FormField control={form.control} name={`siteDetails.${index}.dateOfCompletion`} render={({ field }) => ( <FormItem><FormLabel>Date of Completion{isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full text-left font-normal", !field.value && "text-muted-foreground")} disabled={!isEditor}>{field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem> )}/>
+                                                <FormField control={form.control} name={`siteDetails.${index}.dateOfCompletion`} render={({ field }) => ( 
+                                                    <FormItem>
+                                                        <FormLabel>Date of Completion{isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel>
+                                                        <div className="flex items-center gap-2">
+                                                            <Popover>
+                                                                <PopoverTrigger asChild>
+                                                                    <FormControl>
+                                                                        <Button variant="outline" className={cn("w-full text-left font-normal", !field.value && "text-muted-foreground")} disabled={!isEditor}>
+                                                                            {field.value ? format(new Date(field.value), "dd/MM/yyyy") : <span>Pick a date</span>}
+                                                                            <CalendarIcon className="ml-auto h-4 w-4" />
+                                                                        </Button>
+                                                                    </FormControl>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent>
+                                                            </Popover>
+                                                            {isEditor && field.value && (
+                                                                <Button variant="ghost" size="icon" className="h-9 w-9" type="button" onClick={() => field.onChange(null)} aria-label="Clear date">
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                        <FormMessage />
+                                                    </FormItem> 
+                                                )}/>
                                                 <FormField control={form.control} name={`siteDetails.${index}.totalExpenditure`} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField
                                                     control={form.control}
