@@ -67,7 +67,7 @@ interface PageData {
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
   const fileNoToEdit = searchParams.get("fileNo");
-  const { user, isLoading: authIsLoading } = useAuth();
+  const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
   const { toast } = useToast();
@@ -81,12 +81,14 @@ export default function DataEntryPage() {
       if (!user) return; // Wait for user profile
       setDataLoading(true);
       
-      const usersPromise = (user.role === 'editor' || user.role === 'supervisor') ? fetchEntryForEditing(fileNoToEdit || '') : Promise.resolve(null);
       const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
       
       try {
         const entryResult = await entryPromise;
-        const allUsersResult: UserProfile[] = (user.role === 'editor') ? await useAuth().fetchAllUsers() : [];
+        let allUsersResult: UserProfile[] = [];
+        if (user.role === 'editor') {
+          allUsersResult = await fetchAllUsers();
+        }
 
         if (isMounted) {
           if (fileNoToEdit && !entryResult) {
@@ -142,7 +144,7 @@ export default function DataEntryPage() {
     }
     
     return () => { isMounted = false; };
-  }, [fileNoToEdit, authIsLoading, user, fetchEntryForEditing, toast]);
+  }, [fileNoToEdit, authIsLoading, user, fetchEntryForEditing, fetchAllUsers, toast]);
 
 
   const permissions = useMemo(() => {
