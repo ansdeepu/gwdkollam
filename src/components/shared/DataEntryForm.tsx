@@ -421,7 +421,11 @@ export default function DataEntryFormComponent({
                                 <AccordionItem value={`site-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
                                     <AccordionTrigger className="p-4 hover:no-underline">
                                         <div className="flex flex-1 items-center justify-between">
-                                            <span className="text-lg font-semibold text-primary text-left">Site #{index + 1}{watchedSiteDetails[index]?.nameOfSite ? `: ${watchedSiteDetails[index].nameOfSite}` : ''}</span>
+                                            <span className="text-lg font-semibold text-primary text-left">
+                                                Site #{index + 1}
+                                                {watchedSiteDetails[index]?.nameOfSite ? `: ${watchedSiteDetails[index].nameOfSite}` : ''}
+                                                {watchedSiteDetails[index]?.purpose ? ` (${watchedSiteDetails[index].purpose})` : ''}
+                                            </span>
                                             {isEditor && siteFields.length > 1 && 
                                                 <div role="button" aria-label={`Remove Site #${index + 1}`} className="p-2 rounded-full hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); removeSite(index); }}>
                                                     <Trash2 className="h-5 w-5 text-destructive" />
