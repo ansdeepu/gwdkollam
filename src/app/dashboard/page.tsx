@@ -104,7 +104,7 @@ const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; 
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries, isLoading: entriesLoading } = useFileEntries();
+  const { fileEntries: rawFileEntries, isLoading: entriesLoading } = useFileEntries();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers(); 
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
@@ -138,6 +138,26 @@ export default function DashboardPage() {
   const [monthDetailDialogColumns, setMonthDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
 
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string | undefined>(undefined);
+
+  const fileEntries = useMemo(() => {
+    if (currentUser?.role !== 'supervisor') {
+      return rawFileEntries;
+    }
+    // For supervisors, filter to only show sites assigned to them.
+    return rawFileEntries
+      .map(entry => {
+        if (!entry.siteDetails || entry.siteDetails.length === 0) return null;
+        
+        const assignedSites = entry.siteDetails.filter(
+          site => site.supervisorUid === currentUser.uid
+        );
+
+        if (assignedSites.length === 0) return null;
+
+        return { ...entry, siteDetails: assignedSites };
+      })
+      .filter((entry): entry is DataEntryFormData => entry !== null);
+  }, [rawFileEntries, currentUser]);
 
 
   const getInitials = (name?: string) => {
@@ -1540,4 +1560,5 @@ export default function DashboardPage() {
     
 
     
+
 
