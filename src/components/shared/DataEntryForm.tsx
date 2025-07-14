@@ -347,7 +347,7 @@ export default function DataEntryFormComponent({
                 </AccordionTrigger>
                 <AccordionContent className="p-6 pt-0">
                     <div className="border-t pt-6 space-y-4">
-                        <Accordion type="single" collapsible className="w-full space-y-2">
+                        <Accordion type="multiple" className="w-full space-y-2">
                             {paginatedSiteFields.map((item, index) => {
                             const absoluteIndex = (currentSitePage - 1) * SITES_PER_PAGE + index;
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[absoluteIndex]?.supervisorUid === user.uid;
@@ -501,7 +501,7 @@ export default function DataEntryFormComponent({
                                                         <FormField control={form.control} name={`siteDetails.${absoluteIndex}.noOfTapConnections`} render={({ field }) => (<FormItem><FormLabel>Tap Connections</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                         <FormField control={form.control} name={`siteDetails.${absoluteIndex}.noOfBeneficiary`} render={({ field }) => (<FormItem><FormLabel>Beneficiaries</FormLabel><FormControl><Input {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                         <FormField control={form.control} name={`siteDetails.${absoluteIndex}.pumpDetails`} render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Pump Details</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${absoluteIndex}.drillingRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage /></FormItem>)}/>
+                                                        <FormField control={form.control} name={`siteDetails.${absoluteIndex}.workRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage /></FormItem>)}/>
                                                     </div>
                                                 </>
                                             )}
@@ -514,7 +514,7 @@ export default function DataEntryFormComponent({
                                                     <div className="grid md:grid-cols-3 gap-6">
                                                         <FormField control={form.control} name={`siteDetails.${absoluteIndex}.totalDepth`} render={({ field }) => (<FormItem><FormLabel>Depth Erected (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                         <FormField control={form.control} name={`siteDetails.${absoluteIndex}.waterLevel`} render={({ field }) => (<FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
-                                                      <FormField control={form.control} name={`siteDetails.${absoluteIndex}.drillingRemarks`} render={({ field }) => (<FormItem><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                                      <FormField control={form.control} name={`siteDetails.${absoluteIndex}.workRemarks`} render={({ field }) => (<FormItem><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                     </div>
                                                 </>
                                             )}
