@@ -86,6 +86,7 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
       if (detail.noOfTapConnections === null) detail.noOfTapConnections = undefined;
       if (detail.noOfBeneficiary === null) detail.noOfBeneficiary = undefined;
       if (detail.totalExpenditure === null) detail.totalExpenditure = undefined;
+      if (detail.remittedAmount === null) detail.remittedAmount = undefined;
       return detail;
     });
   }
@@ -199,6 +200,7 @@ export function useFileEntries(): FileEntriesState {
          const supervisorVisibleStatuses: SiteWorkStatus[] = [
           "Work Order Issued",
           "Work in Progress",
+          "Work Completed",
         ];
         finalEntries = entriesFromFirestore.filter(entry => {
           if (!entry.siteDetails || entry.siteDetails.length === 0) {
