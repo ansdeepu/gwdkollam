@@ -186,6 +186,7 @@ export const rigAccessibilityOptions = [
   'Accessible to Dept. Rig',
   'Accessible to Private Rig',
   'Inaccessible to Other Rigs',
+  'Land Dispute',
 ] as const;
 export type RigAccessibility = typeof rigAccessibilityOptions[number];
 
