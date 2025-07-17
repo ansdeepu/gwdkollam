@@ -355,7 +355,7 @@ export default function DataEntryFormComponent({
                               <>
                                 <Separator className="my-4" />
                                 <h4 className="text-md font-medium text-primary mb-2">Work Implementation</h4>
-                                <div className="grid md:grid-cols-4 gap-6">
+                                <div className="grid md:grid-cols-3 gap-6">
                                     {isRigAccessibilityRequired && (
                                         <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
                                             <FormItem>
@@ -488,7 +488,7 @@ export default function DataEntryFormComponent({
                                                         <FormField control={form.control} name={`siteDetails.${index}.noOfTapConnections`} render={({ field }) => (<FormItem><FormLabel>Tap Connections</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                         <FormField control={form.control} name={`siteDetails.${index}.noOfBeneficiary`} render={({ field }) => (<FormItem><FormLabel>Beneficiaries</FormLabel><FormControl><Input {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                         <FormField control={form.control} name={`siteDetails.${index}.pumpDetails`} render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Pump Details</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage /></FormItem>)}/>
+                                                        <FormField control={form.control} name={`siteDetails.${index}.remarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage /></FormItem>)}/>
                                                     </div>
                                                 </>
                                             )}
@@ -501,7 +501,7 @@ export default function DataEntryFormComponent({
                                                     <div className="grid md:grid-cols-3 gap-6">
                                                         <FormField control={form.control} name={`siteDetails.${index}.totalDepth`} render={({ field }) => (<FormItem><FormLabel>Depth Erected (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                         <FormField control={form.control} name={`siteDetails.${index}.waterLevel`} render={({ field }) => (<FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
-                                                      <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                                      <FormField control={form.control} name={`siteDetails.${index}.remarks`} render={({ field }) => (<FormItem><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isSiteEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                                     </div>
                                                 </>
                                             )}
