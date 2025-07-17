@@ -356,6 +356,7 @@ export default function DataEntryFormComponent({
                                 <Separator className="my-4" />
                                 <h4 className="text-md font-medium text-primary mb-2">Work Implementation</h4>
                                 <div className="grid md:grid-cols-3 gap-6">
+                                    <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     {isRigAccessibilityRequired && (
                                         <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
                                             <FormItem>
@@ -371,7 +372,6 @@ export default function DataEntryFormComponent({
                                             </FormItem>
                                         )}/>
                                     )}
-                                    <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
