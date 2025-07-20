@@ -130,10 +130,10 @@ export const fileStatusOptions = [
   "Completed Except Disputed",
   "Partially Completed Except Disputed",
   "Fully Disputed",
+  "To be Refunded",
   "Bill Preparation",
   "Payments",
   "Utilization Certificate",
-  "To be Refunded",
   "File Closed",
 ] as const;
 export type FileStatus = typeof fileStatusOptions[number];
