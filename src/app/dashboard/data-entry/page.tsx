@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 // Helper function to create default form values, ensuring consistency.
 const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntryFormData => {
     const formDefaultValues: DataEntryFormData = {
-      fileNo: "", applicantName: "", applicantAddress: "", phoneNo: "", applicationType: undefined,
+      fileNo: "", applicantName: "", phoneNo: "", applicationType: undefined,
       estimateAmount: undefined, assignedSupervisorUids: [],
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
       totalRemittance: 0, siteDetails: [{
@@ -31,6 +31,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
         surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
         surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
         surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
+        arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined,
       }],
       paymentDetails: [{ 
         dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,

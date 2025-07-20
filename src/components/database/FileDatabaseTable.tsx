@@ -1,3 +1,4 @@
+
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -108,7 +109,6 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
       const mainFieldsToSearch = [
         entry.fileNo,
         entry.applicantName,
-        entry.applicantAddress,
         entry.phoneNo,
         appTypeDisplay,
         entry.fileStatus,
@@ -364,8 +364,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               {/* Main Details Section */}
               <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Main Details:</h4>
               {renderDetail("File No", viewItem?.fileNo)}
-              {renderDetail("Institution / Applicant Name", viewItem?.applicantName)}
-              {renderDetail("Address of Institution / Applicant", viewItem?.applicantAddress)}
+              {renderDetail("Name &amp; Address of Institution / Applicant", viewItem?.applicantName)}
               {renderDetail("Phone No", viewItem?.phoneNo)}
               {renderDetail("Type of Application", viewItem?.applicationType ? viewItem.applicationType.replace(/_/g, " ") : "N/A")}
               {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}
@@ -409,7 +408,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                           {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyRecommendedOB)}
                           {site.purpose === 'BWC' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
                           {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
+                          {renderDetail("Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
                           {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
                           {site.purpose === 'FPW' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
                           {renderDetail("Latitude", site.latitude)}
@@ -425,7 +424,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                           {site.purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
                           {site.purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
                           {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
+                          {renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
                           {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
                           {renderDetail("Discharge (LPH)", site.yieldDischarge)}
                           {renderDetail("Zone Details (m)", site.zoneDetails)}
@@ -462,7 +461,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                         </>
                       )}
 
-                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status & Financials</h6>
+                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status &amp; Financials</h6>
                       {renderDetail("Estimate (₹)", site.estimateAmount)}
                       {renderDetail("TS Amount (₹)", site.tsAmount)}
                       {renderDetail("Tender No.", site.tenderNo)}
@@ -503,7 +502,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               
               {/* File Status & Remarks Section */}
               <div className="pt-2">
-                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status & Remarks:</h4>
+                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status &amp; Remarks:</h4>
                 {renderDetail("File Status", viewItem?.fileStatus)}
                 {renderDetail("Remarks", viewItem?.remarks)}
               </div>

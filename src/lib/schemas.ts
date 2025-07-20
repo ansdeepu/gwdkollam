@@ -103,7 +103,6 @@ export type PaymentAccount = typeof paymentAccountOptions[number];
 export const siteWorkStatusOptions = [
   "Under Process",
   "Addl. AS Awaited",
-  "To be Refunded",
   "Awaiting Dept. Rig",
   "To be Tendered",
   "TS Pending",
@@ -115,6 +114,7 @@ export const siteWorkStatusOptions = [
   "Work Completed",
   "Bill Prepared",
   "Payment Completed",
+  "To be Refunded",
   "Utilization Certificate Issued",
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
@@ -346,8 +346,7 @@ export const DataEntrySchema = z.object({
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
   fileNo: z.string().min(1, "File No. is required."),
-  applicantName: z.string().min(1, "Institution / Applicant Name is required."),
-  applicantAddress: z.string().optional(),
+  applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
   applicationType: z.enum(applicationTypeOptions, { required_error: "Type of Application is required."}),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
@@ -395,7 +394,6 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   // === Main File Details ===
   { id: 'fileNo', label: 'File No.', accessor: (entry) => entry.fileNo },
   { id: 'applicantName', label: 'Applicant Name', accessor: (entry) => entry.applicantName },
-  { id: 'applicantAddress', label: 'Applicant Address', accessor: (entry) => entry.applicantAddress },
   { id: 'phoneNo', label: 'Phone No.', accessor: (entry) => entry.phoneNo },
   { id: 'applicationType', label: 'Application Type', accessor: (entry) => entry.applicationType ? applicationTypeDisplayMap[entry.applicationType] : undefined },
   { id: 'fileStatus', label: 'File Status', accessor: (entry) => entry.fileStatus },
