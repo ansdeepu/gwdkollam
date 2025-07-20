@@ -151,6 +151,7 @@ export const sitePurposeOptions = [
   "MWSS Pump Reno",
   "HPS",
   "HPR",
+  "ARS",
 ] as const;
 export type SitePurpose = typeof sitePurposeOptions[number];
 
@@ -252,6 +253,12 @@ export const SiteDetailSchema = z.object({
   surveyRecommendedPlainPipe: z.string().optional(),
   surveyRecommendedSlottedPipe: z.string().optional(),
   surveyRecommendedMsCasingPipe: z.string().optional(),
+
+  // ARS specific fields
+  arsNumberOfStructures: optionalNumber("Number of Structures must be a valid number."),
+  arsStorageCapacity: optionalNumber("Storage Capacity must be a valid number."),
+  arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
+
 }).superRefine((data, ctx) => {
     if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
         ctx.addIssue({
