@@ -51,7 +51,7 @@ const OTHER_PURPOSES: SitePurpose[] = [
 ];
 
 const COMPLETED_STATUSES = ['Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-const REFUNDED_STATUSES = ['To be Refunded', 'Refund Completed'];
+const REFUNDED_STATUSES = ['To be Refunded'];
 
 
 // Reusable component for the complex BWC/TWC tables

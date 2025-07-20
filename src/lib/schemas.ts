@@ -116,7 +116,6 @@ export const siteWorkStatusOptions = [
   "Bill Prepared",
   "Payment Completed",
   "Utilization Certificate Issued",
-  "Refund Completed",
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
 
