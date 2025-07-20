@@ -83,6 +83,8 @@ const SelectContent = React.forwardRef<
       )}
       position={position}
       {...props}
+      sideOffset={5}
+      collisionPadding={10}
     >
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
@@ -159,4 +161,5 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
 }
+
 
