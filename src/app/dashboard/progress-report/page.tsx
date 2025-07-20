@@ -47,7 +47,7 @@ const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
 
 const OTHER_PURPOSES: SitePurpose[] = [
   "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", 
-  "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR"
+  "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"
 ];
 
 const COMPLETED_STATUSES = ['Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
