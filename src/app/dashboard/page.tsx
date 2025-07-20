@@ -279,7 +279,7 @@ export default function DashboardPage() {
     
     const workStatusRows = [...siteWorkStatusOptions];
     const totalApplicationsRow = "Total No. of Applications";
-    const reorderedRowLabels = [...workStatusRows.filter(status => status !== "Work Completed"), "Work Completed", totalApplicationsRow];
+    const reorderedRowLabels = [...workStatusRows, totalApplicationsRow];
     
     const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
         const serviceCounts: { [service: string]: number } = {};
@@ -1560,5 +1560,6 @@ export default function DashboardPage() {
     
 
     
+
 
 

@@ -134,7 +134,7 @@ export const fileStatusOptions = [
   "Bill Preparation",
   "Payments",
   "Utilization Certificate",
-  "Refund",
+  "To be Refunded",
   "File Closed",
 ] as const;
 export type FileStatus = typeof fileStatusOptions[number];
