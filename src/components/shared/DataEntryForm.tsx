@@ -141,7 +141,7 @@ export default function DataEntryFormComponent({
     defaultValues: initialData,
   });
 
-  const { reset: formReset, trigger: formTrigger, getValues: formGetValues, setValue: formSetValue, control } = form;
+  const { reset: formReset, trigger: formTrigger, getValues: formGetValues, setValue: formSetValue, control, watch } = form;
 
   const stableInitialData = useCallback(() => initialData, [JSON.stringify(initialData)]);
 
@@ -157,6 +157,17 @@ export default function DataEntryFormComponent({
   }, [fileNoToEdit, formTrigger, stableInitialData]);
 
   const watchedSiteDetails = useWatch({ control, name: "siteDetails", defaultValue: [] });
+  const applicationType = watch("applicationType");
+  const isPrivateApplication = useMemo(() => {
+    if (!applicationType) return false;
+    return [
+      'Private_Domestic',
+      'Private_Irrigation',
+      'Private_Instituition',
+      'Private_Industry'
+    ].includes(applicationType);
+  }, [applicationType]);
+
 
   useEffect(() => {
     if (userRole === 'editor') {
@@ -283,8 +294,10 @@ export default function DataEntryFormComponent({
                 <AccordionContent className="p-6 pt-0">
                     <div className="border-t pt-6 space-y-6">
                         <div className="grid md:grid-cols-2 gap-6">
-                            <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} readOnly={!isEditor && !!fileNoToEdit} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem><FormLabel>Name &amp; Address of Institution / Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
+                           <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} readOnly={!isEditor && !!fileNoToEdit} /></FormControl><FormMessage /></FormItem> )}/>
+                           <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem><FormLabel>Name &amp; Address of Institution / Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-6">
                             <FormField control={form.control} name="phoneNo" render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="applicationType" render={({ field }) => ( <FormItem><FormLabel>Type of Application <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{applicationTypeOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o as ApplicationType]}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                         </div>
@@ -375,8 +388,12 @@ export default function DataEntryFormComponent({
                                     <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                    {!isPrivateApplication && (
+                                      <>
+                                        <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                        <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                      </>
+                                    )}
                                     <FormField
                                         key={item.id}
                                         control={form.control}
