@@ -1237,7 +1237,7 @@ export default function DashboardPage() {
                   {currentMonthStats && currentMonthStats.completedThisMonthData.length > 0 ? (
                     <ul className="space-y-3 text-sm">
                       {currentMonthStats.completedThisMonthData.map((item, index) => (
-                        <li key={`completed-${index}`} className="border-b pb-2 last:border-b-0">
+                        <li key={`completed-${index}`} className="flex flex-col gap-1 border-b pb-2 last:border-b-0">
                           <p className="font-medium text-foreground text-xs" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite}</p>
                           <p className="text-xs text-foreground" title={`${item.applicantName} - File: ${item.fileNo}`}>{item.applicantName} - File: {item.fileNo}</p>
                           <div className="flex items-center justify-between mt-1">
@@ -1568,6 +1568,8 @@ export default function DashboardPage() {
     
 
     
+
+
 
 
 
