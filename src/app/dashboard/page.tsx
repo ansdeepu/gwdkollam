@@ -303,7 +303,6 @@ export default function DashboardPage() {
     const now = new Date();
     const fileStatusesForPending: FileStatus[] = ["File Under Process"];
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
-    const fileStatusAlert: FileStatus = "File Under Process";
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered"];
 
     // --- SINGLE LOOP over fileEntries ---
@@ -337,14 +336,6 @@ export default function DashboardPage() {
         });
 
         // 3. Work Alerts Calculation
-        if (entry.fileStatus === fileStatusAlert) {
-            const siteNames = entry.siteDetails?.map(s => s.nameOfSite).filter(Boolean).join(', ') || 'No specific site';
-            const details = `Site: ${siteNames}, App: ${entry.applicantName}, File: ${entry.fileNo}`;
-            const key = `${entry.fileNo}-filestatus`;
-            if (!workAlertsMap.has(key)) {
-                workAlertsMap.set(key, { title: "File Under Process", details });
-            }
-        }
         entry.siteDetails?.forEach(site => {
             if (site.workStatus && siteWorkStatusAlerts.includes(site.workStatus as SiteWorkStatus)) {
                 const details = `Site: ${site.nameOfSite || 'Unnamed Site'}, App: ${entry.applicantName}, File: ${entry.fileNo}`;
@@ -914,7 +905,7 @@ export default function DashboardPage() {
               <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[150px]">
                 <h4 className="text-sm font-semibold text-accent-foreground mb-2 flex items-center gap-2 shrink-0 p-2 bg-accent rounded-t-md text-white">
                   <Cake className="h-4 w-4" />
-                  Today's Birthdays 🎉 ({dashboardData.birthdayWishes.length})
+                  Today's Birthdays ({dashboardData.birthdayWishes.length})
                 </h4>
                 <div className="flex-1 marquee-v-container no-scrollbar bg-white p-2 rounded-b-md">
                   {dashboardData.birthdayWishes.length > 0 ? (
@@ -1568,6 +1559,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
