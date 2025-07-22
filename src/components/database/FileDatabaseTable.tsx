@@ -44,7 +44,6 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useFileEntries } from "@/hooks/useFileEntries";
@@ -355,206 +354,167 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
 
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-4xl p-0 flex flex-col h-[90vh]">
-          <DialogHeader className="p-6 pb-4">
+          <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>File Details: {viewItem?.fileNo}</DialogTitle>
             <DialogDescription>
               Comprehensive information for the selected file entry.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 px-6 pb-4">
-             <Accordion
-                type="multiple"
-                defaultValue={['application-details', 'remittance-details', 'site-details', 'payment-details', 'final-status']}
-                className="w-full space-y-2"
-              >
-                  <AccordionItem value="application-details" className="border bg-secondary/30 rounded-lg">
-                      <AccordionTrigger className="p-3 hover:no-underline text-foreground">
-                          <span className="text-lg font-semibold">Application Details</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="p-4 pt-0">
-                          <div className="border-t pt-4 space-y-2">
-                            {renderDetail("File No", viewItem?.fileNo)}
-                            {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
-                            {renderDetail("Phone No", viewItem?.phoneNo)}
-                            {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
-                            {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}
+          <ScrollArea className="flex-1 px-6 py-4">
+            <div className="space-y-6">
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Application Details</h3>
+                {renderDetail("File No", viewItem?.fileNo)}
+                {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
+                {renderDetail("Phone No", viewItem?.phoneNo)}
+                {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
+                {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Remittance Details</h3>
+                {viewItem?.remittanceDetails && viewItem.remittanceDetails.length > 0 ? (
+                  viewItem.remittanceDetails.map((rd, index) => (
+                    <div key={`remit-${index}`} className="mb-2 p-3 border rounded-md bg-secondary/30">
+                      <h4 className="text-base font-semibold mb-2 text-muted-foreground">Remittance #{index + 1}</h4>
+                      {renderDetail("Amount Remitted (₹)", rd.amountRemitted)}
+                      {renderDetail("Date of Remittance", rd.dateOfRemittance)}
+                      {renderDetail("Remitted Account", rd.remittedAccount)}
+                    </div>
+                  ))
+                ) : (<p className="text-sm text-muted-foreground">No remittance details available.</p>)}
+                {renderDetail("Total Remittance (All Entries) (₹)", viewItem?.totalRemittance)}
+              </div>
+              
+              <div className="space-y-2">
+                 <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Site Details</h3>
+                 {viewItem?.siteDetails && viewItem.siteDetails.length > 0 ? (
+                    viewItem.siteDetails.map((site, index) => {
+                      const purpose = site.purpose as SitePurpose;
+                      const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
+                      const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
+                      const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
+                      const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
+                      const isARSPurpose = ['ARS'].includes(purpose);
+                      return (
+                        <div key={`site-${index}`} className="mb-4 p-4 border rounded-lg bg-secondary/30 space-y-2">
+                          <h4 className="text-md font-semibold text-primary">Site #{index + 1}: {site.nameOfSite}</h4>
+                          <div className="space-y-1 pt-2 border-t">
+                            {renderDetail("Purpose", site.purpose)}
+                            {renderDetail("Latitude", site.latitude)}
+                            {renderDetail("Longitude", site.longitude)}
+
+                            {isWellPurpose && <>
+                              <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Survey Details (Recommended)</h5>
+                              {renderDetail("Recommended Diameter (mm)", site.surveyRecommendedDiameter)}
+                              {renderDetail("Recommended TD (m)", site.surveyRecommendedTD)}
+                              {purpose === 'BWC' && renderDetail("Recommended OB (m)", site.surveyRecommendedOB)}
+                              {purpose === 'BWC' && renderDetail("Recommended Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                              {purpose === 'TWC' && renderDetail("Recommended Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
+                              {purpose === 'TWC' && renderDetail("Recommended Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
+                              {purpose === 'TWC' && renderDetail("Recommended MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
+                              {purpose === 'FPW' && renderDetail("Recommended Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                              {renderDetail("Survey Location", site.surveyLocation)}
+                              {renderDetail("Survey Remarks", site.surveyRemarks)}
+
+                              <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Drilling Details (Actuals)</h5>
+                              {renderDetail("Actual Diameter (mm)", site.diameter)}
+                              {renderDetail("Actual TD (m)", site.totalDepth)}
+                              {purpose === 'BWC' && renderDetail("Actual OB (m)", site.surveyOB)}
+                              {renderDetail("Actual Casing Pipe (m)", site.casingPipeUsed)}
+                              {purpose === 'BWC' && renderDetail("Actual Inner Casing Pipe (m)", site.innerCasingPipe)}
+                              {purpose === 'BWC' && renderDetail("Actual Outer Casing Pipe (m)", site.outerCasingPipe)}
+                              {purpose === 'TWC' && renderDetail("Actual Plain Pipe (m)", site.surveyPlainPipe)}
+                              {purpose === 'TWC' && renderDetail("Actual Slotted Pipe (m)", site.surveySlottedPipe)}
+                              {purpose === 'TWC' && renderDetail("Actual MS Casing Pipe (m)", site.outerCasingPipe)}
+                              {renderDetail("Yield Discharge (LPH)", site.yieldDischarge)}
+                              {renderDetail("Zone Details (m)", site.zoneDetails)}
+                              {renderDetail("Static Water Level (m)", site.waterLevel)}
+                              {renderDetail("Type of Rig Used", site.typeOfRig)}
+                              {renderDetail("Drilling Remarks", site.drillingRemarks)}
+                            </>}
+
+                            {isDevPurpose && <>
+                              <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Developing Details</h5>
+                              {renderDetail("Diameter (mm)", site.diameter)}
+                              {renderDetail("TD (m)", site.totalDepth)}
+                              {renderDetail("Discharge (LPH)", site.yieldDischarge)}
+                              {renderDetail("Water Level (m)", site.waterLevel)}
+                            </>}
+                            
+                            {isMWSSSchemePurpose && <>
+                              <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Scheme Details</h5>
+                              {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
+                              {renderDetail("Pump Details", site.pumpDetails)}
+                              {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
+                              {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
+                              {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
+                            </>}
+
+                            {isHPSPurpose && <>
+                              <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Scheme Details</h5>
+                              {renderDetail("Depth Erected (m)", site.totalDepth)}
+                              {renderDetail("Water Level (m)", site.waterLevel)}
+                            </>}
+
+                             {isARSPurpose && <>
+                              <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">ARS Scheme Details</h5>
+                              {renderDetail("Number of Structures", site.arsNumberOfStructures)}
+                              {renderDetail("Storage Capacity (m³)", site.arsStorageCapacity)}
+                              {renderDetail("Number of Fillings", site.arsNumberOfFillings)}
+                              {renderDetail("Number of Beneficiaries", site.noOfBeneficiary)}
+                            </>}
+
+                            <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Work & Financial Details</h5>
+                            {renderDetail("Site Conditions", site.siteConditions)}
+                            {renderDetail("Rig Accessibility", site.accessibleRig)}
+                            {renderDetail("Site Estimate (₹)", site.estimateAmount)}
+                            {renderDetail("Remitted for Site (₹)", site.remittedAmount)}
+                            {renderDetail("TS Amount (₹)", site.tsAmount)}
+                            {renderDetail("Tender No.", site.tenderNo)}
+                            {renderDetail("Contractor Name", site.contractorName)}
+                            {renderDetail("Assigned Supervisor", site.supervisorName)}
+                            {renderDetail("Date of Completion", site.dateOfCompletion)}
+                            {renderDetail("Total Expenditure (₹)", site.totalExpenditure)}
+                            {renderDetail("Work Status", site.workStatus)}
+                            {renderDetail("Work Remarks", site.workRemarks)}
                           </div>
-                      </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="remittance-details" className="border bg-secondary/30 rounded-lg">
-                      <AccordionTrigger className="p-3 hover:no-underline text-foreground">
-                          <span className="text-lg font-semibold">Remittance Details</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="p-4 pt-0">
-                           <div className="border-t pt-4 space-y-3">
-                            {viewItem?.remittanceDetails && viewItem.remittanceDetails.length > 0 ? (
-                              viewItem.remittanceDetails.map((rd, index) => (
-                                <div key={`remit-${index}`} className="mb-2 p-3 border rounded-md bg-background">
-                                  <h5 className="text-base font-semibold mb-2 text-muted-foreground">Remittance #{index + 1}</h5>
-                                  {renderDetail("Amount Remitted (₹)", rd.amountRemitted)}
-                                  {renderDetail("Date of Remittance", rd.dateOfRemittance)}
-                                  {renderDetail("Remitted Account", rd.remittedAccount)}
-                                </div>
-                              ))
-                            ) : (<p className="text-sm text-muted-foreground">No remittance details available.</p>)}
-                             {renderDetail("Total Remittance (All Entries) (₹)", viewItem?.totalRemittance)}
-                          </div>
-                      </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="site-details" className="border bg-secondary/30 rounded-lg">
-                      <AccordionTrigger className="p-3 hover:no-underline text-foreground">
-                          <span className="text-lg font-semibold">Site Details</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="p-4 pt-0">
-                        <div className="border-t pt-4 space-y-4">
-                           {viewItem?.siteDetails && viewItem.siteDetails.length > 0 ? (
-                             <Accordion type="multiple" className="w-full space-y-2">
-                              {viewItem.siteDetails.map((site, index) => {
-                                const purpose = site.purpose as SitePurpose;
-                                const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
-                                const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
-                                const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
-                                const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
-                                const isARSPurpose = ['ARS'].includes(purpose);
-                                return(
-                                  <AccordionItem value={`site-${index}`} key={`site-${index}`} className="border bg-background rounded-lg">
-                                    <AccordionTrigger className="p-3 hover:no-underline text-primary">
-                                      <span className="text-md font-semibold text-left">Site #{index + 1}: {site.nameOfSite}</span>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-4 pt-0">
-                                      <div className="border-t pt-4 space-y-2">
-                                        {renderDetail("Purpose", site.purpose)}
-                                        {renderDetail("Latitude", site.latitude)}
-                                        {renderDetail("Longitude", site.longitude)}
-
-                                        {isWellPurpose && <>
-                                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Survey Details (Recommended)</h6>
-                                          {renderDetail("Recommended Diameter (mm)", site.surveyRecommendedDiameter)}
-                                          {renderDetail("Recommended TD (m)", site.surveyRecommendedTD)}
-                                          {purpose === 'BWC' && renderDetail("Recommended OB (m)", site.surveyRecommendedOB)}
-                                          {purpose === 'BWC' && renderDetail("Recommended Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
-                                          {purpose === 'TWC' && renderDetail("Recommended Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
-                                          {purpose === 'TWC' && renderDetail("Recommended Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
-                                          {purpose === 'TWC' && renderDetail("Recommended MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
-                                          {purpose === 'FPW' && renderDetail("Recommended Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
-                                          {renderDetail("Survey Location", site.surveyLocation)}
-                                          {renderDetail("Survey Remarks", site.surveyRemarks)}
-
-                                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Drilling Details (Actuals)</h6>
-                                          {renderDetail("Actual Diameter (mm)", site.diameter)}
-                                          {renderDetail("Actual TD (m)", site.totalDepth)}
-                                          {purpose === 'BWC' && renderDetail("Actual OB (m)", site.surveyOB)}
-                                          {renderDetail("Actual Casing Pipe (m)", site.casingPipeUsed)}
-                                          {purpose === 'BWC' && renderDetail("Actual Inner Casing Pipe (m)", site.innerCasingPipe)}
-                                          {purpose === 'BWC' && renderDetail("Actual Outer Casing Pipe (m)", site.outerCasingPipe)}
-                                          {purpose === 'TWC' && renderDetail("Actual Plain Pipe (m)", site.surveyPlainPipe)}
-                                          {purpose === 'TWC' && renderDetail("Actual Slotted Pipe (m)", site.surveySlottedPipe)}
-                                          {purpose === 'TWC' && renderDetail("Actual MS Casing Pipe (m)", site.outerCasingPipe)}
-                                          {renderDetail("Yield Discharge (LPH)", site.yieldDischarge)}
-                                          {renderDetail("Zone Details (m)", site.zoneDetails)}
-                                          {renderDetail("Static Water Level (m)", site.waterLevel)}
-                                          {renderDetail("Type of Rig Used", site.typeOfRig)}
-                                          {renderDetail("Drilling Remarks", site.drillingRemarks)}
-                                        </>}
-                                        
-                                        {isDevPurpose && <>
-                                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Developing Details</h6>
-                                          {renderDetail("Diameter (mm)", site.diameter)}
-                                          {renderDetail("TD (m)", site.totalDepth)}
-                                          {renderDetail("Discharge (LPH)", site.yieldDischarge)}
-                                          {renderDetail("Water Level (m)", site.waterLevel)}
-                                        </>}
-
-                                        {isMWSSSchemePurpose && <>
-                                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Scheme Details</h6>
-                                          {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
-                                          {renderDetail("Pump Details", site.pumpDetails)}
-                                          {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
-                                          {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
-                                          {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
-                                        </>}
-                                        
-                                        {isHPSPurpose && <>
-                                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Scheme Details</h6>
-                                          {renderDetail("Depth Erected (m)", site.totalDepth)}
-                                          {renderDetail("Water Level (m)", site.waterLevel)}
-                                        </>}
-
-                                        {isARSPurpose && <>
-                                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">ARS Scheme Details</h6>
-                                          {renderDetail("Number of Structures", site.arsNumberOfStructures)}
-                                          {renderDetail("Storage Capacity (m³)", site.arsStorageCapacity)}
-                                          {renderDetail("Number of Fillings", site.arsNumberOfFillings)}
-                                          {renderDetail("Number of Beneficiaries", site.noOfBeneficiary)}
-                                        </>}
-
-                                        <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Work & Financial Details</h6>
-                                        {renderDetail("Site Conditions", site.siteConditions)}
-                                        {renderDetail("Rig Accessibility", site.accessibleRig)}
-                                        {renderDetail("Site Estimate (₹)", site.estimateAmount)}
-                                        {renderDetail("Remitted for Site (₹)", site.remittedAmount)}
-                                        {renderDetail("TS Amount (₹)", site.tsAmount)}
-                                        {renderDetail("Tender No.", site.tenderNo)}
-                                        {renderDetail("Contractor Name", site.contractorName)}
-                                        {renderDetail("Assigned Supervisor", site.supervisorName)}
-                                        {renderDetail("Date of Completion", site.dateOfCompletion)}
-                                        {renderDetail("Total Expenditure (₹)", site.totalExpenditure)}
-                                        {renderDetail("Work Status", site.workStatus)}
-                                        {renderDetail("Work Remarks", site.workRemarks)}
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                )
-                              })}
-                             </Accordion>
-                           ) : (<p className="text-sm text-muted-foreground">No site details available.</p>)}
                         </div>
-                      </AccordionContent>
-                  </AccordionItem>
+                      )
+                    })
+                 ) : (<p className="text-sm text-muted-foreground">No site details available.</p>)}
+              </div>
 
-                  <AccordionItem value="payment-details" className="border bg-secondary/30 rounded-lg">
-                      <AccordionTrigger className="p-3 hover:no-underline text-foreground">
-                          <span className="text-lg font-semibold">Payment Details</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="p-4 pt-0">
-                        <div className="border-t pt-4 space-y-3">
-                           {viewItem?.paymentDetails && viewItem.paymentDetails.length > 0 ? (
-                             viewItem.paymentDetails.map((pd, index) => (
-                               <div key={`payment-${index}`} className="mb-3 p-3 border rounded-md bg-background">
-                                <h5 className="text-base font-semibold mb-2 text-muted-foreground">Payment #{index + 1}</h5>
-                                {renderDetail("Date of Payment", pd.dateOfPayment)}
-                                {renderDetail("Payment Account", pd.paymentAccount)}
-                                {renderDetail("Revenue Head (₹)", pd.revenueHead)}
-                                {renderDetail("Contractor's Payment (₹)", pd.contractorsPayment)}
-                                {renderDetail("GST (₹)", pd.gst)}
-                                {renderDetail("Income Tax (₹)", pd.incomeTax)}
-                                {renderDetail("KBCWB (₹)", pd.kbcwb)}
-                                {renderDetail("Refund to Party (₹)", pd.refundToParty)}
-                                {renderDetail("Payment Remarks", pd.paymentRemarks)}
-                                {renderDetail("Total Payment (This Entry) (₹)", pd.totalPaymentPerEntry)}
-                              </div>
-                            ))
-                           ) : (<p className="text-sm text-muted-foreground">No payment details available.</p>)}
-                          {renderDetail("Total Payment (All Entries) (₹)", viewItem?.totalPaymentAllEntries)}
-                          {renderDetail("Overall Balance (₹)", viewItem?.overallBalance)}
-                        </div>
-                      </AccordionContent>
-                  </AccordionItem>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Payment Details</h3>
+                {viewItem?.paymentDetails && viewItem.paymentDetails.length > 0 ? (
+                  viewItem.paymentDetails.map((pd, index) => (
+                    <div key={`payment-${index}`} className="mb-3 p-3 border rounded-md bg-secondary/30">
+                      <h4 className="text-base font-semibold mb-2 text-muted-foreground">Payment #{index + 1}</h4>
+                      {renderDetail("Date of Payment", pd.dateOfPayment)}
+                      {renderDetail("Payment Account", pd.paymentAccount)}
+                      {renderDetail("Revenue Head (₹)", pd.revenueHead)}
+                      {renderDetail("Contractor's Payment (₹)", pd.contractorsPayment)}
+                      {renderDetail("GST (₹)", pd.gst)}
+                      {renderDetail("Income Tax (₹)", pd.incomeTax)}
+                      {renderDetail("KBCWB (₹)", pd.kbcwb)}
+                      {renderDetail("Refund to Party (₹)", pd.refundToParty)}
+                      {renderDetail("Payment Remarks", pd.paymentRemarks)}
+                      {renderDetail("Total Payment (This Entry) (₹)", pd.totalPaymentPerEntry)}
+                    </div>
+                  ))
+                ) : (<p className="text-sm text-muted-foreground">No payment details available.</p>)}
+                {renderDetail("Total Payment (All Entries) (₹)", viewItem?.totalPaymentAllEntries)}
+                {renderDetail("Overall Balance (₹)", viewItem?.overallBalance)}
+              </div>
 
-                  <AccordionItem value="final-status" className="border bg-secondary/30 rounded-lg">
-                      <AccordionTrigger className="p-3 hover:no-underline text-foreground">
-                          <span className="text-lg font-semibold">Final Status</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="p-4 pt-0">
-                          <div className="border-t pt-4 space-y-2">
-                            {renderDetail("File Status", viewItem?.fileStatus)}
-                            {renderDetail("Final Remarks", viewItem?.remarks)}
-                          </div>
-                      </AccordionContent>
-                  </AccordionItem>
-              </Accordion>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Final Status</h3>
+                {renderDetail("File Status", viewItem?.fileStatus)}
+                {renderDetail("Final Remarks", viewItem?.remarks)}
+              </div>
+            </div>
           </ScrollArea>
            <DialogFooter className="p-6 pt-4 border-t">
               <DialogClose asChild>
