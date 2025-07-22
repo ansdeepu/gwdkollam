@@ -52,6 +52,7 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import type { StaffMember } from "@/lib/schemas";
 import type { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
   dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
@@ -612,7 +613,7 @@ export default function DataEntryFormComponent({
                 </AccordionTrigger>
                 <AccordionContent className="p-6 pt-0">
                     <div className="border-t pt-6 space-y-4">
-                        <Accordion type="multiple" defaultValue={paymentFields.map((_, i) => `payment-${i}`)} className="w-full space-y-2">
+                        <div className="space-y-4">
                             {paymentFields.map((item, index) => {
                             const payment = watchedPaymentDetails[index];
                             const hasAnyAmount = payment && (
@@ -625,19 +626,17 @@ export default function DataEntryFormComponent({
                             );
                             const paymentTotal = calculatePaymentEntryTotalGlobal(watchedPaymentDetails[index]);
                             return (
-                                <AccordionItem value={`payment-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
-                                    <AccordionTrigger className="p-4 hover:no-underline">
-                                        <div className="flex flex-1 items-center justify-between">
-                                            <span className="text-base font-semibold text-primary">Payment #{index + 1}</span>
-                                            {isEditor && paymentFields.length > 1 && 
-                                                <div role="button" aria-label={`Remove Payment #${index + 1}`} className="p-2 rounded-full hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); removePayment(index); }}>
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </div>
-                                            }
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-4 pt-0">
-                                        <div className="space-y-6 border-t pt-4">
+                                <Card key={item.id} className="bg-secondary/20 shadow-sm">
+                                    <CardHeader className="flex flex-row items-center justify-between p-4">
+                                        <CardTitle className="text-base font-semibold text-primary">Payment #{index + 1}</CardTitle>
+                                        {isEditor && paymentFields.length > 1 && 
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => removePayment(index)} aria-label={`Remove Payment #${index + 1}`}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        }
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <div className="space-y-6">
                                             <div className="grid md:grid-cols-3 gap-6">
                                                 <FormField control={form.control} name={`paymentDetails.${index}.dateOfPayment`} render={({ field }) => ( <FormItem><FormLabel>Date{hasAnyAmount && <span className="text-destructive">*</span>}</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full text-left font-normal", !field.value && "text-muted-foreground")} disabled={!isEditor}>{field.value ? format(new Date(field.value), "dd/MM/yyyy") : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value ? new Date(field.value): undefined} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem> )}/>
                                                 <FormField control={form.control} name={`paymentDetails.${index}.paymentAccount`} render={({ field }) => ( <FormItem><FormLabel>Account{hasAnyAmount && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value} disabled={!isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
@@ -654,10 +653,10 @@ export default function DataEntryFormComponent({
                                                 <FormField control={form.control} name={`paymentDetails.${index}.paymentRemarks`} render={({ field }) => ( <FormItem className="md:col-span-3"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                                             </div>
                                         </div>
-                                    </AccordionContent>
-                                </AccordionItem>
+                                    </CardContent>
+                                </Card>
                             )})}
-                        </Accordion>
+                        </div>
                         {isEditor && paymentFields.length < 10 && <Button className="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-sm" type="button" variant="secondary" onClick={() => appendPayment(createDefaultPaymentDetail())}><PlusCircle className="mr-2 h-4 w-4" />Add Payment</Button>}
                     </div>
                 </AccordionContent>
