@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -1269,8 +1268,7 @@ export default function DashboardPage() {
                       {currentMonthStats.ongoingData.map((item, index) => (
                         <li key={`ongoing-${index}`} className="border-b pb-2 last:border-b-0">
                           <div className="flex justify-between items-start">
-                            <p className="font-medium text-foreground text-xs truncate" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite}</p>
-                            {item.supervisorName && <span className="text-xs text-muted-foreground truncate pl-2" title={`Supervisor: ${item.supervisorName}`}>Sup: {item.supervisorName}</span>}
+                             <p className="font-medium text-foreground text-xs truncate" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite} {item.supervisorName && <span className="text-muted-foreground font-normal" title={`Supervisor: ${item.supervisorName}`}> (Sup: {item.supervisorName})</span>}</p>
                           </div>
                            <p className="text-xs text-foreground truncate" title={`${item.applicantName} - File: ${item.fileNo}`}>{item.applicantName} - File: {item.fileNo}</p>
                            <div className="flex items-center justify-between mt-1">
@@ -1562,5 +1560,8 @@ export default function DashboardPage() {
     
 
     
+
+
+
 
 
