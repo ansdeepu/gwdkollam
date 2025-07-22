@@ -50,7 +50,7 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 50;
 
 function renderDetail(label: string, value: any) {
   if (value === undefined || value === null || value === '') {
