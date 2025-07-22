@@ -1238,11 +1238,11 @@ export default function DashboardPage() {
                     <ul className="space-y-3 text-sm">
                       {currentMonthStats.completedThisMonthData.map((item, index) => (
                         <li key={`completed-${index}`} className="border-b pb-2 last:border-b-0">
-                          <p className="font-medium text-foreground text-xs truncate" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite}</p>
-                          <p className="text-xs text-foreground truncate" title={`${item.applicantName} - File: ${item.fileNo}`}>{item.applicantName} - File: {item.fileNo}</p>
+                          <p className="font-medium text-foreground text-xs" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite}</p>
+                          <p className="text-xs text-foreground" title={`${item.applicantName} - File: ${item.fileNo}`}>{item.applicantName} - File: {item.fileNo}</p>
                           <div className="flex items-center justify-between mt-1">
                             <Badge variant="secondary" className="text-xs">{item.workStatus}</Badge>
-                            {item.supervisorName && <span className="text-xs text-muted-foreground truncate" title={`Supervisor: ${item.supervisorName}`}>Sup: {item.supervisorName}</span>}
+                            {item.supervisorName && <span className="text-xs text-muted-foreground" title={`Supervisor: ${item.supervisorName}`}>Sup: {item.supervisorName}</span>}
                           </div>
                         </li>
                       ))}
@@ -1267,13 +1267,20 @@ export default function DashboardPage() {
                   {currentMonthStats && currentMonthStats.ongoingData.length > 0 ? (
                     <ul className="space-y-3 text-sm">
                       {currentMonthStats.ongoingData.map((item, index) => (
-                        <li key={`ongoing-${index}`} className="border-b pb-2 last:border-b-0">
-                          <div className="flex justify-between items-start">
-                             <p className="font-medium text-foreground text-xs truncate" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite} {item.supervisorName && <span className="text-muted-foreground font-normal" title={`Supervisor: ${item.supervisorName}`}> (Sup: {item.supervisorName})</span>}</p>
-                          </div>
-                           <p className="text-xs text-foreground truncate" title={`${item.applicantName} - File: ${item.fileNo}`}>{item.applicantName} - File: {item.fileNo}</p>
-                           <div className="flex items-center justify-between mt-1">
+                        <li key={`ongoing-${index}`} className="border-b pb-2 last:border-b-0 flex flex-col gap-1">
+                          <p className="font-medium text-foreground text-xs" title={`${item.purpose} - ${item.nameOfSite}`}>
+                            {item.purpose} - {item.nameOfSite}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">{item.applicantName}</span> - File: {item.fileNo}
+                          </p>
+                          <div className="flex items-center justify-between">
                             <Badge variant="secondary" className="text-xs">{item.workStatus}</Badge>
+                            {item.supervisorName && (
+                              <span className="text-xs text-muted-foreground" title={`Supervisor: ${item.supervisorName}`}>
+                                Sup: {item.supervisorName}
+                              </span>
+                            )}
                           </div>
                         </li>
                       ))}
@@ -1323,8 +1330,8 @@ export default function DashboardPage() {
                         <ul className="space-y-3 text-sm">
                             {supervisorOngoingWorks.map((item, index) => (
                                 <li key={`ongoing-supervisor-${index}`} className="border-b pb-2 last:border-b-0">
-                                    <p className="font-medium text-foreground text-xs truncate" title={item.siteName}>Site: {item.siteName}</p>
-                                    <p className="text-xs text-foreground truncate" title={`${item.applicantName} - File: ${item.fileNo}`}>
+                                    <p className="font-medium text-foreground text-xs" title={item.siteName}>Site: {item.siteName}</p>
+                                    <p className="text-xs text-foreground" title={`${item.applicantName} - File: ${item.fileNo}`}>
                                         {item.applicantName} - File: {item.fileNo}
                                     </p>
                                     <Badge variant="secondary" className="mt-1">{item.workStatus}</Badge>
@@ -1561,6 +1568,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
