@@ -624,7 +624,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                         </>
                       )}
 
-                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status &amp; Financials</h6>
+                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status & Financials</h6>
                       {renderDetail("Estimate (₹)", site.estimateAmount)}
                       {renderDetail("TS Amount (₹)", site.tsAmount)}
                       {renderDetail("Tender No.", site.tenderNo)}
@@ -665,7 +665,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               
               {/* File Status & Remarks Section */}
               <div className="pt-2">
-                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status &amp; Remarks:</h4>
+                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status & Remarks:</h4>
                 {renderDetail("File Status", viewItem?.fileStatus)}
                 {renderDetail("Remarks", viewItem?.remarks)}
               </div>
