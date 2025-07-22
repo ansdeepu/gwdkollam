@@ -1,3 +1,4 @@
+
 // src/components/admin/UserManagementTable.tsx
 "use client";
 
@@ -56,7 +57,9 @@ const getInitials = (name?: string) => {
 
 interface UserManagementTableProps {
   currentUser: UserProfile | null;
-  fetchAllUsers: () => Promise<UserProfile[]>;
+  users: UserProfile[];
+  isLoading: boolean;
+  onDataChange: () => void;
   updateUserApproval: (uid: string, isApproved: boolean) => Promise<void>;
   updateUserRole: (uid: string, newRole: UserRole, staffId?: string) => Promise<void>;
   deleteUserDocument: (uid: string) => Promise<void>;
@@ -66,7 +69,9 @@ interface UserManagementTableProps {
 
 export default function UserManagementTable({
   currentUser,
-  fetchAllUsers,
+  users,
+  isLoading,
+  onDataChange,
   updateUserApproval,
   updateUserRole,
   deleteUserDocument,
@@ -74,8 +79,6 @@ export default function UserManagementTable({
   staffMembers,
 }: UserManagementTableProps) {
   const { toast } = useToast();
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [updatingUsers, setUpdatingUsers] = useState<Record<string, { approval?: boolean, role?: boolean }>>({});
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
@@ -84,32 +87,14 @@ export default function UserManagementTable({
   const [isBatchDeleting, setIsBatchDeleting] = useState(false);
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
 
-  const loadUsers = useCallback(async () => {
-    if (!currentUser) {
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const fetchedUsers = await fetchAllUsers();
-      // Sort by creation date, newest first. If createdAt is missing, treat as older.
-      setUsers(fetchedUsers.sort((a, b) => {
-        const timeA = a.createdAt?.getTime() ?? 0;
-        const timeB = b.createdAt?.getTime() ?? 0;
-        return timeB - timeA;
-      }));
-      setSelectedUserUids([]); 
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
-      toast({ title: "Error Loading Users", description: "Could not load user data. Please try again.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchAllUsers, toast, currentUser]);
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      const timeA = a.createdAt?.getTime() ?? 0;
+      const timeB = b.createdAt?.getTime() ?? 0;
+      return timeB - timeA;
+    });
+  }, [users]);
 
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
 
   const handleApprovalChange = async (uid: string, currentIsApproved: boolean) => {
     if (currentUser?.uid === uid || users.find(u => u.uid === uid)?.email === ADMIN_EMAIL_FOR_TABLE) {
@@ -120,7 +105,7 @@ export default function UserManagementTable({
     try {
       await updateUserApproval(uid, !currentIsApproved);
       toast({ title: "Approval Updated", description: `User approval status changed to ${!currentIsApproved ? 'Approved' : 'Pending'}.` });
-      setUsers(prevUsers => prevUsers.map(u => u.uid === uid ? { ...u, isApproved: !currentIsApproved } : u));
+      onDataChange();
     } catch (error: any) {
       toast({ title: "Update Failed", description: error.message || "Could not update approval status.", variant: "destructive" });
     } finally {
@@ -158,7 +143,7 @@ export default function UserManagementTable({
       if (staffIdToLink) {
         toast({ title: "Staff Profile Linked", description: `User ${userToUpdate?.name} successfully linked to their staff profile.` });
       }
-      await loadUsers(); // Refresh data to get the new staffId
+      onDataChange();
     } catch (error: any) {
       toast({ title: "Update Failed", description: error.message || "Could not update role.", variant: "destructive" });
     } finally {
@@ -177,8 +162,8 @@ export default function UserManagementTable({
     try {
       await deleteUserDocument(userToDelete.uid);
       toast({ title: "User Removed", description: `Profile for ${userToDelete.name || userToDelete.email} has been removed.` });
-      setUsers(prevUsers => prevUsers.filter(u => u.uid !== userToDelete.uid));
       setSelectedUserUids(prev => prev.filter(uid => uid !== userToDelete.uid)); // Remove from selection
+      onDataChange();
     } catch (error: any) {
       toast({ title: "Removal Failed", description: error.message || "Could not remove user profile.", variant: "destructive" });
     } finally {
@@ -188,8 +173,8 @@ export default function UserManagementTable({
   };
 
   const eligibleForSelectionUsers = useMemo(() => {
-    return users.filter(user => user.email !== ADMIN_EMAIL_FOR_TABLE && user.uid !== currentUser?.uid);
-  }, [users, currentUser]);
+    return sortedUsers.filter(user => user.email !== ADMIN_EMAIL_FOR_TABLE && user.uid !== currentUser?.uid);
+  }, [sortedUsers, currentUser]);
 
   const handleSelectAllChange = (checked: boolean | "indeterminate") => {
     if (checked === true) {
@@ -220,7 +205,7 @@ export default function UserManagementTable({
         variant: result.failureCount > 0 ? "default" : "default",
         duration: result.failureCount > 0 ? 10000 : 5000,
       });
-      loadUsers(); 
+      onDataChange();
     } catch (error: any) {
       toast({ title: "Batch Removal Error", description: error.message || "Could not remove selected users.", variant: "destructive" });
     } finally {
@@ -239,7 +224,7 @@ export default function UserManagementTable({
     );
   }
 
-  if (!users || users.length === 0) {
+  if (!sortedUsers || sortedUsers.length === 0) {
     return (
       <div className="py-10 text-center text-muted-foreground border rounded-lg bg-secondary/30">
          <UserCog className="mx-auto h-16 w-16 text-muted-foreground/70 mb-4" />
@@ -270,7 +255,7 @@ export default function UserManagementTable({
           </p>
         </div>
       )}
-      <div className="overflow-x-auto rounded-md border">
+      <div className="rounded-md border">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
@@ -298,7 +283,7 @@ export default function UserManagementTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((userRow) => {
+            {sortedUsers.map((userRow) => {
               const isCurrentUserTheUserInRow = currentUser?.uid === userRow.uid;
               const isUserInRowAdmin = userRow.email === ADMIN_EMAIL_FOR_TABLE;
               const disableActions = updatingUsers[userRow.uid]?.approval || updatingUsers[userRow.uid]?.role || isCurrentUserTheUserInRow || isUserInRowAdmin;
@@ -323,8 +308,8 @@ export default function UserManagementTable({
                       <AvatarFallback>{getInitials(userRow.name)}</AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium px-3 py-2 whitespace-nowrap">{userRow.name || "N/A"}</TableCell>
-                <TableCell className="px-3 py-2 text-muted-foreground whitespace-nowrap">{userRow.email}</TableCell>
+                <TableCell className="font-medium px-3 py-2 whitespace-normal break-words">{userRow.name || "N/A"}</TableCell>
+                <TableCell className="px-3 py-2 text-muted-foreground whitespace-normal break-words">{userRow.email}</TableCell>
                 <TableCell className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
                   {userRow.createdAt ? (
                     <Tooltip>
@@ -404,7 +389,7 @@ export default function UserManagementTable({
               </TableRow>
             )})}
           </TableBody>
-           {users.length === 0 && (
+           {sortedUsers.length === 0 && (
             <TableCaption className="py-10 text-lg">
                 <div className="flex flex-col items-center justify-center gap-2">
                     <Image src="https://placehold.co/100x100/F0F2F5/3F51B5.png?text=No+Users" width={80} height={80} alt="No users" data-ai-hint="empty illustration" className="opacity-60 rounded-md"/>

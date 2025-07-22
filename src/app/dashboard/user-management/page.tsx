@@ -2,10 +2,10 @@
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import UserManagementTable from "@/components/admin/UserManagementTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useRouter } from "next/navigation";
 import { Users, ShieldAlert, Loader2, UserPlus } from "lucide-react";
@@ -32,6 +32,30 @@ export default function UserManagementPage() {
   const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldRefresh, setShouldRefresh] = useState(false);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+
+  const loadUsers = useCallback(async () => {
+    if (!user || user.role !== 'editor') {
+      setUsersLoading(false);
+      return;
+    }
+    setUsersLoading(true);
+    try {
+      const fetchedUsers = await fetchAllUsers();
+      setAllUsers(fetchedUsers);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      toast({ title: "Error Loading Users", description: "Could not load user data. Please try again.", variant: "destructive" });
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [fetchAllUsers, user, toast]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers, shouldRefresh]);
+
 
   useEffect(() => {
     if (!isLoading && user && user.role !== 'editor') {
@@ -59,7 +83,7 @@ export default function UserManagementPage() {
           description: `Account for ${data.email} has been successfully created and is pending approval.`,
         });
         setIsStaffFormOpen(false);
-        setShouldRefresh(true); // Trigger a refresh of the table data
+        setShouldRefresh(prev => !prev); // Trigger a refresh of the table data
       } else {
         toast({
           title: "Creation Failed",
@@ -78,7 +102,7 @@ export default function UserManagementPage() {
     }
   };
 
-  if (isLoading || staffLoading) {
+  if (isLoading || staffLoading || usersLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -121,7 +145,7 @@ export default function UserManagementPage() {
       </p>
       <Card className="shadow-xl border-border/60">
         <CardHeader>
-          <CardTitle className="text-xl">Registered Users</CardTitle>
+          <CardTitle className="text-xl">Registered Users ({allUsers.length})</CardTitle>
           <CardDescription>
             Review and manage all users within the GWD Kollam dashboard system. 
             Use batch actions for efficiency where applicable.
@@ -130,8 +154,10 @@ export default function UserManagementPage() {
         <CardContent>
           <UserManagementTable
             key={shouldRefresh ? 'refresh' : 'initial'} // Add key here to force re-render on refresh
+            users={allUsers}
+            isLoading={usersLoading}
+            onDataChange={() => setShouldRefresh(prev => !prev)}
             currentUser={user}
-            fetchAllUsers={fetchAllUsers}
             updateUserApproval={updateUserApproval}
             updateUserRole={updateUserRole}
             deleteUserDocument={deleteUserDocument}
