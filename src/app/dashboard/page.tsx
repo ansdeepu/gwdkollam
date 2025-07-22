@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -57,7 +58,7 @@ import { Loader2 } from 'lucide-react';
 import { format, parseISO, isValid, formatDistanceToNow, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { useAuth, type UserProfile } from '@/hooks/useAuth';
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Dialog, 
   DialogContent, 
@@ -1560,6 +1561,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
