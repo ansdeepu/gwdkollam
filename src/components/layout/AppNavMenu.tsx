@@ -45,14 +45,17 @@ export default function AppNavMenu() {
     <SidebarMenu>
       {accessibleNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <Link href={item.href} passHref legacyBehavior>
+          <Link href={item.href} passHref>
             <SidebarMenuButton
+              asChild
               isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
               tooltip={{ children: item.label, side: "right", align: "center" }}
               className="justify-start"
             >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <div>
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </div>
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>
