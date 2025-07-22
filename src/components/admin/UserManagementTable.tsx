@@ -255,7 +255,7 @@ export default function UserManagementTable({
           </p>
         </div>
       )}
-      <div className="rounded-md border">
+      <div className="relative w-full overflow-x-auto rounded-md border">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
@@ -274,12 +274,12 @@ export default function UserManagementTable({
                 </Tooltip>
               </TableHead>
               <TableHead className="w-[70px] px-3 py-2.5 text-center">Photo</TableHead>
-              <TableHead className="px-3 py-2.5 min-w-[150px]">Name</TableHead>
-              <TableHead className="px-3 py-2.5 min-w-[200px]">Email</TableHead>
-              <TableHead className="px-3 py-2.5 min-w-[150px]">Registered</TableHead>
-              <TableHead className="px-3 py-2.5 min-w-[100px] text-center">Role</TableHead>
-              <TableHead className="px-3 py-2.5 min-w-[120px] text-center">Status</TableHead>
-              <TableHead className="px-3 py-2.5 min-w-[100px] text-center">Actions</TableHead>
+              <TableHead className="px-3 py-2.5">Name</TableHead>
+              <TableHead className="px-3 py-2.5">Email</TableHead>
+              <TableHead className="px-3 py-2.5">Registered</TableHead>
+              <TableHead className="px-3 py-2.5 text-center">Role</TableHead>
+              <TableHead className="px-3 py-2.5 text-center">Status</TableHead>
+              <TableHead className="px-3 py-2.5 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
