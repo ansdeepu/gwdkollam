@@ -58,7 +58,7 @@ import { Loader2 } from 'lucide-react';
 import { format, parseISO, isValid, formatDistanceToNow, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { useAuth, type UserProfile } from '@/hooks/useAuth'; 
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Dialog, 
   DialogContent, 
@@ -426,7 +426,7 @@ export default function DashboardPage() {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-    const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued"];
+    const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     const completedWorkStatuses: SiteWorkStatus[] = ["Work Completed"];
 
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
@@ -476,7 +476,7 @@ export default function DashboardPage() {
       const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
       const works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; }> = [];
 
-      for (const entry of fileEntries) {
+      for (const entry of rawFileEntries) { // Use rawFileEntries to check all files
           entry.siteDetails?.forEach(site => {
               if (site.supervisorUid === selectedSupervisorId && site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
                   works.push({
@@ -489,7 +489,7 @@ export default function DashboardPage() {
           });
       }
       return works;
-  }, [selectedSupervisorId, fileEntries, entriesLoading]);
+  }, [selectedSupervisorId, rawFileEntries, entriesLoading]);
 
 
   const handleStatusCardClick = (status: string) => {
@@ -1293,7 +1293,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Supervisor's Ongoing Work
+                Supervisor's Ongoing Work ({selectedSupervisorId ? supervisorOngoingWorks.length : 0})
               </CardTitle>
               <CardDescription>
                 Select a supervisor to view their assigned ongoing projects.
@@ -1560,7 +1560,3 @@ export default function DashboardPage() {
     
 
     
-
-
-
-

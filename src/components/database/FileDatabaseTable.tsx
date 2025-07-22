@@ -106,53 +106,51 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
     }
 
     return fileEntries.filter(entry => {
-      const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
-      
-      const mainFieldsToSearch = [
-        entry.fileNo,
-        entry.applicantName,
-        entry.phoneNo,
-        appTypeDisplay,
-        entry.fileStatus,
-        entry.remarks,
-      ].filter(Boolean).map(val => String(val).toLowerCase());
+        const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
+        
+        // Flatten all searchable text fields into one string for easy searching
+        const searchableContent = [
+            entry.fileNo,
+            entry.applicantName,
+            entry.phoneNo,
+            appTypeDisplay,
+            entry.fileStatus,
+            entry.remarks,
+            entry.estimateAmount,
+            entry.totalRemittance,
+            entry.totalPaymentAllEntries,
+            entry.overallBalance,
+            ...(entry.siteDetails || []).flatMap(site => [
+                site.nameOfSite, site.purpose, site.workStatus, site.contractorName,
+                site.supervisorName, site.tenderNo, site.drillingRemarks,
+                site.workRemarks, site.surveyRemarks, site.surveyLocation,
+                site.pumpDetails, site.latitude, site.longitude, site.estimateAmount,
+                site.remittedAmount, site.siteConditions, site.accessibleRig,
+                site.tsAmount, site.diameter, site.totalDepth, site.casingPipeUsed,
+                site.outerCasingPipe, site.innerCasingPipe, site.yieldDischarge,
+                site.zoneDetails, site.waterLevel, site.waterTankCapacity,
+                site.noOfTapConnections, site.noOfBeneficiary, site.typeOfRig,
+                site.totalExpenditure, site.surveyOB, site.surveyPlainPipe,
+                site.surveySlottedPipe, site.surveyRecommendedDiameter,
+                site.surveyRecommendedTD, site.surveyRecommendedOB,
+                site.surveyRecommendedCasingPipe, site.surveyRecommendedPlainPipe,
+                site.surveyRecommendedSlottedPipe, site.surveyRecommendedMsCasingPipe,
+                site.arsNumberOfStructures, site.arsStorageCapacity, site.arsNumberOfFillings
+            ]),
+            ...(entry.remittanceDetails || []).flatMap(rd => [
+                rd.amountRemitted, rd.remittedAccount
+            ]),
+            ...(entry.paymentDetails || []).flatMap(pd => [
+                pd.paymentAccount, pd.revenueHead, pd.contractorsPayment,
+                pd.gst, pd.incomeTax, pd.kbcwb, pd.refundToParty,
+                pd.totalPaymentPerEntry, pd.paymentRemarks
+            ]),
+        ]
+        .filter(val => val !== null && val !== undefined) // Filter out null/undefined values
+        .map(val => String(val).toLowerCase())
+        .join(' || '); // Join with a separator
 
-      if (mainFieldsToSearch.some(field => field.includes(lowerSearchTerm))) {
-        return true;
-      }
-      
-      if (entry.siteDetails?.some(site => 
-        [
-          site.nameOfSite,
-          site.purpose,
-          site.workStatus,
-          site.contractorName,
-          site.supervisorName,
-          site.tenderNo,
-          site.drillingRemarks,
-          site.workRemarks,
-          site.surveyRemarks,
-          site.surveyLocation,
-          site.pumpDetails
-        ].filter(Boolean).map(val => String(val).toLowerCase()).some(field => field.includes(lowerSearchTerm))
-      )) {
-        return true;
-      }
-
-      if (entry.remittanceDetails?.some(rd => 
-        rd.remittedAccount?.toLowerCase().includes(lowerSearchTerm)
-      )) {
-        return true;
-      }
-
-      if (entry.paymentDetails?.some(pd => 
-        (pd.paymentAccount?.toLowerCase().includes(lowerSearchTerm)) ||
-        (pd.paymentRemarks?.toLowerCase().includes(lowerSearchTerm))
-      )) {
-        return true;
-      }
-
-      return false;
+        return searchableContent.includes(lowerSearchTerm);
     });
   }, [fileEntries, searchTerm]);
 
