@@ -510,7 +510,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               Comprehensive information for the selected file entry.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-5 -mr-2">
+          <ScrollArea className="flex-grow pr-6 -mr-2">
              <Accordion
                 type="multiple"
                 defaultValue={['application-details', 'remittance-details', 'site-details', 'payment-details', 'final-status']}
