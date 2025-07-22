@@ -67,8 +67,8 @@ export default function RegisterForm() {
   return (
     <Card className="w-full shadow-xl border-border/60">
       <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold text-foreground">New User Details</CardTitle>
-        <CardDescription>Fill in the form to create a new user account.</CardDescription>
+        <CardTitle className="text-2xl font-bold text-foreground">Create Guest User Account</CardTitle>
+        <CardDescription>Fill in the form to create a new guest user account.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
