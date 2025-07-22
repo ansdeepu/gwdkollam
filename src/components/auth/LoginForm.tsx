@@ -68,7 +68,6 @@ export default function LoginForm() {
     <Card className="w-full shadow-xl border-border/60">
       <CardHeader className="pb-4">
         <CardTitle className="text-2xl font-bold text-foreground">Welcome Back</CardTitle>
-        <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -114,4 +113,3 @@ export default function LoginForm() {
     </Card>
   );
 }
-
