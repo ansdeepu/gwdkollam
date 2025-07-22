@@ -18,6 +18,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import NewUserForm from "@/components/admin/NewUserForm";
+import RegisterForm from "@/components/auth/RegisterForm";
 import type { NewUserByAdminFormData } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,7 +28,8 @@ export default function UserManagementPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isStaffFormOpen, setIsStaffFormOpen] = useState(false);
+  const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldRefresh, setShouldRefresh] = useState(false);
 
@@ -40,7 +42,7 @@ export default function UserManagementPage() {
     }
   }, [user, isLoading, router]);
 
-  const handleFormSubmit = async (data: NewUserByAdminFormData) => {
+  const handleStaffFormSubmit = async (data: NewUserByAdminFormData) => {
     setIsSubmitting(true);
     try {
       const selectedStaffMember = staffMembers.find(s => s.id === data.staffId);
@@ -56,7 +58,7 @@ export default function UserManagementPage() {
           title: "User Created",
           description: `Account for ${data.email} has been successfully created and is pending approval.`,
         });
-        setIsFormOpen(false);
+        setIsStaffFormOpen(false);
         setShouldRefresh(true); // Trigger a refresh of the table data
       } else {
         toast({
@@ -104,9 +106,14 @@ export default function UserManagementPage() {
           <Users className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold tracking-tight text-foreground">User Management</h1>
         </div>
-         <Button onClick={() => setIsFormOpen(true)}>
-            <UserPlus className="mr-2 h-5 w-5" /> Add New User
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
+              <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
+          </Button>
+          <Button onClick={() => setIsStaffFormOpen(true)}>
+              <UserPlus className="mr-2 h-5 w-5" /> Add New User
+          </Button>
+        </div>
       </div>
       <p className="text-muted-foreground max-w-2xl">
         Oversee user accounts, manage roles, approval statuses, and perform administrative actions. 
@@ -134,10 +141,10 @@ export default function UserManagementPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isStaffFormOpen} onOpenChange={setIsStaffFormOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Create New User Account</DialogTitle>
+                <DialogTitle>Create New User (from Staff)</DialogTitle>
                 <DialogDescription>
                     Select a staff member and provide their login details. They will be assigned the 'viewer' role and will need to be approved manually.
                 </DialogDescription>
@@ -145,10 +152,24 @@ export default function UserManagementPage() {
             <NewUserForm
                 staffMembers={staffMembers}
                 staffLoading={staffLoading}
-                onSubmit={handleFormSubmit}
+                onSubmit={handleStaffFormSubmit}
                 isSubmitting={isSubmitting}
-                onCancel={() => setIsFormOpen(false)}
+                onCancel={() => setIsStaffFormOpen(false)}
             />
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isGuestFormOpen} onOpenChange={setIsGuestFormOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Create Guest User Account</DialogTitle>
+                <DialogDescription>
+                    Provide a name, email, and password. The guest user will not be linked to the establishment list. They will need to be approved manually.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="pt-4">
+              <RegisterForm />
+            </div>
         </DialogContent>
       </Dialog>
 
