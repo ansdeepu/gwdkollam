@@ -67,7 +67,7 @@ export default function LoginForm() {
   return (
     <Card className="w-full shadow-xl border-border/60">
       <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold text-foreground">Welcome Back</CardTitle>
+        <CardTitle className="text-2xl font-bold text-foreground">Sign In</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -107,7 +107,7 @@ export default function LoginForm() {
       </CardContent>
       <CardFooter className="flex flex-col items-center space-y-3 pt-4">
         <p className="text-xs text-muted-foreground text-center">
-          New user accounts are created by administrators. If you need an account or approval, please contact: <strong className="font-semibold">8547650853</strong>.
+          For new accounts or approval, please contact the administrator at <strong className="font-semibold">8547650853</strong>.
         </p>
       </CardFooter>
     </Card>
