@@ -1,3 +1,4 @@
+
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -103,7 +104,7 @@ export default function UserManagementPage() {
           <Users className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold tracking-tight text-foreground">User Management</h1>
         </div>
-         <Button onClick={() => setIsFormOpen(true)}>
+         <Button onClick={() => router.push('/register')}>
             <UserPlus className="mr-2 h-5 w-5" /> Add New User
         </Button>
       </div>
