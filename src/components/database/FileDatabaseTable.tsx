@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit3, Trash2, Loader2 } from "lucide-react";
+import { Eye, Edit3, Trash2, Loader2, FileDown } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, ApplicationType } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
 import { format } from "date-fns";
@@ -39,14 +39,17 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
+import * as XLSX from 'xlsx';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -215,6 +218,153 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
     setDeleteItem(null);
   };
 
+  const handleExportSingleFileToExcel = () => {
+    if (!viewItem) {
+        toast({ title: "No Data", description: "No file data to export.", variant: "default" });
+        return;
+    }
+    
+    const wb = XLSX.utils.book_new();
+    const sheetName = `File_${viewItem.fileNo}`.replace(/[/\\?*\[\]]/g, '-').substring(0, 31);
+    
+    const dataForSheet: (string | number | Date | null)[][] = [];
+
+    // --- Title & Header ---
+    dataForSheet.push(["Ground Water Department, Kollam"]);
+    dataForSheet.push([`Detailed Report for File No: ${viewItem.fileNo}`]);
+    dataForSheet.push([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]);
+    dataForSheet.push([]); // Spacer
+
+    const addSection = (title: string, data: Record<string, any>) => {
+        dataForSheet.push([title]);
+        Object.entries(data).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                dataForSheet.push([key, value]);
+            }
+        });
+        dataForSheet.push([]); // Spacer
+    };
+    
+    // --- Main Details ---
+    const mainDetails = {
+        "File No": viewItem.fileNo,
+        "Name & Address": viewItem.applicantName,
+        "Phone No": viewItem.phoneNo,
+        "Type of Application": viewItem.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A",
+        "Total Estimate Amount (₹)": viewItem.estimateAmount,
+    };
+    addSection("Main Details", mainDetails);
+
+    // --- Remittance Details ---
+    if (viewItem.remittanceDetails && viewItem.remittanceDetails.length > 0) {
+      dataForSheet.push(["Remittance Details"]);
+      dataForSheet.push(["#", "Date", "Amount (₹)", "Account"]);
+      viewItem.remittanceDetails.forEach((rd, i) => {
+        dataForSheet.push([
+            i + 1,
+            rd.dateOfRemittance ? format(new Date(rd.dateOfRemittance), 'dd/MM/yyyy') : 'N/A',
+            rd.amountRemitted ?? 'N/A',
+            rd.remittedAccount ?? 'N/A'
+        ]);
+      });
+      dataForSheet.push(["", "Total Remittance (₹)", viewItem.totalRemittance ?? 0, ""]);
+      dataForSheet.push([]);
+    }
+
+    // --- Site Details ---
+    viewItem.siteDetails?.forEach((site, index) => {
+        addSection(`Site #${index + 1}: ${site.nameOfSite}`, {
+            "Purpose": site.purpose,
+            "Latitude": site.latitude,
+            "Longitude": site.longitude,
+            "Survey - Recommended Diameter (mm)": site.surveyRecommendedDiameter,
+            "Survey - Recommended TD (m)": site.surveyRecommendedTD,
+            "Drilling - Actual Diameter (mm)": site.diameter,
+            "Drilling - Actual TD (m)": site.totalDepth,
+            "Discharge (LPH)": site.yieldDischarge,
+            "Water Level (m)": site.waterLevel,
+            "Date of Completion": site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
+            "Work Status": site.workStatus,
+            "Contractor": site.contractorName,
+            "Supervisor": site.supervisorName,
+            "Total Expenditure (₹)": site.totalExpenditure,
+            "Work Remarks": site.workRemarks,
+        });
+    });
+
+    // --- Payment Details ---
+    if (viewItem.paymentDetails && viewItem.paymentDetails.length > 0) {
+      dataForSheet.push(["Payment Details"]);
+      dataForSheet.push(["#", "Date", "Account", "Contractor's (₹)", "GST (₹)", "Income Tax (₹)", "KBCWB (₹)", "Refund (₹)", "Revenue Head (₹)", "Total (₹)"]);
+      viewItem.paymentDetails.forEach((pd, i) => {
+        dataForSheet.push([
+          i+1,
+          pd.dateOfPayment ? format(new Date(pd.dateOfPayment), 'dd/MM/yyyy') : 'N/A',
+          pd.paymentAccount ?? 'N/A',
+          pd.contractorsPayment ?? 0,
+          pd.gst ?? 0,
+          pd.incomeTax ?? 0,
+          pd.kbcwb ?? 0,
+          pd.refundToParty ?? 0,
+          pd.revenueHead ?? 0,
+          pd.totalPaymentPerEntry ?? 0
+        ]);
+      });
+      dataForSheet.push([]);
+    }
+
+    // --- Final Summary ---
+    addSection("Final Summary", {
+        "File Status": viewItem.fileStatus,
+        "Final Remarks": viewItem.remarks,
+        "Total Remittance (₹)": viewItem.totalRemittance,
+        "Total Payment (₹)": viewItem.totalPaymentAllEntries,
+        "Overall Balance (₹)": viewItem.overallBalance,
+    });
+    
+    const ws = XLSX.utils.aoa_to_sheet(dataForSheet, { cellStyles: false });
+
+    // --- Styling ---
+    ws['!cols'] = [{ wch: 35 }, { wch: 35 }]; // Set default widths for key-value pairs
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Title
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Subtitle
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } }, // Generated on
+    ];
+
+    dataForSheet.forEach((row, R) => {
+      row.forEach((cell, C) => {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
+
+        let isHeader = false;
+        if (row.length === 1 && C === 0) { // Section headers
+          isHeader = true;
+          if (ws['!merges']) ws['!merges'].push({ s: { r: R, c: 0 }, e: { r: R, c: 3 } });
+        } else if (dataForSheet[R-1] && dataForSheet[R-1].length === 1) { // Table headers
+          isHeader = true;
+        }
+
+        ws[cellRef].s = {
+          font: { bold: isHeader, sz: R < 3 ? (R === 0 ? 16 : 14) : 11 },
+          alignment: { vertical: "center", wrapText: true, horizontal: R < 3 ? "center" : "left" },
+          fill: { fgColor: { rgb: isHeader ? "F0F0F0" : "FFFFFF" } }
+        };
+        
+        if (typeof cell === 'number') {
+           ws[cellRef].t = 'n';
+           ws[cellRef].z = '#,##0.00';
+        }
+      })
+    });
+    
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    const uniqueFileName = `GWD_Report_${viewItem.fileNo.replace(/[/\\?*\[\]]/g, '-')}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    XLSX.writeFile(wb, uniqueFileName);
+
+    toast({ title: "Excel Exported", description: `Report for File No. ${viewItem.fileNo} downloaded.` });
+  };
+
 
   if (entriesLoadingHook || authIsLoading) {
     return (
@@ -364,9 +514,9 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               {/* Main Details Section */}
               <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Main Details:</h4>
               {renderDetail("File No", viewItem?.fileNo)}
-              {renderDetail("Name &amp; Address of Institution / Applicant", viewItem?.applicantName)}
+              {renderDetail("Name & Address of Institution / Applicant", viewItem?.applicantName)}
               {renderDetail("Phone No", viewItem?.phoneNo)}
-              {renderDetail("Type of Application", viewItem?.applicationType ? viewItem.applicationType.replace(/_/g, " ") : "N/A")}
+              {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
               {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}
               
               {/* Remittance Details Section */}
@@ -394,6 +544,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                     const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(site.purpose as SitePurpose);
                     const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(site.purpose as SitePurpose);
                     const isHPSPurpose = ['HPS', 'HPR'].includes(site.purpose as SitePurpose);
+                    const isARSPurpose = ['ARS'].includes(site.purpose as SitePurpose);
 
                     return (
                     <div key={index} className="mb-4 p-3 border rounded-md bg-secondary/30">
@@ -461,6 +612,17 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                         </>
                       )}
 
+                      {isARSPurpose && (
+                        <>
+                           <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
+                           {renderDetail("Number of Structures", site.arsNumberOfStructures)}
+                           {renderDetail("Storage Capacity (m3)", site.arsStorageCapacity)}
+                           {renderDetail("No. of Fillings", site.arsNumberOfFillings)}
+                           {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
+                           {renderDetail("Remarks", site.workRemarks)}
+                        </>
+                      )}
+
                       <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status &amp; Financials</h6>
                       {renderDetail("Estimate (₹)", site.estimateAmount)}
                       {renderDetail("TS Amount (₹)", site.tsAmount)}
@@ -509,6 +671,16 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
 
             </div>
           </ScrollArea>
+           <DialogFooter className="pt-4">
+              <Button variant="outline" onClick={handleExportSingleFileToExcel}>
+                <FileDown className="mr-2 h-4 w-4" /> Export Excel
+              </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 
