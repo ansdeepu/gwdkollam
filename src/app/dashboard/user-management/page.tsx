@@ -135,7 +135,7 @@ export default function UserManagementPage() {
               <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
           </Button>
           <Button onClick={() => setIsStaffFormOpen(true)}>
-              <UserPlus className="mr-2 h-5 w-5" /> Add New User
+              <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
           </Button>
         </div>
       </div>

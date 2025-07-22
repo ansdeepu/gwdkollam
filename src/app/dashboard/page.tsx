@@ -104,8 +104,8 @@ const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; 
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries: rawFileEntries, isLoading: entriesLoading } = useFileEntries();
-  const { staffMembers, isLoading: staffLoading } = useStaffMembers(); 
+  const { fileEntries: rawFileEntries, isLoading: entriesLoading } from useFileEntries();
+  const { staffMembers, isLoading: staffLoading } from useStaffMembers(); 
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
   
@@ -1267,7 +1267,7 @@ export default function DashboardPage() {
                   {currentMonthStats && currentMonthStats.ongoingData.length > 0 ? (
                     <ul className="space-y-3 text-sm">
                       {currentMonthStats.ongoingData.map((item, index) => (
-                        <li key={`ongoing-${index}`} className="border-b pb-2 last:border-b-0 flex flex-col gap-1">
+                        <li key={`ongoing-${index}`} className="flex flex-col gap-1 border-b pb-2 last:border-b-0">
                           <p className="font-medium text-foreground text-xs" title={`${item.purpose} - ${item.nameOfSite}`}>
                             {item.purpose} - {item.nameOfSite}
                           </p>
@@ -1329,12 +1329,12 @@ export default function DashboardPage() {
                     supervisorOngoingWorks.length > 0 ? (
                         <ul className="space-y-3 text-sm">
                             {supervisorOngoingWorks.map((item, index) => (
-                                <li key={`ongoing-supervisor-${index}`} className="border-b pb-2 last:border-b-0">
+                                <li key={`ongoing-supervisor-${index}`} className="flex flex-col gap-1 border-b pb-2 last:border-b-0">
                                     <p className="font-medium text-foreground text-xs" title={item.siteName}>Site: {item.siteName}</p>
                                     <p className="text-xs text-foreground" title={`${item.applicantName} - File: ${item.fileNo}`}>
                                         {item.applicantName} - File: {item.fileNo}
                                     </p>
-                                    <Badge variant="secondary" className="mt-1">{item.workStatus}</Badge>
+                                    <Badge variant="secondary" className="mt-1 self-start">{item.workStatus}</Badge>
                                 </li>
                             ))}
                         </ul>
@@ -1568,6 +1568,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
