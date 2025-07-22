@@ -503,18 +503,18 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
       </Card>
 
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] p-0 flex flex-col">
+          <DialogHeader className="p-6 pb-4">
             <DialogTitle>File Details: {viewItem?.fileNo}</DialogTitle>
             <DialogDescription>
               Comprehensive information for the selected file entry.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-grow pr-6 -mr-2">
+          <ScrollArea className="flex-1 px-6 pb-4">
              <Accordion
                 type="multiple"
                 defaultValue={['application-details', 'remittance-details', 'site-details', 'payment-details', 'final-status']}
-                className="w-full space-y-2 py-4"
+                className="w-full space-y-2"
               >
                   <AccordionItem value="application-details" className="border bg-secondary/30 rounded-lg">
                       <AccordionTrigger className="p-3 hover:no-underline text-foreground">
@@ -705,7 +705,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                   </AccordionItem>
               </Accordion>
           </ScrollArea>
-           <DialogFooter className="pt-4 mt-auto">
+           <DialogFooter className="p-6 pt-4 border-t">
               <Button variant="outline" onClick={handleExportSingleFileToExcel}>
                 <FileDown className="mr-2 h-4 w-4" /> Export Excel
               </Button>
