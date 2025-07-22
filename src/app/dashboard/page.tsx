@@ -303,7 +303,7 @@ export default function DashboardPage() {
     const now = new Date();
     const fileStatusesForPending: FileStatus[] = ["File Under Process"];
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
-    const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered"];
+    const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
     // --- SINGLE LOOP over fileEntries ---
     for (const entry of fileEntries) {
@@ -1559,6 +1559,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
