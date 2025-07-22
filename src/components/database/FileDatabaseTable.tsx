@@ -502,14 +502,14 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
       </Card>
 
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh]">
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>File Details: {viewItem?.fileNo}</DialogTitle>
             <DialogDescription>
               Detailed information for the selected file entry.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[70vh] pr-5">
+          <ScrollArea className="flex-1 pr-5 -mr-2">
             <div className="space-y-3 py-4">
               {/* Main Details Section */}
               <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Main Details:</h4>
@@ -671,7 +671,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
 
             </div>
           </ScrollArea>
-           <DialogFooter className="pt-4">
+           <DialogFooter className="pt-4 mt-auto">
               <Button variant="outline" onClick={handleExportSingleFileToExcel}>
                 <FileDown className="mr-2 h-4 w-4" /> Export Excel
               </Button>
