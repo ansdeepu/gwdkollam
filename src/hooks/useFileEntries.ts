@@ -200,6 +200,7 @@ export function useFileEntries(): FileEntriesState {
          const supervisorVisibleStatuses: SiteWorkStatus[] = [
           "Work Order Issued",
           "Work in Progress",
+          "Awaiting Dept. Rig",
         ];
         finalEntries = entriesFromFirestore.filter(entry => {
           if (!entry.siteDetails || entry.siteDetails.length === 0) {

@@ -473,7 +473,7 @@ export default function DashboardPage() {
   const supervisorOngoingWorks = useMemo(() => {
       if (!selectedSupervisorId || entriesLoading) return [];
       
-      const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+      const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
       const works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; }> = [];
 
       for (const entry of fileEntries) {
@@ -1560,6 +1560,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
