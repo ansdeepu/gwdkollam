@@ -506,15 +506,15 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
           <DialogHeader>
             <DialogTitle>File Details: {viewItem?.fileNo}</DialogTitle>
             <DialogDescription>
-              Detailed information for the selected file entry.
+              Comprehensive information for the selected file entry.
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="flex-1 pr-5 -mr-2">
             <div className="space-y-3 py-4">
               {/* Main Details Section */}
-              <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Main Details:</h4>
+              <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Main Details</h4>
               {renderDetail("File No", viewItem?.fileNo)}
-              {renderDetail("Name & Address of Institution / Applicant", viewItem?.applicantName)}
+              {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
               {renderDetail("Phone No", viewItem?.phoneNo)}
               {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
               {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}
@@ -522,9 +522,9 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               {/* Remittance Details Section */}
               {viewItem?.remittanceDetails && viewItem.remittanceDetails.length > 0 && (
                 <div className="pt-2">
-                  <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Remittance Details:</h4>
+                  <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Remittance Details</h4>
                   {viewItem.remittanceDetails.map((rd, index) => (
-                    <div key={index} className="mb-2 p-2 border rounded-md bg-secondary/20">
+                    <div key={`remit-${index}`} className="mb-2 p-2 border rounded-md bg-secondary/20">
                       <h5 className="text-sm font-semibold mb-1 text-muted-foreground">Remittance #{index + 1}</h5>
                       {renderDetail("Amount Remitted (₹)", rd.amountRemitted)}
                       {renderDetail("Date of Remittance", rd.dateOfRemittance)}
@@ -538,55 +538,57 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               {/* Site Details Section */}
               {viewItem?.siteDetails && viewItem.siteDetails.length > 0 && (
                 <div className="pt-4">
-                  <h4 className="text-md font-semibold text-primary mb-2 border-b pb-1">Site Details:</h4>
+                  <h4 className="text-md font-semibold text-primary mb-2 border-b pb-1">Site Details</h4>
                   {viewItem.siteDetails.map((site, index) => {
-                    const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(site.purpose as SitePurpose);
-                    const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(site.purpose as SitePurpose);
-                    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(site.purpose as SitePurpose);
-                    const isHPSPurpose = ['HPS', 'HPR'].includes(site.purpose as SitePurpose);
-                    const isARSPurpose = ['ARS'].includes(site.purpose as SitePurpose);
+                    const purpose = site.purpose as SitePurpose;
+                    const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
+                    const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
+                    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
+                    const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
+                    const isARSPurpose = ['ARS'].includes(purpose);
 
                     return (
-                    <div key={index} className="mb-4 p-3 border rounded-md bg-secondary/30">
-                      <h5 className="text-sm font-semibold mb-1.5">Site #{index + 1}: {site.nameOfSite}</h5>
+                    <div key={`site-${index}`} className="mb-4 p-3 border rounded-md bg-secondary/30">
+                      <h5 className="text-base font-semibold mb-1.5 text-foreground">Site #{index + 1}: {site.nameOfSite}</h5>
                       {renderDetail("Purpose", site.purpose)}
+                      {renderDetail("Latitude", site.latitude)}
+                      {renderDetail("Longitude", site.longitude)}
 
                       {isWellPurpose && (
                         <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Survey Details</h6>
+                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Survey Details (Recommended)</h6>
                           {renderDetail("Recommended Diameter (mm)", site.surveyRecommendedDiameter)}
-                          {renderDetail("TD (m)", site.surveyRecommendedTD)}
-                          {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyRecommendedOB)}
-                          {site.purpose === 'BWC' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
-                          {renderDetail("Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
-                          {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
-                          {site.purpose === 'FPW' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
-                          {renderDetail("Latitude", site.latitude)}
-                          {renderDetail("Longitude", site.longitude)}
-                          {renderDetail("Location", site.surveyLocation)}
-                          {renderDetail("Remarks", site.surveyRemarks)}
+                          {renderDetail("Recommended TD (m)", site.surveyRecommendedTD)}
+                          {purpose === 'BWC' && renderDetail("Recommended OB (m)", site.surveyRecommendedOB)}
+                          {purpose === 'BWC' && renderDetail("Recommended Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                          {purpose === 'TWC' && renderDetail("Recommended Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
+                          {purpose === 'TWC' && renderDetail("Recommended Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
+                          {purpose === 'TWC' && renderDetail("Recommended MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
+                          {purpose === 'FPW' && renderDetail("Recommended Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                          {renderDetail("Survey Location", site.surveyLocation)}
+                          {renderDetail("Survey Remarks", site.surveyRemarks)}
 
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Drilling Details (Actuals)</h6>
-                          {renderDetail("Diameter (mm)", site.diameter)}
-                          {renderDetail("TD (m)", site.totalDepth)}
-                          {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
-                          {renderDetail("Casing Pipe (m)", site.casingPipeUsed)}
-                          {site.purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
-                          {site.purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
-                          {renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
-                          {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
-                          {renderDetail("Discharge (LPH)", site.yieldDischarge)}
+                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Drilling Details (Actuals)</h6>
+                          {renderDetail("Actual Diameter (mm)", site.diameter)}
+                          {renderDetail("Actual TD (m)", site.totalDepth)}
+                          {purpose === 'BWC' && renderDetail("Actual OB (m)", site.surveyOB)}
+                          {renderDetail("Actual Casing Pipe (m)", site.casingPipeUsed)}
+                          {purpose === 'BWC' && renderDetail("Actual Inner Casing Pipe (m)", site.innerCasingPipe)}
+                          {purpose === 'BWC' && renderDetail("Actual Outer Casing Pipe (m)", site.outerCasingPipe)}
+                          {purpose === 'TWC' && renderDetail("Actual Plain Pipe (m)", site.surveyPlainPipe)}
+                          {purpose === 'TWC' && renderDetail("Actual Slotted Pipe (m)", site.surveySlottedPipe)}
+                          {purpose === 'TWC' && renderDetail("Actual MS Casing Pipe (m)", site.outerCasingPipe)}
+                          {renderDetail("Yield Discharge (LPH)", site.yieldDischarge)}
                           {renderDetail("Zone Details (m)", site.zoneDetails)}
-                          {renderDetail("Water Level (m)", site.waterLevel)}
+                          {renderDetail("Static Water Level (m)", site.waterLevel)}
+                          {renderDetail("Type of Rig Used", site.typeOfRig)}
                           {renderDetail("Drilling Remarks", site.drillingRemarks)}
                         </>
                       )}
                       
                       {isDevPurpose && (
                         <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Developing Details</h6>
+                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Developing Details</h6>
                           {renderDetail("Diameter (mm)", site.diameter)}
                           {renderDetail("TD (m)", site.totalDepth)}
                           {renderDetail("Discharge (LPH)", site.yieldDischarge)}
@@ -596,18 +598,18 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
 
                       {isMWSSSchemePurpose && (
                         <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
+                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Scheme Details</h6>
                           {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
                           {renderDetail("Pump Details", site.pumpDetails)}
-                          {renderDetail("Water Tank (L)", site.waterTankCapacity)}
-                          {renderDetail("Tap Connections", site.noOfTapConnections)}
-                          {renderDetail("Beneficiaries", site.noOfBeneficiary)}
+                          {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
+                          {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
+                          {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
                         </>
                       )}
                       
                       {isHPSPurpose && (
                         <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
+                          <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Scheme Details</h6>
                           {renderDetail("Depth Erected (m)", site.totalDepth)}
                           {renderDetail("Water Level (m)", site.waterLevel)}
                         </>
@@ -615,17 +617,19 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
 
                       {isARSPurpose && (
                         <>
-                           <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
+                           <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">ARS Scheme Details</h6>
                            {renderDetail("Number of Structures", site.arsNumberOfStructures)}
-                           {renderDetail("Storage Capacity (m3)", site.arsStorageCapacity)}
-                           {renderDetail("No. of Fillings", site.arsNumberOfFillings)}
-                           {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
-                           {renderDetail("Remarks", site.workRemarks)}
+                           {renderDetail("Storage Capacity (m³)", site.arsStorageCapacity)}
+                           {renderDetail("Number of Fillings", site.arsNumberOfFillings)}
+                           {renderDetail("Number of Beneficiaries", site.noOfBeneficiary)}
                         </>
                       )}
 
-                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status & Financials</h6>
-                      {renderDetail("Estimate (₹)", site.estimateAmount)}
+                      <h6 className="text-sm font-semibold text-primary mt-3 pt-2 border-t">Work & Financial Details</h6>
+                      {renderDetail("Site Conditions", site.siteConditions)}
+                      {renderDetail("Rig Accessibility", site.accessibleRig)}
+                      {renderDetail("Site Estimate (₹)", site.estimateAmount)}
+                      {renderDetail("Remitted for Site (₹)", site.remittedAmount)}
                       {renderDetail("TS Amount (₹)", site.tsAmount)}
                       {renderDetail("Tender No.", site.tenderNo)}
                       {renderDetail("Contractor Name", site.contractorName)}
@@ -642,9 +646,9 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               {/* Payment Details Section */}
               {viewItem?.paymentDetails && viewItem.paymentDetails.length > 0 && (
                 <div className="pt-2">
-                  <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Payment Details:</h4>
+                  <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Payment Details</h4>
                   {viewItem.paymentDetails.map((pd, index) => (
-                     <div key={index} className="mb-3 p-3 border rounded-md bg-accent/10">
+                     <div key={`payment-${index}`} className="mb-3 p-3 border rounded-md bg-accent/10">
                       <h5 className="text-sm font-semibold mb-1.5 text-muted-foreground">Payment #{index + 1}</h5>
                       {renderDetail("Date of Payment", pd.dateOfPayment)}
                       {renderDetail("Payment Account", pd.paymentAccount)}
@@ -665,11 +669,10 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
               
               {/* File Status & Remarks Section */}
               <div className="pt-2">
-                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status & Remarks:</h4>
+                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status & Final Remarks</h4>
                 {renderDetail("File Status", viewItem?.fileStatus)}
-                {renderDetail("Remarks", viewItem?.remarks)}
+                {renderDetail("Final Remarks", viewItem?.remarks)}
               </div>
-
             </div>
           </ScrollArea>
            <DialogFooter className="pt-4 mt-auto">
