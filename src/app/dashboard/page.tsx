@@ -104,8 +104,8 @@ const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; 
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries: rawFileEntries, isLoading: entriesLoading } from useFileEntries();
-  const { staffMembers, isLoading: staffLoading } from useStaffMembers(); 
+  const { fileEntries: rawFileEntries, isLoading: entriesLoading } = useFileEntries();
+  const { staffMembers, isLoading: staffLoading } = useStaffMembers(); 
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
   
@@ -1568,6 +1568,8 @@ export default function DashboardPage() {
     
 
     
+
+
 
 
 
