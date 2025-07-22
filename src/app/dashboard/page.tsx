@@ -56,9 +56,9 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers"; 
 import { Loader2 } from 'lucide-react';
 import { format, parseISO, isValid, formatDistanceToNow, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
-import { useAuth, type UserProfile } from '@/hooks/useAuth'; 
+import { useAuth, type UserProfile } from '@/hooks/useAuth';
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar';
 import { 
   Dialog, 
   DialogContent, 
@@ -1268,11 +1268,13 @@ export default function DashboardPage() {
                     <ul className="space-y-3 text-sm">
                       {currentMonthStats.ongoingData.map((item, index) => (
                         <li key={`ongoing-${index}`} className="border-b pb-2 last:border-b-0">
-                           <p className="font-medium text-foreground text-xs truncate" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite}</p>
+                          <div className="flex justify-between items-start">
+                            <p className="font-medium text-foreground text-xs truncate" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite}</p>
+                            {item.supervisorName && <span className="text-xs text-muted-foreground truncate pl-2" title={`Supervisor: ${item.supervisorName}`}>Sup: {item.supervisorName}</span>}
+                          </div>
                            <p className="text-xs text-foreground truncate" title={`${item.applicantName} - File: ${item.fileNo}`}>{item.applicantName} - File: {item.fileNo}</p>
                            <div className="flex items-center justify-between mt-1">
                             <Badge variant="secondary" className="text-xs">{item.workStatus}</Badge>
-                            {item.supervisorName && <span className="text-xs text-muted-foreground truncate" title={`Supervisor: ${item.supervisorName}`}>Sup: {item.supervisorName}</span>}
                           </div>
                         </li>
                       ))}
@@ -1293,7 +1295,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Supervisor's Ongoing Work ({selectedSupervisorId ? supervisorOngoingWorks.length : 0})
+                Supervisor's Ongoing Work ({selectedSupervisorId ? supervisorOngoingWorks.length : 'Total'})
               </CardTitle>
               <CardDescription>
                 Select a supervisor to view their assigned ongoing projects.
@@ -1560,3 +1562,5 @@ export default function DashboardPage() {
     
 
     
+
+
