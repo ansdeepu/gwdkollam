@@ -26,7 +26,7 @@ import {
   Megaphone,
   Cake,
   Bell,
-  CalendarCheck, // Added for new card
+  CalendarCheck,
 } from "lucide-react";
 import { 
   Card, 
@@ -46,7 +46,7 @@ import {
   type SiteDetailFormData,
   type SitePurpose,
   type Designation,
-} from '@/lib/schemas'; 
+} from '@/lib/schemas';
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -1568,6 +1568,8 @@ export default function DashboardPage() {
     
 
     
+
+
 
 
 
