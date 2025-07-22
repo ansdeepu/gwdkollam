@@ -580,6 +580,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                           {renderDetail("Discharge (LPH)", site.yieldDischarge)}
                           {renderDetail("Zone Details (m)", site.zoneDetails)}
                           {renderDetail("Water Level (m)", site.waterLevel)}
+                          {renderDetail("Drilling Remarks", site.drillingRemarks)}
                         </>
                       )}
                       
