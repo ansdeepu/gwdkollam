@@ -914,7 +914,7 @@ export default function DashboardPage() {
               <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[150px]">
                 <h4 className="text-sm font-semibold text-accent-foreground mb-2 flex items-center gap-2 shrink-0 p-2 bg-accent rounded-t-md text-white">
                   <Cake className="h-4 w-4" />
-                  Today's Birthdays 🎉
+                  Today's Birthdays 🎉 ({dashboardData.birthdayWishes.length})
                 </h4>
                 <div className="flex-1 marquee-v-container no-scrollbar bg-white p-2 rounded-b-md">
                   {dashboardData.birthdayWishes.length > 0 ? (
@@ -941,7 +941,7 @@ export default function DashboardPage() {
               <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[450px]">
                 <h4 className="text-sm font-semibold text-orange-600 mb-2 flex items-center gap-2 shrink-0 p-2 bg-orange-100 rounded-t-md">
                   <Megaphone className="h-4 w-4" />
-                  📢 Important Updates
+                  📢 Important Updates ({dashboardData.workAlerts.length})
                 </h4>
                 <div className="flex-1 marquee-v-container no-scrollbar bg-white p-2 rounded-b-md">
                   {dashboardData.workAlerts.length > 0 ? (
@@ -1568,6 +1568,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
