@@ -91,7 +91,7 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState("all"); 
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all"); 
   const [workCategoryFilter, setWorkCategoryFilter] = useState("all");
-  const [dateFilterType, setDateFilterType] = useState<"remittance" | "completion" | "payment" | undefined>(undefined);
+  const [dateFilterType, setDateFilterType] = useState<"remittance" | "completion" | "payment" | "all">( "all");
   
   const [applicationTypeFilter, setApplicationTypeFilter] = useState("all");
   const [typeOfRigFilter, setTypeOfRigFilter] = useState("all");
@@ -132,7 +132,7 @@ export default function ReportsPage() {
       });
     } else {
       // Regular filtering logic
-      if ((startDate || endDate) && dateFilterType) {
+      if ((startDate || endDate) && dateFilterType && dateFilterType !== 'all') {
         currentEntries = currentEntries.filter(entry => {
           let dateFoundInRange = false;
           const from = startDate ? startOfDay(startDate) : null;
@@ -193,7 +193,7 @@ export default function ReportsPage() {
       }
     }
 
-    const isFileStatusReport = statusFilter !== "all" && reportType !== "pendingDashboardTasks";
+    const isFileStatusReport = statusFilter !== "all" && reportType !== "pendingDashboardTasks" && workCategoryFilter === 'all' && serviceTypeFilter === 'all';
     
     const flattenedRows: FlattenedReportRow[] = [];
     currentEntries.forEach(entry => {
@@ -202,7 +202,7 @@ export default function ReportsPage() {
         ? format(new Date(fileFirstRemittanceDateStr), "dd/MM/yyyy")
         : "-";
 
-      if (isFileStatusReport && workCategoryFilter === 'all' && serviceTypeFilter === 'all') {
+      if (isFileStatusReport) {
         const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite || 'N/A').filter(Boolean).join(', ') || '-';
         const sitePurposes = entry.siteDetails?.map(sd => sd.purpose || 'N/A').filter(Boolean).join(', ') || '-';
         
@@ -342,7 +342,7 @@ export default function ReportsPage() {
     setStatusFilter("all");
     setServiceTypeFilter("all");
     setWorkCategoryFilter("all");
-    setDateFilterType(undefined);
+    setDateFilterType("all");
     setApplicationTypeFilter("all");
     setTypeOfRigFilter("all");
     
@@ -520,6 +520,7 @@ export default function ReportsPage() {
           <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
             <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">-- Clear Selection --</SelectItem>
               <SelectItem value="remittance">Date of Remittance</SelectItem>
               <SelectItem value="completion">Date of Completion</SelectItem>
               <SelectItem value="payment">Date of Payment</SelectItem>
