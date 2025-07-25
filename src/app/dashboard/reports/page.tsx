@@ -110,8 +110,6 @@ export default function ReportsPage() {
     setCurrentTime(format(now, 'hh:mm:ss a'));
   }, []);
 
-  const allWorkCategories = [...siteWorkStatusOptions];
-
   const applyFilters = useCallback(() => {
     let currentEntries = [...fileEntries];
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -162,11 +160,7 @@ export default function ReportsPage() {
       }
       
       if (workCategoryFilter !== "all") {
-        if (workCategoryFilter === "Total No. of Applications") {
-          currentEntries = currentEntries.filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
-        } else {
-          currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.workStatus === workCategoryFilter));
-        }
+        currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.workStatus === workCategoryFilter));
       }
       
       if (serviceTypeFilter !== "all") { 
@@ -248,7 +242,7 @@ export default function ReportsPage() {
           entry.siteDetails.forEach(site => {
             let siteMatchesGeneralFilters = true;
 
-            if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications" && site.workStatus !== workCategoryFilter) {
+            if (workCategoryFilter !== "all" && site.workStatus !== workCategoryFilter) {
               siteMatchesGeneralFilters = false;
             }
             if (serviceTypeFilter !== "all" && site.purpose !== serviceTypeFilter) {
@@ -270,7 +264,7 @@ export default function ReportsPage() {
         } else { 
           let includeFileWithoutSitesInGeneralReport = true;
           
-          if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications") {
+          if (workCategoryFilter !== "all") {
             includeFileWithoutSitesInGeneralReport = false;
           }
           if (serviceTypeFilter !== "all") {
@@ -303,10 +297,10 @@ export default function ReportsPage() {
     const serviceTypeFromQuery = searchParams.get("serviceType");
     
     setStatusFilter(statusFromQuery && fileStatusOptions.includes(statusFromQuery as any) ? statusFromQuery : "all");
-    setWorkCategoryFilter(workCategoryFromQuery && allWorkCategories.includes(workCategoryFromQuery as any) ? workCategoryFromQuery : "all");
+    setWorkCategoryFilter(workCategoryFromQuery && siteWorkStatusOptions.includes(workCategoryFromQuery as any) ? workCategoryFromQuery : "all");
     setServiceTypeFilter(serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all') ? serviceTypeFromQuery : "all");
 
-  }, [searchParams, entriesLoading, allWorkCategories]);
+  }, [searchParams, entriesLoading]);
 
 
   useEffect(() => {
@@ -523,7 +517,7 @@ export default function ReportsPage() {
               <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
               <SelectContent>
                   <SelectItem value="all">All Site Work Categories</SelectItem>
-                  {allWorkCategories.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
+                  {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
               </SelectContent>
           </Select>
           <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
@@ -719,6 +713,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
-
-
