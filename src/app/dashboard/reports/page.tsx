@@ -193,7 +193,7 @@ export default function ReportsPage() {
       }
     }
 
-    const isFileStatusReport = statusFilter !== "all" && reportType !== "pendingDashboardTasks" && workCategoryFilter === 'all' && serviceTypeFilter === 'all';
+    const isFileStatusReport = statusFilter !== "all" && reportType !== "pendingDashboardTasks";
     
     const flattenedRows: FlattenedReportRow[] = [];
     currentEntries.forEach(entry => {
@@ -202,7 +202,7 @@ export default function ReportsPage() {
         ? format(new Date(fileFirstRemittanceDateStr), "dd/MM/yyyy")
         : "-";
 
-      if (isFileStatusReport) {
+      if (isFileStatusReport && workCategoryFilter === 'all' && serviceTypeFilter === 'all') {
         const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite || 'N/A').filter(Boolean).join(', ') || '-';
         const sitePurposes = entry.siteDetails?.map(sd => sd.purpose || 'N/A').filter(Boolean).join(', ') || '-';
         
@@ -741,3 +741,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
