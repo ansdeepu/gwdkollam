@@ -110,7 +110,7 @@ export default function ReportsPage() {
     setCurrentTime(format(now, 'hh:mm:ss a'));
   }, []);
 
-  const allWorkCategories = [...siteWorkStatusOptions, "Total No. of Applications"];
+  const allWorkCategories = [...siteWorkStatusOptions];
 
   const applyFilters = useCallback(() => {
     let currentEntries = [...fileEntries];
@@ -719,5 +719,6 @@ export default function ReportsPage() {
     </div>
   );
 }
+
 
 
