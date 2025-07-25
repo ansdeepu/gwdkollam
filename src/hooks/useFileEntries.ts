@@ -30,8 +30,8 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
   const entry = { ...data } as any;
 
   // Helper to robustly convert any date-like value to a JS Date object
-  const toDate = (value: any): Date | undefined => {
-    if (!value) return undefined;
+  const toDate = (value: any): Date | undefined | null => {
+    if (!value) return null;
     if (value instanceof Date) return value; // Already a Date
     if (value instanceof Timestamp) return value.toDate(); // Firestore Timestamp
     // Plain object from serialization { seconds: ..., nanoseconds: ... }
@@ -43,25 +43,26 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
       const d = parseISO(value); // Use parseISO for reliability
       if (isValid(d)) return d;
     }
-    return undefined;
+    return null;
   };
-
 
   entry.createdAt = toDate(entry.createdAt);
   entry.updatedAt = toDate(entry.updatedAt);
 
   if (entry.remittanceDetails && Array.isArray(entry.remittanceDetails)) {
     entry.remittanceDetails = entry.remittanceDetails.map((rd: any) => {
+      if (!rd) return null; // Handle null entries in the array
       const detail = {...rd};
       detail.dateOfRemittance = toDate(rd.dateOfRemittance);
       if (detail.amountRemitted === null) detail.amountRemitted = undefined;
       if (detail.remittedAccount === null) detail.remittedAccount = undefined;
       return detail;
-    });
+    }).filter(Boolean); // Remove any null entries
   }
 
   if (entry.paymentDetails && Array.isArray(entry.paymentDetails)) {
     entry.paymentDetails = entry.paymentDetails.map((pd: any) => {
+       if (!pd) return null;
       const detail = {...pd};
       detail.dateOfPayment = toDate(pd.dateOfPayment);
       if (detail.paymentAccount === null) detail.paymentAccount = undefined;
@@ -74,11 +75,12 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
       if (detail.totalPaymentPerEntry === null) detail.totalPaymentPerEntry = undefined;
       if (detail.paymentRemarks === null) detail.paymentRemarks = "";
       return detail;
-    });
+    }).filter(Boolean);
   }
 
   if (entry.siteDetails && Array.isArray(entry.siteDetails)) {
     entry.siteDetails = entry.siteDetails.map((sd: any) => {
+      if (!sd) return null;
       const detail = {...sd};
       detail.dateOfCompletion = toDate(sd.dateOfCompletion);
       if (detail.tsAmount === null) detail.tsAmount = undefined;
@@ -88,7 +90,7 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
       if (detail.totalExpenditure === null) detail.totalExpenditure = undefined;
       if (detail.remittedAmount === null) detail.remittedAmount = undefined;
       return detail;
-    });
+    }).filter(Boolean);
   }
   
   if (entry.estimateAmount === null) entry.estimateAmount = undefined;

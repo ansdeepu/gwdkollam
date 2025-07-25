@@ -533,6 +533,29 @@ export default function ReportsPage() {
             </SelectContent>
           </Select>
           <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="xl:col-span-1"/>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
+            <SelectContent>
+                <SelectItem value="all">All File Statuses</SelectItem>
+                {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
+            </SelectContent>
+          </Select>
+          <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
+              <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
+              <SelectContent>
+                  <SelectItem value="all">All Site Work Categories</SelectItem>
+                  {allWorkCategories.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
+              </SelectContent>
+          </Select>
+          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+              <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
+              <SelectContent>
+                  <SelectItem value="all">All Site Service Types</SelectItem>
+                  {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
+              </SelectContent>
+          </Select>
+          
           <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
             <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
             <SelectContent>
