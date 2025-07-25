@@ -92,7 +92,7 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState("all"); 
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all"); 
   const [workCategoryFilter, setWorkCategoryFilter] = useState("all");
-  const [dateFilterType, setDateFilterType] = useState<"remittance" | "completion" | "payment" | "all">( "all");
+  const [dateFilterType, setDateFilterType] = useState<"remittance" | "completion" | "payment" | "all">("all");
   
   const [applicationTypeFilter, setApplicationTypeFilter] = useState("all");
   const [typeOfRigFilter, setTypeOfRigFilter] = useState("all");
@@ -113,7 +113,7 @@ export default function ReportsPage() {
   const applyFilters = useCallback(() => {
     let currentEntries = [...fileEntries];
     const lowerSearchTerm = searchTerm.toLowerCase();
-    
+
     const reportType = searchParams.get("reportType");
     const fileStatusesForPendingReport: FileStatus[] = ["File Under Process"];
     const siteWorkStatusesForPendingReport: SiteWorkStatus[] = [
@@ -125,90 +125,107 @@ export default function ReportsPage() {
         const isFileLevelPending = entry.fileStatus && fileStatusesForPendingReport.includes(entry.fileStatus as FileStatus);
         if (isFileLevelPending) return true;
         
-        // Only consider site statuses if file status itself isn't 'File Under Process'
         const isAnySiteLevelPending = entry.siteDetails?.some(sd => sd.workStatus && siteWorkStatusesForPendingReport.includes(sd.workStatus as SiteWorkStatus)) ?? false;
         return isAnySiteLevelPending;
       });
-    } else {
-      // Regular filtering logic
-      if ((startDate || endDate) && dateFilterType && dateFilterType !== 'all') {
-        currentEntries = currentEntries.filter(entry => {
-          let dateFoundInRange = false;
-          const from = startDate ? startOfDay(startDate) : null;
-          const to = endDate ? endOfDay(endDate) : null;
-
-          const checkDate = (targetDateValue: Date | string | null | undefined): boolean => {
-            if (!targetDateValue) return false;
-            const targetDate = targetDateValue instanceof Date ? targetDateValue : parseISO(targetDateValue as any);
-            if (!targetDate || !isValid(targetDate)) return false;
-            let isAfterFrom = true;
-            if (from) isAfterFrom = targetDate >= from;
-            let isBeforeTo = true;
-            if (to) isBeforeTo = targetDate <= to;
-            return isAfterFrom && isBeforeTo;
-          };
-
-          if (dateFilterType === "remittance") dateFoundInRange = entry.remittanceDetails?.some(rd => checkDate(rd.dateOfRemittance)) ?? false;
-          else if (dateFilterType === "completion") dateFoundInRange = entry.siteDetails?.some(sd => checkDate(sd.dateOfCompletion)) ?? false;
-          else if (dateFilterType === "payment") dateFoundInRange = entry.paymentDetails?.some(pd => checkDate(pd.dateOfPayment)) ?? false;
-          return dateFoundInRange;
-        });
-      }
-
-      if (statusFilter !== "all") {
-        currentEntries = currentEntries.filter(entry => entry.fileStatus === statusFilter);
-      }
-      
-      if (workCategoryFilter !== "all") {
-        currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.workStatus === workCategoryFilter));
-      }
-      
-      if (serviceTypeFilter !== "all") { 
-          currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.purpose === serviceTypeFilter));
-      }
-
-      if (applicationTypeFilter !== "all") currentEntries = currentEntries.filter(entry => entry.applicationType === applicationTypeFilter);
-      if (typeOfRigFilter !== "all") currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(site => site.typeOfRig === typeOfRigFilter));
-      
-      if (lowerSearchTerm) {
-        currentEntries = currentEntries.filter(entry => {
-          const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
-          const mainFieldsToSearch = [
-            entry.fileNo, entry.applicantName, entry.phoneNo, appTypeDisplay, entry.fileStatus, entry.remarks
-          ].filter(Boolean).map(val => String(val).toLowerCase());
-          if (mainFieldsToSearch.some(field => field.includes(lowerSearchTerm))) return true;
-          if (entry.siteDetails?.some(site => [
-              site.nameOfSite, site.accessibleRig, site.tenderNo, site.purpose, site.typeOfRig, site.contractorName, site.supervisorName, site.workStatus, site.workRemarks, site.zoneDetails, site.pumpDetails, site.waterTankCapacity,
-            ].filter(Boolean).map(val => String(val).toLowerCase()).some(field => field.includes(lowerSearchTerm))
-          )) return true;
-          if (entry.remittanceDetails?.some(rd => rd.remittedAccount?.toLowerCase().includes(lowerSearchTerm))) return true;
-          if (entry.paymentDetails?.some(pd => pd.paymentRemarks?.toLowerCase().includes(lowerSearchTerm))) return true;
-          return false;
-        });
-      }
     }
 
-    const isFileStatusReport = statusFilter !== "all" && reportType !== "pendingDashboardTasks";
+    // --- Start Filtering `currentEntries` based on all active filters ---
     
+    // Date Filters
+    if ((startDate || endDate) && dateFilterType && dateFilterType !== 'all') {
+      currentEntries = currentEntries.filter(entry => {
+        let dateFoundInRange = false;
+        const from = startDate ? startOfDay(startDate) : null;
+        const to = endDate ? endOfDay(endDate) : null;
+
+        const checkDate = (targetDateValue: Date | string | null | undefined): boolean => {
+          if (!targetDateValue) return false;
+          const targetDate = targetDateValue instanceof Date ? targetDateValue : parseISO(targetDateValue as any);
+          if (!targetDate || !isValid(targetDate)) return false;
+          let isAfterFrom = true;
+          if (from) isAfterFrom = targetDate >= from;
+          let isBeforeTo = true;
+          if (to) isBeforeTo = targetDate <= to;
+          return isAfterFrom && isBeforeTo;
+        };
+
+        if (dateFilterType === "remittance") dateFoundInRange = entry.remittanceDetails?.some(rd => checkDate(rd.dateOfRemittance)) ?? false;
+        else if (dateFilterType === "completion") dateFoundInRange = entry.siteDetails?.some(sd => checkDate(sd.dateOfCompletion)) ?? false;
+        else if (dateFilterType === "payment") dateFoundInRange = entry.paymentDetails?.some(pd => checkDate(pd.dateOfPayment)) ?? false;
+        return dateFoundInRange;
+      });
+    }
+
+    // Dropdown Filters
+    if (statusFilter !== "all") {
+      currentEntries = currentEntries.filter(entry => entry.fileStatus === statusFilter);
+    }
+    if (applicationTypeFilter !== "all") {
+      currentEntries = currentEntries.filter(entry => entry.applicationType === applicationTypeFilter);
+    }
+    
+    // Site-specific dropdowns need to filter the whole entry if any site matches
+    if (workCategoryFilter !== "all") {
+      currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.workStatus === workCategoryFilter));
+    }
+    if (serviceTypeFilter !== "all") { 
+        currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.purpose === serviceTypeFilter));
+    }
+    if (typeOfRigFilter !== "all") {
+      currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(site => site.typeOfRig === typeOfRigFilter));
+    }
+    
+    // Global Search Term
+    if (lowerSearchTerm) {
+      currentEntries = currentEntries.filter(entry => {
+        const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
+        const mainFieldsToSearch = [
+          entry.fileNo, entry.applicantName, entry.phoneNo, appTypeDisplay, entry.fileStatus, entry.remarks
+        ].filter(Boolean).map(val => String(val).toLowerCase());
+        if (mainFieldsToSearch.some(field => field.includes(lowerSearchTerm))) return true;
+        if (entry.siteDetails?.some(site => [
+            site.nameOfSite, site.accessibleRig, site.tenderNo, site.purpose, site.typeOfRig, site.contractorName, site.supervisorName, site.workStatus, site.workRemarks, site.zoneDetails, site.pumpDetails, site.waterTankCapacity,
+          ].filter(Boolean).map(val => String(val).toLowerCase()).some(field => field.includes(lowerSearchTerm))
+        )) return true;
+        if (entry.remittanceDetails?.some(rd => rd.remittedAccount?.toLowerCase().includes(lowerSearchTerm))) return true;
+        if (entry.paymentDetails?.some(pd => pd.paymentRemarks?.toLowerCase().includes(lowerSearchTerm))) return true;
+        return false;
+      });
+    }
+
+    // --- End Filtering `currentEntries` ---
+
+
+    // --- Start Flattening logic ---
     const flattenedRows: FlattenedReportRow[] = [];
+    const isSiteLevelFilterActive = workCategoryFilter !== "all" || serviceTypeFilter !== "all" || typeOfRigFilter !== "all";
+
     currentEntries.forEach(entry => {
       const fileFirstRemittanceDateStr = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const fileFirstRemittanceDate = fileFirstRemittanceDateStr && isValid(new Date(fileFirstRemittanceDateStr))
         ? format(new Date(fileFirstRemittanceDateStr), "dd/MM/yyyy")
         : "-";
 
-      if (isFileStatusReport && workCategoryFilter === 'all' && serviceTypeFilter === 'all') {
-        const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite || 'N/A').filter(Boolean).join(', ') || '-';
-        const sitePurposes = entry.siteDetails?.map(sd => sd.purpose || 'N/A').filter(Boolean).join(', ') || '-';
-        
-        flattenedRows.push({
-          fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
-          siteName: siteNames, sitePurpose: sitePurposes,
-          siteWorkStatus: "-", 
-          siteTotalExpenditure: "-"
+      // If a site-level filter is active, we must expand to show matching sites.
+      if (isSiteLevelFilterActive) {
+        entry.siteDetails?.forEach(site => {
+          // Check if this specific site meets the active site-level filters
+          const workCategoryMatch = workCategoryFilter === "all" || site.workStatus === workCategoryFilter;
+          const serviceTypeMatch = serviceTypeFilter === "all" || site.purpose === serviceTypeFilter;
+          const rigTypeMatch = typeOfRigFilter === "all" || site.typeOfRig === typeOfRigFilter;
+
+          if (workCategoryMatch && serviceTypeMatch && rigTypeMatch) {
+            flattenedRows.push({
+              fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
+              siteName: site.nameOfSite || "-", sitePurpose: site.purpose || "-", siteWorkStatus: site.workStatus || "-",
+              siteTotalExpenditure: site.totalExpenditure?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00",
+            });
+          }
         });
-        
-      } else if (reportType === "pendingDashboardTasks") {
+      } 
+      // If a pending report is active, expand sites to show which ones are pending.
+      else if (reportType === "pendingDashboardTasks") {
         const isFileLevelPending = entry.fileStatus && fileStatusesForPendingReport.includes(entry.fileStatus as FileStatus);
 
         if (isFileLevelPending) {
@@ -237,52 +254,25 @@ export default function ReportsPage() {
             }
           });
         }
-      } else { 
-        if (entry.siteDetails && entry.siteDetails.length > 0) {
-          entry.siteDetails.forEach(site => {
-            let siteMatchesGeneralFilters = true;
+      }
+      // Otherwise (only file-level or search filters active), show one row per file, aggregating site info.
+      else { 
+        const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite || 'N/A').filter(Boolean).join(', ') || '-';
+        const sitePurposes = entry.siteDetails?.map(sd => sd.purpose || 'N/A').filter(Boolean).join(', ') || '-';
+        const siteWorkStatuses = entry.siteDetails?.map(sd => sd.workStatus || 'N/A').filter(Boolean).join(', ') || '-';
+        const siteTotalExpenditure = entry.siteDetails?.reduce((acc, site) => acc + (Number(site.totalExpenditure) || 0), 0) ?? 0;
 
-            if (workCategoryFilter !== "all" && site.workStatus !== workCategoryFilter) {
-              siteMatchesGeneralFilters = false;
-            }
-            if (serviceTypeFilter !== "all" && site.purpose !== serviceTypeFilter) {
-              siteMatchesGeneralFilters = false;
-            }
-            
-            if (typeOfRigFilter !== "all" && site.typeOfRig !== typeOfRigFilter) {
-              siteMatchesGeneralFilters = false;
-            }
-
-            if (siteMatchesGeneralFilters) {
-              flattenedRows.push({
-                fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
-                siteName: site.nameOfSite || "-", sitePurpose: site.purpose || "-", siteWorkStatus: site.workStatus || "-",
-                siteTotalExpenditure: site.totalExpenditure?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00",
-              });
-            }
-          });
-        } else { 
-          let includeFileWithoutSitesInGeneralReport = true;
-          
-          if (workCategoryFilter !== "all") {
-            includeFileWithoutSitesInGeneralReport = false;
-          }
-          if (serviceTypeFilter !== "all") {
-            includeFileWithoutSitesInGeneralReport = false;
-          }
-          if (typeOfRigFilter !== "all") {
-            includeFileWithoutSitesInGeneralReport = false;
-          }
-          
-          if(includeFileWithoutSitesInGeneralReport) {
-              flattenedRows.push({
-                  fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
-                  siteName: "-", sitePurpose: "-", siteWorkStatus: "-", siteTotalExpenditure: "0.00",
-              });
-          }
-        }
+        flattenedRows.push({
+          fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
+          siteName: siteNames, 
+          sitePurpose: sitePurposes,
+          siteWorkStatus: siteWorkStatuses, 
+          siteTotalExpenditure: siteTotalExpenditure.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        });
       }
     });
+    // --- End Flattening logic ---
+    
     setFilteredReportRows(flattenedRows);
   }, [
     fileEntries, searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
@@ -713,3 +703,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
