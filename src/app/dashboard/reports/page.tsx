@@ -158,17 +158,18 @@ export default function ReportsPage() {
 
       if (statusFilter !== "all") {
         currentEntries = currentEntries.filter(entry => entry.fileStatus === statusFilter);
-      } else {
-        // Only apply workCategory and serviceType filters if statusFilter is 'all'
-        if (workCategoryFilter !== "all") {
-          if (workCategoryFilter === "Total No. of Applications") {
-            if(serviceTypeFilter !== "all") currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.purpose === serviceTypeFilter));
-          } else { 
-            currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.workStatus === workCategoryFilter && (serviceTypeFilter === "all" || sd.purpose === serviceTypeFilter)));
-          }
-        } else if (serviceTypeFilter !== "all") { 
-            currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.purpose === serviceTypeFilter));
+      }
+      
+      if (workCategoryFilter !== "all") {
+        if (workCategoryFilter === "Total No. of Applications") {
+          currentEntries = currentEntries.filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+        } else {
+          currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.workStatus === workCategoryFilter));
         }
+      }
+      
+      if (serviceTypeFilter !== "all") { 
+          currentEntries = currentEntries.filter(entry => entry.siteDetails?.some(sd => sd.purpose === serviceTypeFilter));
       }
 
       if (applicationTypeFilter !== "all") currentEntries = currentEntries.filter(entry => entry.applicationType === applicationTypeFilter);
@@ -247,12 +248,17 @@ export default function ReportsPage() {
           entry.siteDetails.forEach(site => {
             let siteMatchesGeneralFilters = true;
 
-            if (statusFilter === "all") {
-              if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications" && site.workStatus !== workCategoryFilter) siteMatchesGeneralFilters = false;
-              if (serviceTypeFilter !== "all" && site.purpose !== serviceTypeFilter) siteMatchesGeneralFilters = false;
+            // Apply workCategory and serviceType filters at the site level
+            if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications" && site.workStatus !== workCategoryFilter) {
+              siteMatchesGeneralFilters = false;
+            }
+            if (serviceTypeFilter !== "all" && site.purpose !== serviceTypeFilter) {
+              siteMatchesGeneralFilters = false;
             }
             
-            if (typeOfRigFilter !== "all" && site.typeOfRig !== typeOfRigFilter) siteMatchesGeneralFilters = false;
+            if (typeOfRigFilter !== "all" && site.typeOfRig !== typeOfRigFilter) {
+              siteMatchesGeneralFilters = false;
+            }
 
             if (siteMatchesGeneralFilters) {
               flattenedRows.push({
@@ -265,11 +271,15 @@ export default function ReportsPage() {
         } else { 
           let includeFileWithoutSitesInGeneralReport = true;
           
-          if (statusFilter === "all") {
-            if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications") includeFileWithoutSitesInGeneralReport = false;
-            if (serviceTypeFilter !== "all") includeFileWithoutSitesInGeneralReport = false;
+          if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications") {
+            includeFileWithoutSitesInGeneralReport = false;
           }
-          if (typeOfRigFilter !== "all") includeFileWithoutSitesInGeneralReport = false;
+          if (serviceTypeFilter !== "all") {
+            includeFileWithoutSitesInGeneralReport = false;
+          }
+          if (typeOfRigFilter !== "all") {
+            includeFileWithoutSitesInGeneralReport = false;
+          }
           
           if(includeFileWithoutSitesInGeneralReport) {
               flattenedRows.push({
@@ -297,25 +307,18 @@ export default function ReportsPage() {
     if (reportTypeFromQuery === "pendingDashboardTasks") {
       // For this special report, we might want to clear other filters
     } else {
-      // Sync status filter from URL. If invalid or missing, default to "all".
       const newStatusFilter = statusFromQuery && fileStatusOptions.includes(statusFromQuery as any)
           ? statusFromQuery
           : "all";
       setStatusFilter(newStatusFilter);
       
-      // Sync work category filter from URL.
-      // If a file status is present, ignore work category to prevent conflicts.
       setWorkCategoryFilter(
-        newStatusFilter !== 'all' ? 'all' :
         (workCategoryFromQuery && allWorkCategories.includes(workCategoryFromQuery as any)
           ? workCategoryFromQuery
           : "all")
       );
 
-      // Sync service type filter from URL.
-      // If a file status is present, ignore service type to prevent conflicts.
       setServiceTypeFilter(
-        newStatusFilter !== 'all' ? 'all' :
         (serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all')
           ? serviceTypeFromQuery
           : "all")
@@ -516,7 +519,7 @@ export default function ReportsPage() {
               <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={startDate ? { before: startDate } : undefined} initialFocus />
             </PopoverContent>
           </Popover>
-          <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as "remittance" | "completion" | "payment")} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+          <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
             <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="remittance">Date of Remittance</SelectItem>
@@ -532,14 +535,14 @@ export default function ReportsPage() {
               {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks" || statusFilter !== 'all'}>
+          <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
             <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Site Work Categories</SelectItem>
               {allWorkCategories.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks" || statusFilter !== 'all'}>
+          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
             <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Site Service Types</SelectItem>
