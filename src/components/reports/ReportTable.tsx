@@ -61,7 +61,7 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
   return (
     <TooltipProvider>
       <Card className="shadow-lg">
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
               <Table>
               <TableHeader>
                   <TableRow>
