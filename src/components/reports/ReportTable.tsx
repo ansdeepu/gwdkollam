@@ -1,4 +1,3 @@
-
 // src/components/reports/ReportTable.tsx
 "use client";
 
@@ -62,7 +61,7 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
     <TooltipProvider>
       <Card className="shadow-lg">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div>
               <Table>
               <TableHeader>
                   <TableRow>
@@ -74,10 +73,6 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
                   <TableHead className="w-[150px] text-center text-xs">File<br />Status</TableHead>
                   <TableHead className="text-center text-xs max-w-[120px] whitespace-normal break-words">Site<br />Purpose</TableHead>
                   <TableHead className="text-center text-xs max-w-[180px] whitespace-normal break-words">Site Work<br />Status</TableHead>
-                  <TableHead className="w-[120px] text-center text-xs">Site Date of<br />Completion</TableHead>
-                  <TableHead className="text-center text-xs">Site Rig<br />Type</TableHead>
-                  <TableHead className="text-center text-xs max-w-[130px] whitespace-normal break-words">Site Contractor<br />Name</TableHead>
-                  <TableHead className="text-center text-xs max-w-[130px] whitespace-normal break-words">Site Supervisor<br />Name</TableHead>
                   <TableHead className="text-center text-xs w-[130px]">Site Total<br />Expenditure</TableHead>
                   <TableHead className="text-center text-xs w-[80px]">Actions</TableHead>
                   </TableRow>
@@ -97,10 +92,6 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
                           <TableCell className="text-xs text-center">{row.fileStatus}</TableCell>
                           <TableCell className="text-xs text-center max-w-[120px] whitespace-normal break-words">{row.sitePurpose}</TableCell>
                           <TableCell className="text-xs text-center max-w-[180px] whitespace-normal break-words">{row.siteWorkStatus}</TableCell>
-                          <TableCell className="text-xs text-center">{row.siteCompletionDate}</TableCell>
-                          <TableCell className="text-xs text-center">{row.siteRigType}</TableCell>
-                          <TableCell className="text-xs text-center max-w-[130px] whitespace-normal break-words">{row.siteContractorName}</TableCell>
-                          <TableCell className="text-xs text-center max-w-[130px] whitespace-normal break-words">{row.siteSupervisorName}</TableCell>
                           <TableCell className="text-right font-medium text-xs">{row.siteTotalExpenditure}</TableCell>
                           <TableCell className="text-center">
                             <Tooltip>

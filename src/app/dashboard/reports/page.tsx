@@ -47,10 +47,6 @@ export interface FlattenedReportRow {
   siteName: string; 
   sitePurpose: string; 
   siteWorkStatus: string; 
-  siteCompletionDate: string; 
-  siteRigType: string; 
-  siteContractorName: string; 
-  siteSupervisorName: string;
   siteTotalExpenditure: string; 
 }
 
@@ -213,8 +209,8 @@ export default function ReportsPage() {
         flattenedRows.push({
           fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
           siteName: siteNames, sitePurpose: sitePurposes,
-          siteWorkStatus: "-", siteCompletionDate: "-", siteRigType: "-",
-          siteContractorName: "-", siteSupervisorName: "-", siteTotalExpenditure: "-"
+          siteWorkStatus: "-", 
+          siteTotalExpenditure: "-"
         });
         
       } else if (reportType === "pendingDashboardTasks") {
@@ -226,16 +222,13 @@ export default function ReportsPage() {
               flattenedRows.push({
                 fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
                 siteName: site.nameOfSite || "-", sitePurpose: site.purpose || "-", siteWorkStatus: site.workStatus || "-",
-                siteCompletionDate: site.dateOfCompletion && isValid(new Date(site.dateOfCompletion)) ? format(new Date(site.dateOfCompletion), "dd/MM/yyyy") : "-",
-                siteRigType: site.typeOfRig || "-", siteContractorName: site.contractorName || "-",
-                siteSupervisorName: site.supervisorName || "-",
                 siteTotalExpenditure: site.totalExpenditure?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00",
               });
             });
           } else {
             flattenedRows.push({
               fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
-              siteName: "-", sitePurpose: "-", siteWorkStatus: "-", siteCompletionDate: "-", siteRigType: "-", siteContractorName: "-", siteSupervisorName: "-", siteTotalExpenditure: "0.00",
+              siteName: "-", sitePurpose: "-", siteWorkStatus: "-", siteTotalExpenditure: "0.00",
             });
           }
         } else {
@@ -244,9 +237,6 @@ export default function ReportsPage() {
               flattenedRows.push({
                 fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
                 siteName: site.nameOfSite || "-", sitePurpose: site.purpose || "-", siteWorkStatus: site.workStatus || "-",
-                siteCompletionDate: site.dateOfCompletion && isValid(new Date(site.dateOfCompletion)) ? format(new Date(site.dateOfCompletion), "dd/MM/yyyy") : "-",
-                siteRigType: site.typeOfRig || "-", siteContractorName: site.contractorName || "-",
-                siteSupervisorName: site.supervisorName || "-",
                 siteTotalExpenditure: site.totalExpenditure?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00",
               });
             }
@@ -268,9 +258,6 @@ export default function ReportsPage() {
               flattenedRows.push({
                 fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
                 siteName: site.nameOfSite || "-", sitePurpose: site.purpose || "-", siteWorkStatus: site.workStatus || "-",
-                siteCompletionDate: site.dateOfCompletion && isValid(new Date(site.dateOfCompletion)) ? format(new Date(site.dateOfCompletion), "dd/MM/yyyy") : "-",
-                siteRigType: site.typeOfRig || "-", siteContractorName: site.contractorName || "-",
-                siteSupervisorName: site.supervisorName || "-",
                 siteTotalExpenditure: site.totalExpenditure?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00",
               });
             }
@@ -287,7 +274,7 @@ export default function ReportsPage() {
           if(includeFileWithoutSitesInGeneralReport) {
               flattenedRows.push({
                   fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
-                  siteName: "-", sitePurpose: "-", siteWorkStatus: "-", siteCompletionDate: "-", siteRigType: "-", siteContractorName: "-", siteSupervisorName: "-", siteTotalExpenditure: "0.00",
+                  siteName: "-", sitePurpose: "-", siteWorkStatus: "-", siteTotalExpenditure: "0.00",
               });
           }
         }
@@ -374,11 +361,10 @@ export default function ReportsPage() {
 
   const handleExportExcel = () => {
     const reportTitle = "Site-Wise Report";
-    const columnLabels = [ "File No", "Applicant Name", "Site Name", "File First Remittance Date", "File Status", "Site Purpose", "Site Work Status", "Site Completion Date", "Site Rig Type", "Site Contractor Name", "Site Supervisor Name", "Site Total Expenditure (₹)" ];
+    const columnLabels = [ "File No", "Applicant Name", "Site Name", "File First Remittance Date", "File Status", "Site Purpose", "Site Work Status", "Site Total Expenditure (₹)" ];
     const dataRows = filteredReportRows.map(row => [
         row.fileNo, row.applicantName, row.siteName, row.fileFirstRemittanceDate, row.fileStatus,
-        row.sitePurpose, row.siteWorkStatus, row.siteCompletionDate, row.siteRigType, row.siteContractorName,
-        row.siteSupervisorName, row.siteTotalExpenditure
+        row.sitePurpose, row.siteWorkStatus, row.siteTotalExpenditure
     ]);
     const sheetName = "SiteWiseReport";
     const fileNamePrefix = "gwd_site_wise_report";
