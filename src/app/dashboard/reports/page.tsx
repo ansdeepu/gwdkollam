@@ -196,7 +196,8 @@ export default function ReportsPage() {
       }
     }
 
-
+    const isFileStatusReport = statusFilter !== "all" && workCategoryFilter === "all" && serviceTypeFilter === "all" && reportType !== "pendingDashboardTasks";
+    
     const flattenedRows: FlattenedReportRow[] = [];
     currentEntries.forEach(entry => {
       const fileFirstRemittanceDateStr = entry.remittanceDetails?.[0]?.dateOfRemittance;
@@ -204,11 +205,22 @@ export default function ReportsPage() {
         ? format(new Date(fileFirstRemittanceDateStr), "dd/MM/yyyy")
         : "-";
 
-      if (reportType === "pendingDashboardTasks") {
+      if (isFileStatusReport) {
+        // Create one row per file, summarizing site data
+        const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite || 'N/A').filter(Boolean).join(', ') || '-';
+        const sitePurposes = entry.siteDetails?.map(sd => sd.purpose || 'N/A').filter(Boolean).join(', ') || '-';
+        
+        flattenedRows.push({
+          fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
+          siteName: siteNames, sitePurpose: sitePurposes,
+          siteWorkStatus: "-", siteCompletionDate: "-", siteRigType: "-",
+          siteContractorName: "-", siteSupervisorName: "-", siteTotalExpenditure: "-"
+        });
+        
+      } else if (reportType === "pendingDashboardTasks") {
         const isFileLevelPending = entry.fileStatus && fileStatusesForPendingReport.includes(entry.fileStatus as FileStatus);
 
         if (isFileLevelPending) {
-          // If file status is "File Under Process", include all its sites or a single row if no sites.
           if (entry.siteDetails && entry.siteDetails.length > 0) {
             entry.siteDetails.forEach(site => {
               flattenedRows.push({
@@ -227,8 +239,6 @@ export default function ReportsPage() {
             });
           }
         } else {
-          // File is not "File Under Process", so it was included due to specific site(s) being pending.
-          // Only include those specific pending sites.
           entry.siteDetails?.forEach(site => {
             if (site.workStatus && siteWorkStatusesForPendingReport.includes(site.workStatus as SiteWorkStatus)) {
               flattenedRows.push({
@@ -247,7 +257,7 @@ export default function ReportsPage() {
           entry.siteDetails.forEach(site => {
             let siteMatchesGeneralFilters = true;
 
-            if (statusFilter === "all") { // Only check these if file status is not the primary filter
+            if (statusFilter === "all") {
               if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications" && site.workStatus !== workCategoryFilter) siteMatchesGeneralFilters = false;
               if (serviceTypeFilter !== "all" && site.purpose !== serviceTypeFilter) siteMatchesGeneralFilters = false;
             }
@@ -268,7 +278,7 @@ export default function ReportsPage() {
         } else { 
           let includeFileWithoutSitesInGeneralReport = true;
           
-          if (statusFilter === "all") { // Only check these if file status is not the primary filter
+          if (statusFilter === "all") {
             if (workCategoryFilter !== "all" && workCategoryFilter !== "Total No. of Applications") includeFileWithoutSitesInGeneralReport = false;
             if (serviceTypeFilter !== "all") includeFileWithoutSitesInGeneralReport = false;
           }
