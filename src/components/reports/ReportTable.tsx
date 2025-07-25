@@ -24,7 +24,7 @@ interface ReportTableProps {
   onViewDetailsClick: (fileNo: string) => void; 
 }
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 50;
 
 export default function ReportTable({ data = [], onViewDetailsClick }: ReportTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -61,7 +61,7 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
   return (
     <TooltipProvider>
       <Card className="shadow-lg">
-          <CardContent className="p-0 overflow-x-auto">
+          <CardContent className="p-0">
               <Table>
               <TableHeader>
                   <TableRow>
