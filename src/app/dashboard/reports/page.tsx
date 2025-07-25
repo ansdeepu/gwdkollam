@@ -196,10 +196,10 @@ export default function ReportsPage() {
 
     // --- End Filtering `currentEntries` ---
 
-
     // --- Start Flattening logic ---
     const flattenedRows: FlattenedReportRow[] = [];
-    const isSiteLevelFilterActive = workCategoryFilter !== "all" || serviceTypeFilter !== "all" || typeOfRigFilter !== "all";
+    const isFileLevelFilterActive = statusFilter !== "all" || (dateFilterType !== "all" && (!!startDate || !!endDate));
+    const isSiteLevelFilterActive = workCategoryFilter !== "all" || serviceTypeFilter !== "all" || typeOfRigFilter !== "all" || applicationTypeFilter !== "all";
 
     currentEntries.forEach(entry => {
       const fileFirstRemittanceDateStr = entry.remittanceDetails?.[0]?.dateOfRemittance;
@@ -214,8 +214,10 @@ export default function ReportsPage() {
           const workCategoryMatch = workCategoryFilter === "all" || site.workStatus === workCategoryFilter;
           const serviceTypeMatch = serviceTypeFilter === "all" || site.purpose === serviceTypeFilter;
           const rigTypeMatch = typeOfRigFilter === "all" || site.typeOfRig === typeOfRigFilter;
+          const appTypeMatch = applicationTypeFilter === "all" || entry.applicationType === applicationTypeFilter;
 
-          if (workCategoryMatch && serviceTypeMatch && rigTypeMatch) {
+
+          if (workCategoryMatch && serviceTypeMatch && rigTypeMatch && appTypeMatch) {
             flattenedRows.push({
               fileNo: entry.fileNo || "-", applicantName: entry.applicantName || "-", fileFirstRemittanceDate, fileStatus: entry.fileStatus || "-",
               siteName: site.nameOfSite || "-", sitePurpose: site.purpose || "-", siteWorkStatus: site.workStatus || "-",
@@ -703,4 +705,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
