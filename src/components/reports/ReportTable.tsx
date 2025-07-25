@@ -62,9 +62,11 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
     <TooltipProvider>
       <Card className="shadow-lg">
           <CardContent className="p-0">
+            <div className="overflow-x-auto">
               <Table>
               <TableHeader>
                   <TableRow>
+                  <TableHead className="w-[80px] text-center text-xs">Sl.<br/>No.</TableHead>
                   <TableHead className="w-[100px] text-center text-xs">File<br />No.</TableHead>
                   <TableHead className="text-center text-xs max-w-[150px] whitespace-normal break-words">Applicant<br />Name</TableHead>
                   <TableHead className="text-center text-xs max-w-[180px] whitespace-normal break-words">Site<br />Name</TableHead>
@@ -82,11 +84,25 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
               </TableHeader>
               <TableBody>
                   {paginatedData.map((row, index) => (
-                      <TableRow key={index}><TableCell className="font-medium text-xs text-center">
+                      <TableRow key={index}>
+                          <TableCell className="text-xs text-center">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                          <TableCell className="font-medium text-xs text-center">
                             {row.fileNo}
-                          </TableCell><TableCell className="text-xs text-center max-w-[150px] whitespace-normal break-words">{row.applicantName}</TableCell><TableCell className="text-xs text-center max-w-[180px] whitespace-normal break-words">
+                          </TableCell>
+                          <TableCell className="text-xs text-left max-w-[150px] whitespace-normal break-words">{row.applicantName}</TableCell>
+                          <TableCell className="text-xs text-left max-w-[180px] whitespace-normal break-words">
                             {row.siteName}
-                          </TableCell><TableCell className="text-xs text-center">{row.fileFirstRemittanceDate}</TableCell><TableCell className="text-xs text-center">{row.fileStatus}</TableCell><TableCell className="text-xs text-center max-w-[120px] whitespace-normal break-words">{row.sitePurpose}</TableCell><TableCell className="text-xs text-center max-w-[180px] whitespace-normal break-words">{row.siteWorkStatus}</TableCell><TableCell className="text-xs text-center">{row.siteCompletionDate}</TableCell><TableCell className="text-xs text-center">{row.siteRigType}</TableCell><TableCell className="text-xs text-center max-w-[130px] whitespace-normal break-words">{row.siteContractorName}</TableCell><TableCell className="text-xs text-center max-w-[130px] whitespace-normal break-words">{row.siteSupervisorName}</TableCell><TableCell className="text-right font-medium text-xs">{row.siteTotalExpenditure}</TableCell><TableCell className="text-center">
+                          </TableCell>
+                          <TableCell className="text-xs text-center">{row.fileFirstRemittanceDate}</TableCell>
+                          <TableCell className="text-xs text-center">{row.fileStatus}</TableCell>
+                          <TableCell className="text-xs text-center max-w-[120px] whitespace-normal break-words">{row.sitePurpose}</TableCell>
+                          <TableCell className="text-xs text-center max-w-[180px] whitespace-normal break-words">{row.siteWorkStatus}</TableCell>
+                          <TableCell className="text-xs text-center">{row.siteCompletionDate}</TableCell>
+                          <TableCell className="text-xs text-center">{row.siteRigType}</TableCell>
+                          <TableCell className="text-xs text-center max-w-[130px] whitespace-normal break-words">{row.siteContractorName}</TableCell>
+                          <TableCell className="text-xs text-center max-w-[130px] whitespace-normal break-words">{row.siteSupervisorName}</TableCell>
+                          <TableCell className="text-right font-medium text-xs">{row.siteTotalExpenditure}</TableCell>
+                          <TableCell className="text-center">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" onClick={() => handleViewClick(row.fileNo)}>
@@ -98,10 +114,12 @@ export default function ReportTable({ data = [], onViewDetailsClick }: ReportTab
                                 <p>View File Details</p>
                               </TooltipContent>
                             </Tooltip>
-                          </TableCell></TableRow>
+                          </TableCell>
+                      </TableRow>
                     ))}
               </TableBody>
               </Table>
+            </div>
           </CardContent>
           <CardFooter className="p-4 border-t no-print flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground">
