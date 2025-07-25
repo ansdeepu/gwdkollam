@@ -1,3 +1,4 @@
+
 // src/app/dashboard/reports/page.tsx
 "use client"; 
 
@@ -300,34 +301,11 @@ export default function ReportsPage() {
     const statusFromQuery = searchParams.get("status");
     const workCategoryFromQuery = searchParams.get("workCategory");
     const serviceTypeFromQuery = searchParams.get("serviceType");
-    const reportTypeFromQuery = searchParams.get("reportType");
+    
+    setStatusFilter(statusFromQuery && fileStatusOptions.includes(statusFromQuery as any) ? statusFromQuery : "all");
+    setWorkCategoryFilter(workCategoryFromQuery && allWorkCategories.includes(workCategoryFromQuery as any) ? workCategoryFromQuery : "all");
+    setServiceTypeFilter(serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all') ? serviceTypeFromQuery : "all");
 
-    if (reportTypeFromQuery === "pendingDashboardTasks") {
-      // For this special report, we might want to clear other filters
-    } else {
-      let newStatusFilter = statusFromQuery && fileStatusOptions.includes(statusFromQuery as any)
-          ? statusFromQuery
-          : "all";
-
-      // If a work category or service type is also in the URL, prioritize them over status
-      if ((workCategoryFromQuery || serviceTypeFromQuery) && statusFromQuery) {
-          newStatusFilter = "all";
-      }
-
-      setStatusFilter(newStatusFilter);
-      
-      setWorkCategoryFilter(
-        (workCategoryFromQuery && allWorkCategories.includes(workCategoryFromQuery as any)
-          ? workCategoryFromQuery
-          : "all")
-      );
-
-      setServiceTypeFilter(
-        (serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all')
-          ? serviceTypeFromQuery
-          : "all")
-      );
-    }
   }, [searchParams, entriesLoading, allWorkCategories]);
 
 
@@ -510,7 +488,7 @@ export default function ReportsPage() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-              <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={endDate ? { after: endDate } : undefined} initialFocus />
+              <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
             </PopoverContent>
           </Popover>
           <Popover>
@@ -520,7 +498,7 @@ export default function ReportsPage() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-              <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={startDate ? { before: startDate } : undefined} initialFocus />
+              <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
             </PopoverContent>
           </Popover>
           <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
@@ -741,4 +719,5 @@ export default function ReportsPage() {
     </div>
   );
 }
+
 
