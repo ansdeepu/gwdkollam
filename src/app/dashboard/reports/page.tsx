@@ -305,9 +305,15 @@ export default function ReportsPage() {
     if (reportTypeFromQuery === "pendingDashboardTasks") {
       // For this special report, we might want to clear other filters
     } else {
-      const newStatusFilter = statusFromQuery && fileStatusOptions.includes(statusFromQuery as any)
+      let newStatusFilter = statusFromQuery && fileStatusOptions.includes(statusFromQuery as any)
           ? statusFromQuery
           : "all";
+
+      // If a work category or service type is also in the URL, prioritize them over status
+      if ((workCategoryFromQuery || serviceTypeFromQuery) && statusFromQuery) {
+          newStatusFilter = "all";
+      }
+
       setStatusFilter(newStatusFilter);
       
       setWorkCategoryFilter(
