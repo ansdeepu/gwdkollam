@@ -499,7 +499,7 @@ export default function ReportsPage() {
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+              <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
                 <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
               </Button>
             </PopoverTrigger>
@@ -509,7 +509,7 @@ export default function ReportsPage() {
           </Popover>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+              <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
                 <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
               </Button>
             </PopoverTrigger>
@@ -517,7 +517,7 @@ export default function ReportsPage() {
               <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={startDate ? { before: startDate } : undefined} initialFocus />
             </PopoverContent>
           </Popover>
-          <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+          <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
             <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">-- Clear Selection --</SelectItem>
@@ -526,43 +526,43 @@ export default function ReportsPage() {
               <SelectItem value="payment">Date of Payment</SelectItem>
             </SelectContent>
           </Select>
-          <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="xl:col-span-1" disabled={searchParams.get("reportType") === "pendingDashboardTasks"}/>
-          <Select value={statusFilter} onValueChange={setStatusFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+          <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="xl:col-span-1"/>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All File Statuses</SelectItem>
               {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+          <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
             <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Site Work Categories</SelectItem>
               {allWorkCategories.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
             <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Site Service Types</SelectItem>
               {sitePurposeOptions.map((service) => (<SelectItem key={service} value={service}>{service}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+          <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
             <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Application Types</SelectItem>
               {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter} disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>
+          <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
             <SelectTrigger><SelectValue placeholder="Filter by Site Type of Rig" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Site Rig Types</SelectItem>
               {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Button onClick={handleSearch} className="w-full xl:col-span-3 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={searchParams.get("reportType") === "pendingDashboardTasks"}>Apply Filters</Button>
+          <Button onClick={handleSearch} className="w-full xl:col-span-3 bg-primary hover:bg-primary/90 text-primary-foreground">Apply Filters</Button>
         </CardContent>
       </Card>
 
