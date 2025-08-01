@@ -35,7 +35,7 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
     if (value instanceof Date) return value; // Already a Date
     if (value instanceof Timestamp) return value.toDate(); // Firestore Timestamp
     // Plain object from serialization { seconds: ..., nanoseconds: ... }
-    if (typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
       return new Timestamp(value.seconds, value.nanoseconds).toDate();
     }
     // ISO string from JSON.stringify or other sources
