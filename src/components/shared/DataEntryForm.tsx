@@ -87,32 +87,47 @@ const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev
 const PURPOSES_REQUIRING_RIG_ACCESSIBILITY: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 
 
-const getAllErrorMessages = (errors: any): string[] => {
-    const messages = new Set<string>();
+const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): string[] => {
+  const messages = new Set<string>();
 
-    function findMessages(obj: any, currentPath: string = "") {
-        if (!obj) return;
+  const processPath = (path: string, index?: number): string => {
+    let userFriendlyPath = '';
+    if (path.startsWith('remittanceDetails')) userFriendlyPath = `Remittance #${(index ?? 0) + 1}`;
+    else if (path.startsWith('siteDetails')) userFriendlyPath = `Site #${(index ?? 0) + 1}`;
+    else if (path.startsWith('paymentDetails')) userFriendlyPath = `Payment #${(index ?? 0) + 1}`;
 
-        Object.keys(obj).forEach(key => {
-            const newPath = currentPath ? `${currentPath}.${key}` : key;
-            const value = obj[key];
-            if (value) {
-                if (value.message && typeof value.message === 'string') {
-                    messages.add(value.message);
+    return userFriendlyPath ? `${userFriendlyPath}: ` : '';
+  };
+
+  function findMessages(obj: any, parentPath: string = "") {
+    if (!obj) return;
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        const newPath = parentPath ? `${parentPath}.${key}` : key;
+        
+        if (value?.message && typeof value.message === 'string') {
+          messages.add(value.message);
+        } else if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (item && typeof item === 'object') {
+              for (const itemKey in item) {
+                if (item[itemKey]?.message) {
+                  const pathPrefix = processPath(newPath, index);
+                  messages.add(`${pathPrefix}${item[itemKey].message}`);
                 }
-                if (typeof value === 'object' && !Array.isArray(value)) {
-                    findMessages(value, newPath);
-                } else if (Array.isArray(value)) {
-                    value.forEach((item, index) => {
-                        findMessages(item, `${newPath}.${index}`);
-                    });
-                }
+              }
             }
-        });
+          });
+        } else if (value && typeof value === 'object') {
+          findMessages(value, newPath);
+        }
+      }
     }
+  }
 
-    findMessages(errors, '');
-    return Array.from(messages);
+  findMessages(errors);
+  return Array.from(messages);
 };
 
 interface DataEntryFormProps {
@@ -205,7 +220,7 @@ export default function DataEntryFormComponent({
   const watchedPaymentDetails = useWatch({ control: form.control, name: "paymentDetails", defaultValue: [] });
 
   const onInvalid = (errors: FieldErrors<DataEntryFormData>) => {
-    const messages = getAllErrorMessages(errors);
+    const messages = getFormattedErrorMessages(errors);
     
     if (messages.length > 0) {
       toast({
