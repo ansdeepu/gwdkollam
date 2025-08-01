@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FilePlus2, FileText, Settings, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, FileText, Settings, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 
@@ -22,6 +22,7 @@ interface NavItem {
 const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/data-entry', label: 'File Data Entry', icon: FilePlus2, roles: ['editor'] },
+  { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/file-room', label: 'File Manager', icon: FolderOpen },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
