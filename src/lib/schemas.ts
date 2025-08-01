@@ -348,8 +348,6 @@ export type PaymentDetailFormData = z.infer<typeof PaymentDetailSchema>;
 
 export const DataEntrySchema = z.object({
   id: z.string().optional(),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
   fileNo: z.string().min(1, "File No. is required."),
   applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
