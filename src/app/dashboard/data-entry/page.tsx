@@ -11,6 +11,17 @@ import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useMemo, useEffect, useState } from "react";
 import type { DataEntryFormData, StaffMember, UserRole } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
+import { parseISO, isValid } from 'date-fns';
+
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+    const parsed = new Date(dateValue);
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
 
 // Helper function to create default form values, ensuring consistency.
 const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntryFormData => {
@@ -47,13 +58,13 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
     ...formDefaultValues,
     ...entryToEdit,
     remittanceDetails: entryToEdit.remittanceDetails && entryToEdit.remittanceDetails.length > 0 
-      ? entryToEdit.remittanceDetails 
+      ? entryToEdit.remittanceDetails.map(rd => ({...rd, dateOfRemittance: safeParseDate(rd.dateOfRemittance)}))
       : [JSON.parse(JSON.stringify(formDefaultValues.remittanceDetails[0]))],
     paymentDetails: entryToEdit.paymentDetails && entryToEdit.paymentDetails.length > 0
-      ? entryToEdit.paymentDetails
+      ? entryToEdit.paymentDetails.map(pd => ({...pd, dateOfPayment: safeParseDate(pd.dateOfPayment)}))
       : [formDefaultValues.paymentDetails[0]],
     siteDetails: entryToEdit.siteDetails && entryToEdit.siteDetails.length > 0
-      ? entryToEdit.siteDetails
+      ? entryToEdit.siteDetails.map(sd => ({...sd, dateOfCompletion: safeParseDate(sd.dateOfCompletion)}))
       : [formDefaultValues.siteDetails[0]],
   };
 

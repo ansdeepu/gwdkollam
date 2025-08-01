@@ -194,13 +194,18 @@ export type RigAccessibility = typeof rigAccessibilityOptions[number];
 const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
   z.preprocess((val) => {
     if (val === null || val === undefined || val === "") return undefined;
-    if (typeof val === 'string') {
-        // If it's a string that doesn't represent a number, treat as undefined
-        // so optional() can handle it gracefully. This prevents validation errors on load.
-        if (isNaN(Number(val))) return undefined;
-    }
+    if (typeof val === 'string' && isNaN(Number(val))) return undefined;
     return val;
 }, z.coerce.number({ invalid_type_error: errorMessage }).min(0, "Cannot be negative.").optional());
+
+const optionalDate = z.preprocess((val) => {
+  if (!val) return undefined;
+  if (typeof val === 'string' || val instanceof Date) {
+    const date = new Date(val);
+    return isNaN(date.getTime()) ? undefined : date;
+  }
+  return undefined;
+}, z.date().optional().nullable());
 
 
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
@@ -229,7 +234,7 @@ export const SiteDetailSchema = z.object({
   waterTankCapacity: z.string().optional(),
   noOfTapConnections: optionalNumber("Tap Connections must be a valid number."),
   noOfBeneficiary: z.string().optional(),
-  dateOfCompletion: z.date().nullable().optional(),
+  dateOfCompletion: optionalDate,
   typeOfRig: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteTypeOfRigOptions).optional()),
   contractorName: z.string().optional(),
   supervisorUid: z.string().optional().nullable(),
@@ -263,14 +268,14 @@ export const SiteDetailSchema = z.object({
     if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Date of Completion is required when status is 'Work Completed' or 'Work Failed'.",
+            message: "is required when status is 'Work Completed' or 'Work Failed'.",
             path: ["dateOfCompletion"],
         });
     }
     if (data.purpose && PURPOSES_REQUIRING_DIAMETER.includes(data.purpose as SitePurpose) && !data.diameter) {
          ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Diameter is required for this purpose.",
+            message: "is required for this purpose.",
             path: ["diameter"],
         });
     }
@@ -279,21 +284,21 @@ export type SiteDetailFormData = z.infer<typeof SiteDetailSchema>;
 
 export const RemittanceDetailSchema = z.object({
   amountRemitted: optionalNumber("Amount Remitted must be a valid number."),
-  dateOfRemittance: z.date().nullable().optional(),
+  dateOfRemittance: optionalDate,
   remittedAccount: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(remittedAccountOptions).optional()),
 }).superRefine((data, ctx) => {
     if (data.amountRemitted && data.amountRemitted > 0) {
         if (!data.dateOfRemittance) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Date is required when an amount is entered.",
+                message: "is required when an amount is entered.",
                 path: ["dateOfRemittance"],
             });
         }
         if (!data.remittedAccount) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Account is required when an amount is entered.",
+                message: "is required when an amount is entered.",
                 path: ["remittedAccount"],
             });
         }
@@ -302,7 +307,7 @@ export const RemittanceDetailSchema = z.object({
 export type RemittanceDetailFormData = z.infer<typeof RemittanceDetailSchema>;
 
 export const PaymentDetailSchema = z.object({
-  dateOfPayment: z.date().nullable().optional(),
+  dateOfPayment: optionalDate,
   paymentAccount: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(paymentAccountOptions).optional()),
   revenueHead: optionalNumber("Revenue Head must be a valid number."),
   contractorsPayment: optionalNumber("Contractor's Payment must be a valid number."),
@@ -325,14 +330,14 @@ export const PaymentDetailSchema = z.object({
         if (!data.dateOfPayment) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Date is required when any payment amount is entered.",
+                message: "is required when any payment amount is entered.",
                 path: ["dateOfPayment"],
             });
         }
         if (!data.paymentAccount) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Account is required when any payment amount is entered.",
+                message: "is required when any payment amount is entered.",
                 path: ["paymentAccount"],
             });
         }

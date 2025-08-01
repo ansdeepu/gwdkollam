@@ -91,12 +91,10 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
   const messages = new Set<string>();
 
   const processPath = (path: string, index?: number): string => {
-    let userFriendlyPath = '';
-    if (path.startsWith('remittanceDetails')) userFriendlyPath = `Remittance #${(index ?? 0) + 1}`;
-    else if (path.startsWith('siteDetails')) userFriendlyPath = `Site #${(index ?? 0) + 1}`;
-    else if (path.startsWith('paymentDetails')) userFriendlyPath = `Payment #${(index ?? 0) + 1}`;
-
-    return userFriendlyPath ? `${userFriendlyPath}: ` : '';
+    if (path.startsWith('remittanceDetails')) return `Remittance #${(index ?? 0) + 1}`;
+    if (path.startsWith('siteDetails')) return `Site #${(index ?? 0) + 1}`;
+    if (path.startsWith('paymentDetails')) return `Payment #${(index ?? 0) + 1}`;
+    return path;
   };
 
   function findMessages(obj: any, parentPath: string = "") {
@@ -107,14 +105,17 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
         const newPath = parentPath ? `${parentPath}.${key}` : key;
         
         if (value?.message && typeof value.message === 'string') {
-          messages.add(value.message);
+          // For top-level errors, format them nicely
+          const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+          messages.add(`${formattedKey}: ${value.message}`);
         } else if (Array.isArray(value)) {
           value.forEach((item, index) => {
             if (item && typeof item === 'object') {
               for (const itemKey in item) {
                 if (item[itemKey]?.message) {
                   const pathPrefix = processPath(newPath, index);
-                  messages.add(`${pathPrefix}${item[itemKey].message}`);
+                  const formattedItemKey = itemKey.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+                  messages.add(`${pathPrefix} - ${formattedItemKey}: ${item[itemKey].message}`);
                 }
               }
             }
