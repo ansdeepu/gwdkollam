@@ -49,6 +49,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useFileEntries } from "@/hooks/useFileEntries";
+import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import type { StaffMember } from "@/lib/schemas";
 import type { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
@@ -147,6 +148,7 @@ export default function DataEntryFormComponent({
   const { toast } = useToast();
   const router = useRouter();
   const { addFileEntry } = useFileEntries();
+  const { createPendingUpdate } = usePendingUpdates();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   
@@ -249,7 +251,7 @@ export default function DataEntryFormComponent({
   };
 
   async function onValidSubmit(data: DataEntryFormData) {
-    if (!userRole) {
+    if (!user) {
         toast({ title: "Authentication Error", description: "You must be logged in to save.", variant: "destructive" });
         return;
     }
@@ -267,27 +269,38 @@ export default function DataEntryFormComponent({
     setIsSubmitting(true);
 
     try {
-        const supervisorUids = [...new Set(data.siteDetails?.map(s => s.supervisorUid).filter((uid): uid is string => !!uid))];
-        const processedPaymentDetails = (data.paymentDetails || []).map(pd => ({ ...pd, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(pd) }));
-        const sumOfAllPayments = processedPaymentDetails.reduce((acc, pd) => acc + (pd.totalPaymentPerEntry || 0), 0);
-        const totalRemittance = data.remittanceDetails?.reduce((acc, rd) => acc + (Number(rd.amountRemitted) || 0), 0) || 0;
-        
-        const payload: DataEntryFormData = {
-          ...data,
-          assignedSupervisorUids: supervisorUids,
-          paymentDetails: processedPaymentDetails,
-          totalRemittance: totalRemittance,
-          totalPaymentAllEntries: sumOfAllPayments,
-          overallBalance: totalRemittance - sumOfAllPayments,
-        };
+      if (userRole === 'editor') {
+          const supervisorUids = [...new Set(data.siteDetails?.map(s => s.supervisorUid).filter((uid): uid is string => !!uid))];
+          const processedPaymentDetails = (data.paymentDetails || []).map(pd => ({ ...pd, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(pd) }));
+          const sumOfAllPayments = processedPaymentDetails.reduce((acc, pd) => acc + (pd.totalPaymentPerEntry || 0), 0);
+          const totalRemittance = data.remittanceDetails?.reduce((acc, rd) => acc + (Number(rd.amountRemitted) || 0), 0) || 0;
+          
+          const payload: DataEntryFormData = {
+            ...data,
+            assignedSupervisorUids: supervisorUids,
+            paymentDetails: processedPaymentDetails,
+            totalRemittance: totalRemittance,
+            totalPaymentAllEntries: sumOfAllPayments,
+            overallBalance: totalRemittance - sumOfAllPayments,
+          };
 
-        await addFileEntry(payload, fileNoToEdit);
+          await addFileEntry(payload, fileNoToEdit);
+          toast({
+              title: fileNoToEdit ? "File Data Updated" : "File Data Submitted",
+              description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
+          });
+      } else if (userRole === 'supervisor' && fileNoToEdit) {
+          if (!data.siteDetails || data.siteDetails.length === 0) {
+              throw new Error("No site details to submit.");
+          }
+          await createPendingUpdate(fileNoToEdit, data.siteDetails, user);
+          toast({
+              title: "Update Submitted",
+              description: `Your changes for file '${fileNoToEdit}' have been submitted for admin approval.`,
+          });
+      }
 
-        toast({
-            title: fileNoToEdit ? "File Data Updated" : "File Data Submitted",
-            description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
-        });
-        router.push('/dashboard/file-room');
+      router.push('/dashboard/file-room');
 
     } catch (error: any) {
         toast({ title: "Submission Failed", description: error.message, variant: "destructive" });

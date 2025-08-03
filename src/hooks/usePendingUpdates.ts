@@ -1,3 +1,4 @@
+
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -10,15 +11,16 @@ import {
   onSnapshot,
   doc,
   updateDoc,
-  getDoc,
+  getDocs,
   writeBatch,
   Timestamp,
   serverTimestamp,
+  addDoc,
   type DocumentData,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import { useAuth } from './useAuth';
-import type { PendingUpdate, DataEntryFormData } from '@/lib/schemas';
+import { useAuth, type UserProfile } from './useAuth';
+import type { PendingUpdate, DataEntryFormData, SiteDetailFormData } from '@/lib/schemas';
 
 const db = getFirestore(app);
 const PENDING_UPDATES_COLLECTION = 'pendingUpdates';
@@ -38,6 +40,7 @@ interface PendingUpdatesState {
   isLoading: boolean;
   approveUpdate: (updateId: string, fileNo: string, updatedSiteDetails: DataEntryFormData['siteDetails']) => Promise<void>;
   rejectUpdate: (updateId: string) => Promise<void>;
+  createPendingUpdate: (fileNo: string, updatedSiteDetails: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
 }
 
 export function usePendingUpdates(): PendingUpdatesState {
@@ -67,6 +70,22 @@ export function usePendingUpdates(): PendingUpdatesState {
 
     return () => unsubscribe();
   }, [user]);
+
+  const createPendingUpdate = useCallback(async (fileNo: string, updatedSiteDetails: SiteDetailFormData[], currentUser: UserProfile) => {
+    if (currentUser.role !== 'supervisor') {
+      throw new Error("Only supervisors can submit updates for review.");
+    }
+    const payload = {
+      fileNo,
+      updatedSiteDetails,
+      submittedByUid: currentUser.uid,
+      submittedByName: currentUser.name || currentUser.email,
+      submittedAt: serverTimestamp(),
+      status: 'pending',
+    };
+    await addDoc(collection(db, PENDING_UPDATES_COLLECTION), payload);
+  }, []);
+
 
   const approveUpdate = useCallback(async (updateId: string, fileNo: string, updatedSiteDetails: DataEntryFormData['siteDetails']) => {
     if (!user || user.role !== 'editor') {
@@ -127,5 +146,5 @@ export function usePendingUpdates(): PendingUpdatesState {
     });
   }, [user]);
 
-  return { pendingUpdates, isLoading, approveUpdate, rejectUpdate };
+  return { pendingUpdates, isLoading, approveUpdate, rejectUpdate, createPendingUpdate };
 }
