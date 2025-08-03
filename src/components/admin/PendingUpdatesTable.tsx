@@ -11,10 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, XCircle, Info, Eye } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Info, Eye, ChevronsRight } from "lucide-react";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
+import { useFileEntries } from "@/hooks/useFileEntries";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNowStrict } from "date-fns";
+import { format, formatDistanceToNowStrict, isValid } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -26,13 +27,53 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { SiteDetailFormData } from "@/lib/schemas";
+import type { SiteDetailFormData, PendingUpdate } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
+
+
+type FieldComparison = {
+  label: string;
+  original: any;
+  updated: any;
+};
+
+// Function to compare two site objects and find the differences
+const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailFormData): FieldComparison[] => {
+    const changes: FieldComparison[] = [];
+    const fieldsToCompare: Array<{ key: keyof SiteDetailFormData; label: string; isDate?: boolean }> = [
+        { key: 'workStatus', label: 'Work Status' },
+        { key: 'dateOfCompletion', label: 'Date of Completion', isDate: true },
+        { key: 'totalExpenditure', label: 'Expenditure (₹)' },
+        { key: 'workRemarks', label: 'Work Remarks' },
+    ];
+
+    fieldsToCompare.forEach(({ key, label, isDate }) => {
+        let originalValue = originalSite[key];
+        let updatedValue = updatedSite[key];
+
+        if (isDate) {
+            originalValue = originalValue ? format(new Date(originalValue), 'dd/MM/yyyy') : 'N/A';
+            updatedValue = updatedValue ? format(new Date(updatedValue), 'dd/MM/yyyy') : 'N/A';
+        } else {
+            originalValue = originalValue ?? 'N/A';
+            updatedValue = updatedValue ?? 'N/A';
+        }
+
+        if (originalValue !== updatedValue) {
+            changes.push({ label, original: originalValue, updated: updatedValue });
+        }
+    });
+
+    return changes;
+};
+
 
 export default function PendingUpdatesTable() {
   const { pendingUpdates, isLoading, approveUpdate, rejectUpdate } = usePendingUpdates();
+  const { getFileEntry } = useFileEntries();
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [viewingUpdate, setViewingUpdate] = useState<{fileNo: string, sites: SiteDetailFormData[]} | null>(null);
+  const [viewingUpdate, setViewingUpdate] = useState<PendingUpdate | null>(null);
 
   const handleApprove = async (updateId: string, fileNo: string, sites: SiteDetailFormData[]) => {
     setProcessingId(updateId);
@@ -106,7 +147,7 @@ export default function PendingUpdatesTable() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setViewingUpdate({ fileNo: update.fileNo, sites: update.updatedSiteDetails })}
+                      onClick={() => setViewingUpdate(update)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -140,26 +181,56 @@ export default function PendingUpdatesTable() {
       
       {/* View Details Dialog */}
       <Dialog open={!!viewingUpdate} onOpenChange={() => setViewingUpdate(null)}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Updated Site Details for File No: {viewingUpdate?.fileNo}</DialogTitle>
+            <DialogTitle>Review Changes for File No: {viewingUpdate?.fileNo}</DialogTitle>
             <DialogDescription>
-              Review the changes submitted by the supervisor.
+              Submitted by <strong>{viewingUpdate?.submittedByName}</strong> about {viewingUpdate ? formatDistanceToNowStrict(viewingUpdate.submittedAt, { addSuffix: true }) : ''}.
+              Review the changes below before approving.
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-4 py-4">
-              {viewingUpdate?.sites.map((site, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-secondary/50">
-                  <h4 className="font-semibold text-primary mb-2">Site: {site.nameOfSite}</h4>
-                  <ul className="text-sm space-y-1">
-                    <li><strong>Work Status:</strong> {site.workStatus}</li>
-                    <li><strong>Date of Completion:</strong> {site.dateOfCompletion ? new Date(site.dateOfCompletion).toLocaleDateString() : 'N/A'}</li>
-                    <li><strong>Expenditure:</strong> {site.totalExpenditure?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? 'N/A'}</li>
-                    <li><strong>Work Remarks:</strong> <p className="text-xs whitespace-pre-wrap pl-2 border-l-2 ml-2">{site.workRemarks || 'N/A'}</p></li>
-                  </ul>
-                </div>
-              ))}
+              {viewingUpdate?.updatedSiteDetails.map((updatedSite, index) => {
+                const originalFile = getFileEntry(viewingUpdate.fileNo);
+                const originalSite = originalFile?.siteDetails?.find(
+                  (site) => site.nameOfSite === updatedSite.nameOfSite
+                );
+
+                if (!originalSite) {
+                    return (
+                        <div key={index} className="p-4 border rounded-lg bg-destructive/10 text-destructive">
+                            <h4 className="font-semibold">Error: Could not find original site data for "{updatedSite.nameOfSite}".</h4>
+                        </div>
+                    );
+                }
+
+                const changes = compareSites(originalSite, updatedSite);
+                
+                return (
+                  <div key={index} className="p-4 border rounded-lg bg-secondary/50">
+                    <h4 className="font-semibold text-primary mb-2 border-b pb-2">Site: {updatedSite.nameOfSite}</h4>
+                    {changes.length > 0 ? (
+                        <div className="space-y-2 text-sm">
+                            {changes.map((change, changeIndex) => (
+                                <div key={changeIndex} className="grid grid-cols-12 gap-2 items-center">
+                                    <div className="col-span-3 font-medium text-muted-foreground">{change.label}:</div>
+                                    <div className={cn("col-span-4 p-1.5 rounded-md text-xs bg-red-100 text-red-800", change.original === 'N/A' && "italic")}>
+                                      {String(change.original)}
+                                    </div>
+                                    <div className="col-span-1 text-center"><ChevronsRight className="h-4 w-4 text-muted-foreground"/></div>
+                                    <div className={cn("col-span-4 p-1.5 rounded-md text-xs bg-green-100 text-green-800", change.updated === 'N/A' && "italic")}>
+                                      {String(change.updated)}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground italic">No changes were detected for this site.</p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </ScrollArea>
            <DialogFooter>
