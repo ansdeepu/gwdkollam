@@ -138,34 +138,27 @@ export default function DashboardPage() {
   const [monthDetailDialogColumns, setMonthDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
 
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string | undefined>(undefined);
+  const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
 
   const fileEntries = useMemo(() => {
-    if (currentUser?.role !== 'supervisor') {
-      return rawFileEntries;
+    // For supervisors, filter out any sites that are 'Work Completed'.
+    if (currentUser?.role === 'supervisor') {
+      return rawFileEntries
+        .map(entry => {
+          if (!entry.siteDetails || !currentUser.uid) {
+            return { ...entry, siteDetails: [] };
+          }
+          
+          const activeAssignedSites = entry.siteDetails.filter(
+            site => site.supervisorUid === currentUser.uid && site.workStatus !== 'Work Completed'
+          );
+
+          return { ...entry, siteDetails: activeAssignedSites };
+        });
     }
 
-    // For supervisors, filter out any sites that are 'Work Completed', and then filter out
-    // any files that no longer have any sites assigned to them as a result.
-    return rawFileEntries
-      .map(entry => {
-        if (!entry.siteDetails || !currentUser.uid) {
-          return null;
-        }
-        
-        const activeAssignedSites = entry.siteDetails.filter(
-          site => site.supervisorUid === currentUser.uid && site.workStatus !== 'Work Completed'
-        );
-
-        // If after filtering, there are no active sites left for the supervisor in this file,
-        // we should discard the entire file entry for the dashboard view.
-        if (activeAssignedSites.length === 0) {
-          return null;
-        }
-
-        // Return the entry, but with its siteDetails scoped to only the active ones for this supervisor.
-        return { ...entry, siteDetails: activeAssignedSites };
-      })
-      .filter((entry): entry is DataEntryFormData => entry !== null);
+    // For other roles, return all entries as is.
+    return rawFileEntries;
   }, [rawFileEntries, currentUser]);
 
 
@@ -422,17 +415,19 @@ export default function DashboardPage() {
   const currentMonthStats = useMemo(() => {
     if (entriesLoading) return null;
     
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const startOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth(), 1);
+    const endOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth() + 1, 0, 23, 59, 59);
 
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     const completedWorkStatuses: SiteWorkStatus[] = ["Work Completed"];
 
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
+    
+    // Use rawFileEntries for completed works calculation to include all data, regardless of user role
+    const sourceEntriesForCompleted = currentUser?.role === 'supervisor' ? rawFileEntries : fileEntries;
 
-    for (const entry of fileEntries) {
+    for (const entry of sourceEntriesForCompleted) {
         entry.siteDetails?.forEach(site => {
             if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
                 const completionDate = new Date(site.dateOfCompletion);
@@ -440,11 +435,16 @@ export default function DashboardPage() {
                     completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
                 }
             }
-            
-            if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
-               ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
-            }
         });
+    }
+
+    // For ongoing works, use the already-filtered `fileEntries` which respects supervisor's view
+    for (const entry of fileEntries) {
+      entry.siteDetails?.forEach(site => {
+        if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
+           ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+        }
+      });
     }
     
     return {
@@ -453,7 +453,7 @@ export default function DashboardPage() {
         ongoingCount: ongoingSites.length,
         ongoingData: ongoingSites
     }
-  }, [fileEntries, entriesLoading]);
+  }, [fileEntries, rawFileEntries, entriesLoading, workReportMonth, currentUser]);
 
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
@@ -773,7 +773,7 @@ export default function DashboardPage() {
         setMonthDetailDialogTitle("Total Ongoing Works");
         setMonthDetailDialogData(currentMonthStats.ongoingData.map(mapSiteToDialogData));
     } else {
-        setMonthDetailDialogTitle("Works Completed This Month");
+        setMonthDetailDialogTitle(`Works Completed in ${format(workReportMonth, 'MMMM yyyy')}`);
         setMonthDetailDialogData(currentMonthStats.completedThisMonthData.map(mapSiteToDialogData));
     }
     setMonthDetailDialogColumns(columns);
@@ -1217,18 +1217,44 @@ export default function DashboardPage() {
       <div className="space-y-6 mt-6">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-primary" />
-              This Month's Work
-            </CardTitle>
-            <CardDescription>A summary of works completed and those currently in progress for this month. Click "View All" for more details and export options.</CardDescription>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div className="flex-1">
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarCheck className="h-5 w-5 text-primary" />
+                  Work Progress for {format(workReportMonth, 'MMMM yyyy')}
+                </CardTitle>
+                <CardDescription>
+                  Summary of completed and ongoing work. Select a month to view its report.
+                </CardDescription>
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className="w-full sm:w-auto">
+                    <CalendarIconLucide className="mr-2 h-4 w-4" />
+                    {format(workReportMonth, 'MMMM yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <Calendar
+                    mode="single"
+                    month={workReportMonth}
+                    onMonthChange={setWorkReportMonth}
+                    initialFocus
+                    captionLayout="dropdown-buttons"
+                    fromYear={2020}
+                    toYear={new Date().getFullYear()}
+                    className="p-0 [&_td]:hidden [&_th]:hidden [&_.rdp-day_selected]:bg-transparent [&_.rdp-day_selected]:text-foreground"
+                   />
+                </PopoverContent>
+              </Popover>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Completed Works Column */}
               <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-semibold text-foreground">Completed This Month</h4>
+                  <h4 className="font-semibold text-foreground">Completed in {format(workReportMonth, 'MMMM')}</h4>
                   <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('completed')} disabled={!currentMonthStats || currentMonthStats.completedThisMonthCount === 0}>
                     View All ({currentMonthStats?.completedThisMonthCount ?? 0})
                   </Button>
@@ -1258,7 +1284,7 @@ export default function DashboardPage() {
               {/* Ongoing Works Column */}
               <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-semibold text-foreground">Ongoing Works</h4>
+                  <h4 className="font-semibold text-foreground">Total Ongoing Works</h4>
                   <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('ongoing')} disabled={!currentMonthStats || currentMonthStats.ongoingCount === 0}>
                     View All ({currentMonthStats?.ongoingCount ?? 0})
                   </Button>
@@ -1519,7 +1545,7 @@ export default function DashboardPage() {
             <DialogDescription>
               {monthDetailDialogTitle === 'Total Ongoing Works'
                 ? 'List of all sites currently in an ongoing work status.'
-                : `List of all sites completed in ${format(new Date(), 'MMMM yyyy')}.`}
+                : `List of all sites completed in ${format(workReportMonth, 'MMMM yyyy')}.`}
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
@@ -1568,6 +1594,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
