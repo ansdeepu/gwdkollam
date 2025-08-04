@@ -140,20 +140,40 @@ export default function DashboardPage() {
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string | undefined>(undefined);
 
   const fileEntries = useMemo(() => {
+    // For editors and viewers, show all raw entries.
     if (currentUser?.role !== 'supervisor') {
       return rawFileEntries;
     }
-    // For supervisors, filter to only show sites assigned to them.
+  
+    // For supervisors, the logic is more nuanced.
+    // The hook `useFileEntries` already fetches all files where the supervisor is assigned.
+    // Here, we just need to ensure the `siteDetails` array within each entry is correctly scoped
+    // for display purposes on the dashboard, without filtering out the entire file entry.
     return rawFileEntries
       .map(entry => {
-        if (!entry.siteDetails || entry.siteDetails.length === 0) return null;
+        if (!entry.siteDetails || entry.siteDetails.length === 0) {
+          // This should not happen if they are assigned, but as a safeguard:
+          return null; 
+        }
         
         const assignedSites = entry.siteDetails.filter(
           site => site.supervisorUid === currentUser.uid
         );
 
-        if (assignedSites.length === 0) return null;
+        // IMPORTANT: An empty assignedSites array does NOT mean we should discard the file.
+        // The supervisor might be assigned to a site that is now completed.
+        // The main file entry should still be visible. We just scope down the details for this view.
+        if (assignedSites.length === 0) {
+            // Check if supervisor is listed in the main file's assigned UIDs.
+            // If so, it means their sites were likely filtered out due to status, but the file is theirs.
+            // Return the entry but with an empty siteDetails array for this specific dashboard view to prevent errors.
+            if (entry.assignedSupervisorUids?.includes(currentUser.uid)) {
+               return { ...entry, siteDetails: [] };
+            }
+            return null; // The supervisor is truly not associated with this file.
+        }
 
+        // Return the entry, but with its siteDetails scoped to only those assigned to the current supervisor.
         return { ...entry, siteDetails: assignedSites };
       })
       .filter((entry): entry is DataEntryFormData => entry !== null);
@@ -1559,6 +1579,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 

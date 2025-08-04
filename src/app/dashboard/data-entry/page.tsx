@@ -25,11 +25,13 @@ const safeParseDate = (dateValue: any): Date | null => {
 
 // Helper function to create default form values, ensuring consistency.
 const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntryFormData => {
-    const formDefaultValues: DataEntryFormData = {
+    // A safe, deep-cloned default structure.
+    const getFormDefaults = (): DataEntryFormData => ({
       fileNo: "", applicantName: "", phoneNo: "", applicationType: undefined,
       estimateAmount: undefined, assignedSupervisorUids: [],
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
-      totalRemittance: 0, siteDetails: [{
+      totalRemittance: 0, 
+      siteDetails: [{
         nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
         estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
         tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
@@ -48,28 +50,36 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
         dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
         contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined,
         refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "",
-       }], totalPaymentAllEntries: 0, overallBalance: 0,
+       }], 
+      totalPaymentAllEntries: 0, overallBalance: 0,
       fileStatus: undefined, remarks: "",
-    };
+    });
 
-  if (!entryToEdit) return JSON.parse(JSON.stringify(formDefaultValues));
+  if (!entryToEdit) return getFormDefaults();
   
+  // Start with defaults to ensure all keys are present.
+  const defaults = getFormDefaults();
+  
+  // Create a deep copy of the entry to avoid mutation.
+  const entryCopy = JSON.parse(JSON.stringify(entryToEdit));
+
   const mergedData = {
-    ...formDefaultValues,
-    ...entryToEdit,
-    remittanceDetails: entryToEdit.remittanceDetails && entryToEdit.remittanceDetails.length > 0 
-      ? entryToEdit.remittanceDetails.map(rd => ({...rd, dateOfRemittance: safeParseDate(rd.dateOfRemittance)}))
-      : [JSON.parse(JSON.stringify(formDefaultValues.remittanceDetails[0]))],
-    paymentDetails: entryToEdit.paymentDetails && entryToEdit.paymentDetails.length > 0
-      ? entryToEdit.paymentDetails.map(pd => ({...pd, dateOfPayment: safeParseDate(pd.dateOfPayment)}))
-      : [formDefaultValues.paymentDetails[0]],
-    siteDetails: entryToEdit.siteDetails && entryToEdit.siteDetails.length > 0
-      ? entryToEdit.siteDetails.map(sd => ({...sd, dateOfCompletion: safeParseDate(sd.dateOfCompletion)}))
-      : [formDefaultValues.siteDetails[0]],
+    ...defaults,
+    ...entryCopy,
+    remittanceDetails: entryCopy.remittanceDetails && entryCopy.remittanceDetails.length > 0 
+      ? entryCopy.remittanceDetails.map((rd: any) => ({...rd, dateOfRemittance: safeParseDate(rd.dateOfRemittance)}))
+      : defaults.remittanceDetails, // Fallback to default structure
+    paymentDetails: entryCopy.paymentDetails && entryCopy.paymentDetails.length > 0
+      ? entryCopy.paymentDetails.map((pd: any) => ({...pd, dateOfPayment: safeParseDate(pd.dateOfPayment)}))
+      : defaults.paymentDetails, // Fallback to default structure
+    siteDetails: entryCopy.siteDetails && entryCopy.siteDetails.length > 0
+      ? entryCopy.siteDetails.map((sd: any) => ({...sd, dateOfCompletion: safeParseDate(sd.dateOfCompletion)}))
+      : defaults.siteDetails, // Fallback to default structure
   };
 
   return mergedData;
 };
+
 
 interface PageData {
   initialData: DataEntryFormData;
