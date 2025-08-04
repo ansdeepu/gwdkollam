@@ -51,10 +51,6 @@ export default function ProfilePage() {
               <p className="font-semibold text-foreground">{user.email}</p>
             </div>
             <div className="flex flex-col space-y-1">
-              <span className="text-sm font-medium text-muted-foreground">User ID</span>
-              <p className="font-mono text-xs text-muted-foreground">{user.uid}</p>
-            </div>
-             <div className="flex flex-col space-y-1">
               <span className="text-sm font-medium text-muted-foreground">Role</span>
               <p className="font-semibold text-foreground capitalize">{user.role}</p>
             </div>
