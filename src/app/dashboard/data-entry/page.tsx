@@ -122,17 +122,22 @@ export default function DataEntryPage() {
           // ** NEW: Filter site details if the user is a supervisor **
           if (finalEntryData && user.role === 'supervisor' && user.uid) {
               const assignedSites = finalEntryData.siteDetails?.filter(
-                  site => site.supervisorUid === user.uid
+                  site => site.supervisorUid === user.uid && site.workStatus !== 'Work Completed'
               );
               
-              setOriginalSupervisorSites(JSON.stringify(assignedSites));
+              const originalAssignedSites = finalEntryData.siteDetails?.filter(
+                  site => site.supervisorUid === user.uid
+              );
 
-              // If supervisor opens a file with no sites assigned to them, treat as not found.
+              // Ensure a valid JSON string is always set, even for an empty array
+              setOriginalSupervisorSites(JSON.stringify(originalAssignedSites || []));
+
+              // If supervisor opens a file with no active sites assigned to them, treat as not found for editing.
               if (!assignedSites || assignedSites.length === 0) {
-                  finalEntryData = null; // Clear the entry data
+                  finalEntryData = null; // Clear the entry data for the form
                   toast({
-                      title: "Access Restricted",
-                      description: "You do not have any sites assigned to you in this file.",
+                      title: "No Active Sites",
+                      description: "You do not have any active sites assigned to you in this file.",
                       variant: "default"
                   });
               } else {
