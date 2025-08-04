@@ -196,14 +196,12 @@ export function useFileEntries(): FileEntriesState {
         entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
       });
       
-      let finalEntries = entriesFromFirestore;
+      const finalEntries = entriesFromFirestore;
 
-      if (user.role === 'supervisor') {
-         // Supervisors should see all files they are assigned to, regardless of status.
-         // The Firestore query `where("assignedSupervisorUids", "array-contains", user.uid)` is sufficient.
-         // We no longer need to filter by site work status on the client side.
-      }
-
+      // Supervisors should see all files they are assigned to, regardless of status.
+      // The Firestore query `where("assignedSupervisorUids", "array-contains", user.uid)` is sufficient.
+      // We no longer need to filter by site work status on the client side.
+      
       finalEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
         const dateB_str = b.remittanceDetails?.[0]?.dateOfRemittance;
