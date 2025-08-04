@@ -10,6 +10,9 @@ import {
   signOut,
   type User as FirebaseUser,
   onAuthStateChanged,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword as firebaseUpdatePassword,
 } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, Timestamp, query, where } from 'firebase/firestore';
@@ -392,6 +395,29 @@ export function useAuth() {
     return { successCount, failureCount, errors: errorsEncountered };
   }, [authState.user]);
 
+  const updatePassword = useCallback(async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: any }> => {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser || !firebaseUser.email) {
+      return { success: false, error: { message: "No authenticated user found." } };
+    }
 
-  return { ...authState, login, logout, register, fetchAllUsers, updateUserApproval, updateUserRole, deleteUserDocument, batchDeleteUserDocuments, updateUserLastActive, createUserByAdmin };
+    try {
+      const credential = EmailAuthProvider.credential(firebaseUser.email, currentPassword);
+      await reauthenticateWithCredential(firebaseUser, credential);
+      await firebaseUpdatePassword(firebaseUser, newPassword);
+      return { success: true };
+    } catch (error: any) {
+      let errorMessage = "An unexpected error occurred.";
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMessage = "The current password you entered is incorrect.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "The new password is too weak. It must be at least 6 characters.";
+      }
+      console.error("[Auth] Update password error:", error);
+      return { success: false, error: { message: errorMessage, code: error.code } };
+    }
+  }, []);
+
+
+  return { ...authState, login, logout, register, fetchAllUsers, updateUserApproval, updateUserRole, deleteUserDocument, batchDeleteUserDocuments, updateUserLastActive, createUserByAdmin, updatePassword };
 }
