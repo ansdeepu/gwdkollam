@@ -52,15 +52,22 @@ const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailF
         let updatedValue = updatedSite[key];
 
         if (isDate) {
-            originalValue = originalValue ? format(new Date(originalValue), 'dd/MM/yyyy') : 'N/A';
-            updatedValue = updatedValue ? format(new Date(updatedValue), 'dd/MM/yyyy') : 'N/A';
-        } else {
-            originalValue = originalValue ?? 'N/A';
-            updatedValue = updatedValue ?? 'N/A';
-        }
+            const originalDate = originalValue ? new Date(originalValue) : null;
+            const updatedDate = updatedValue ? new Date(updatedValue) : null;
 
-        if (originalValue !== updatedValue) {
-            changes.push({ label, original: originalValue, updated: updatedValue });
+            const formattedOriginal = originalDate && isValid(originalDate) ? format(originalDate, 'dd/MM/yyyy') : 'N/A';
+            const formattedUpdated = updatedDate && isValid(updatedDate) ? format(updatedDate, 'dd/MM/yyyy') : 'N/A';
+
+            if (formattedOriginal !== formattedUpdated) {
+                changes.push({ label, original: formattedOriginal, updated: formattedUpdated });
+            }
+        } else {
+            const originalStr = originalValue ?? 'N/A';
+            const updatedStr = updatedValue ?? 'N/A';
+
+            if (originalStr !== updatedStr) {
+                changes.push({ label, original: originalStr, updated: updatedStr });
+            }
         }
     });
 
