@@ -141,23 +141,19 @@ export default function DashboardPage() {
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
 
   const fileEntries = useMemo(() => {
-    // For supervisors, filter out any sites that are 'Work Completed'.
     if (currentUser?.role === 'supervisor') {
       return rawFileEntries
         .map(entry => {
           if (!entry.siteDetails || !currentUser.uid) {
             return { ...entry, siteDetails: [] };
           }
-          
           const activeAssignedSites = entry.siteDetails.filter(
             site => site.supervisorUid === currentUser.uid && site.workStatus !== 'Work Completed'
           );
-
           return { ...entry, siteDetails: activeAssignedSites };
-        });
+        })
+        .filter(entry => entry.siteDetails.length > 0); // Only include files that still have active sites for the supervisor
     }
-
-    // For other roles, return all entries as is.
     return rawFileEntries;
   }, [rawFileEntries, currentUser]);
 
@@ -1594,6 +1590,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
