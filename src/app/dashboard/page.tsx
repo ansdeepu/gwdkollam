@@ -271,7 +271,7 @@ export default function DashboardPage() {
   }, [authLoading, currentUser, fetchAllUsers]);
 
   const dashboardData = useMemo(() => {
-    if (entriesLoading || staffLoading) return null;
+    if (entriesLoading || staffLoading || !fileEntries) return null;
 
     // --- Start Initializing accumulators ---
     let pendingTasksCount = 0;
