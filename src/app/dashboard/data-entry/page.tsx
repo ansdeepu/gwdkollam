@@ -96,6 +96,7 @@ export default function DataEntryPage() {
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [originalSupervisorSites, setOriginalSupervisorSites] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -123,6 +124,8 @@ export default function DataEntryPage() {
               const assignedSites = finalEntryData.siteDetails?.filter(
                   site => site.supervisorUid === user.uid
               );
+              
+              setOriginalSupervisorSites(JSON.stringify(assignedSites));
 
               // If supervisor opens a file with no sites assigned to them, treat as not found.
               if (!assignedSites || assignedSites.length === 0) {
@@ -275,6 +278,7 @@ export default function DataEntryPage() {
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}
+                originalSupervisorSites={originalSupervisorSites}
              />
           </CardContent>
         </Card>

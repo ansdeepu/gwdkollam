@@ -1,3 +1,4 @@
+
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
@@ -242,7 +243,7 @@ export default function PendingUpdatesTable() {
                 if (!originalSite) {
                     return (
                         <div key={index} className="p-4 border rounded-lg bg-destructive/10 text-destructive">
-                            <h4 className="font-semibold">Error: Could not find original site data for "{updatedSite.nameOfSite}".</h4>
+                            <h4 className="font-semibold">Error: Could not find original site data for "{updatedSite.nameOfSite}". The site might be new or its name was changed.</h4>
                         </div>
                     );
                 }

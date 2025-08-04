@@ -137,6 +137,7 @@ interface DataEntryFormProps {
   initialData: DataEntryFormData;
   supervisorList: (StaffMember & { uid: string; name: string })[];
   userRole?: UserRole;
+  originalSupervisorSites?: string | null;
 }
 
 export default function DataEntryFormComponent({ 
@@ -144,6 +145,7 @@ export default function DataEntryFormComponent({
   initialData,
   supervisorList,
   userRole,
+  originalSupervisorSites,
 }: DataEntryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -290,10 +292,19 @@ export default function DataEntryFormComponent({
               description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
           });
       } else if (userRole === 'supervisor' && fileNoToEdit) {
-          if (!data.siteDetails || data.siteDetails.length === 0) {
-              throw new Error("No site details to submit.");
+          const originalSites = originalSupervisorSites ? JSON.parse(originalSupervisorSites) : [];
+          const sitesWithChanges = data.siteDetails?.filter(currentSite => {
+              const originalSite = originalSites.find((s: any) => s.nameOfSite === currentSite.nameOfSite);
+              return !originalSite || JSON.stringify(currentSite) !== JSON.stringify(originalSite);
+          });
+
+          if (!sitesWithChanges || sitesWithChanges.length === 0) {
+              toast({ title: "No Changes Detected", description: "You haven't made any changes to the site details." });
+              setIsSubmitting(false);
+              return;
           }
-          await createPendingUpdate(fileNoToEdit, data.siteDetails, user);
+
+          await createPendingUpdate(fileNoToEdit, sitesWithChanges, user);
           toast({
               title: "Update Submitted",
               description: `Your changes for file '${fileNoToEdit}' have been submitted for admin approval.`,
