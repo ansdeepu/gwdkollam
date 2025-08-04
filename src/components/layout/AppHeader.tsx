@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, UserCog } from 'lucide-react';
+import { LogOut, UserCog, HelpCircle } from 'lucide-react';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import Link from 'next/link';
 
@@ -70,6 +70,12 @@ export default function AppHeader() {
               <Link href="/dashboard/profile">
                 <UserCog className="mr-2 h-4 w-4" />
                 <span>Profile</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/help">
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>Help</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
