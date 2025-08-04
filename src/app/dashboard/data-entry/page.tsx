@@ -57,25 +57,25 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
 
   if (!entryToEdit) return getFormDefaults();
   
-  // Start with defaults to ensure all keys are present.
+  // Start with a deep copy of defaults to ensure all keys are present.
   const defaults = getFormDefaults();
-  
-  // Create a deep copy of the entry to avoid mutation.
-  const entryCopy = JSON.parse(JSON.stringify(entryToEdit));
+  const mergedData = JSON.parse(JSON.stringify(defaults));
 
-  const mergedData = {
-    ...defaults,
-    ...entryCopy,
-    remittanceDetails: entryCopy.remittanceDetails && entryCopy.remittanceDetails.length > 0 
-      ? entryCopy.remittanceDetails.map((rd: any) => ({...rd, dateOfRemittance: safeParseDate(rd.dateOfRemittance)}))
-      : defaults.remittanceDetails, // Fallback to default structure
-    paymentDetails: entryCopy.paymentDetails && entryCopy.paymentDetails.length > 0
-      ? entryCopy.paymentDetails.map((pd: any) => ({...pd, dateOfPayment: safeParseDate(pd.dateOfPayment)}))
-      : defaults.paymentDetails, // Fallback to default structure
-    siteDetails: entryCopy.siteDetails && entryCopy.siteDetails.length > 0
-      ? entryCopy.siteDetails.map((sd: any) => ({...sd, dateOfCompletion: safeParseDate(sd.dateOfCompletion)}))
-      : defaults.siteDetails, // Fallback to default structure
-  };
+  // Merge the editable entry into the default structure.
+  Object.assign(mergedData, entryToEdit);
+  
+  // Ensure nested arrays are correctly initialized and dates are parsed.
+  mergedData.remittanceDetails = (entryToEdit.remittanceDetails && entryToEdit.remittanceDetails.length > 0)
+    ? entryToEdit.remittanceDetails.map((rd: any) => ({ ...rd, dateOfRemittance: safeParseDate(rd.dateOfRemittance) }))
+    : defaults.remittanceDetails;
+
+  mergedData.paymentDetails = (entryToEdit.paymentDetails && entryToEdit.paymentDetails.length > 0)
+    ? entryToEdit.paymentDetails.map((pd: any) => ({ ...pd, dateOfPayment: safeParseDate(pd.dateOfPayment) }))
+    : defaults.paymentDetails;
+
+  mergedData.siteDetails = (entryToEdit.siteDetails && entryToEdit.siteDetails.length > 0)
+    ? entryToEdit.siteDetails.map((sd: any) => ({ ...sd, dateOfCompletion: safeParseDate(sd.dateOfCompletion) }))
+    : defaults.siteDetails;
 
   return mergedData;
 };
