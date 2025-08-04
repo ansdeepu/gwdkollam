@@ -466,7 +466,7 @@ export default function GwdRatesPage() {
                     type="number"
                     placeholder="0.00"
                     {...field}
-                    onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}
+                    onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                     value={field.value ?? ''}
                   /></FormControl>
                   <FormMessage />
