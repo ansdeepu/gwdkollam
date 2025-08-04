@@ -40,23 +40,59 @@ type FieldComparison = {
 // Function to compare two site objects and find the differences
 const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailFormData): FieldComparison[] => {
     const changes: FieldComparison[] = [];
-    const fieldsToCompare: Array<{ key: keyof SiteDetailFormData; label: string; isDate?: boolean }> = [
-        { key: 'workStatus', label: 'Work Status' },
-        { key: 'dateOfCompletion', label: 'Date of Completion', isDate: true },
-        { key: 'totalExpenditure', label: 'Expenditure (₹)' },
-        { key: 'workRemarks', label: 'Work Remarks' },
+    const fieldsToCompare: Array<{ key: keyof SiteDetailFormData; label: string; isDate?: boolean; isNumeric?: boolean }> = [
+      // Location
+      { key: 'latitude', label: 'Latitude', isNumeric: true },
+      { key: 'longitude', label: 'Longitude', isNumeric: true },
+      // Drilling (Actuals)
+      { key: 'diameter', label: 'Diameter (mm)' },
+      { key: 'totalDepth', label: 'TD (m)', isNumeric: true },
+      { key: 'surveyOB', label: 'OB (m)' },
+      { key: 'casingPipeUsed', label: 'Casing Pipe (m)' },
+      { key: 'innerCasingPipe', label: 'Inner Casing (m)' },
+      { key: 'outerCasingPipe', label: 'Outer/MS Casing (m)' },
+      { key: 'surveyPlainPipe', label: 'Plain Pipe (m)' },
+      { key: 'surveySlottedPipe', label: 'Slotted Pipe (m)' },
+      { key: 'yieldDischarge', label: 'Discharge (LPH)' },
+      { key: 'zoneDetails', label: 'Zone Details (m)' },
+      { key: 'waterLevel', label: 'Water Level (m)' },
+      { key: 'typeOfRig', label: 'Type of Rig' },
+      { key: 'drillingRemarks', label: 'Drilling Remarks' },
+      // Scheme Details
+      { key: 'pumpDetails', label: 'Pump Details' },
+      { key: 'waterTankCapacity', label: 'Water Tank (L)' },
+      { key: 'noOfTapConnections', label: 'Tap Connections', isNumeric: true },
+      { key: 'noOfBeneficiary', label: 'Beneficiaries' },
+      // ARS Details
+      { key: 'arsNumberOfStructures', label: 'ARS Structures', isNumeric: true },
+      { key: 'arsStorageCapacity', label: 'ARS Capacity (m³)', isNumeric: true },
+      { key: 'arsNumberOfFillings', label: 'ARS Fillings', isNumeric: true },
+      // Work Status
+      { key: 'workStatus', label: 'Work Status' },
+      { key: 'dateOfCompletion', label: 'Date of Completion', isDate: true },
+      { key: 'totalExpenditure', label: 'Expenditure (₹)', isNumeric: true },
+      { key: 'workRemarks', label: 'Work Remarks' },
     ];
 
-    fieldsToCompare.forEach(({ key, label, isDate }) => {
+
+    fieldsToCompare.forEach(({ key, label, isDate, isNumeric }) => {
         let originalValue = originalSite[key];
         let updatedValue = updatedSite[key];
 
         if (isDate) {
             const originalDate = originalValue ? new Date(originalValue) : null;
             const updatedDate = updatedValue ? new Date(updatedValue) : null;
-
             const formattedOriginal = originalDate && isValid(originalDate) ? format(originalDate, 'dd/MM/yyyy') : 'N/A';
             const formattedUpdated = updatedDate && isValid(updatedDate) ? format(updatedDate, 'dd/MM/yyyy') : 'N/A';
+            if (formattedOriginal !== formattedUpdated) {
+                changes.push({ label, original: formattedOriginal, updated: formattedUpdated });
+            }
+        } else if (isNumeric) {
+            const originalNum = originalValue !== undefined && originalValue !== null && originalValue !== '' ? Number(originalValue) : NaN;
+            const updatedNum = updatedValue !== undefined && updatedValue !== null && updatedValue !== '' ? Number(updatedValue) : NaN;
+
+            const formattedOriginal = !isNaN(originalNum) ? originalNum.toLocaleString('en-IN') : 'N/A';
+            const formattedUpdated = !isNaN(updatedNum) ? updatedNum.toLocaleString('en-IN') : 'N/A';
 
             if (formattedOriginal !== formattedUpdated) {
                 changes.push({ label, original: formattedOriginal, updated: formattedUpdated });
@@ -64,8 +100,7 @@ const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailF
         } else {
             const originalStr = originalValue ?? 'N/A';
             const updatedStr = updatedValue ?? 'N/A';
-
-            if (originalStr !== updatedStr) {
+            if (String(originalStr).trim() !== String(updatedStr).trim()) {
                 changes.push({ label, original: originalStr, updated: updatedStr });
             }
         }
