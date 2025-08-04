@@ -71,7 +71,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TransformedFinanceMetrics {
   sbiCredit: number;
@@ -430,7 +430,8 @@ export default function DashboardPage() {
     const sourceEntriesForCompleted = rawFileEntries;
 
     for (const entry of sourceEntriesForCompleted) {
-      entry.siteDetails?.forEach(site => {
+      if (!entry.siteDetails) continue;
+      for (const site of entry.siteDetails) {
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = new Date(site.dateOfCompletion);
           if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
@@ -443,15 +444,16 @@ export default function DashboardPage() {
             }
           }
         }
-      });
+      }
     }
 
     for (const entry of fileEntries) {
-      entry.siteDetails?.forEach(site => {
+      if (!entry.siteDetails) continue;
+      for (const site of entry.siteDetails) {
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
           ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
-      });
+      }
     }
     
     const createSummary = (sites: typeof completedThisMonthSites): WorkSummary => {
@@ -491,24 +493,28 @@ export default function DashboardPage() {
 
 
   const supervisorOngoingWorks = useMemo(() => {
-      if (!selectedSupervisorId || entriesLoading) return [];
-      
-      const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-      const works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; }> = [];
+    if (!selectedSupervisorId || entriesLoading) return { works: [], byPurpose: {}, totalCount: 0 };
+    
+    const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+    const works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; }> = [];
+    const byPurpose: Record<string, number> = {};
 
-      for (const entry of rawFileEntries) { // Use rawFileEntries to check all files
-          entry.siteDetails?.forEach(site => {
-              if (site.supervisorUid === selectedSupervisorId && site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
-                  works.push({
-                      fileNo: entry.fileNo || 'N/A',
-                      applicantName: entry.applicantName || 'N/A',
-                      siteName: site.nameOfSite || 'Unnamed Site',
-                      workStatus: site.workStatus,
-                  });
-              }
-          });
-      }
-      return works;
+    for (const entry of rawFileEntries) { // Use rawFileEntries to check all files
+        entry.siteDetails?.forEach(site => {
+            if (site.supervisorUid === selectedSupervisorId && site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
+                works.push({
+                    fileNo: entry.fileNo || 'N/A',
+                    applicantName: entry.applicantName || 'N/A',
+                    siteName: site.nameOfSite || 'Unnamed Site',
+                    workStatus: site.workStatus,
+                });
+                if(site.purpose) {
+                    byPurpose[site.purpose] = (byPurpose[site.purpose] || 0) + 1;
+                }
+            }
+        });
+    }
+    return { works, byPurpose, totalCount: works.length };
   }, [selectedSupervisorId, rawFileEntries, entriesLoading]);
 
 
@@ -1293,7 +1299,11 @@ export default function DashboardPage() {
                         {Object.entries(currentMonthStats.completedSummary.byPurpose).map(([purpose, count]) => (
                           <TableRow key={purpose}>
                             <TableCell className="font-medium py-1.5">{purpose}</TableCell>
-                            <TableCell className="text-right py-1.5">{count}</TableCell>
+                            <TableCell className="text-right py-1.5">
+                              <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick('Work Completed', purpose)}>
+                                {count}
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1327,7 +1337,11 @@ export default function DashboardPage() {
                         {Object.entries(currentMonthStats.ongoingSummary.byPurpose).map(([purpose, count]) => (
                           <TableRow key={purpose}>
                             <TableCell className="font-medium py-1.5">{purpose}</TableCell>
-                            <TableCell className="text-right py-1.5">{count}</TableCell>
+                            <TableCell className="text-right py-1.5">
+                               <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick('Work in Progress', purpose)}>
+                                {count}
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1348,10 +1362,10 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Supervisor's Ongoing Work ({selectedSupervisorId ? supervisorOngoingWorks.length : 'Total'})
+                Supervisor's Ongoing Work
               </CardTitle>
               <CardDescription>
-                Select a supervisor to view their assigned ongoing projects.
+                Select a supervisor to view their assigned ongoing projects by category.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1373,18 +1387,27 @@ export default function DashboardPage() {
               </Select>
               <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner border">
                 {selectedSupervisorId ? (
-                    supervisorOngoingWorks.length > 0 ? (
-                        <ul className="space-y-3 text-sm">
-                            {supervisorOngoingWorks.map((item, index) => (
-                                <li key={`ongoing-supervisor-${index}`} className="flex flex-col gap-1 border-b pb-2 last:border-b-0">
-                                    <p className="font-medium text-foreground text-xs" title={item.siteName}>Site: {item.siteName}</p>
-                                    <p className="text-xs text-foreground" title={`${item.applicantName} - File: ${item.fileNo}`}>
-                                        {item.applicantName} - File: {item.fileNo}
-                                    </p>
-                                    <Badge variant="secondary" className="mt-1 self-start">{item.workStatus}</Badge>
-                                </li>
+                    supervisorOngoingWorks.totalCount > 0 ? (
+                       <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Category</TableHead>
+                            <TableHead className="text-right">Count</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {Object.entries(supervisorOngoingWorks.byPurpose).map(([purpose, count]) => (
+                            <TableRow key={purpose}>
+                                <TableCell className="font-medium">{purpose}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="link" className="p-0 h-auto" onClick={() => router.push(`/dashboard/reports?workCategory=Work in Progress&serviceType=${purpose}`)}>
+                                        {count}
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
                             ))}
-                        </ul>
+                        </TableBody>
+                        </Table>
                     ) : (
                         <div className="flex h-full items-center justify-center">
                             <p className="text-muted-foreground text-center text-sm">No ongoing works found for the selected supervisor.</p>
@@ -1624,3 +1647,4 @@ export default function DashboardPage() {
     
 
     
+
