@@ -9,7 +9,7 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useMemo, useEffect, useState } from "react";
-import type { DataEntryFormData, StaffMember, UserRole } from "@/lib/schemas";
+import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { parseISO, isValid } from 'date-fns';
 
@@ -121,8 +121,9 @@ export default function DataEntryPage() {
           let finalEntryData = entryResult;
           // ** NEW: Filter site details if the user is a supervisor **
           if (finalEntryData && user.role === 'supervisor' && user.uid) {
+              const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
               const assignedSites = finalEntryData.siteDetails?.filter(
-                  site => site.supervisorUid === user.uid && site.workStatus !== 'Work Completed'
+                  site => site.supervisorUid === user.uid && site.workStatus && !inactiveStatuses.includes(site.workStatus)
               );
               
               const originalAssignedSites = finalEntryData.siteDetails?.filter(

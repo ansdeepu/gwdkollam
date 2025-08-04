@@ -142,13 +142,14 @@ export default function DashboardPage() {
 
   const fileEntries = useMemo(() => {
     if (currentUser?.role === 'supervisor') {
+      const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
       return rawFileEntries
         .map(entry => {
           if (!entry.siteDetails || !currentUser.uid) {
             return { ...entry, siteDetails: [] };
           }
           const activeAssignedSites = entry.siteDetails.filter(
-            site => site.supervisorUid === currentUser.uid && site.workStatus !== 'Work Completed'
+            site => site.supervisorUid === currentUser.uid && site.workStatus && !inactiveStatuses.includes(site.workStatus)
           );
           return { ...entry, siteDetails: activeAssignedSites };
         })
@@ -1590,6 +1591,7 @@ export default function DashboardPage() {
     
 
     
+
 
 
 
