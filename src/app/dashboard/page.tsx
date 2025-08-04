@@ -115,9 +115,6 @@ export default function DashboardPage() {
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
   
-  const [currentDateState, setCurrentDateState] = useState<string | null>(null); 
-  const [currentTimeState, setCurrentTimeState] = useState<string | null>(null); 
-
   const [unapprovedUsersCount, setUnapprovedUsersCount] = useState<number>(0);
   const [usersLoading, setUsersLoading] = useState<boolean>(true);
   const [activeUsers, setActiveUsers] = useState<UserProfile[]>([]);
@@ -159,7 +156,7 @@ export default function DashboardPage() {
           );
           return { ...entry, siteDetails: activeAssignedSites };
         })
-        .filter(entry => entry.siteDetails.length > 0); // Only include files that still have active sites for the supervisor
+        .filter(entry => entry.siteDetails.length > 0);
     }
     return rawFileEntries;
   }, [rawFileEntries, currentUser]);
@@ -169,14 +166,6 @@ export default function DashboardPage() {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   };
-
-  useEffect(() => {
-    const now = new Date();
-    setCurrentDateState(format(now, 'dd/MM/yyyy'));
-    setCurrentTimeState(format(now, 'hh:mm:ss a'));
-    const timerId = setInterval(() => setCurrentTimeState(format(new Date(), 'hh:mm:ss a')), 1000);
-    return () => clearInterval(timerId);
-  }, []);
 
   const calculateFinanceData = useCallback(() => {
     if (entriesLoading) return;
@@ -279,7 +268,6 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (entriesLoading || staffLoading || !fileEntries) return null;
 
-    // --- Start Initializing accumulators ---
     let pendingTasksCount = 0;
     
     const workStatusRows = [...siteWorkStatusOptions];
@@ -287,11 +275,11 @@ export default function DashboardPage() {
     const reorderedRowLabels = [...workStatusRows, totalApplicationsRow];
     
     const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
-        const serviceCounts: { [service: string]: number } = {};
+        const serviceCounts: { [service: string]: { count: number, data: any[] } } = {};
         sitePurposeOptions.forEach(service => {
-            serviceCounts[service] = 0;
+            serviceCounts[service] = { count: 0, data: [] };
         });
-        return { statusCategory, ...serviceCounts, total: 0 };
+        return { statusCategory, ...serviceCounts, total: { count: 0, data: [] } };
     });
 
     const birthdayWishes: { name: string, designation?: Designation }[] = [];
@@ -303,44 +291,43 @@ export default function DashboardPage() {
 
     const fileStatusCounts = new Map<string, number>();
     fileStatusOptions.forEach(status => fileStatusCounts.set(status, 0));
-    // --- End Initializing accumulators ---
 
     const now = new Date();
     const fileStatusesForPending: FileStatus[] = ["File Under Process"];
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
-    // --- SINGLE LOOP over fileEntries ---
     for (const entry of fileEntries) {
-        // 1. Pending Tasks Calculation
         let isFilePending = false;
         if (entry.fileStatus && fileStatusesForPending.includes(entry.fileStatus as FileStatus)) isFilePending = true;
         else if (entry.siteDetails?.some(sd => sd.workStatus && siteWorkStatusesForPending.includes(sd.workStatus as SiteWorkStatus))) isFilePending = true;
         if (isFilePending) pendingTasksCount++;
         
-        // 2. Work Status by Service Calculation
         entry.siteDetails?.forEach(sd => {
             if (sd.purpose && sd.workStatus) {
                 const purposeIndex = sitePurposeOptions.indexOf(sd.purpose as SitePurpose);
                 if (purposeIndex > -1) {
                     const service = sd.purpose as SitePurpose;
-                    // Find row for this workStatus
+                    const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
+                    
                     const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
                     if (workStatusRow) {
-                        workStatusRow[service]++;
-                        workStatusRow.total++;
+                        workStatusRow[service].count++;
+                        workStatusRow[service].data.push(siteData);
+                        workStatusRow.total.count++;
+                        workStatusRow.total.data.push(siteData);
                     }
-                    // Find row for total applications
                     const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
                     if (totalAppsRow) {
-                        totalAppsRow[service]++;
-                        totalAppsRow.total++;
+                        totalAppsRow[service].count++;
+                        totalAppsRow[service].data.push(siteData);
+                        totalAppsRow.total.count++;
+                        totalAppsRow.total.data.push(siteData);
                     }
                 }
             }
         });
 
-        // 3. Work Alerts Calculation
         entry.siteDetails?.forEach(site => {
             if (site.workStatus && siteWorkStatusAlerts.includes(site.workStatus as SiteWorkStatus)) {
                 const details = `Site: ${site.nameOfSite || 'Unnamed Site'}, App: ${entry.applicantName}, File: ${entry.fileNo}`;
@@ -351,7 +338,6 @@ export default function DashboardPage() {
             }
         });
 
-        // 4. Files by Age Calculation
         const latestRemittanceDate = entry.remittanceDetails
             ?.map(rd => (rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null))
             .filter((d): d is Date => d !== null && isValid(d))
@@ -370,13 +356,11 @@ export default function DashboardPage() {
             else if (ageInYears >= 5) ageGroups.above5.push(entry);
         }
 
-        // 5. File Status Counts
         if (entry.fileStatus && fileStatusCounts.has(entry.fileStatus)) {
             fileStatusCounts.set(entry.fileStatus, (fileStatusCounts.get(entry.fileStatus) || 0) + 1);
         }
     }
 
-    // --- SINGLE LOOP over staffMembers ---
     const today = new Date();
     const todayMonth = today.getMonth();
     const todayDate = today.getDate();
@@ -388,7 +372,6 @@ export default function DashboardPage() {
         }
     }
     
-    // --- Final Data Assembly ---
     const workAlerts = Array.from(workAlertsMap.values());
     const filesByAgeCounts = {
         lessThan1: ageGroups.lessThan1.length,
@@ -496,10 +479,10 @@ export default function DashboardPage() {
     if (!selectedSupervisorId || entriesLoading) return { works: [], byPurpose: {}, totalCount: 0 };
     
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-    const works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; }> = [];
+    let works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; purpose?: SitePurpose; supervisorName?: string | null }> = [];
     const byPurpose: Record<string, number> = {};
 
-    for (const entry of rawFileEntries) { // Use rawFileEntries to check all files
+    for (const entry of rawFileEntries) {
         entry.siteDetails?.forEach(site => {
             if (site.supervisorUid === selectedSupervisorId && site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
                 works.push({
@@ -507,6 +490,8 @@ export default function DashboardPage() {
                     applicantName: entry.applicantName || 'N/A',
                     siteName: site.nameOfSite || 'Unnamed Site',
                     workStatus: site.workStatus,
+                    purpose: site.purpose,
+                    supervisorName: site.supervisorName,
                 });
                 if(site.purpose) {
                     byPurpose[site.purpose] = (byPurpose[site.purpose] || 0) + 1;
@@ -522,12 +507,27 @@ export default function DashboardPage() {
     router.push(`/dashboard/reports?status=${encodeURIComponent(status)}`);
   };
 
-  const handleWorkStatusCellClick = (workCategory: string, serviceType: string) => {
-    router.push(`/dashboard/reports?workCategory=${encodeURIComponent(workCategory)}&serviceType=${encodeURIComponent(serviceType)}`);
-  };
-  
-  const handlePendingTasksClick = () => {
-    router.push('/dashboard/reports?reportType=pendingDashboardTasks');
+  const handleWorkStatusCellClick = (data: any[], title: string) => {
+    const dialogData = data.map(site => ({
+      fileNo: site.fileNo,
+      applicantName: site.applicantName,
+      siteName: site.nameOfSite,
+      purpose: site.purpose,
+      workStatus: site.workStatus,
+      supervisorName: site.supervisorName || 'N/A'
+    }));
+    const columns: DetailDialogColumn[] = [
+      { key: 'fileNo', label: 'File No.' },
+      { key: 'applicantName', label: 'Applicant Name' },
+      { key: 'siteName', label: 'Site Name' },
+      { key: 'purpose', label: 'Purpose' },
+      { key: 'workStatus', label: 'Work Status' },
+      { key: 'supervisorName', label: 'Supervisor' }
+    ];
+    setDetailDialogTitle(title);
+    setDetailDialogData(dialogData);
+    setDetailDialogColumns(columns);
+    setIsDetailDialogOpen(true);
   };
   
   const handleCalendarInteraction = (e: Event) => {
@@ -644,12 +644,11 @@ export default function DashboardPage() {
 
     const wb = XLSX.utils.book_new();
     
-    // --- Data Preparation ---
     const headerRows = [
       ["Ground Water Department, Kollam"],
       [reportTitle],
       [`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`],
-      [] // Blank row
+      []
     ];
     
     const numCols = columnLabels.length;
@@ -658,14 +657,13 @@ export default function DashboardPage() {
     footerRowData[footerColIndex] = "District Officer";
     
     const footerRows = [
-      [], // Spacer row
+      [], 
       footerRowData
     ];
 
     const finalData = [...headerRows, columnLabels, ...dataRows, ...footerRows];
     const ws = XLSX.utils.aoa_to_sheet(finalData, { cellStyles: false });
     
-    // --- Styling ---
     const merges = [
       { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } },
       { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } },
@@ -705,7 +703,7 @@ export default function DashboardPage() {
         if (R < 3) {
           ws[cellRef].s.font = { bold: true, sz: R === 0 ? 16 : (R === 1 ? 14 : 12) };
           if (R === 2) ws[cellRef].s.font.italic = true;
-        } else if (R === 3) { // Column headers row
+        } else if (R === 3) { 
           ws[cellRef].s.font = { bold: true };
           ws[cellRef].s.fill = { fgColor: { rgb: "F0F0F0" } };
         } else if (R === footerRowIndex) {
@@ -718,7 +716,6 @@ export default function DashboardPage() {
       }
     }
     
-    // --- Write File ---
     XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
     const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
     XLSX.writeFile(wb, uniqueFileName);
@@ -815,8 +812,27 @@ export default function DashboardPage() {
     exportDialogDataToExcel(monthDetailDialogTitle, monthDetailDialogColumns, monthDetailDialogData);
   };
 
+  const handleSupervisorWorkClick = (purpose: string) => {
+    if (!supervisorOngoingWorks || supervisorOngoingWorks.totalCount === 0) return;
+  
+    const filteredWorks = supervisorOngoingWorks.works.filter(work => work.purpose === purpose);
+  
+    const columns: DetailDialogColumn[] = [
+      { key: 'fileNo', label: 'File No.' },
+      { key: 'applicantName', label: 'Applicant Name' },
+      { key: 'siteName', label: 'Site Name' },
+      { key: 'workStatus', label: 'Work Status' },
+    ];
+  
+    const selectedSupervisorName = supervisorList.find(s => s.uid === selectedSupervisorId)?.name || "Selected Supervisor";
+    setMonthDetailDialogTitle(`Ongoing '${purpose}' Works for ${selectedSupervisorName}`);
+    setMonthDetailDialogData(filteredWorks);
+    setMonthDetailDialogColumns(columns);
+    setIsMonthDetailDialogOpen(true);
+  };
 
-  if (entriesLoading || authLoading || usersLoading || staffLoading || !currentDateState || !currentTimeState || !dashboardData || !currentMonthStats) { 
+
+  if (entriesLoading || authLoading || usersLoading || staffLoading || !dashboardData || !currentMonthStats) { 
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -830,20 +846,6 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
-        <div className="text-sm text-foreground text-right space-y-1">
-          {currentDateState && (
-            <div className="flex items-center justify-end gap-2">
-              <CalendarDays className="h-4 w-4" />
-              <span>{currentDateState}</span>
-            </div>
-          )}
-          {currentTimeState && (
-            <div className="flex items-center justify-end gap-2">
-              <Clock className="h-4 w-4" />
-              <span>{currentTimeState}</span>
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
@@ -870,12 +872,12 @@ export default function DashboardPage() {
                 </div>
                 {dashboardData.filesByAgeCounts ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    <AgeStatCard title="&lt; 1 Year" count={dashboardData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
+                    <AgeStatCard title="< 1 Year" count={dashboardData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
                     <AgeStatCard title="1-2 Years" count={dashboardData.filesByAgeCounts.between1And2} onClick={() => handleAgeCardClick('between1And2', 'Files Aged 1-2 Years')} />
                     <AgeStatCard title="2-3 Years" count={dashboardData.filesByAgeCounts.between2And3} onClick={() => handleAgeCardClick('between2And3', 'Files Aged 2-3 Years')} />
                     <AgeStatCard title="3-4 Years" count={dashboardData.filesByAgeCounts.between3And4} onClick={() => handleAgeCardClick('between3And4', 'Files Aged 3-4 Years')} />
                     <AgeStatCard title="4-5 Years" count={dashboardData.filesByAgeCounts.between4And5} onClick={() => handleAgeCardClick('between4And5', 'Files Aged 4-5 Years')} />
-                    <AgeStatCard title="&gt; 5 Years" count={dashboardData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
+                    <AgeStatCard title="> 5 Years" count={dashboardData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">Calculating age data...</p>
@@ -1040,7 +1042,7 @@ export default function DashboardPage() {
                         key={`${row.statusCategory}-${service}`} 
                         className="text-center px-2 py-2"
                       >
-                        {(row as any)[service] > 0 ? (
+                        {(row as any)[service].count > 0 ? (
                           <Button 
                             variant="link" 
                             className={cn(
@@ -1049,10 +1051,10 @@ export default function DashboardPage() {
                                 ? "text-accent font-bold" 
                                 : "text-primary"
                             )}
-                            onClick={() => handleWorkStatusCellClick(row.statusCategory, service)}
+                            onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}
                             aria-label={`View details for ${row.statusCategory} under ${service}`}
                           >
-                            {(row as any)[service]}
+                            {(row as any)[service].count}
                           </Button>
                         ) : (
                           <span className="text-muted-foreground font-normal">0</span>
@@ -1060,7 +1062,7 @@ export default function DashboardPage() {
                       </TableCell>
                     ))}
                     <TableCell className="text-center px-2 py-2">
-                       {(row as any)['total'] > 0 ? (
+                       {(row as any)['total'].count > 0 ? (
                         <Button
                           variant="link"
                           className={cn(
@@ -1069,10 +1071,10 @@ export default function DashboardPage() {
                                ? "text-accent" 
                                : "text-primary",
                           )}
-                          onClick={() => handleWorkStatusCellClick(row.statusCategory, 'all')}
+                           onClick={() => handleWorkStatusCellClick((row as any).total.data, `Total for ${row.statusCategory}`)}
                           aria-label={`View details for total of ${row.statusCategory}`}
                         >
-                            {(row as any)['total']}
+                            {(row as any)['total'].count}
                         </Button>
                       ) : (
                         <span className="text-muted-foreground font-medium">0</span>
@@ -1278,7 +1280,6 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Completed Works Column */}
               <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                 <div className="flex justify-between items-center">
                   <h4 className="font-semibold text-foreground">Completed in {format(workReportMonth, 'MMMM')}</h4>
@@ -1300,7 +1301,7 @@ export default function DashboardPage() {
                           <TableRow key={purpose}>
                             <TableCell className="font-medium py-1.5">{purpose}</TableCell>
                             <TableCell className="text-right py-1.5">
-                              <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick('Work Completed', purpose)}>
+                              <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick(currentMonthStats.completedSummary.data.filter(d => d.purpose === purpose), `Completed '${purpose}' Works`)}>
                                 {count}
                               </Button>
                             </TableCell>
@@ -1316,7 +1317,6 @@ export default function DashboardPage() {
                 </ScrollArea>
               </div>
 
-              {/* Ongoing Works Column */}
               <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                 <div className="flex justify-between items-center">
                   <h4 className="font-semibold text-foreground">Total Ongoing Works</h4>
@@ -1338,7 +1338,7 @@ export default function DashboardPage() {
                           <TableRow key={purpose}>
                             <TableCell className="font-medium py-1.5">{purpose}</TableCell>
                             <TableCell className="text-right py-1.5">
-                               <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick('Work in Progress', purpose)}>
+                               <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick(currentMonthStats.ongoingSummary.data.filter(d => d.purpose === purpose), `Ongoing '${purpose}' Works`)}>
                                 {count}
                               </Button>
                             </TableCell>
@@ -1400,7 +1400,7 @@ export default function DashboardPage() {
                             <TableRow key={purpose}>
                                 <TableCell className="font-medium">{purpose}</TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="link" className="p-0 h-auto" onClick={() => router.push(`/dashboard/reports?workCategory=Work in Progress&serviceType=${purpose}`)}>
+                                    <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)}>
                                         {count}
                                     </Button>
                                 </TableCell>
@@ -1446,7 +1446,7 @@ export default function DashboardPage() {
                           alt={usr.name || 'User'}
                           data-ai-hint="person user"
                         />
-                        <AvatarFallback className="text-xs">{getInitials(usr.name)}</AvatarFallback>
+                        <AvatarFallback>{getInitials(usr.name)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
@@ -1484,8 +1484,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-
-      {/* Finance Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
@@ -1533,7 +1531,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-       {/* Age Detail Dialog */}
       <Dialog open={isAgeDetailDialogOpen} onOpenChange={setIsAgeDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
@@ -1581,15 +1578,14 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
       
-      {/* Monthly Work Detail Dialog */}
       <Dialog open={isMonthDetailDialogOpen} onOpenChange={setIsMonthDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>{monthDetailDialogTitle}</DialogTitle>
             <DialogDescription>
-              {monthDetailDialogTitle === 'Total Ongoing Works'
-                ? 'List of all sites currently in an ongoing work status.'
-                : `List of all sites completed in ${format(workReportMonth, 'MMMM yyyy')}.`}
+              {monthDetailDialogTitle.includes('Ongoing')
+                ? 'List of sites currently in an ongoing work status.'
+                : `List of sites completed in ${format(workReportMonth, 'MMMM yyyy')}.`}
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
@@ -1634,17 +1630,3 @@ export default function DashboardPage() {
   );
 }
     
-
-    
-
-    
-
-
-
-    
-
-
-    
-
-    
-
