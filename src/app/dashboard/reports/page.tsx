@@ -36,6 +36,7 @@ import {
 } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { useFileEntries } from "@/hooks/useFileEntries";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 
@@ -83,6 +84,7 @@ export default function ReportsPage() {
   const searchParams = useSearchParams();
   const router = useRouter(); 
   const { fileEntries, isLoading: entriesLoading, getFileEntry } = useFileEntries();
+  const { user, isLoading: authIsLoading } = useAuth();
   const [filteredReportRows, setFilteredReportRows] = useState<FlattenedReportRow[]>([]);
   const { toast } = useToast();
 
@@ -111,7 +113,21 @@ export default function ReportsPage() {
   }, []);
 
   const applyFilters = useCallback(() => {
-    let currentEntries = [...fileEntries];
+    let baseEntries = [...fileEntries];
+
+    // ** NEW: Supervisor-specific initial filtering **
+    if (user?.role === 'supervisor' && user.uid) {
+        const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
+        baseEntries = baseEntries.filter(entry => 
+            entry.siteDetails?.some(site => 
+                site.supervisorUid === user.uid && 
+                site.workStatus && 
+                !inactiveStatuses.includes(site.workStatus)
+            )
+        );
+    }
+    
+    let currentEntries = [...baseEntries];
     const lowerSearchTerm = searchTerm.toLowerCase();
 
     const reportType = searchParams.get("reportType");
@@ -277,13 +293,13 @@ export default function ReportsPage() {
     
     setFilteredReportRows(flattenedRows);
   }, [
-    fileEntries, searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
+    fileEntries, user, searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
     startDate, endDate, dateFilterType,
     applicationTypeFilter, typeOfRigFilter, searchParams
   ]);
 
   useEffect(() => {
-    if (entriesLoading) return;
+    if (entriesLoading || authIsLoading) return;
     const statusFromQuery = searchParams.get("status");
     const workCategoryFromQuery = searchParams.get("workCategory");
     const serviceTypeFromQuery = searchParams.get("serviceType");
@@ -292,15 +308,15 @@ export default function ReportsPage() {
     setWorkCategoryFilter(workCategoryFromQuery && siteWorkStatusOptions.includes(workCategoryFromQuery as any) ? workCategoryFromQuery : "all");
     setServiceTypeFilter(serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all') ? serviceTypeFromQuery : "all");
 
-  }, [searchParams, entriesLoading]);
+  }, [searchParams, entriesLoading, authIsLoading]);
 
 
   useEffect(() => {
-    if (!entriesLoading) applyFilters();
+    if (!entriesLoading && !authIsLoading) applyFilters();
   }, [
     searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
     dateFilterType, startDate, endDate, entriesLoading, fileEntries, applyFilters,
-    applicationTypeFilter, typeOfRigFilter, searchParams 
+    applicationTypeFilter, typeOfRigFilter, searchParams, authIsLoading, user
   ]);
 
   const handleSearch = () => applyFilters();
@@ -437,7 +453,7 @@ export default function ReportsPage() {
     }
   };
 
-  if (entriesLoading) {
+  if (entriesLoading || authIsLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
