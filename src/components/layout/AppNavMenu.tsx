@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FilePlus2, FileText, Settings, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, FileText, Settings, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, HelpCircle, UserCog } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 
@@ -30,6 +30,7 @@ const allNavItems: NavItem[] = [
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
   { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor'] },
+  { href: '/dashboard/profile', label: 'Profile', icon: UserCog },
   { href: '/dashboard/help', label: 'Help', icon: HelpCircle },
 ];
 
