@@ -421,21 +421,25 @@ export default function DashboardPage() {
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     
-    // Use rawFileEntries for completed works calculation to include all data, regardless of user role
-    const sourceEntriesForCompleted = currentUser?.role === 'supervisor' ? rawFileEntries : fileEntries;
+    const sourceEntriesForCompleted = rawFileEntries;
 
     for (const entry of sourceEntriesForCompleted) {
         entry.siteDetails?.forEach(site => {
             if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
                 const completionDate = new Date(site.dateOfCompletion);
                 if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
-                    completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+                    if (currentUser?.role === 'supervisor') {
+                        if(site.supervisorUid === currentUser.uid) {
+                            completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+                        }
+                    } else {
+                         completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+                    }
                 }
             }
         });
     }
 
-    // For ongoing works, use the already-filtered `fileEntries` which respects supervisor's view
     for (const entry of fileEntries) {
       entry.siteDetails?.forEach(site => {
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
@@ -707,7 +711,8 @@ export default function DashboardPage() {
   };
 
   const handleAgeCardClick = (category: keyof NonNullable<typeof dashboardData>['filesByAgeData'], title: string) => {
-    const dataForDialog = dashboardData?.filesByAgeData[category].map(entry => {
+    if (!dashboardData) return;
+    const dataForDialog = dashboardData.filesByAgeData[category].map(entry => {
       const latestRemittanceDate = entry.remittanceDetails
         ?.map(rd => (rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null))
         .filter((d): d is Date => d !== null && isValid(d))
@@ -1592,6 +1597,9 @@ export default function DashboardPage() {
 
     
 
+
+
+    
 
 
     

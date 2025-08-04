@@ -3,6 +3,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -112,22 +113,15 @@ const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailF
 
 
 export default function PendingUpdatesTable() {
-  const { pendingUpdates, isLoading, approveUpdate, rejectUpdate } = usePendingUpdates();
+  const router = useRouter();
+  const { pendingUpdates, isLoading, rejectUpdate } = usePendingUpdates();
   const { getFileEntry } = useFileEntries();
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [viewingUpdate, setViewingUpdate] = useState<PendingUpdate | null>(null);
-
-  const handleApprove = async (updateId: string, fileNo: string, sites: SiteDetailFormData[]) => {
-    setProcessingId(updateId);
-    try {
-      await approveUpdate(updateId, fileNo, sites);
-      toast({ title: "Update Approved", description: `Changes for File No. ${fileNo} have been applied.` });
-    } catch (error: any) {
-      toast({ title: "Approval Failed", description: error.message, variant: "destructive" });
-    } finally {
-      setProcessingId(null);
-    }
+  
+  const handleApproveRedirect = (updateId: string, fileNo: string) => {
+    router.push(`/dashboard/data-entry?fileNo=${encodeURIComponent(fileNo)}&approveUpdateId=${encodeURIComponent(updateId)}`);
   };
 
   const handleReject = async (updateId: string, fileNo: string) => {
@@ -199,10 +193,10 @@ export default function PendingUpdatesTable() {
                       size="sm"
                       className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700"
                       disabled={processingId === update.id}
-                      onClick={() => handleApprove(update.id, update.fileNo, update.updatedSiteDetails)}
+                      onClick={() => handleApproveRedirect(update.id, update.fileNo)}
                     >
-                      {processingId === update.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                      Approve
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Review & Approve
                     </Button>
                     <Button
                       variant="outline"
@@ -286,3 +280,5 @@ export default function PendingUpdatesTable() {
     </>
   );
 }
+
+    

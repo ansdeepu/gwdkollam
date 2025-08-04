@@ -16,6 +16,7 @@ import {
   Timestamp,
   serverTimestamp,
   addDoc,
+  getDoc,
   type DocumentData,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
@@ -41,6 +42,7 @@ interface PendingUpdatesState {
   approveUpdate: (updateId: string, fileNo: string, updatedSiteDetails: DataEntryFormData['siteDetails']) => Promise<void>;
   rejectUpdate: (updateId: string) => Promise<void>;
   createPendingUpdate: (fileNo: string, updatedSiteDetails: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
+  getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
 }
 
 export function usePendingUpdates(): PendingUpdatesState {
@@ -69,6 +71,24 @@ export function usePendingUpdates(): PendingUpdatesState {
     });
 
     return () => unsubscribe();
+  }, [user]);
+
+  const getPendingUpdateById = useCallback(async (updateId: string): Promise<PendingUpdate | null> => {
+    if (!user || user.role !== 'editor') {
+      console.warn("Attempted to fetch pending update without editor permissions.");
+      return null;
+    }
+    try {
+      const updateDocRef = doc(db, PENDING_UPDATES_COLLECTION, updateId);
+      const docSnap = await getDoc(updateDocRef);
+      if (docSnap.exists()) {
+        return convertTimestampToDate({ id: docSnap.id, ...docSnap.data() });
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching pending update by ID:", error);
+      return null;
+    }
   }, [user]);
 
   const createPendingUpdate = useCallback(async (fileNo: string, updatedSiteDetails: SiteDetailFormData[], currentUser: UserProfile) => {
@@ -146,5 +166,7 @@ export function usePendingUpdates(): PendingUpdatesState {
     });
   }, [user]);
 
-  return { pendingUpdates, isLoading, approveUpdate, rejectUpdate, createPendingUpdate };
+  return { pendingUpdates, isLoading, approveUpdate, rejectUpdate, createPendingUpdate, getPendingUpdateById };
 }
+
+    

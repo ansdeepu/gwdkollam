@@ -9,9 +9,10 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useMemo, useEffect, useState } from "react";
-import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus } from "@/lib/schemas";
+import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus, PendingUpdate } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
-import { parseISO, isValid } from 'date-fns';
+import { usePendingUpdates } from "@/hooks/usePendingUpdates";
+import { isValid } from 'date-fns';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -89,9 +90,12 @@ interface PageData {
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
   const fileNoToEdit = searchParams.get("fileNo");
+  const updateIdToApprove = searchParams.get("approveUpdateId");
+  
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
+  const { getPendingUpdateById } = usePendingUpdates();
   const { toast } = useToast();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
@@ -105,9 +109,11 @@ export default function DataEntryPage() {
       setDataLoading(true);
       
       const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
+      const pendingUpdatePromise = updateIdToApprove ? getPendingUpdateById(updateIdToApprove) : Promise.resolve(null);
       
       try {
-        const entryResult = await entryPromise;
+        const [entryResult, pendingUpdateResult] = await Promise.all([entryPromise, pendingUpdatePromise]);
+        
         let allUsersResult: UserProfile[] = [];
         if (user.role === 'editor') {
           allUsersResult = await fetchAllUsers();
@@ -119,6 +125,24 @@ export default function DataEntryPage() {
           }
 
           let finalEntryData = entryResult;
+
+          // ** NEW: If approving, merge pending changes into the entry data **
+          if (finalEntryData && pendingUpdateResult && user.role === 'editor') {
+            const updatedSiteDetails = [...(finalEntryData.siteDetails || [])];
+            pendingUpdateResult.updatedSiteDetails.forEach(updatedSite => {
+                const index = updatedSiteDetails.findIndex(site => site.nameOfSite === updatedSite.nameOfSite);
+                if (index > -1) {
+                    updatedSiteDetails[index] = updatedSite; // Replace with updated site data
+                }
+            });
+            finalEntryData = { ...finalEntryData, siteDetails: updatedSiteDetails };
+            toast({
+              title: "Reviewing Update",
+              description: `Loaded changes from supervisor for approval. Please review and save.`,
+              variant: "default"
+            });
+          }
+          
           // ** NEW: Filter site details if the user is a supervisor **
           if (finalEntryData && user.role === 'supervisor' && user.uid) {
               const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
@@ -130,22 +154,17 @@ export default function DataEntryPage() {
                   site => site.supervisorUid === user.uid
               );
 
-              // Ensure a valid JSON string is always set, even for an empty array
               setOriginalSupervisorSites(JSON.stringify(originalAssignedSites || []));
 
-              // If supervisor opens a file with no active sites assigned to them, treat as not found for editing.
               if (!assignedSites || assignedSites.length === 0) {
-                  finalEntryData = null; // Clear the entry data for the form
+                  finalEntryData = null; 
                   toast({
                       title: "No Active Sites",
                       description: "You do not have any active sites assigned to you in this file.",
                       variant: "default"
                   });
               } else {
-                  finalEntryData = {
-                      ...finalEntryData,
-                      siteDetails: assignedSites,
-                  };
+                  finalEntryData = { ...finalEntryData, siteDetails: assignedSites };
               }
           }
           
@@ -175,7 +194,7 @@ export default function DataEntryPage() {
     }
     
     return () => { isMounted = false; };
-  }, [fileNoToEdit, authIsLoading, user, fetchEntryForEditing, fetchAllUsers, toast]);
+  }, [fileNoToEdit, updateIdToApprove, authIsLoading, user, fetchEntryForEditing, fetchAllUsers, getPendingUpdateById, toast]);
 
 
   const permissions = useMemo(() => {
@@ -187,6 +206,9 @@ export default function DataEntryPage() {
       if (isCreatingNew) {
         title = "New File Data Entry";
         description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
+      } else if (updateIdToApprove) {
+        title = "Approve Supervisor Update";
+        description = `Reviewing supervisor changes for File No: ${fileNoToEdit}. Make final adjustments and save to approve.`;
       } else {
         title = "Edit File Data";
         description = `Editing details for File No: ${fileNoToEdit}. Please make your changes and submit.`;
@@ -205,7 +227,7 @@ export default function DataEntryPage() {
     }
 
     return { title, description };
-  }, [fileNoToEdit, user]);
+  }, [fileNoToEdit, user, updateIdToApprove]);
 
   const supervisorList = useMemo(() => {
     if (!user || !pageData || staffMembers.length === 0) return [];
@@ -281,6 +303,7 @@ export default function DataEntryPage() {
              <DataEntryFormComponent
                 key={fileNoToEdit || 'new-entry'} 
                 fileNoToEdit={fileNoToEdit || undefined}
+                updateIdToApprove={updateIdToApprove || undefined}
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}
@@ -292,5 +315,7 @@ export default function DataEntryPage() {
     </div>
   );
 }
+
+    
 
     
