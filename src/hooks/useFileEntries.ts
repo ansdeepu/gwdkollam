@@ -199,23 +199,9 @@ export function useFileEntries(): FileEntriesState {
       let finalEntries = entriesFromFirestore;
 
       if (user.role === 'supervisor') {
-         const supervisorVisibleStatuses: SiteWorkStatus[] = [
-          "Work Order Issued",
-          "Work in Progress",
-          "Awaiting Dept. Rig",
-        ];
-        finalEntries = entriesFromFirestore.filter(entry => {
-          if (!entry.siteDetails || entry.siteDetails.length === 0) {
-            return false;
-          }
-          // The main query already filters for files where the supervisor is assigned.
-          // This second filter ensures at least one of their assigned sites has a visible status.
-          return entry.siteDetails.some(site => 
-            site.supervisorUid === user.uid && 
-            site.workStatus && 
-            supervisorVisibleStatuses.includes(site.workStatus as SiteWorkStatus)
-          );
-        });
+         // Supervisors should see all files they are assigned to, regardless of status.
+         // The Firestore query `where("assignedSupervisorUids", "array-contains", user.uid)` is sufficient.
+         // We no longer need to filter by site work status on the client side.
       }
 
       finalEntries.sort((a, b) => {
