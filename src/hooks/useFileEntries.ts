@@ -180,6 +180,7 @@ export function useFileEntries(): FileEntriesState {
     setIsLoading(true);
     try {
       let q;
+      // The initial query is broader for supervisors and will be filtered client-side.
       if (user.role === 'editor' || user.role === 'viewer') {
         q = query(collection(db, FILE_ENTRIES_COLLECTION));
       } else if (user.role === 'supervisor') {
@@ -196,10 +197,22 @@ export function useFileEntries(): FileEntriesState {
         entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
       });
       
-      const finalEntries = entriesFromFirestore;
+      let finalEntries = entriesFromFirestore;
 
-      // Supervisors should see all files they are assigned to, regardless of status.
-      // The Firestore query `where("assignedSupervisorUids", "array-contains", user.uid)` is sufficient.
+      // ** NEW: Client-side filtering for supervisors to hide completed/failed work **
+      if (user.role === 'supervisor') {
+        const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
+        finalEntries = finalEntries.filter(entry => {
+          // A file is visible to a supervisor if it contains AT LEAST ONE site that is:
+          // 1. Assigned to them.
+          // 2. Has a status that is NOT 'Work Completed' or 'Work Failed'.
+          return entry.siteDetails?.some(site =>
+            site.supervisorUid === user.uid &&
+            site.workStatus &&
+            !inactiveStatuses.includes(site.workStatus)
+          );
+        });
+      }
       
       finalEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
