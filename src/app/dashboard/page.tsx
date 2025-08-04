@@ -90,6 +90,12 @@ interface DetailDialogColumn {
   isNumeric?: boolean;
 }
 
+interface WorkSummary {
+  totalCount: number;
+  byPurpose: Record<string, number>;
+  data: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }>;
+}
+
 const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; onClick: () => void }) => (
   <button
     onClick={onClick}
@@ -411,7 +417,7 @@ export default function DashboardPage() {
 
   const currentMonthStats = useMemo(() => {
     if (entriesLoading) return null;
-    
+
     const startOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth(), 1);
     const endOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth() + 1, 0, 23, 59, 59);
 
@@ -424,36 +430,49 @@ export default function DashboardPage() {
     const sourceEntriesForCompleted = rawFileEntries;
 
     for (const entry of sourceEntriesForCompleted) {
-        entry.siteDetails?.forEach(site => {
-            if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
-                const completionDate = new Date(site.dateOfCompletion);
-                if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
-                    if (currentUser?.role === 'supervisor') {
-                        if(site.supervisorUid === currentUser.uid) {
-                            completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
-                        }
-                    } else {
-                         completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
-                    }
-                }
+      entry.siteDetails?.forEach(site => {
+        if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
+          const completionDate = new Date(site.dateOfCompletion);
+          if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
+            if (currentUser?.role === 'supervisor') {
+              if (site.supervisorUid === currentUser.uid) {
+                completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+              }
+            } else {
+              completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
             }
-        });
+          }
+        }
+      });
     }
 
     for (const entry of fileEntries) {
       entry.siteDetails?.forEach(site => {
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
-           ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+          ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
       });
     }
     
+    const createSummary = (sites: typeof completedThisMonthSites): WorkSummary => {
+        const byPurpose = sites.reduce((acc, site) => {
+            if (site.purpose) {
+                acc[site.purpose] = (acc[site.purpose] || 0) + 1;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+
+        return {
+            totalCount: sites.length,
+            byPurpose,
+            data: sites,
+        };
+    };
+
     return {
-        completedThisMonthCount: completedThisMonthSites.length,
-        completedThisMonthData: completedThisMonthSites,
-        ongoingCount: ongoingSites.length,
-        ongoingData: ongoingSites
-    }
+        completedSummary: createSummary(completedThisMonthSites),
+        ongoingSummary: createSummary(ongoingSites),
+    };
   }, [fileEntries, rawFileEntries, entriesLoading, workReportMonth, currentUser]);
 
   const supervisorList = useMemo(() => {
@@ -773,10 +792,10 @@ export default function DashboardPage() {
     
     if (type === 'ongoing') {
         setMonthDetailDialogTitle("Total Ongoing Works");
-        setMonthDetailDialogData(currentMonthStats.ongoingData.map(mapSiteToDialogData));
+        setMonthDetailDialogData(currentMonthStats.ongoingSummary.data.map(mapSiteToDialogData));
     } else {
         setMonthDetailDialogTitle(`Works Completed in ${format(workReportMonth, 'MMMM yyyy')}`);
-        setMonthDetailDialogData(currentMonthStats.completedThisMonthData.map(mapSiteToDialogData));
+        setMonthDetailDialogData(currentMonthStats.completedSummary.data.map(mapSiteToDialogData));
     }
     setMonthDetailDialogColumns(columns);
     setIsMonthDetailDialogOpen(true);
@@ -845,12 +864,12 @@ export default function DashboardPage() {
                 </div>
                 {dashboardData.filesByAgeCounts ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    <AgeStatCard title="< 1 Year" count={dashboardData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
+                    <AgeStatCard title="&lt; 1 Year" count={dashboardData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
                     <AgeStatCard title="1-2 Years" count={dashboardData.filesByAgeCounts.between1And2} onClick={() => handleAgeCardClick('between1And2', 'Files Aged 1-2 Years')} />
                     <AgeStatCard title="2-3 Years" count={dashboardData.filesByAgeCounts.between2And3} onClick={() => handleAgeCardClick('between2And3', 'Files Aged 2-3 Years')} />
                     <AgeStatCard title="3-4 Years" count={dashboardData.filesByAgeCounts.between3And4} onClick={() => handleAgeCardClick('between3And4', 'Files Aged 3-4 Years')} />
                     <AgeStatCard title="4-5 Years" count={dashboardData.filesByAgeCounts.between4And5} onClick={() => handleAgeCardClick('between4And5', 'Files Aged 4-5 Years')} />
-                    <AgeStatCard title="> 5 Years" count={dashboardData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
+                    <AgeStatCard title="&gt; 5 Years" count={dashboardData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">Calculating age data...</p>
@@ -1257,24 +1276,28 @@ export default function DashboardPage() {
               <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                 <div className="flex justify-between items-center">
                   <h4 className="font-semibold text-foreground">Completed in {format(workReportMonth, 'MMMM')}</h4>
-                  <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('completed')} disabled={!currentMonthStats || currentMonthStats.completedThisMonthCount === 0}>
-                    View All ({currentMonthStats?.completedThisMonthCount ?? 0})
+                  <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('completed')} disabled={!currentMonthStats || currentMonthStats.completedSummary.totalCount === 0}>
+                    View All ({currentMonthStats?.completedSummary.totalCount ?? 0})
                   </Button>
                 </div>
                 <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner">
-                  {currentMonthStats && currentMonthStats.completedThisMonthData.length > 0 ? (
-                    <ul className="space-y-3 text-sm">
-                      {currentMonthStats.completedThisMonthData.map((item, index) => (
-                        <li key={`completed-${index}`} className="flex flex-col gap-1 border-b pb-2 last:border-b-0">
-                          <p className="font-medium text-foreground text-xs" title={`${item.purpose} - ${item.nameOfSite}`}>{item.purpose} - {item.nameOfSite}</p>
-                          <p className="text-xs text-foreground" title={`${item.applicantName} - File: ${item.fileNo}`}>{item.applicantName} - File: {item.fileNo}</p>
-                          <div className="flex items-center justify-between mt-1">
-                            <Badge variant="secondary" className="text-xs">{item.workStatus}</Badge>
-                            {item.supervisorName && <span className="text-xs text-muted-foreground" title={`Supervisor: ${item.supervisorName}`}>Sup: {item.supervisorName}</span>}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                  {currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="h-8">Category</TableHead>
+                          <TableHead className="h-8 text-right">Count</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(currentMonthStats.completedSummary.byPurpose).map(([purpose, count]) => (
+                          <TableRow key={purpose}>
+                            <TableCell className="font-medium py-1.5">{purpose}</TableCell>
+                            <TableCell className="text-right py-1.5">{count}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <p className="text-muted-foreground text-center text-sm">No works completed this month.</p>
@@ -1287,32 +1310,28 @@ export default function DashboardPage() {
               <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                 <div className="flex justify-between items-center">
                   <h4 className="font-semibold text-foreground">Total Ongoing Works</h4>
-                  <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('ongoing')} disabled={!currentMonthStats || currentMonthStats.ongoingCount === 0}>
-                    View All ({currentMonthStats?.ongoingCount ?? 0})
+                  <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('ongoing')} disabled={!currentMonthStats || currentMonthStats.ongoingSummary.totalCount === 0}>
+                    View All ({currentMonthStats?.ongoingSummary.totalCount ?? 0})
                   </Button>
                 </div>
                 <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner">
-                  {currentMonthStats && currentMonthStats.ongoingData.length > 0 ? (
-                    <ul className="space-y-3 text-sm">
-                      {currentMonthStats.ongoingData.map((item, index) => (
-                        <li key={`ongoing-${index}`} className="flex flex-col gap-1 border-b pb-2 last:border-b-0">
-                          <p className="font-medium text-foreground text-xs" title={`${item.purpose} - ${item.nameOfSite}`}>
-                            {item.purpose} - {item.nameOfSite}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            <span className="font-medium text-foreground">{item.applicantName}</span> - File: {item.fileNo}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <Badge variant="secondary" className="text-xs">{item.workStatus}</Badge>
-                            {item.supervisorName && (
-                              <span className="text-xs text-muted-foreground" title={`Supervisor: ${item.supervisorName}`}>
-                                Sup: {item.supervisorName}
-                              </span>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                  {currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="h-8">Category</TableHead>
+                          <TableHead className="h-8 text-right">Count</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(currentMonthStats.ongoingSummary.byPurpose).map(([purpose, count]) => (
+                          <TableRow key={purpose}>
+                            <TableCell className="font-medium py-1.5">{purpose}</TableCell>
+                            <TableCell className="text-right py-1.5">{count}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   ) : (
                     <div className="flex h-full items-center justify-center">
                        <p className="text-muted-foreground text-center text-sm">No ongoing works found.</p>
@@ -1426,7 +1445,7 @@ export default function DashboardPage() {
                             ? <>Last active: {formatDistanceToNow(usr.lastActiveAt, { addSuffix: true })}
                               <span className="text-muted-foreground/70"> ({format(usr.lastActiveAt, 'dd MMM, p')})</span>
                             </>
-                            : (usr.createdAt ? `Registered: ${format(usr.createdAt, 'dd MMM yyyy, p')} (No activity logged)` : 'Activity status unknown')
+                            : (usr.createdAt ? `Registered: {format(usr.createdAt, 'dd MMM yyyy, p')} (No activity logged)` : 'Activity status unknown')
                           }
                           {!usr.isApproved && <span className="ml-2 text-orange-500 font-medium">(Pending)</span>}
                         </p>
@@ -1601,5 +1620,7 @@ export default function DashboardPage() {
 
     
 
+
+    
 
     
