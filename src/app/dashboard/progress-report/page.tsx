@@ -170,6 +170,7 @@ export default function ProgressReportPage() {
 
     const filteredEntries = fileEntries.filter(entry => {
       if (!sDate || !eDate) return true;
+      // An entry is in the date range if ANY of its remittances are in the range.
       return entry.remittanceDetails?.some(rd => {
         if (!rd.dateOfRemittance) return false;
         const remDate = new Date(rd.dateOfRemittance);
@@ -222,6 +223,7 @@ export default function ProgressReportPage() {
       diameters.forEach(d => { totals[d] = initialDiameterStats(); });
 
       applicationTypeOptions.forEach(appType => {
+        // Correctly sum up diameter-specific stats
         diameters.forEach(diameter => {
           const stats = data[appType][diameter];
           totals[diameter].applications += stats.applications;
@@ -229,6 +231,8 @@ export default function ProgressReportPage() {
           totals[diameter].refunded += stats.refunded;
           totals[diameter].balance += stats.balance;
         });
+        
+        // Sum up the pre-calculated 'Total' for each application type
         const totalStats = data[appType]['Total'];
         totals['Total'].applications += totalStats.applications;
         totals['Total'].completed += totalStats.completed;
@@ -237,6 +241,7 @@ export default function ProgressReportPage() {
       });
       return totals;
     };
+
 
     const bwcTotals = calculateTotals(bwcData, BWC_DIAMETERS);
     const twcTotals = calculateTotals(twcData, TWC_DIAMETERS);
