@@ -38,6 +38,7 @@ type OtherServiceProgress = Record<SitePurpose, ProgressStats>;
 interface FinancialSummary {
     totalApplications: number;
     totalRemittance: number;
+
     totalCompleted: number;
     totalPayment: number;
 }
@@ -57,8 +58,8 @@ const REFUNDED_STATUSES = ['To be Refunded'];
 
 const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data: ApplicationTypeProgress, diameters: string[] }) => {
     const metrics: Array<{ key: keyof ProgressStats, label: string }> = [
-        { key: 'previousBalance', label: 'No. of Previous Application' },
-        { key: 'currentApplications', label: 'No. of Current Application' },
+        { key: 'previousBalance', label: 'Previous Balance' },
+        { key: 'currentApplications', label: 'Current Application' },
         { key: 'completed', label: 'Completed' },
         { key: 'refunded', label: 'Refund' },
         { key: 'balance', label: 'Balance' }
@@ -89,28 +90,34 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
                 <Table className="min-w-full border-collapse">
                 <TableHeader>
                     <TableRow>
-                    <TableHead className="border p-2 align-middle text-left min-w-[200px] font-semibold">Details</TableHead>
-                    {applicationTypeOptions.map(appType => (
-                        <TableHead key={appType} className="border p-2 text-center font-semibold min-w-[100px] whitespace-normal break-words">{applicationTypeDisplayMap[appType]}</TableHead>
+                    <TableHead className="border p-2 align-middle text-left min-w-[200px] font-semibold">Type of Application</TableHead>
+                    {metrics.map(metric => (
+                        <TableHead key={metric.key} className="border p-2 text-center font-semibold min-w-[100px] whitespace-normal break-words">{metric.label}</TableHead>
                     ))}
-                    <TableHead className="border p-2 text-center font-bold">Total</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {metrics.map(metric => (
-                    <TableRow key={metric.key}>
-                        <TableCell className={cn("border p-2 text-left", metric.key === 'balance' && "font-bold")}>{metric.label}</TableCell>
-                        {applicationTypeOptions.map(appType => (
-                        <TableCell key={`${metric.key}-${appType}`} className={cn("border p-2 text-center", metric.key === 'balance' && "font-bold")}>
-                            {data[appType][diameter]?.[metric.key] ?? 0}
-                        </TableCell>
-                        ))}
-                        <TableCell className={cn("border p-2 text-center font-bold")}>
-                            {diameterTotals[metric.key]}
-                        </TableCell>
-                    </TableRow>
+                    {applicationTypeOptions.map(appType => (
+                        <TableRow key={appType}>
+                            <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
+                            {metrics.map(metric => (
+                                <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", metric.key === 'balance' && "font-bold")}>
+                                    {data[appType][diameter]?.[metric.key] ?? 0}
+                                </TableCell>
+                            ))}
+                        </TableRow>
                     ))}
                 </TableBody>
+                <TableFooter>
+                    <TableRow className="bg-muted/50">
+                        <TableCell className="border p-2 text-left font-bold">Total</TableCell>
+                        {metrics.map(metric => (
+                            <TableCell key={`total-${metric.key}`} className="border p-2 text-center font-bold">
+                                {diameterTotals[metric.key]}
+                            </TableCell>
+                        ))}
+                    </TableRow>
+                </TableFooter>
                 </Table>
             </div>
             )
@@ -394,3 +401,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
