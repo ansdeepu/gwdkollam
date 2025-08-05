@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
 import { format, startOfDay, endOfDay, isValid, isWithinInterval } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
@@ -55,7 +55,7 @@ const REFUNDED_STATUSES = ['To be Refunded'];
 
 
 // Reusable component for the complex BWC/TWC tables
-const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data: BwcTwcReportData; diameters: string[] }) => (
+const WellTypeProgressTable = ({ title, data, diameters, totals }: { title: string; data: BwcTwcReportData; diameters: string[]; totals: ApplicationProgress | null }) => (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
@@ -99,6 +99,28 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
               </TableRow>
             )})}
           </TableBody>
+          {totals && (
+            <TableFooter>
+              <TableRow className="bg-secondary/50 font-bold">
+                <TableCell className="border p-1 text-xs whitespace-normal break-words min-w-[120px] max-w-[120px]">Total</TableCell>
+                {diameters.map(diameter => {
+                  const diameterData = totals[diameter];
+                  return (
+                    <React.Fragment key={`total-${diameter}`}>
+                      <TableCell className="border p-1 text-center text-xs">{diameterData?.applications || 0}</TableCell>
+                      <TableCell className="border p-1 text-center text-xs">{diameterData?.completed || 0}</TableCell>
+                      <TableCell className="border p-1 text-center text-xs">{diameterData?.refunded || 0}</TableCell>
+                      <TableCell className="border p-1 text-center text-xs">{diameterData?.balance || 0}</TableCell>
+                    </React.Fragment>
+                  );
+                })}
+                <TableCell className="border p-1 text-center text-xs">{totals['Total']?.applications || 0}</TableCell>
+                <TableCell className="border p-1 text-center text-xs">{totals['Total']?.completed || 0}</TableCell>
+                <TableCell className="border p-1 text-center text-xs">{totals['Total']?.refunded || 0}</TableCell>
+                <TableCell className="border p-1 text-center text-xs">{totals['Total']?.balance || 0}</TableCell>
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </CardContent>
     </Card>
@@ -116,6 +138,8 @@ export default function ProgressReportPage() {
     bwcData: BwcTwcReportData;
     twcData: BwcTwcReportData;
     otherServicesData: OtherServicesReportData;
+    bwcTotals: ApplicationProgress;
+    twcTotals: ApplicationProgress;
   } | null>(null);
 
   // Memoized calculation of report data now as a callback
@@ -145,14 +169,12 @@ export default function ProgressReportPage() {
     const eDate = endDate ? endOfDay(endDate) : null;
 
     const filteredEntries = fileEntries.filter(entry => {
-        if (!sDate || !eDate) return true; // No date filter applied
-        
-        // Check if ANY remittance date falls within the selected range
-        return entry.remittanceDetails?.some(rd => {
-            if (!rd.dateOfRemittance) return false;
-            const remDate = new Date(rd.dateOfRemittance);
-            return isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate });
-        }) ?? false;
+      if (!sDate || !eDate) return true;
+      return entry.remittanceDetails?.some(rd => {
+        if (!rd.dateOfRemittance) return false;
+        const remDate = new Date(rd.dateOfRemittance);
+        return isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate });
+      }) ?? false;
     });
 
     filteredEntries.forEach(entry => {
@@ -194,8 +216,32 @@ export default function ProgressReportPage() {
         }
       });
     });
+    
+    const calculateTotals = (data: BwcTwcReportData, diameters: string[]): ApplicationProgress => {
+      const totals: ApplicationProgress = { Total: initialDiameterStats() };
+      diameters.forEach(d => { totals[d] = initialDiameterStats(); });
 
-    setReportData({ bwcData, twcData, otherServicesData });
+      applicationTypeOptions.forEach(appType => {
+        diameters.forEach(diameter => {
+          const stats = data[appType][diameter];
+          totals[diameter].applications += stats.applications;
+          totals[diameter].completed += stats.completed;
+          totals[diameter].refunded += stats.refunded;
+          totals[diameter].balance += stats.balance;
+        });
+        const totalStats = data[appType]['Total'];
+        totals['Total'].applications += totalStats.applications;
+        totals['Total'].completed += totalStats.completed;
+        totals['Total'].refunded += totalStats.refunded;
+        totals['Total'].balance += totalStats.balance;
+      });
+      return totals;
+    };
+
+    const bwcTotals = calculateTotals(bwcData, BWC_DIAMETERS);
+    const twcTotals = calculateTotals(twcData, TWC_DIAMETERS);
+
+    setReportData({ bwcData, twcData, otherServicesData, bwcTotals, twcTotals });
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate]);
   
@@ -300,6 +346,13 @@ export default function ProgressReportPage() {
       });
       return rowData;
     });
+    const bwcTotalRow = ['Total'];
+    [...BWC_DIAMETERS, 'Total'].forEach(diameter => {
+      const stats = reportData.bwcTotals[diameter];
+      bwcTotalRow.push(stats?.applications || 0, stats?.completed || 0, stats?.refunded || 0, stats?.balance || 0);
+    });
+    bwcDataRows.push(bwcTotalRow);
+
     styleAndFormatWorksheet(ws_bwc, bwcTitle, [bwcHeaderRow1, bwcHeaderRow2], bwcDataRows);
     XLSX.utils.book_append_sheet(wb, ws_bwc, "BWC Report");
 
@@ -316,6 +369,12 @@ export default function ProgressReportPage() {
         });
         return rowData;
     });
+    const twcTotalRow = ['Total'];
+    [...TWC_DIAMETERS, 'Total'].forEach(diameter => {
+      const stats = reportData.twcTotals[diameter];
+      twcTotalRow.push(stats?.applications || 0, stats?.completed || 0, stats?.refunded || 0, stats?.balance || 0);
+    });
+    twcDataRows.push(twcTotalRow);
     styleAndFormatWorksheet(ws_twc, twcTitle, [twcHeaderRow1, twcHeaderRow2], twcDataRows);
     XLSX.utils.book_append_sheet(wb, ws_twc, "TWC Report");
 
@@ -375,7 +434,7 @@ export default function ProgressReportPage() {
       <Card className="shadow-lg no-print">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">Report Filters</CardTitle>
-          <CardDescription>Filter by first remittance date.</CardDescription>
+          <CardDescription>Filter by remittance date.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row flex-wrap gap-2 pt-3">
               <Popover>
@@ -420,8 +479,8 @@ export default function ProgressReportPage() {
         </div>
       ) : reportData ? (
         <div className="space-y-8">
-            <WellTypeProgressTable title="BWC - Progress Report" data={reportData.bwcData} diameters={BWC_DIAMETERS} />
-            <WellTypeProgressTable title="TWC - Progress Report" data={reportData.twcData} diameters={TWC_DIAMETERS} />
+            <WellTypeProgressTable title="BWC - Progress Report" data={reportData.bwcData} diameters={BWC_DIAMETERS} totals={reportData.bwcTotals} />
+            <WellTypeProgressTable title="TWC - Progress Report" data={reportData.twcData} diameters={TWC_DIAMETERS} totals={reportData.twcTotals} />
 
             <Card className="shadow-lg">
                 <CardHeader>
