@@ -3,13 +3,13 @@
 "use client";
 
 import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isWithinInterval } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -17,33 +17,40 @@ import {
   applicationTypeDisplayMap,
   type ApplicationType,
   type SitePurpose,
+  type DataEntryFormData,
+  type SiteDetailFormData,
 } from '@/lib/schemas';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Define the structure for the new progress report data
+// Define the structure for the progress report data
 interface ProgressStats {
   previousBalance: number;
   currentApplications: number;
   completed: number;
   refunded: number;
   balance: number;
+  // Add data arrays to hold the actual entries
+  previousBalanceData: SiteDetailFormData[];
+  currentApplicationsData: SiteDetailFormData[];
+  completedData: SiteDetailFormData[];
+  refundedData: SiteDetailFormData[];
+  balanceData: SiteDetailFormData[];
 }
 
-type DiameterProgress = Record<string, ProgressStats>; // Keyed by diameter string like "110 mm" or "Total"
+type DiameterProgress = Record<string, ProgressStats>;
 type ApplicationTypeProgress = Record<ApplicationType, DiameterProgress>;
-
 type OtherServiceProgress = Record<SitePurpose, ProgressStats>;
 
 interface FinancialSummary {
     totalApplications: number;
     totalRemittance: number;
-
     totalCompleted: number;
     totalPayment: number;
 }
 type FinancialSummaryReport = Record<SitePurpose, FinancialSummary>;
-
 
 const BWC_DIAMETERS = ['110 mm (4.5”)', '150 mm (6”)'];
 const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
@@ -55,8 +62,22 @@ const OTHER_PURPOSES: SitePurpose[] = [
 
 const REFUNDED_STATUSES = ['To be Refunded'];
 
+interface DetailDialogColumn {
+  key: string;
+  label: string;
+}
 
-const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data: ApplicationTypeProgress, diameters: string[] }) => {
+const WellTypeProgressTable = ({ 
+  title, 
+  data, 
+  diameters, 
+  onCountClick 
+}: { 
+  title: string; 
+  data: ApplicationTypeProgress, 
+  diameters: string[],
+  onCountClick: (data: SiteDetailFormData[], title: string) => void;
+}) => {
     const metrics: Array<{ key: keyof ProgressStats, label: string }> = [
         { key: 'previousBalance', label: 'Previous Balance' },
         { key: 'currentApplications', label: 'Current Application' },
@@ -72,7 +93,8 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
       </CardHeader>
       <CardContent className="overflow-x-auto space-y-6">
         {diameters.map(diameter => {
-            const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0 };
+            const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], completedData: [], refundedData: [], balanceData: [] };
+            
             applicationTypeOptions.forEach(appType => {
                 const stats = data[appType][diameter];
                 if (stats) {
@@ -81,6 +103,12 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
                     diameterTotals.completed += stats.completed;
                     diameterTotals.refunded += stats.refunded;
                     diameterTotals.balance += stats.balance;
+                    
+                    diameterTotals.previousBalanceData.push(...stats.previousBalanceData);
+                    diameterTotals.currentApplicationsData.push(...stats.currentApplicationsData);
+                    diameterTotals.completedData.push(...stats.completedData);
+                    diameterTotals.refundedData.push(...stats.refundedData);
+                    diameterTotals.balanceData.push(...stats.balanceData);
                 }
             });
 
@@ -100,11 +128,17 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
                     {applicationTypeOptions.map(appType => (
                         <TableRow key={appType}>
                             <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
-                            {metrics.map(metric => (
+                            {metrics.map(metric => {
+                              const count = data[appType][diameter]?.[metric.key] as number ?? 0;
+                              const metricData = data[appType][diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[] ?? [];
+                              return (
                                 <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", metric.key === 'balance' && "font-bold")}>
-                                    {data[appType][diameter]?.[metric.key] ?? 0}
+                                    <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
+                                      {count}
+                                    </Button>
                                 </TableCell>
-                            ))}
+                              )
+                            })}
                         </TableRow>
                     ))}
                 </TableBody>
@@ -112,9 +146,11 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
                     <TableRow className="bg-muted/50">
                         <TableCell className="border p-2 text-left font-bold">Total</TableCell>
                         {metrics.map(metric => (
-                            <TableCell key={`total-${metric.key}`} className="border p-2 text-center font-bold">
-                                {diameterTotals[metric.key]}
-                            </TableCell>
+                           <TableCell key={`total-${metric.key}`} className="border p-2 text-center font-bold">
+                               <Button variant="link" className="p-0 h-auto font-bold" disabled={diameterTotals[metric.key] === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[], `Total for ${diameter} - ${metric.label}`)}>
+                                    {diameterTotals[metric.key]}
+                               </Button>
+                           </TableCell>
                         ))}
                     </TableRow>
                 </TableFooter>
@@ -142,6 +178,18 @@ export default function ProgressReportPage() {
     financialSummaryData: FinancialSummaryReport;
   } | null>(null);
 
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [detailDialogTitle, setDetailDialogTitle] = useState("");
+  const [detailDialogData, setDetailDialogData] = useState<SiteDetailFormData[]>([]);
+  const detailDialogColumns: DetailDialogColumn[] = [
+    { key: 'fileNo', label: 'File No.' },
+    { key: 'applicantName', label: 'Applicant Name' },
+    { key: 'nameOfSite', label: 'Site Name' },
+    { key: 'purpose', label: 'Purpose' },
+    { key: 'workStatus', label: 'Work Status' },
+    { key: 'dateOfCompletion', label: 'Completion Date' },
+  ];
+
   const handleGenerateReport = useCallback(() => {
     if (!startDate || !endDate) {
         toast({ title: "Date Range Required", description: "Please select both a 'From' and 'To' date to generate the report.", variant: "destructive" });
@@ -153,7 +201,7 @@ export default function ProgressReportPage() {
     const sDate = startOfDay(startDate);
     const eDate = endOfDay(endDate);
 
-    const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0 });
+    const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], completedData: [], refundedData: [], balanceData: [] });
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const twcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const otherServicesData: OtherServiceProgress = {} as OtherServiceProgress;
@@ -164,38 +212,39 @@ export default function ProgressReportPage() {
     [...BWC_DIAMETERS, ...TWC_DIAMETERS, ...OTHER_PURPOSES, "BWC", "TWC"].forEach(p => financialSummaryData[p as SitePurpose] = initialFinancialSummary())
 
     applicationTypeOptions.forEach(appType => {
-      bwcData[appType] = { Total: initialStats() };
+      bwcData[appType] = {};
       BWC_DIAMETERS.forEach(d => { bwcData[appType][d] = initialStats(); });
-      twcData[appType] = { Total: initialStats() };
+      twcData[appType] = {};
       TWC_DIAMETERS.forEach(d => { twcData[appType][d] = initialStats(); });
     });
 
     fileEntries.forEach(entry => {
       const appType = entry.applicationType;
       if (!appType) return;
-
-      const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance ? new Date(entry.remittanceDetails[0].dateOfRemittance) : null;
       
       const entryTotalRemittance = entry.totalRemittance || 0;
       const entryTotalPayment = entry.totalPaymentAllEntries || 0;
 
       entry.siteDetails?.forEach(site => {
+        const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName };
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
+
+        const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance ? new Date(entry.remittanceDetails[0].dateOfRemittance) : null;
         const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
 
-        const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
-        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        const isCompletedInPeriod = completionDate && isValid(completionDate) && completionDate >= sDate && completionDate <= eDate;
+        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
         const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate < sDate && (!completionDate || !isValid(completionDate) || completionDate >= sDate);
         
         const isRefunded = workStatus ? REFUNDED_STATUSES.includes(workStatus) : false;
 
         const updateStats = (statsObj: ProgressStats) => {
-            if (isCurrentApplication) statsObj.currentApplications++;
-            if (wasActiveBeforePeriod) statsObj.previousBalance++;
-            if (isCompletedInPeriod) statsObj.completed++;
-            if (isRefunded) statsObj.refunded++;
+            if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
+            if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
+            if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
+            if (isRefunded) { statsObj.refunded++; statsObj.refundedData.push(siteWithFileContext); }
         };
         
         const updateFinancials = (purposeKey: SitePurpose) => {
@@ -211,11 +260,9 @@ export default function ProgressReportPage() {
 
         if (purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
           updateStats(bwcData[appType][diameter]);
-          updateStats(bwcData[appType]['Total']);
           updateFinancials(purpose);
         } else if (purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
           updateStats(twcData[appType][diameter]);
-          updateStats(twcData[appType]['Total']);
           updateFinancials(purpose);
         } else if (OTHER_PURPOSES.includes(purpose)) {
           updateStats(otherServicesData[purpose]);
@@ -227,11 +274,14 @@ export default function ProgressReportPage() {
     // Final balance calculation
     const calculateBalance = (stats: ProgressStats) => {
       stats.balance = stats.previousBalance + stats.currentApplications - stats.completed - stats.refunded;
+      stats.balanceData = [ ...stats.previousBalanceData, ...stats.currentApplicationsData ].filter(
+          item => !stats.completedData.includes(item) && !stats.refundedData.includes(item)
+      );
     };
     
     applicationTypeOptions.forEach(appType => {
-      [...BWC_DIAMETERS, 'Total'].forEach(d => calculateBalance(bwcData[appType][d]));
-      [...TWC_DIAMETERS, 'Total'].forEach(d => calculateBalance(twcData[appType][d]));
+      BWC_DIAMETERS.forEach(d => calculateBalance(bwcData[appType][d]));
+      TWC_DIAMETERS.forEach(d => calculateBalance(twcData[appType][d]));
     });
     OTHER_PURPOSES.forEach(p => calculateBalance(otherServicesData[p]));
     
@@ -240,10 +290,7 @@ export default function ProgressReportPage() {
   }, [fileEntries, startDate, endDate, toast]);
   
   const handleExportExcel = () => {
-    // This function will need a complete rewrite to support the new format.
-    // Due to complexity, this is being simplified for now. A more robust export
-    // would require significant effort.
-    toast({ title: "Export Not Implemented", description: "Excel export for this new report format is not yet available." });
+    toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
   };
 
   const handleCalendarInteraction = (e: Event) => {
@@ -255,6 +302,28 @@ export default function ProgressReportPage() {
     setStartDate(undefined);
     setEndDate(undefined);
     setReportData(null);
+  };
+
+  const handleCountClick = (data: SiteDetailFormData[], title: string) => {
+    setDetailDialogTitle(title);
+    setDetailDialogData(data);
+    setIsDetailDialogOpen(true);
+  };
+
+  const handleExportDialogData = () => {
+    const dataToExport = detailDialogData.map(row => ({
+        "File No.": row.fileNo || 'N/A',
+        "Applicant Name": row.applicantName || 'N/A',
+        "Site Name": row.nameOfSite || 'N/A',
+        "Purpose": row.purpose || 'N/A',
+        "Work Status": row.workStatus || 'N/A',
+        "Completion Date": row.dateOfCompletion ? format(new Date(row.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Details");
+    XLSX.writeFile(workbook, `Report_Details_${detailDialogTitle.replace(/ /g, '_')}.xlsx`);
+    toast({ title: "Exported!", description: "The detailed list has been exported to Excel." });
   };
   
   if (entriesLoading) {
@@ -289,7 +358,7 @@ export default function ProgressReportPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <PopoverContent className="w-auto p-0" align="start" side="top" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
                       <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
                   </PopoverContent>
               </Popover>
@@ -299,7 +368,7 @@ export default function ProgressReportPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <PopoverContent className="w-auto p-0" align="start" side="top" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
                       <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
                   </PopoverContent>
               </Popover>
@@ -325,8 +394,8 @@ export default function ProgressReportPage() {
         </div>
       ) : reportData ? (
         <div className="space-y-8">
-            <WellTypeProgressTable title="BWC - Progress Report" data={reportData.bwcData} diameters={BWC_DIAMETERS} />
-            <WellTypeProgressTable title="TWC - Progress Report" data={reportData.twcData} diameters={TWC_DIAMETERS} />
+            <WellTypeProgressTable title="BWC - Progress Report" data={reportData.bwcData} diameters={BWC_DIAMETERS} onCountClick={handleCountClick} />
+            <WellTypeProgressTable title="TWC - Progress Report" data={reportData.twcData} diameters={TWC_DIAMETERS} onCountClick={handleCountClick} />
 
             <Card className="shadow-lg">
                 <CardHeader>
@@ -345,16 +414,18 @@ export default function ProgressReportPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {OTHER_PURPOSES.map(purpose => (
+                        {OTHER_PURPOSES.map(purpose => {
+                           const stats = reportData.otherServicesData[purpose];
+                           return (
                             <TableRow key={purpose}>
                                 <TableCell className="border p-2 font-medium">{purpose}</TableCell>
-                                <TableCell className="border p-2 text-center">{reportData.otherServicesData[purpose]?.previousBalance || 0}</TableCell>
-                                <TableCell className="border p-2 text-center">{reportData.otherServicesData[purpose]?.currentApplications || 0}</TableCell>
-                                <TableCell className="border p-2 text-center">{reportData.otherServicesData[purpose]?.completed || 0}</TableCell>
-                                <TableCell className="border p-2 text-center">{reportData.otherServicesData[purpose]?.refunded || 0}</TableCell>
-                                <TableCell className="border p-2 text-center font-bold">{reportData.otherServicesData[purpose]?.balance || 0}</TableCell>
+                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.previousBalance === 0} onClick={() => handleCountClick(stats.previousBalanceData, `${purpose} - Previous Balance`)}>{stats?.previousBalance || 0}</Button></TableCell>
+                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.currentApplications === 0} onClick={() => handleCountClick(stats.currentApplicationsData, `${purpose} - Current Applications`)}>{stats?.currentApplications || 0}</Button></TableCell>
+                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.completed === 0} onClick={() => handleCountClick(stats.completedData, `${purpose} - Completed`)}>{stats?.completed || 0}</Button></TableCell>
+                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.refunded === 0} onClick={() => handleCountClick(stats.refundedData, `${purpose} - Refunded`)}>{stats?.refunded || 0}</Button></TableCell>
+                                <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.balance === 0} onClick={() => handleCountClick(stats.balanceData, `${purpose} - Balance`)}>{stats?.balance || 0}</Button></TableCell>
                             </TableRow>
-                        ))}
+                        )})}
                     </TableBody>
                     </Table>
                 </CardContent>
@@ -398,7 +469,52 @@ export default function ProgressReportPage() {
             <p className="text-muted-foreground">Select a date range and click "Generate Report" to view progress.</p>
         </div>
       )}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>{detailDialogTitle}</DialogTitle>
+                <DialogDescription>
+                    Displaying {detailDialogData.length} records.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="flex-grow overflow-hidden">
+              <ScrollArea className="h-full pr-4">
+                {detailDialogData.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {detailDialogColumns.map(col => <TableHead key={col.key}>{col.label}</TableHead>)}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detailDialogData.map((row, index) => (
+                        <TableRow key={index}>
+                          {detailDialogColumns.map(col => (
+                            <TableCell key={col.key} className="text-xs">
+                              {col.key === 'dateOfCompletion' && row[col.key] 
+                                ? format(new Date(row[col.key] as string), 'dd/MM/yyyy') 
+                                : String(row[col.key as keyof SiteDetailFormData] ?? 'N/A')}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="py-4 text-center text-muted-foreground">No details found for this selection.</p>
+                )}
+              </ScrollArea>
+            </div>
+            <DialogFooter className="pt-4">
+              <Button variant="outline" onClick={handleExportDialogData} disabled={detailDialogData.length === 0}>
+                <FileDown className="mr-2 h-4 w-4" /> Export to Excel
+              </Button>
+              <DialogClose asChild>
+                  <Button type="button" variant="secondary">Close</Button>
+              </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
