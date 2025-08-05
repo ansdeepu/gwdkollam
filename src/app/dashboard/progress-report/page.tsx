@@ -53,7 +53,6 @@ const OTHER_PURPOSES: SitePurpose[] = [
 ];
 
 const REFUNDED_STATUSES = ['To be Refunded'];
-const INACTIVE_STATUSES_FOR_BALANCE = ['Work Completed', 'Work Failed', 'To be Refunded'];
 
 
 const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data: ApplicationTypeProgress, diameters: string[] }) => {
@@ -64,6 +63,22 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
         { key: 'refunded', label: 'Refund' },
         { key: 'balance', label: 'Balance' }
     ];
+
+    const grandTotal: ProgressStats = {
+        previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0
+    };
+
+    // Calculate totals by summing up the 'Total' column for each application type
+    (Object.keys(data) as ApplicationType[]).forEach(appType => {
+        const totalStats = data[appType]['Total'];
+        if (totalStats) {
+            grandTotal.previousBalance += totalStats.previousBalance;
+            grandTotal.currentApplications += totalStats.currentApplications;
+            grandTotal.completed += totalStats.completed;
+            grandTotal.refunded += totalStats.refunded;
+            grandTotal.balance += totalStats.balance;
+        }
+    });
 
     return (
     <Card className="shadow-lg">
@@ -83,7 +98,7 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(Object.keys(data) as ApplicationType[]).map((appType, appIndex) => (
+            {(Object.keys(data) as ApplicationType[]).map((appType) => (
               <React.Fragment key={appType}>
                 {metrics.map((metric, metricIndex) => (
                   <TableRow key={`${appType}-${metric.key}`}>
@@ -108,6 +123,20 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
               </React.Fragment>
             ))}
           </TableBody>
+          <TableFooter>
+             <TableRow className="bg-secondary/50 font-bold">
+                <TableCell colSpan={2} className="border p-2 text-right">Grand Total</TableCell>
+                {diameters.map(diameter => {
+                    const diameterTotal = (Object.keys(data) as ApplicationType[]).reduce((sum, appType) => sum + (data[appType][diameter]?.balance || 0), 0);
+                    return (
+                        <TableCell key={`total-balance-${diameter}`} className="border p-2 text-center">
+                            {/* You could show total balance per diameter, or keep it simple */}
+                        </TableCell>
+                    );
+                })}
+                 <TableCell className="border p-2 text-center">{grandTotal.balance}</TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </CardContent>
     </Card>
@@ -148,7 +177,7 @@ export default function ProgressReportPage() {
     
     const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0 });
     const financialSummaryData: FinancialSummaryReport = {} as FinancialSummaryReport;
-    [...BWC_DIAMETERS, ...TWC_DIAMETERS, ...OTHER_PURPOSES].forEach(p => financialSummaryData[p as SitePurpose] = initialFinancialSummary())
+    [...BWC_DIAMETERS, ...TWC_DIAMETERS, ...OTHER_PURPOSES, "BWC", "TWC"].forEach(p => financialSummaryData[p as SitePurpose] = initialFinancialSummary())
 
     applicationTypeOptions.forEach(appType => {
       bwcData[appType] = { Total: initialStats() };
@@ -161,8 +190,7 @@ export default function ProgressReportPage() {
       const appType = entry.applicationType;
       if (!appType) return;
 
-      const firstRemittanceDateStr = entry.remittanceDetails?.[0]?.dateOfRemittance;
-      const firstRemittanceDate = firstRemittanceDateStr ? parseISO(firstRemittanceDateStr as any) : null;
+      const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance;
       
       const entryTotalRemittance = entry.totalRemittance || 0;
       const entryTotalPayment = entry.totalPaymentAllEntries || 0;
@@ -171,8 +199,7 @@ export default function ProgressReportPage() {
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
-        const completionDateStr = site.dateOfCompletion;
-        const completionDate = completionDateStr ? parseISO(completionDateStr as any) : null;
+        const completionDate = site.dateOfCompletion;
 
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
