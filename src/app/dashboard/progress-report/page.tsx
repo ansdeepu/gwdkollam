@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isWithinInterval } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -145,11 +145,14 @@ export default function ProgressReportPage() {
     const eDate = endDate ? endOfDay(endDate) : null;
 
     const filteredEntries = fileEntries.filter(entry => {
-      if (!sDate || !eDate) return true; // No date filter applied
-      const remDateStr = entry.remittanceDetails?.[0]?.dateOfRemittance;
-      if (!remDateStr) return false;
-      const remDate = new Date(remDateStr);
-      return isValid(remDate) && remDate >= sDate && remDate <= eDate;
+        if (!sDate || !eDate) return true; // No date filter applied
+        
+        // Check if ANY remittance date falls within the selected range
+        return entry.remittanceDetails?.some(rd => {
+            if (!rd.dateOfRemittance) return false;
+            const remDate = new Date(rd.dateOfRemittance);
+            return isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate });
+        }) ?? false;
     });
 
     filteredEntries.forEach(entry => {
@@ -458,5 +461,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-    
