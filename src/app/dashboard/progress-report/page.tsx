@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isWithinInterval, parseISO } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isWithinInterval } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -64,80 +64,57 @@ const WellTypeProgressTable = ({ title, data, diameters }: { title: string; data
         { key: 'balance', label: 'Balance' }
     ];
 
-    const grandTotal: ProgressStats = {
-        previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0
-    };
-
-    // Calculate totals by summing up the 'Total' column for each application type
-    (Object.keys(data) as ApplicationType[]).forEach(appType => {
-        const totalStats = data[appType]['Total'];
-        if (totalStats) {
-            grandTotal.previousBalance += totalStats.previousBalance;
-            grandTotal.currentApplications += totalStats.currentApplications;
-            grandTotal.completed += totalStats.completed;
-            grandTotal.refunded += totalStats.refunded;
-            grandTotal.balance += totalStats.balance;
-        }
-    });
-
     return (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table className="min-w-full border-collapse">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="border p-2 align-middle text-center min-w-[150px] font-semibold">Type of Application</TableHead>
-              <TableHead className="border p-2 align-middle text-center min-w-[200px] font-semibold">Details</TableHead>
-              {diameters.map(diameter => (
-                <TableHead key={diameter} className="border p-2 text-center font-semibold">{diameter}</TableHead>
-              ))}
-              <TableHead className="border p-2 text-center font-bold">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(Object.keys(data) as ApplicationType[]).map((appType) => (
-              <React.Fragment key={appType}>
-                {metrics.map((metric, metricIndex) => (
-                  <TableRow key={`${appType}-${metric.key}`}>
-                    {metricIndex === 0 && (
-                      <TableCell rowSpan={metrics.length} className="border p-2 font-medium align-middle text-left whitespace-normal break-words min-w-[150px]">
-                        {applicationTypeDisplayMap[appType]}
-                      </TableCell>
-                    )}
-                    <TableCell className={cn("border p-2 text-left", metric.key === 'balance' && "font-bold")}>
-                      {metric.label}
-                    </TableCell>
-                    {diameters.map(diameter => (
-                      <TableCell key={`${appType}-${metric.key}-${diameter}`} className={cn("border p-2 text-center", metric.key === 'balance' && "font-bold")}>
-                        {data[appType][diameter]?.[metric.key] ?? 0}
-                      </TableCell>
+      <CardContent className="overflow-x-auto space-y-6">
+        {diameters.map(diameter => {
+            const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0 };
+            applicationTypeOptions.forEach(appType => {
+                const stats = data[appType][diameter];
+                if (stats) {
+                    diameterTotals.previousBalance += stats.previousBalance;
+                    diameterTotals.currentApplications += stats.currentApplications;
+                    diameterTotals.completed += stats.completed;
+                    diameterTotals.refunded += stats.refunded;
+                    diameterTotals.balance += stats.balance;
+                }
+            });
+
+            return (
+            <div key={diameter}>
+                <h4 className="font-semibold text-lg mb-2 text-primary">{diameter}</h4>
+                <Table className="min-w-full border-collapse">
+                <TableHeader>
+                    <TableRow>
+                    <TableHead className="border p-2 align-middle text-left min-w-[200px] font-semibold">Details</TableHead>
+                    {applicationTypeOptions.map(appType => (
+                        <TableHead key={appType} className="border p-2 text-center font-semibold min-w-[100px] whitespace-normal break-words">{applicationTypeDisplayMap[appType]}</TableHead>
                     ))}
-                    <TableCell className={cn("border p-2 text-center font-bold")}>
-                      {data[appType]['Total']?.[metric.key] ?? 0}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </React.Fragment>
-            ))}
-          </TableBody>
-          <TableFooter>
-             <TableRow className="bg-secondary/50 font-bold">
-                <TableCell colSpan={2} className="border p-2 text-right">Grand Total</TableCell>
-                {diameters.map(diameter => {
-                    const diameterTotal = (Object.keys(data) as ApplicationType[]).reduce((sum, appType) => sum + (data[appType][diameter]?.balance || 0), 0);
-                    return (
-                        <TableCell key={`total-balance-${diameter}`} className="border p-2 text-center">
-                            {/* You could show total balance per diameter, or keep it simple */}
+                    <TableHead className="border p-2 text-center font-bold">Total</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {metrics.map(metric => (
+                    <TableRow key={metric.key}>
+                        <TableCell className={cn("border p-2 text-left", metric.key === 'balance' && "font-bold")}>{metric.label}</TableCell>
+                        {applicationTypeOptions.map(appType => (
+                        <TableCell key={`${metric.key}-${appType}`} className={cn("border p-2 text-center", metric.key === 'balance' && "font-bold")}>
+                            {data[appType][diameter]?.[metric.key] ?? 0}
                         </TableCell>
-                    );
-                })}
-                 <TableCell className="border p-2 text-center">{grandTotal.balance}</TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+                        ))}
+                        <TableCell className={cn("border p-2 text-center font-bold")}>
+                            {diameterTotals[metric.key]}
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            </div>
+            )
+        })}
       </CardContent>
     </Card>
   );
@@ -190,7 +167,7 @@ export default function ProgressReportPage() {
       const appType = entry.applicationType;
       if (!appType) return;
 
-      const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance;
+      const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance ? new Date(entry.remittanceDetails[0].dateOfRemittance) : null;
       
       const entryTotalRemittance = entry.totalRemittance || 0;
       const entryTotalPayment = entry.totalPaymentAllEntries || 0;
@@ -199,7 +176,7 @@ export default function ProgressReportPage() {
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
-        const completionDate = site.dateOfCompletion;
+        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
 
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
