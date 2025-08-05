@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -23,7 +23,7 @@ import {
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Define the structure for the progress report data
 interface ProgressStats {
@@ -62,6 +62,7 @@ const OTHER_PURPOSES: SitePurpose[] = [
   "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", 
   "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"
 ];
+const financialSummaryOrder: SitePurpose[] = ["BWC", "TWC", ...OTHER_PURPOSES];
 
 const REFUNDED_STATUSES = ['To be Refunded'];
 
@@ -205,7 +206,7 @@ export default function ProgressReportPage() {
     
     const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] });
     const financialSummaryData: FinancialSummaryReport = {} as FinancialSummaryReport;
-    [...BWC_DIAMETERS, ...TWC_DIAMETERS, ...OTHER_PURPOSES, "BWC", "TWC"].forEach(p => financialSummaryData[p as SitePurpose] = initialFinancialSummary())
+    financialSummaryOrder.forEach(p => financialSummaryData[p as SitePurpose] = initialFinancialSummary())
 
     applicationTypeOptions.forEach(appType => {
       bwcData[appType] = {};
@@ -218,7 +219,9 @@ export default function ProgressReportPage() {
       const appType = entry.applicationType;
       if (!appType) return;
       
-      const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance ? new Date(entry.remittanceDetails[0].dateOfRemittance) : null;
+      const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
+      const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
+      
       const entryTotalRemittance = entry.totalRemittance || 0;
       const entryTotalPayment = entry.totalPaymentAllEntries || 0;
 
@@ -228,7 +231,8 @@ export default function ProgressReportPage() {
         const diameter = site.diameter;
         const workStatus = site.workStatus;
 
-        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
+        const completionDateValue = site.dateOfCompletion;
+        const completionDate = completionDateValue ? new Date(completionDateValue) : null;
 
         const isCompletedInPeriod = completionDate && isValid(completionDate) && completionDate >= sDate && completionDate <= eDate;
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
@@ -249,11 +253,11 @@ export default function ProgressReportPage() {
                     financialSummaryData[purposeKey].totalApplications++;
                     financialSummaryData[purposeKey].applicationData.push(entry);
                     financialSummaryData[purposeKey].totalRemittance += entryTotalRemittance;
-                    financialSummaryData[purposeKey].totalPayment += entryTotalPayment;
                 }
                 if(isCompletedInPeriod && !financialSummaryData[purposeKey].completedData.some(e => e.fileNo === entry.fileNo)) {
                     financialSummaryData[purposeKey].totalCompleted++;
                     financialSummaryData[purposeKey].completedData.push(entry);
+                    financialSummaryData[purposeKey].totalPayment += entryTotalPayment;
                 }
             }
         };
@@ -305,6 +309,7 @@ export default function ProgressReportPage() {
   };
 
   const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData>, title: string) => {
+    if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
     setDetailDialogData(data);
      const columns: DetailDialogColumn[] = 'nameOfSite' in data[0] 
@@ -485,7 +490,10 @@ export default function ProgressReportPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {Object.entries(reportData.financialSummaryData).map(([purpose, data]) => (
+                            {financialSummaryOrder.map(purpose => {
+                                const data = reportData.financialSummaryData[purpose];
+                                if (!data) return null;
+                                return (
                                 <TableRow key={purpose}>
                                     <TableCell className="border p-2 font-medium">{purpose}</TableCell>
                                     <TableCell className="border p-2 text-center">
@@ -501,7 +509,7 @@ export default function ProgressReportPage() {
                                     </TableCell>
                                     <TableCell className="border p-2 text-right">{data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                 </TableRow>
-                            ))}
+                            )})}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -561,3 +569,5 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
+    
