@@ -92,7 +92,7 @@ interface DetailDialogColumn {
 
 interface WorkSummary {
   totalCount: number;
-  byPurpose: Record<string, number>;
+  byPurpose: Record<SitePurpose, number>;
   data: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }>;
 }
 
@@ -440,12 +440,16 @@ export default function DashboardPage() {
     }
     
     const createSummary = (sites: typeof completedThisMonthSites): WorkSummary => {
-        const byPurpose = sites.reduce((acc, site) => {
-            if (site.purpose) {
-                acc[site.purpose] = (acc[site.purpose] || 0) + 1;
-            }
-            return acc;
-        }, {} as Record<string, number>);
+        const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
+          acc[purpose] = 0;
+          return acc;
+        }, {} as Record<SitePurpose, number>);
+
+        sites.forEach(site => {
+          if (site.purpose && sitePurposeOptions.includes(site.purpose as SitePurpose)) {
+            byPurpose[site.purpose as SitePurpose]++;
+          }
+        });
 
         return {
             totalCount: sites.length,
@@ -476,11 +480,20 @@ export default function DashboardPage() {
 
 
   const supervisorOngoingWorks = useMemo(() => {
-    if (!selectedSupervisorId || entriesLoading) return { works: [], byPurpose: {}, totalCount: 0 };
+    if (!selectedSupervisorId || entriesLoading) {
+      const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
+        acc[purpose] = 0;
+        return acc;
+      }, {} as Record<SitePurpose, number>);
+      return { works: [], byPurpose, totalCount: 0 };
+    }
     
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
     let works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; purpose?: SitePurpose; supervisorName?: string | null }> = [];
-    const byPurpose: Record<string, number> = {};
+    const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
+        acc[purpose] = 0;
+        return acc;
+    }, {} as Record<SitePurpose, number>);
 
     for (const entry of rawFileEntries) {
         entry.siteDetails?.forEach(site => {
@@ -493,8 +506,8 @@ export default function DashboardPage() {
                     purpose: site.purpose,
                     supervisorName: site.supervisorName,
                 });
-                if(site.purpose) {
-                    byPurpose[site.purpose] = (byPurpose[site.purpose] || 0) + 1;
+                if(site.purpose && sitePurposeOptions.includes(site.purpose as SitePurpose)) {
+                    byPurpose[site.purpose as SitePurpose]++;
                 }
             }
         });
@@ -526,7 +539,6 @@ export default function DashboardPage() {
     ];
     setDetailDialogTitle(title);
     setDetailDialogData(dialogData);
-    setDetailDialogColumns(columns);
     setIsDetailDialogOpen(true);
   };
   
@@ -1401,7 +1413,7 @@ export default function DashboardPage() {
                                 <TableCell className="font-medium">{purpose}</TableCell>
                                 <TableCell className="text-right">
                                     <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)}>
-                                        {count}
+                                        {count as number}
                                     </Button>
                                 </TableCell>
                             </TableRow>
@@ -1438,6 +1450,7 @@ export default function DashboardPage() {
                   {activeUsers.map((usr) => {
                     const staffInfo = staffMembers.find(s => s.id === usr.staffId);
                     const photoUrl = staffInfo?.photoUrl;
+                    const avatarColorClass = getColorClass(usr.name || usr.email || 'user');
                     return (
                     <li key={usr.uid} className="flex items-center space-x-3 p-2 hover:bg-secondary/50 rounded-md">
                       <Avatar className="h-9 w-9">
@@ -1446,7 +1459,7 @@ export default function DashboardPage() {
                           alt={usr.name || 'User'}
                           data-ai-hint="person user"
                         />
-                        <AvatarFallback>{getInitials(usr.name)}</AvatarFallback>
+                        <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(usr.name)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
