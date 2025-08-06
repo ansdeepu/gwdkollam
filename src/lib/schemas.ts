@@ -62,10 +62,10 @@ export type UserRole = typeof userRoleOptions[number];
 export const applicationTypeOptions = [
   "Private_Domestic",
   "Private_Irrigation",
-  "Private_Instituition",
+  "Private_Institution",
   "Private_Industry",
   "LSGD",
-  "Government_Instituition",
+  "Government_Institution",
   "Government_Water_Authority",
   "Government_PMKSY",
   "Government_Others",

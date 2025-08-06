@@ -576,7 +576,7 @@ export default function ReportsPage() {
             <div className="space-y-3 py-4">
               <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Main Details:</h4>
               {renderDetail("File No", viewItem?.fileNo)}
-              {renderDetail("Name &amp; Address of Institution / Applicant", viewItem?.applicantName)}
+              {renderDetail("Name & Address of Institution / Applicant", viewItem?.applicantName)}
               {renderDetail("Phone No", viewItem?.phoneNo)}
               {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
               {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}

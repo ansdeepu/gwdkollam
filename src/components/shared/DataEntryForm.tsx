@@ -184,7 +184,7 @@ export default function DataEntryFormComponent({
     return [
       'Private_Domestic',
       'Private_Irrigation',
-      'Private_Instituition',
+      'Private_Institution',
       'Private_Industry'
     ].includes(applicationType);
   }, [applicationType]);

@@ -55,7 +55,8 @@ interface FinancialSummary {
   applicationData: DataEntryFormData[];
   completedData: DataEntryFormData[];
 }
-type FinancialSummaryReport = Record<SitePurpose, FinancialSummary>;
+type FinancialSummaryReport = Record<string, FinancialSummary>;
+
 
 const BWC_DIAMETERS = ['110 mm (4.5”)', '150 mm (6”)'];
 const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
@@ -64,7 +65,11 @@ const OTHER_PURPOSES: SitePurpose[] = [
   "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", 
   "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"
 ];
-const financialSummaryOrder: SitePurpose[] = ["BWC", "TWC", ...OTHER_PURPOSES];
+const financialSummaryOrder: string[] = ["BWC", "TWC", ...OTHER_PURPOSES];
+
+const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
+  "Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"
+];
 
 const REFUNDED_STATUSES = ['To be Refunded'];
 
@@ -211,7 +216,7 @@ export default function ProgressReportPage() {
     
     const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] });
     const financialSummaryData: FinancialSummaryReport = {} as FinancialSummaryReport;
-    financialSummaryOrder.forEach(p => financialSummaryData[p as SitePurpose] = initialFinancialSummary())
+    financialSummaryOrder.forEach(p => financialSummaryData[p as string] = initialFinancialSummary())
 
     applicationTypeOptions.forEach(appType => {
       bwcData[appType] = {};
@@ -254,28 +259,29 @@ export default function ProgressReportPage() {
             if (isRefunded) { statsObj.refunded++; statsObj.refundedData.push(siteWithFileContext); }
         };
         
-        const updateFinancials = (purposeKey: SitePurpose) => {
-             if (financialSummaryData[purposeKey]) {
-                const applicationAlreadyCounted = financialSummaryData[purposeKey].applicationData.some(e => e.fileNo === entry.fileNo);
+        const updateFinancials = (purposeKey: SitePurpose | ApplicationType) => {
+             const summaryKey = purposeKey as string;
+             if (financialSummaryData[summaryKey]) {
+                const applicationAlreadyCounted = financialSummaryData[summaryKey].applicationData.some(e => e.fileNo === entry.fileNo);
                 if ((isCurrentApplication || wasActiveBeforePeriod) && !applicationAlreadyCounted) {
-                    financialSummaryData[purposeKey].totalApplications++;
-                    financialSummaryData[purposeKey].applicationData.push(entry);
-                    financialSummaryData[purposeKey].totalRemittance += entryTotalRemittance;
+                    financialSummaryData[summaryKey].totalApplications++;
+                    financialSummaryData[summaryKey].applicationData.push(entry);
+                    financialSummaryData[summaryKey].totalRemittance += entryTotalRemittance;
                 }
-                if(isCompletedInPeriod && !financialSummaryData[purposeKey].completedData.some(e => e.fileNo === entry.fileNo)) {
-                    financialSummaryData[purposeKey].totalCompleted++;
-                    financialSummaryData[purposeKey].completedData.push(entry);
-                    financialSummaryData[purposeKey].totalPayment += entryTotalPayment;
+                if(isCompletedInPeriod && !financialSummaryData[summaryKey].completedData.some(e => e.fileNo === entry.fileNo)) {
+                    financialSummaryData[summaryKey].totalCompleted++;
+                    financialSummaryData[summaryKey].completedData.push(entry);
+                    financialSummaryData[summaryKey].totalPayment += entryTotalPayment;
                 }
             }
         };
 
         if (purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
           updateStats(bwcData[appType][diameter]);
-          updateFinancials(purpose);
+          updateFinancials('BWC');
         } else if (purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
           updateStats(twcData[appType][diameter]);
-          updateFinancials(purpose);
+          updateFinancials('TWC');
         } else if (OTHER_PURPOSES.includes(purpose)) {
           updateStats(otherServicesData[purpose]);
           updateFinancials(purpose);
@@ -375,6 +381,60 @@ export default function ProgressReportPage() {
     XLSX.writeFile(workbook, `Report_Details_${detailDialogTitle.replace(/ /g, '_')}.xlsx`);
     toast({ title: "Exported!", description: "The detailed list has been exported to Excel." });
   };
+  
+  const FinancialSummaryTable = ({ title, purposesToShow }: { title: string; purposesToShow: string[] }) => {
+    if (!reportData) return null;
+
+    return (
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>
+            A summary of financial and application counts for each purpose within the selected period.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-full border-collapse">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="border p-2 align-middle text-center font-semibold">Type of Purpose</TableHead>
+                <TableHead className="border p-2 text-center font-semibold">Total Application Received</TableHead>
+                <TableHead className="border p-2 text-center font-semibold">Total Remittance (₹)</TableHead>
+                <TableHead className="border p-2 text-center font-semibold">No. of Application Completed</TableHead>
+                <TableHead className="border p-2 text-center font-semibold">Total Payment (₹)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {purposesToShow.map(purpose => {
+                const data = reportData.financialSummaryData[purpose];
+                if (!data || data.totalApplications === 0 && data.totalCompleted === 0) return null;
+                return (
+                  <TableRow key={purpose}>
+                    <TableCell className="border p-2 font-medium">{purpose}</TableCell>
+                    <TableCell className="border p-2 text-center">
+                      <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Applications for ${purpose}`)}>
+                        {data.totalApplications}
+                      </Button>
+                    </TableCell>
+                    <TableCell className="border p-2 text-right">{data.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-center">
+                      <Button variant="link" className="p-0 h-auto" disabled={data.totalCompleted === 0} onClick={() => handleCountClick(data.completedData, `Completed Applications for ${purpose}`)}>
+                        {data.totalCompleted}
+                      </Button>
+                    </TableCell>
+                    <TableCell className="border p-2 text-right">{data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const privatePurposes = financialSummaryOrder.filter(p => PRIVATE_APPLICATION_TYPES.some(privateType => p === privateType.split('_')[0] || p === 'BWC' || p === 'TWC'));
+  const governmentPurposes = financialSummaryOrder.filter(p => !privatePurposes.includes(p));
   
   if (entriesLoading) {
     return (
@@ -483,49 +543,10 @@ export default function ProgressReportPage() {
                 </CardContent>
             </Card>
 
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle>Financial Summary by Purpose</CardTitle>
-                    <CardDescription>
-                        A summary of financial and application counts for each purpose within the selected period.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                    <Table className="min-w-full border-collapse">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="border p-2 align-middle text-center font-semibold">Type of Purpose</TableHead>
-                                <TableHead className="border p-2 text-center font-semibold">Total Application Received</TableHead>
-                                <TableHead className="border p-2 text-center font-semibold">Total Remittance (₹)</TableHead>
-                                <TableHead className="border p-2 text-center font-semibold">No. of Application Completed</TableHead>
-                                <TableHead className="border p-2 text-center font-semibold">Total Payment (₹)</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {financialSummaryOrder.map(purpose => {
-                                const data = reportData.financialSummaryData[purpose];
-                                if (!data) return null;
-                                return (
-                                <TableRow key={purpose}>
-                                    <TableCell className="border p-2 font-medium">{purpose}</TableCell>
-                                    <TableCell className="border p-2 text-center">
-                                      <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Applications for ${purpose}`)}>
-                                        {data.totalApplications}
-                                      </Button>
-                                    </TableCell>
-                                    <TableCell className="border p-2 text-right">{data.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                    <TableCell className="border p-2 text-center">
-                                      <Button variant="link" className="p-0 h-auto" disabled={data.totalCompleted === 0} onClick={() => handleCountClick(data.completedData, `Completed Applications for ${purpose}`)}>
-                                        {data.totalCompleted}
-                                      </Button>
-                                    </TableCell>
-                                    <TableCell className="border p-2 text-right">{data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                </TableRow>
-                            )})}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            <div className="space-y-6">
+                <FinancialSummaryTable title="Financial Summary - Private Applications" purposesToShow={privatePurposes} />
+                <FinancialSummaryTable title="Financial Summary - Government & Other Applications" purposesToShow={governmentPurposes} />
+            </div>
         </div>
       ) : (
         <div className="flex items-center justify-center py-10 border-2 border-dashed rounded-lg">
