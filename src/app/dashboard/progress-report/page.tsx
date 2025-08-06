@@ -29,12 +29,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface ProgressStats {
   previousBalance: number;
   currentApplications: number;
+  totalApplications: number;
   completed: number;
   refunded: number;
   balance: number;
   // Add data arrays to hold the actual entries
   previousBalanceData: SiteDetailFormData[];
   currentApplicationsData: SiteDetailFormData[];
+  totalApplicationsData: SiteDetailFormData[];
   completedData: SiteDetailFormData[];
   refundedData: SiteDetailFormData[];
   balanceData: SiteDetailFormData[];
@@ -85,6 +87,7 @@ const WellTypeProgressTable = ({
     const metrics: Array<{ key: keyof ProgressStats, label: string }> = [
         { key: 'previousBalance', label: 'Previous Balance' },
         { key: 'currentApplications', label: 'Current Application' },
+        { key: 'totalApplications', label: 'Total Application' },
         { key: 'completed', label: 'Completed' },
         { key: 'refunded', label: 'Refund' },
         { key: 'balance', label: 'Balance' }
@@ -97,19 +100,21 @@ const WellTypeProgressTable = ({
       </CardHeader>
       <CardContent className="overflow-x-auto space-y-6">
         {diameters.map(diameter => {
-            const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], completedData: [], refundedData: [], balanceData: [] };
+            const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] };
             
             applicationTypeOptions.forEach(appType => {
                 const stats = data[appType][diameter];
                 if (stats) {
                     diameterTotals.previousBalance += stats.previousBalance;
                     diameterTotals.currentApplications += stats.currentApplications;
+                    diameterTotals.totalApplications += stats.totalApplications;
                     diameterTotals.completed += stats.completed;
                     diameterTotals.refunded += stats.refunded;
                     diameterTotals.balance += stats.balance;
                     
                     diameterTotals.previousBalanceData.push(...stats.previousBalanceData);
                     diameterTotals.currentApplicationsData.push(...stats.currentApplicationsData);
+                    diameterTotals.totalApplicationsData.push(...stats.totalApplicationsData);
                     diameterTotals.completedData.push(...stats.completedData);
                     diameterTotals.refundedData.push(...stats.refundedData);
                     diameterTotals.balanceData.push(...stats.balanceData);
@@ -136,7 +141,7 @@ const WellTypeProgressTable = ({
                               const count = data[appType][diameter]?.[metric.key] as number ?? 0;
                               const metricData = data[appType][diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[] ?? [];
                               return (
-                                <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", metric.key === 'balance' && "font-bold")}>
+                                <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", (metric.key === 'balance' || metric.key === 'totalApplications') && "font-bold")}>
                                     <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
                                       {count}
                                     </Button>
@@ -150,7 +155,7 @@ const WellTypeProgressTable = ({
                     <TableRow className="bg-muted/50">
                         <TableCell className="border p-2 text-left font-bold">Total</TableCell>
                         {metrics.map(metric => (
-                           <TableCell key={`total-${metric.key}`} className="border p-2 text-center font-bold">
+                           <TableCell key={`total-${metric.key}`} className={cn("border p-2 text-center font-bold")}>
                                <Button variant="link" className="p-0 h-auto font-bold" disabled={diameterTotals[metric.key] === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[], `Total for ${diameter} - ${metric.label}`)}>
                                     {diameterTotals[metric.key]}
                                </Button>
@@ -198,7 +203,7 @@ export default function ProgressReportPage() {
     const sDate = startOfDay(startDate);
     const eDate = endOfDay(endDate);
 
-    const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], completedData: [], refundedData: [], balanceData: [] });
+    const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] });
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const twcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const otherServicesData: OtherServiceProgress = {} as OtherServiceProgress;
@@ -279,18 +284,20 @@ export default function ProgressReportPage() {
     });
     
     // Final balance calculation
-    const calculateBalance = (stats: ProgressStats) => {
-      stats.balance = stats.previousBalance + stats.currentApplications - stats.completed - stats.refunded;
-      stats.balanceData = [ ...stats.previousBalanceData, ...stats.currentApplicationsData ].filter(
+    const calculateBalanceAndTotal = (stats: ProgressStats) => {
+      stats.totalApplications = stats.previousBalance + stats.currentApplications;
+      stats.totalApplicationsData = [ ...stats.previousBalanceData, ...stats.currentApplicationsData ];
+      stats.balance = stats.totalApplications - stats.completed - stats.refunded;
+      stats.balanceData = stats.totalApplicationsData.filter(
           item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo) && !stats.refundedData.some(rd => rd.nameOfSite === item.nameOfSite && rd.fileNo === item.fileNo)
       );
     };
     
     applicationTypeOptions.forEach(appType => {
-      BWC_DIAMETERS.forEach(d => calculateBalance(bwcData[appType][d]));
-      TWC_DIAMETERS.forEach(d => calculateBalance(twcData[appType][d]));
+      BWC_DIAMETERS.forEach(d => calculateBalanceAndTotal(bwcData[appType][d]));
+      TWC_DIAMETERS.forEach(d => calculateBalanceAndTotal(twcData[appType][d]));
     });
-    OTHER_PURPOSES.forEach(p => calculateBalance(otherServicesData[p]));
+    OTHER_PURPOSES.forEach(p => calculateBalanceAndTotal(otherServicesData[p]));
     
     setReportData({ bwcData, twcData, otherServicesData, financialSummaryData });
     setIsFiltering(false);
@@ -451,6 +458,7 @@ export default function ProgressReportPage() {
                             <TableHead className="border p-2 align-middle text-center font-semibold">Service Type</TableHead>
                             <TableHead className="border p-2 text-center font-semibold">Previous Balance</TableHead>
                             <TableHead className="border p-2 text-center font-semibold">Current Application</TableHead>
+                            <TableHead className="border p-2 text-center font-bold">Total Application</TableHead>
                             <TableHead className="border p-2 text-center font-semibold">Completed</TableHead>
                             <TableHead className="border p-2 text-center font-semibold">Refunded</TableHead>
                             <TableHead className="border p-2 text-center font-bold">Balance</TableHead>
@@ -464,6 +472,7 @@ export default function ProgressReportPage() {
                                 <TableCell className="border p-2 font-medium">{purpose}</TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.previousBalance === 0} onClick={() => handleCountClick(stats.previousBalanceData, `${purpose} - Previous Balance`)}>{stats?.previousBalance || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.currentApplications === 0} onClick={() => handleCountClick(stats.currentApplicationsData, `${purpose} - Current Applications`)}>{stats?.currentApplications || 0}</Button></TableCell>
+                                <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.totalApplications === 0} onClick={() => handleCountClick(stats.totalApplicationsData, `${purpose} - Total Applications`)}>{stats?.totalApplications || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.completed === 0} onClick={() => handleCountClick(stats.completedData, `${purpose} - Completed`)}>{stats?.completed || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.refunded === 0} onClick={() => handleCountClick(stats.refundedData, `${purpose} - Refunded`)}>{stats?.refunded || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.balance === 0} onClick={() => handleCountClick(stats.balanceData, `${purpose} - Balance`)}>{stats?.balance || 0}</Button></TableCell>
