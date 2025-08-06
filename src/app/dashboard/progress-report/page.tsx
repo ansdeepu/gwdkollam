@@ -277,9 +277,11 @@ export default function ProgressReportPage() {
         };
 
         if (purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
+          if (!bwcData[appType]) return; // Guard clause
           updateStats(bwcData[appType][diameter]);
           updateFinancials('BWC');
         } else if (purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
+          if (!twcData[appType]) return; // Guard clause
           updateStats(twcData[appType][diameter]);
           updateFinancials('TWC');
         } else if (OTHER_PURPOSES.includes(purpose)) {
@@ -602,3 +604,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
