@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -249,7 +249,8 @@ export default function ProgressReportPage() {
         
         const updateFinancials = (purposeKey: SitePurpose) => {
              if (financialSummaryData[purposeKey]) {
-                if (isCurrentApplication && !financialSummaryData[purposeKey].applicationData.some(e => e.fileNo === entry.fileNo)) {
+                const applicationAlreadyCounted = financialSummaryData[purposeKey].applicationData.some(e => e.fileNo === entry.fileNo);
+                if ((isCurrentApplication || wasActiveBeforePeriod) && !applicationAlreadyCounted) {
                     financialSummaryData[purposeKey].totalApplications++;
                     financialSummaryData[purposeKey].applicationData.push(entry);
                     financialSummaryData[purposeKey].totalRemittance += entryTotalRemittance;
