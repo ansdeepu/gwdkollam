@@ -189,7 +189,8 @@ export default function ProgressReportPage() {
     bwcData: ApplicationTypeProgress;
     twcData: ApplicationTypeProgress;
     otherServicesData: OtherServiceProgress;
-    financialSummaryData: FinancialSummaryReport;
+    privateFinancialSummaryData: FinancialSummaryReport;
+    governmentFinancialSummaryData: FinancialSummaryReport;
   } | null>(null);
 
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
@@ -214,10 +215,6 @@ export default function ProgressReportPage() {
     const otherServicesData: OtherServiceProgress = {} as OtherServiceProgress;
     OTHER_PURPOSES.forEach(p => { otherServicesData[p] = initialStats(); });
     
-    const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] });
-    const financialSummaryData: FinancialSummaryReport = {} as FinancialSummaryReport;
-    financialSummaryOrder.forEach(p => financialSummaryData[p as string] = initialFinancialSummary())
-
     applicationTypeOptions.forEach(appType => {
       bwcData[appType] = {};
       BWC_DIAMETERS.forEach(d => { bwcData[appType][d] = initialStats(); });
@@ -226,6 +223,7 @@ export default function ProgressReportPage() {
     });
 
     // New logic for financial summary
+    const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] });
     const privateFinancialSummary: FinancialSummaryReport = {};
     const governmentFinancialSummary: FinancialSummaryReport = {};
     financialSummaryOrder.forEach(p => {
@@ -242,21 +240,16 @@ export default function ProgressReportPage() {
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
       
-      // Calculate isPreviousApplicationForFinancials at the entry level
-      let isPreviousApplicationForFinancials = false;
-      if (firstRemittanceDate && isBefore(firstRemittanceDate, sDate)) {
-          const isCompletedBeforePeriod = entry.siteDetails?.every(site => {
-              const completionDateValue = site.dateOfCompletion;
-              if (!completionDateValue) return false;
-              const completionDate = new Date(completionDateValue);
-              return isValid(completionDate) && isBefore(completionDate, sDate);
-          });
-          if (!isCompletedBeforePeriod) {
-              isPreviousApplicationForFinancials = true;
-          }
-      }
-
+      const wasActiveBeforePeriodForFinancials = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && 
+            !entry.siteDetails?.every(site => {
+                const completionDateValue = site.dateOfCompletion;
+                if (!completionDateValue) return false;
+                const completionDate = new Date(completionDateValue);
+                return isValid(completionDate) && isBefore(completionDate, sDate);
+            });
+      
       const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
+      
       const isCompletedInPeriodForFinancials = entry.siteDetails?.some(site => {
         const completionDateValue = site.dateOfCompletion;
         const completionDate = completionDateValue ? new Date(completionDateValue) : null;
@@ -270,13 +263,13 @@ export default function ProgressReportPage() {
         const entryTotalRemittance = entry.totalRemittance || 0;
         const entryTotalPayment = entry.totalPaymentAllEntries || 0;
 
-        if (isPreviousApplicationForFinancials || isCurrentApplicationForFinancials) {
+        if (wasActiveBeforePeriodForFinancials || isCurrentApplicationForFinancials) {
           const uniquePurposes = new Set(entry.siteDetails?.map(s => s.purpose).filter(Boolean) as SitePurpose[]);
           uniquePurposes.forEach(purpose => {
             if (targetFinancialSummary[purpose]) {
               targetFinancialSummary[purpose].totalApplications++;
               targetFinancialSummary[purpose].applicationData.push(entry);
-              targetFinancialSummary[purpose].totalRemittance += entryTotalRemittance / (uniquePurposes.size || 1); // Distribute remittance
+              targetFinancialSummary[purpose].totalRemittance += entryTotalRemittance / (uniquePurposes.size || 1); 
             }
           });
         }
@@ -286,7 +279,7 @@ export default function ProgressReportPage() {
               if (targetFinancialSummary[purpose]) {
                   targetFinancialSummary[purpose].totalCompleted++;
                   targetFinancialSummary[purpose].completedData.push(entry);
-                  targetFinancialSummary[purpose].totalPayment += entryTotalPayment / (uniquePurposes.size || 1); // Distribute payment
+                  targetFinancialSummary[purpose].totalPayment += entryTotalPayment / (uniquePurposes.size || 1);
               }
           });
         }
@@ -306,7 +299,6 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isValid(completionDate) && completionDate >= sDate && completionDate <= eDate;
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
         
-        // Corrected Previous Balance Logic
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && 
                                      (!completionDate || !isValid(completionDate) || !isBefore(completionDate, sDate));
 
@@ -331,7 +323,6 @@ export default function ProgressReportPage() {
       });
     });
     
-    // Final balance calculation
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
       stats.totalApplications = stats.previousBalance + stats.currentApplications;
       stats.totalApplicationsData = [ ...stats.previousBalanceData, ...stats.currentApplicationsData ];
@@ -347,7 +338,7 @@ export default function ProgressReportPage() {
     });
     OTHER_PURPOSES.forEach(p => calculateBalanceAndTotal(otherServicesData[p]));
     
-    setReportData({ bwcData, twcData, otherServicesData, financialSummaryData: { ...privateFinancialSummary, ...governmentFinancialSummary } });
+    setReportData({ bwcData, twcData, otherServicesData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary });
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate, toast]);
   
@@ -424,8 +415,10 @@ export default function ProgressReportPage() {
     toast({ title: "Exported!", description: "The detailed list has been exported to Excel." });
   };
   
-  const FinancialSummaryTable = ({ title, purposesToShow, summaryData }: { title: string; purposesToShow: string[]; summaryData: FinancialSummaryReport }) => {
+  const FinancialSummaryTable = ({ title, summaryData }: { title: string; summaryData: FinancialSummaryReport }) => {
     if (!reportData) return null;
+
+    const purposesToShow = financialSummaryOrder.filter(p => summaryData[p]?.totalApplications > 0 || summaryData[p]?.totalCompleted > 0);
 
     const total: FinancialSummary = { totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] };
     purposesToShow.forEach(p => {
@@ -463,7 +456,7 @@ export default function ProgressReportPage() {
             <TableBody>
               {purposesToShow.map(purpose => {
                 const data = summaryData[purpose];
-                if (!data || data.totalApplications === 0 && data.totalCompleted === 0) return null;
+                if (!data) return null;
                 return (
                   <TableRow key={purpose}>
                     <TableCell className="border p-2 font-medium">{purpose}</TableCell>
@@ -506,8 +499,6 @@ export default function ProgressReportPage() {
     );
   };
   
-  const privatePurposes = financialSummaryOrder.filter(p => PRIVATE_APPLICATION_TYPES.some(privateType => p === privateType.split('_')[0] || p === 'BWC' || p === 'TWC'));
-  const governmentPurposes = financialSummaryOrder;
   
   if (entriesLoading) {
     return (
@@ -617,8 +608,8 @@ export default function ProgressReportPage() {
             </Card>
 
             <div className="space-y-6">
-                <FinancialSummaryTable title="Financial Summary - Private Applications" purposesToShow={privatePurposes} summaryData={reportData.financialSummaryData} />
-                <FinancialSummaryTable title="Financial Summary - Government & Other Applications" purposesToShow={governmentPurposes} summaryData={reportData.financialSummaryData} />
+                <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
+                <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
             </div>
         </div>
       ) : (
