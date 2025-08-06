@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isBefore } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -108,7 +108,7 @@ const WellTypeProgressTable = ({
             const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] };
             
             applicationTypeOptions.forEach(appType => {
-                const stats = data[appType][diameter];
+                const stats = data[appType]?.[diameter];
                 if (stats) {
                     diameterTotals.previousBalance += stats.previousBalance;
                     diameterTotals.currentApplications += stats.currentApplications;
@@ -143,8 +143,8 @@ const WellTypeProgressTable = ({
                         <TableRow key={appType}>
                             <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
                             {metrics.map(metric => {
-                              const count = data[appType][diameter]?.[metric.key] as number ?? 0;
-                              const metricData = data[appType][diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[] ?? [];
+                              const count = data[appType]?.[diameter]?.[metric.key] as number ?? 0;
+                              const metricData = data[appType]?.[diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[] ?? [];
                               return (
                                 <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", (metric.key === 'balance' || metric.key === 'totalApplications') && "font-bold")}>
                                     <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
@@ -225,6 +225,16 @@ export default function ProgressReportPage() {
       TWC_DIAMETERS.forEach(d => { twcData[appType][d] = initialStats(); });
     });
 
+    // New logic for financial summary
+    const privateFinancialSummary: FinancialSummaryReport = {};
+    const governmentFinancialSummary: FinancialSummaryReport = {};
+    financialSummaryOrder.forEach(p => {
+        privateFinancialSummary[p] = initialFinancialSummary();
+        governmentFinancialSummary[p] = initialFinancialSummary();
+    });
+
+    const processedFileNosForFinancials = new Set<string>();
+
     fileEntries.forEach(entry => {
       const appType = entry.applicationType;
       if (!appType) return;
@@ -232,8 +242,57 @@ export default function ProgressReportPage() {
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
       
-      const entryTotalRemittance = entry.totalRemittance || 0;
-      const entryTotalPayment = entry.totalPaymentAllEntries || 0;
+      // Calculate isPreviousApplicationForFinancials at the entry level
+      let isPreviousApplicationForFinancials = false;
+      if (firstRemittanceDate && isBefore(firstRemittanceDate, sDate)) {
+          const isCompletedBeforePeriod = entry.siteDetails?.every(site => {
+              const completionDateValue = site.dateOfCompletion;
+              if (!completionDateValue) return false;
+              const completionDate = new Date(completionDateValue);
+              return isValid(completionDate) && isBefore(completionDate, sDate);
+          });
+          if (!isCompletedBeforePeriod) {
+              isPreviousApplicationForFinancials = true;
+          }
+      }
+
+      const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
+      const isCompletedInPeriodForFinancials = entry.siteDetails?.some(site => {
+        const completionDateValue = site.dateOfCompletion;
+        const completionDate = completionDateValue ? new Date(completionDateValue) : null;
+        return completionDate && isValid(completionDate) && completionDate >= sDate && completionDate <= eDate;
+      });
+      
+      // Process financial data once per file entry
+      if (!processedFileNosForFinancials.has(entry.fileNo!)) {
+        const isPrivate = PRIVATE_APPLICATION_TYPES.includes(appType);
+        const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
+        const entryTotalRemittance = entry.totalRemittance || 0;
+        const entryTotalPayment = entry.totalPaymentAllEntries || 0;
+
+        if (isPreviousApplicationForFinancials || isCurrentApplicationForFinancials) {
+          const uniquePurposes = new Set(entry.siteDetails?.map(s => s.purpose).filter(Boolean) as SitePurpose[]);
+          uniquePurposes.forEach(purpose => {
+            if (targetFinancialSummary[purpose]) {
+              targetFinancialSummary[purpose].totalApplications++;
+              targetFinancialSummary[purpose].applicationData.push(entry);
+              targetFinancialSummary[purpose].totalRemittance += entryTotalRemittance / (uniquePurposes.size || 1); // Distribute remittance
+            }
+          });
+        }
+        if (isCompletedInPeriodForFinancials) {
+          const uniquePurposes = new Set(entry.siteDetails?.map(s => s.purpose).filter(Boolean) as SitePurpose[]);
+          uniquePurposes.forEach(purpose => {
+              if (targetFinancialSummary[purpose]) {
+                  targetFinancialSummary[purpose].totalCompleted++;
+                  targetFinancialSummary[purpose].completedData.push(entry);
+                  targetFinancialSummary[purpose].totalPayment += entryTotalPayment / (uniquePurposes.size || 1); // Distribute payment
+              }
+          });
+        }
+        processedFileNosForFinancials.add(entry.fileNo!);
+      }
+
 
       entry.siteDetails?.forEach(site => {
         const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName };
@@ -247,8 +306,9 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isValid(completionDate) && completionDate >= sDate && completionDate <= eDate;
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
         
-        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate < sDate &&
-                                      (!completionDate || !isValid(completionDate) || completionDate >= sDate);
+        // Corrected Previous Balance Logic
+        const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && 
+                                     (!completionDate || !isValid(completionDate) || !isBefore(completionDate, sDate));
 
         const isRefunded = workStatus ? REFUNDED_STATUSES.includes(workStatus) : false;
 
@@ -259,34 +319,14 @@ export default function ProgressReportPage() {
             if (isRefunded) { statsObj.refunded++; statsObj.refundedData.push(siteWithFileContext); }
         };
         
-        const updateFinancials = (purposeKey: SitePurpose | ApplicationType) => {
-             const summaryKey = purposeKey as string;
-             if (financialSummaryData[summaryKey]) {
-                const applicationAlreadyCounted = financialSummaryData[summaryKey].applicationData.some(e => e.fileNo === entry.fileNo);
-                if ((isCurrentApplication || wasActiveBeforePeriod) && !applicationAlreadyCounted) {
-                    financialSummaryData[summaryKey].totalApplications++;
-                    financialSummaryData[summaryKey].applicationData.push(entry);
-                    financialSummaryData[summaryKey].totalRemittance += entryTotalRemittance;
-                }
-                if(isCompletedInPeriod && !financialSummaryData[summaryKey].completedData.some(e => e.fileNo === entry.fileNo)) {
-                    financialSummaryData[summaryKey].totalCompleted++;
-                    financialSummaryData[summaryKey].completedData.push(entry);
-                    financialSummaryData[summaryKey].totalPayment += entryTotalPayment;
-                }
-            }
-        };
-
         if (purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
-          if (!bwcData[appType]) return; // Guard clause
+          if (!bwcData[appType]?.[diameter]) return;
           updateStats(bwcData[appType][diameter]);
-          updateFinancials('BWC');
         } else if (purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
-          if (!twcData[appType]) return; // Guard clause
+          if (!twcData[appType]?.[diameter]) return;
           updateStats(twcData[appType][diameter]);
-          updateFinancials('TWC');
         } else if (OTHER_PURPOSES.includes(purpose)) {
           updateStats(otherServicesData[purpose]);
-          updateFinancials(purpose);
         }
       });
     });
@@ -302,12 +342,12 @@ export default function ProgressReportPage() {
     };
     
     applicationTypeOptions.forEach(appType => {
-      BWC_DIAMETERS.forEach(d => calculateBalanceAndTotal(bwcData[appType][d]));
-      TWC_DIAMETERS.forEach(d => calculateBalanceAndTotal(twcData[appType][d]));
+      BWC_DIAMETERS.forEach(d => { if(bwcData[appType]?.[d]) calculateBalanceAndTotal(bwcData[appType][d]) });
+      TWC_DIAMETERS.forEach(d => { if(twcData[appType]?.[d]) calculateBalanceAndTotal(twcData[appType][d]) });
     });
     OTHER_PURPOSES.forEach(p => calculateBalanceAndTotal(otherServicesData[p]));
     
-    setReportData({ bwcData, twcData, otherServicesData, financialSummaryData });
+    setReportData({ bwcData, twcData, otherServicesData, financialSummaryData: { ...privateFinancialSummary, ...governmentFinancialSummary } });
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate, toast]);
   
@@ -352,7 +392,7 @@ export default function ProgressReportPage() {
 
   const handleExportDialogData = () => {
     if (detailDialogData.length === 0) return;
-    const isSiteDetail = 'nameOfSite' in detailDialogData[0];
+    const isSiteDetail = detailDialogData[0] && 'nameOfSite' in detailDialogData[0];
 
     const dataToExport = detailDialogData.map(row => {
         if (isSiteDetail) {
@@ -384,8 +424,22 @@ export default function ProgressReportPage() {
     toast({ title: "Exported!", description: "The detailed list has been exported to Excel." });
   };
   
-  const FinancialSummaryTable = ({ title, purposesToShow }: { title: string; purposesToShow: string[] }) => {
+  const FinancialSummaryTable = ({ title, purposesToShow, summaryData }: { title: string; purposesToShow: string[]; summaryData: FinancialSummaryReport }) => {
     if (!reportData) return null;
+
+    const total: FinancialSummary = { totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] };
+    purposesToShow.forEach(p => {
+        const data = summaryData[p];
+        if(data) {
+            total.totalApplications += data.totalApplications;
+            total.totalRemittance += data.totalRemittance;
+            total.totalCompleted += data.totalCompleted;
+            total.totalPayment += data.totalPayment;
+            total.applicationData.push(...data.applicationData);
+            total.completedData.push(...data.completedData);
+        }
+    });
+
 
     return (
       <Card className="shadow-lg">
@@ -408,7 +462,7 @@ export default function ProgressReportPage() {
             </TableHeader>
             <TableBody>
               {purposesToShow.map(purpose => {
-                const data = reportData.financialSummaryData[purpose];
+                const data = summaryData[purpose];
                 if (!data || data.totalApplications === 0 && data.totalCompleted === 0) return null;
                 return (
                   <TableRow key={purpose}>
@@ -429,14 +483,31 @@ export default function ProgressReportPage() {
                 )
               })}
             </TableBody>
+             <TableFooter>
+                <TableRow className="bg-muted/50 font-bold">
+                    <TableCell className="border p-2">Total</TableCell>
+                    <TableCell className="border p-2 text-center">
+                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalApplications === 0} onClick={() => handleCountClick(total.applicationData, `Total Applications for ${title}`)}>
+                            {total.totalApplications}
+                        </Button>
+                    </TableCell>
+                    <TableCell className="border p-2 text-right">{total.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-center">
+                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalCompleted === 0} onClick={() => handleCountClick(total.completedData, `Total Completed Applications for ${title}`)}>
+                            {total.totalCompleted}
+                        </Button>
+                    </TableCell>
+                    <TableCell className="border p-2 text-right">{total.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                </TableRow>
+            </TableFooter>
           </Table>
         </CardContent>
       </Card>
     );
   };
-
+  
   const privatePurposes = financialSummaryOrder.filter(p => PRIVATE_APPLICATION_TYPES.some(privateType => p === privateType.split('_')[0] || p === 'BWC' || p === 'TWC'));
-  const governmentPurposes = financialSummaryOrder.filter(p => !privatePurposes.includes(p));
+  const governmentPurposes = financialSummaryOrder;
   
   if (entriesLoading) {
     return (
@@ -546,8 +617,8 @@ export default function ProgressReportPage() {
             </Card>
 
             <div className="space-y-6">
-                <FinancialSummaryTable title="Financial Summary - Private Applications" purposesToShow={privatePurposes} />
-                <FinancialSummaryTable title="Financial Summary - Government & Other Applications" purposesToShow={governmentPurposes} />
+                <FinancialSummaryTable title="Financial Summary - Private Applications" purposesToShow={privatePurposes} summaryData={reportData.financialSummaryData} />
+                <FinancialSummaryTable title="Financial Summary - Government & Other Applications" purposesToShow={governmentPurposes} summaryData={reportData.financialSummaryData} />
             </div>
         </div>
       ) : (
@@ -605,3 +676,6 @@ export default function ProgressReportPage() {
   );
 }
 
+
+
+    
