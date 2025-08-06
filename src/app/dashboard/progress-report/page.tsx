@@ -236,8 +236,10 @@ export default function ProgressReportPage() {
 
         const isCompletedInPeriod = completionDate && isValid(completionDate) && completionDate >= sDate && completionDate <= eDate;
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
-        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate < sDate && (!completionDate || !isValid(completionDate) || completionDate >= sDate);
         
+        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate < sDate &&
+                                      (!completionDate || !isValid(completionDate) || completionDate >= sDate);
+
         const isRefunded = workStatus ? REFUNDED_STATUSES.includes(workStatus) : false;
 
         const updateStats = (statsObj: ProgressStats) => {
