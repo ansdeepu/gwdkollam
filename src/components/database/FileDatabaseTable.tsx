@@ -418,6 +418,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
 
                               <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Drilling Details (Actuals)</h5>
                               {renderDetail("Actual Diameter (mm)", site.diameter)}
+                              {purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
                               {renderDetail("Actual TD (m)", site.totalDepth)}
                               {purpose === 'BWC' && renderDetail("Actual OB (m)", site.surveyOB)}
                               {renderDetail("Actual Casing Pipe (m)", site.casingPipeUsed)}
@@ -445,6 +446,8 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                               <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Scheme Details</h5>
                               {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
                               {renderDetail("Pump Details", site.pumpDetails)}
+                              {renderDetail("Pumping Line Length (m)", site.pumpingLineLength)}
+                              {renderDetail("Delivery Line Length (m)", site.deliveryLineLength)}
                               {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
                               {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
                               {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}

@@ -222,6 +222,7 @@ export const SiteDetailSchema = z.object({
   tsAmount: optionalNumber("TS Amount must be a valid number."),
   tenderNo: z.string().optional(),
   diameter: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteDiameterOptions).optional()),
+  pilotDrillingDepth: z.string().optional(),
   totalDepth: optionalNumber("Total Depth must be a valid number."),
   casingPipeUsed: z.string().optional(),
   outerCasingPipe: z.string().optional(),
@@ -231,6 +232,8 @@ export const SiteDetailSchema = z.object({
   waterLevel: z.string().optional(),
   drillingRemarks: z.string().optional().nullable().default(""),
   pumpDetails: z.string().optional(),
+  pumpingLineLength: z.string().optional(),
+  deliveryLineLength: z.string().optional(),
   waterTankCapacity: z.string().optional(),
   noOfTapConnections: optionalNumber("Tap Connections must be a valid number."),
   noOfBeneficiary: z.string().optional(),
@@ -484,3 +487,13 @@ export const GwdRateItemSchema = GwdRateItemFormDataSchema.extend({
   updatedAt: z.date(),
 });
 export type GwdRateItem = z.infer<typeof GwdRateItemSchema>;
+
+export const UpdatePasswordSchema = z.object({
+  currentPassword: z.string().min(1, { message: "Current password is required." }),
+  newPassword: z.string().min(6, { message: "New password must be at least 6 characters." }),
+  confirmPassword: z.string(),
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: "New passwords don't match.",
+  path: ["confirmPassword"],
+});
+export type UpdatePasswordFormData = z.infer<typeof UpdatePasswordSchema>;
