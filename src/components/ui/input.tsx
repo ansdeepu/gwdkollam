@@ -13,7 +13,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         )}
         ref={ref}
         {...props}
-        value={props.value === null ? '' : props.value}
+        value={props.value === null || props.value === undefined ? '' : props.value}
       />
     )
   }
