@@ -464,9 +464,6 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
-        <p className="text-muted-foreground">
-          Generate, filter, and sort site-wise data-driven reports to gain insights into work progress and resource allocation.
-        </p>
         <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
             <Button onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
@@ -624,6 +621,7 @@ export default function ReportsPage() {
 
                           <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Drilling Details (Actuals)</h6>
                           {renderDetail("Diameter (mm)", site.diameter)}
+                          {site.purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
                           {renderDetail("TD (m)", site.totalDepth)}
                           {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
                           {renderDetail("Casing Pipe (m)", site.casingPipeUsed)}
@@ -653,6 +651,8 @@ export default function ReportsPage() {
                           <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
                           {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
                           {renderDetail("Pump Details", site.pumpDetails)}
+                          {renderDetail("Pumping Line Length (m)", site.pumpingLineLength)}
+                          {renderDetail("Delivery Line Length (m)", site.deliveryLineLength)}
                           {renderDetail("Water Tank (L)", site.waterTankCapacity)}
                           {renderDetail("Tap Connections", site.noOfTapConnections)}
                           {renderDetail("Beneficiaries", site.noOfBeneficiary)}
@@ -717,3 +717,5 @@ export default function ReportsPage() {
     </div>
   );
 }
+
+    

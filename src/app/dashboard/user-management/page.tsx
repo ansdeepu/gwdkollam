@@ -126,9 +126,6 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <p className="text-muted-foreground max-w-2xl">
-          Oversee user accounts, manage roles, approval statuses, and perform administrative actions. 
-        </p>
         <div className="flex gap-2">
           <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
               <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
@@ -142,7 +139,7 @@ export default function UserManagementPage() {
         <CardHeader>
           <CardTitle className="text-xl">Registered Users ({allUsers.length})</CardTitle>
           <CardDescription>
-            Review and manage all users within the GWD Kollam dashboard system. 
+            Oversee user accounts, manage roles, approval statuses, and perform administrative actions. 
             Use batch actions for efficiency where applicable.
           </CardDescription>
         </CardHeader>
@@ -197,3 +194,5 @@ export default function UserManagementPage() {
     </div>
   );
 }
+
+    

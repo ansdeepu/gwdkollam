@@ -1,3 +1,4 @@
+
 // src/app/dashboard/pending-updates/page.tsx
 "use client";
 
@@ -50,3 +51,5 @@ export default function PendingUpdatesPage() {
     </div>
   );
 }
+
+    

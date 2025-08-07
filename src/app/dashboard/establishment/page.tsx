@@ -1,3 +1,4 @@
+
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -192,10 +193,6 @@ export default function EstablishmentPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <p className="text-muted-foreground">
-            Manage staff profiles, designations, and statuses. 
-            Overall Total: {totalStaffMembersOverall} (Active: {totalActiveStaffOverall}, Transferred: {totalTransferredStaffOverall}, Retired: {totalRetiredStaffOverall}).
-        </p>
         {canManage && (
             <Button onClick={handleAddNewStaff}>
               <UserPlus className="mr-2 h-5 w-5" /> Add New Staff
@@ -321,3 +318,5 @@ export default function EstablishmentPage() {
     </div>
   );
 }
+
+    
