@@ -125,7 +125,10 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <p className="text-muted-foreground max-w-2xl">
+          Oversee user accounts, manage roles, approval statuses, and perform administrative actions. 
+        </p>
         <div className="flex gap-2">
           <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
               <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
@@ -135,10 +138,6 @@ export default function UserManagementPage() {
           </Button>
         </div>
       </div>
-      <p className="text-muted-foreground max-w-2xl">
-        Oversee user accounts, manage roles, approval statuses, and perform administrative actions. 
-        Ensure careful handling of user data and permissions.
-      </p>
       <Card className="shadow-xl border-border/60">
         <CardHeader>
           <CardTitle className="text-xl">Registered Users ({allUsers.length})</CardTitle>

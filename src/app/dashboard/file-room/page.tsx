@@ -12,10 +12,6 @@ export default function FileManagerPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-muted-foreground">
-        Browse, view, edit, or delete files stored in the File Manager.
-      </p>
-
       <div className="relative my-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input

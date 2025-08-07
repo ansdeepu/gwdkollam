@@ -35,15 +35,12 @@ export default function PendingUpdatesPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-muted-foreground max-w-2xl">
-        Supervisors can submit updates for site-specific details like work status, completion dates, and remarks.
-        As an administrator, you must review and approve these changes. Approved updates will be merged with the main file data.
-      </p>
       <Card className="shadow-xl border-border/60">
         <CardHeader>
           <CardTitle className="text-xl">Submissions Awaiting Review</CardTitle>
           <CardDescription>
-            List of all pending updates from supervisors. Click the view icon to see a comparison of the changes.
+            Supervisors can submit updates for site-specific details like work status, completion dates, and remarks.
+            As an administrator, you must review and approve these changes. Approved updates will be merged with the main file data.
           </CardDescription>
         </CardHeader>
         <CardContent>

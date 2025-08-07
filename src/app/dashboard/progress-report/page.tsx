@@ -288,6 +288,7 @@ export default function ProgressReportPage() {
 
 
       entry.siteDetails?.forEach(site => {
+        if (site.additionalAS === 'No') return;
         const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName };
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
@@ -510,10 +511,6 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-muted-foreground">
-        Detailed progress reports for BWC/TWC and a summary for other services based on application type and date range.
-      </p>
-
       <Card className="shadow-lg no-print">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">Report Filters</CardTitle>

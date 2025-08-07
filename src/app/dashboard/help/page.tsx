@@ -6,10 +6,6 @@ import { HelpCircle, LifeBuoy } from "lucide-react";
 export default function HelpPage() {
   return (
     <div className="space-y-6">
-      <p className="text-muted-foreground">
-        Find answers to frequently asked questions and get help with the dashboard.
-      </p>
-
       <Card>
         <CardHeader>
           <CardTitle>Frequently Asked Questions (FAQ)</CardTitle>

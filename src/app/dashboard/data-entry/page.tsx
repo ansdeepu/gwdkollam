@@ -298,7 +298,6 @@ export default function DataEntryPage() {
              <DataEntryFormComponent
                 key={fileNoToEdit || 'new-entry'} 
                 fileNoToEdit={fileNoToEdit || undefined}
-                updateIdToApprove={updateIdToApprove || undefined}
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}

@@ -45,10 +45,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-muted-foreground">
-        View your account details and manage your password.
-      </p>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
           <Card>

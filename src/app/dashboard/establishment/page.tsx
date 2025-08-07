@@ -191,17 +191,17 @@ export default function EstablishmentPage() {
   
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <p className="text-muted-foreground">
+            Manage staff profiles, designations, and statuses. 
+            Overall Total: {totalStaffMembersOverall} (Active: {totalActiveStaffOverall}, Transferred: {totalTransferredStaffOverall}, Retired: {totalRetiredStaffOverall}).
+        </p>
         {canManage && (
             <Button onClick={handleAddNewStaff}>
               <UserPlus className="mr-2 h-5 w-5" /> Add New Staff
             </Button>
           )}
       </div>
-      <p className="text-muted-foreground">
-        Manage staff profiles, designations, and statuses. 
-        Overall Total: {totalStaffMembersOverall} (Active: {totalActiveStaffOverall}, Transferred: {totalTransferredStaffOverall}, Retired: {totalRetiredStaffOverall}).
-      </p>
 
       <div className="relative my-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

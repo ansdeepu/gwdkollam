@@ -463,15 +463,15 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 no-print">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
+        <p className="text-muted-foreground">
+          Generate, filter, and sort site-wise data-driven reports to gain insights into work progress and resource allocation.
+        </p>
         <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
             <Button onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
         </div>
       </div>
-      <p className="text-muted-foreground no-print">
-        Generate, filter, and sort site-wise data-driven reports to gain insights into work progress and resource allocation.
-      </p>
 
       <Card className="shadow-lg no-print">
         <CardHeader>
