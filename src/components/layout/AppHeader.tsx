@@ -1,4 +1,3 @@
-
 // src/components/layout/AppHeader.tsx
 "use client";
 
@@ -65,11 +64,19 @@ export default function AppHeader() {
   const pathname = usePathname();
 
   const pageTitle = useMemo(() => {
-    const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/dashboard');
     if (pathname.startsWith('/dashboard/data-entry')) return 'File Data Form';
     if (pathname === '/dashboard/profile') return 'User Profile';
     if (pathname === '/dashboard/help') return 'Help & Support';
-    return currentNavItem?.label || 'Dashboard';
+
+    // Find the best match from the nav items
+    const currentNavItem = allNavItems
+        .filter(item => item.href !== '/dashboard') // Exclude the base dashboard route for more specific matching
+        .find(item => pathname.startsWith(item.href));
+        
+    if (currentNavItem) return currentNavItem.label;
+    if (pathname === '/dashboard') return 'Dashboard'; // Handle base dashboard case specifically
+
+    return 'Dashboard'; // Fallback
   }, [pathname]);
 
 
@@ -86,7 +93,7 @@ export default function AppHeader() {
       </div>
       
       <div className="flex-1">
-        <h1 className="text-xl font-semibold text-foreground">{pageTitle}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
       </div>
 
       {user && (
