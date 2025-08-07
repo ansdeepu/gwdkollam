@@ -64,6 +64,7 @@ const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
   estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
+  additionalAS: 'Yes', // Default to Yes
   tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
   outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
   waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
@@ -190,6 +191,24 @@ export default function DataEntryFormComponent({
     ].includes(applicationType);
   }, [applicationType]);
 
+  // Effect to manage 'Additional AS' field default value
+  useEffect(() => {
+    watchedSiteDetails.forEach((site, index) => {
+      const estimate = site.estimateAmount ?? 0;
+      const remitted = site.remittedAmount ?? 0;
+      const currentAS = form.getValues(`siteDetails.${index}.additionalAS`);
+
+      // Only set the default if the field is not already set by the user or from initial data
+      if (currentAS === undefined || currentAS === null) {
+        if (remitted >= estimate && estimate > 0) {
+          form.setValue(`siteDetails.${index}.additionalAS`, 'Yes', { shouldValidate: true });
+        } else {
+          form.setValue(`siteDetails.${index}.additionalAS`, 'No', { shouldValidate: true });
+        }
+      }
+    });
+  }, [watchedSiteDetails, form]);
+
 
   useEffect(() => {
     if (userRole === 'editor') {
@@ -224,6 +243,9 @@ export default function DataEntryFormComponent({
 
   const watchedRemittanceDetails = useWatch({ control: form.control, name: "remittanceDetails", defaultValue: [] });
   const watchedPaymentDetails = useWatch({ control: form.control, name: "paymentDetails", defaultValue: [] });
+  const watchedTotalEstimate = useWatch({ control, name: 'siteDetails' })
+    ?.reduce((sum, site) => sum + (Number(site.estimateAmount) || 0), 0) || 0;
+
 
   const onInvalid = (errors: FieldErrors<DataEntryFormData>) => {
     const messages = getFormattedErrorMessages(errors);
@@ -293,7 +315,7 @@ export default function DataEntryFormComponent({
               description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
           });
       } else if (userRole === 'supervisor' && fileNoToEdit) {
-          const originalSites = originalSupervisorSites ? JSON.parse(originalSupervisorSites) : [];
+          const originalSites = (originalSupervisorSites && typeof originalSupervisorSites === 'string') ? JSON.parse(originalSupervisorSites) : [];
           const sitesWithChanges = data.siteDetails?.filter(currentSite => {
               const originalSite = originalSites.find((s: any) => s.nameOfSite === currentSite.nameOfSite);
               return !originalSite || JSON.stringify(currentSite) !== JSON.stringify(originalSite);
@@ -405,13 +427,14 @@ export default function DataEntryFormComponent({
                             const isDiameterRequired = purpose && PURPOSES_REQUIRING_DIAMETER.includes(purpose as SitePurpose);
                             const isRigAccessibilityRequired = purpose && PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(purpose as SitePurpose);
                             const workStatus = watchedSiteDetails[index]?.workStatus;
-                            const isCompletionDateRequired = workStatus === 'Work Completed' || workStatus === 'Work Failed';
+                            const isCompletionDateRequired = workStatus && ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'].includes(workStatus);
 
                             const workImplementationFields = (
                               <>
                                 <Separator className="my-4" />
                                 <h4 className="text-md font-medium text-primary mb-2">Work Implementation</h4>
                                 <div className="grid md:grid-cols-3 gap-6">
+                                    <FormField control={form.control} name={`siteDetails.${index}.additionalAS`} render={({ field }) => ( <FormItem> <FormLabel>Additional AS</FormLabel> <Select onValueChange={field.onChange} value={field.value} disabled={!isEditor}> <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="Yes">Yes</SelectItem> <SelectItem value="No">No</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
                                     {isRigAccessibilityRequired && (
                                         <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
                                             <FormItem>
@@ -710,16 +733,15 @@ export default function DataEntryFormComponent({
         
             <AccordionItem value="final-status" className="border bg-card rounded-lg shadow-sm">
                 <AccordionTrigger className="p-4 hover:no-underline text-primary">
-                    <span className="text-xl font-semibold">Final Status</span>
+                    <span className="text-xl font-semibold">Final Status & Summary</span>
                 </AccordionTrigger>
                 <AccordionContent className="p-6 pt-0">
                     <div className="space-y-6 border-t pt-6">
-                         <div className="grid md:grid-cols-3 gap-6">
-                            <FormField control={form.control} name="fileStatus" render={({ field }) => ( <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="remarks" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Final remarks" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                        </div>
-                        <Separator />
                         <div className="grid md:grid-cols-3 gap-6">
+                           <div className="space-y-2">
+                                <Label htmlFor="totalEstimateCalculated" className="text-muted-foreground">Total Estimate Amount (₹)</Label>
+                                <Input id="totalEstimateCalculated" name="totalEstimateCalculated" value={watchedTotalEstimate.toFixed(2)} readOnly className="bg-muted/50"/>
+                            </div>
                             <div className="space-y-2">
                                 <Label htmlFor="totalRemittanceCalculated" className="text-muted-foreground">Total Remittance (₹)</Label>
                                 <Input id="totalRemittanceCalculated" name="totalRemittanceCalculated" value={form.watch('remittanceDetails', []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} readOnly className="bg-muted/50"/>
@@ -728,10 +750,15 @@ export default function DataEntryFormComponent({
                                 <Label htmlFor="totalPaymentCalculated" className="text-muted-foreground">Total Payment (₹)</Label>
                                 <Input id="totalPaymentCalculated" name="totalPaymentCalculated" value={form.watch('paymentDetails', []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} readOnly className="bg-muted/50"/>
                             </div>
-                            <div className="space-y-2">
+                             <div className="space-y-2">
                                 <Label htmlFor="balanceCalculated" className="text-muted-foreground">Balance (₹)</Label>
                                 <Input id="balanceCalculated" name="balanceCalculated" value={(form.watch('remittanceDetails', []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - form.watch('paymentDetails', []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} readOnly className="bg-muted/50"/>
                             </div>
+                        </div>
+                        <Separator />
+                         <div className="grid md:grid-cols-3 gap-6">
+                            <FormField control={form.control} name="fileStatus" render={({ field }) => ( <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="remarks" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Final remarks" {...field} readOnly={!isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                     </div>
                 </AccordionContent>

@@ -65,8 +65,8 @@ export default function AppHeader() {
   const pathname = usePathname();
 
   const pageTitle = useMemo(() => {
-    const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href));
-    if (pathname.includes('/data-entry') && pathname !== '/dashboard/data-entry') return 'File Data Form';
+    const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href) && item.href !== '/dashboard');
+    if (pathname.startsWith('/dashboard/data-entry')) return 'File Data Form';
     if (pathname === '/dashboard/profile') return 'User Profile';
     if (pathname === '/dashboard/help') return 'Help & Support';
     return currentNavItem?.label || 'Dashboard';
