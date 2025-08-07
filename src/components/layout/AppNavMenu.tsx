@@ -13,14 +13,14 @@ import { LayoutDashboard, FilePlus2, FileText, FolderOpen, Users, Briefcase, Set
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 
-interface NavItem {
+export interface NavItem {
   href: string;
   label: string;
   icon: React.ElementType;
   roles?: UserRole[]; // Roles that can see this item.
 }
 
-const allNavItems: NavItem[] = [
+export const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/data-entry', label: 'File Data Entry', icon: FilePlus2, roles: ['editor'] },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },

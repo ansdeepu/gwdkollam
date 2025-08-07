@@ -2,7 +2,8 @@
 // src/components/layout/AppHeader.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,10 +16,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, UserCog, HelpCircle, CalendarDays, Clock } from 'lucide-react';
+import { LogOut, UserCog, HelpCircle } from 'lucide-react';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { allNavItems } from './AppNavMenu';
 import { cn } from '@/lib/utils';
 
 
@@ -61,17 +62,16 @@ const getColorClass = (nameOrEmail: string): string => {
 export default function AppHeader() {
   const { user, logout } = useAuth();
   const { staffMembers } = useStaffMembers();
+  const pathname = usePathname();
 
-  const [currentDateState, setCurrentDateState] = useState<string | null>(null);
-  const [currentTimeState, setCurrentTimeState] = useState<string | null>(null);
+  const pageTitle = useMemo(() => {
+    const currentNavItem = allNavItems.find(item => pathname.startsWith(item.href));
+    if (pathname.includes('/data-entry') && pathname !== '/dashboard/data-entry') return 'File Data Form';
+    if (pathname === '/dashboard/profile') return 'User Profile';
+    if (pathname === '/dashboard/help') return 'Help & Support';
+    return currentNavItem?.label || 'Dashboard';
+  }, [pathname]);
 
-  useEffect(() => {
-    const now = new Date();
-    setCurrentDateState(format(now, 'dd/MM/yyyy'));
-    setCurrentTimeState(format(now, 'hh:mm:ss a'));
-    const timerId = setInterval(() => setCurrentTimeState(format(new Date(), 'hh:mm:ss a')), 1000);
-    return () => clearInterval(timerId);
-  }, []);
 
   const staffInfo = staffMembers.find(s => s.id === user?.staffId);
   const photoUrl = staffInfo?.photoUrl;
@@ -85,19 +85,8 @@ export default function AppHeader() {
         <SidebarTrigger />
       </div>
       
-      <div className="flex-1 flex items-center justify-end sm:justify-center gap-4">
-        {currentDateState && (
-          <div className="hidden sm:flex items-center gap-2 text-sm text-foreground">
-            <CalendarDays className="h-4 w-4" />
-            <span>{currentDateState}</span>
-          </div>
-        )}
-        {currentTimeState && (
-          <div className="hidden sm:flex items-center gap-2 text-sm text-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{currentTimeState}</span>
-          </div>
-        )}
+      <div className="flex-1">
+        <h1 className="text-xl font-semibold text-foreground">{pageTitle}</h1>
       </div>
 
       {user && (
