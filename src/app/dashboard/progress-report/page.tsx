@@ -63,7 +63,7 @@ const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
 
 const OTHER_PURPOSES: SitePurpose[] = [
   "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", 
-  "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"
+  "PumpingScheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"
 ];
 const financialSummaryOrder: string[] = ["BWC", "TWC", ...OTHER_PURPOSES];
 
@@ -510,12 +510,6 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center space-x-3">
-            <BarChart3 className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Site Progress Reports</h1>
-        </div>
-      </div>
       <p className="text-muted-foreground">
         Detailed progress reports for BWC/TWC and a summary for other services based on application type and date range.
       </p>
@@ -666,7 +660,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-
-
-    

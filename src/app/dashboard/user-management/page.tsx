@@ -125,11 +125,7 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center space-x-3">
-          <Users className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">User Management</h1>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
         <div className="flex gap-2">
           <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
               <UserPlus className="mr-2 h-5 w-5" /> Add Guest User

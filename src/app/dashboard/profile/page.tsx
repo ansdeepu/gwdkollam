@@ -45,10 +45,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex items-center space-x-3">
-        <UserCircle className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">User Profile</h1>
-      </div>
       <p className="text-muted-foreground">
         View your account details and manage your password.
       </p>

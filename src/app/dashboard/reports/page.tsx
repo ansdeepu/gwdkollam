@@ -463,11 +463,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
-        <div className="flex items-center space-x-3">
-            <FileText className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Reports</h1>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 no-print">
         <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
             <Button onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
@@ -576,7 +572,7 @@ export default function ReportsPage() {
             <div className="space-y-3 py-4">
               <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">Main Details:</h4>
               {renderDetail("File No", viewItem?.fileNo)}
-              {renderDetail("Name & Address of Institution / Applicant", viewItem?.applicantName)}
+              {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
               {renderDetail("Phone No", viewItem?.phoneNo)}
               {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
               {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}

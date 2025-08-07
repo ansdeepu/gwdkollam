@@ -35,6 +35,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
       siteDetails: [{
         nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
         estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
+        additionalAS: undefined,
         tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
         outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
         waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
@@ -46,6 +47,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
         surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
         surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
         arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined,
+        pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
       }],
       paymentDetails: [{ 
         dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
@@ -101,6 +103,8 @@ export default function DataEntryPage() {
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [originalSupervisorSites, setOriginalSupervisorSites] = useState<string | null>(null);
+  const [pageTitle, setPageTitle] = useState("Data Entry");
+  const [pageDescription, setPageDescription] = useState("Loading...");
 
   useEffect(() => {
     let isMounted = true;
@@ -145,7 +149,7 @@ export default function DataEntryPage() {
           
           // ** NEW: Filter site details if the user is a supervisor **
           if (finalEntryData && user.role === 'supervisor' && user.uid) {
-              const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
+              const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
               const assignedSites = finalEntryData.siteDetails?.filter(
                   site => site.supervisorUid === user.uid && site.workStatus && !inactiveStatuses.includes(site.workStatus)
               );
@@ -196,12 +200,11 @@ export default function DataEntryPage() {
     return () => { isMounted = false; };
   }, [fileNoToEdit, updateIdToApprove, authIsLoading, user, fetchEntryForEditing, fetchAllUsers, getPendingUpdateById, toast]);
 
-
-  const permissions = useMemo(() => {
+  useEffect(() => {
     let title = "View File Data";
     let description = `Viewing details for File No: ${fileNoToEdit}. You are in read-only mode.`;
     const isCreatingNew = !fileNoToEdit;
-    
+
     if (user?.role === 'editor') {
       if (isCreatingNew) {
         title = "New File Data Entry";
@@ -214,20 +217,22 @@ export default function DataEntryPage() {
         description = `Editing details for File No: ${fileNoToEdit}. Please make your changes and submit.`;
       }
     } else if (user?.role === 'supervisor') {
-       if (isCreatingNew) {
-         title = "Access Denied";
-         description = "Supervisors cannot create new files. Please contact an editor.";
-       } else {
-          title = "Update Site Details";
-          description = `Editing site details for assigned sites within File No: ${fileNoToEdit}.`;
-       }
-    } else if (isCreatingNew) {
+      if (isCreatingNew) {
         title = "Access Denied";
-        description = "You do not have permission to create new file entries. This action is restricted to Editors.";
+        description = "Supervisors cannot create new files. Please contact an editor.";
+      } else {
+        title = "Update Site Details";
+        description = `Editing site details for assigned sites within File No: ${fileNoToEdit}.`;
+      }
+    } else if (isCreatingNew) {
+      title = "Access Denied";
+      description = "You do not have permission to create new file entries. This action is restricted to Editors.";
     }
 
-    return { title, description };
+    setPageTitle(title);
+    setPageDescription(description);
   }, [fileNoToEdit, user, updateIdToApprove]);
+
 
   const supervisorList = useMemo(() => {
     if (!user || !pageData || staffMembers.length === 0) return [];
@@ -268,9 +273,9 @@ export default function DataEntryPage() {
      return (
       <div className="space-y-6 p-6 text-center">
         <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{permissions.title}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{pageTitle}</h1>
         <p className="text-muted-foreground">
-          {permissions.description}
+          {pageDescription}
         </p>
       </div>
     );
@@ -278,16 +283,6 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-3">
-        {!fileNoToEdit ? <FilePlus2 className="h-8 w-8 text-primary" /> : <Edit className="h-8 w-8 text-primary" />}
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          {permissions.title}
-        </h1>
-      </div>
-      <p className="text-muted-foreground">
-        {permissions.description}
-      </p>
-
       {pageData && (
         <Card className="shadow-lg">
           <CardHeader>
@@ -315,7 +310,3 @@ export default function DataEntryPage() {
     </div>
   );
 }
-
-    
-
-    

@@ -35,10 +35,6 @@ export default function PendingUpdatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-3">
-        <Hourglass className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Pending Updates</h1>
-      </div>
       <p className="text-muted-foreground max-w-2xl">
         Supervisors can submit updates for site-specific details like work status, completion dates, and remarks.
         As an administrator, you must review and approve these changes. Approved updates will be merged with the main file data.
