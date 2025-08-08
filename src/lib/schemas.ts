@@ -269,10 +269,11 @@ export const SiteDetailSchema = z.object({
   arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
 
 }).superRefine((data, ctx) => {
-    if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
+    const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+    if (data.workStatus && finalStatuses.includes(data.workStatus) && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "is required when status is 'Work Completed' or 'Work Failed'.",
+            message: `is required when status is '${data.workStatus}'.`,
             path: ["dateOfCompletion"],
         });
     }
