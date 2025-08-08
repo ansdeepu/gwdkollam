@@ -318,7 +318,13 @@ export default function DataEntryFormComponent({
           const originalSites = (originalSupervisorSites && typeof originalSupervisorSites === 'string') ? JSON.parse(originalSupervisorSites) : [];
           const sitesWithChanges = data.siteDetails?.filter(currentSite => {
               const originalSite = originalSites.find((s: any) => s.nameOfSite === currentSite.nameOfSite);
-              return !originalSite || JSON.stringify(currentSite) !== JSON.stringify(originalSite);
+              if (!originalSite) return true; // Treat new sites as a change
+              
+              // Deep comparison, ignoring null vs undefined for certain keys
+              const stringifiedOriginal = JSON.stringify(originalSite, (key, value) => (value === null ? undefined : value));
+              const stringifiedCurrent = JSON.stringify(currentSite, (key, value) => (value === null ? undefined : value));
+
+              return stringifiedCurrent !== stringifiedOriginal;
           });
 
           if (!sitesWithChanges || sitesWithChanges.length === 0) {
@@ -737,7 +743,7 @@ export default function DataEntryFormComponent({
                 </AccordionTrigger>
                 <AccordionContent className="p-6 pt-0">
                     <div className="space-y-6 border-t pt-6">
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div className="grid md:grid-cols-4 gap-6">
                            <div className="space-y-2">
                                 <Label htmlFor="totalEstimateCalculated" className="text-muted-foreground">Total Estimate Amount (₹)</Label>
                                 <Input id="totalEstimateCalculated" name="totalEstimateCalculated" value={watchedTotalEstimate.toFixed(2)} readOnly className="bg-muted/50"/>

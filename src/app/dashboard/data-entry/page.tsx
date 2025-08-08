@@ -35,7 +35,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
       siteDetails: [{
         nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
         estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
-        additionalAS: undefined,
+        additionalAS: 'No',
         tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
         outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
         waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
@@ -132,14 +132,16 @@ export default function DataEntryPage() {
 
           // ** NEW: If approving, merge pending changes into the entry data **
           if (finalEntryData && pendingUpdateResult && user.role === 'editor') {
-            const updatedSiteDetails = [...(finalEntryData.siteDetails || [])];
+            const entryCopy = JSON.parse(JSON.stringify(finalEntryData)); // Deep copy to avoid mutation
+            const updatedSiteDetails = [...(entryCopy.siteDetails || [])];
+            
             pendingUpdateResult.updatedSiteDetails.forEach(updatedSite => {
                 const index = updatedSiteDetails.findIndex(site => site.nameOfSite === updatedSite.nameOfSite);
                 if (index > -1) {
                     updatedSiteDetails[index] = updatedSite; // Replace with updated site data
                 }
             });
-            finalEntryData = { ...finalEntryData, siteDetails: updatedSiteDetails };
+            finalEntryData = { ...entryCopy, siteDetails: updatedSiteDetails };
             toast({
               title: "Reviewing Update",
               description: `Loaded changes from supervisor for approval. Please review and save.`,
