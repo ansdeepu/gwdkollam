@@ -347,7 +347,11 @@ export default function ProgressReportPage() {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
     setDetailDialogData(data);
-     const columns: DetailDialogColumn[] = 'nameOfSite' in data[0] 
+    
+    // Check if the data is for sites or financial summary
+    const isSiteData = data.some(item => 'nameOfSite' in item);
+
+    const columns: DetailDialogColumn[] = isSiteData 
         ? [
             { key: 'fileNo', label: 'File No.' },
             { key: 'applicantName', label: 'Applicant Name' },
