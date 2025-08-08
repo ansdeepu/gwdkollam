@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit3, Trash2, Loader2, FileDown } from "lucide-react";
-import type { DataEntryFormData, SitePurpose, ApplicationType } from "@/lib/schemas";
+import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -49,8 +49,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 50;
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
 
 function renderDetail(label: string, value: any) {
   if (value === undefined || value === null || value === '') {
@@ -274,7 +276,11 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                   <TableCell>{entry.applicantName}</TableCell>
                   <TableCell>
                     {entry.siteDetails && entry.siteDetails.length > 0
-                      ? entry.siteDetails.map(site => site.nameOfSite).filter(Boolean).join(', ') || "N/A"
+                      ? entry.siteDetails.map((site, idx) => (
+                          <span key={idx} className={cn("font-semibold", FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) ? 'text-red-600' : 'text-green-600')}>
+                            {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
+                          </span>
+                        ))
                       : "N/A"}
                   </TableCell>
                   <TableCell>
@@ -287,7 +293,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
                       ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") 
                       : "N/A"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={cn("font-semibold", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
                     {entry.fileStatus}
                   </TableCell>
                   <TableCell className="text-right">

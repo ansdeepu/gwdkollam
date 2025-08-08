@@ -45,6 +45,7 @@ import {
   siteConditionsOptions,
   type UserRole,
   rigAccessibilityOptions,
+  type SiteWorkStatus,
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -88,6 +89,7 @@ const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undef
 
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 const PURPOSES_REQUIRING_RIG_ACCESSIBILITY: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
 
 
 const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): string[] => {
@@ -423,6 +425,8 @@ export default function DataEntryFormComponent({
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
                             const isSiteEditable = isEditor || (isSupervisor && isAssignedToCurrentUser);
                             const purpose = watchedSiteDetails[index]?.purpose;
+                            const workStatus = watchedSiteDetails[index]?.workStatus;
+                            const isFinalStatus = workStatus && FINAL_WORK_STATUSES.includes(workStatus as SiteWorkStatus);
                             
                             const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose as string);
                             const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose as string);
@@ -432,7 +436,7 @@ export default function DataEntryFormComponent({
 
                             const isDiameterRequired = purpose && PURPOSES_REQUIRING_DIAMETER.includes(purpose as SitePurpose);
                             const isRigAccessibilityRequired = purpose && PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(purpose as SitePurpose);
-                            const workStatus = watchedSiteDetails[index]?.workStatus;
+                            
                             const isCompletionDateRequired = workStatus && ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'].includes(workStatus);
 
                             const workImplementationFields = (
@@ -510,7 +514,10 @@ export default function DataEntryFormComponent({
                                 <AccordionItem value={`site-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
                                     <AccordionTrigger className="p-4 hover:no-underline">
                                         <div className="flex flex-1 items-center justify-between">
-                                            <span className="text-lg font-semibold text-primary text-left">
+                                            <span className={cn(
+                                                "text-lg font-semibold text-left",
+                                                isFinalStatus ? "text-red-600" : "text-green-600"
+                                            )}>
                                                 Site #{index + 1}
                                                 {watchedSiteDetails[index]?.nameOfSite ? `: ${watchedSiteDetails[index].nameOfSite}` : ''}
                                                 {watchedSiteDetails[index]?.purpose ? ` (${watchedSiteDetails[index].purpose})` : ''}
