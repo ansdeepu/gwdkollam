@@ -434,29 +434,20 @@ export default function DashboardPage() {
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     
-    const sourceEntriesForCompleted = rawFileEntries;
+    // Use the role-appropriate data source for both completed and ongoing calculations
+    const sourceEntriesForReport = currentUser?.role === 'supervisor' ? fileEntries : rawFileEntries;
 
-    for (const entry of sourceEntriesForCompleted) {
+    for (const entry of sourceEntriesForReport) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
+        // Check for completed works within the month
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = new Date(site.dateOfCompletion);
           if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
-            if (currentUser?.role === 'supervisor') {
-              if (site.supervisorUid === currentUser.uid) {
-                completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
-              }
-            } else {
-              completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
-            }
+            completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
           }
         }
-      }
-    }
-
-    for (const entry of fileEntries) {
-      if (!entry.siteDetails) continue;
-      for (const site of entry.siteDetails) {
+        // Check for ongoing works
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
           ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
@@ -563,7 +554,6 @@ export default function DashboardPage() {
     ];
     setDetailDialogTitle(title);
     setDetailDialogData(dialogData);
-    setDetailDialogColumns(columns);
     setIsDetailDialogOpen(true);
   };
   
