@@ -553,6 +553,7 @@ export default function DashboardPage() {
       { key: 'supervisorName', label: 'Supervisor' }
     ];
     setDetailDialogTitle(title);
+    setDetailDialogColumns(columns);
     setDetailDialogData(dialogData);
     setIsDetailDialogOpen(true);
   };
@@ -830,6 +831,38 @@ export default function DashboardPage() {
     setMonthDetailDialogColumns(columns);
     setIsMonthDetailDialogOpen(true);
   };
+
+  const handleMonthPurposeClick = (
+    dataSource: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }>,
+    purpose: SitePurpose,
+    type: 'Ongoing' | 'Completed'
+  ) => {
+    const filteredData = dataSource.filter(d => d.purpose === purpose);
+    if (filteredData.length === 0) return;
+
+    const title = `${type} '${purpose}' Works`;
+    const dialogData = filteredData.map(site => ({
+      fileNo: site.fileNo,
+      applicantName: site.applicantName,
+      siteName: site.nameOfSite,
+      workStatus: site.workStatus,
+      supervisorName: site.supervisorName || 'N/A',
+    }));
+
+    const columns: DetailDialogColumn[] = [
+      { key: 'fileNo', label: 'File No.' },
+      { key: 'applicantName', label: 'Applicant Name' },
+      { key: 'siteName', label: 'Site Name' },
+      { key: 'workStatus', label: 'Work Status' },
+      { key: 'supervisorName', label: 'Supervisor' },
+    ];
+    
+    setMonthDetailDialogTitle(title);
+    setMonthDetailDialogColumns(columns);
+    setMonthDetailDialogData(dialogData);
+    setIsMonthDetailDialogOpen(true);
+  };
+
 
   const handleMonthDialogExcelExport = () => {
     if (monthDetailDialogData.length === 0 || monthDetailDialogColumns.length === 0) {
@@ -1324,7 +1357,7 @@ export default function DashboardPage() {
                           <TableRow key={purpose}>
                             <TableCell className="font-medium py-1.5">{purpose}</TableCell>
                             <TableCell className="text-right py-1.5">
-                              <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick(currentMonthStats.completedSummary.data.filter(d => d.purpose === purpose), `Completed '${purpose}' Works`)}>
+                              <Button variant="link" className="p-0 h-auto" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
                                 {currentMonthStats.completedSummary.byPurpose[purpose] || 0}
                               </Button>
                             </TableCell>
@@ -1361,7 +1394,7 @@ export default function DashboardPage() {
                           <TableRow key={purpose}>
                             <TableCell className="font-medium py-1.5">{purpose}</TableCell>
                             <TableCell className="text-right py-1.5">
-                               <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick(currentMonthStats.ongoingSummary.data.filter(d => d.purpose === purpose), `Ongoing '${purpose}' Works`)}>
+                               <Button variant="link" className="p-0 h-auto" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
                                 {currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}
                               </Button>
                             </TableCell>
@@ -1653,4 +1686,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-    
