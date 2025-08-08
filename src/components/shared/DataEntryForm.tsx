@@ -64,7 +64,7 @@ const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
   estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
-  additionalAS: 'Yes', // Default to Yes
+  additionalAS: 'No', // Default to No
   tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
   outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
   waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
@@ -434,7 +434,6 @@ export default function DataEntryFormComponent({
                                 <Separator className="my-4" />
                                 <h4 className="text-md font-medium text-primary mb-2">Work Implementation</h4>
                                 <div className="grid md:grid-cols-3 gap-6">
-                                    <FormField control={form.control} name={`siteDetails.${index}.additionalAS`} render={({ field }) => ( <FormItem> <FormLabel>Additional AS</FormLabel> <Select onValueChange={field.onChange} value={field.value} disabled={!isEditor}> <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="Yes">Yes</SelectItem> <SelectItem value="No">No</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
                                     {isRigAccessibilityRequired && (
                                         <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
                                             <FormItem>
@@ -453,6 +452,7 @@ export default function DataEntryFormComponent({
                                     <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.additionalAS`} render={({ field }) => ( <FormItem> <FormLabel>Additional AS</FormLabel> <Select onValueChange={field.onChange} value={field.value} disabled={!isEditor}> <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="Yes">Yes</SelectItem> <SelectItem value="No">No</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
                                     {!isPrivateApplication && (
                                       <>
                                         <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={!isEditor} /></FormControl><FormMessage/></FormItem>)}/>
