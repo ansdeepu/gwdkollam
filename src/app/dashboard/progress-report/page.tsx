@@ -229,7 +229,7 @@ export default function ProgressReportPage() {
     });
 
     fileEntries.forEach(entry => {
-      if (!entry.applicationType) return; // FIX: Skip entries without an application type
+      if (!entry.applicationType) return; 
 
       const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
       const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
@@ -239,7 +239,7 @@ export default function ProgressReportPage() {
       
       const wasActiveBeforePeriodForFinancials = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && 
             !entry.siteDetails?.every(site => {
-                if (!site) return true; // Ignore if site is null/undefined
+                if (!site) return true;
                 const completionDateValue = site.dateOfCompletion;
                 if (!completionDateValue) return false;
                 const completionDate = new Date(completionDateValue);
@@ -251,10 +251,11 @@ export default function ProgressReportPage() {
       if (wasActiveBeforePeriodForFinancials || isCurrentApplicationForFinancials) {
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
         uniquePurposes.forEach(purpose => {
-            if (targetFinancialSummary[purpose]) {
-                targetFinancialSummary[purpose].totalApplications++;
-                targetFinancialSummary[purpose].applicationData.push(entry);
-                targetFinancialSummary[purpose].totalRemittance += (entry.totalRemittance || 0) / (uniquePurposes.size || 1);
+            const purposeKey = isPrivate ? purpose : (financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes');
+            if (targetFinancialSummary[purposeKey]) {
+                targetFinancialSummary[purposeKey].totalApplications++;
+                targetFinancialSummary[purposeKey].applicationData.push(entry);
+                targetFinancialSummary[purposeKey].totalRemittance += (entry.totalRemittance || 0) / (uniquePurposes.size || 1);
             }
         });
       }
@@ -262,16 +263,17 @@ export default function ProgressReportPage() {
       if (entry.siteDetails?.some(site => site && site.dateOfCompletion && new Date(site.dateOfCompletion) >= sDate && new Date(site.dateOfCompletion) <= eDate)) {
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
         uniquePurposes.forEach(purpose => {
-            if (targetFinancialSummary[purpose]) {
-                targetFinancialSummary[purpose].totalCompleted++;
-                targetFinancialSummary[purpose].completedData.push(entry);
-                targetFinancialSummary[purpose].totalPayment += (entry.totalPaymentAllEntries || 0) / (uniquePurposes.size || 1);
+            const purposeKey = isPrivate ? purpose : (financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes');
+            if (targetFinancialSummary[purposeKey]) {
+                targetFinancialSummary[purposeKey].totalCompleted++;
+                targetFinancialSummary[purposeKey].completedData.push(entry);
+                targetFinancialSummary[purposeKey].totalPayment += (entry.totalPaymentAllEntries || 0) / (uniquePurposes.size || 1);
             }
         });
       }
 
       (entry.siteDetails || []).forEach(site => {
-        if (!site || site.additionalAS === 'No') return; // FIX: Added check for site existence
+        if (!site || site.additionalAS === 'No') return;
         
         const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName };
         const purpose = site.purpose as SitePurpose;
@@ -496,6 +498,7 @@ export default function ProgressReportPage() {
     <div className="space-y-6">
       <Card className="shadow-lg no-print">
         <CardHeader>
+          <CardTitle>Progress Report</CardTitle>
           <CardDescription>Select a date range to generate the report.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row flex-wrap gap-2 pt-3">

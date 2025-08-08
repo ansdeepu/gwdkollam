@@ -220,6 +220,7 @@ export const SiteDetailSchema = z.object({
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
   accessibleRig: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(rigAccessibilityOptions).optional()),
   tsAmount: optionalNumber("TS Amount must be a valid number."),
+  additionalAS: z.enum(['Yes', 'No']).optional().nullable().default('Yes'),
   tenderNo: z.string().optional(),
   diameter: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteDiameterOptions).optional()),
   pilotDrillingDepth: z.string().optional(),
