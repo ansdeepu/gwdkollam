@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -231,7 +231,6 @@ export default function ProgressReportPage() {
       TWC_DIAMETERS.forEach(d => { twcData[appType][d] = initialStats(); });
     });
 
-    // New logic for financial summary
     const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, balanceApplications: 0, applicationData: [], completedData: [], balanceApplicationData: [] });
     const privateFinancialSummary: FinancialSummaryReport = {};
     const governmentFinancialSummary: FinancialSummaryReport = {};
@@ -262,6 +261,24 @@ export default function ProgressReportPage() {
             });
       
       const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
+
+      // Calculate Remittance and Payment within the date range
+      const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
+        const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
+        if (remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+            return sum + (Number(rd.amountRemitted) || 0);
+        }
+        return sum;
+      }, 0) || 0;
+
+      const paymentInRange = entry.paymentDetails?.reduce((sum, pd) => {
+        const payDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
+        if (payDate && isValid(payDate) && isWithinInterval(payDate, { start: sDate, end: eDate })) {
+            const total = (Number(pd.contractorsPayment) || 0) + (Number(pd.gst) || 0) + (Number(pd.incomeTax) || 0) + (Number(pd.kbcwb) || 0) + (Number(pd.refundToParty) || 0);
+            return sum + total;
+        }
+        return sum;
+      }, 0) || 0;
       
       if (wasActiveBeforePeriodForFinancials || isCurrentApplicationForFinancials) {
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
@@ -270,7 +287,7 @@ export default function ProgressReportPage() {
             if (targetFinancialSummary[purposeKey]) {
                 targetFinancialSummary[purposeKey].totalApplications++;
                 targetFinancialSummary[purposeKey].applicationData.push(entry);
-                targetFinancialSummary[purposeKey].totalRemittance += (entry.totalRemittance || 0) / (uniquePurposes.size || 1);
+                targetFinancialSummary[purposeKey].totalRemittance += remittanceInRange / (uniquePurposes.size || 1);
             }
         });
       }
@@ -282,7 +299,7 @@ export default function ProgressReportPage() {
             if (targetFinancialSummary[purposeKey]) {
                 targetFinancialSummary[purposeKey].totalCompleted++;
                 targetFinancialSummary[purposeKey].completedData.push(entry);
-                targetFinancialSummary[purposeKey].totalPayment += (entry.totalPaymentAllEntries || 0) / (uniquePurposes.size || 1);
+                targetFinancialSummary[purposeKey].totalPayment += paymentInRange / (uniquePurposes.size || 1);
             }
         });
       }
@@ -777,4 +794,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
