@@ -249,7 +249,7 @@ export default function ProgressReportPage() {
             if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
                 const siteKey = `${entry.fileNo}-${site.nameOfSite}`;
                 if (!uniqueCompletedSites.has(siteKey)) {
-                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName });
+                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType });
                 }
             }
         });
@@ -260,15 +260,14 @@ export default function ProgressReportPage() {
     fileEntries.forEach(entry => {
       if (!entry.applicationType) return; 
 
-      const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
-      const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
-      
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
       
       const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName }));
 
       if (firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
+        const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
+        const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
         const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
           const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
           if (remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
@@ -285,18 +284,6 @@ export default function ProgressReportPage() {
                 targetFinancialSummary[purpose].totalRemittance += remittanceInRange / (sitesInEntry.length || 1); // Distribute remittance
             }
         });
-      }
-      
-      const completedSitesInThisEntry = allCompletedSitesInPeriod.filter(cs => cs.fileNo === entry.fileNo);
-      if (completedSitesInThisEntry.length > 0) {
-          completedSitesInThisEntry.forEach(site => {
-              const purpose = site.purpose as SitePurpose;
-              if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
-                  targetFinancialSummary[purpose].completedData.push(site);
-                  targetFinancialSummary[purpose].totalCompleted++;
-                  targetFinancialSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
-              }
-          });
       }
       
       entry.paymentDetails?.forEach(pd => {
@@ -319,7 +306,7 @@ export default function ProgressReportPage() {
       (entry.siteDetails || []).forEach(site => {
         if (!site) return;
         
-        const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName };
+        const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType };
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
@@ -329,15 +316,15 @@ export default function ProgressReportPage() {
         
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
         
-        const isToBeRefunded = workStatus && workStatus === 'To be Refunded';
+        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate) || isWithinInterval(completionDate, { start: sDate, end: eDate }));
+        const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || wasActiveBeforePeriod);
         
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
             if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
             if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
-            if (isToBeRefunded && (isCurrentApplication || wasActiveBeforePeriod)) { 
+            if (isToBeRefunded) { 
                 statsObj.toBeRefunded++; 
                 statsObj.toBeRefundedData.push(siteWithFileContext); 
             }
@@ -356,7 +343,18 @@ export default function ProgressReportPage() {
         }
       });
     });
-    
+
+    allCompletedSitesInPeriod.forEach(site => {
+      const purpose = site.purpose as SitePurpose;
+      if (purpose && financialSummaryOrder.includes(purpose)) {
+        const isPrivate = site.applicationType && PRIVATE_APPLICATION_TYPES.includes(site.applicationType);
+        const targetSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
+        targetSummary[purpose].completedData.push(site);
+        targetSummary[purpose].totalCompleted++;
+        targetSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
+      }
+    });
+
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
         stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
         const totalApplicationSites = [...stats.previousBalanceData, ...stats.currentApplicationsData];
@@ -794,3 +792,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
