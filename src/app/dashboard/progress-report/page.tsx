@@ -248,7 +248,8 @@ export default function ProgressReportPage() {
         (entry.siteDetails || []).forEach(site => {
             const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
             if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
-                const siteKey = `${entry.fileNo}-${site.nameOfSite}`;
+                // Use a key that includes file number, site name, AND purpose to ensure uniqueness
+                const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
                 if (!uniqueCompletedSites.has(siteKey)) {
                     uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType });
                 }
@@ -790,6 +791,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-
-
