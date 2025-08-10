@@ -53,7 +53,7 @@ interface FinancialSummary {
   totalPayment: number;
   // Data arrays
   applicationData: DataEntryFormData[];
-  completedData: DataEntryFormData[];
+  completedData: SiteDetailFormData[];
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
 
@@ -270,17 +270,25 @@ export default function ProgressReportPage() {
         });
       }
 
-      entry.siteDetails?.forEach(site => {
-        if (site && site.dateOfCompletion && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
-            const purpose = site.purpose;
-            if (purpose && financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
-                targetFinancialSummary[purpose].totalCompleted++;
-                targetFinancialSummary[purpose].completedData.push(entry);
-                targetFinancialSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
-            }
-        }
-      });
+      // Collect all completed sites for this entry within the date range first.
+      const completedSitesThisEntry = entry.siteDetails?.filter(site => 
+          site && 
+          site.dateOfCompletion && 
+          isValid(new Date(site.dateOfCompletion)) && 
+          isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })
+      ) || [];
       
+      if (completedSitesThisEntry.length > 0) {
+        completedSitesThisEntry.forEach(site => {
+          const purpose = site.purpose;
+          if (purpose && financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
+              targetFinancialSummary[purpose].totalCompleted++;
+              targetFinancialSummary[purpose].completedData.push({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName });
+              targetFinancialSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
+          }
+        });
+      }
+
       entry.paymentDetails?.forEach(pd => {
           const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
           if (paymentDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
@@ -312,14 +320,14 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
-
-        const isRefunded = workStatus ? REFUNDED_STATUSES.includes(workStatus) : false;
+        
+        const isRefundedInPeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && isCurrentApplication;
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
             if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
             if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
-            if (isRefunded) { statsObj.refunded++; statsObj.refundedData.push(siteWithFileContext); }
+            if (isRefundedInPeriod) { statsObj.refunded++; statsObj.refundedData.push(siteWithFileContext); }
         };
         
         if (entry.applicationType && purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
@@ -365,7 +373,7 @@ export default function ProgressReportPage() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entriesLoading, fileEntries]); 
+  }, [entriesLoading]); 
 
   const handleExportExcel = () => {
     toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
@@ -392,20 +400,39 @@ export default function ProgressReportPage() {
     let dialogData: Array<Record<string, any>>;
 
     if (isSiteData) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'fileNo', label: 'File No.' },
-            { key: 'applicantName', label: 'Applicant Name' },
-            { key: 'nameOfSite', label: 'Site Name' },
-            { key: 'purpose', label: 'Purpose' },
-            { key: 'workStatus', label: 'Work Status' },
-            { key: 'dateOfCompletion', label: 'Completion Date' },
-        ];
-        dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
-          slNo: index + 1,
-          ...site,
-          dateOfCompletion: site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
-        }));
+        if (title.toLowerCase().includes('application completed')) {
+             columns = [
+                { key: 'slNo', label: 'Sl. No.' },
+                { key: 'fileNo', label: 'File No.' },
+                { key: 'applicantName', label: 'Applicant Name' },
+                { key: 'nameOfSite', label: 'Site Name' },
+                { key: 'purpose', label: 'Purpose' },
+                { key: 'workStatus', label: 'Work Status' },
+                { key: 'dateOfCompletion', label: 'Completion Date' },
+                { key: 'totalExpenditure', label: 'Expenditure (₹)' },
+            ];
+            dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+              slNo: index + 1,
+              ...site,
+              dateOfCompletion: site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
+              totalExpenditure: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            }));
+        } else {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.' },
+                { key: 'fileNo', label: 'File No.' },
+                { key: 'applicantName', label: 'Applicant Name' },
+                { key: 'nameOfSite', label: 'Site Name' },
+                { key: 'purpose', label: 'Purpose' },
+                { key: 'workStatus', label: 'Work Status' },
+                { key: 'dateOfCompletion', label: 'Completion Date' },
+            ];
+            dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+              slNo: index + 1,
+              ...site,
+              dateOfCompletion: site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
+            }));
+        }
     } else {
         const sDate = startDate ? startOfDay(startDate) : null;
         const eDate = endDate ? endOfDay(endDate) : null;
@@ -435,43 +462,6 @@ export default function ProgressReportPage() {
                     remittanceInRange: remittanceInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 };
             });
-        } else if (title.toLowerCase().includes('completed')) {
-            columns = [
-                { key: 'slNo', label: 'Sl. No.' },
-                { key: 'fileNo', label: 'File No.' },
-                { key: 'applicantName', label: 'Applicant Name' },
-                { key: 'siteName', label: 'Site Name' },
-                { key: 'purpose', label: 'Purpose' },
-                { key: 'workStatus', label: 'Work Status' },
-                { key: 'completionDate', label: 'Completion Date' },
-                { key: 'expenditure', label: 'Expenditure (₹)' },
-            ];
-            
-            const completedSitesUnique = new Map<string, Record<string, any>>();
-            (data as DataEntryFormData[]).forEach(entry => {
-              entry.siteDetails?.forEach(site => {
-                if (site.dateOfCompletion && sDate && eDate && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
-                  const uniqueKey = `${entry.fileNo}-${site.nameOfSite}`;
-                  if (!completedSitesUnique.has(uniqueKey)) {
-                    completedSitesUnique.set(uniqueKey, {
-                      fileNo: entry.fileNo || 'N/A',
-                      applicantName: entry.applicantName || 'N/A',
-                      siteName: site.nameOfSite || 'N/A',
-                      purpose: site.purpose || 'N/A',
-                      workStatus: site.workStatus || 'N/A',
-                      completionDate: format(new Date(site.dateOfCompletion), 'dd/MM/yyyy'),
-                      expenditure: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    });
-                  }
-                }
-              });
-            });
-
-            dialogData = Array.from(completedSitesUnique.values()).map((site, index) => ({
-              slNo: index + 1,
-              ...site
-            }));
-            
         } else {
              columns = [
                 { key: 'slNo', label: 'Sl. No.' },
@@ -502,7 +492,7 @@ export default function ProgressReportPage() {
         const exportRow: Record<string, string> = {};
         detailDialogColumns.forEach(col => {
             const value = (row as any)[col.key];
-             if (col.key === 'dateOfCompletion' && value) {
+             if (col.key === 'dateOfCompletion' && value && (value !== "N/A")) {
                 exportRow[col.label] = format(new Date(value as string), 'dd/MM/yyyy');
             } else {
                 exportRow[col.label] = String(value ?? 'N/A');
