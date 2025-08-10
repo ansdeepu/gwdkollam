@@ -365,7 +365,7 @@ export default function ProgressReportPage() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entriesLoading, fileEntries, startDate, endDate]); // Re-run when dependencies change
+  }, [entriesLoading, fileEntries]); 
 
   const handleExportExcel = () => {
     toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
@@ -447,24 +447,31 @@ export default function ProgressReportPage() {
                 { key: 'expenditure', label: 'Expenditure (₹)' },
             ];
             
-            const completedSites: Array<Record<string, any>> = [];
+            const completedSitesUnique = new Map<string, Record<string, any>>();
             (data as DataEntryFormData[]).forEach(entry => {
               entry.siteDetails?.forEach(site => {
                 if (site.dateOfCompletion && sDate && eDate && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
-                  completedSites.push({
-                    slNo: completedSites.length + 1,
-                    fileNo: entry.fileNo || 'N/A',
-                    applicantName: entry.applicantName || 'N/A',
-                    siteName: site.nameOfSite || 'N/A',
-                    purpose: site.purpose || 'N/A',
-                    workStatus: site.workStatus || 'N/A',
-                    completionDate: format(new Date(site.dateOfCompletion), 'dd/MM/yyyy'),
-                    expenditure: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                  });
+                  const uniqueKey = `${entry.fileNo}-${site.nameOfSite}`;
+                  if (!completedSitesUnique.has(uniqueKey)) {
+                    completedSitesUnique.set(uniqueKey, {
+                      fileNo: entry.fileNo || 'N/A',
+                      applicantName: entry.applicantName || 'N/A',
+                      siteName: site.nameOfSite || 'N/A',
+                      purpose: site.purpose || 'N/A',
+                      workStatus: site.workStatus || 'N/A',
+                      completionDate: format(new Date(site.dateOfCompletion), 'dd/MM/yyyy'),
+                      expenditure: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    });
+                  }
                 }
               });
             });
-            dialogData = completedSites;
+
+            dialogData = Array.from(completedSitesUnique.values()).map((site, index) => ({
+              slNo: index + 1,
+              ...site
+            }));
+            
         } else {
              columns = [
                 { key: 'slNo', label: 'Sl. No.' },
@@ -779,3 +786,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
