@@ -405,7 +405,7 @@ export default function ProgressReportPage() {
     setDetailDialogTitle(title);
     
     // Check if data is site data or file entry data
-    const isSiteData = 'nameOfSite' in data[0] && !('fileStatus' in data[0]);
+    const isSiteData = data.length > 0 && 'nameOfSite' in data[0] && !('fileStatus' in data[0]);
 
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
@@ -756,46 +756,46 @@ export default function ProgressReportPage() {
       )}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
-            <DialogHeader className="p-6 pb-4 border-b">
-                <DialogTitle>{detailDialogTitle}</DialogTitle>
-                <DialogDescription>
-                    Displaying {detailDialogData.length} records.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="flex-grow overflow-hidden px-6 py-2">
-              <ScrollArea className="h-full pr-4">
-                {detailDialogData.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        {detailDialogColumns.map(col => <TableHead key={col.key}>{col.label}</TableHead>)}
+          <DialogHeader className="p-6 pb-4 border-b shrink-0">
+            <DialogTitle>{detailDialogTitle}</DialogTitle>
+            <DialogDescription>
+              Displaying {detailDialogData.length} records.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-grow px-6 py-2 min-h-0">
+            <ScrollArea className="h-full pr-4">
+              {detailDialogData.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {detailDialogColumns.map(col => <TableHead key={col.key}>{col.label}</TableHead>)}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {detailDialogData.map((row, index) => (
+                      <TableRow key={index}>
+                        {detailDialogColumns.map(col => (
+                          <TableCell key={col.key} className="text-xs">
+                             {(row as any)[col.key] !== undefined && (row as any)[col.key] !== null ? String((row as any)[col.key]) : 'N/A'}
+                          </TableCell>
+                        ))}
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {detailDialogData.map((row, index) => (
-                        <TableRow key={index}>
-                          {detailDialogColumns.map(col => (
-                            <TableCell key={col.key} className="text-xs">
-                               {(row as any)[col.key] !== undefined && (row as any)[col.key] !== null ? String((row as any)[col.key]) : 'N/A'}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="py-4 text-center text-muted-foreground">No details found for this selection.</p>
-                )}
-              </ScrollArea>
-            </div>
-            <DialogFooter className="p-6 pt-4 border-t">
-              <Button variant="outline" onClick={handleExportDialogData} disabled={detailDialogData.length === 0}>
-                <FileDown className="mr-2 h-4 w-4" /> Export to Excel
-              </Button>
-              <DialogClose asChild>
-                  <Button type="button" variant="secondary">Close</Button>
-              </DialogClose>
-            </DialogFooter>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="py-4 text-center text-muted-foreground">No details found for this selection.</p>
+              )}
+            </ScrollArea>
+          </div>
+          <DialogFooter className="p-6 pt-4 border-t shrink-0">
+            <Button variant="outline" onClick={handleExportDialogData} disabled={detailDialogData.length === 0}>
+              <FileDown className="mr-2 h-4 w-4" /> Export to Excel
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Close</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
