@@ -51,11 +51,9 @@ interface FinancialSummary {
   totalRemittance: number;
   totalCompleted: number;
   totalPayment: number;
-  balanceApplications: number; // New field
   // Data arrays
   applicationData: DataEntryFormData[];
   completedData: DataEntryFormData[];
-  balanceApplicationData: DataEntryFormData[]; // New field
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
 
@@ -76,6 +74,8 @@ const OTHER_PURPOSES: SitePurpose[] = [
   "PumpingScheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"
 ];
 const financialSummaryOrder: string[] = ["BWC", "TWC", ...OTHER_PURPOSES];
+const allServicePurposesForSummary: SitePurpose[] = ["BWC", "TWC", ...OTHER_PURPOSES];
+
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
   "Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"
@@ -222,7 +222,7 @@ export default function ProgressReportPage() {
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const twcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const otherServicesData: OtherServiceProgress = {} as OtherServiceProgress;
-    OTHER_PURPOSES.forEach(p => { otherServicesData[p] = initialStats(); });
+    allServicePurposesForSummary.forEach(p => { otherServicesData[p] = initialStats(); });
     
     applicationTypeOptions.forEach(appType => {
       bwcData[appType] = {};
@@ -231,7 +231,7 @@ export default function ProgressReportPage() {
       TWC_DIAMETERS.forEach(d => { twcData[appType][d] = initialStats(); });
     });
 
-    const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, balanceApplications: 0, applicationData: [], completedData: [], balanceApplicationData: [] });
+    const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] });
     const privateFinancialSummary: FinancialSummaryReport = {};
     const governmentFinancialSummary: FinancialSummaryReport = {};
     financialSummaryOrder.forEach(p => {
@@ -346,7 +346,7 @@ export default function ProgressReportPage() {
         } else if (entry.applicationType && purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
           if (!twcData[entry.applicationType]?.[diameter]) return;
           updateStats(twcData[entry.applicationType][diameter]);
-        } else if (OTHER_PURPOSES.includes(purpose)) {
+        } else if (allServicePurposesForSummary.includes(purpose)) {
           updateStats(otherServicesData[purpose]);
         }
       });
@@ -365,7 +365,7 @@ export default function ProgressReportPage() {
       BWC_DIAMETERS.forEach(d => { if(bwcData[appType]?.[d]) calculateBalanceAndTotal(bwcData[appType][d]) });
       TWC_DIAMETERS.forEach(d => { if(twcData[appType]?.[d]) calculateBalanceAndTotal(twcData[appType][d]) });
     });
-    OTHER_PURPOSES.forEach(p => calculateBalanceAndTotal(otherServicesData[p]));
+    allServicePurposesForSummary.forEach(p => calculateBalanceAndTotal(otherServicesData[p]));
     
     setReportData({ bwcData, twcData, otherServicesData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary, revenueHeadTotal: totalRevenueHeadAmount, revenueHeadDetails: revenueHeadDetails });
     setIsFiltering(false);
@@ -397,7 +397,6 @@ export default function ProgressReportPage() {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
     
-    // Check if data is site data or file entry data
     const isSiteData = data.length > 0 && 'nameOfSite' in data[0] && !('fileStatus' in data[0]);
 
     let columns: DetailDialogColumn[];
@@ -416,7 +415,7 @@ export default function ProgressReportPage() {
           ...site,
           dateOfCompletion: site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
         }));
-    } else { // It's DataEntryFormData
+    } else {
         const sDate = startDate ? startOfDay(startDate) : null;
         const eDate = endDate ? endOfDay(endDate) : null;
 
@@ -426,14 +425,23 @@ export default function ProgressReportPage() {
                 { key: 'applicantName', label: 'Applicant Name' },
                 { key: 'siteNames', label: 'Site Name(s)' },
                 { key: 'fileStatus', label: 'File Status' },
-                { key: 'totalRemittance', label: 'Total Remittance (₹)' },
+                { key: 'remittanceInRange', label: 'Remittance in Range (₹)' },
             ];
-            dialogData = (data as DataEntryFormData[]).map(entry => ({
-                ...entry,
-                siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
-                totalRemittance: (entry.totalRemittance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            }));
-        } else if (title.toLowerCase().includes('completed')) { // Completed applications
+            dialogData = (data as DataEntryFormData[]).map(entry => {
+                const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
+                    const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
+                    if (remDate && sDate && eDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+                        return sum + (Number(rd.amountRemitted) || 0);
+                    }
+                    return sum;
+                }, 0) || 0;
+                return {
+                    ...entry,
+                    siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                    remittanceInRange: remittanceInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                };
+            });
+        } else if (title.toLowerCase().includes('completed')) {
             columns = [
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
@@ -456,7 +464,7 @@ export default function ProgressReportPage() {
                     paymentInRange: paymentInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 };
             });
-        } else { // Fallback for other clicks like "Balance"
+        } else {
              columns = [
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
@@ -504,7 +512,7 @@ export default function ProgressReportPage() {
 
     const purposesToShow = financialSummaryOrder.filter(p => summaryData[p]?.totalApplications > 0 || summaryData[p]?.totalCompleted > 0);
 
-    const total: FinancialSummary = { totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, balanceApplications: 0, applicationData: [], completedData: [], balanceApplicationData: [] };
+    const total: FinancialSummary = { totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] };
     purposesToShow.forEach(p => {
         const data = summaryData[p];
         if(data) {
@@ -516,10 +524,6 @@ export default function ProgressReportPage() {
             total.completedData.push(...data.completedData);
         }
     });
-
-    total.balanceApplications = total.totalApplications - total.totalCompleted;
-    total.balanceApplicationData = total.applicationData.filter(app => !total.completedData.some(comp => comp.fileNo === app.fileNo));
-
 
     return (
       <Card className="shadow-lg">
@@ -538,15 +542,12 @@ export default function ProgressReportPage() {
                 <TableHead className="border p-2 text-center font-semibold">Total Remittance (₹)</TableHead>
                 <TableHead className="border p-2 text-center font-semibold">No. of Application Completed</TableHead>
                 <TableHead className="border p-2 text-center font-semibold">Total Payment (₹)</TableHead>
-                <TableHead className="border p-2 text-center font-semibold">Balance No. of Application</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {purposesToShow.map(purpose => {
                 const data = summaryData[purpose];
                 if (!data) return null;
-                const balanceCount = data.totalApplications - data.totalCompleted;
-                const balanceData = data.applicationData.filter(app => !data.completedData.some(comp => comp.fileNo === app.fileNo));
                 return (
                   <TableRow key={purpose}>
                     <TableCell className="border p-2 font-medium">{purpose}</TableCell>
@@ -562,11 +563,6 @@ export default function ProgressReportPage() {
                       </Button>
                     </TableCell>
                     <TableCell className="border p-2 text-right">{data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    <TableCell className="border p-2 text-center">
-                      <Button variant="link" className="p-0 h-auto" disabled={balanceCount === 0} onClick={() => handleCountClick(balanceData, `Balance Applications - ${purpose}`)}>
-                        {balanceCount}
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 )
               })}
@@ -586,11 +582,6 @@ export default function ProgressReportPage() {
                         </Button>
                     </TableCell>
                     <TableCell className="border p-2 text-right">{total.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    <TableCell className="border p-2 text-center">
-                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.balanceApplications === 0} onClick={() => handleCountClick(total.balanceApplicationData, `Total Balance Applications for ${title}`)}>
-                            {total.balanceApplications}
-                        </Button>
-                    </TableCell>
                 </TableRow>
             </TableFooter>
           </Table>
@@ -676,7 +667,7 @@ export default function ProgressReportPage() {
 
             <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle>Other Services - Progress Summary</CardTitle>
+                    <CardTitle>Progress Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="overflow-x-auto pt-6">
                     <Table className="min-w-full border-collapse">
@@ -692,7 +683,7 @@ export default function ProgressReportPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {OTHER_PURPOSES.map(purpose => {
+                        {allServicePurposesForSummary.map(purpose => {
                            const stats = reportData.otherServicesData[purpose];
                            return (
                             <TableRow key={purpose}>
@@ -748,7 +739,7 @@ export default function ProgressReportPage() {
         </div>
       )}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
           <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>{detailDialogTitle}</DialogTitle>
             <DialogDescription>
