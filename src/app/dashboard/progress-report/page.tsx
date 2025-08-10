@@ -251,15 +251,6 @@ export default function ProgressReportPage() {
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
       
-      const wasActiveBeforePeriodForFinancials = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && 
-            !entry.siteDetails?.every(site => {
-                if (!site) return true;
-                const completionDateValue = site.dateOfCompletion;
-                if (!completionDateValue) return false;
-                const completionDate = new Date(completionDateValue);
-                return isValid(completionDate) && isBefore(completionDate, sDate);
-            });
-      
       const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
 
       // Calculate Remittance and Payment within the date range
@@ -280,10 +271,11 @@ export default function ProgressReportPage() {
         return sum;
       }, 0) || 0;
       
-      if (wasActiveBeforePeriodForFinancials || isCurrentApplicationForFinancials) {
+      // Count as "Total Application Received" ONLY if the first remittance is within the date range.
+      if (isCurrentApplicationForFinancials) {
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
         uniquePurposes.forEach(purpose => {
-            const purposeKey = isPrivate ? purpose : (financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes');
+            const purposeKey = financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes';
             if (targetFinancialSummary[purposeKey]) {
                 targetFinancialSummary[purposeKey].totalApplications++;
                 targetFinancialSummary[purposeKey].applicationData.push(entry);
@@ -292,10 +284,11 @@ export default function ProgressReportPage() {
         });
       }
 
-      if (entry.siteDetails?.some(site => site && site.dateOfCompletion && new Date(site.dateOfCompletion) >= sDate && new Date(site.dateOfCompletion) <= eDate)) {
+      // Count as "Completed" ONLY if a site completion date is within the date range.
+      if (entry.siteDetails?.some(site => site && site.dateOfCompletion && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate }))) {
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
         uniquePurposes.forEach(purpose => {
-            const purposeKey = isPrivate ? purpose : (financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes');
+            const purposeKey = financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes';
             if (targetFinancialSummary[purposeKey]) {
                 targetFinancialSummary[purposeKey].totalCompleted++;
                 targetFinancialSummary[purposeKey].completedData.push(entry);
@@ -332,11 +325,11 @@ export default function ProgressReportPage() {
 
         const completionDateValue = site.dateOfCompletion;
         const completionDate = completionDateValue ? new Date(completionDateValue) : null;
-        const isCompletedInPeriod = completionDate && isValid(completionDate) && completionDate >= sDate && completionDate <= eDate;
-        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
+        const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
+        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && 
-                                     (!completionDate || !isValid(completionDate) || completionDate >= sDate);
+                                     (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
 
         const isRefunded = workStatus ? REFUNDED_STATUSES.includes(workStatus) : false;
 
@@ -756,13 +749,13 @@ export default function ProgressReportPage() {
       )}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+          <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>{detailDialogTitle}</DialogTitle>
             <DialogDescription>
               Displaying {detailDialogData.length} records.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-grow overflow-hidden">
+          <div className="flex-grow overflow-hidden px-6">
             <ScrollArea className="h-full pr-4">
               {detailDialogData.length > 0 ? (
                 <Table>
@@ -788,7 +781,7 @@ export default function ProgressReportPage() {
               )}
             </ScrollArea>
           </div>
-          <DialogFooter className="pt-4 border-t">
+          <DialogFooter className="p-6 pt-4 border-t">
             <Button variant="outline" onClick={handleExportDialogData} disabled={detailDialogData.length === 0}>
               <FileDown className="mr-2 h-4 w-4" /> Export to Excel
             </Button>
@@ -801,3 +794,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
