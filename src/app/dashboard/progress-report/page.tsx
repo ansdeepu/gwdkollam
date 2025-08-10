@@ -348,6 +348,7 @@ export default function ProgressReportPage() {
       const purpose = site.purpose as SitePurpose;
       if (purpose && financialSummaryOrder.includes(purpose)) {
         const isPrivate = site.applicationType ? PRIVATE_APPLICATION_TYPES.includes(site.applicationType) : false;
+        // If applicationType is missing, default to government/other for counting purposes.
         const targetSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
         targetSummary[purpose].completedData.push(site);
         targetSummary[purpose].totalCompleted++;
@@ -789,5 +790,6 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
 
 
