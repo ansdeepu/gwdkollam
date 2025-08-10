@@ -183,8 +183,8 @@ const WellTypeProgressTable = ({
 
 export default function ProgressReportPage() {
   const { fileEntries, isLoading: entriesLoading } = useFileEntries();
-  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
-  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isFiltering, setIsFiltering] = useState(true);
   const { toast } = useToast();
 
@@ -354,8 +354,11 @@ export default function ProgressReportPage() {
   }, [fileEntries, startDate, endDate, toast]);
   
   useEffect(() => {
-    if (!entriesLoading) {
-      handleGenerateReport();
+    // This will run once on initial load if entries are available, but not generate a report.
+    // The user must now click "Generate Report" to see data.
+    if (!entriesLoading && (!startDate || !endDate)) {
+      setIsFiltering(false); // Ensure loader is off if no dates are set
+      setReportData(null); // Clear any previous report data
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entriesLoading]);
@@ -406,7 +409,7 @@ export default function ProgressReportPage() {
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
                 { key: 'siteNames', label: 'Site Name(s)' },
-                { key: 'fileStatus', label: 'File Status' },
+                { key: 'workStatus', label: 'Work Status' },
                 { key: 'remittanceInRange', label: 'Remittance in Range (₹)' },
             ];
             dialogData = (data as DataEntryFormData[]).map(entry => {
@@ -420,6 +423,7 @@ export default function ProgressReportPage() {
                 return {
                     ...entry,
                     siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                    workStatus: entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A',
                     remittanceInRange: remittanceInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 };
             });
@@ -428,7 +432,7 @@ export default function ProgressReportPage() {
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
                 { key: 'siteNames', label: 'Site Name(s)' },
-                { key: 'fileStatus', label: 'File Status' },
+                { key: 'workStatus', label: 'Work Status' },
                 { key: 'paymentInRange', label: 'Payment in Range (₹)' },
             ];
             dialogData = (data as DataEntryFormData[]).map(entry => {
@@ -441,6 +445,7 @@ export default function ProgressReportPage() {
                 return {
                     ...entry,
                     siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                    workStatus: entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A',
                     paymentInRange: paymentInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 };
             });
@@ -449,11 +454,12 @@ export default function ProgressReportPage() {
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
                 { key: 'siteNames', label: 'Site Name(s)' },
-                { key: 'fileStatus', label: 'File Status' },
+                { key: 'workStatus', label: 'Work Status' },
             ];
             dialogData = (data as DataEntryFormData[]).map(entry => ({
                 ...entry,
                 siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                workStatus: entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A',
             }));
         }
     }
@@ -709,7 +715,7 @@ export default function ProgressReportPage() {
         </div>
       )}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-4xl flex flex-col h-[90vh]">
           <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>{detailDialogTitle}</DialogTitle>
             <DialogDescription>
