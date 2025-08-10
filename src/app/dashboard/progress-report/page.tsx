@@ -271,11 +271,10 @@ export default function ProgressReportPage() {
       if (isCurrentApplicationForFinancials) {
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
         uniquePurposes.forEach(purpose => {
-            const purposeKey = financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes';
-            if (targetFinancialSummary[purposeKey]) {
-                targetFinancialSummary[purposeKey].totalApplications++;
-                targetFinancialSummary[purposeKey].applicationData.push(entry);
-                targetFinancialSummary[purposeKey].totalRemittance += remittanceInRange;
+            if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
+                targetFinancialSummary[purpose].totalApplications++;
+                targetFinancialSummary[purpose].applicationData.push(entry);
+                targetFinancialSummary[purpose].totalRemittance += remittanceInRange;
             }
         });
       }
@@ -284,11 +283,10 @@ export default function ProgressReportPage() {
       if (entry.siteDetails?.some(site => site && site.dateOfCompletion && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate }))) {
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
         uniquePurposes.forEach(purpose => {
-            const purposeKey = financialSummaryOrder.includes(purpose) ? purpose : 'Other_Schemes';
-            if (targetFinancialSummary[purposeKey]) {
-                targetFinancialSummary[purposeKey].totalCompleted++;
-                targetFinancialSummary[purposeKey].completedData.push(entry);
-                targetFinancialSummary[purposeKey].totalPayment += paymentInRange;
+            if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
+                targetFinancialSummary[purpose].totalCompleted++;
+                targetFinancialSummary[purpose].completedData.push(entry);
+                targetFinancialSummary[purpose].totalPayment += paymentInRange;
             }
         });
       }
@@ -321,10 +319,11 @@ export default function ProgressReportPage() {
 
         const completionDateValue = site.dateOfCompletion;
         const completionDate = completionDateValue ? new Date(completionDateValue) : null;
+        
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         
-        const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && 
+        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && 
                                      (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
 
         const isRefunded = workStatus ? REFUNDED_STATUSES.includes(workStatus) : false;
@@ -784,4 +783,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
