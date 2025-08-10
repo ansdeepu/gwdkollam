@@ -19,6 +19,7 @@ import {
   type SitePurpose,
   type DataEntryFormData,
   type SiteDetailFormData,
+  type SiteWorkStatus,
 } from '@/lib/schemas';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
@@ -241,7 +242,6 @@ export default function ProgressReportPage() {
     let totalRevenueHeadAmount = 0;
     const revenueHeadDetails: RevenueHeadDetail[] = [];
     
-    // Create a definitive list of unique sites completed in the period.
     const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
     fileEntries.forEach(entry => {
         (entry.siteDetails || []).forEach(site => {
@@ -263,7 +263,7 @@ export default function ProgressReportPage() {
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
       
-      const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName }));
+      const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }));
 
       if (firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
         const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
@@ -281,7 +281,7 @@ export default function ProgressReportPage() {
             if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
                 targetFinancialSummary[purpose].totalApplications++;
                 targetFinancialSummary[purpose].applicationData.push(site);
-                targetFinancialSummary[purpose].totalRemittance += remittanceInRange / (sitesInEntry.length || 1); // Distribute remittance
+                targetFinancialSummary[purpose].totalRemittance += remittanceInRange / (sitesInEntry.length || 1);
             }
         });
       }
@@ -317,7 +317,8 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         
-        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate) || isWithinInterval(completionDate, { start: sDate, end: eDate }));
+        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
+        
         const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || wasActiveBeforePeriod);
         
         const updateStats = (statsObj: ProgressStats) => {
@@ -508,11 +509,7 @@ export default function ProgressReportPage() {
         const exportRow: Record<string, string> = {};
         detailDialogColumns.forEach(col => {
             const value = (row as any)[col.key];
-             if (col.key === 'dateOfCompletion' && value && (value !== "N/A")) {
-                exportRow[col.label] = format(new Date(value as string), 'dd/MM/yyyy');
-            } else {
-                exportRow[col.label] = String(value ?? 'N/A');
-            }
+            exportRow[col.label] = String(value ?? 'N/A');
         });
         return exportRow;
     });
@@ -792,4 +789,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
