@@ -73,7 +73,7 @@ const BWC_DIAMETERS = ['110 mm (4.5”)', '150 mm (6”)'];
 const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
 
 const allServicePurposesForSummary: SitePurpose[] = Array.from(sitePurposeOptions);
-const financialSummaryOrder: string[] = Array.from(sitePurposeOptions);
+const financialSummaryOrder: SitePurpose[] = Array.from(sitePurposeOptions);
 
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
@@ -259,14 +259,12 @@ export default function ProgressReportPage() {
 
 
     fileEntries.forEach(entry => {
-      if (!entry.applicationType) return; 
-
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
       
       const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }));
 
-      if (firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
+      if (entry.applicationType && firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
         const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
         const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
         const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
@@ -349,7 +347,7 @@ export default function ProgressReportPage() {
     allCompletedSitesInPeriod.forEach(site => {
       const purpose = site.purpose as SitePurpose;
       if (purpose && financialSummaryOrder.includes(purpose)) {
-        const isPrivate = site.applicationType && PRIVATE_APPLICATION_TYPES.includes(site.applicationType);
+        const isPrivate = site.applicationType ? PRIVATE_APPLICATION_TYPES.includes(site.applicationType) : false;
         const targetSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
         targetSummary[purpose].completedData.push(site);
         targetSummary[purpose].totalCompleted++;
@@ -791,4 +789,5 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
 
