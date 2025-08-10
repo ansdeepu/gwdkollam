@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isBefore } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -192,7 +192,7 @@ export default function ProgressReportPage() {
 
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [detailDialogTitle, setDetailDialogTitle] = useState("");
-  const [detailDialogData, setDetailDialogData] = useState<Array<SiteDetailFormData | DataEntryFormData>>([]);
+  const [detailDialogData, setDetailDialogData] = useState<Array<SiteDetailFormData | DataEntryFormData | Record<string, any>>>([]);
   const [detailDialogColumns, setDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
 
   const handleGenerateReport = useCallback(() => {
@@ -346,56 +346,84 @@ export default function ProgressReportPage() {
   const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData>, title: string) => {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
-    setDetailDialogData(data);
     
-    // Check if the data is for sites or financial summary
-    const isSiteData = data.some(item => 'nameOfSite' in item);
+    const isSiteData = data.some(item => 'nameOfSite' in item && !('fileNo' in item && 'applicantName' in item && 'fileStatus' in item));
 
-    const columns: DetailDialogColumn[] = isSiteData 
-        ? [
+    let columns: DetailDialogColumn[];
+    let dialogData: Array<Record<string, any>>;
+
+    if (isSiteData) {
+        columns = [
             { key: 'fileNo', label: 'File No.' },
             { key: 'applicantName', label: 'Applicant Name' },
             { key: 'nameOfSite', label: 'Site Name' },
             { key: 'purpose', label: 'Purpose' },
             { key: 'workStatus', label: 'Work Status' },
             { key: 'dateOfCompletion', label: 'Completion Date' },
-          ]
-        : [
-            { key: 'fileNo', label: 'File No.' },
-            { key: 'applicantName', label: 'Applicant Name' },
-            { key: 'fileStatus', label: 'File Status' },
-            { key: 'totalRemittance', label: 'Total Remittance (₹)' },
-            { key: 'totalPaymentAllEntries', label: 'Total Payment (₹)' },
-          ];
+        ];
+        dialogData = data as SiteDetailFormData[];
+    } else {
+        const sDate = startDate ? startOfDay(startDate) : null;
+        const eDate = endDate ? endOfDay(endDate) : null;
+
+        if (title.includes('Total Application')) {
+            columns = [
+                { key: 'fileNo', label: 'File No.' },
+                { key: 'applicantName', label: 'Applicant Name' },
+                { key: 'siteNames', label: 'Site Name(s)' },
+                { key: 'fileStatus', label: 'File Status' },
+                { key: 'totalRemittance', label: 'Total Remittance (₹)' },
+            ];
+            dialogData = (data as DataEntryFormData[]).map(entry => ({
+                ...entry,
+                siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+            }));
+        } else { // Completed applications
+            columns = [
+                { key: 'fileNo', label: 'File No.' },
+                { key: 'applicantName', label: 'Applicant Name' },
+                { key: 'siteNames', label: 'Site Name(s)' },
+                { key: 'fileStatus', label: 'File Status' },
+                { key: 'paymentInRange', label: 'Payment in Range (₹)' },
+            ];
+            dialogData = (data as DataEntryFormData[]).map(entry => {
+                const paymentInRange = entry.paymentDetails?.reduce((sum, pd) => {
+                    const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
+                    if (paymentDate && sDate && eDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
+                        const total = (Number(pd.contractorsPayment) || 0) + (Number(pd.gst) || 0) + (Number(pd.incomeTax) || 0) + (Number(pd.kbcwb) || 0) + (Number(pd.refundToParty) || 0);
+                        return sum + total;
+                    }
+                    return sum;
+                }, 0) || 0;
+                return {
+                    ...entry,
+                    siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                    paymentInRange: paymentInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                };
+            });
+        }
+    }
+    
     setDetailDialogColumns(columns);
+    setDetailDialogData(dialogData);
     setIsDetailDialogOpen(true);
-  };
+};
+
 
   const handleExportDialogData = () => {
     if (detailDialogData.length === 0) return;
-    const isSiteDetail = detailDialogData[0] && 'nameOfSite' in detailDialogData[0];
 
     const dataToExport = detailDialogData.map(row => {
-        if (isSiteDetail) {
-            const siteRow = row as SiteDetailFormData;
-            return {
-                "File No.": siteRow.fileNo || 'N/A',
-                "Applicant Name": siteRow.applicantName || 'N/A',
-                "Site Name": siteRow.nameOfSite || 'N/A',
-                "Purpose": siteRow.purpose || 'N/A',
-                "Work Status": siteRow.workStatus || 'N/A',
-                "Completion Date": siteRow.dateOfCompletion ? format(new Date(siteRow.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
-            };
-        } else {
-            const entryRow = row as DataEntryFormData;
-            return {
-                "File No.": entryRow.fileNo || 'N/A',
-                "Applicant Name": entryRow.applicantName || 'N/A',
-                "File Status": entryRow.fileStatus || 'N/A',
-                "Total Remittance (₹)": entryRow.totalRemittance?.toLocaleString('en-IN') || '0.00',
-                "Total Payment (₹)": entryRow.totalPaymentAllEntries?.toLocaleString('en-IN') || '0.00',
-            };
-        }
+        const exportRow: Record<string, string> = {};
+        detailDialogColumns.forEach(col => {
+            const value = (row as any)[col.key];
+             if (col.key === 'dateOfCompletion' && value) {
+                exportRow[col.label] = format(new Date(value as string), 'dd/MM/yyyy');
+            } else {
+                exportRow[col.label] = String(value ?? 'N/A');
+            }
+        });
+        return exportRow;
     });
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -451,13 +479,13 @@ export default function ProgressReportPage() {
                   <TableRow key={purpose}>
                     <TableCell className="border p-2 font-medium">{purpose}</TableCell>
                     <TableCell className="border p-2 text-center">
-                      <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Applications for ${purpose}`)}>
+                      <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Total Application - ${purpose}`)}>
                         {data.totalApplications}
                       </Button>
                     </TableCell>
                     <TableCell className="border p-2 text-right">{data.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                     <TableCell className="border p-2 text-center">
-                      <Button variant="link" className="p-0 h-auto" disabled={data.totalCompleted === 0} onClick={() => handleCountClick(data.completedData, `Completed Applications for ${purpose}`)}>
+                      <Button variant="link" className="p-0 h-auto" disabled={data.totalCompleted === 0} onClick={() => handleCountClick(data.completedData, `Application Completed - ${purpose}`)}>
                         {data.totalCompleted}
                       </Button>
                     </TableCell>
@@ -619,9 +647,7 @@ export default function ProgressReportPage() {
                         <TableRow key={index}>
                           {detailDialogColumns.map(col => (
                             <TableCell key={col.key} className="text-xs">
-                              {col.key === 'dateOfCompletion' && (row as SiteDetailFormData)[col.key] 
-                                ? format(new Date((row as SiteDetailFormData)[col.key] as string), 'dd/MM/yyyy') 
-                                : String((row as any)[col.key] ?? 'N/A')}
+                               {(row as any)[col.key] !== undefined && (row as any)[col.key] !== null ? String((row as any)[col.key]) : 'N/A'}
                             </TableCell>
                           ))}
                         </TableRow>
@@ -646,3 +672,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
