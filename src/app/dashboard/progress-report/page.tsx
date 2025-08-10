@@ -755,14 +755,14 @@ export default function ProgressReportPage() {
         </div>
       )}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="p-6 pb-4 border-b shrink-0">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
             <DialogTitle>{detailDialogTitle}</DialogTitle>
             <DialogDescription>
               Displaying {detailDialogData.length} records.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-grow px-6 py-2 min-h-0">
+          <div className="flex-grow overflow-hidden">
             <ScrollArea className="h-full pr-4">
               {detailDialogData.length > 0 ? (
                 <Table>
@@ -788,7 +788,7 @@ export default function ProgressReportPage() {
               )}
             </ScrollArea>
           </div>
-          <DialogFooter className="p-6 pt-4 border-t shrink-0">
+          <DialogFooter className="pt-4 border-t">
             <Button variant="outline" onClick={handleExportDialogData} disabled={detailDialogData.length === 0}>
               <FileDown className="mr-2 h-4 w-4" /> Export to Excel
             </Button>
