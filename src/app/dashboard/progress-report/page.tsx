@@ -29,18 +29,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface ProgressStats {
   previousBalance: number;
   currentApplications: number;
+  toBeRefunded: number;
   totalApplications: number;
   completed: number;
-  refunded: number;
   balance: number;
   // Add data arrays to hold the actual entries
   previousBalanceData: SiteDetailFormData[];
   currentApplicationsData: SiteDetailFormData[];
+  toBeRefundedData: SiteDetailFormData[];
   totalApplicationsData: SiteDetailFormData[];
   completedData: SiteDetailFormData[];
-  refundedData: SiteDetailFormData[];
   balanceData: SiteDetailFormData[];
 }
+
 
 type DiameterProgress = Record<string, ProgressStats>;
 type ApplicationTypeProgress = Record<ApplicationType, DiameterProgress>;
@@ -98,32 +99,32 @@ const WellTypeProgressTable = ({
     const metrics: Array<{ key: keyof ProgressStats, label: string }> = [
         { key: 'previousBalance', label: 'Previous Balance' },
         { key: 'currentApplications', label: 'Current Application' },
+        { key: 'toBeRefunded', label: 'To be refunded' },
         { key: 'totalApplications', label: 'Total Application' },
         { key: 'completed', label: 'Completed' },
-        { key: 'refunded', label: 'Refund' },
         { key: 'balance', label: 'Balance' }
     ];
 
     return (
     <>
       {diameters.map(diameter => {
-          const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] };
+          const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, toBeRefunded: 0, totalApplications: 0, completed: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], toBeRefundedData: [], totalApplicationsData: [], completedData: [], balanceData: [] };
           
           applicationTypeOptions.forEach(appType => {
               const stats = data[appType]?.[diameter];
               if (stats) {
                   diameterTotals.previousBalance += stats.previousBalance;
                   diameterTotals.currentApplications += stats.currentApplications;
+                  diameterTotals.toBeRefunded += stats.toBeRefunded;
                   diameterTotals.totalApplications += stats.totalApplications;
                   diameterTotals.completed += stats.completed;
-                  diameterTotals.refunded += stats.refunded;
                   diameterTotals.balance += stats.balance;
                   
                   diameterTotals.previousBalanceData.push(...stats.previousBalanceData);
                   diameterTotals.currentApplicationsData.push(...stats.currentApplicationsData);
+                  diameterTotals.toBeRefundedData.push(...stats.toBeRefundedData);
                   diameterTotals.totalApplicationsData.push(...stats.totalApplicationsData);
                   diameterTotals.completedData.push(...stats.completedData);
-                  diameterTotals.refundedData.push(...stats.refundedData);
                   diameterTotals.balanceData.push(...stats.balanceData);
               }
           });
@@ -216,7 +217,7 @@ export default function ProgressReportPage() {
     const sDate = startOfDay(startDate);
     const eDate = endOfDay(endDate);
 
-    const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] });
+    const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, toBeRefunded: 0, totalApplications: 0, completed: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], toBeRefundedData: [], totalApplicationsData: [], completedData: [], balanceData: [] });
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const twcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const progressSummaryData: OtherServiceProgress = {} as OtherServiceProgress;
@@ -239,6 +240,22 @@ export default function ProgressReportPage() {
 
     let totalRevenueHeadAmount = 0;
     const revenueHeadDetails: RevenueHeadDetail[] = [];
+    let uniqueCompletedSites: SiteDetailFormData[] = [];
+
+
+    fileEntries.forEach(entry => {
+        const completedSitesInEntryForPeriod = (entry.siteDetails || []).filter(site => {
+            const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
+            return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
+        });
+
+        completedSitesInEntryForPeriod.forEach(site => {
+            if (!uniqueCompletedSites.some(s => s.nameOfSite === site.nameOfSite && s.fileNo === entry.fileNo)) {
+                uniqueCompletedSites.push({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName });
+            }
+        });
+    });
+
 
     fileEntries.forEach(entry => {
       if (!entry.applicationType) return; 
@@ -281,13 +298,22 @@ export default function ProgressReportPage() {
           uniquePurposesInCompletedSites.forEach(purpose => {
               const sitesForPurpose = allCompletedSitesInEntry.filter(site => site.purpose === purpose);
               if (sitesForPurpose.length > 0 && financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
-                  targetFinancialSummary[purpose].totalCompleted += sitesForPurpose.length;
                   const siteDetailsWithContext = sitesForPurpose.map(site => ({...site, fileNo: entry.fileNo, applicantName: entry.applicantName}));
                   targetFinancialSummary[purpose].completedData.push(...siteDetailsWithContext);
                   targetFinancialSummary[purpose].totalPayment += sitesForPurpose.reduce((sum, site) => sum + (Number(site.totalExpenditure) || 0), 0);
               }
           });
       }
+      
+      const completedSitesForThisEntry = uniqueCompletedSites.filter(site => site.fileNo === entry.fileNo);
+        if (completedSitesForThisEntry.length > 0) {
+            const purposes = new Set(completedSitesForThisEntry.map(s => s.purpose).filter(Boolean) as SitePurpose[]);
+            purposes.forEach(p => {
+                if (targetFinancialSummary[p]) {
+                    targetFinancialSummary[p].totalCompleted += completedSitesForThisEntry.filter(s => s.purpose === p).length;
+                }
+            });
+        }
       
 
       entry.paymentDetails?.forEach(pd => {
@@ -322,13 +348,13 @@ export default function ProgressReportPage() {
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
         
-        const isRefundedInPeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && isCurrentApplication;
+        const isToBeRefundedInPeriod = workStatus && workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
             if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
             if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
-            if (isRefundedInPeriod) { statsObj.refunded++; statsObj.refundedData.push(siteWithFileContext); }
+            if (isToBeRefundedInPeriod) { statsObj.toBeRefunded++; statsObj.toBeRefundedData.push(siteWithFileContext); }
         };
         
         if (entry.applicationType && purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
@@ -346,12 +372,17 @@ export default function ProgressReportPage() {
     });
     
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
-      stats.totalApplications = stats.previousBalance + stats.currentApplications;
-      stats.totalApplicationsData = [ ...stats.previousBalanceData, ...stats.currentApplicationsData ];
-      stats.balance = stats.totalApplications - stats.completed - stats.refunded;
-      stats.balanceData = stats.totalApplicationsData.filter(
-          item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo) && !stats.refundedData.some(rd => rd.nameOfSite === item.nameOfSite && rd.fileNo === item.fileNo)
-      );
+        stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
+        const totalApplicationSites = [...stats.previousBalanceData, ...stats.currentApplicationsData];
+        stats.totalApplicationsData = totalApplicationSites.filter(
+            site => !stats.toBeRefundedData.some(refundedSite =>
+                refundedSite.nameOfSite === site.nameOfSite && refundedSite.fileNo === site.fileNo
+            )
+        );
+        stats.balance = stats.totalApplications - stats.completed;
+        stats.balanceData = stats.totalApplicationsData.filter(
+            item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo)
+        );
     };
     
     applicationTypeOptions.forEach(appType => {
@@ -675,9 +706,9 @@ export default function ProgressReportPage() {
                             <TableHead className="border p-2 align-middle text-center font-semibold">Service Type</TableHead>
                             <TableHead className="border p-2 text-center font-semibold">Previous Balance</TableHead>
                             <TableHead className="border p-2 text-center font-semibold">Current Application</TableHead>
+                            <TableHead className="border p-2 text-center font-semibold">To be refunded</TableHead>
                             <TableHead className="border p-2 text-center font-bold">Total Application</TableHead>
                             <TableHead className="border p-2 text-center font-semibold">Completed</TableHead>
-                            <TableHead className="border p-2 text-center font-semibold">Refunded</TableHead>
                             <TableHead className="border p-2 text-center font-bold">Balance</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -689,9 +720,9 @@ export default function ProgressReportPage() {
                                 <TableCell className="border p-2 font-medium">{purpose}</TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.previousBalance === 0} onClick={() => handleCountClick(stats.previousBalanceData, `${purpose} - Previous Balance`)}>{stats?.previousBalance || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.currentApplications === 0} onClick={() => handleCountClick(stats.currentApplicationsData, `${purpose} - Current Applications`)}>{stats?.currentApplications || 0}</Button></TableCell>
+                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.toBeRefunded === 0} onClick={() => handleCountClick(stats.toBeRefundedData, `${purpose} - To be Refunded`)}>{stats?.toBeRefunded || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.totalApplications === 0} onClick={() => handleCountClick(stats.totalApplicationsData, `${purpose} - Total Applications`)}>{stats?.totalApplications || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.completed === 0} onClick={() => handleCountClick(stats.completedData, `${purpose} - Completed`)}>{stats?.completed || 0}</Button></TableCell>
-                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.refunded === 0} onClick={() => handleCountClick(stats.refundedData, `${purpose} - Refunded`)}>{stats?.refunded || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.balance === 0} onClick={() => handleCountClick(stats.balanceData, `${purpose} - Balance`)}>{stats?.balance || 0}</Button></TableCell>
                             </TableRow>
                         )})}
@@ -777,3 +808,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
