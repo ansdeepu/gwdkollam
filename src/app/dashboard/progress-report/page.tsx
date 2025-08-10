@@ -249,26 +249,15 @@ export default function ProgressReportPage() {
       
       const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
 
-      // Calculate Remittance and Payment within the date range
-      const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
-        const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
-        if (remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
-            return sum + (Number(rd.amountRemitted) || 0);
-        }
-        return sum;
-      }, 0) || 0;
-
-      const paymentInRange = entry.paymentDetails?.reduce((sum, pd) => {
-        const payDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
-        if (payDate && isValid(payDate) && isWithinInterval(payDate, { start: sDate, end: eDate })) {
-            const total = (Number(pd.contractorsPayment) || 0) + (Number(pd.gst) || 0) + (Number(pd.incomeTax) || 0) + (Number(pd.kbcwb) || 0) + (Number(pd.refundToParty) || 0);
-            return sum + total;
-        }
-        return sum;
-      }, 0) || 0;
-      
-      // Count as "Total Application Received" ONLY if the first remittance is within the date range.
       if (isCurrentApplicationForFinancials) {
+        const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
+          const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
+          if (remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+              return sum + (Number(rd.amountRemitted) || 0);
+          }
+          return sum;
+        }, 0) || 0;
+        
         const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
         uniquePurposes.forEach(purpose => {
             if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
@@ -279,19 +268,17 @@ export default function ProgressReportPage() {
         });
       }
 
-      // Count as "Completed" ONLY if a site completion date is within the date range.
-      if (entry.siteDetails?.some(site => site && site.dateOfCompletion && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate }))) {
-        const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
-        uniquePurposes.forEach(purpose => {
-            if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
+      entry.siteDetails?.forEach(site => {
+        if (site && site.dateOfCompletion && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
+            const purpose = site.purpose;
+            if (purpose && financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
                 targetFinancialSummary[purpose].totalCompleted++;
                 targetFinancialSummary[purpose].completedData.push(entry);
-                targetFinancialSummary[purpose].totalPayment += paymentInRange;
+                targetFinancialSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
             }
-        });
-      }
-
-      // Revenue Head Calculation
+        }
+      });
+      
       entry.paymentDetails?.forEach(pd => {
           const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
           if (paymentDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
@@ -322,9 +309,7 @@ export default function ProgressReportPage() {
         
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        
-        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && 
-                                     (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
+        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
 
         const isRefunded = workStatus ? REFUNDED_STATUSES.includes(workStatus) : false;
 
@@ -343,7 +328,6 @@ export default function ProgressReportPage() {
           updateStats(twcData[entry.applicationType][diameter]);
         }
         
-        // This will update the main progress summary for ALL purposes, including BWC and TWC
         if (allServicePurposesForSummary.includes(purpose)) {
           updateStats(progressSummaryData[purpose]);
         }
@@ -448,11 +432,9 @@ export default function ProgressReportPage() {
                 { key: 'paymentInRange', label: 'Payment in Range (₹)' },
             ];
             dialogData = (data as DataEntryFormData[]).map(entry => {
-                const paymentInRange = entry.paymentDetails?.reduce((sum, pd) => {
-                    const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
-                    if (paymentDate && sDate && eDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
-                        const total = (Number(pd.contractorsPayment) || 0) + (Number(pd.gst) || 0) + (Number(pd.incomeTax) || 0) + (Number(pd.kbcwb) || 0) + (Number(pd.refundToParty) || 0);
-                        return sum + total;
+                const paymentInRange = entry.siteDetails?.reduce((sum, site) => {
+                    if (site && site.dateOfCompletion && sDate && eDate && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
+                        return sum + (Number(site.totalExpenditure) || 0);
                     }
                     return sum;
                 }, 0) || 0;
@@ -711,22 +693,12 @@ export default function ProgressReportPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="text-center font-semibold">Total Amount in Revenue Head (₹)</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell className="text-center">
-                                        <Button variant="link" className="p-0 h-auto text-lg font-bold" disabled={reportData.revenueHeadTotal === 0} onClick={handleRevenueHeadClick}>
-                                            {reportData.revenueHeadTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <div className="rounded-lg border bg-card text-card-foreground p-6 text-center">
+                            <h3 className="text-sm font-medium text-muted-foreground mb-2">Total Amount in Revenue Head (₹)</h3>
+                            <Button variant="link" className="p-0 h-auto text-3xl font-bold text-primary" disabled={reportData.revenueHeadTotal === 0} onClick={handleRevenueHeadClick}>
+                                {reportData.revenueHeadTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
