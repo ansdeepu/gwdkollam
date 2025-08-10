@@ -365,7 +365,7 @@ export default function ProgressReportPage() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entriesLoading, fileEntries]); // Only re-run when entries are loaded
+  }, [entriesLoading, fileEntries, startDate, endDate]); // Re-run when dependencies change
 
   const handleExportExcel = () => {
     toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
@@ -393,6 +393,7 @@ export default function ProgressReportPage() {
 
     if (isSiteData) {
         columns = [
+            { key: 'slNo', label: 'Sl. No.' },
             { key: 'fileNo', label: 'File No.' },
             { key: 'applicantName', label: 'Applicant Name' },
             { key: 'nameOfSite', label: 'Site Name' },
@@ -400,7 +401,8 @@ export default function ProgressReportPage() {
             { key: 'workStatus', label: 'Work Status' },
             { key: 'dateOfCompletion', label: 'Completion Date' },
         ];
-        dialogData = (data as SiteDetailFormData[]).map(site => ({
+        dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+          slNo: index + 1,
           ...site,
           dateOfCompletion: site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
         }));
@@ -410,13 +412,14 @@ export default function ProgressReportPage() {
 
         if (title.toLowerCase().includes('total application')) {
             columns = [
+                { key: 'slNo', label: 'Sl. No.' },
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
                 { key: 'siteNames', label: 'Site Name(s)' },
                 { key: 'workStatus', label: 'Work Status' },
                 { key: 'remittanceInRange', label: 'Remittance in Range (₹)' },
             ];
-            dialogData = (data as DataEntryFormData[]).map(entry => {
+            dialogData = (data as DataEntryFormData[]).map((entry, index) => {
                 const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
                     const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
                     if (remDate && sDate && eDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
@@ -425,6 +428,7 @@ export default function ProgressReportPage() {
                     return sum;
                 }, 0) || 0;
                 return {
+                    slNo: index + 1,
                     ...entry,
                     siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
                     workStatus: entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A',
@@ -433,13 +437,14 @@ export default function ProgressReportPage() {
             });
         } else if (title.toLowerCase().includes('completed')) {
             columns = [
+                { key: 'slNo', label: 'Sl. No.' },
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
                 { key: 'siteNames', label: 'Site Name(s)' },
                 { key: 'workStatus', label: 'Work Status' },
                 { key: 'paymentInRange', label: 'Payment in Range (₹)' },
             ];
-            dialogData = (data as DataEntryFormData[]).map(entry => {
+            dialogData = (data as DataEntryFormData[]).map((entry, index) => {
                 const paymentInRange = entry.siteDetails?.reduce((sum, site) => {
                     if (site && site.dateOfCompletion && sDate && eDate && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
                         return sum + (Number(site.totalExpenditure) || 0);
@@ -447,6 +452,7 @@ export default function ProgressReportPage() {
                     return sum;
                 }, 0) || 0;
                 return {
+                    slNo: index + 1,
                     ...entry,
                     siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
                     workStatus: entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A',
@@ -455,12 +461,14 @@ export default function ProgressReportPage() {
             });
         } else {
              columns = [
+                { key: 'slNo', label: 'Sl. No.' },
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
                 { key: 'siteNames', label: 'Site Name(s)' },
                 { key: 'workStatus', label: 'Work Status' },
             ];
-            dialogData = (data as DataEntryFormData[]).map(entry => ({
+            dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
+                slNo: index + 1,
                 ...entry,
                 siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
                 workStatus: entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A',
@@ -765,5 +773,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-    
