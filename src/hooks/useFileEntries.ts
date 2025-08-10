@@ -46,6 +46,7 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
     return null;
   };
 
+  if (entry.id === null) entry.id = undefined;
   entry.createdAt = toDate(entry.createdAt);
   entry.updatedAt = toDate(entry.updatedAt);
 
