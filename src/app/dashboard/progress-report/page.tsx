@@ -69,12 +69,8 @@ interface RevenueHeadDetail {
 const BWC_DIAMETERS = ['110 mm (4.5”)', '150 mm (6”)'];
 const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
 
-const OTHER_PURPOSES: SitePurpose[] = [
-  "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", 
-  "PumpingScheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"
-];
-const financialSummaryOrder: string[] = ["BWC", "TWC", ...OTHER_PURPOSES];
-const allServicePurposesForSummary: SitePurpose[] = ["BWC", "TWC", ...OTHER_PURPOSES];
+const allServicePurposesForSummary: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "PumpingScheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"];
+const financialSummaryOrder: string[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "PumpingScheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"];
 
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
@@ -739,38 +735,40 @@ export default function ProgressReportPage() {
         </div>
       )}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="p-6 pb-4 sticky top-0 bg-background border-b z-10">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] p-0 flex flex-col">
+          <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>{detailDialogTitle}</DialogTitle>
             <DialogDescription>
               Displaying {detailDialogData.length} records.
             </DialogDescription>
           </DialogHeader>
-          <div className="p-6 pt-2">
-            {detailDialogData.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {detailDialogColumns.map(col => <TableHead key={col.key}>{col.label}</TableHead>)}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detailDialogData.map((row, index) => (
-                    <TableRow key={index}>
-                      {detailDialogColumns.map(col => (
-                        <TableCell key={col.key} className="text-xs">
-                           {(row as any)[col.key] !== undefined && (row as any)[col.key] !== null ? String((row as any)[col.key]) : 'N/A'}
-                        </TableCell>
-                      ))}
+          <div className="flex-1 overflow-hidden px-6">
+            <ScrollArea className="h-full pr-4">
+              {detailDialogData.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {detailDialogColumns.map(col => <TableHead key={col.key}>{col.label}</TableHead>)}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="py-4 text-center text-muted-foreground">No details found for this selection.</p>
-            )}
+                  </TableHeader>
+                  <TableBody>
+                    {detailDialogData.map((row, index) => (
+                      <TableRow key={index}>
+                        {detailDialogColumns.map(col => (
+                          <TableCell key={col.key} className="text-xs">
+                             {(row as any)[col.key] !== undefined && (row as any)[col.key] !== null ? String((row as any)[col.key]) : 'N/A'}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="py-4 text-center text-muted-foreground">No details found for this selection.</p>
+              )}
+            </ScrollArea>
           </div>
-          <DialogFooter className="p-6 pt-4 sticky bottom-0 bg-background border-t z-10">
+          <DialogFooter className="p-6 pt-4 border-t">
             <Button variant="outline" onClick={handleExportDialogData} disabled={detailDialogData.length === 0}>
               <FileDown className="mr-2 h-4 w-4" /> Export to Excel
             </Button>
@@ -783,4 +781,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
