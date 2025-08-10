@@ -51,11 +51,21 @@ interface FinancialSummary {
   totalRemittance: number;
   totalCompleted: number;
   totalPayment: number;
+  balanceApplications: number; // New field
   // Data arrays
   applicationData: DataEntryFormData[];
   completedData: DataEntryFormData[];
+  balanceApplicationData: DataEntryFormData[]; // New field
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
+
+interface RevenueHeadDetail {
+    slNo: number;
+    applicantName: string;
+    siteNames: string;
+    fileStatus: string;
+    paymentAmount: number;
+}
 
 
 const BWC_DIAMETERS = ['110 mm (4.5”)', '150 mm (6”)'];
@@ -188,6 +198,8 @@ export default function ProgressReportPage() {
     otherServicesData: OtherServiceProgress;
     privateFinancialSummaryData: FinancialSummaryReport;
     governmentFinancialSummaryData: FinancialSummaryReport;
+    revenueHeadTotal: number;
+    revenueHeadDetails: RevenueHeadDetail[];
   } | null>(null);
 
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
@@ -220,13 +232,16 @@ export default function ProgressReportPage() {
     });
 
     // New logic for financial summary
-    const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] });
+    const initialFinancialSummary = (): FinancialSummary => ({ totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, balanceApplications: 0, applicationData: [], completedData: [], balanceApplicationData: [] });
     const privateFinancialSummary: FinancialSummaryReport = {};
     const governmentFinancialSummary: FinancialSummaryReport = {};
     financialSummaryOrder.forEach(p => {
         privateFinancialSummary[p] = initialFinancialSummary();
         governmentFinancialSummary[p] = initialFinancialSummary();
     });
+
+    let totalRevenueHeadAmount = 0;
+    const revenueHeadDetails: RevenueHeadDetail[] = [];
 
     fileEntries.forEach(entry => {
       if (!entry.applicationType) return; 
@@ -271,6 +286,24 @@ export default function ProgressReportPage() {
             }
         });
       }
+
+      // Revenue Head Calculation
+      entry.paymentDetails?.forEach(pd => {
+          const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
+          if (paymentDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
+              const revenueAmount = Number(pd.revenueHead) || 0;
+              if (revenueAmount > 0) {
+                  totalRevenueHeadAmount += revenueAmount;
+                  revenueHeadDetails.push({
+                      slNo: revenueHeadDetails.length + 1,
+                      applicantName: entry.applicantName || 'N/A',
+                      siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                      fileStatus: entry.fileStatus || 'N/A',
+                      paymentAmount: revenueAmount
+                  });
+              }
+          }
+      });
 
       (entry.siteDetails || []).forEach(site => {
         if (!site || site.additionalAS === 'No') return;
@@ -324,7 +357,7 @@ export default function ProgressReportPage() {
     });
     OTHER_PURPOSES.forEach(p => calculateBalanceAndTotal(otherServicesData[p]));
     
-    setReportData({ bwcData, twcData, otherServicesData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary });
+    setReportData({ bwcData, twcData, otherServicesData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary, revenueHeadTotal: totalRevenueHeadAmount, revenueHeadDetails: revenueHeadDetails });
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate, toast]);
   
@@ -343,11 +376,12 @@ export default function ProgressReportPage() {
     setReportData(null);
   };
 
-  const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData>, title: string) => {
+ const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData>, title: string) => {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
     
-    const isSiteData = data.some(item => 'nameOfSite' in item && !('fileNo' in item && 'applicantName' in item && 'fileStatus' in item));
+    // Check if data is site data or file entry data
+    const isSiteData = 'nameOfSite' in data[0] && !('fileStatus' in data[0]);
 
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
@@ -361,12 +395,15 @@ export default function ProgressReportPage() {
             { key: 'workStatus', label: 'Work Status' },
             { key: 'dateOfCompletion', label: 'Completion Date' },
         ];
-        dialogData = data as SiteDetailFormData[];
-    } else {
+        dialogData = (data as SiteDetailFormData[]).map(site => ({
+          ...site,
+          dateOfCompletion: site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A',
+        }));
+    } else { // It's DataEntryFormData
         const sDate = startDate ? startOfDay(startDate) : null;
         const eDate = endDate ? endOfDay(endDate) : null;
 
-        if (title.includes('Total Application')) {
+        if (title.toLowerCase().includes('total application')) {
             columns = [
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
@@ -377,8 +414,9 @@ export default function ProgressReportPage() {
             dialogData = (data as DataEntryFormData[]).map(entry => ({
                 ...entry,
                 siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                totalRemittance: (entry.totalRemittance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             }));
-        } else { // Completed applications
+        } else if (title.toLowerCase().includes('completed')) { // Completed applications
             columns = [
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
@@ -401,6 +439,17 @@ export default function ProgressReportPage() {
                     paymentInRange: paymentInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                 };
             });
+        } else { // Fallback for other clicks like "Balance"
+             columns = [
+                { key: 'fileNo', label: 'File No.' },
+                { key: 'applicantName', label: 'Applicant Name' },
+                { key: 'siteNames', label: 'Site Name(s)' },
+                { key: 'fileStatus', label: 'File Status' },
+            ];
+            dialogData = (data as DataEntryFormData[]).map(entry => ({
+                ...entry,
+                siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+            }));
         }
     }
     
@@ -438,7 +487,7 @@ export default function ProgressReportPage() {
 
     const purposesToShow = financialSummaryOrder.filter(p => summaryData[p]?.totalApplications > 0 || summaryData[p]?.totalCompleted > 0);
 
-    const total: FinancialSummary = { totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] };
+    const total: FinancialSummary = { totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, balanceApplications: 0, applicationData: [], completedData: [], balanceApplicationData: [] };
     purposesToShow.forEach(p => {
         const data = summaryData[p];
         if(data) {
@@ -450,6 +499,9 @@ export default function ProgressReportPage() {
             total.completedData.push(...data.completedData);
         }
     });
+
+    total.balanceApplications = total.totalApplications - total.totalCompleted;
+    total.balanceApplicationData = total.applicationData.filter(app => !total.completedData.some(comp => comp.fileNo === app.fileNo));
 
 
     return (
@@ -469,12 +521,15 @@ export default function ProgressReportPage() {
                 <TableHead className="border p-2 text-center font-semibold">Total Remittance (₹)</TableHead>
                 <TableHead className="border p-2 text-center font-semibold">No. of Application Completed</TableHead>
                 <TableHead className="border p-2 text-center font-semibold">Total Payment (₹)</TableHead>
+                <TableHead className="border p-2 text-center font-semibold">Balance No. of Application</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {purposesToShow.map(purpose => {
                 const data = summaryData[purpose];
                 if (!data) return null;
+                const balanceCount = data.totalApplications - data.totalCompleted;
+                const balanceData = data.applicationData.filter(app => !data.completedData.some(comp => comp.fileNo === app.fileNo));
                 return (
                   <TableRow key={purpose}>
                     <TableCell className="border p-2 font-medium">{purpose}</TableCell>
@@ -490,6 +545,11 @@ export default function ProgressReportPage() {
                       </Button>
                     </TableCell>
                     <TableCell className="border p-2 text-right">{data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-center">
+                      <Button variant="link" className="p-0 h-auto" disabled={balanceCount === 0} onClick={() => handleCountClick(balanceData, `Balance Applications - ${purpose}`)}>
+                        {balanceCount}
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 )
               })}
@@ -509,6 +569,11 @@ export default function ProgressReportPage() {
                         </Button>
                     </TableCell>
                     <TableCell className="border p-2 text-right">{total.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-center">
+                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.balanceApplications === 0} onClick={() => handleCountClick(total.balanceApplicationData, `Total Balance Applications for ${title}`)}>
+                            {total.balanceApplications}
+                        </Button>
+                    </TableCell>
                 </TableRow>
             </TableFooter>
           </Table>
@@ -517,6 +582,19 @@ export default function ProgressReportPage() {
     );
   };
   
+    const handleRevenueHeadClick = () => {
+        if (!reportData || reportData.revenueHeadDetails.length === 0) return;
+        setDetailDialogTitle("Revenue Head Details");
+        setDetailDialogColumns([
+            { key: 'slNo', label: 'Sl. No' },
+            { key: 'applicantName', label: 'Name of Applicant' },
+            { key: 'siteNames', label: 'Name of Site' },
+            { key: 'fileStatus', label: 'File Status' },
+            { key: 'paymentAmount', label: 'Payments (₹)' }
+        ]);
+        setDetailDialogData(reportData.revenueHeadDetails.map(d => ({...d, paymentAmount: d.paymentAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })));
+        setIsDetailDialogOpen(true);
+    };
   
   if (entriesLoading) {
     return (
@@ -618,6 +696,33 @@ export default function ProgressReportPage() {
             <div className="space-y-6">
                 <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
                 <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
+                
+                <Card className="shadow-lg">
+                    <CardHeader>
+                        <CardTitle>Revenue Head Summary</CardTitle>
+                        <CardDescription>
+                            Total amount credited to the Revenue Head within the selected period.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="text-center font-semibold">Total Amount in Revenue Head (₹)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className="text-center">
+                                        <Button variant="link" className="p-0 h-auto text-lg font-bold" disabled={reportData.revenueHeadTotal === 0} onClick={handleRevenueHeadClick}>
+                                            {reportData.revenueHeadTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
             </div>
         </div>
       ) : (
