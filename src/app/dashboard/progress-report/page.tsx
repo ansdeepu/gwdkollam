@@ -269,25 +269,26 @@ export default function ProgressReportPage() {
             }
         });
       }
-
-      // Collect all completed sites for this entry within the date range first.
-      const completedSitesThisEntry = entry.siteDetails?.filter(site => 
-          site && 
-          site.dateOfCompletion && 
-          isValid(new Date(site.dateOfCompletion)) && 
-          isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })
-      ) || [];
       
-      if (completedSitesThisEntry.length > 0) {
-        completedSitesThisEntry.forEach(site => {
-          const purpose = site.purpose;
-          if (purpose && financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
-              targetFinancialSummary[purpose].totalCompleted++;
-              targetFinancialSummary[purpose].completedData.push({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName });
-              targetFinancialSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
-          }
-        });
+      const allCompletedSitesInEntry = (entry.siteDetails || []).filter(site => {
+        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
+        return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
+      });
+
+      if (allCompletedSitesInEntry.length > 0) {
+          const uniquePurposesInCompletedSites = new Set(allCompletedSitesInEntry.map(site => site.purpose).filter(Boolean) as SitePurpose[]);
+          
+          uniquePurposesInCompletedSites.forEach(purpose => {
+              const sitesForPurpose = allCompletedSitesInEntry.filter(site => site.purpose === purpose);
+              if (sitesForPurpose.length > 0 && financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
+                  targetFinancialSummary[purpose].totalCompleted += sitesForPurpose.length;
+                  const siteDetailsWithContext = sitesForPurpose.map(site => ({...site, fileNo: entry.fileNo, applicantName: entry.applicantName}));
+                  targetFinancialSummary[purpose].completedData.push(...siteDetailsWithContext);
+                  targetFinancialSummary[purpose].totalPayment += sitesForPurpose.reduce((sum, site) => sum + (Number(site.totalExpenditure) || 0), 0);
+              }
+          });
       }
+      
 
       entry.paymentDetails?.forEach(pd => {
           const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
@@ -776,4 +777,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
