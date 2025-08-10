@@ -105,78 +105,80 @@ const WellTypeProgressTable = ({
     ];
 
     return (
-    <Card className="shadow-lg">
-      <CardContent className="overflow-x-auto space-y-6 pt-6">
-        {diameters.map(diameter => {
-            const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] };
-            
-            applicationTypeOptions.forEach(appType => {
-                const stats = data[appType]?.[diameter];
-                if (stats) {
-                    diameterTotals.previousBalance += stats.previousBalance;
-                    diameterTotals.currentApplications += stats.currentApplications;
-                    diameterTotals.totalApplications += stats.totalApplications;
-                    diameterTotals.completed += stats.completed;
-                    diameterTotals.refunded += stats.refunded;
-                    diameterTotals.balance += stats.balance;
-                    
-                    diameterTotals.previousBalanceData.push(...stats.previousBalanceData);
-                    diameterTotals.currentApplicationsData.push(...stats.currentApplicationsData);
-                    diameterTotals.totalApplicationsData.push(...stats.totalApplicationsData);
-                    diameterTotals.completedData.push(...stats.completedData);
-                    diameterTotals.refundedData.push(...stats.refundedData);
-                    diameterTotals.balanceData.push(...stats.balanceData);
-                }
-            });
+    <>
+      {diameters.map(diameter => {
+          const diameterTotals: ProgressStats = { previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] };
+          
+          applicationTypeOptions.forEach(appType => {
+              const stats = data[appType]?.[diameter];
+              if (stats) {
+                  diameterTotals.previousBalance += stats.previousBalance;
+                  diameterTotals.currentApplications += stats.currentApplications;
+                  diameterTotals.totalApplications += stats.totalApplications;
+                  diameterTotals.completed += stats.completed;
+                  diameterTotals.refunded += stats.refunded;
+                  diameterTotals.balance += stats.balance;
+                  
+                  diameterTotals.previousBalanceData.push(...stats.previousBalanceData);
+                  diameterTotals.currentApplicationsData.push(...stats.currentApplicationsData);
+                  diameterTotals.totalApplicationsData.push(...stats.totalApplicationsData);
+                  diameterTotals.completedData.push(...stats.completedData);
+                  diameterTotals.refundedData.push(...stats.refundedData);
+                  diameterTotals.balanceData.push(...stats.balanceData);
+              }
+          });
 
-            return (
-            <div key={diameter}>
-                <h4 className="font-semibold text-lg mb-2 text-primary">{title} - {diameter}</h4>
-                <Table className="min-w-full border-collapse">
-                <TableHeader>
-                    <TableRow>
-                    <TableHead className="border p-2 align-middle text-left min-w-[200px] font-semibold">Type of Application</TableHead>
-                    {metrics.map(metric => (
-                        <TableHead key={metric.key} className="border p-2 text-center font-semibold min-w-[100px] whitespace-normal break-words">{metric.label}</TableHead>
-                    ))}
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {applicationTypeOptions.map(appType => (
-                        <TableRow key={appType}>
-                            <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
-                            {metrics.map(metric => {
-                              const count = data[appType]?.[diameter]?.[metric.key] as number ?? 0;
-                              const metricData = data[appType]?.[diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[] ?? [];
-                              return (
-                                <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", (metric.key === 'balance' || metric.key === 'totalApplications') && "font-bold")}>
-                                    <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
-                                      {count}
-                                    </Button>
-                                </TableCell>
-                              )
-                            })}
-                        </TableRow>
-                    ))}
-                </TableBody>
-                <TableFooter>
-                    <TableRow className="bg-muted/50">
-                        <TableCell className="border p-2 text-left font-bold">Total</TableCell>
-                        {metrics.map(metric => (
-                           <TableCell key={`total-${metric.key}`} className={cn("border p-2 text-center font-bold")}>
-                               <Button variant="link" className="p-0 h-auto font-bold" disabled={diameterTotals[metric.key] === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[], `Total for ${diameter} - ${metric.label}`)}>
-                                    {diameterTotals[metric.key]}
-                               </Button>
-                           </TableCell>
-                        ))}
-                    </TableRow>
-                </TableFooter>
-                </Table>
-            </div>
-            )
-        })}
-      </CardContent>
-    </Card>
+          return (
+          <Card key={diameter} className="shadow-lg">
+            <CardHeader>
+              <CardTitle>{title} - {diameter}</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table className="min-w-full border-collapse">
+              <TableHeader>
+                  <TableRow>
+                  <TableHead className="border p-2 align-middle text-left min-w-[200px] font-semibold">Type of Application</TableHead>
+                  {metrics.map(metric => (
+                      <TableHead key={metric.key} className="border p-2 text-center font-semibold min-w-[100px] whitespace-normal break-words">{metric.label}</TableHead>
+                  ))}
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {applicationTypeOptions.map(appType => (
+                      <TableRow key={appType}>
+                          <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
+                          {metrics.map(metric => {
+                            const count = data[appType]?.[diameter]?.[metric.key] as number ?? 0;
+                            const metricData = data[appType]?.[diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[] ?? [];
+                            return (
+                              <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", (metric.key === 'balance' || metric.key === 'totalApplications') && "font-bold")}>
+                                  <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
+                                    {count}
+                                  </Button>
+                              </TableCell>
+                            )
+                          })}
+                      </TableRow>
+                  ))}
+              </TableBody>
+              <TableFooter>
+                  <TableRow className="bg-muted/50">
+                      <TableCell className="border p-2 text-left font-bold">Total</TableCell>
+                      {metrics.map(metric => (
+                         <TableCell key={`total-${metric.key}`} className={cn("border p-2 text-center font-bold")}>
+                             <Button variant="link" className="p-0 h-auto font-bold" disabled={diameterTotals[metric.key] === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[], `Total for ${diameter} - ${metric.label}`)}>
+                                  {diameterTotals[metric.key]}
+                             </Button>
+                         </TableCell>
+                      ))}
+                  </TableRow>
+              </TableFooter>
+              </Table>
+            </CardContent>
+          </Card>
+          )
+      })}
+    </>
   );
 };
 
@@ -650,9 +652,6 @@ export default function ProgressReportPage() {
         </div>
       ) : reportData ? (
         <div className="space-y-8">
-            <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={BWC_DIAMETERS} onCountClick={handleCountClick} />
-            <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={TWC_DIAMETERS} onCountClick={handleCountClick} />
-
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle>Progress Summary</CardTitle>
@@ -689,27 +688,30 @@ export default function ProgressReportPage() {
                 </CardContent>
             </Card>
 
-            <div className="space-y-6">
-                <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
-                <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
-                
-                <Card className="shadow-lg">
-                    <CardHeader>
-                        <CardTitle>Revenue Head Summary</CardTitle>
-                        <CardDescription>
-                            Total amount credited to the Revenue Head within the selected period.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="rounded-lg border bg-card text-card-foreground p-6 text-center">
-                            <h3 className="text-sm font-medium text-muted-foreground mb-2">Total Amount in Revenue Head (₹)</h3>
-                            <Button variant="link" className="p-0 h-auto text-3xl font-bold text-primary" disabled={reportData.revenueHeadTotal === 0} onClick={handleRevenueHeadClick}>
-                                {reportData.revenueHeadTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
+            <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
+            
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle>Revenue Head Summary</CardTitle>
+                    <CardDescription>
+                        Total amount credited to the Revenue Head within the selected period.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="rounded-lg border bg-card text-card-foreground p-6 text-center">
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Total Amount in Revenue Head (₹)</h3>
+                        <Button variant="link" className="p-0 h-auto text-3xl font-bold text-primary" disabled={reportData.revenueHeadTotal === 0} onClick={handleRevenueHeadClick}>
+                            {reportData.revenueHeadTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['110 mm (4.5”)']} onCountClick={handleCountClick} />
+            <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
+            <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
+            <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['200 mm (8”)']} onCountClick={handleCountClick} />
         </div>
       ) : (
         <div className="flex items-center justify-center py-10 border-2 border-dashed rounded-lg">
@@ -764,3 +766,4 @@ export default function ProgressReportPage() {
   );
 }
 
+    
