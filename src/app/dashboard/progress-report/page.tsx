@@ -331,13 +331,16 @@ export default function ProgressReportPage() {
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
         
-        const isToBeRefundedInPeriod = workStatus && workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-
+        const isToBeRefunded = workStatus && workStatus === 'To be Refunded';
+        
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
             if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
             if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
-            if (isToBeRefundedInPeriod) { statsObj.toBeRefunded++; statsObj.toBeRefundedData.push(siteWithFileContext); }
+            if (isToBeRefunded && (isCurrentApplication || wasActiveBeforePeriod)) { 
+                statsObj.toBeRefunded++; 
+                statsObj.toBeRefundedData.push(siteWithFileContext); 
+            }
         };
         
         if (entry.applicationType && purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
