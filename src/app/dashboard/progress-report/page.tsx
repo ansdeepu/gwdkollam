@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import {
   applicationTypeOptions,
   applicationTypeDisplayMap,
+  sitePurposeOptions,
   type ApplicationType,
   type SitePurpose,
   type DataEntryFormData,
@@ -71,8 +72,8 @@ interface RevenueHeadDetail {
 const BWC_DIAMETERS = ['110 mm (4.5”)', '150 mm (6”)'];
 const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
 
-const allServicePurposesForSummary: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "PumpingScheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"];
-const financialSummaryOrder: string[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "PumpingScheme", "MWSS Pump Reno", "HPS", "HPR", "ARS"];
+const allServicePurposesForSummary: SitePurpose[] = Array.from(sitePurposeOptions);
+const financialSummaryOrder: string[] = Array.from(sitePurposeOptions);
 
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
@@ -517,7 +518,8 @@ export default function ProgressReportPage() {
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Details");
-    XLSX.writeFile(workbook, `Report_Details_${detailDialogTitle.replace(/ /g, '_')}.xlsx`);
+    const safeTitle = detailDialogTitle.replace(/[\/\\?*%[\]:]/g, '-').substring(0, 30);
+    XLSX.writeFile(workbook, `Report_Details_${safeTitle}.xlsx`);
     toast({ title: "Exported!", description: "The detailed list has been exported to Excel." });
   };
   
@@ -789,3 +791,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
