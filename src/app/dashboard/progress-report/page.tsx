@@ -53,7 +53,7 @@ interface FinancialSummary {
   totalCompleted: number;
   totalPayment: number;
   // Data arrays
-  applicationData: DataEntryFormData[];
+  applicationData: SiteDetailFormData[];
   completedData: SiteDetailFormData[];
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
@@ -240,21 +240,21 @@ export default function ProgressReportPage() {
 
     let totalRevenueHeadAmount = 0;
     const revenueHeadDetails: RevenueHeadDetail[] = [];
-    let uniqueCompletedSites: SiteDetailFormData[] = [];
-
-
+    
+    // Create a definitive list of unique sites completed in the period.
+    const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
     fileEntries.forEach(entry => {
-        const completedSitesInEntryForPeriod = (entry.siteDetails || []).filter(site => {
+        (entry.siteDetails || []).forEach(site => {
             const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
-            return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
-        });
-
-        completedSitesInEntryForPeriod.forEach(site => {
-            if (!uniqueCompletedSites.some(s => s.nameOfSite === site.nameOfSite && s.fileNo === entry.fileNo)) {
-                uniqueCompletedSites.push({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName });
+            if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
+                const siteKey = `${entry.fileNo}-${site.nameOfSite}`;
+                if (!uniqueCompletedSites.has(siteKey)) {
+                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName });
+                }
             }
         });
     });
+    const allCompletedSitesInPeriod = Array.from(uniqueCompletedSites.values());
 
 
     fileEntries.forEach(entry => {
@@ -266,9 +266,9 @@ export default function ProgressReportPage() {
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
       const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
       
-      const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+      const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName }));
 
-      if (isCurrentApplicationForFinancials) {
+      if (firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
         const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
           const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
           if (remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
@@ -277,45 +277,28 @@ export default function ProgressReportPage() {
           return sum;
         }, 0) || 0;
         
-        const uniquePurposes = new Set(entry.siteDetails?.map(s => s?.purpose).filter(Boolean) as SitePurpose[]);
-        uniquePurposes.forEach(purpose => {
+        sitesInEntry.forEach(site => {
+            const purpose = site.purpose as SitePurpose;
             if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
                 targetFinancialSummary[purpose].totalApplications++;
-                targetFinancialSummary[purpose].applicationData.push(entry);
-                targetFinancialSummary[purpose].totalRemittance += remittanceInRange;
+                targetFinancialSummary[purpose].applicationData.push(site);
+                targetFinancialSummary[purpose].totalRemittance += remittanceInRange / (sitesInEntry.length || 1); // Distribute remittance
             }
         });
       }
       
-      const allCompletedSitesInEntry = (entry.siteDetails || []).filter(site => {
-        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
-        return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
-      });
-
-      if (allCompletedSitesInEntry.length > 0) {
-          const uniquePurposesInCompletedSites = new Set(allCompletedSitesInEntry.map(site => site.purpose).filter(Boolean) as SitePurpose[]);
-          
-          uniquePurposesInCompletedSites.forEach(purpose => {
-              const sitesForPurpose = allCompletedSitesInEntry.filter(site => site.purpose === purpose);
-              if (sitesForPurpose.length > 0 && financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
-                  const siteDetailsWithContext = sitesForPurpose.map(site => ({...site, fileNo: entry.fileNo, applicantName: entry.applicantName}));
-                  targetFinancialSummary[purpose].completedData.push(...siteDetailsWithContext);
-                  targetFinancialSummary[purpose].totalPayment += sitesForPurpose.reduce((sum, site) => sum + (Number(site.totalExpenditure) || 0), 0);
+      const completedSitesInThisEntry = allCompletedSitesInPeriod.filter(cs => cs.fileNo === entry.fileNo);
+      if (completedSitesInThisEntry.length > 0) {
+          completedSitesInThisEntry.forEach(site => {
+              const purpose = site.purpose as SitePurpose;
+              if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
+                  targetFinancialSummary[purpose].completedData.push(site);
+                  targetFinancialSummary[purpose].totalCompleted++;
+                  targetFinancialSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
               }
           });
       }
       
-      const completedSitesForThisEntry = uniqueCompletedSites.filter(site => site.fileNo === entry.fileNo);
-        if (completedSitesForThisEntry.length > 0) {
-            const purposes = new Set(completedSitesForThisEntry.map(s => s.purpose).filter(Boolean) as SitePurpose[]);
-            purposes.forEach(p => {
-                if (targetFinancialSummary[p]) {
-                    targetFinancialSummary[p].totalCompleted += completedSitesForThisEntry.filter(s => s.purpose === p).length;
-                }
-            });
-        }
-      
-
       entry.paymentDetails?.forEach(pd => {
           const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
           if (paymentDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
@@ -334,7 +317,7 @@ export default function ProgressReportPage() {
       });
 
       (entry.siteDetails || []).forEach(site => {
-        if (!site || site.additionalAS === 'No') return;
+        if (!site) return;
         
         const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName };
         const purpose = site.purpose as SitePurpose;
@@ -426,7 +409,7 @@ export default function ProgressReportPage() {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
     
-    const isSiteData = data.length > 0 && 'nameOfSite' in data[0] && !('fileStatus' in data[0]);
+    const isSiteData = data.length > 0 && 'nameOfSite' in data[0];
 
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
@@ -808,4 +791,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
