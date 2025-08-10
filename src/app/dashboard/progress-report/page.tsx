@@ -2,14 +2,14 @@
 // src/app/dashboard/progress-report/page.tsx
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -187,9 +187,9 @@ const WellTypeProgressTable = ({
 
 export default function ProgressReportPage() {
   const { fileEntries, isLoading: entriesLoading } = useFileEntries();
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [isFiltering, setIsFiltering] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
+  const [isFiltering, setIsFiltering] = useState(true);
   const { toast } = useToast();
 
   const [reportData, setReportData] = useState<{
@@ -260,7 +260,7 @@ export default function ProgressReportPage() {
                 return isValid(completionDate) && isBefore(completionDate, sDate);
             });
       
-      const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && firstRemittanceDate >= sDate && firstRemittanceDate <= eDate;
+      const isCurrentApplicationForFinancials = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
 
       // Calculate Remittance and Payment within the date range
       const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
@@ -378,6 +378,13 @@ export default function ProgressReportPage() {
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate, toast]);
   
+  useEffect(() => {
+    if (!entriesLoading) {
+      handleGenerateReport();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entriesLoading]);
+
   const handleExportExcel = () => {
     toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
   };
