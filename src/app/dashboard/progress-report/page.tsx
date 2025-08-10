@@ -440,25 +440,31 @@ export default function ProgressReportPage() {
                 { key: 'slNo', label: 'Sl. No.' },
                 { key: 'fileNo', label: 'File No.' },
                 { key: 'applicantName', label: 'Applicant Name' },
-                { key: 'siteNames', label: 'Site Name(s)' },
+                { key: 'siteName', label: 'Site Name' },
+                { key: 'purpose', label: 'Purpose' },
                 { key: 'workStatus', label: 'Work Status' },
-                { key: 'paymentInRange', label: 'Payment in Range (₹)' },
+                { key: 'completionDate', label: 'Completion Date' },
+                { key: 'expenditure', label: 'Expenditure (₹)' },
             ];
-            dialogData = (data as DataEntryFormData[]).map((entry, index) => {
-                const paymentInRange = entry.siteDetails?.reduce((sum, site) => {
-                    if (site && site.dateOfCompletion && sDate && eDate && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
-                        return sum + (Number(site.totalExpenditure) || 0);
-                    }
-                    return sum;
-                }, 0) || 0;
-                return {
-                    slNo: index + 1,
-                    ...entry,
-                    siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
-                    workStatus: entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A',
-                    paymentInRange: paymentInRange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                };
+            
+            const completedSites: Array<Record<string, any>> = [];
+            (data as DataEntryFormData[]).forEach(entry => {
+              entry.siteDetails?.forEach(site => {
+                if (site.dateOfCompletion && sDate && eDate && isValid(new Date(site.dateOfCompletion)) && isWithinInterval(new Date(site.dateOfCompletion), { start: sDate, end: eDate })) {
+                  completedSites.push({
+                    slNo: completedSites.length + 1,
+                    fileNo: entry.fileNo || 'N/A',
+                    applicantName: entry.applicantName || 'N/A',
+                    siteName: site.nameOfSite || 'N/A',
+                    purpose: site.purpose || 'N/A',
+                    workStatus: site.workStatus || 'N/A',
+                    completionDate: format(new Date(site.dateOfCompletion), 'dd/MM/yyyy'),
+                    expenditure: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  });
+                }
+              });
             });
+            dialogData = completedSites;
         } else {
              columns = [
                 { key: 'slNo', label: 'Sl. No.' },
