@@ -1,0 +1,81 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 🔐 Helper: check if user is an authenticated, approved editor
+    function isApprovedEditor() {
+      let userId = request.auth.uid;
+      return request.auth != null &&
+             userId != null &&
+             get(/databases/$(database)/documents/users/$(userId)).data.role == 'editor' &&
+             get(/databases/$(database)/documents/users/$(userId)).data.isApproved == true;
+    }
+
+    // 🔐 Helper: check if user is an authenticated, approved supervisor
+    function isApprovedSupervisor() {
+      let userId = request.auth.uid;
+      return request.auth != null &&
+             userId != null &&
+             get(/databases/$(database)/documents/users/$(userId)).data.role == 'supervisor' &&
+             get(/databases/$(database)/documents/users/$(userId)).data.isApproved == true;
+    }
+    
+    // 🔐 Helper: check if user is an authenticated, approved user (any role)
+    function isApprovedUser() {
+      let userId = request.auth.uid;
+      return request.auth != null &&
+             userId != null &&
+             get(/databases/$(database)/documents/users/$(userId)).data.isApproved == true;
+    }
+
+    // 👤 Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null && (
+                    request.auth.uid == userId ||
+                    isApprovedEditor()
+                  );
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+                      (request.auth.uid == userId &&
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.isApproved == resource.data.isApproved) ||
+                      isApprovedEditor()
+                    );
+      allow delete: if isApprovedEditor() &&
+                       resource.data.email != "gwdklm@gmail.com" &&
+                       request.auth.uid != userId;
+    }
+
+    // 👥 staffMembers collection
+    match /staffMembers/{staffId} {
+      allow read: if isApprovedUser();
+      allow create, update, delete: if isApprovedEditor();
+    }
+
+    // 📁 fileEntries collection
+    match /fileEntries/{entryId} {
+      allow read: if isApprovedUser();
+      allow create, delete: if isApprovedEditor();
+      // Allow editors to update any field.
+      // Supervisors can now update files they are assigned to directly.
+      allow update: if isApprovedEditor() || 
+                     (isApprovedSupervisor() && request.auth.uid in resource.data.assignedSupervisorUids);
+    }
+
+    // 💵 gwdRates collection
+    match /gwdRates/{rateId} {
+      allow read: if isApprovedUser();
+      allow create, update, delete: if isApprovedEditor();
+    }
+
+    // ⏳ pendingUpdates collection - NOTE: This workflow is now bypassed by supervisors.
+    match /pendingUpdates/{updateId} {
+      allow read: if isApprovedEditor();
+      allow create: if isApprovedSupervisor();
+      allow update: if isApprovedEditor() && request.resource.data.status != resource.data.status;
+      allow delete: if isApprovedEditor();
+    }
+  }
+}
