@@ -223,7 +223,7 @@ export const SiteDetailSchema = z.object({
   additionalAS: z.enum(['Yes', 'No']).optional().nullable().default('No'),
   tenderNo: z.string().optional(),
   diameter: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteDiameterOptions).optional()),
-  pilotDrillingDepth: z.string().optional(),
+  pilotDrillingDepth: z.string().optional().nullable().default(""),
   totalDepth: optionalNumber("Total Depth must be a valid number."),
   casingPipeUsed: z.string().optional(),
   outerCasingPipe: z.string().optional(),
