@@ -191,7 +191,7 @@ export default function ProgressReportPage() {
   const [reportData, setReportData] = useState<{
     bwcData: ApplicationTypeProgress;
     twcData: ApplicationTypeProgress;
-    otherServicesData: OtherServiceProgress;
+    progressSummaryData: OtherServiceProgress;
     privateFinancialSummaryData: FinancialSummaryReport;
     governmentFinancialSummaryData: FinancialSummaryReport;
     revenueHeadTotal: number;
@@ -217,8 +217,8 @@ export default function ProgressReportPage() {
     const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, totalApplications: 0, completed: 0, refunded: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], totalApplicationsData: [], completedData: [], refundedData: [], balanceData: [] });
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const twcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
-    const otherServicesData: OtherServiceProgress = {} as OtherServiceProgress;
-    allServicePurposesForSummary.forEach(p => { otherServicesData[p] = initialStats(); });
+    const progressSummaryData: OtherServiceProgress = {} as OtherServiceProgress;
+    allServicePurposesForSummary.forEach(p => { progressSummaryData[p] = initialStats(); });
     
     applicationTypeOptions.forEach(appType => {
       bwcData[appType] = {};
@@ -342,8 +342,11 @@ export default function ProgressReportPage() {
         } else if (entry.applicationType && purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
           if (!twcData[entry.applicationType]?.[diameter]) return;
           updateStats(twcData[entry.applicationType][diameter]);
-        } else if (allServicePurposesForSummary.includes(purpose)) {
-          updateStats(otherServicesData[purpose]);
+        }
+        
+        // This will update the main progress summary for ALL purposes, including BWC and TWC
+        if (allServicePurposesForSummary.includes(purpose)) {
+          updateStats(progressSummaryData[purpose]);
         }
       });
     });
@@ -361,9 +364,9 @@ export default function ProgressReportPage() {
       BWC_DIAMETERS.forEach(d => { if(bwcData[appType]?.[d]) calculateBalanceAndTotal(bwcData[appType][d]) });
       TWC_DIAMETERS.forEach(d => { if(twcData[appType]?.[d]) calculateBalanceAndTotal(twcData[appType][d]) });
     });
-    allServicePurposesForSummary.forEach(p => calculateBalanceAndTotal(otherServicesData[p]));
+    allServicePurposesForSummary.forEach(p => calculateBalanceAndTotal(progressSummaryData[p]));
     
-    setReportData({ bwcData, twcData, otherServicesData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary, revenueHeadTotal: totalRevenueHeadAmount, revenueHeadDetails: revenueHeadDetails });
+    setReportData({ bwcData, twcData, progressSummaryData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary, revenueHeadTotal: totalRevenueHeadAmount, revenueHeadDetails: revenueHeadDetails });
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate, toast]);
   
@@ -680,7 +683,7 @@ export default function ProgressReportPage() {
                     </TableHeader>
                     <TableBody>
                         {allServicePurposesForSummary.map(purpose => {
-                           const stats = reportData.otherServicesData[purpose];
+                           const stats = reportData.progressSummaryData[purpose];
                            return (
                             <TableRow key={purpose}>
                                 <TableCell className="border p-2 font-medium">{purpose}</TableCell>
@@ -742,7 +745,7 @@ export default function ProgressReportPage() {
               Displaying {detailDialogData.length} records.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto px-6">
+          <div className="flex-1 overflow-hidden px-6">
             <ScrollArea className="h-full pr-4">
               {detailDialogData.length > 0 ? (
                 <Table>
@@ -781,3 +784,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
