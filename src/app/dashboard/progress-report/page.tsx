@@ -183,8 +183,8 @@ const WellTypeProgressTable = ({
 
 export default function ProgressReportPage() {
   const { fileEntries, isLoading: entriesLoading } = useFileEntries();
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
   const [isFiltering, setIsFiltering] = useState(true);
   const { toast } = useToast();
 
@@ -354,14 +354,16 @@ export default function ProgressReportPage() {
   }, [fileEntries, startDate, endDate, toast]);
   
   useEffect(() => {
-    // This will run once on initial load if entries are available, but not generate a report.
-    // The user must now click "Generate Report" to see data.
-    if (!entriesLoading && (!startDate || !endDate)) {
-      setIsFiltering(false); // Ensure loader is off if no dates are set
-      setReportData(null); // Clear any previous report data
+    if (!entriesLoading) {
+      if (startDate && endDate) {
+        handleGenerateReport();
+      } else {
+        setIsFiltering(false);
+        setReportData(null);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entriesLoading]);
+  }, [entriesLoading, fileEntries]); // Only re-run when entries are loaded
 
   const handleExportExcel = () => {
     toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
@@ -761,3 +763,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
