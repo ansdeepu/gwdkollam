@@ -12,22 +12,8 @@ import type { SiteWorkStatus } from '@/lib/schemas';
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { fileEntries: rawFileEntries } = useFileEntries();
+  const { fileEntries } = useFileEntries();
   const { user } = useAuth();
-
-  const fileEntries = useMemo(() => {
-    if (user?.role !== 'supervisor') {
-      return rawFileEntries;
-    }
-    const supervisorVisibleStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-    return rawFileEntries.filter(entry => 
-      entry.siteDetails?.some(site => 
-        site.supervisorUid === user.uid &&
-        site.workStatus &&
-        supervisorVisibleStatuses.includes(site.workStatus as SiteWorkStatus)
-      )
-    );
-  }, [rawFileEntries, user]);
 
   return (
     <div className="space-y-6">

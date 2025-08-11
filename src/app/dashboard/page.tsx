@@ -134,7 +134,7 @@ const getColorClass = (nameOrEmail: string): string => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries: rawFileEntries, isLoading: entriesLoading } = useFileEntries();
+  const { fileEntries, isLoading: entriesLoading } = useFileEntries();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers(); 
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
@@ -171,20 +171,6 @@ export default function DashboardPage() {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   };
-
-  const fileEntries = useMemo(() => {
-    if (currentUser?.role !== 'supervisor') {
-      return rawFileEntries;
-    }
-    const supervisorVisibleStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-    return rawFileEntries.filter(entry => 
-      entry.siteDetails?.some(site => 
-        site.supervisorUid === currentUser.uid &&
-        site.workStatus &&
-        supervisorVisibleStatuses.includes(site.workStatus as SiteWorkStatus)
-      )
-    );
-  }, [rawFileEntries, currentUser]);
 
   const calculateFinanceData = useCallback(() => {
     if (entriesLoading) return;
