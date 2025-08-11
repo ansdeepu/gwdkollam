@@ -168,19 +168,15 @@ export default function DashboardPage() {
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
 
   const fileEntries = useMemo(() => {
-    if (currentUser?.role === 'supervisor') {
-      const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
-      return rawFileEntries
-        .map(entry => {
-          if (!entry.siteDetails || !currentUser.uid) {
-            return { ...entry, siteDetails: [] };
-          }
-          const activeAssignedSites = entry.siteDetails.filter(
-            site => site.supervisorUid === currentUser.uid && site.workStatus && !inactiveStatuses.includes(site.workStatus)
-          );
-          return { ...entry, siteDetails: activeAssignedSites };
-        })
-        .filter(entry => entry.siteDetails.length > 0);
+    if (currentUser?.role === 'supervisor' && currentUser.uid) {
+        const finalWorkStatuses: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+        return rawFileEntries.filter(entry => 
+            entry.siteDetails?.some(site => 
+                site.supervisorUid === currentUser.uid && 
+                site.workStatus && 
+                !finalWorkStatuses.includes(site.workStatus)
+            )
+        );
     }
     return rawFileEntries;
   }, [rawFileEntries, currentUser]);
@@ -1686,3 +1682,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
