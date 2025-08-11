@@ -149,29 +149,43 @@ export default function DataEntryPage() {
             });
           }
           
-          // ** NEW: Filter site details if the user is a supervisor **
           if (finalEntryData && user.role === 'supervisor' && user.uid) {
-              const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-              const assignedSites = finalEntryData.siteDetails?.filter(
-                  site => site.supervisorUid === user.uid && site.workStatus && !inactiveStatuses.includes(site.workStatus)
-              );
-              
-              const originalAssignedSites = finalEntryData.siteDetails?.filter(
-                  site => site.supervisorUid === user.uid
-              );
+            const originalAssignedSites = finalEntryData.siteDetails?.filter(
+                site => site.supervisorUid === user.uid
+            );
+            setOriginalSupervisorSites(JSON.stringify(originalAssignedSites || []));
 
-              setOriginalSupervisorSites(JSON.stringify(originalAssignedSites || []));
+            // A supervisor should see ALL sites assigned to them...
+            const allSupervisorSites = finalEntryData.siteDetails?.filter(
+              site => site.supervisorUid === user.uid
+            );
 
-              if (!assignedSites || assignedSites.length === 0) {
-                  finalEntryData = null; 
-                  toast({
-                      title: "No Active Sites",
-                      description: "You do not have any active sites assigned to you in this file.",
-                      variant: "default"
-                  });
-              } else {
-                  finalEntryData = { ...finalEntryData, siteDetails: assignedSites };
-              }
+            // ... but if all their sites are inactive, show a toast.
+            const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+            const hasActiveSites = allSupervisorSites?.some(
+              site => site.workStatus && !inactiveStatuses.includes(site.workStatus)
+            );
+
+            if (allSupervisorSites && allSupervisorSites.length > 0 && !hasActiveSites) {
+              toast({
+                  title: "No Active Sites",
+                  description: "All your assigned sites in this file are completed or inactive. Viewing in read-only mode.",
+                  variant: "default"
+              });
+            }
+
+            if (!allSupervisorSites || allSupervisorSites.length === 0) {
+              // This case handles if a supervisor tries to access a file they are not assigned to at all.
+              finalEntryData = null; 
+              toast({
+                  title: "Access Restricted",
+                  description: "You are not assigned to any sites in this file.",
+                  variant: "destructive"
+              });
+            } else {
+              // Show the supervisor their sites, regardless of status. The form component will handle read-only state.
+              finalEntryData = { ...finalEntryData, siteDetails: allSupervisorSites };
+            }
           }
           
           const finalInitialData = mapEntryToFormValues(finalEntryData);
