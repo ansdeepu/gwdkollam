@@ -195,8 +195,6 @@ export function useFileEntries(): FileEntriesState {
       // SUPERVISOR VISIBILITY LOGIC
       if (user.role === 'supervisor' && user.uid) {
         finalEntries = entriesFromFirestore.filter(entry => {
-          // A file is visible if it has at least one site assigned to the current supervisor
-          // AND that site's status is one of the active statuses.
           return entry.siteDetails?.some(site => 
             site.supervisorUid === user.uid && 
             site.workStatus && 
@@ -295,3 +293,5 @@ export function useFileEntries(): FileEntriesState {
 
   return { fileEntries, isLoading, addFileEntry, deleteFileEntry, getFileEntry, fetchEntryForEditing, refreshFileEntries: fetchData };
 }
+
+    

@@ -12,7 +12,7 @@ import type { SiteWorkStatus } from '@/lib/schemas';
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { fileEntries } = useFileEntries();
+  const { fileEntries } = useFileEntries(); // This hook now correctly filters for supervisors
   const { user } = useAuth();
 
   return (
@@ -45,3 +45,5 @@ export default function FileManagerPage() {
     </div>
   );
 }
+
+    

@@ -426,6 +426,7 @@ export default function DataEntryFormComponent({
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
+                            
                             const siteIsEditableBySupervisor = isSupervisor && isAssignedToCurrentUser;
                             const siteIsEditable = isEditor || siteIsEditableBySupervisor;
 
@@ -802,3 +803,5 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    
