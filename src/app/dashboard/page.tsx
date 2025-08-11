@@ -146,7 +146,7 @@ export default function DashboardPage() {
   
   const [financeStartDate, setFinanceStartDate] = useState<Date | undefined>(undefined);
   const [financeEndDate, setFinanceEndDate] = useState<Date | undefined>(undefined);
-  const [transformedFinanceMetrics, setTransformedFinanceMetrics] = useState<TransformedFinanceMetrics | null>(null);
+  const [transformedFinanceMetrics, setTransformedFinanceMetrics] = useState<TransformedFinanceMetrics | null >(null);
   const [financeLoading, setFinanceLoading] = useState(false);
 
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
