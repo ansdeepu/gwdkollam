@@ -150,42 +150,42 @@ export default function DataEntryPage() {
           }
           
           if (finalEntryData && user.role === 'supervisor' && user.uid) {
-            const originalAssignedSites = finalEntryData.siteDetails?.filter(
-                site => site.supervisorUid === user.uid
-            );
-            setOriginalSupervisorSites(JSON.stringify(originalAssignedSites || []));
+              const originalAssignedSites = finalEntryData.siteDetails?.filter(
+                  site => site.supervisorUid === user.uid
+              );
+              setOriginalSupervisorSites(JSON.stringify(originalAssignedSites || []));
 
-            // A supervisor should see ALL sites assigned to them...
-            const allSupervisorSites = finalEntryData.siteDetails?.filter(
-              site => site.supervisorUid === user.uid
-            );
+              // Supervisors should see ALL sites they are assigned to, regardless of status.
+              const assignedSites = finalEntryData.siteDetails?.filter(
+                  site => site.supervisorUid === user.uid
+              );
 
-            // ... but if all their sites are inactive, show a toast.
-            const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-            const hasActiveSites = allSupervisorSites?.some(
-              site => site.workStatus && !inactiveStatuses.includes(site.workStatus)
-            );
+              if (!assignedSites || assignedSites.length === 0) {
+                  // This handles if a supervisor tries to access a file they are not assigned to.
+                  finalEntryData = null; 
+                  toast({
+                      title: "Access Restricted",
+                      description: "You are not assigned to any sites in this file.",
+                      variant: "destructive"
+                  });
+              } else {
+                  // The form component will handle the read-only state for completed sites.
+                  // For the data entry page, we pass all assigned sites.
+                  finalEntryData = { ...finalEntryData, siteDetails: assignedSites };
 
-            if (allSupervisorSites && allSupervisorSites.length > 0 && !hasActiveSites) {
-              toast({
-                  title: "No Active Sites",
-                  description: "All your assigned sites in this file are completed or inactive. Viewing in read-only mode.",
-                  variant: "default"
-              });
-            }
+                  const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+                  const hasOnlyInactiveSites = assignedSites.every(
+                      site => site.workStatus && inactiveStatuses.includes(site.workStatus)
+                  );
 
-            if (!allSupervisorSites || allSupervisorSites.length === 0) {
-              // This case handles if a supervisor tries to access a file they are not assigned to at all.
-              finalEntryData = null; 
-              toast({
-                  title: "Access Restricted",
-                  description: "You are not assigned to any sites in this file.",
-                  variant: "destructive"
-              });
-            } else {
-              // Show the supervisor their sites, regardless of status. The form component will handle read-only state.
-              finalEntryData = { ...finalEntryData, siteDetails: allSupervisorSites };
-            }
+                  if (hasOnlyInactiveSites) {
+                      toast({
+                          title: "Viewing Completed Sites",
+                          description: "All your assigned sites in this file are completed or inactive. Viewing in read-only mode.",
+                          variant: "default"
+                      });
+                  }
+              }
           }
           
           const finalInitialData = mapEntryToFormValues(finalEntryData);
@@ -326,4 +326,6 @@ export default function DataEntryPage() {
   );
 }
 
+    
+    
     
