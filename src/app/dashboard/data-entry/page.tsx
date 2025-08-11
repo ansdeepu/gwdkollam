@@ -149,18 +149,14 @@ export default function DataEntryPage() {
             });
           }
           
-          if (finalEntryData && user.role === 'supervisor' && user.uid) {
+           if (finalEntryData && user.role === 'supervisor' && user.uid) {
               const assignedSites = finalEntryData.siteDetails?.filter(
                   site => site.supervisorUid === user.uid
               );
 
-              // Set originalSupervisorSites to only include sites assigned to the current supervisor
-              // This is used for detecting changes upon submission
               setOriginalSupervisorSites(JSON.stringify(assignedSites || []));
 
               if (!assignedSites || assignedSites.length === 0) {
-                  // This condition means the supervisor is trying to access a file
-                  // where they are NOT assigned to ANY sites at all.
                   finalEntryData = null; 
                   toast({
                       title: "Access Restricted",
@@ -168,8 +164,6 @@ export default function DataEntryPage() {
                       variant: "destructive"
                   });
               } else {
-                  // The form should receive ALL file data, but with only the assigned sites for the supervisor
-                  // The form component will handle the read-only state based on work status
                   finalEntryData = { ...finalEntryData, siteDetails: assignedSites };
               }
           }
