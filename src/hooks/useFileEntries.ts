@@ -150,6 +150,8 @@ interface FileEntriesState {
   refreshFileEntries: () => void;
 }
 
+const SUPERVISOR_ACTIVE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+
 export function useFileEntries(): FileEntriesState {
   const { user, isLoading: authIsLoading } = useAuth();
   const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>([]);
@@ -180,7 +182,7 @@ export function useFileEntries(): FileEntriesState {
 
     setIsLoading(true);
     try {
-      const q = query(collection(db, FILE_ENTRIES_COLLECTION));
+      const q = collection(db, FILE_ENTRIES_COLLECTION);
       
       const querySnapshot = await getDocs(q);
       const entriesFromFirestore: DataEntryFormData[] = [];
@@ -189,6 +191,19 @@ export function useFileEntries(): FileEntriesState {
       });
       
       let finalEntries = entriesFromFirestore;
+
+      // SUPERVISOR VISIBILITY LOGIC
+      if (user.role === 'supervisor' && user.uid) {
+        finalEntries = entriesFromFirestore.filter(entry => {
+          // A file is visible if it has at least one site assigned to the current supervisor
+          // AND that site's status is one of the active statuses.
+          return entry.siteDetails?.some(site => 
+            site.supervisorUid === user.uid && 
+            site.workStatus && 
+            SUPERVISOR_ACTIVE_STATUSES.includes(site.workStatus as SiteWorkStatus)
+          ) ?? false;
+        });
+      }
       
       finalEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
