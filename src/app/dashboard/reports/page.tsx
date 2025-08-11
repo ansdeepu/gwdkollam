@@ -113,21 +113,7 @@ export default function ReportsPage() {
   }, []);
 
   const applyFilters = useCallback(() => {
-    let baseEntries = [...fileEntries];
-
-    // ** NEW: Supervisor-specific initial filtering **
-    if (user?.role === 'supervisor' && user.uid) {
-        const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed'];
-        baseEntries = baseEntries.filter(entry => 
-            entry.siteDetails?.some(site => 
-                site.supervisorUid === user.uid && 
-                site.workStatus && 
-                !inactiveStatuses.includes(site.workStatus)
-            )
-        );
-    }
-    
-    let currentEntries = [...baseEntries];
+    let currentEntries = [...fileEntries];
     const lowerSearchTerm = searchTerm.toLowerCase();
 
     const reportType = searchParams.get("reportType");
@@ -717,5 +703,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
-    

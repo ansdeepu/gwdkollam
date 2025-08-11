@@ -180,15 +180,7 @@ export function useFileEntries(): FileEntriesState {
 
     setIsLoading(true);
     try {
-      let q;
-      // The initial query is broader for supervisors and will be filtered client-side.
-      if (user.role === 'editor' || user.role === 'viewer' || user.role === 'supervisor') {
-        q = query(collection(db, FILE_ENTRIES_COLLECTION));
-      } else {
-        setIsLoading(false);
-        setFileEntries([]);
-        return;
-      }
+      const q = query(collection(db, FILE_ENTRIES_COLLECTION));
       
       const querySnapshot = await getDocs(q);
       const entriesFromFirestore: DataEntryFormData[] = [];
@@ -197,17 +189,6 @@ export function useFileEntries(): FileEntriesState {
       });
       
       let finalEntries = entriesFromFirestore;
-
-      if (user.role === 'supervisor') {
-        const finalWorkStatuses: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-        finalEntries = finalEntries.filter(entry => {
-          return entry.siteDetails?.some(site =>
-            site.supervisorUid === user.uid &&
-            site.workStatus &&
-            !finalWorkStatuses.includes(site.workStatus)
-          );
-        });
-      }
       
       finalEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;

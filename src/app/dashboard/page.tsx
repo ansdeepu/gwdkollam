@@ -134,7 +134,7 @@ const getColorClass = (nameOrEmail: string): string => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries: rawFileEntries, isLoading: entriesLoading } = useFileEntries();
+  const { fileEntries, isLoading: entriesLoading } = useFileEntries();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers(); 
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
@@ -166,21 +166,6 @@ export default function DashboardPage() {
 
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string | undefined>(undefined);
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
-
-  const fileEntries = useMemo(() => {
-    if (currentUser?.role === 'supervisor' && currentUser.uid) {
-        const finalWorkStatuses: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-        return rawFileEntries.filter(entry => 
-            entry.siteDetails?.some(site => 
-                site.supervisorUid === currentUser.uid && 
-                site.workStatus && 
-                !finalWorkStatuses.includes(site.workStatus)
-            )
-        );
-    }
-    return rawFileEntries;
-  }, [rawFileEntries, currentUser]);
-
 
   const getInitials = (name?: string) => {
     if (!name) return 'U';
@@ -430,10 +415,7 @@ export default function DashboardPage() {
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     
-    // Use the role-appropriate data source for both completed and ongoing calculations
-    const sourceEntriesForReport = currentUser?.role === 'supervisor' ? fileEntries : rawFileEntries;
-
-    for (const entry of sourceEntriesForReport) {
+    for (const entry of fileEntries) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
         // Check for completed works within the month
@@ -473,7 +455,7 @@ export default function DashboardPage() {
         completedSummary: createSummary(completedThisMonthSites),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [fileEntries, rawFileEntries, entriesLoading, workReportMonth, currentUser]);
+  }, [fileEntries, entriesLoading, workReportMonth]);
 
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
@@ -506,7 +488,7 @@ export default function DashboardPage() {
         return acc;
     }, {} as Record<SitePurpose, number>);
 
-    for (const entry of rawFileEntries) {
+    for (const entry of fileEntries) {
         entry.siteDetails?.forEach(site => {
             if (site.supervisorUid === selectedSupervisorId && site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
                 works.push({
@@ -524,7 +506,7 @@ export default function DashboardPage() {
         });
     }
     return { works, byPurpose, totalCount: works.length };
-  }, [selectedSupervisorId, rawFileEntries, entriesLoading]);
+  }, [selectedSupervisorId, fileEntries, entriesLoading]);
 
 
   const handleStatusCardClick = (status: string) => {
@@ -1682,5 +1664,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

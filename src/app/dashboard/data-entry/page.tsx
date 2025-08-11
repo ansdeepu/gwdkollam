@@ -149,25 +149,6 @@ export default function DataEntryPage() {
             });
           }
           
-           if (finalEntryData && user.role === 'supervisor' && user.uid) {
-              const assignedSites = finalEntryData.siteDetails?.filter(
-                  site => site.supervisorUid === user.uid
-              );
-
-              setOriginalSupervisorSites(JSON.stringify(assignedSites || []));
-
-              if (!assignedSites || assignedSites.length === 0) {
-                  finalEntryData = null; 
-                  toast({
-                      title: "Access Restricted",
-                      description: "You are not assigned to any sites in this file.",
-                      variant: "destructive"
-                  });
-              } else {
-                  finalEntryData = { ...finalEntryData, siteDetails: assignedSites };
-              }
-          }
-          
           const finalInitialData = mapEntryToFormValues(finalEntryData);
           
           setPageData({
