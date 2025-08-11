@@ -83,12 +83,13 @@ function renderDetail(label: string, value: any) {
 
 interface FileDatabaseTableProps {
   searchTerm?: string;
+  fileEntries: DataEntryFormData[];
 }
 
-export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTableProps) {
+export default function FileDatabaseTable({ searchTerm = "", fileEntries }: FileDatabaseTableProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { fileEntries, isLoading: entriesLoadingHook, deleteFileEntry } = useFileEntries(); 
+  const { isLoading: entriesLoadingHook, deleteFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth(); 
 
   const [viewItem, setViewItem] = useState<DataEntryFormData | null>(null);
@@ -158,7 +159,7 @@ export default function FileDatabaseTable({ searchTerm = "" }: FileDatabaseTable
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, fileEntries]);
 
   const displayedEntries = filteredEntries;
 

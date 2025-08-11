@@ -1,14 +1,33 @@
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FolderOpen, Search } from "lucide-react";
 import { Input } from '@/components/ui/input';
+import { useFileEntries } from '@/hooks/useFileEntries';
+import { useAuth } from '@/hooks/useAuth';
+import type { SiteWorkStatus } from '@/lib/schemas';
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { fileEntries: rawFileEntries } = useFileEntries();
+  const { user } = useAuth();
+
+  const fileEntries = useMemo(() => {
+    if (user?.role !== 'supervisor') {
+      return rawFileEntries;
+    }
+    const supervisorVisibleStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+    return rawFileEntries.filter(entry => 
+      entry.siteDetails?.some(site => 
+        site.supervisorUid === user.uid &&
+        site.workStatus &&
+        supervisorVisibleStatuses.includes(site.workStatus as SiteWorkStatus)
+      )
+    );
+  }, [rawFileEntries, user]);
 
   return (
     <div className="space-y-6">
@@ -34,7 +53,7 @@ export default function FileManagerPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FileDatabaseTable searchTerm={searchTerm} />
+          <FileDatabaseTable searchTerm={searchTerm} fileEntries={fileEntries} />
         </CardContent>
       </Card>
     </div>
