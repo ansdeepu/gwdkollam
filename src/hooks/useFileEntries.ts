@@ -150,7 +150,7 @@ interface FileEntriesState {
   refreshFileEntries: () => void;
 }
 
-const SUPERVISOR_ACTIVE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+const SUPERVISOR_ACTIVE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
 
 export function useFileEntries(): FileEntriesState {
   const { user, isLoading: authIsLoading } = useAuth();
