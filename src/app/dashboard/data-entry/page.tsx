@@ -150,18 +150,17 @@ export default function DataEntryPage() {
           }
           
           if (finalEntryData && user.role === 'supervisor' && user.uid) {
-              const originalAssignedSites = finalEntryData.siteDetails?.filter(
-                  site => site.supervisorUid === user.uid
-              );
-              setOriginalSupervisorSites(JSON.stringify(originalAssignedSites || []));
-
-              // Supervisors should see ALL sites they are assigned to, regardless of status.
               const assignedSites = finalEntryData.siteDetails?.filter(
                   site => site.supervisorUid === user.uid
               );
 
+              // Set originalSupervisorSites to only include sites assigned to the current supervisor
+              // This is used for detecting changes upon submission
+              setOriginalSupervisorSites(JSON.stringify(assignedSites || []));
+
               if (!assignedSites || assignedSites.length === 0) {
-                  // This handles if a supervisor tries to access a file they are not assigned to.
+                  // This condition means the supervisor is trying to access a file
+                  // where they are NOT assigned to ANY sites at all.
                   finalEntryData = null; 
                   toast({
                       title: "Access Restricted",
@@ -169,22 +168,9 @@ export default function DataEntryPage() {
                       variant: "destructive"
                   });
               } else {
-                  // The form component will handle the read-only state for completed sites.
-                  // For the data entry page, we pass all assigned sites.
+                  // The form should receive ALL file data, but with only the assigned sites for the supervisor
+                  // The form component will handle the read-only state based on work status
                   finalEntryData = { ...finalEntryData, siteDetails: assignedSites };
-
-                  const inactiveStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-                  const hasOnlyInactiveSites = assignedSites.every(
-                      site => site.workStatus && inactiveStatuses.includes(site.workStatus)
-                  );
-
-                  if (hasOnlyInactiveSites) {
-                      toast({
-                          title: "Viewing Completed Sites",
-                          description: "All your assigned sites in this file are completed or inactive. Viewing in read-only mode.",
-                          variant: "default"
-                      });
-                  }
               }
           }
           
