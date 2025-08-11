@@ -17,7 +17,7 @@ import {
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, Timestamp, query, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import { type UserRole } from '@/lib/schemas';
+import { type UserRole, type Designation } from '@/lib/schemas';
 import { useToast } from "@/hooks/use-toast"; 
 
 const auth = getAuth(app);
@@ -32,6 +32,7 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
+  designation?: Designation; // Added designation
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -81,6 +82,14 @@ export function useAuth() {
 
           if (isAdminByEmail) {
             const userDocSnap = await getDoc(userDocRef);
+            let staffInfo: { designation?: Designation } = {};
+            if (userDocSnap.exists() && userDocSnap.data().staffId) {
+                const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
+                const staffDocSnap = await getDoc(staffDocRef);
+                if (staffDocSnap.exists()) {
+                    staffInfo = staffDocSnap.data();
+                }
+            }
             const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
             userProfile = {
                 uid: firebaseUser.uid,
@@ -89,6 +98,7 @@ export function useAuth() {
                 role: 'editor',
                 isApproved: true,
                 staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
+                designation: staffInfo.designation, // Added designation
                 createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
                 lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
             };
@@ -105,6 +115,14 @@ export function useAuth() {
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
+                 let staffInfo: { designation?: Designation } = {};
+                 if (userData.staffId) {
+                    const staffDocRef = doc(db, "staffMembers", userData.staffId);
+                    const staffDocSnap = await getDoc(staffDocRef);
+                    if (staffDocSnap.exists()) {
+                        staffInfo = staffDocSnap.data();
+                    }
+                 }
                 userProfile = {
                     uid: firebaseUser.uid,
                     email: firebaseUser.email,
@@ -112,6 +130,7 @@ export function useAuth() {
                     role: userData.role || 'viewer',
                     isApproved: userData.isApproved === true,
                     staffId: userData.staffId || undefined,
+                    designation: staffInfo.designation, // Added designation
                     createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                     lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
                 };
@@ -198,7 +217,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,

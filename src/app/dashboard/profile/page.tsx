@@ -5,7 +5,7 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, UserCircle, ShieldCheck, KeyRound } from "lucide-react";
+import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 
@@ -56,12 +56,19 @@ export default function ProfilePage() {
               <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
             </CardHeader>
-            <CardContent className="text-sm">
+            <CardContent className="text-sm space-y-3 text-center">
                 <div className="flex items-center justify-center space-x-2">
                     <ShieldCheck className="h-5 w-5 text-primary" />
                     <span className="font-medium">Role:</span>
                     <Badge variant={user.role === 'editor' ? 'default' : 'secondary'}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                 </div>
+                 {user.designation && (
+                    <div className="flex items-center justify-center space-x-2">
+                        <Briefcase className="h-5 w-5 text-primary" />
+                        <span className="font-medium">Designation:</span>
+                        <span className="text-foreground">{user.designation}</span>
+                    </div>
+                )}
             </CardContent>
           </Card>
         </div>
