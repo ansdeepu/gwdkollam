@@ -271,7 +271,28 @@ export default function DashboardPage() {
   }, [authLoading, currentUser, fetchAllUsers]);
 
   const dashboardData = useMemo(() => {
-    if (entriesLoading || staffLoading || !fileEntries) return null;
+    if (entriesLoading || staffLoading || !fileEntries || !currentUser) return null;
+    
+    const isSiteManager = currentUser.role === 'site-manager';
+    const activeSupervisorStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+
+    // Filter file entries for dashboard cards if user is a site manager
+    const entriesForCards = isSiteManager
+      ? fileEntries.map(entry => {
+          const relevantSites = entry.siteDetails?.filter(site =>
+            site.supervisorUid === currentUser.uid &&
+            site.workStatus &&
+            activeSupervisorStatuses.includes(site.workStatus as SiteWorkStatus)
+          ) || [];
+          
+          if (relevantSites.length > 0) {
+            // Return a new entry object with only the relevant sites for card calculations
+            return { ...entry, siteDetails: relevantSites };
+          }
+          return null; // This entry is not relevant for the site manager's card view
+        }).filter((entry): entry is DataEntryFormData => entry !== null)
+      : fileEntries;
+
 
     let pendingTasksCount = 0;
     
@@ -302,7 +323,7 @@ export default function DashboardPage() {
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
-    for (const entry of fileEntries) {
+    for (const entry of entriesForCards) { // Use filtered entries for cards
         let isFilePending = false;
         if (entry.fileStatus && fileStatusesForPending.includes(entry.fileStatus as FileStatus)) isFilePending = true;
         else if (entry.siteDetails?.some(sd => sd.workStatus && siteWorkStatusesForPending.includes(sd.workStatus as SiteWorkStatus))) isFilePending = true;
@@ -399,9 +420,9 @@ export default function DashboardPage() {
         filesByAgeData: ageGroups,
         filesByAgeCounts,
         fileStatusCountsData,
-        totalFiles: fileEntries.length,
+        totalFiles: entriesForCards.length,
     };
-  }, [entriesLoading, fileEntries, staffLoading, staffMembers]);
+  }, [entriesLoading, fileEntries, staffLoading, staffMembers, currentUser]);
 
   const currentMonthStats = useMemo(() => {
     if (entriesLoading) return null;
@@ -415,7 +436,7 @@ export default function DashboardPage() {
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     
-    for (const entry of fileEntries) {
+    for (const entry of fileEntries) { // Use all fileEntries for this report
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
         // Check for completed works within the month
@@ -1168,7 +1189,7 @@ export default function DashboardPage() {
                         mode="single" 
                         selected={financeEndDate} 
                         onSelect={setFinanceEndDate} 
-                        disabled={(date) => (financeStartDate ? date < startDate : false) || date > new Date()} 
+                        disabled={(date) => (financeStartDate ? date < financeStartDate : false) || date > new Date()} 
                         initialFocus
                       />
                   </PopoverContent>
