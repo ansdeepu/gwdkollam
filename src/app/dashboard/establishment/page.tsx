@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { Briefcase, UserPlus, ShieldAlert, Loader2, Expand, Search } from "lucide-react";
+import { Briefcase, UserPlus, ShieldAlert, Loader2, Expand, Search, FileDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
+import * as XLSX from "xlsx";
 
 const isPlaceholderUrl = (url?: string | null): boolean => {
   if (!url) return false;
@@ -117,6 +118,112 @@ export default function EstablishmentPage() {
       setIsImageModalOpen(true);
     }
   };
+
+  const handleExportExcel = () => {
+    const reportTitle = "Establishment Staff Report";
+    const columnLabels = ["Sl. No.", "Name", "Designation", "PEN", "Phone No.", "Date of Birth", "Roles", "Status", "Remarks"];
+    
+    // Use the unfiltered staffMembers list for a complete export
+    const dataRows = staffMembers.map((staff, index) => [
+      index + 1,
+      staff.name,
+      staff.designation,
+      staff.pen,
+      staff.phoneNo || 'N/A',
+      formatDateForSearch(staff.dateOfBirth),
+      staff.roles || 'N/A',
+      staff.status,
+      staff.remarks || 'N/A',
+    ]);
+    const sheetName = "StaffList";
+    const fileNamePrefix = "gwd_establishment_report";
+
+    if (dataRows.length === 0) {
+      toast({ title: "No Data to Export", variant: "default" });
+      return;
+    }
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([]);
+    
+    const headerRows = [
+      ["Ground Water Department, Kollam"],
+      [reportTitle],
+      [],
+      [`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`],
+      [],
+    ];
+
+    const numCols = columnLabels.length;
+    const footerColIndex = numCols > 1 ? numCols - 2 : 0;
+    const footerRowData = new Array(numCols).fill("");
+    footerRowData[footerColIndex] = "District Officer";
+    const footerRows = [[], footerRowData];
+    
+    const finalData = [...headerRows, columnLabels, ...dataRows, ...footerRows];
+    
+    XLSX.utils.sheet_add_aoa(ws, finalData, { cellStyles: false });
+    
+    const merges = [];
+    for (let i = 0; i < headerRows.length; i++) {
+        if (headerRows[i].length > 0 && headerRows[i][0]) {
+             merges.push({ s: { r: i, c: 0 }, e: { r: i, c: numCols - 1 } });
+        }
+    }
+    const footerRowIndex = finalData.length - 1;
+    if (numCols > 1) {
+        merges.push({ s: { r: footerRowIndex, c: footerColIndex }, e: { r: footerRowIndex, c: numCols - 1 } });
+    }
+    ws['!merges'] = merges;
+
+    const colWidths = finalData[0].map((_, i) => ({
+      wch: Math.max(...finalData.map(row => (row[i] ? String(row[i]).length : 0))) + 2
+    }));
+    ws['!cols'] = colWidths;
+
+    for (let R = 0; R < finalData.length; R++) {
+      ws['!rows'] = ws['!rows'] || [];
+      ws['!rows'][R] = { hpt: 20 };
+      for (let C = 0; C < numCols; C++) {
+        const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
+        
+        ws[cellRef].s = {
+          alignment: { horizontal: "center", vertical: "center", wrapText: true },
+          border: { 
+            top: { style: "thin" }, bottom: { style: "thin" }, 
+            left: { style: "thin" }, right: { style: "thin" } 
+          }
+        };
+
+        if (R < 2) {
+             ws[cellRef].s.font = { bold: true, sz: R === 0 ? 16 : 14 };
+        } else if (R < headerRows.length -1) {
+             ws[cellRef].s.font = { italic: true };
+             ws[cellRef].s.alignment!.horizontal = "left";
+        }
+        
+        const columnLabelsRowIndex = headerRows.length;
+        if (R === columnLabelsRowIndex) {
+            ws[cellRef].s.font = { bold: true };
+            ws[cellRef].s.fill = { fgColor: { rgb: "F0F0F0" } };
+        }
+        
+        if (R === footerRowIndex) {
+          ws[cellRef].s.border = {};
+          if (C >= footerColIndex) {
+             ws[cellRef].s.font = { bold: true };
+             ws[cellRef].s.alignment!.horizontal = "right";
+          }
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    XLSX.writeFile(wb, uniqueFileName);
+    toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
+  };
   
   // Debounce the search term to avoid excessive re-renders and filtering
   useEffect(() => {
@@ -192,23 +299,27 @@ export default function EstablishmentPage() {
   
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        {canManage && (
-            <Button onClick={handleAddNewStaff}>
+      <div className="my-4 flex flex-col sm:flex-row items-center gap-4">
+        <div className="relative flex-grow w-full sm:w-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search by name, PEN, designation, roles, phone, DOB (dd/MM/yyyy), remarks..."
+            className="w-full rounded-lg bg-background pl-10 md:w-full lg:w-full shadow-sm text-base h-12 border-2 border-primary/20 focus-visible:ring-primary focus-visible:ring-offset-2"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          {canManage && (
+            <Button onClick={handleAddNewStaff} className="w-full sm:w-auto">
               <UserPlus className="mr-2 h-5 w-5" /> Add New Staff
             </Button>
           )}
-      </div>
-
-      <div className="relative my-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search by name, PEN, designation, roles, phone, DOB (dd/MM/yyyy), remarks..."
-          className="w-full rounded-lg bg-background pl-10 md:w-2/3 lg:w-1/2 shadow-sm text-base h-12 border-2 border-primary/20 focus-visible:ring-primary focus-visible:ring-offset-2"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+          <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto">
+            <FileDown className="mr-2 h-4 w-4" /> Export Excel
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="activeStaff" className="w-full">
@@ -318,5 +429,3 @@ export default function EstablishmentPage() {
     </div>
   );
 }
-
-    
