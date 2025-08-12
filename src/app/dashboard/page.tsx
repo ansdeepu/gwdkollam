@@ -164,6 +164,11 @@ export default function DashboardPage() {
   const [monthDetailDialogData, setMonthDetailDialogData] = useState<Array<Record<string, any>>>([]);
   const [monthDetailDialogColumns, setMonthDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
 
+  const [isFileStatusDetailDialogOpen, setIsFileStatusDetailDialogOpen] = useState(false);
+  const [fileStatusDetailDialogTitle, setFileStatusDetailDialogTitle] = useState("");
+  const [fileStatusDetailDialogData, setFileStatusDetailDialogData] = useState<Array<Record<string, any>>>([]);
+  const [fileStatusDetailDialogColumns, setFileStatusDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
+
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string | undefined>(undefined);
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
 
@@ -540,8 +545,36 @@ export default function DashboardPage() {
   }, [selectedSupervisorId, fileEntries, entriesLoading]);
 
 
-  const handleStatusCardClick = (status: string) => {
-    router.push(`/dashboard/reports?status=${encodeURIComponent(status)}`);
+  const handleFileStatusCardClick = (status: string) => {
+    const dataForDialog = fileEntries
+      .filter(entry => entry.fileStatus === status)
+      .map((entry, index) => {
+        const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance;
+        const siteNames = entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A';
+        const workStatuses = entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A';
+        return {
+          slNo: index + 1,
+          fileNo: entry.fileNo || 'N/A',
+          applicantName: entry.applicantName || 'N/A',
+          siteNames,
+          firstRemittanceDate: firstRemittanceDate ? format(new Date(firstRemittanceDate), 'dd/MM/yyyy') : 'N/A',
+          workStatuses,
+        };
+      });
+
+    const columns: DetailDialogColumn[] = [
+      { key: 'slNo', label: 'Sl. No.' },
+      { key: 'fileNo', label: 'File No.' },
+      { key: 'applicantName', label: 'Applicant Name' },
+      { key: 'siteNames', label: 'Site(s)' },
+      { key: 'firstRemittanceDate', label: 'First Remittance' },
+      { key: 'workStatuses', label: 'Site Status(es)' },
+    ];
+
+    setFileStatusDetailDialogTitle(`Files with Status: "${status}"`);
+    setFileStatusDetailDialogColumns(columns);
+    setFileStatusDetailDialogData(dataForDialog);
+    setIsFileStatusDetailDialogOpen(true);
   };
 
   const handleWorkStatusCellClick = (data: any[], title: string) => {
@@ -960,12 +993,12 @@ export default function DashboardPage() {
                           "shadow-sm transition-all",
                           item.count > 0 ? "cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30" : "cursor-not-allowed opacity-75"
                         )}
-                        onClick={() => item.count > 0 && handleStatusCardClick(item.status)}
+                        onClick={() => item.count > 0 && handleFileStatusCardClick(item.status)}
                         role="button"
                         tabIndex={item.count > 0 ? 0 : -1}
                         aria-disabled={item.count === 0}
                         aria-label={`View details for status: ${item.status}`}
-                        onKeyDown={(e) => { if (item.count > 0 && (e.key === 'Enter' || e.key === ' ')) handleStatusCardClick(item.status)}}
+                        onKeyDown={(e) => { if (item.count > 0 && (e.key === 'Enter' || e.key === ' ')) handleFileStatusCardClick(item.status)}}
                       >
                         <CardContent className="p-3">
                           <div className="flex items-center justify-between">
@@ -1675,6 +1708,54 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isFileStatusDetailDialogOpen} onOpenChange={setIsFileStatusDetailDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{fileStatusDetailDialogTitle}</DialogTitle>
+            <DialogDescription>
+              List of all files matching the selected status.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {fileStatusDetailDialogData.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {fileStatusDetailDialogColumns.map(col => (
+                      <TableHead key={col.key}>{col.label}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fileStatusDetailDialogData.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {fileStatusDetailDialogColumns.map(col => (
+                        <TableCell key={`${rowIndex}-${col.key}`} className="text-xs">
+                          {row[col.key]}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="py-4 text-center text-muted-foreground">No files found with this status.</p>
+            )}
+          </ScrollArea>
+          <DialogFooter className="pt-4">
+            <Button variant="outline" onClick={() => exportDialogDataToExcel(fileStatusDetailDialogTitle, fileStatusDetailDialogColumns, fileStatusDetailDialogData)} disabled={fileStatusDetailDialogData.length === 0}>
+              <FileDown className="mr-2 h-4 w-4" /> Export Excel
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
