@@ -122,14 +122,14 @@ export default function UserManagementTable({
     let staffIdToLink: string | undefined = undefined;
     const userToUpdate = users.find(u => u.uid === uid);
 
-    if (userToUpdate && !userToUpdate.staffId && (newRole === 'supervisor' || newRole === 'editor')) {
+    if (userToUpdate && !userToUpdate.staffId && (newRole === 'site-manager' || newRole === 'editor')) {
         const matchingStaffMember = staffMembers.find(staff => staff.name === userToUpdate.name);
         if (matchingStaffMember) {
             staffIdToLink = matchingStaffMember.id;
         } else {
             toast({
                 title: "Staff Linking Failed",
-                description: `Could not find a matching staff profile for ${userToUpdate.name}. The user can still be a supervisor, but won't be assignable to sites. Please ensure staff and user names match exactly.`,
+                description: `Could not find a matching staff profile for ${userToUpdate.name}. The user can still be a Site Manager, but won't be assignable to sites. Please ensure staff and user names match exactly.`,
                 variant: "destructive",
                 duration: 9000
             });
@@ -327,13 +327,13 @@ export default function UserManagementTable({
                       onValueChange={(newRole) => handleRoleChange(userRow.uid, newRole as UserRole)}
                       disabled={disableActions || updatingUsers[userRow.uid]?.role}
                     >
-                      <SelectTrigger className="w-[100px] h-8 text-xs focus:ring-primary" aria-label={`Change role for ${userRow.name}`}>
+                      <SelectTrigger className="w-[120px] h-8 text-xs focus:ring-primary" aria-label={`Change role for ${userRow.name}`}>
                          {updatingUsers[userRow.uid]?.role ? <Loader2 className="h-3 w-3 animate-spin" /> : <SelectValue />}
                       </SelectTrigger>
                       <SelectContent>
                         {userRoleOptions.map(roleOption => (
                           <SelectItem key={roleOption} value={roleOption} className="text-xs">
-                            {roleOption.charAt(0).toUpperCase() + roleOption.slice(1)}
+                            {roleOption === 'site-manager' ? 'Site Manager' : roleOption.charAt(0).toUpperCase() + roleOption.slice(1)}
                           </SelectItem>
                         ))}
                       </SelectContent>

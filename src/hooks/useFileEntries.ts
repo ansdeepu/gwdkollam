@@ -189,6 +189,17 @@ export function useFileEntries(): FileEntriesState {
       });
       
       let finalEntries = entriesFromFirestore;
+
+      if (user.role === 'site-manager') {
+        const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+        finalEntries = entriesFromFirestore.filter(entry => 
+          entry.siteDetails?.some(site => 
+            site.supervisorUid === user.uid && 
+            site.workStatus && 
+            activeStatuses.includes(site.workStatus as SiteWorkStatus)
+          )
+        );
+      }
       
       finalEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
@@ -232,7 +243,7 @@ export function useFileEntries(): FileEntriesState {
   }, [fetchData]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, originalFileNoWhileEditing?: string) => {
-    if (!user || (user.role !== 'editor')) {
+    if (!user || (user.role !== 'editor' && user.role !== 'site-manager')) {
       throw new Error("You do not have permission to save file data.");
     }
     
@@ -244,6 +255,7 @@ export function useFileEntries(): FileEntriesState {
 
       // If file number is being changed, check if the new file number already exists
       if (entryData.fileNo !== originalFileNoWhileEditing) {
+        if (user.role !== 'editor') throw new Error("Only editors can change the file number.");
         const newFileNoQuery = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", entryData.fileNo));
         const newFileNoSnapshot = await getDocs(newFileNoQuery);
         if (!newFileNoSnapshot.empty) {
@@ -254,6 +266,7 @@ export function useFileEntries(): FileEntriesState {
       const payload = sanitizeObjectForFirestore({ ...entryData, id: undefined, updatedAt: serverTimestamp() });
       await updateDoc(docToUpdateRef, payload);
     } else { 
+      if (user.role !== 'editor') throw new Error("Only editors can create new files.");
       const payload = sanitizeObjectForFirestore({ ...entryData, id: undefined, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
       const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", payload.fileNo));
       const querySnapshot = await getDocs(q);
