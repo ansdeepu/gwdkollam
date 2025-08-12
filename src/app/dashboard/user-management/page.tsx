@@ -1,4 +1,3 @@
-
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -194,5 +193,3 @@ export default function UserManagementPage() {
     </div>
   );
 }
-
-    

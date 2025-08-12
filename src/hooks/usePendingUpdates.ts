@@ -1,4 +1,3 @@
-
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -18,6 +17,7 @@ import {
   addDoc,
   getDoc,
   type DocumentData,
+  deleteDoc,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth, type UserProfile } from './useAuth';
@@ -39,7 +39,9 @@ const convertTimestampToDate = (data: DocumentData): PendingUpdate => {
 interface PendingUpdatesState {
   pendingUpdates: PendingUpdate[];
   isLoading: boolean;
-  // All supervisor-specific functions are removed as the role is being deleted.
+  createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
+  rejectUpdate: (updateId: string) => Promise<void>;
+  getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
 }
 
 export function usePendingUpdates(): PendingUpdatesState {
@@ -48,18 +50,80 @@ export function usePendingUpdates(): PendingUpdatesState {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Since supervisor role is removed, this component no longer needs to fetch data.
-    setIsLoading(false);
-    setPendingUpdates([]);
+    if (!user || user.role !== 'editor') {
+      setIsLoading(false);
+      setPendingUpdates([]);
+      return;
+    }
+
+    setIsLoading(true);
+    const q = query(
+      collection(db, PENDING_UPDATES_COLLECTION),
+      where('status', '==', 'pending'),
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const updates = snapshot.docs.map(doc => convertTimestampToDate({ id: doc.id, ...doc.data() }));
+      setPendingUpdates(updates);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching pending updates:", error);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [user]);
 
-  return { 
-    pendingUpdates: [], 
-    isLoading: false,
-    // Provide empty functions to prevent crashes in any component that might still call them during transition.
-    approveUpdate: async () => Promise.resolve(),
-    rejectUpdate: async () => Promise.resolve(),
-    createPendingUpdate: async () => Promise.resolve(),
-    getPendingUpdateById: async () => Promise.resolve(null),
+  const createPendingUpdate = useCallback(async (
+    fileNo: string,
+    updatedSites: SiteDetailFormData[],
+    currentUser: UserProfile
+  ) => {
+    if (!currentUser.uid || !currentUser.name) {
+      throw new Error("Invalid user profile for submitting an update.");
+    }
+
+    const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
+      fileNo,
+      updatedSiteDetails: updatedSites,
+      submittedByUid: currentUser.uid,
+      submittedByName: currentUser.name,
+      status: 'pending',
+    };
+
+    await addDoc(collection(db, PENDING_UPDATES_COLLECTION), {
+      ...newUpdate,
+      submittedAt: serverTimestamp(),
+    });
+  }, []);
+  
+  const getPendingUpdateById = useCallback(async (updateId: string): Promise<PendingUpdate | null> => {
+    const docRef = doc(db, PENDING_UPDATES_COLLECTION, updateId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return convertTimestampToDate({ id: docSnap.id, ...docSnap.data() });
+    }
+    return null;
+  }, []);
+
+  const rejectUpdate = useCallback(async (updateId: string) => {
+    if (!user || user.role !== 'editor') {
+      throw new Error("You do not have permission to reject updates.");
+    }
+    const updateDocRef = doc(db, PENDING_UPDATES_COLLECTION, updateId);
+    await updateDoc(updateDocRef, {
+      status: 'rejected',
+      reviewedByUid: user.uid,
+      reviewedAt: serverTimestamp(),
+    });
+    // The onSnapshot listener will automatically update the local state.
+  }, [user]);
+
+  return {
+    pendingUpdates,
+    isLoading,
+    createPendingUpdate,
+    rejectUpdate,
+    getPendingUpdateById,
   };
 }

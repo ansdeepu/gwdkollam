@@ -1,4 +1,3 @@
-
 // src/app/dashboard/reports/page.tsx
 "use client"; 
 
@@ -279,7 +278,7 @@ export default function ReportsPage() {
     
     setFilteredReportRows(flattenedRows);
   }, [
-    fileEntries, user, searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
+    fileEntries, searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
     startDate, endDate, dateFilterType,
     applicationTypeFilter, typeOfRigFilter, searchParams
   ]);

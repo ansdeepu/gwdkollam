@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -171,8 +170,12 @@ export function useFileEntries(): FileEntriesState {
   }, []);
 
   const fetchData = useCallback(async () => {
-    if (authIsLoading) return;
-    if (!user || !user.isApproved) {
+    if (authIsLoading || !user) {
+      setIsLoading(authIsLoading);
+      if (!authIsLoading && !user) setFileEntries([]);
+      return;
+    }
+    if (!user.isApproved) {
       setIsLoading(false);
       setFileEntries([]);
       return;
@@ -181,12 +184,9 @@ export function useFileEntries(): FileEntriesState {
     setIsLoading(true);
     try {
       let q;
-      // If user is a site manager, construct a specific query to get only their assigned files.
-      // This works with Firestore security rules.
-      if (user.role === 'site-manager' && user.uid) {
+      if (user.role === 'supervisor' && user.uid) {
         q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
       } else {
-        // Editors and viewers get all documents.
         q = query(collection(db, FILE_ENTRIES_COLLECTION));
       }
       
@@ -198,8 +198,7 @@ export function useFileEntries(): FileEntriesState {
       
       let finalEntries = entriesFromFirestore;
 
-      // For site managers, apply the additional client-side filtering for active work status.
-      if (user.role === 'site-manager' && user.uid) {
+      if (user.role === 'supervisor' && user.uid) {
         const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
         
         finalEntries = entriesFromFirestore.filter(entry => 
@@ -253,7 +252,7 @@ export function useFileEntries(): FileEntriesState {
   }, [fetchData]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, originalFileNoWhileEditing?: string) => {
-    if (!user || (user.role !== 'editor' && user.role !== 'site-manager')) {
+    if (!user || user.role !== 'editor') {
       throw new Error("You do not have permission to save file data.");
     }
     
