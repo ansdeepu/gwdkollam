@@ -253,26 +253,28 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    setUsersLoading(true);
-    fetchAllUsers()
-      .then(users => {
-        setAllUsers(users);
-        if (currentUser?.role === 'editor') {
-          const count = users.filter(user => !user.isApproved).length;
-          setUnapprovedUsersCount(count);
-          const sortedUsers = [...users]
-            .sort((a, b) => {
-              const timeA = a.lastActiveAt?.getTime() ?? a.createdAt?.getTime() ?? 0;
-              const timeB = b.lastActiveAt?.getTime() ?? b.createdAt?.getTime() ?? 0;
-              return timeB - timeA;
-            });
-          setActiveUsers(sortedUsers.slice(0, 5));
-        } else {
-          setActiveUsers([]);
-        }
-      })
-      .catch(error => console.error("Error fetching users for dashboard:", error))
-      .finally(() => setUsersLoading(false));
+    if (!authLoading && currentUser) {
+        setUsersLoading(true);
+        fetchAllUsers()
+          .then(users => {
+            setAllUsers(users);
+            if (currentUser?.role === 'editor') {
+              const count = users.filter(user => !user.isApproved).length;
+              setUnapprovedUsersCount(count);
+              const sortedUsers = [...users]
+                .sort((a, b) => {
+                  const timeA = a.lastActiveAt?.getTime() ?? a.createdAt?.getTime() ?? 0;
+                  const timeB = b.lastActiveAt?.getTime() ?? b.createdAt?.getTime() ?? 0;
+                  return timeB - timeA;
+                });
+              setActiveUsers(sortedUsers.slice(0, 5));
+            } else {
+              setActiveUsers([]);
+            }
+          })
+          .catch(error => console.error("Error fetching users for dashboard:", error))
+          .finally(() => setUsersLoading(false));
+    }
   }, [authLoading, currentUser, fetchAllUsers]);
 
   const dashboardData = useMemo(() => {

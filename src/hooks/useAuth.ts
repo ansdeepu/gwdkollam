@@ -244,7 +244,7 @@ export function useAuth() {
   }, []);
 
   const createUserByAdmin = useCallback(async (email: string, password: string, name: string, staffId: string): Promise<{ success: boolean; error?: any }> => {
-    if (!authState.user || authState.user.role !== 'editor' || !auth.currentUser) {
+    if (!authState.user || authState.user.role !== 'editor') {
       return { success: false, error: { message: "You do not have permission to create users." } };
     }
   
@@ -297,9 +297,8 @@ export function useAuth() {
   }, [router]);
 
   const fetchAllUsers = useCallback(async (): Promise<UserProfile[]> => {
-    if (!authState.user || authState.user.role !== 'editor') {
-      // Instead of throwing an error, return an empty array for non-editors.
-      // This prevents crashes in components that call this function without checking permissions first.
+    // Allow editors and viewers to fetch all users.
+    if (!authState.user || (authState.user.role !== 'editor' && authState.user.role !== 'viewer')) {
       return [];
     }
     
