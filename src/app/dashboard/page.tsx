@@ -455,7 +455,13 @@ export default function DashboardPage() {
         }
         // Check for ongoing works
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
-          ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+          if (isSiteManager) {
+             if(site.supervisorUid === currentUser.uid) {
+               ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+             }
+          } else {
+             ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+          }
         }
       }
     }
@@ -1349,34 +1355,24 @@ export default function DashboardPage() {
                     View All ({currentMonthStats?.completedSummary.totalCount ?? 0})
                   </Button>
                 </div>
-                <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner">
+                <div className="p-2 bg-background rounded-md shadow-inner">
                   {currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="h-8">Category</TableHead>
-                          <TableHead className="h-8 text-right">Count</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {sitePurposeOptions.map((purpose) => (
-                          <TableRow key={purpose}>
-                            <TableCell className="font-medium py-1.5">{purpose}</TableCell>
-                            <TableCell className="text-right py-1.5">
-                              <Button variant="link" className="p-0 h-auto" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
-                                {currentMonthStats.completedSummary.byPurpose[purpose] || 0}
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                      {sitePurposeOptions.map((purpose) => (
+                        <div key={purpose} className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">{purpose}</span>
+                          <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
+                            {currentMonthStats.completedSummary.byPurpose[purpose] || 0}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <div className="flex h-full items-center justify-center">
+                    <div className="flex h-[150px] items-center justify-center">
                       <p className="text-muted-foreground text-center text-sm">No works completed this month.</p>
                     </div>
                   )}
-                </ScrollArea>
+                </div>
               </div>
 
               <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
@@ -1386,34 +1382,24 @@ export default function DashboardPage() {
                     View All ({currentMonthStats?.ongoingSummary.totalCount ?? 0})
                   </Button>
                 </div>
-                <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner">
+                <div className="p-2 bg-background rounded-md shadow-inner">
                   {currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="h-8">Category</TableHead>
-                          <TableHead className="h-8 text-right">Count</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                         {sitePurposeOptions.map((purpose) => (
-                          <TableRow key={purpose}>
-                            <TableCell className="font-medium py-1.5">{purpose}</TableCell>
-                            <TableCell className="text-right py-1.5">
-                               <Button variant="link" className="p-0 h-auto" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
-                                {currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                       {sitePurposeOptions.map((purpose) => (
+                        <div key={purpose} className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">{purpose}</span>
+                          <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
+                            {currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <div className="flex h-full items-center justify-center">
+                    <div className="flex h-[150px] items-center justify-center">
                        <p className="text-muted-foreground text-center text-sm">No ongoing works found.</p>
                     </div>
                   )}
-                </ScrollArea>
+                </div>
               </div>
             </div>
           </CardContent>
