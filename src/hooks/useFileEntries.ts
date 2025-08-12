@@ -2,7 +2,7 @@
 // src/hooks/useFileEntries.ts
 "use client";
 
-import type { DataEntryFormData, SiteDetailFormData, SiteWorkStatus } from "@/lib/schemas";
+import type { DataEntryFormData, SiteWorkStatus } from "@/lib/schemas";
 import { useState, useEffect, useCallback } from "react";
 import {
   getFirestore,
@@ -192,15 +192,14 @@ export function useFileEntries(): FileEntriesState {
       
       let finalEntries = entriesFromFirestore;
 
-      // SUPERVISOR VISIBILITY LOGIC
       if (user.role === 'supervisor' && user.uid) {
-        finalEntries = entriesFromFirestore.filter(entry => {
-          return entry.siteDetails?.some(site => 
-            site.supervisorUid === user.uid && 
-            site.workStatus && 
-            SUPERVISOR_ACTIVE_STATUSES.includes(site.workStatus as SiteWorkStatus)
-          ) ?? false;
-        });
+        finalEntries = entriesFromFirestore.filter(entry => 
+            entry.siteDetails?.some(site => 
+                site.supervisorUid === user.uid &&
+                site.workStatus &&
+                SUPERVISOR_ACTIVE_STATUSES.includes(site.workStatus as SiteWorkStatus)
+            )
+        );
       }
       
       finalEntries.sort((a, b) => {
@@ -293,5 +292,3 @@ export function useFileEntries(): FileEntriesState {
 
   return { fileEntries, isLoading, addFileEntry, deleteFileEntry, getFileEntry, fetchEntryForEditing, refreshFileEntries: fetchData };
 }
-
-    

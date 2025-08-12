@@ -1,19 +1,16 @@
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FolderOpen, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { useFileEntries } from '@/hooks/useFileEntries';
-import { useAuth } from '@/hooks/useAuth';
-import type { SiteWorkStatus } from '@/lib/schemas';
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { fileEntries } = useFileEntries(); // This hook now correctly filters for supervisors
-  const { user } = useAuth();
+  const { fileEntries } = useFileEntries(); 
 
   return (
     <div className="space-y-6">
@@ -45,5 +42,3 @@ export default function FileManagerPage() {
     </div>
   );
 }
-
-    

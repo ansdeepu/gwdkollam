@@ -803,5 +803,3 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
-
-    
