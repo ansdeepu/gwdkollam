@@ -99,7 +99,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
+  const canEdit = user?.role === 'editor' || user?.role === 'site-manager';
   const canDelete = user?.role === 'editor';
 
   const filteredEntries = useMemo(() => {
