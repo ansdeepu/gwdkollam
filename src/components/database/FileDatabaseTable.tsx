@@ -103,12 +103,26 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const canDelete = user?.role === 'editor';
 
   const filteredEntries = useMemo(() => {
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    if (!lowerSearchTerm) {
-      return fileEntries;
+    let entries = fileEntries;
+
+    // For site managers, only show files that have at least one active, assigned site
+    if (user?.role === 'site-manager' && user.uid) {
+        const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+        entries = entries.filter(entry =>
+            entry.siteDetails?.some(site =>
+                site.supervisorUid === user.uid &&
+                site.workStatus &&
+                activeStatuses.includes(site.workStatus as SiteWorkStatus)
+            )
+        );
     }
 
-    return fileEntries.filter(entry => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    if (!lowerSearchTerm) {
+      return entries;
+    }
+
+    return entries.filter(entry => {
         const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
         
         // Flatten all searchable text fields into one string for easy searching
@@ -155,7 +169,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
         return searchableContent.includes(lowerSearchTerm);
     });
-  }, [fileEntries, searchTerm]);
+  }, [fileEntries, searchTerm, user]);
 
   useEffect(() => {
     setCurrentPage(1);

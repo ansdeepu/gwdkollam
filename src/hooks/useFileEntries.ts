@@ -154,7 +154,7 @@ export function useFileEntries(): FileEntriesState {
 
   const fetchEntryForEditing = useCallback(async (fileNo: string): Promise<DataEntryFormData | undefined> => {
     // If the user isn't loaded yet, we can't fetch.
-    if (!user) {
+    if (authIsLoading || !user) {
         console.warn("[useFileEntries] fetchEntryForEditing called before user was loaded.");
         return undefined;
     }
@@ -172,7 +172,10 @@ export function useFileEntries(): FileEntriesState {
             // This ensures they can't load a file they aren't assigned to, even if they know the fileNo.
             if (fileEntries.length > 0) {
                  const entry = fileEntries.find(e => e.fileNo === fileNo);
-                 return entry;
+                 // We must also check if the user is actually assigned to it.
+                 if (entry && entry.assignedSupervisorUids?.includes(user.uid)) {
+                   return entry;
+                 }
             } else {
                  // Fallback if the main list hasn't loaded yet
                  const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
@@ -187,7 +190,7 @@ export function useFileEntries(): FileEntriesState {
       console.error("[useFileEntries] Error fetching single entry:", error);
       return undefined;
     }
-  }, [user, fileEntries]);
+  }, [user, fileEntries, authIsLoading]);
 
   const fetchData = useCallback(async () => {
     if (authIsLoading || !user) {
@@ -218,17 +221,6 @@ export function useFileEntries(): FileEntriesState {
       
       let finalEntries = entriesFromFirestore;
 
-      if (user.role === 'site-manager' && user.uid) {
-        const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-        finalEntries = entriesFromFirestore.filter(entry => 
-            entry.siteDetails?.some(site => 
-                site.supervisorUid === user.uid &&
-                site.workStatus &&
-                activeStatuses.includes(site.workStatus as SiteWorkStatus)
-            )
-        );
-      }
-      
       finalEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
         const dateB_str = b.remittanceDetails?.[0]?.dateOfRemittance;
