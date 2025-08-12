@@ -403,6 +403,11 @@ export default function DashboardPage() {
         }
     }
     
+    let finalWorkStatusData = initialWorkStatusData;
+    if (isSiteManager) {
+        finalWorkStatusData = initialWorkStatusData.filter(row => row.total.count > 0 || row.statusCategory === "Total No. of Applications");
+    }
+
     const workAlerts = Array.from(workAlertsMap.values());
     const filesByAgeCounts = {
         lessThan1: ageGroups.lessThan1.length,
@@ -419,7 +424,7 @@ export default function DashboardPage() {
 
     return {
         pendingTasksCount,
-        workStatusByServiceData: initialWorkStatusData,
+        workStatusByServiceData: finalWorkStatusData,
         birthdayWishes,
         workAlerts,
         filesByAgeData: ageGroups,
@@ -1194,8 +1199,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="shadow-lg md:col-span-2"> 
+      <Card className="shadow-lg"> 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Landmark className="h-5 w-5 text-primary" />
@@ -1339,7 +1343,6 @@ export default function DashboardPage() {
                Note: Withdrawals for SBI/STSB are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.
           </CardFooter>
         </Card>
-      </div>
       
       <div className="space-y-6 mt-6">
         <Card className="shadow-lg">
