@@ -159,30 +159,38 @@ export function useFileEntries(): FileEntriesState {
     }
 
     try {
+        // Always query the database directly to ensure fresh and authorized data is fetched.
         const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
         const querySnapshot = await getDocs(q);
+        
         if (querySnapshot.empty) {
-            return undefined;
+            return undefined; // File does not exist
         }
         
         const docData = querySnapshot.docs[0].data();
         const entry = convertTimestampsToDates({ id: querySnapshot.docs[0].id, ...docData });
 
+        // Security check: Verify if the current user is authorized to view this specific entry.
         if (user.role === 'editor' || user.role === 'viewer') {
-            return entry;
+            return entry; // Editors and viewers can see everything.
         }
 
-        if (user.role === 'site-manager' && entry.assignedSupervisorUids?.includes(user.uid)) {
-            return entry;
+        if (user.role === 'site-manager') {
+            // A site manager can only edit a file if their UID is in the list of assigned supervisors.
+            const isAssigned = entry.assignedSupervisorUids?.includes(user.uid);
+            if (isAssigned) {
+                return entry;
+            }
         }
         
-        // If user is not authorized, return undefined
+        // If none of the above conditions are met, the user is not authorized.
         return undefined;
+
     } catch (error) {
         console.error("[useFileEntries] Error fetching single entry for editing:", error);
         return undefined;
     }
-}, [user, authIsLoading]);
+  }, [user, authIsLoading]);
 
 
   const fetchData = useCallback(async () => {
