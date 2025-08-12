@@ -507,20 +507,17 @@ export default function DashboardPage() {
 
 
   const supervisorOngoingWorks = useMemo(() => {
-    if (!selectedSupervisorId || entriesLoading) {
-      const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
+    const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
         acc[purpose] = 0;
         return acc;
-      }, {} as Record<SitePurpose, number>);
+    }, {} as Record<SitePurpose, number>);
+    
+    if (!selectedSupervisorId || entriesLoading) {
       return { works: [], byPurpose, totalCount: 0 };
     }
     
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
     let works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; purpose?: SitePurpose; supervisorName?: string | null }> = [];
-    const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
-        acc[purpose] = 0;
-        return acc;
-    }, {} as Record<SitePurpose, number>);
 
     for (const entry of fileEntries) {
         entry.siteDetails?.forEach(site => {
@@ -757,7 +754,7 @@ export default function DashboardPage() {
     }
     
     XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
-    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}`;
     XLSX.writeFile(wb, uniqueFileName);
 
     toast({ title: "Excel Exported", description: `Your report has been downloaded as ${uniqueFileName}.` });
@@ -1356,8 +1353,8 @@ export default function DashboardPage() {
                   </Button>
                 </div>
                 <div className="p-2 bg-background rounded-md shadow-inner">
-                  {currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                  {currentMonthStats ? (
+                    <div className="space-y-2">
                       {sitePurposeOptions.map((purpose) => (
                         <div key={purpose} className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">{purpose}</span>
@@ -1383,8 +1380,8 @@ export default function DashboardPage() {
                   </Button>
                 </div>
                 <div className="p-2 bg-background rounded-md shadow-inner">
-                  {currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                  {currentMonthStats ? (
+                    <div className="space-y-2">
                        {sitePurposeOptions.map((purpose) => (
                         <div key={purpose} className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">{purpose}</span>
@@ -1435,32 +1432,29 @@ export default function DashboardPage() {
               </Select>
               <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner border">
                 {selectedSupervisorId ? (
-                    supervisorOngoingWorks.totalCount > 0 ? (
-                       <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Category</TableHead>
-                            <TableHead className="text-right">Count</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {Object.entries(supervisorOngoingWorks.byPurpose).map(([purpose, count]) => (
-                            <TableRow key={purpose}>
-                                <TableCell className="font-medium">{purpose}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)}>
-                                        {count as number}
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                            ))}
-                        </TableBody>
-                        </Table>
-                    ) : (
-                        <div className="flex h-full items-center justify-center">
-                            <p className="text-muted-foreground text-center text-sm">No ongoing works found for the selected Site Manager.</p>
-                        </div>
-                    )
+                   <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Category</TableHead>
+                        <TableHead className="text-right">Count</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {sitePurposeOptions.map((purpose) => {
+                            const count = supervisorOngoingWorks.byPurpose[purpose] || 0;
+                            return (
+                                <TableRow key={purpose}>
+                                    <TableCell className="font-medium">{purpose}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)} disabled={count === 0}>
+                                            {count}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                    </Table>
                 ) : (
                     <div className="flex h-full items-center justify-center">
                         <p className="text-muted-foreground text-center text-sm">Please select a Site Manager to see their work.</p>
