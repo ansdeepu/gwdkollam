@@ -1452,7 +1452,7 @@ export default function DashboardPage() {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
+          {currentUser?.role === 'editor' && (
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
