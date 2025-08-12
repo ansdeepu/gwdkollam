@@ -150,8 +150,6 @@ interface FileEntriesState {
   refreshFileEntries: () => void;
 }
 
-const SUPERVISOR_ACTIVE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-
 export function useFileEntries(): FileEntriesState {
   const { user, isLoading: authIsLoading } = useAuth();
   const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>([]);
@@ -191,16 +189,6 @@ export function useFileEntries(): FileEntriesState {
       });
       
       let finalEntries = entriesFromFirestore;
-
-      if (user.role === 'supervisor' && user.uid) {
-        finalEntries = entriesFromFirestore.filter(entry => 
-            entry.siteDetails?.some(site => 
-                site.supervisorUid === user.uid &&
-                site.workStatus &&
-                SUPERVISOR_ACTIVE_STATUSES.includes(site.workStatus as SiteWorkStatus)
-            )
-        );
-      }
       
       finalEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
@@ -244,7 +232,7 @@ export function useFileEntries(): FileEntriesState {
   }, [fetchData]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, originalFileNoWhileEditing?: string) => {
-    if (!user || (user.role !== 'editor' && user.role !== 'supervisor')) {
+    if (!user || (user.role !== 'editor')) {
       throw new Error("You do not have permission to save file data.");
     }
     

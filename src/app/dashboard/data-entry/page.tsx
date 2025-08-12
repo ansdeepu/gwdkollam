@@ -92,17 +92,14 @@ interface PageData {
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
   const fileNoToEdit = searchParams.get("fileNo");
-  const updateIdToApprove = searchParams.get("approveUpdateId");
   
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
-  const { getPendingUpdateById } = usePendingUpdates();
   const { toast } = useToast();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const [originalSupervisorSites, setOriginalSupervisorSites] = useState<string | null>(null);
   const [pageTitle, setPageTitle] = useState("Data Entry");
   const [pageDescription, setPageDescription] = useState("Loading...");
 
@@ -113,10 +110,9 @@ export default function DataEntryPage() {
       setDataLoading(true);
       
       const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
-      const pendingUpdatePromise = updateIdToApprove ? getPendingUpdateById(updateIdToApprove) : Promise.resolve(null);
       
       try {
-        const [entryResult, pendingUpdateResult] = await Promise.all([entryPromise, pendingUpdatePromise]);
+        const [entryResult] = await Promise.all([entryPromise]);
         
         let allUsersResult: UserProfile[] = [];
         if (user.role === 'editor') {
@@ -127,29 +123,8 @@ export default function DataEntryPage() {
           if (fileNoToEdit && !entryResult) {
             toast({ title: "Error", description: `File No. ${fileNoToEdit} not found.`, variant: "destructive" });
           }
-
-          let finalEntryData = entryResult;
-
-          // ** NEW: If approving, merge pending changes into the entry data **
-          if (finalEntryData && pendingUpdateResult && user.role === 'editor') {
-            const entryCopy = JSON.parse(JSON.stringify(finalEntryData)); // Deep copy to avoid mutation
-            const updatedSiteDetails = [...(entryCopy.siteDetails || [])];
-            
-            pendingUpdateResult.updatedSiteDetails.forEach(updatedSite => {
-                const index = updatedSiteDetails.findIndex(site => site.nameOfSite === updatedSite.nameOfSite);
-                if (index > -1) {
-                    updatedSiteDetails[index] = updatedSite; // Replace with updated site data
-                }
-            });
-            finalEntryData = { ...entryCopy, siteDetails: updatedSiteDetails };
-            toast({
-              title: "Reviewing Update",
-              description: `Loaded changes from supervisor for approval. Please review and save.`,
-              variant: "default"
-            });
-          }
           
-          const finalInitialData = mapEntryToFormValues(finalEntryData);
+          const finalInitialData = mapEntryToFormValues(entryResult);
           
           setPageData({
             initialData: finalInitialData,
@@ -175,7 +150,7 @@ export default function DataEntryPage() {
     }
     
     return () => { isMounted = false; };
-  }, [fileNoToEdit, updateIdToApprove, authIsLoading, user, fetchEntryForEditing, fetchAllUsers, getPendingUpdateById, toast]);
+  }, [fileNoToEdit, authIsLoading, user, fetchEntryForEditing, fetchAllUsers, toast]);
 
   useEffect(() => {
     let title = "View File Data";
@@ -186,20 +161,9 @@ export default function DataEntryPage() {
       if (isCreatingNew) {
         title = "New File Data Entry";
         description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
-      } else if (updateIdToApprove) {
-        title = "Approve Supervisor Update";
-        description = `Reviewing supervisor changes for File No: ${fileNoToEdit}. Make final adjustments and save to approve.`;
       } else {
         title = "Edit File Data";
         description = `Editing details for File No: ${fileNoToEdit}. Please make your changes and submit.`;
-      }
-    } else if (user?.role === 'supervisor') {
-      if (isCreatingNew) {
-        title = "Access Denied";
-        description = "Supervisors cannot create new files. Please contact an editor.";
-      } else {
-        title = "Update Site Details";
-        description = `Editing site details for assigned sites within File No: ${fileNoToEdit}.`;
       }
     } else if (isCreatingNew) {
       title = "Access Denied";
@@ -208,14 +172,14 @@ export default function DataEntryPage() {
 
     setPageTitle(title);
     setPageDescription(description);
-  }, [fileNoToEdit, user, updateIdToApprove]);
+  }, [fileNoToEdit, user]);
 
 
   const supervisorList = useMemo(() => {
     if (!user || !pageData || staffMembers.length === 0) return [];
     
     const activeSupervisors = pageData.allUsers
-      .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
+      .filter(u => u.role === 'editor' && u.isApproved && u.staffId)
       .map(userProfile => {
         const staffInfo = staffMembers.find(s => s.id === userProfile.staffId && s.status === 'Active');
         if (staffInfo) {
@@ -243,10 +207,9 @@ export default function DataEntryPage() {
     );
   }
   
-  const isSupervisorCreatingNew = user?.role === 'supervisor' && !fileNoToEdit;
   const isViewerCreatingNew = user?.role === 'viewer' && !fileNoToEdit;
 
-  if (isSupervisorCreatingNew || isViewerCreatingNew) {
+  if (isViewerCreatingNew) {
      return (
       <div className="space-y-6 p-6 text-center">
         <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -278,7 +241,6 @@ export default function DataEntryPage() {
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}
-                originalSupervisorSites={originalSupervisorSites}
              />
           </CardContent>
         </Card>
