@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -104,19 +103,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
   const filteredEntries = useMemo(() => {
     let entries = fileEntries;
-
-    // For site managers, only show files that have at least one active, assigned site for editing.
-    if (user?.role === 'site-manager' && user.uid) {
-        const activeStatusesForEditing: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
-        entries = entries.filter(entry =>
-            entry.siteDetails?.some(site =>
-                site.supervisorUid === user.uid &&
-                site.workStatus &&
-                activeStatusesForEditing.includes(site.workStatus as SiteWorkStatus)
-            )
-        );
-    }
-
     const lowerSearchTerm = searchTerm.toLowerCase();
     if (!lowerSearchTerm) {
       return entries;
@@ -169,7 +155,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
         return searchableContent.includes(lowerSearchTerm);
     });
-  }, [fileEntries, searchTerm, user]);
+  }, [fileEntries, searchTerm]);
 
   useEffect(() => {
     setCurrentPage(1);

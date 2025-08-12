@@ -1,16 +1,32 @@
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { useFileEntries } from '@/hooks/useFileEntries';
+import { useAuth } from '@/hooks/useAuth';
+import type { SiteWorkStatus } from '@/lib/schemas';
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { fileEntries } = useFileEntries(); 
+  const { user } = useAuth();
+
+  const filteredFileEntriesForManager = useMemo(() => {
+    if (user?.role === 'site-manager') {
+      const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+      return fileEntries.filter(entry =>
+        entry.siteDetails?.some(site =>
+          site.supervisorUid === user.uid &&
+          activeStatuses.includes(site.workStatus as SiteWorkStatus)
+        )
+      );
+    }
+    return fileEntries;
+  }, [fileEntries, user]);
 
   return (
     <div className="space-y-6">
@@ -36,7 +52,7 @@ export default function FileManagerPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FileDatabaseTable searchTerm={searchTerm} fileEntries={fileEntries} />
+          <FileDatabaseTable searchTerm={searchTerm} fileEntries={filteredFileEntriesForManager} />
         </CardContent>
       </Card>
     </div>
