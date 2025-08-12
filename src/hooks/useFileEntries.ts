@@ -182,9 +182,12 @@ export function useFileEntries(): FileEntriesState {
     setIsLoading(true);
     try {
       let q;
+      // If the user is a supervisor, create a query to get only their assigned files.
+      // This works with the Firestore security rules.
       if (user.role === 'supervisor' && user.uid) {
         q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
       } else {
+        // Editors and viewers get all files.
         q = query(collection(db, FILE_ENTRIES_COLLECTION));
       }
       
@@ -196,6 +199,7 @@ export function useFileEntries(): FileEntriesState {
       
       let finalEntries = entriesFromFirestore;
 
+      // After fetching the base data, supervisors need an additional client-side filter for active work status.
       if (user.role === 'supervisor' && user.uid) {
         const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
         
