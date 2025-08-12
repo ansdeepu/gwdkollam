@@ -1353,16 +1353,18 @@ export default function DashboardPage() {
                   </Button>
                 </div>
                 <div className="p-2 bg-background rounded-md shadow-inner">
-                  {currentMonthStats ? (
+                  {currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
                     <div className="space-y-2">
-                      {sitePurposeOptions.map((purpose) => (
-                        <div key={purpose} className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">{purpose}</span>
-                          <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
-                            {currentMonthStats.completedSummary.byPurpose[purpose] || 0}
-                          </Button>
-                        </div>
-                      ))}
+                      {sitePurposeOptions
+                        .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose] || 0) > 0)
+                        .map((purpose) => (
+                          <div key={purpose} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{purpose}</span>
+                            <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
+                              {currentMonthStats.completedSummary.byPurpose[purpose] || 0}
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   ) : (
                     <div className="flex h-[150px] items-center justify-center">
@@ -1380,16 +1382,18 @@ export default function DashboardPage() {
                   </Button>
                 </div>
                 <div className="p-2 bg-background rounded-md shadow-inner">
-                  {currentMonthStats ? (
+                  {currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
                     <div className="space-y-2">
-                       {sitePurposeOptions.map((purpose) => (
-                        <div key={purpose} className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">{purpose}</span>
-                          <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
-                            {currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}
-                          </Button>
-                        </div>
-                      ))}
+                       {sitePurposeOptions
+                        .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose] || 0) > 0)
+                        .map((purpose) => (
+                          <div key={purpose} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{purpose}</span>
+                            <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
+                              {currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   ) : (
                     <div className="flex h-[150px] items-center justify-center">
@@ -1440,7 +1444,9 @@ export default function DashboardPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {sitePurposeOptions.map((purpose) => {
+                        {sitePurposeOptions
+                          .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose] || 0) > 0)
+                          .map((purpose) => {
                             const count = supervisorOngoingWorks.byPurpose[purpose] || 0;
                             return (
                                 <TableRow key={purpose}>
