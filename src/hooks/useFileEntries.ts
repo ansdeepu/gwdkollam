@@ -168,90 +168,85 @@ export function useFileEntries(): FileEntriesState {
   }, []);
 
   const fetchData = useCallback(async () => {
-    if (authIsLoading || !user) {
-      setIsLoading(authIsLoading);
-      if (!authIsLoading && !user) setFileEntries([]);
-      return;
+    if (authIsLoading) {
+        setIsLoading(true);
+        return;
     }
-    if (!user.isApproved) {
-      setIsLoading(false);
-      setFileEntries([]);
-      return;
+    if (!user || !user.isApproved) {
+        setIsLoading(false);
+        setFileEntries([]);
+        return;
     }
 
     setIsLoading(true);
     try {
-      let q;
-      // If the user is a supervisor, create a query to get only their assigned files.
-      // This works with the Firestore security rules.
-      if (user.role === 'supervisor' && user.uid) {
-        q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
-      } else {
-        // Editors and viewers get all files.
-        q = query(collection(db, FILE_ENTRIES_COLLECTION));
-      }
-      
-      const querySnapshot = await getDocs(q);
-      const entriesFromFirestore: DataEntryFormData[] = [];
-      querySnapshot.forEach((doc) => {
-        entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
-      });
-      
-      let finalEntries = entriesFromFirestore;
-
-      // After fetching the base data, supervisors need an additional client-side filter for active work status.
-      if (user.role === 'supervisor' && user.uid) {
-        const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+        let q;
+        if (user.role === 'supervisor' && user.uid) {
+            q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
+        } else {
+            q = query(collection(db, FILE_ENTRIES_COLLECTION));
+        }
         
-        finalEntries = entriesFromFirestore.filter(entry => 
-          entry.siteDetails?.some(site => 
-            site.supervisorUid === user.uid &&
-            site.workStatus &&
-            activeStatuses.includes(site.workStatus as SiteWorkStatus)
-          )
-        );
-      }
-      
-      finalEntries.sort((a, b) => {
-        const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
-        const dateB_str = b.remittanceDetails?.[0]?.dateOfRemittance;
-        const dateA = dateA_str ? new Date(dateA_str) : null;
-        const dateB = dateB_str ? new Date(dateB_str) : null;
-        if (dateA && isValid(dateA) && dateB && isValid(dateB)) {
-          const timeDiff = dateB.getTime() - dateA.getTime();
-          if (timeDiff !== 0) return timeDiff;
-        } else if (dateA && isValid(dateA)) return -1;
-        else if (dateB && isValid(dateB)) return 1;
-        const detailsA = parseFileNoDetails(a.fileNo);
-        const detailsB = parseFileNoDetails(b.fileNo);
-        const typeOrder: Record<ParsedFileNoType, number> = { alphaNum: 1, yearNum: 2, other: 3 };
-        if (typeOrder[detailsA.type] !== typeOrder[detailsB.type]) return typeOrder[detailsA.type] - typeOrder[detailsB.type];
-        if (detailsA.type === 'alphaNum') {
-          const prefixCompare = (detailsA.prefix || "").toLowerCase().localeCompare((detailsB.prefix || "").toLowerCase());
-          if (prefixCompare !== 0) return prefixCompare;
-          return (detailsA.num || 0) - (detailsB.num || 0);
+        const querySnapshot = await getDocs(q);
+        const entriesFromFirestore: DataEntryFormData[] = [];
+        querySnapshot.forEach((doc) => {
+            entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
+        });
+        
+        let finalEntries = entriesFromFirestore;
+
+        if (user.role === 'supervisor' && user.uid) {
+            const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+            finalEntries = entriesFromFirestore.filter(entry => 
+                entry.siteDetails?.some(site => 
+                    site.supervisorUid === user.uid &&
+                    site.workStatus &&
+                    activeStatuses.includes(site.workStatus as SiteWorkStatus)
+                )
+            );
         }
-        if (detailsA.type === 'yearNum') {
-          if ((detailsA.year || 0) < (detailsB.year || 0)) return -1;
-          if ((detailsA.year || 0) > (detailsB.year || 0)) return 1;
-          if ((detailsA.num || 0) < (detailsA.num || 0)) return -1;
-          if ((detailsB.num || 0) > (detailsB.num || 0)) return 1;
-          return 0;
-        }
-        return detailsA.original.localeCompare(detailsB.original);
-      });
-      setFileEntries(finalEntries);
+        
+        finalEntries.sort((a, b) => {
+            const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
+            const dateB_str = b.remittanceDetails?.[0]?.dateOfRemittance;
+            const dateA = dateA_str ? new Date(dateA_str) : null;
+            const dateB = dateB_str ? new Date(dateB_str) : null;
+            if (dateA && isValid(dateA) && dateB && isValid(dateB)) {
+                const timeDiff = dateB.getTime() - dateA.getTime();
+                if (timeDiff !== 0) return timeDiff;
+            } else if (dateA && isValid(dateA)) return -1;
+            else if (dateB && isValid(dateB)) return 1;
+            const detailsA = parseFileNoDetails(a.fileNo);
+            const detailsB = parseFileNoDetails(b.fileNo);
+            const typeOrder: Record<ParsedFileNoType, number> = { alphaNum: 1, yearNum: 2, other: 3 };
+            if (typeOrder[detailsA.type] !== typeOrder[detailsB.type]) return typeOrder[detailsA.type] - typeOrder[detailsB.type];
+            if (detailsA.type === 'alphaNum') {
+                const prefixCompare = (detailsA.prefix || "").toLowerCase().localeCompare((detailsB.prefix || "").toLowerCase());
+                if (prefixCompare !== 0) return prefixCompare;
+                return (detailsA.num || 0) - (detailsB.num || 0);
+            }
+            if (detailsA.type === 'yearNum') {
+                if ((detailsA.year || 0) < (detailsB.year || 0)) return -1;
+                if ((detailsA.year || 0) > (detailsB.year || 0)) return 1;
+                if ((detailsA.num || 0) < (detailsA.num || 0)) return -1;
+                if ((detailsB.num || 0) > (detailsB.num || 0)) return 1;
+                return 0;
+            }
+            return detailsA.original.localeCompare(detailsB.original);
+        });
+        setFileEntries(finalEntries);
     } catch (error) {
-      console.error("[useFileEntries] Error fetching file entries:", error);
-       setFileEntries([]);
+        console.error("[useFileEntries] Error fetching file entries:", error);
+        setFileEntries([]);
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   }, [user, authIsLoading]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, originalFileNoWhileEditing?: string) => {
     if (!user || user.role !== 'editor') {
