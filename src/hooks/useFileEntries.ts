@@ -180,7 +180,15 @@ export function useFileEntries(): FileEntriesState {
 
     setIsLoading(true);
     try {
-      const q = collection(db, FILE_ENTRIES_COLLECTION);
+      let q;
+      // If user is a site manager, construct a specific query to get only their assigned files.
+      // This works with Firestore security rules.
+      if (user.role === 'site-manager' && user.uid) {
+        q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
+      } else {
+        // Editors and viewers get all documents.
+        q = query(collection(db, FILE_ENTRIES_COLLECTION));
+      }
       
       const querySnapshot = await getDocs(q);
       const entriesFromFirestore: DataEntryFormData[] = [];
@@ -190,6 +198,7 @@ export function useFileEntries(): FileEntriesState {
       
       let finalEntries = entriesFromFirestore;
 
+      // For site managers, apply the additional client-side filtering for active work status.
       if (user.role === 'site-manager' && user.uid) {
         const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
         
