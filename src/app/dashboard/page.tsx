@@ -460,7 +460,7 @@ export default function DashboardPage() {
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
     return allUsers
-        .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
+        .filter(u => u.role === 'site-manager' && u.isApproved && u.staffId)
         .map(u => {
             const staffInfo = staffMembers.find(s => s.id === u.staffId);
             return {
@@ -1168,7 +1168,7 @@ export default function DashboardPage() {
                         mode="single" 
                         selected={financeEndDate} 
                         onSelect={setFinanceEndDate} 
-                        disabled={(date) => (financeStartDate ? date < financeStartDate : false) || date > new Date()} 
+                        disabled={(date) => (financeStartDate ? date < startDate : false) || date > new Date()} 
                         initialFocus
                       />
                   </PopoverContent>
@@ -1396,16 +1396,16 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Supervisor's Ongoing Work
+                Site Manager's Ongoing Work
               </CardTitle>
               <CardDescription>
-                Select a supervisor to view their assigned ongoing projects by category.
+                Select a Site Manager to view their assigned ongoing projects by category.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Select value={selectedSupervisorId} onValueChange={setSelectedSupervisorId}>
                 <SelectTrigger className="w-full sm:w-[300px]">
-                    <SelectValue placeholder="Select a Supervisor" />
+                    <SelectValue placeholder="Select a Site Manager" />
                 </SelectTrigger>
                 <SelectContent>
                     {supervisorList.length > 0 ? (
@@ -1415,7 +1415,7 @@ export default function DashboardPage() {
                             </SelectItem>
                         ))
                     ) : (
-                        <SelectItem value="no-supervisors" disabled>No supervisors available</SelectItem>
+                        <SelectItem value="no-supervisors" disabled>No Site Managers available</SelectItem>
                     )}
                 </SelectContent>
               </Select>
@@ -1444,12 +1444,12 @@ export default function DashboardPage() {
                         </Table>
                     ) : (
                         <div className="flex h-full items-center justify-center">
-                            <p className="text-muted-foreground text-center text-sm">No ongoing works found for the selected supervisor.</p>
+                            <p className="text-muted-foreground text-center text-sm">No ongoing works found for the selected Site Manager.</p>
                         </div>
                     )
                 ) : (
                     <div className="flex h-full items-center justify-center">
-                        <p className="text-muted-foreground text-center text-sm">Please select a supervisor to see their work.</p>
+                        <p className="text-muted-foreground text-center text-sm">Please select a Site Manager to see their work.</p>
                     </div>
                 )}
               </ScrollArea>
@@ -1495,7 +1495,7 @@ export default function DashboardPage() {
                             variant={usr.role === 'editor' ? 'default' : 'secondary'}
                             className="text-xs whitespace-nowrap ml-2"
                           >
-                            {usr.role.charAt(0).toUpperCase() + usr.role.slice(1)}
+                            {usr.role === 'site-manager' ? 'Site Manager' : (usr.role.charAt(0).toUpperCase() + usr.role.slice(1))}
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
