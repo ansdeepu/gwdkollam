@@ -425,7 +425,7 @@ export default function DashboardPage() {
   }, [entriesLoading, fileEntries, staffLoading, staffMembers, currentUser]);
 
   const currentMonthStats = useMemo(() => {
-    if (entriesLoading) return null;
+    if (entriesLoading || !currentUser) return null;
 
     const startOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth(), 1);
     const endOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth() + 1, 0, 23, 59, 59);
@@ -436,9 +436,16 @@ export default function DashboardPage() {
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     
+    const isSiteManager = currentUser.role === 'site-manager';
+
     for (const entry of fileEntries) { // Use all fileEntries for this report
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
+        // Site Manager specific filtering
+        if (isSiteManager && site.supervisorUid !== currentUser.uid) {
+            continue; // Skip sites not assigned to this manager
+        }
+
         // Check for completed works within the month
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = new Date(site.dateOfCompletion);
@@ -476,7 +483,7 @@ export default function DashboardPage() {
         completedSummary: createSummary(completedThisMonthSites),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [fileEntries, entriesLoading, workReportMonth]);
+  }, [fileEntries, entriesLoading, workReportMonth, currentUser]);
 
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
