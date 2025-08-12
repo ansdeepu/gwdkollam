@@ -1440,129 +1440,129 @@ export default function DashboardPage() {
         </Card>
 
         {currentUser?.role === 'editor' && (
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Site Manager's Ongoing Work
-              </CardTitle>
-              <CardDescription>
-                Select a Site Manager to view their assigned ongoing projects by category.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Select value={selectedSupervisorId} onValueChange={setSelectedSupervisorId}>
-                <SelectTrigger className="w-full sm:w-[300px]">
-                    <SelectValue placeholder="Select a Site Manager" />
-                </SelectTrigger>
-                <SelectContent>
-                    {supervisorList.length > 0 ? (
-                        supervisorList.map(supervisor => (
-                            <SelectItem key={supervisor.uid} value={supervisor.uid}>
-                                {supervisor.name}
-                            </SelectItem>
-                        ))
-                    ) : (
-                        <SelectItem value="no-supervisors" disabled>No Site Managers available</SelectItem>
-                    )}
-                </SelectContent>
-              </Select>
-              <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner border">
-                {selectedSupervisorId ? (
-                   <Table>
-                    <TableHeader>
-                        <TableRow>
-                        <TableHead>Category</TableHead>
-                        <TableHead className="text-right">Count</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {sitePurposeOptions
-                          .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose] || 0) > 0)
-                          .map((purpose) => {
-                            const count = supervisorOngoingWorks.byPurpose[purpose] || 0;
-                            return (
-                                <TableRow key={purpose}>
-                                    <TableCell className="font-medium">{purpose}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)} disabled={count === 0}>
-                                            {count}
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                    </Table>
-                ) : (
-                    <div className="flex h-full items-center justify-center">
-                        <p className="text-muted-foreground text-center text-sm">Please select a Site Manager to see their work.</p>
-                    </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
-
-        {currentUser?.role === 'editor' && (
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
-                User Activity
-              </CardTitle>
-              <CardDescription>Showing users by their most recent activity (top 5).</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activeUsers.length > 0 ? (
-                <ul className="space-y-3">
-                  {activeUsers.map((usr) => {
-                    const staffInfo = staffMembers.find(s => s.id === usr.staffId);
-                    const photoUrl = staffInfo?.photoUrl;
-                    const avatarColorClass = getColorClass(usr.name || usr.email || 'user');
-                    return (
-                    <li key={usr.uid} className="flex items-center space-x-3 p-2 hover:bg-secondary/50 rounded-md">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src={photoUrl || undefined}
-                          alt={usr.name || 'User'}
-                          data-ai-hint="person user"
-                        />
-                        <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(usr.name)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p
-                            className="text-sm font-medium text-foreground truncate"
-                            title={usr.name || usr.email?.split('@')[0]}
-                          >
-                            {usr.name || usr.email?.split('@')[0]}
-                          </p>
-                          <Badge
-                            variant={usr.role === 'editor' ? 'default' : 'secondary'}
-                            className="text-xs whitespace-nowrap ml-2"
-                          >
-                            {usr.role === 'site-manager' ? 'Site Manager' : (usr.role.charAt(0).toUpperCase() + usr.role.slice(1))}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {usr.lastActiveAt
-                            ? <>Last active: {formatDistanceToNow(usr.lastActiveAt, { addSuffix: true })}
-                              <span className="text-muted-foreground/70"> ({format(usr.lastActiveAt, 'dd MMM, p')})</span>
-                            </>
-                            : (usr.createdAt ? `Registered: {format(usr.createdAt, 'dd MMM yyyy, p')} (No activity logged)` : 'Activity status unknown')
-                          }
-                          {!usr.isApproved && <span className="ml-2 text-orange-500 font-medium">(Pending)</span>}
-                        </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Site Manager's Ongoing Work
+                </CardTitle>
+                <CardDescription>
+                  Select a Site Manager to view their assigned ongoing projects by category.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Select value={selectedSupervisorId} onValueChange={setSelectedSupervisorId}>
+                  <SelectTrigger className="w-full sm:w-[300px]">
+                      <SelectValue placeholder="Select a Site Manager" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {supervisorList.length > 0 ? (
+                          supervisorList.map(supervisor => (
+                              <SelectItem key={supervisor.uid} value={supervisor.uid}>
+                                  {supervisor.name}
+                              </SelectItem>
+                          ))
+                      ) : (
+                          <SelectItem value="no-supervisors" disabled>No Site Managers available</SelectItem>
+                      )}
+                  </SelectContent>
+                </Select>
+                <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner border">
+                  {selectedSupervisorId ? (
+                     <Table>
+                      <TableHeader>
+                          <TableRow>
+                          <TableHead>Category</TableHead>
+                          <TableHead className="text-right">Count</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {sitePurposeOptions
+                            .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose] || 0) > 0)
+                            .map((purpose) => {
+                              const count = supervisorOngoingWorks.byPurpose[purpose] || 0;
+                              return (
+                                  <TableRow key={purpose}>
+                                      <TableCell className="font-medium">{purpose}</TableCell>
+                                      <TableCell className="text-right">
+                                          <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)} disabled={count === 0}>
+                                              {count}
+                                          </Button>
+                                      </TableCell>
+                                  </TableRow>
+                              );
+                          })}
+                      </TableBody>
+                      </Table>
+                  ) : (
+                      <div className="flex h-full items-center justify-center">
+                          <p className="text-muted-foreground text-center text-sm">Please select a Site Manager to see their work.</p>
                       </div>
-                    </li>
-                  )})}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground text-center py-4">No user activity data to display.</p>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  User Activity
+                </CardTitle>
+                <CardDescription>Showing users by their most recent activity (top 5).</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {activeUsers.length > 0 ? (
+                  <ul className="space-y-3">
+                    {activeUsers.map((usr) => {
+                      const staffInfo = staffMembers.find(s => s.id === usr.staffId);
+                      const photoUrl = staffInfo?.photoUrl;
+                      const avatarColorClass = getColorClass(usr.name || usr.email || 'user');
+                      return (
+                      <li key={usr.uid} className="flex items-center space-x-3 p-2 hover:bg-secondary/50 rounded-md">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage
+                            src={photoUrl || undefined}
+                            alt={usr.name || 'User'}
+                            data-ai-hint="person user"
+                          />
+                          <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(usr.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p
+                              className="text-sm font-medium text-foreground truncate"
+                              title={usr.name || usr.email?.split('@')[0]}
+                            >
+                              {usr.name || usr.email?.split('@')[0]}
+                            </p>
+                            <Badge
+                              variant={usr.role === 'editor' ? 'default' : 'secondary'}
+                              className="text-xs whitespace-nowrap ml-2"
+                            >
+                              {usr.role === 'site-manager' ? 'Site Manager' : (usr.role.charAt(0).toUpperCase() + usr.role.slice(1))}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {usr.lastActiveAt
+                              ? <>Last active: {formatDistanceToNow(usr.lastActiveAt, { addSuffix: true })}
+                                <span className="text-muted-foreground/70"> ({format(usr.lastActiveAt, 'dd MMM, p')})</span>
+                              </>
+                              : (usr.createdAt ? `Registered: {format(usr.createdAt, 'dd MMM yyyy, p')} (No activity logged)` : 'Activity status unknown')
+                            }
+                            {!usr.isApproved && <span className="ml-2 text-orange-500 font-medium">(Pending)</span>}
+                          </p>
+                        </div>
+                      </li>
+                    )})}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">No user activity data to display.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
