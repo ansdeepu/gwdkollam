@@ -121,7 +121,7 @@ export default function DataEntryPage() {
 
         if (isMounted) {
           if (fileNoToEdit && !entryResult) {
-            toast({ title: "Error", description: `File No. ${fileNoToEdit} not found.`, variant: "destructive" });
+            toast({ title: "Error", description: `File No. ${fileNoToEdit} not found or you do not have permission to view it.`, variant: "destructive" });
           }
           
           const finalInitialData = mapEntryToFormValues(entryResult);

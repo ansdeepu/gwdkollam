@@ -159,32 +159,30 @@ export function useFileEntries(): FileEntriesState {
     }
 
     try {
-        // Always query the database directly to ensure fresh and authorized data is fetched.
-        const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
+        let q;
+        // Construct the query based on user role for security.
+        if (user.role === 'editor' || user.role === 'viewer') {
+            q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
+        } else if (user.role === 'site-manager') {
+            q = query(
+                collection(db, FILE_ENTRIES_COLLECTION),
+                where("fileNo", "==", fileNo),
+                where("assignedSupervisorUids", "array-contains", user.uid)
+            );
+        } else {
+            // If user role is not recognized or doesn't have permissions, return nothing.
+            return undefined;
+        }
+
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-            return undefined; // File does not exist
+            return undefined; // File does not exist or user doesn't have access.
         }
         
         const docData = querySnapshot.docs[0].data();
         const entry = convertTimestampsToDates({ id: querySnapshot.docs[0].id, ...docData });
-
-        // Security check: Verify if the current user is authorized to view this specific entry.
-        if (user.role === 'editor' || user.role === 'viewer') {
-            return entry; // Editors and viewers can see everything.
-        }
-
-        if (user.role === 'site-manager') {
-            // A site manager can only edit a file if their UID is in the list of assigned supervisors.
-            const isAssigned = entry.assignedSupervisorUids?.includes(user.uid);
-            if (isAssigned) {
-                return entry;
-            }
-        }
-        
-        // If none of the above conditions are met, the user is not authorized.
-        return undefined;
+        return entry;
 
     } catch (error) {
         console.error("[useFileEntries] Error fetching single entry for editing:", error);
