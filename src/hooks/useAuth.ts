@@ -297,7 +297,6 @@ export function useAuth() {
   }, [router]);
 
   const fetchAllUsers = useCallback(async (): Promise<UserProfile[]> => {
-    // Allow editors and viewers to fetch all users.
     if (!authState.user || (authState.user.role !== 'editor' && authState.user.role !== 'viewer')) {
       return [];
     }
