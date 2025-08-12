@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -28,18 +29,15 @@ const FILE_ENTRIES_COLLECTION = 'fileEntries';
 const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
   const entry = { ...data } as any;
 
-  // Helper to robustly convert any date-like value to a JS Date object
   const toDate = (value: any): Date | undefined | null => {
     if (!value) return null;
-    if (value instanceof Date) return value; // Already a Date
-    if (value instanceof Timestamp) return value.toDate(); // Firestore Timestamp
-    // Plain object from serialization { seconds: ..., nanoseconds: ... }
+    if (value instanceof Date) return value;
+    if (value instanceof Timestamp) return value.toDate();
     if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
       return new Timestamp(value.seconds, value.nanoseconds).toDate();
     }
-    // ISO string from JSON.stringify or other sources
     if (typeof value === 'string') {
-      const d = parseISO(value); // Use parseISO for reliability
+      const d = parseISO(value);
       if (isValid(d)) return d;
     }
     return null;
@@ -51,13 +49,13 @@ const convertTimestampsToDates = (data: DocumentData): DataEntryFormData => {
 
   if (entry.remittanceDetails && Array.isArray(entry.remittanceDetails)) {
     entry.remittanceDetails = entry.remittanceDetails.map((rd: any) => {
-      if (!rd) return null; // Handle null entries in the array
+      if (!rd) return null;
       const detail = {...rd};
       detail.dateOfRemittance = toDate(rd.dateOfRemittance);
       if (detail.amountRemitted === null) detail.amountRemitted = undefined;
       if (detail.remittedAccount === null) detail.remittedAccount = undefined;
       return detail;
-    }).filter(Boolean); // Remove any null entries
+    }).filter(Boolean);
   }
 
   if (entry.paymentDetails && Array.isArray(entry.paymentDetails)) {
@@ -262,7 +260,6 @@ export function useFileEntries(): FileEntriesState {
       if (querySnapshot.empty) throw new Error(`File No. '${originalFileNoWhileEditing}' not found for update.`);
       const docToUpdateRef = doc(db, FILE_ENTRIES_COLLECTION, querySnapshot.docs[0].id);
 
-      // If file number is being changed, check if the new file number already exists
       if (entryData.fileNo !== originalFileNoWhileEditing) {
         if (user.role !== 'editor') throw new Error("Only editors can change the file number.");
         const newFileNoQuery = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", entryData.fileNo));
