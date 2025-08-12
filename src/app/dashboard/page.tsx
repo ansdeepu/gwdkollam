@@ -1442,8 +1442,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {currentUser?.role === 'editor' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1506,7 +1506,9 @@ export default function DashboardPage() {
                 </ScrollArea>
               </CardContent>
             </Card>
+          )}
 
+          {currentUser?.role === 'editor' && (
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1565,8 +1567,8 @@ export default function DashboardPage() {
                 )}
               </CardContent>
             </Card>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
