@@ -190,12 +190,13 @@ export function useFileEntries(): FileEntriesState {
       
       let finalEntries = entriesFromFirestore;
 
-      if (user.role === 'site-manager') {
+      if (user.role === 'site-manager' && user.uid) {
         const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+        
         finalEntries = entriesFromFirestore.filter(entry => 
           entry.siteDetails?.some(site => 
-            site.supervisorUid === user.uid && 
-            site.workStatus && 
+            site.supervisorUid === user.uid &&
+            site.workStatus &&
             activeStatuses.includes(site.workStatus as SiteWorkStatus)
           )
         );
