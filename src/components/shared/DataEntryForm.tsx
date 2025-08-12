@@ -90,7 +90,7 @@ const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undef
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 const PURPOSES_REQUIRING_RIG_ACCESSIBILITY: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig", "Work Failed", "Work Completed"];
+const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
 
 
 const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): string[] => {
@@ -160,9 +160,9 @@ export default function DataEntryFormComponent({
   const { user } = useAuth();
   
   const isEditor = userRole === 'editor';
-  const isSupervisor = userRole === 'supervisor';
+  const isSiteManager = userRole === 'site-manager';
   const isViewer = userRole === 'viewer';
-  const isReadOnly = isViewer || (isSupervisor && !fileNoToEdit);
+  const isReadOnly = isViewer || (isSiteManager && !fileNoToEdit);
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
@@ -286,13 +286,13 @@ export default function DataEntryFormComponent({
         return;
     }
     
-    if (userRole !== 'editor' && userRole !== 'supervisor') {
+    if (userRole !== 'editor' && userRole !== 'site-manager') {
         toast({ title: "Permission Denied", description: "You do not have permission to save file data.", variant: "destructive" });
         return;
     }
 
-    if (userRole === 'supervisor' && !fileNoToEdit) {
-        toast({ title: "Permission Denied", description: "Supervisors cannot create new files.", variant: "destructive" });
+    if (userRole === 'site-manager' && !fileNoToEdit) {
+        toast({ title: "Permission Denied", description: "Site Managers cannot create new files.", variant: "destructive" });
         return;
     }
 
@@ -319,9 +319,9 @@ export default function DataEntryFormComponent({
               title: fileNoToEdit ? "File Data Updated" : "File Data Submitted",
               description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
           });
-      } else if (userRole === 'supervisor' && fileNoToEdit) {
+      } else if (userRole === 'site-manager' && fileNoToEdit) {
           const sitesWithChanges = data.siteDetails?.filter(currentSite => {
-              if (currentSite.supervisorUid !== user.uid) return false; // Supervisor can only submit changes for their own sites
+              if (currentSite.supervisorUid !== user.uid) return false; // Site Manager can only submit changes for their own sites
 
               const originalSite = initialData.siteDetails?.find(s => s.nameOfSite === currentSite.nameOfSite);
               if (!originalSite) return true;
@@ -427,8 +427,8 @@ export default function DataEntryFormComponent({
                             {siteFields.map((item, index) => {
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
                             
-                            const siteIsEditableBySupervisor = isSupervisor && isAssignedToCurrentUser;
-                            const siteIsEditable = isEditor || siteIsEditableBySupervisor;
+                            const siteIsEditableBySiteManager = isSiteManager && isAssignedToCurrentUser;
+                            const siteIsEditable = isEditor || siteIsEditableBySiteManager;
 
                             const purpose = watchedSiteDetails[index]?.purpose;
                             const workStatus = watchedSiteDetails[index]?.workStatus;
@@ -481,7 +481,7 @@ export default function DataEntryFormComponent({
                                         name={`siteDetails.${index}.supervisorUid`}
                                         render={({ field }) => (
                                         <FormItem>
-                                        <FormLabel>Supervisor</FormLabel>
+                                        <FormLabel>Site Manager</FormLabel>
                                         {isEditor ? (
                                             <Select
                                             disabled={!isEditor}
@@ -496,9 +496,9 @@ export default function DataEntryFormComponent({
                                                 }
                                             }}
                                             value={field.value || ''}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Assign a supervisor" /></SelectTrigger></FormControl>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Assign a site manager" /></SelectTrigger></FormControl>
                                             <SelectContent>
-                                                <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); field.onChange(null); formSetValue(`siteDetails.${index}.supervisorName`, null); }}>-- Unassign Supervisor --</SelectItem>
+                                                <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); field.onChange(null); formSetValue(`siteDetails.${index}.supervisorName`, null); }}>-- Unassign Site Manager --</SelectItem>
                                                 {supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>)}
                                             </SelectContent>
                                             </Select>
@@ -516,8 +516,8 @@ export default function DataEntryFormComponent({
                               </>
                             );
                             
-                            if (isSupervisor && !isAssignedToCurrentUser) {
-                                return null; // Don't render site details if supervisor is not assigned
+                            if (isSiteManager && !isAssignedToCurrentUser) {
+                                return null; // Don't render site details if site manager is not assigned
                             }
 
                             return (
@@ -673,7 +673,7 @@ export default function DataEntryFormComponent({
                                                             </SelectTrigger>
                                                         </FormControl>
                                                         <SelectContent>
-                                                            {(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map((o) => (
+                                                            {(isSiteManager ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map((o) => (
                                                               <SelectItem key={o} value={o}>{o}</SelectItem>
                                                             ))}
                                                         </SelectContent>
