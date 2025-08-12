@@ -135,7 +135,7 @@ const getColorClass = (nameOrEmail: string): string => {
 export default function DashboardPage() {
   const router = useRouter();
   const { fileEntries, isLoading: entriesLoading } = useFileEntries();
-  const { staffMembers, isLoading: staffLoading } = useStaffMembers(); 
+  const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
   
