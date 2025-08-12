@@ -349,6 +349,8 @@ export function useAuth() {
         const dataToUpdate: any = { role };
         if (staffId) {
             dataToUpdate.staffId = staffId;
+        } else if (role === 'viewer') { // If changing to viewer, unlink staffId
+            dataToUpdate.staffId = null;
         }
         await updateDoc(userDocRef, dataToUpdate);
     } catch (error: any) {
