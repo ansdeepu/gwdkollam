@@ -1,3 +1,4 @@
+
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -42,6 +43,7 @@ interface PendingUpdatesState {
   createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
   rejectUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
+  hasPendingUpdateForSite: (fileNo: string, siteName: string) => Promise<boolean>;
 }
 
 export function usePendingUpdates(): PendingUpdatesState {
@@ -73,6 +75,31 @@ export function usePendingUpdates(): PendingUpdatesState {
 
     return () => unsubscribe();
   }, [user]);
+
+  const hasPendingUpdateForSite = useCallback(async (fileNo: string, siteName: string): Promise<boolean> => {
+    try {
+      const q = query(
+        collection(db, PENDING_UPDATES_COLLECTION),
+        where('fileNo', '==', fileNo),
+        where('status', '==', 'pending')
+      );
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        return false;
+      }
+      // Check if any of the pending updates for this file contain the specific site name
+      for (const doc of querySnapshot.docs) {
+        const updateData = doc.data() as PendingUpdate;
+        if (updateData.updatedSiteDetails.some(site => site.nameOfSite === siteName)) {
+          return true; // Found a pending update for this site
+        }
+      }
+      return false; // No pending updates found for this specific site
+    } catch (error) {
+      console.error("Error checking for pending site updates:", error);
+      return false; // Assume no pending update on error
+    }
+  }, []);
 
   const createPendingUpdate = useCallback(async (
     fileNo: string,
@@ -125,5 +152,6 @@ export function usePendingUpdates(): PendingUpdatesState {
     createPendingUpdate,
     rejectUpdate,
     getPendingUpdateById,
+    hasPendingUpdateForSite,
   };
 }
