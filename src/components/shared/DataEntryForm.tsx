@@ -1,4 +1,3 @@
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -142,7 +141,6 @@ interface DataEntryFormProps {
   initialData: DataEntryFormData;
   supervisorList: (StaffMember & { uid: string; name: string })[];
   userRole?: UserRole;
-  originalSupervisorSites?: string | null;
 }
 
 export default function DataEntryFormComponent({ 
@@ -150,7 +148,6 @@ export default function DataEntryFormComponent({
   initialData,
   supervisorList,
   userRole,
-  originalSupervisorSites,
 }: DataEntryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -171,18 +168,19 @@ export default function DataEntryFormComponent({
 
   const { reset: formReset, trigger: formTrigger, getValues: formGetValues, setValue: formSetValue, control, watch } = form;
 
-  const stableInitialData = useCallback(() => initialData, [JSON.stringify(initialData)]);
+  // Use JSON.stringify to create a stable dependency for useCallback and useEffect
+  const stableInitialDataString = JSON.stringify(initialData);
 
   useEffect(() => {
-    formReset(stableInitialData());
-  }, [stableInitialData, formReset]);
+    formReset(initialData);
+  }, [stableInitialDataString, formReset, initialData]);
 
   useEffect(() => {
     if (fileNoToEdit) {
       const timer = setTimeout(() => formTrigger(), 500);
       return () => clearTimeout(timer);
     }
-  }, [fileNoToEdit, formTrigger, stableInitialData]);
+  }, [fileNoToEdit, formTrigger, stableInitialDataString]);
 
   const watchedSiteDetails = useWatch({ control, name: "siteDetails", defaultValue: [] });
   const applicationType = watch("applicationType");
