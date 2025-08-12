@@ -145,7 +145,7 @@ export default function DataEntryPage() {
       }
     };
 
-    if (!authIsLoading) {
+    if (!authIsLoading && user) { // Ensure user object is available before loading
       loadAllData();
     }
     
@@ -165,6 +165,14 @@ export default function DataEntryPage() {
         title = "Edit File Data";
         description = `Editing details for File No: ${fileNoToEdit}. Please make your changes and submit.`;
       }
+    } else if (user?.role === 'site-manager') {
+       if (isCreatingNew) {
+         title = "Access Denied";
+         description = "Site Managers cannot create new files.";
+       } else {
+         title = "Edit Assigned Site Details";
+         description = `Editing assigned sites for File No: ${fileNoToEdit}. Submit your changes for approval.`;
+       }
     } else if (isCreatingNew) {
       title = "Access Denied";
       description = "You do not have permission to create new file entries. This action is restricted to Editors.";
@@ -179,7 +187,7 @@ export default function DataEntryPage() {
     if (!user || !pageData || staffMembers.length === 0) return [];
     
     const activeSupervisors = pageData.allUsers
-      .filter(u => u.role === 'editor' && u.isApproved && u.staffId)
+      .filter(u => u.role === 'site-manager' && u.isApproved && u.staffId)
       .map(userProfile => {
         const staffInfo = staffMembers.find(s => s.id === userProfile.staffId && s.status === 'Active');
         if (staffInfo) {
@@ -207,9 +215,9 @@ export default function DataEntryPage() {
     );
   }
   
-  const isViewerCreatingNew = user?.role === 'viewer' && !fileNoToEdit;
+  const isDeniedAccess = (user?.role === 'viewer' && !fileNoToEdit) || (user?.role === 'site-manager' && !fileNoToEdit);
 
-  if (isViewerCreatingNew) {
+  if (isDeniedAccess) {
      return (
       <div className="space-y-6 p-6 text-center">
         <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -226,12 +234,9 @@ export default function DataEntryPage() {
       {pageData && (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>{!fileNoToEdit ? "File Data Entry Form" : "File Data Form"}</CardTitle>
+            <CardTitle>{pageTitle}</CardTitle>
             <CardDescription>
-              {!fileNoToEdit
-                  ? "Please fill in all compulsory fields accurately."
-                  : `File No: ${fileNoToEdit}`
-              }
+              {pageDescription}
             </CardDescription>
           </CardHeader>
           <CardContent>

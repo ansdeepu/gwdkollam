@@ -153,19 +153,41 @@ export function useFileEntries(): FileEntriesState {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchEntryForEditing = useCallback(async (fileNo: string): Promise<DataEntryFormData | undefined> => {
+    // If the user isn't loaded yet, we can't fetch.
+    if (!user) {
+        console.warn("[useFileEntries] fetchEntryForEditing called before user was loaded.");
+        return undefined;
+    }
+
     try {
-      const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const docData = querySnapshot.docs[0].data();
-        return convertTimestampsToDates({ id: querySnapshot.docs[0].id, ...docData });
-      }
+        if (user.role === 'editor' || user.role === 'viewer') {
+            const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                const docData = querySnapshot.docs[0].data();
+                return convertTimestampsToDates({ id: querySnapshot.docs[0].id, ...docData });
+            }
+        } else if (user.role === 'site-manager') {
+            // For site managers, we fetch their authorized list first, then find the file.
+            // This ensures they can't load a file they aren't assigned to, even if they know the fileNo.
+            if (fileEntries.length > 0) {
+                 const entry = fileEntries.find(e => e.fileNo === fileNo);
+                 return entry;
+            } else {
+                 // Fallback if the main list hasn't loaded yet
+                 const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
+                 const querySnapshot = await getDocs(q);
+                 const entriesFromFirestore = querySnapshot.docs.map(doc => convertTimestampsToDates({ id: doc.id, ...doc.data() }));
+                 const entry = entriesFromFirestore.find(e => e.fileNo === fileNo);
+                 return entry;
+            }
+        }
       return undefined;
     } catch (error) {
       console.error("[useFileEntries] Error fetching single entry:", error);
       return undefined;
     }
-  }, []);
+  }, [user, fileEntries]);
 
   const fetchData = useCallback(async () => {
     if (authIsLoading || !user) {
