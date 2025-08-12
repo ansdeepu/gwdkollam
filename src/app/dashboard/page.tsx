@@ -801,7 +801,7 @@ export default function DashboardPage() {
     }
     
     XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
-    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}`;
+    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
     XLSX.writeFile(wb, uniqueFileName);
 
     toast({ title: "Excel Exported", description: `Your report has been downloaded as ${uniqueFileName}.` });
