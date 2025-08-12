@@ -105,14 +105,14 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const filteredEntries = useMemo(() => {
     let entries = fileEntries;
 
-    // For site managers, only show files that have at least one active, assigned site
+    // For site managers, only show files that have at least one active, assigned site for editing.
     if (user?.role === 'site-manager' && user.uid) {
-        const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+        const activeStatusesForEditing: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
         entries = entries.filter(entry =>
             entry.siteDetails?.some(site =>
                 site.supervisorUid === user.uid &&
                 site.workStatus &&
-                activeStatuses.includes(site.workStatus as SiteWorkStatus)
+                activeStatusesForEditing.includes(site.workStatus as SiteWorkStatus)
             )
         );
     }
@@ -256,6 +256,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
         <p className="text-muted-foreground">
           {searchTerm
             ? "No files match your search."
+            : user?.role === 'site-manager' 
+            ? "You have no active files assigned (Work Order Issued or Work in Progress)."
             : "There are no file entries recorded yet. Start by adding new file data."
           }
         </p>
