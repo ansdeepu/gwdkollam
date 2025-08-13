@@ -137,26 +137,27 @@ export default function DataEntryPage() {
                   // Create a deep copy of the original entry to avoid direct mutation
                   let mergedData = JSON.parse(JSON.stringify(dataToProcess));
                   
-                  // Parse dates within the pending update before merging
-                  const parsedUpdatedSites = pendingUpdateResult.updatedSiteDetails.map(site => ({
-                    ...site,
-                    dateOfCompletion: safeParseDate(site.dateOfCompletion),
-                  }));
-
-                  // Create a map of updated sites for easy lookup
+                  // Create a map of updated sites by name for efficient lookup
                   const updatedSitesMap = new Map(
-                    parsedUpdatedSites.map(site => [site.nameOfSite, site])
+                    pendingUpdateResult.updatedSiteDetails.map(site => [site.nameOfSite, site])
                   );
-                  
-                  // Merge the updated site details
-                  const mergedSiteDetails = mergedData.siteDetails?.map((originalSite: any) => {
+
+                  // Merge the updated site details by iterating through original sites
+                  mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
                       if (updatedSitesMap.has(originalSite.nameOfSite)) {
-                          return updatedSitesMap.get(originalSite.nameOfSite)!;
+                          const updatedSiteData = updatedSitesMap.get(originalSite.nameOfSite)!;
+                          // IMPORTANT: Merge the updated fields into the original site object.
+                          // This preserves all fields from the original that were not editable by the supervisor.
+                          return {
+                            ...originalSite,
+                            ...updatedSiteData,
+                            // Ensure date is properly parsed during the merge itself
+                            dateOfCompletion: safeParseDate(updatedSiteData.dateOfCompletion),
+                          };
                       }
-                      return originalSite;
+                      return originalSite; // Return original if no update for this site
                   }) || [];
                   
-                  mergedData.siteDetails = mergedSiteDetails;
                   dataToProcess = mergedData; // Use the merged data for the next step
 
                   toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdateResult.submittedByName}. Please review and save.` });
