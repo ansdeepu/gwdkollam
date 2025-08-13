@@ -237,6 +237,7 @@ export function useFileEntries(): FileEntriesState {
       if (user.role === 'site-manager' && user.uid) {
           const allManagerPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
           const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];
+          const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
 
           // Create a set of identifiers for sites that are pending completion/failure.
           const sitesPendingCompletion = new Set<string>();
@@ -248,32 +249,36 @@ export function useFileEntries(): FileEntriesState {
               });
           });
 
-          const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-          
+          const filteredEntriesForManager: DataEntryFormData[] = [];
+
           entriesFromFirestore.forEach(entry => {
               const userPendingUpdateForThisFile = allManagerPendingUpdates.find(p => p.fileNo === entry.fileNo);
               
               const sitesToDisplay = (entry.siteDetails || [])
                   .filter(site => {
-                      // Rule 1: Must be assigned to the current site manager.
                       if (site.supervisorUid !== user.uid) return false;
+                      const siteIdentifier = `${entry.fileNo}-${site.nameOfSite}`;
                       
-                      // Rule 2: If the site has a PENDING completion/failure update, HIDE it.
-                      if (sitesPendingCompletion.has(`${entry.fileNo}-${site.nameOfSite}`)) {
+                      // Rule 1: Hide any site that has a pending "Work Completed" or "Work Failed" update.
+                      if (sitesPendingCompletion.has(siteIdentifier)) {
                           return false;
                       }
                       
-                      // Rule 3: For all other sites, only show if their CURRENT status is active.
+                      // Rule 2: From the remaining sites, only show those with an active work status.
                       return site.workStatus && activeStatuses.includes(site.workStatus as SiteWorkStatus);
                   })
                   .map(site => {
-                      // For the sites that WILL be displayed, mark if they have ANY pending update.
+                      // Mark if the site has ANY pending update (not just completion).
                       const isPending = userPendingUpdateForThisFile?.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite);
                       return { ...site, isPending };
                   });
               
-              entry.siteDetails = sitesToDisplay;
+              // Only include the file entry if it still contains sites to display for the manager.
+              if (sitesToDisplay.length > 0) {
+                filteredEntriesForManager.push({ ...entry, siteDetails: sitesToDisplay });
+              }
           });
+           entriesFromFirestore = filteredEntriesForManager;
       }
       
       entriesFromFirestore.sort((a, b) => {
@@ -304,7 +309,7 @@ export function useFileEntries(): FileEntriesState {
         }
         return detailsA.original.localeCompare(detailsB.original);
       });
-      setFileEntries(entriesFromFirestore.filter(entry => user.role !== 'site-manager' || (entry.siteDetails && entry.siteDetails.length > 0)));
+      setFileEntries(entriesFromFirestore);
     } catch (error) {
       console.error("[useFileEntries] Error fetching file entries:", error);
       setFileEntries([]);
