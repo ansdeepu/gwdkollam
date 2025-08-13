@@ -1,3 +1,4 @@
+
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -12,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit3, Trash2, Loader2, FileDown } from "lucide-react";
+import { Eye, Edit3, Trash2, Loader2, Clock } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
 import { format } from "date-fns";
@@ -49,6 +50,7 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
+import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 
 const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
@@ -90,6 +92,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const { toast } = useToast();
   const { isLoading: entriesLoadingHook, deleteFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth(); 
+  const { hasPendingUpdateForFile } = usePendingUpdates();
 
   const [viewItem, setViewItem] = useState<DataEntryFormData | null>(null);
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
@@ -97,6 +100,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pendingStatusMap, setPendingStatusMap] = useState<Record<string, boolean>>({});
 
   const canEdit = user?.role === 'editor' || user?.role === 'site-manager';
   const canDelete = user?.role === 'editor';
@@ -168,6 +172,22 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     const endIndex = startIndex + ITEMS_PER_PAGE;
     return displayedEntries.slice(startIndex, endIndex);
   }, [displayedEntries, currentPage]);
+
+  useEffect(() => {
+    if (user?.role === 'site-manager' && user.uid) {
+        const checkPendingStatus = async () => {
+            const newStatusMap: Record<string, boolean> = {};
+            for (const entry of paginatedEntries) {
+                if (entry.fileNo) {
+                    const hasPending = await hasPendingUpdateForFile(entry.fileNo, user.uid!);
+                    newStatusMap[entry.fileNo] = hasPending;
+                }
+            }
+            setPendingStatusMap(newStatusMap);
+        };
+        checkPendingStatus();
+    }
+  }, [paginatedEntries, user, hasPendingUpdateForFile]);
 
   const totalPages = Math.ceil(displayedEntries.length / ITEMS_PER_PAGE);
 
@@ -243,7 +263,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
           {searchTerm
             ? "No files match your search."
             : user?.role === 'site-manager' 
-            ? "You have no active files assigned (Work Order Issued or Work in Progress)."
+            ? "You have no active files assigned to you."
             : "There are no file entries recorded yet. Start by adding new file data."
           }
         </p>
@@ -272,7 +292,11 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedEntries.map((entry, index) => (
+              {paginatedEntries.map((entry, index) => {
+                const isPending = user?.role === 'site-manager' && entry.fileNo && pendingStatusMap[entry.fileNo];
+                const isEditDisabled = isPending || (user?.role === 'site-manager' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
+                
+                return (
                 <TableRow key={entry.fileNo}>
                   <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                   <TableCell className="font-medium">{entry.fileNo}</TableCell>
@@ -315,13 +339,13 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                       {canEdit && (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(entry)}>
-                              <Edit3 className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(entry)} disabled={isEditDisabled}>
+                              {isPending ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit3 className="h-4 w-4" />}
                               <span className="sr-only">Edit Entry</span>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Edit Entry</p>
+                            <p>{isPending ? "Pending Approval" : "Edit Entry"}</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -341,7 +365,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         </CardContent>

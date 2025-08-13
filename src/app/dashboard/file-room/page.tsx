@@ -1,3 +1,4 @@
+
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
@@ -9,24 +10,47 @@ import { Input } from '@/components/ui/input';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus } from '@/lib/schemas';
+import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { fileEntries } = useFileEntries(); 
   const { user } = useAuth();
+  const { hasPendingUpdateForFile } = usePendingUpdates(); // Use the hook
+
+  // This state is just to trigger re-renders when a pending status changes for a file.
+  // We use a map to track the pending status for each fileNo.
+  const [pendingStatusMap, setPendingStatusMap] = useState<Map<string, boolean>>(new Map());
+
+  // We don't need a useEffect to populate this anymore. The table component will do the check.
+  // The fileEntries hook will now provide the merged data.
 
   const filteredFileEntriesForManager = useMemo(() => {
-    if (user?.role === 'site-manager') {
+    if (user?.role === 'site-manager' && user.uid) {
       const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
-      return fileEntries.filter(entry =>
-        entry.siteDetails?.some(site =>
-          site.supervisorUid === user.uid &&
-          activeStatuses.includes(site.workStatus as SiteWorkStatus)
-        )
-      );
+      
+      // Filter the entries to show only those that have sites assigned to the current manager
+      // AND those sites are in an active state.
+      return fileEntries
+        .map(entry => {
+          const relevantSites = entry.siteDetails?.filter(site => 
+            site.supervisorUid === user.uid
+          );
+
+          // If there are no sites for this manager in the entry, filter it out.
+          if (!relevantSites || relevantSites.length === 0) {
+            return null;
+          }
+
+          // Return a new entry object containing ONLY the sites relevant to the manager.
+          return { ...entry, siteDetails: relevantSites };
+        })
+        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
     }
+    // For other roles, or if not a site manager, return all entries as is.
     return fileEntries;
   }, [fileEntries, user]);
+
 
   return (
     <div className="space-y-6">
@@ -43,16 +67,19 @@ export default function FileManagerPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>Files in File Manager</CardTitle>
+          <CardTitle>File Manager</CardTitle>
           <CardDescription>
-            {searchTerm 
-              ? `Filtered list of files matching "${searchTerm}"`
-              : "List of all files in the File Manager."
+            {user?.role === 'site-manager'
+              ? 'List of sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
+              : 'List of all files in the system.'
             }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FileDatabaseTable searchTerm={searchTerm} fileEntries={filteredFileEntriesForManager} />
+          <FileDatabaseTable 
+            searchTerm={searchTerm} 
+            fileEntries={filteredFileEntriesForManager} 
+          />
         </CardContent>
       </Card>
     </div>

@@ -43,7 +43,8 @@ interface PendingUpdatesState {
   createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
   rejectUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
-  hasPendingUpdateForSite: (fileNo: string, siteName: string) => Promise<boolean>;
+  hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
+  getPendingUpdatesForFile: (fileNo: string) => Promise<PendingUpdate[]>;
 }
 
 export function usePendingUpdates(): PendingUpdatesState {
@@ -76,30 +77,40 @@ export function usePendingUpdates(): PendingUpdatesState {
     return () => unsubscribe();
   }, [user]);
 
-  const hasPendingUpdateForSite = useCallback(async (fileNo: string, siteName: string): Promise<boolean> => {
+  const hasPendingUpdateForFile = useCallback(async (fileNo: string, submittedByUid: string): Promise<boolean> => {
     try {
       const q = query(
         collection(db, PENDING_UPDATES_COLLECTION),
         where('fileNo', '==', fileNo),
-        where('status', '==', 'pending')
+        where('status', '==', 'pending'),
+        where('submittedByUid', '==', submittedByUid)
       );
       const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) {
-        return false;
-      }
-      // Check if any of the pending updates for this file contain the specific site name
-      for (const doc of querySnapshot.docs) {
-        const updateData = doc.data() as PendingUpdate;
-        if (updateData.updatedSiteDetails.some(site => site.nameOfSite === siteName)) {
-          return true; // Found a pending update for this site
-        }
-      }
-      return false; // No pending updates found for this specific site
+      return !querySnapshot.empty;
     } catch (error) {
-      console.error("Error checking for pending site updates:", error);
-      return false; // Assume no pending update on error
+      console.error("Error checking for pending file updates:", error);
+      return false; 
     }
   }, []);
+  
+  const getPendingUpdatesForFile = useCallback(async (fileNo: string): Promise<PendingUpdate[]> => {
+    try {
+        const q = query(
+            collection(db, PENDING_UPDATES_COLLECTION),
+            where('fileNo', '==', fileNo),
+            where('status', '==', 'pending')
+        );
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            return [];
+        }
+        return querySnapshot.docs.map(doc => convertTimestampToDate({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error(`Error fetching pending updates for file ${fileNo}:`, error);
+        return [];
+    }
+  }, []);
+
 
   const createPendingUpdate = useCallback(async (
     fileNo: string,
@@ -152,6 +163,7 @@ export function usePendingUpdates(): PendingUpdatesState {
     createPendingUpdate,
     rejectUpdate,
     getPendingUpdateById,
-    hasPendingUpdateForSite,
+    hasPendingUpdateForFile,
+    getPendingUpdatesForFile,
   };
 }

@@ -2,7 +2,7 @@
 // src/hooks/useFileEntries.ts
 "use client";
 
-import type { DataEntryFormData, SiteWorkStatus } from "@/lib/schemas";
+import type { DataEntryFormData, SiteDetailFormData, SiteWorkStatus } from "@/lib/schemas";
 import { useState, useEffect, useCallback } from "react";
 import {
   getFirestore,
@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import { useAuth } from './useAuth';
+import { usePendingUpdates } from './usePendingUpdates';
 import { isValid, parseISO } from 'date-fns';
 
 const db = getFirestore(app);
@@ -149,6 +150,7 @@ interface FileEntriesState {
 
 export function useFileEntries(): FileEntriesState {
   const { user, isLoading: authIsLoading } = useAuth();
+  const { getPendingUpdatesForFile } = usePendingUpdates();
   const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -213,14 +215,34 @@ export function useFileEntries(): FileEntriesState {
       }
       
       const querySnapshot = await getDocs(q);
-      const entriesFromFirestore: DataEntryFormData[] = [];
+      let entriesFromFirestore: DataEntryFormData[] = [];
       querySnapshot.forEach((doc) => {
         entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
       });
-      
-      let finalEntries = entriesFromFirestore;
 
-      finalEntries.sort((a, b) => {
+      // For site managers, merge any pending updates they've submitted.
+      if (user.role === 'site-manager' && user.uid) {
+        for (let i = 0; i < entriesFromFirestore.length; i++) {
+          const entry = entriesFromFirestore[i];
+          const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo);
+          const userPendingUpdate = pendingUpdates.find(p => p.submittedByUid === user.uid);
+
+          if (userPendingUpdate) {
+            const updatedSitesMap = new Map(
+              userPendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site])
+            );
+             entry.siteDetails = entry.siteDetails?.map(originalSite => {
+              if (updatedSitesMap.has(originalSite.nameOfSite)) {
+                // Return the supervisor's updated version of the site
+                return updatedSitesMap.get(originalSite.nameOfSite)!;
+              }
+              return originalSite;
+            }) || [];
+          }
+        }
+      }
+      
+      entriesFromFirestore.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
         const dateB_str = b.remittanceDetails?.[0]?.dateOfRemittance;
         const dateA = dateA_str ? new Date(dateA_str) : null;
@@ -248,14 +270,14 @@ export function useFileEntries(): FileEntriesState {
         }
         return detailsA.original.localeCompare(detailsB.original);
       });
-      setFileEntries(finalEntries);
+      setFileEntries(entriesFromFirestore);
     } catch (error) {
       console.error("[useFileEntries] Error fetching file entries:", error);
       setFileEntries([]);
     } finally {
       setIsLoading(false);
     }
-  }, [user, authIsLoading]);
+  }, [user, authIsLoading, getPendingUpdatesForFile]);
 
   useEffect(() => {
     fetchData();
