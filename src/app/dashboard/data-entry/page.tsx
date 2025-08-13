@@ -118,7 +118,7 @@ export default function DataEntryPage() {
         const [entryResult, pendingUpdateResult] = await Promise.all([entryPromise, pendingUpdatePromise]);
         
         let allUsersResult: UserProfile[] = [];
-        if (user.role === 'editor') {
+        if (user.role === 'editor' || user.role === 'viewer') {
           allUsersResult = await fetchAllUsers();
         }
 
@@ -137,9 +137,15 @@ export default function DataEntryPage() {
                   // Create a deep copy of the original entry to avoid direct mutation
                   let mergedData = JSON.parse(JSON.stringify(dataToProcess));
                   
+                  // Parse dates within the pending update before merging
+                  const parsedUpdatedSites = pendingUpdateResult.updatedSiteDetails.map(site => ({
+                    ...site,
+                    dateOfCompletion: safeParseDate(site.dateOfCompletion),
+                  }));
+
                   // Create a map of updated sites for easy lookup
                   const updatedSitesMap = new Map(
-                    pendingUpdateResult.updatedSiteDetails.map(site => [site.nameOfSite, site])
+                    parsedUpdatedSites.map(site => [site.nameOfSite, site])
                   );
                   
                   // Merge the updated site details
