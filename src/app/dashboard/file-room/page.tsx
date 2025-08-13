@@ -14,25 +14,16 @@ import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hoo
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  // The useFileEntries hook now handles all complex filtering logic for site managers.
+  // The fileEntries it returns are already correctly filtered.
   const { fileEntries } = useFileEntries(); 
   const { user } = useAuth();
   
+  // No additional filtering is needed here for site managers.
+  // The hook provides the pre-filtered list.
   const filteredFileEntriesForManager = useMemo(() => {
-    if (user?.role === 'site-manager' && user.uid) {
-      // The useFileEntries hook now handles the complex filtering logic.
-      // We just need to filter out files that have no visible sites left for the manager.
-      return fileEntries
-        .map(entry => {
-          if (!entry.siteDetails || entry.siteDetails.length === 0) {
-            return null;
-          }
-          // The hook has already filtered the sites, so if siteDetails exist, they are relevant.
-          return entry;
-        })
-        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-    }
     return fileEntries;
-  }, [fileEntries, user]);
+  }, [fileEntries]);
 
 
   return (

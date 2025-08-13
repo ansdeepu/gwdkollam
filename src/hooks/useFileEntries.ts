@@ -245,21 +245,20 @@ export function useFileEntries(): FileEntriesState {
             .filter(site => {
               if (site.supervisorUid !== user.uid) return false;
       
-              // If there's a pending update for this site by the current user
+              // If there's a pending update for this site by the current user...
               if (userPendingUpdate && userPendingUpdate.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite)) {
                 const updatedSite = userPendingUpdate.updatedSiteDetails.find(us => us.nameOfSite === site.nameOfSite);
-                // If they submitted a final status, hide it from their view immediately.
+                // ...and they submitted a final status, hide it from their view immediately.
                 if (updatedSite && updatedSite.workStatus && finalSubmittedStatuses.includes(updatedSite.workStatus as SiteWorkStatus)) {
                   return false;
                 }
-                // Otherwise, keep it, it will be marked as pending below.
               }
       
-              // If not pending, only show if it has an active status.
+              // If not pending for completion, only show if it has an active status currently.
               return site.workStatus && activeStatuses.includes(site.workStatus as SiteWorkStatus);
             })
             .map(site => {
-              // Mark sites that have a pending update (and weren't filtered out) as pending
+              // Mark sites that have a pending update (and weren't filtered out) as pending.
               const isPending = userPendingUpdate?.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite);
               return { ...site, isPending };
             });
@@ -296,7 +295,7 @@ export function useFileEntries(): FileEntriesState {
         }
         return detailsA.original.localeCompare(detailsB.original);
       });
-      setFileEntries(entriesFromFirestore);
+      setFileEntries(entriesFromFirestore.filter(entry => user.role !== 'site-manager' || (entry.siteDetails && entry.siteDetails.length > 0)));
     } catch (error) {
       console.error("[useFileEntries] Error fetching file entries:", error);
       setFileEntries([]);
