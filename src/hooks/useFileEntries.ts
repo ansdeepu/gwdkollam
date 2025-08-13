@@ -114,7 +114,8 @@ const sanitizeObjectForFirestore = (data: any): any => {
   for (const key in data) {
     if (Object.prototype.hasOwnProperty.call(data, key)) {
       const value = data[key];
-      if (key === 'id') continue;
+      // Do not include the transient 'isPending' field in Firestore writes.
+      if (key === 'id' || key === 'isPending') continue;
       sanitizedObject[key] = sanitizeObjectForFirestore(value);
     }
   }
@@ -227,17 +228,14 @@ export function useFileEntries(): FileEntriesState {
           const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo);
           const userPendingUpdate = pendingUpdates.find(p => p.submittedByUid === user.uid);
 
-          if (userPendingUpdate) {
-            const updatedSitesMap = new Map(
-              userPendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site])
-            );
-             entry.siteDetails = entry.siteDetails?.map(originalSite => {
-              if (updatedSitesMap.has(originalSite.nameOfSite)) {
-                // Return the supervisor's updated version of the site
-                return updatedSitesMap.get(originalSite.nameOfSite)!;
+          if (userPendingUpdate && entry.siteDetails) {
+            const pendingSiteNames = new Set(userPendingUpdate.updatedSiteDetails.map(s => s.nameOfSite));
+            entry.siteDetails = entry.siteDetails.map(originalSite => {
+              if (pendingSiteNames.has(originalSite.nameOfSite)) {
+                return { ...originalSite, isPending: true };
               }
               return originalSite;
-            }) || [];
+            });
           }
         }
       }

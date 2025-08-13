@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -21,7 +22,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Loader2, Trash2, PlusCircle, X, Save } from "lucide-react";
+import { CalendarIcon, Loader2, Trash2, PlusCircle, X, Save, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
@@ -424,8 +425,9 @@ export default function DataEntryFormComponent({
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
+                            const isSitePending = !!watchedSiteDetails[index]?.isPending;
                             
-                            const siteIsEditableBySiteManager = isSiteManager && isAssignedToCurrentUser;
+                            const siteIsEditableBySiteManager = isSiteManager && isAssignedToCurrentUser && !isSitePending;
                             const siteIsEditable = isEditor || siteIsEditableBySiteManager;
 
                             const purpose = watchedSiteDetails[index]?.purpose;
@@ -538,6 +540,12 @@ export default function DataEntryFormComponent({
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
+                                        {isSitePending && (
+                                          <div className="mb-4 flex items-center gap-2 rounded-md border border-orange-500/50 bg-orange-500/10 p-3 text-sm text-orange-700">
+                                            <Clock className="h-5 w-5" />
+                                            <span>This site has an update pending admin approval. You cannot make further changes until it is reviewed.</span>
+                                          </div>
+                                        )}
                                         <div className="border-t pt-6 space-y-6">
                                             <div className="grid md:grid-cols-2 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>

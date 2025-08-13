@@ -50,7 +50,6 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
-import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 
 const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
@@ -92,7 +91,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const { toast } = useToast();
   const { isLoading: entriesLoadingHook, deleteFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth(); 
-  const { hasPendingUpdateForFile } = usePendingUpdates();
 
   const [viewItem, setViewItem] = useState<DataEntryFormData | null>(null);
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
@@ -100,7 +98,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pendingStatusMap, setPendingStatusMap] = useState<Record<string, boolean>>({});
 
   const canEdit = user?.role === 'editor' || user?.role === 'site-manager';
   const canDelete = user?.role === 'editor';
@@ -173,21 +170,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     return displayedEntries.slice(startIndex, endIndex);
   }, [displayedEntries, currentPage]);
 
-  useEffect(() => {
-    if (user?.role === 'site-manager' && user.uid) {
-        const checkPendingStatus = async () => {
-            const newStatusMap: Record<string, boolean> = {};
-            for (const entry of paginatedEntries) {
-                if (entry.fileNo) {
-                    const hasPending = await hasPendingUpdateForFile(entry.fileNo, user.uid!);
-                    newStatusMap[entry.fileNo] = hasPending;
-                }
-            }
-            setPendingStatusMap(newStatusMap);
-        };
-        checkPendingStatus();
-    }
-  }, [paginatedEntries, user, hasPendingUpdateForFile]);
 
   const totalPages = Math.ceil(displayedEntries.length / ITEMS_PER_PAGE);
 
@@ -293,8 +275,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
             </TableHeader>
             <TableBody>
               {paginatedEntries.map((entry, index) => {
-                const isPending = user?.role === 'site-manager' && entry.fileNo && pendingStatusMap[entry.fileNo];
-                const isEditDisabled = isPending || (user?.role === 'site-manager' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
+                const isFilePendingForManager = user?.role === 'site-manager' && entry.siteDetails?.some(s => s.isPending);
+                const isEditDisabled = isFilePendingForManager || (user?.role === 'site-manager' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
                 
                 return (
                 <TableRow key={entry.fileNo}>
@@ -340,12 +322,12 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={() => handleEditClick(entry)} disabled={isEditDisabled}>
-                              {isPending ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit3 className="h-4 w-4" />}
+                              {isFilePendingForManager ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit3 className="h-4 w-4" />}
                               <span className="sr-only">Edit Entry</span>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{isPending ? "Pending Approval" : "Edit Entry"}</p>
+                            <p>{isFilePendingForManager ? "Pending Approval" : "Edit Entry"}</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
