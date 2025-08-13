@@ -425,11 +425,11 @@ export default function DataEntryFormComponent({
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
-                            const isSitePending = !!watchedSiteDetails[index]?.isPending;
-                            
-                            const siteIsEditableBySiteManager = isSiteManager && isAssignedToCurrentUser && !isSitePending;
-                            const siteIsEditable = isEditor || siteIsEditableBySiteManager;
+                            const isSitePendingForManager = isSiteManager && !!watchedSiteDetails[index]?.isPending;
 
+                            // An editor can always edit. A site manager can edit if assigned and not pending.
+                            const siteIsEditable = isEditor || (isSiteManager && isAssignedToCurrentUser && !isSitePendingForManager);
+                            
                             const purpose = watchedSiteDetails[index]?.purpose;
                             const workStatus = watchedSiteDetails[index]?.workStatus;
                             const isFinalStatus = workStatus && FINAL_WORK_STATUSES.includes(workStatus as SiteWorkStatus);
@@ -540,7 +540,7 @@ export default function DataEntryFormComponent({
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
-                                        {isSitePending && (
+                                        {isSitePendingForManager && (
                                           <div className="mb-4 flex items-center gap-2 rounded-md border border-orange-500/50 bg-orange-500/10 p-3 text-sm text-orange-700">
                                             <Clock className="h-5 w-5" />
                                             <span>This site has an update pending admin approval. You cannot make further changes until it is reviewed.</span>
