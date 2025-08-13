@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -236,10 +237,8 @@ export function useFileEntries(): FileEntriesState {
           const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
           const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];
       
-          // Get all pending updates for this user in one go
           const allPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-      
-          // Create a set of "fileNo-siteName" for sites that are pending completion/failure
+          
           const pendingCompletionSites = new Set<string>();
           allPendingUpdates.forEach(update => {
               update.updatedSiteDetails.forEach(siteUpdate => {
@@ -255,17 +254,12 @@ export function useFileEntries(): FileEntriesState {
               const sitesToDisplay = (entry.siteDetails || [])
                   .filter(site => {
                       if (site.supervisorUid !== user.uid) return false;
-      
-                      // Rule 1: If the site is pending completion, hide it.
                       if (pendingCompletionSites.has(`${entry.fileNo}-${site.nameOfSite}`)) {
                           return false;
                       }
-                      
-                      // Rule 2: If the site is not pending completion, only show it if its CURRENT status is active.
                       return site.workStatus && activeStatuses.includes(site.workStatus as SiteWorkStatus);
                   })
                   .map(site => {
-                      // Mark sites that have any other kind of pending update as pending.
                       const isPending = userPendingUpdateForThisFile?.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite);
                       return { ...site, isPending };
                   });
