@@ -425,7 +425,7 @@ export default function DataEntryFormComponent({
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
-                            const isSitePendingForManager = isSiteManager && !!watchedSiteDetails[index]?.isPending;
+                            const isSitePendingForManager = isSiteManager && !!initialData.siteDetails?.[index]?.isPending;
 
                             // An editor can always edit. A site manager can edit if assigned and not pending.
                             const siteIsEditable = isEditor || (isSiteManager && isAssignedToCurrentUser && !isSitePendingForManager);
