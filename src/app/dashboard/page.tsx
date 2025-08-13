@@ -254,12 +254,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authLoading && currentUser) {
-        if (currentUser.role === 'editor' || currentUser.role === 'viewer') {
+        if (currentUser.role === 'editor') {
             setUsersLoading(true);
             fetchAllUsers()
             .then(users => {
                 setAllUsers(users);
-                if (currentUser?.role === 'editor') {
                 const count = users.filter(user => !user.isApproved).length;
                 setUnapprovedUsersCount(count);
                 const sortedUsers = [...users]
@@ -269,9 +268,6 @@ export default function DashboardPage() {
                     return timeB - timeA;
                     });
                 setActiveUsers(sortedUsers.slice(0, 5));
-                } else {
-                setActiveUsers([]);
-                }
             })
             .catch(error => console.error("Error fetching users for dashboard:", error))
             .finally(() => setUsersLoading(false));
@@ -1452,7 +1448,7 @@ export default function DashboardPage() {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
+          {currentUser?.role === 'editor' && (
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
