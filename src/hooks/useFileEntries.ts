@@ -238,8 +238,8 @@ export function useFileEntries(): FileEntriesState {
         const allManagerPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];
         const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-  
-        // Create a set of identifiers for sites with pending 'Work Failed' or 'Work Completed' status.
+        
+        // 1. Create a set of site identifiers that are pending completion/failure. These should be hidden.
         const sitesPendingCompletion = new Set<string>();
         allManagerPendingUpdates.forEach(update => {
           update.updatedSiteDetails.forEach(site => {
@@ -248,7 +248,8 @@ export function useFileEntries(): FileEntriesState {
             }
           });
         });
-  
+        
+        // 2. Filter and map the entries for the site manager.
         const filteredEntriesForManager = entriesFromFirestore.map(entry => {
           const userPendingUpdateForThisFile = allManagerPendingUpdates.find(p => p.fileNo === entry.fileNo);
           
@@ -264,7 +265,7 @@ export function useFileEntries(): FileEntriesState {
                 return false;
               }
               
-              // Rule 2: From the remaining sites, only show those with an active work status.
+              // Rule 2: From the remaining sites, only show those with an active work status in the main database.
               return site.workStatus && activeStatuses.includes(site.workStatus as SiteWorkStatus);
             })
             .map(site => {
