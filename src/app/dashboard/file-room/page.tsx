@@ -16,32 +16,18 @@ export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { fileEntries } = useFileEntries(); 
   const { user } = useAuth();
-  const { hasPendingUpdateForFile } = usePendingUpdates(); // Use the hook
-
-  // This state is just to trigger re-renders when a pending status changes for a file.
-  // We use a map to track the pending status for each fileNo.
-  const [pendingStatusMap, setPendingStatusMap] = useState<Map<string, boolean>>(new Map());
-
-  // We don't need a useEffect to populate this anymore. The table component will do the check.
-  // The fileEntries hook will now provide the merged data.
-
+  
   const filteredFileEntriesForManager = useMemo(() => {
     if (user?.role === 'site-manager' && user.uid) {
-      const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
-      
+      // The useFileEntries hook now handles the complex filtering logic.
+      // We just need to filter out files that have no visible sites left for the manager.
       return fileEntries
         .map(entry => {
-          const relevantSites = entry.siteDetails?.filter(site => 
-            site.supervisorUid === user.uid &&
-            site.workStatus &&
-            activeStatuses.includes(site.workStatus as SiteWorkStatus)
-          );
-
-          if (!relevantSites || relevantSites.length === 0) {
+          if (!entry.siteDetails || entry.siteDetails.length === 0) {
             return null;
           }
-
-          return { ...entry, siteDetails: relevantSites };
+          // The hook has already filtered the sites, so if siteDetails exist, they are relevant.
+          return entry;
         })
         .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
     }
@@ -67,7 +53,7 @@ export default function FileManagerPage() {
           <CardTitle>File Manager</CardTitle>
           <CardDescription>
             {user?.role === 'site-manager'
-              ? 'List of sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
+              ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
               : 'List of all files in the system.'
             }
           </CardDescription>

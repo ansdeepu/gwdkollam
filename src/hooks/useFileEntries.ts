@@ -183,15 +183,27 @@ export function useFileEntries(): FileEntriesState {
             return undefined; // File does not exist or user doesn't have access.
         }
         
-        const docData = querySnapshot.docs[0].data();
-        const entry = convertTimestampsToDates({ id: querySnapshot.docs[0].id, ...docData });
+        let entry = convertTimestampsToDates({ id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() });
+
+        // For site manager, we need to mark which sites are pending
+        if (user.role === 'site-manager' && user.uid && entry.siteDetails) {
+            const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo);
+            const userPendingUpdate = pendingUpdates.find(p => p.submittedByUid === user.uid);
+            if (userPendingUpdate) {
+                const pendingSiteNames = new Set(userPendingUpdate.updatedSiteDetails.map(s => s.nameOfSite));
+                entry.siteDetails = entry.siteDetails.map(site => 
+                    pendingSiteNames.has(site.nameOfSite) ? { ...site, isPending: true } : site
+                );
+            }
+        }
+        
         return entry;
 
     } catch (error) {
         console.error("[useFileEntries] Error fetching single entry for editing:", error);
         return undefined;
     }
-  }, [user, authIsLoading]);
+  }, [user, authIsLoading, getPendingUpdatesForFile]);
 
 
   const fetchData = useCallback(async () => {
@@ -217,26 +229,42 @@ export function useFileEntries(): FileEntriesState {
       
       const querySnapshot = await getDocs(q);
       let entriesFromFirestore: DataEntryFormData[] = [];
-      querySnapshot.forEach((doc) => {
-        entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
-      });
-
-      // For site managers, merge any pending updates they've submitted.
+      for (const doc of querySnapshot.docs) {
+          entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
+      }
+      
       if (user.role === 'site-manager' && user.uid) {
-        for (let i = 0; i < entriesFromFirestore.length; i++) {
-          const entry = entriesFromFirestore[i];
+        const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+        const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];
+      
+        for (let entry of entriesFromFirestore) {
           const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo);
           const userPendingUpdate = pendingUpdates.find(p => p.submittedByUid === user.uid);
-
-          if (userPendingUpdate && entry.siteDetails) {
-            const pendingSiteNames = new Set(userPendingUpdate.updatedSiteDetails.map(s => s.nameOfSite));
-            entry.siteDetails = entry.siteDetails.map(originalSite => {
-              if (pendingSiteNames.has(originalSite.nameOfSite)) {
-                return { ...originalSite, isPending: true };
+      
+          const sitesToDisplay = (entry.siteDetails || [])
+            .filter(site => {
+              if (site.supervisorUid !== user.uid) return false;
+      
+              // If there's a pending update for this site by the current user
+              if (userPendingUpdate && userPendingUpdate.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite)) {
+                const updatedSite = userPendingUpdate.updatedSiteDetails.find(us => us.nameOfSite === site.nameOfSite);
+                // If they submitted a final status, hide it from their view immediately.
+                if (updatedSite && updatedSite.workStatus && finalSubmittedStatuses.includes(updatedSite.workStatus as SiteWorkStatus)) {
+                  return false;
+                }
+                // Otherwise, keep it, it will be marked as pending below.
               }
-              return originalSite;
+      
+              // If not pending, only show if it has an active status.
+              return site.workStatus && activeStatuses.includes(site.workStatus as SiteWorkStatus);
+            })
+            .map(site => {
+              // Mark sites that have a pending update (and weren't filtered out) as pending
+              const isPending = userPendingUpdate?.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite);
+              return { ...site, isPending };
             });
-          }
+      
+          entry.siteDetails = sitesToDisplay;
         }
       }
       
