@@ -127,37 +127,38 @@ export default function DataEntryPage() {
             toast({ title: "Error", description: `File No. ${fileNoToEdit} not found or you do not have permission to view it.`, variant: "destructive" });
           }
 
-          let finalInitialData: DataEntryFormData | null = entryResult;
+          let dataToProcess: DataEntryFormData | null = entryResult;
 
-          // If there's a pending update, merge it into the initial data
-          if (approveUpdateId && pendingUpdateResult && finalInitialData) {
+          // If there's a pending update, merge it into the data before the final parsing step.
+          if (approveUpdateId && pendingUpdateResult && dataToProcess) {
               if (pendingUpdateResult.status !== 'pending') {
                   toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
               } else {
+                  // Create a deep copy of the original entry to avoid direct mutation
+                  let mergedData = JSON.parse(JSON.stringify(dataToProcess));
+                  
                   // Create a map of updated sites for easy lookup
                   const updatedSitesMap = new Map(
-                    pendingUpdateResult.updatedSiteDetails.map(site => [
-                      site.nameOfSite, 
-                      { ...site, dateOfCompletion: safeParseDate(site.dateOfCompletion) } // Ensure date is parsed here
-                    ])
+                    pendingUpdateResult.updatedSiteDetails.map(site => [site.nameOfSite, site])
                   );
                   
                   // Merge the updated site details
-                  const mergedSiteDetails = finalInitialData.siteDetails?.map(originalSite => {
+                  const mergedSiteDetails = mergedData.siteDetails?.map((originalSite: any) => {
                       if (updatedSitesMap.has(originalSite.nameOfSite)) {
-                          // Replace the original site with the updated one from the pending update
                           return updatedSitesMap.get(originalSite.nameOfSite)!;
                       }
                       return originalSite;
                   }) || [];
+                  
+                  mergedData.siteDetails = mergedSiteDetails;
+                  dataToProcess = mergedData; // Use the merged data for the next step
 
-                  finalInitialData = { ...finalInitialData, siteDetails: mergedSiteDetails };
                   toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdateResult.submittedByName}. Please review and save.` });
               }
           }
           
           setPageData({
-            initialData: mapEntryToFormValues(finalInitialData),
+            initialData: mapEntryToFormValues(dataToProcess), // Final parsing happens here on the processed data
             allUsers: allUsersResult,
           });
         }
