@@ -1,4 +1,3 @@
-
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -44,7 +43,7 @@ interface PendingUpdatesState {
   rejectUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
   hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
-  getPendingUpdatesForFile: (fileNo: string) => Promise<PendingUpdate[]>;
+  getPendingUpdatesForFile: (fileNo: string | null, submittedByUid?: string) => Promise<PendingUpdate[]>;
 }
 
 export function usePendingUpdates(): PendingUpdatesState {
@@ -93,14 +92,19 @@ export function usePendingUpdates(): PendingUpdatesState {
     }
   }, []);
   
-  const getPendingUpdatesForFile = useCallback(async (fileNo: string): Promise<PendingUpdate[]> => {
+  const getPendingUpdatesForFile = useCallback(async (fileNo: string | null, submittedByUid?: string): Promise<PendingUpdate[]> => {
     try {
-        const q = query(
-            collection(db, PENDING_UPDATES_COLLECTION),
-            where('fileNo', '==', fileNo),
-            where('status', '==', 'pending')
-        );
+        let conditions = [where('status', '==', 'pending')];
+        if (fileNo) {
+            conditions.push(where('fileNo', '==', fileNo));
+        }
+        if (submittedByUid) {
+            conditions.push(where('submittedByUid', '==', submittedByUid));
+        }
+        
+        const q = query(collection(db, PENDING_UPDATES_COLLECTION), ...conditions);
         const querySnapshot = await getDocs(q);
+        
         if (querySnapshot.empty) {
             return [];
         }
