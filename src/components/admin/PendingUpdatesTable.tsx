@@ -43,36 +43,22 @@ type FieldComparison = {
 const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailFormData): FieldComparison[] => {
     const changes: FieldComparison[] = [];
     const fieldsToCompare: Array<{ key: keyof SiteDetailFormData; label: string; isDate?: boolean; isNumeric?: boolean }> = [
-      // Location
+      // Supervisor-editable fields
       { key: 'latitude', label: 'Latitude', isNumeric: true },
       { key: 'longitude', label: 'Longitude', isNumeric: true },
-      // Drilling (Actuals)
       { key: 'diameter', label: 'Diameter (mm)' },
       { key: 'totalDepth', label: 'TD (m)', isNumeric: true },
-      { key: 'surveyOB', label: 'OB (m)' },
       { key: 'casingPipeUsed', label: 'Casing Pipe (m)' },
-      { key: 'innerCasingPipe', label: 'Inner Casing (m)' },
-      { key: 'outerCasingPipe', label: 'Outer/MS Casing (m)' },
-      { key: 'surveyPlainPipe', label: 'Plain Pipe (m)' },
-      { key: 'surveySlottedPipe', label: 'Slotted Pipe (m)' },
       { key: 'yieldDischarge', label: 'Discharge (LPH)' },
-      { key: 'zoneDetails', label: 'Zone Details (m)' },
       { key: 'waterLevel', label: 'Water Level (m)' },
-      { key: 'typeOfRig', label: 'Type of Rig' },
       { key: 'drillingRemarks', label: 'Drilling Remarks' },
-      // Scheme Details
       { key: 'pumpDetails', label: 'Pump Details' },
       { key: 'waterTankCapacity', label: 'Water Tank (L)' },
       { key: 'noOfTapConnections', label: 'Tap Connections', isNumeric: true },
       { key: 'noOfBeneficiary', label: 'Beneficiaries' },
-      // ARS Details
-      { key: 'arsNumberOfStructures', label: 'ARS Structures', isNumeric: true },
-      { key: 'arsStorageCapacity', label: 'ARS Capacity (m³)', isNumeric: true },
-      { key: 'arsNumberOfFillings', label: 'ARS Fillings', isNumeric: true },
-      // Work Status
-      { key: 'workStatus', label: 'Work Status' },
       { key: 'dateOfCompletion', label: 'Date of Completion', isDate: true },
       { key: 'totalExpenditure', label: 'Expenditure (₹)', isNumeric: true },
+      { key: 'workStatus', label: 'Work Status' },
       { key: 'workRemarks', label: 'Work Remarks' },
     ];
 
@@ -280,5 +266,3 @@ export default function PendingUpdatesTable() {
     </>
   );
 }
-
-    
