@@ -1,4 +1,3 @@
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -427,7 +426,6 @@ export default function DataEntryFormComponent({
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
                             const isSitePendingForManager = isSiteManager && !!initialData.siteDetails?.[index]?.isPending;
 
-                            // An editor can always edit. A site manager can edit if assigned and not pending.
                             const siteIsEditable = isEditor || (isSiteManager && isAssignedToCurrentUser && !isSitePendingForManager);
                             
                             const purpose = watchedSiteDetails[index]?.purpose;

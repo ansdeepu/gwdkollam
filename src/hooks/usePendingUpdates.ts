@@ -125,6 +125,18 @@ export function usePendingUpdates(): PendingUpdatesState {
       throw new Error("Invalid user profile for submitting an update.");
     }
 
+    // Critical Check: Ensure no pending updates exist for the sites being submitted.
+    const siteNamesBeingUpdated = new Set(updatedSites.map(s => s.nameOfSite));
+    const existingUpdates = await getPendingUpdatesForFile(fileNo, currentUser.uid);
+
+    for (const update of existingUpdates) {
+        for (const site of update.updatedSiteDetails) {
+            if (siteNamesBeingUpdated.has(site.nameOfSite)) {
+                throw new Error(`An update for site "${site.nameOfSite}" is already pending approval. Please wait for the admin to review it.`);
+            }
+        }
+    }
+
     const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
       fileNo,
       updatedSiteDetails: updatedSites,
@@ -137,7 +149,7 @@ export function usePendingUpdates(): PendingUpdatesState {
       ...newUpdate,
       submittedAt: serverTimestamp(),
     });
-  }, []);
+  }, [getPendingUpdatesForFile]);
   
   const getPendingUpdateById = useCallback(async (updateId: string): Promise<PendingUpdate | null> => {
     const docRef = doc(db, PENDING_UPDATES_COLLECTION, updateId);
