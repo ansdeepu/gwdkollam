@@ -17,12 +17,17 @@ import { isValid } from 'date-fns';
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
   if (dateValue instanceof Date) return dateValue;
+  // Handle Firestore Timestamps which are objects with seconds/nanoseconds
+  if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number') {
+    return new Date(dateValue.seconds * 1000);
+  }
   if (typeof dateValue === 'string' || typeof dateValue === 'number') {
     const parsed = new Date(dateValue);
     if (isValid(parsed)) return parsed;
   }
   return null;
 };
+
 
 // Helper function to create default form values, ensuring consistency.
 const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntryFormData => {
