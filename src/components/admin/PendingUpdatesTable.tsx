@@ -43,12 +43,14 @@ type FieldComparison = {
 const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailFormData): FieldComparison[] => {
     const changes: FieldComparison[] = [];
     const fieldsToCompare: Array<{ key: keyof SiteDetailFormData; label: string; isDate?: boolean; isNumeric?: boolean }> = [
-      // Supervisor-editable fields
+      // All fields a supervisor can edit
       { key: 'latitude', label: 'Latitude', isNumeric: true },
       { key: 'longitude', label: 'Longitude', isNumeric: true },
       { key: 'diameter', label: 'Diameter (mm)' },
       { key: 'totalDepth', label: 'TD (m)', isNumeric: true },
       { key: 'casingPipeUsed', label: 'Casing Pipe (m)' },
+      { key: 'outerCasingPipe', label: 'Outer Casing (m)' },
+      { key: 'innerCasingPipe', label: 'Inner Casing (m)' },
       { key: 'yieldDischarge', label: 'Discharge (LPH)' },
       { key: 'waterLevel', label: 'Water Level (m)' },
       { key: 'drillingRemarks', label: 'Drilling Remarks' },
@@ -60,6 +62,14 @@ const compareSites = (originalSite: SiteDetailFormData, updatedSite: SiteDetailF
       { key: 'totalExpenditure', label: 'Expenditure (₹)', isNumeric: true },
       { key: 'workStatus', label: 'Work Status' },
       { key: 'workRemarks', label: 'Work Remarks' },
+      { key: 'zoneDetails', label: 'Zone Details (m)' },
+      { key: 'typeOfRig', label: 'Type of Rig' },
+      { key: 'surveyOB', label: 'Actual OB (m)' },
+      { key: 'surveyPlainPipe', label: 'Actual Plain Pipe (m)' },
+      { key: 'surveySlottedPipe', label: 'Actual Slotted Pipe (m)' },
+      { key: 'pilotDrillingDepth', label: 'Pilot Drilling Depth (m)'},
+      { key: 'pumpingLineLength', label: 'Pumping Line (m)'},
+      { key: 'deliveryLineLength', label: 'Delivery Line (m)'},
     ];
 
 
