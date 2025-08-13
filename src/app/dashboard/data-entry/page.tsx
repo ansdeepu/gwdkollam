@@ -115,7 +115,7 @@ export default function DataEntryPage() {
       const pendingUpdatePromise = approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null);
       
       try {
-        const [entryResult, pendingUpdateResult] = await Promise.all([entryPromise, pendingUpdatePromise]);
+        const [originalEntry, pendingUpdate] = await Promise.all([entryPromise, pendingUpdatePromise]);
         
         let allUsersResult: UserProfile[] = [];
         if (user.role === 'editor' || user.role === 'viewer') {
@@ -123,38 +123,51 @@ export default function DataEntryPage() {
         }
 
         if (isMounted) {
-          if (fileNoToEdit && !entryResult) {
+          if (fileNoToEdit && !originalEntry) {
             toast({ title: "Error", description: `File No. ${fileNoToEdit} not found or you do not have permission to view it.`, variant: "destructive" });
           }
 
-          let dataToProcess: DataEntryFormData | null = entryResult;
+          let dataForForm: DataEntryFormData | null = originalEntry;
 
-          if (approveUpdateId && pendingUpdateResult && dataToProcess) {
-              if (pendingUpdateResult.status !== 'pending') {
+          if (approveUpdateId && pendingUpdate && originalEntry) {
+              if (pendingUpdate.status !== 'pending') {
                   toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
               } else {
-                  let mergedData = JSON.parse(JSON.stringify(dataToProcess));
-                  
-                  const updatedSitesMap = new Map(
-                    pendingUpdateResult.updatedSiteDetails.map(site => [site.nameOfSite, site])
-                  );
+                  // This is the new, more robust merging logic.
+                  // 1. Create a deep copy of the original entry to modify.
+                  let mergedData = JSON.parse(JSON.stringify(originalEntry));
 
+                  // 2. Prepare the supervisor's updates by parsing dates correctly first.
+                  const processedSupervisorUpdates = pendingUpdate.updatedSiteDetails.map(updatedSite => {
+                      return {
+                          ...updatedSite,
+                          dateOfCompletion: safeParseDate(updatedSite.dateOfCompletion),
+                      };
+                  });
+                  
+                  // 3. Create a map for easy lookup of the processed updates.
+                  const updatedSitesMap = new Map(
+                    processedSupervisorUpdates.map(site => [site.nameOfSite, site])
+                  );
+                  
+                  // 4. Intelligently merge the processed updates into the original site details.
                   mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
                       if (updatedSitesMap.has(originalSite.nameOfSite)) {
+                          // Merge only the fields from the update into the original site data.
                           const updatedSiteData = updatedSitesMap.get(originalSite.nameOfSite)!;
                           return { ...originalSite, ...updatedSiteData };
                       }
                       return originalSite;
                   }) || [];
-                  
-                  dataToProcess = mergedData; 
 
-                  toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdateResult.submittedByName}. Please review and save.` });
+                  dataForForm = mergedData; 
+
+                  toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
               }
           }
           
           setPageData({
-            initialData: mapEntryToFormValues(dataToProcess), // Final parsing happens here on the processed data
+            initialData: mapEntryToFormValues(dataForForm),
             allUsers: allUsersResult,
           });
         }
