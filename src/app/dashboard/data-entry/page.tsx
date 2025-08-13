@@ -135,7 +135,12 @@ export default function DataEntryPage() {
                   toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
               } else {
                   // Create a map of updated sites for easy lookup
-                  const updatedSitesMap = new Map(pendingUpdateResult.updatedSiteDetails.map(site => [site.nameOfSite, site]));
+                  const updatedSitesMap = new Map(
+                    pendingUpdateResult.updatedSiteDetails.map(site => [
+                      site.nameOfSite, 
+                      { ...site, dateOfCompletion: safeParseDate(site.dateOfCompletion) } // Ensure date is parsed here
+                    ])
+                  );
                   
                   // Merge the updated site details
                   const mergedSiteDetails = finalInitialData.siteDetails?.map(originalSite => {
