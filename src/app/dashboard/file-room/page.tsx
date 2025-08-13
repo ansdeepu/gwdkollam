@@ -27,27 +27,24 @@ export default function FileManagerPage() {
 
   const filteredFileEntriesForManager = useMemo(() => {
     if (user?.role === 'site-manager' && user.uid) {
-      const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+      const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
       
-      // Filter the entries to show only those that have sites assigned to the current manager
-      // AND those sites are in an active state.
       return fileEntries
         .map(entry => {
           const relevantSites = entry.siteDetails?.filter(site => 
-            site.supervisorUid === user.uid
+            site.supervisorUid === user.uid &&
+            site.workStatus &&
+            activeStatuses.includes(site.workStatus as SiteWorkStatus)
           );
 
-          // If there are no sites for this manager in the entry, filter it out.
           if (!relevantSites || relevantSites.length === 0) {
             return null;
           }
 
-          // Return a new entry object containing ONLY the sites relevant to the manager.
           return { ...entry, siteDetails: relevantSites };
         })
         .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
     }
-    // For other roles, or if not a site manager, return all entries as is.
     return fileEntries;
   }, [fileEntries, user]);
 
