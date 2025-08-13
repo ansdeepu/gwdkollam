@@ -92,10 +92,12 @@ interface PageData {
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
   const fileNoToEdit = searchParams.get("fileNo");
+  const approveUpdateId = searchParams.get("approveUpdateId");
   
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
+  const { getPendingUpdateById } = usePendingUpdates();
   const { toast } = useToast();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
@@ -110,9 +112,10 @@ export default function DataEntryPage() {
       setDataLoading(true);
       
       const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
+      const pendingUpdatePromise = approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null);
       
       try {
-        const [entryResult] = await Promise.all([entryPromise]);
+        const [entryResult, pendingUpdateResult] = await Promise.all([entryPromise, pendingUpdatePromise]);
         
         let allUsersResult: UserProfile[] = [];
         if (user.role === 'editor') {
@@ -123,11 +126,33 @@ export default function DataEntryPage() {
           if (fileNoToEdit && !entryResult) {
             toast({ title: "Error", description: `File No. ${fileNoToEdit} not found or you do not have permission to view it.`, variant: "destructive" });
           }
-          
-          const finalInitialData = mapEntryToFormValues(entryResult);
+
+          let finalInitialData: DataEntryFormData | null = entryResult;
+
+          // If there's a pending update, merge it into the initial data
+          if (approveUpdateId && pendingUpdateResult && finalInitialData) {
+              if (pendingUpdateResult.status !== 'pending') {
+                  toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
+              } else {
+                  // Create a map of updated sites for easy lookup
+                  const updatedSitesMap = new Map(pendingUpdateResult.updatedSiteDetails.map(site => [site.nameOfSite, site]));
+                  
+                  // Merge the updated site details
+                  const mergedSiteDetails = finalInitialData.siteDetails?.map(originalSite => {
+                      if (updatedSitesMap.has(originalSite.nameOfSite)) {
+                          // Replace the original site with the updated one from the pending update
+                          return updatedSitesMap.get(originalSite.nameOfSite)!;
+                      }
+                      return originalSite;
+                  }) || [];
+
+                  finalInitialData = { ...finalInitialData, siteDetails: mergedSiteDetails };
+                  toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdateResult.submittedByName}. Please review and save.` });
+              }
+          }
           
           setPageData({
-            initialData: finalInitialData,
+            initialData: mapEntryToFormValues(finalInitialData),
             allUsers: allUsersResult,
           });
         }
@@ -150,7 +175,7 @@ export default function DataEntryPage() {
     }
     
     return () => { isMounted = false; };
-  }, [fileNoToEdit, authIsLoading, user, fetchEntryForEditing, fetchAllUsers, toast]);
+  }, [fileNoToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, fetchAllUsers, toast]);
 
   useEffect(() => {
     let title = "View File Data";
@@ -161,7 +186,11 @@ export default function DataEntryPage() {
       if (isCreatingNew) {
         title = "New File Data Entry";
         description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
-      } else {
+      } else if (approveUpdateId) {
+        title = "Approve Pending Updates";
+        description = `Reviewing and approving updates for File No: ${fileNoToEdit}. Click "Save Changes" to finalize.`;
+      }
+      else {
         title = "Edit File Data";
         description = `Editing details for File No: ${fileNoToEdit}. Please make your changes and submit.`;
       }
@@ -180,7 +209,7 @@ export default function DataEntryPage() {
 
     setPageTitle(title);
     setPageDescription(description);
-  }, [fileNoToEdit, user]);
+  }, [fileNoToEdit, user, approveUpdateId]);
 
 
   const supervisorList = useMemo(() => {
@@ -241,7 +270,7 @@ export default function DataEntryPage() {
           </CardHeader>
           <CardContent>
              <DataEntryFormComponent
-                key={fileNoToEdit || 'new-entry'} 
+                key={approveUpdateId || fileNoToEdit || 'new-entry'} 
                 fileNoToEdit={fileNoToEdit || undefined}
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
