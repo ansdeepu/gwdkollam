@@ -233,39 +233,47 @@ export function useFileEntries(): FileEntriesState {
           entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
       }
       
+      // Site Manager Specific Filtering Logic
       if (user.role === 'site-manager' && user.uid) {
-          const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+          const allManagerPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
           const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];
-      
-          const allPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-          
-          const pendingCompletionSites = new Set<string>();
-          allPendingUpdates.forEach(update => {
-              update.updatedSiteDetails.forEach(siteUpdate => {
-                  if (siteUpdate.workStatus && finalSubmittedStatuses.includes(siteUpdate.workStatus as SiteWorkStatus)) {
-                      pendingCompletionSites.add(`${update.fileNo}-${siteUpdate.nameOfSite}`);
+
+          // Create a set of identifiers for sites that are pending completion/failure.
+          const sitesPendingCompletion = new Set<string>();
+          allManagerPendingUpdates.forEach(update => {
+              update.updatedSiteDetails.forEach(site => {
+                  if (site.workStatus && finalSubmittedStatuses.includes(site.workStatus as SiteWorkStatus)) {
+                      sitesPendingCompletion.add(`${update.fileNo}-${site.nameOfSite}`);
                   }
               });
           });
-      
-          for (let entry of entriesFromFirestore) {
-              const userPendingUpdateForThisFile = allPendingUpdates.find(p => p.fileNo === entry.fileNo);
-      
+
+          const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+          
+          entriesFromFirestore.forEach(entry => {
+              const userPendingUpdateForThisFile = allManagerPendingUpdates.find(p => p.fileNo === entry.fileNo);
+              
               const sitesToDisplay = (entry.siteDetails || [])
                   .filter(site => {
+                      // Rule 1: Must be assigned to the current site manager.
                       if (site.supervisorUid !== user.uid) return false;
-                      if (pendingCompletionSites.has(`${entry.fileNo}-${site.nameOfSite}`)) {
+                      
+                      // Rule 2: If the site has a PENDING completion/failure update, HIDE it.
+                      if (sitesPendingCompletion.has(`${entry.fileNo}-${site.nameOfSite}`)) {
                           return false;
                       }
+                      
+                      // Rule 3: For all other sites, only show if their CURRENT status is active.
                       return site.workStatus && activeStatuses.includes(site.workStatus as SiteWorkStatus);
                   })
                   .map(site => {
+                      // For the sites that WILL be displayed, mark if they have ANY pending update.
                       const isPending = userPendingUpdateForThisFile?.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite);
                       return { ...site, isPending };
                   });
-      
+              
               entry.siteDetails = sitesToDisplay;
-          }
+          });
       }
       
       entriesFromFirestore.sort((a, b) => {
