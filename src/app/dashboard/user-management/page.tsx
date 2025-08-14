@@ -34,8 +34,10 @@ export default function UserManagementPage() {
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
 
+  const canManage = user?.role === 'editor';
+
   const loadUsers = useCallback(async () => {
-    if (!user || user.role !== 'editor') {
+    if (!user || !user.isApproved) {
       setUsersLoading(false);
       return;
     }
@@ -57,7 +59,7 @@ export default function UserManagementPage() {
 
 
   useEffect(() => {
-    if (!isLoading && user && user.role !== 'editor') {
+    if (!isLoading && user && !['editor', 'viewer'].includes(user.role)) {
       router.push('/dashboard');
     }
     if (!isLoading && !user) {
@@ -110,7 +112,7 @@ export default function UserManagementPage() {
     );
   }
 
-  if (!user || user.role !== 'editor') {
+  if (!user || !['editor', 'viewer'].includes(user.role)) {
     return (
       <div className="space-y-6 p-6 text-center">
         <ShieldAlert className="h-16 w-16 text-destructive mx-auto mb-4" />
@@ -124,22 +126,26 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex gap-2">
-          <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
-              <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
-          </Button>
-          <Button onClick={() => setIsStaffFormOpen(true)}>
-              <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
-          </Button>
+      {canManage && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex gap-2">
+            <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
+                <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
+            </Button>
+            <Button onClick={() => setIsStaffFormOpen(true)}>
+                <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
       <Card className="shadow-xl border-border/60">
         <CardHeader>
           <CardTitle className="text-xl">Registered Users ({allUsers.length})</CardTitle>
           <CardDescription>
-            Oversee user accounts, manage roles, approval statuses, and perform administrative actions. 
-            Use batch actions for efficiency where applicable.
+            {canManage 
+              ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions. Use batch actions for efficiency where applicable."
+              : "View all registered users in the system. (Read-only)"
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>

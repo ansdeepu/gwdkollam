@@ -29,7 +29,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/report-format-suggestion', label: 'Report Builders', icon: Settings2 },
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
-  { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor'] },
+  { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
 ];
 
 export default function AppNavMenu() {
