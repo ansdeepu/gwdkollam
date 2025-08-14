@@ -239,7 +239,7 @@ export function useFileEntries(): FileEntriesState {
         const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];
         const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
         
-        // 1. Create a set of site identifiers that are pending completion/failure. These should be hidden.
+        // Create a "hide list" of sites that are pending completion.
         const sitesPendingCompletion = new Set<string>();
         allManagerPendingUpdates.forEach(update => {
           update.updatedSiteDetails.forEach(site => {
@@ -248,16 +248,14 @@ export function useFileEntries(): FileEntriesState {
             }
           });
         });
-        
-        // 2. Filter and map the entries for the site manager.
+  
         const filteredEntriesForManager = entriesFromFirestore.map(entry => {
           const userPendingUpdateForThisFile = allManagerPendingUpdates.find(p => p.fileNo === entry.fileNo);
           
           const sitesToDisplay = (entry.siteDetails || [])
             .filter(site => {
-              // Only consider sites assigned to the current manager.
               if (site.supervisorUid !== user.uid) return false;
-              
+  
               const siteIdentifier = `${entry.fileNo}-${site.nameOfSite}`;
               
               // Rule 1: Hide any site that has a pending 'Work Completed' or 'Work Failed' update.
@@ -269,14 +267,13 @@ export function useFileEntries(): FileEntriesState {
               return site.workStatus && activeStatuses.includes(site.workStatus as SiteWorkStatus);
             })
             .map(site => {
-              // Mark if the site has ANY pending update (not just completion).
+              // Mark if the site has ANY other pending update (not just completion).
               const isPending = userPendingUpdateForThisFile?.updatedSiteDetails.some(us => us.nameOfSite === site.nameOfSite);
               return { ...site, isPending };
             });
           
-          // Return the entry with only the sites that should be displayed.
           return { ...entry, siteDetails: sitesToDisplay };
-        }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0); // Exclude entries that now have no sites to show.
+        }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
   
         entriesFromFirestore = filteredEntriesForManager;
       }
