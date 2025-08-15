@@ -316,16 +316,15 @@ export default function ProgressReportPage() {
         
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
 
-        // Corrected, mutually exclusive logic for Previous Balance and Current Application
+        // Mutually exclusive logic for Previous Balance and Current Application
         const isPreviousBalance =
           firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) &&
-          (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate) || isWithinInterval(completionDate, { start: sDate, end: eDate })) &&
-          workStatus !== 'To be Refunded';
+          (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
 
         const isCurrentApplication = 
-          firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) &&
-          workStatus !== 'To be Refunded';
-
+          firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        
+        // "To be Refunded" counts all applicable works up to the end of the report period.
         const isToBeRefunded = workStatus === 'To be Refunded' && (isPreviousBalance || isCurrentApplication);
         
         const updateStats = (statsObj: ProgressStats) => {
