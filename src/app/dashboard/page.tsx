@@ -449,11 +449,10 @@ export default function DashboardPage() {
 
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     const completedWorkStatuses: SiteWorkStatus[] = ["Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
-
-    const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
-    const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     
     const isSupervisor = currentUser.role === 'supervisor';
+    const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName: string; }>();
+    const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
 
     // Use `reportEntries` here to ensure we can find completed works from the past.
     for (const entry of reportEntries) {
@@ -468,7 +467,10 @@ export default function DashboardPage() {
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = new Date(site.dateOfCompletion);
           if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
-            completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+             const siteKey = `${entry.fileNo}-${site.nameOfSite}`;
+             if (!uniqueCompletedSites.has(siteKey)) {
+                uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
+             }
           }
         }
         
@@ -480,6 +482,8 @@ export default function DashboardPage() {
       }
     }
     
+    const completedThisMonthSites = Array.from(uniqueCompletedSites.values());
+
     const createSummary = (sites: typeof completedThisMonthSites): WorkSummary => {
         const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
           acc[purpose] = 0;
@@ -1528,7 +1532,7 @@ export default function DashboardPage() {
             </Card>
           )}
 
-          {currentUser?.role === 'editor' && (
+          {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
