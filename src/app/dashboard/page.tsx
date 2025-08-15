@@ -72,6 +72,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
 
 interface TransformedFinanceMetrics {
   sbiCredit: number;
@@ -134,7 +135,8 @@ const getColorClass = (nameOrEmail: string): string => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries, isLoading: entriesLoading } = useFileEntries();
+  const { fileEntries, isLoading: entriesLoading } = useFileEntries(); // For dashboard cards and general view
+  const { reportEntries, isReportLoading } = useAllFileEntriesForReports(); // For progress report card
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
@@ -286,7 +288,7 @@ export default function DashboardPage() {
     const isSiteManager = currentUser.role === 'site-manager';
     const activeSupervisorStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
 
-    // Filter file entries for dashboard cards if user is a site manager
+    // Use `fileEntries` from `useFileEntries` which is already filtered for the site manager's active view.
     const entriesForCards = isSiteManager
       ? fileEntries.map(entry => {
           const relevantSites = entry.siteDetails?.filter(site =>
@@ -296,10 +298,9 @@ export default function DashboardPage() {
           ) || [];
           
           if (relevantSites.length > 0) {
-            // Return a new entry object with only the relevant sites for card calculations
             return { ...entry, siteDetails: relevantSites };
           }
-          return null; // This entry is not relevant for the site manager's card view
+          return null;
         }).filter((entry): entry is DataEntryFormData => entry !== null)
       : fileEntries;
 
@@ -333,7 +334,7 @@ export default function DashboardPage() {
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
-    for (const entry of entriesForCards) { // Use filtered entries for cards
+    for (const entry of entriesForCards) {
         let isFilePending = false;
         if (entry.fileStatus && fileStatusesForPending.includes(entry.fileStatus as FileStatus)) isFilePending = true;
         else if (entry.siteDetails?.some(sd => sd.workStatus && siteWorkStatusesForPending.includes(sd.workStatus as SiteWorkStatus))) isFilePending = true;
@@ -440,7 +441,8 @@ export default function DashboardPage() {
   }, [entriesLoading, fileEntries, staffLoading, staffMembers, currentUser]);
 
   const currentMonthStats = useMemo(() => {
-    if (entriesLoading || !currentUser) return null;
+    // Use the new `reportEntries` hook which contains ALL files, not just active ones.
+    if (isReportLoading || !currentUser) return null;
 
     const startOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth(), 1);
     const endOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth() + 1, 0, 23, 59, 59);
@@ -453,30 +455,27 @@ export default function DashboardPage() {
     
     const isSiteManager = currentUser.role === 'site-manager';
 
-    for (const entry of fileEntries) { // Use all fileEntries for this report
+    // Use `reportEntries` here to ensure we can find completed works from the past.
+    for (const entry of reportEntries) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
-        // Site Manager specific filtering
+        // Site Manager specific filtering remains crucial
         if (isSiteManager && site.supervisorUid !== currentUser.uid) {
             continue; // Skip sites not assigned to this manager
         }
 
-        // Check for completed works within the month
+        // Check for completed works within the selected month
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = new Date(site.dateOfCompletion);
           if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
             completedThisMonthSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
           }
         }
+        
         // Check for ongoing works
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
-          if (isSiteManager) {
-             if(site.supervisorUid === currentUser.uid) {
-               ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
-             }
-          } else {
-             ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
-          }
+            // No need for a sub-check for site manager, the outer loop already handles it
+            ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
       }
     }
@@ -504,7 +503,7 @@ export default function DashboardPage() {
         completedSummary: createSummary(completedThisMonthSites),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [fileEntries, entriesLoading, workReportMonth, currentUser]);
+  }, [reportEntries, isReportLoading, workReportMonth, currentUser]);
 
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
@@ -960,7 +959,7 @@ export default function DashboardPage() {
   };
 
 
-  if (entriesLoading || authLoading || usersLoading || staffLoading || !dashboardData || !currentMonthStats) { 
+  if (entriesLoading || authLoading || usersLoading || staffLoading || isReportLoading || !dashboardData || !currentMonthStats) { 
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
