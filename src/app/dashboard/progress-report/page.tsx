@@ -316,20 +316,18 @@ export default function ProgressReportPage() {
         
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
 
-        // Mutually exclusive logic for Previous Balance and Current Application
-        const isPreviousBalance =
-          firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) &&
-          (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
+        // A site is a "Current Application" if it started within the reporting period.
+        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) && workStatus !== 'Addl. AS Awaited';
 
-        const isCurrentApplication = 
-          firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        
-        // "To be Refunded" counts all applicable works up to the end of the report period.
-        const isToBeRefunded = workStatus === 'To be Refunded' && (isPreviousBalance || isCurrentApplication);
-        
+        // A site is part of the "Previous Balance" if it started before the reporting period and was still active when it began.
+        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate)) && workStatus !== 'Addl. AS Awaited';
+
+        // A site is "To be Refunded" if its status is 'To be Refunded' at any point up to the end date of the report.
+        const isToBeRefunded = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, eDate);
+
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
-            if (isPreviousBalance) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
+            if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
             if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
             if (isToBeRefunded) { 
                 statsObj.toBeRefunded++; 
@@ -364,16 +362,14 @@ export default function ProgressReportPage() {
     });
 
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
-        stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
+        stats.totalApplications = stats.previousBalance + stats.currentApplications;
         const totalApplicationSites = [...stats.previousBalanceData, ...stats.currentApplicationsData];
-        stats.totalApplicationsData = totalApplicationSites.filter(
-            site => !stats.toBeRefundedData.some(refundedSite =>
-                refundedSite.nameOfSite === site.nameOfSite && refundedSite.fileNo === site.fileNo
-            )
-        );
-        stats.balance = stats.totalApplications - stats.completed;
+        stats.totalApplicationsData = totalApplicationSites;
+
+        stats.balance = stats.totalApplications - stats.completed - stats.toBeRefunded;
         stats.balanceData = stats.totalApplicationsData.filter(
-            item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo)
+            item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo) &&
+                    !stats.toBeRefundedData.some(rd => rd.nameOfSite === item.nameOfSite && rd.fileNo === item.fileNo)
         );
     };
     
