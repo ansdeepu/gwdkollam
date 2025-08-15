@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -157,9 +158,9 @@ export default function DataEntryFormComponent({
   const { user } = useAuth();
   
   const isEditor = userRole === 'editor';
-  const isSiteManager = userRole === 'site-manager';
+  const isSupervisor = userRole === 'supervisor';
   const isViewer = userRole === 'viewer';
-  const isReadOnly = isViewer || (isSiteManager && !fileNoToEdit);
+  const isReadOnly = isViewer || (isSupervisor && !fileNoToEdit);
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
@@ -284,13 +285,13 @@ export default function DataEntryFormComponent({
         return;
     }
     
-    if (userRole !== 'editor' && userRole !== 'site-manager') {
+    if (userRole !== 'editor' && userRole !== 'supervisor') {
         toast({ title: "Permission Denied", description: "You do not have permission to save file data.", variant: "destructive" });
         return;
     }
 
-    if (userRole === 'site-manager' && !fileNoToEdit) {
-        toast({ title: "Permission Denied", description: "Site Managers cannot create new files.", variant: "destructive" });
+    if (userRole === 'supervisor' && !fileNoToEdit) {
+        toast({ title: "Permission Denied", description: "Supervisors cannot create new files.", variant: "destructive" });
         return;
     }
 
@@ -317,9 +318,9 @@ export default function DataEntryFormComponent({
               title: fileNoToEdit ? "File Data Updated" : "File Data Submitted",
               description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
           });
-      } else if (userRole === 'site-manager' && fileNoToEdit) {
+      } else if (userRole === 'supervisor' && fileNoToEdit) {
           const sitesWithChanges = data.siteDetails?.filter(currentSite => {
-              if (currentSite.supervisorUid !== user.uid) return false; // Site Manager can only submit changes for their own sites
+              if (currentSite.supervisorUid !== user.uid) return false; // Supervisor can only submit changes for their own sites
 
               const originalSite = initialData.siteDetails?.find(s => s.nameOfSite === currentSite.nameOfSite);
               if (!originalSite) return true;
@@ -424,9 +425,9 @@ export default function DataEntryFormComponent({
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
-                            const isSitePendingForManager = isSiteManager && !!initialData.siteDetails?.[index]?.isPending;
+                            const isSitePendingForManager = isSupervisor && !!initialData.siteDetails?.[index]?.isPending;
 
-                            const siteIsEditable = isEditor || (isSiteManager && isAssignedToCurrentUser && !isSitePendingForManager);
+                            const siteIsEditable = isEditor || (isSupervisor && isAssignedToCurrentUser && !isSitePendingForManager);
                             
                             const purpose = watchedSiteDetails[index]?.purpose;
                             const workStatus = watchedSiteDetails[index]?.workStatus;
@@ -452,7 +453,7 @@ export default function DataEntryFormComponent({
                                         <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Rig Accessibility</FormLabel>
-                                                <Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value} disabled={isReadOnly || !isEditor}>
+                                                <Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value} disabled={isReadOnly || !siteIsEditable}>
                                                     <FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
@@ -463,13 +464,13 @@ export default function DataEntryFormComponent({
                                             </FormItem>
                                         )}/>
                                     )}
-                                    <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                     {!isPrivateApplication && (
                                       <>
-                                        <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                        <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                        <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                        <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
                                       </>
                                     )}
                                     <FormField
@@ -513,8 +514,8 @@ export default function DataEntryFormComponent({
                               </>
                             );
                             
-                            if (isSiteManager && !isAssignedToCurrentUser) {
-                                return null; // Don't render site details if site manager is not assigned
+                            if (isSupervisor && !isAssignedToCurrentUser) {
+                                return null; // Don't render site details if supervisor is not assigned
                             }
 
                             return (
@@ -676,7 +677,7 @@ export default function DataEntryFormComponent({
                                                             </SelectTrigger>
                                                         </FormControl>
                                                         <SelectContent>
-                                                            {(isSiteManager ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map((o) => (
+                                                            {(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map((o) => (
                                                               <SelectItem key={o} value={o}>{o}</SelectItem>
                                                             ))}
                                                         </SelectContent>
