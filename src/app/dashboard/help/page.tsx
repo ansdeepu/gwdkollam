@@ -46,7 +46,7 @@ export default function HelpPage() {
              <AccordionItem value="item-5">
               <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
               <AccordionContent>
-                Supervisors can edit their assigned sites through the 'File Manager'. After making changes, clicking the "Save Changes" button will submit their updates to an administrator for review. The changes will not be applied to the main file until an admin approves them from the "Pending Updates" page. The site will be hidden from the manager's view once an update is submitted and will reappear only if the update is rejected.
+                Supervisors can edit their assigned sites through the 'File Manager'. After making changes, clicking the "Save Changes" button will submit their updates to an administrator for review. The changes will not be applied to the main file until an admin approves them from the "Pending Updates" page. The site will be hidden from the supervisor's view once an update is submitted and will reappear only if the update is rejected.
               </AccordionContent>
             </AccordionItem>
              <AccordionItem value="item-6">
