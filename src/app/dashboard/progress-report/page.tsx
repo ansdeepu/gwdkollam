@@ -362,14 +362,19 @@ export default function ProgressReportPage() {
     });
 
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
-        stats.totalApplications = stats.previousBalance + stats.currentApplications;
+        stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
         const totalApplicationSites = [...stats.previousBalanceData, ...stats.currentApplicationsData];
-        stats.totalApplicationsData = totalApplicationSites;
+        // Filter out refunded sites from the total applications data pool
+        stats.totalApplicationsData = totalApplicationSites.filter(
+            site => !stats.toBeRefundedData.some(refundedSite =>
+                refundedSite.nameOfSite === site.nameOfSite && refundedSite.fileNo === site.fileNo
+            )
+        );
 
-        stats.balance = stats.totalApplications - stats.completed - stats.toBeRefunded;
+        stats.balance = stats.totalApplications - stats.completed;
+        // The balance data should be the total applications minus the completed ones
         stats.balanceData = stats.totalApplicationsData.filter(
-            item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo) &&
-                    !stats.toBeRefundedData.some(rd => rd.nameOfSite === item.nameOfSite && rd.fileNo === item.fileNo)
+            item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo)
         );
     };
     
