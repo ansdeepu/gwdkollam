@@ -243,26 +243,12 @@ export default function ProgressReportPage() {
         governmentFinancialSummary[p] = initialFinancialSummary();
     });
 
+    // --- New, Isolated Revenue Head Calculation Logic ---
     let totalRevenueHeadAmount = 0;
     const revenueHeadDetails: RevenueHeadDetail[] = [];
-    
-    const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
-    fileEntries.forEach(entry => {
-        (entry.siteDetails || []).forEach(site => {
-            const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
-            if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
-                const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
-                if (!uniqueCompletedSites.has(siteKey)) {
-                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType });
-                }
-            }
-        });
-    });
-    const allCompletedSitesInPeriod = Array.from(uniqueCompletedSites.values());
 
-    // --- Start of Corrected Revenue Head Calculation ---
     fileEntries.forEach(entry => {
-        // Source 1: From Payment Details
+        // Source 1: From Payment Details within date range
         entry.paymentDetails?.forEach(pd => {
             const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
             const revenueAmount = Number(pd.revenueHead) || 0;
@@ -280,7 +266,7 @@ export default function ProgressReportPage() {
             }
         });
 
-        // Source 2: From Direct Remittance Details
+        // Source 2: From Direct Remittance Details within date range
         entry.remittanceDetails?.forEach(rd => {
             const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
             const remittedAmount = Number(rd.amountRemitted) || 0;
@@ -298,7 +284,21 @@ export default function ProgressReportPage() {
             }
         });
     });
-    // --- End of Corrected Revenue Head Calculation ---
+    // --- End of Revenue Head Calculation ---
+    
+    const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
+    fileEntries.forEach(entry => {
+        (entry.siteDetails || []).forEach(site => {
+            const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
+            if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
+                const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
+                if (!uniqueCompletedSites.has(siteKey)) {
+                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType });
+                }
+            }
+        });
+    });
+    const allCompletedSitesInPeriod = Array.from(uniqueCompletedSites.values());
 
     fileEntries.forEach(entry => {
       const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
@@ -328,7 +328,7 @@ export default function ProgressReportPage() {
       }
       
       (entry.siteDetails || []).forEach(site => {
-        if (!site || site.workStatus === 'Addl. AS Awaited') return;
+        if (!site) return;
         
         const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType };
         const purpose = site.purpose as SitePurpose;
@@ -340,14 +340,26 @@ export default function ProgressReportPage() {
         
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        
         const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
-        const isToBeRefunded = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, eDate);
+        
+        const isToBeRefundedInPeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        const wasToBeRefundedBeforePeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate);
 
         const updateStats = (statsObj: ProgressStats) => {
-            if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
-            if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
-            if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
-            if (isToBeRefunded) { 
+            if (isCurrentApplication && workStatus !== 'Addl. AS Awaited') { 
+                statsObj.currentApplications++; 
+                statsObj.currentApplicationsData.push(siteWithFileContext); 
+            }
+            if (wasActiveBeforePeriod && workStatus !== 'Addl. AS Awaited') { 
+                statsObj.previousBalance++; 
+                statsObj.previousBalanceData.push(siteWithFileContext); 
+            }
+            if (isCompletedInPeriod) { 
+                statsObj.completed++; 
+                statsObj.completedData.push(siteWithFileContext); 
+            }
+            if (isToBeRefundedInPeriod || wasToBeRefundedBeforePeriod) { 
                 statsObj.toBeRefunded++; 
                 statsObj.toBeRefundedData.push(siteWithFileContext); 
             }
