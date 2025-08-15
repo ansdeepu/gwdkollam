@@ -317,7 +317,7 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) && site.additionalAS === 'No';
         
-        const wasActiveBeforePeriod = site.additionalAS === 'Yes' && completionDate && isValid(completionDate) && isAfter(completionDate, sDate);
+        const wasActiveBeforePeriod = site.additionalAS === 'No' && completionDate && isValid(completionDate) && isAfter(completionDate, sDate);
         
         const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || wasActiveBeforePeriod);
         
