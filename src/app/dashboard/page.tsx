@@ -588,7 +588,8 @@ export default function DashboardPage() {
   };
 
   const handleWorkStatusCellClick = (data: any[], title: string) => {
-    const dialogData = data.map(site => ({
+    const dialogData = data.map((site, index) => ({
+      slNo: index + 1,
       fileNo: site.fileNo,
       applicantName: site.applicantName,
       siteName: site.nameOfSite,
@@ -597,6 +598,7 @@ export default function DashboardPage() {
       supervisorName: site.supervisorName || 'N/A'
     }));
     const columns: DetailDialogColumn[] = [
+      { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
       { key: 'applicantName', label: 'Applicant Name' },
       { key: 'siteName', label: 'Site Name' },
@@ -641,7 +643,7 @@ export default function DashboardPage() {
       if ((account === 'SBI' || account === 'STSB') && type === 'credit') {
         title = `${account} - Credit Details`;
         columnsForDialog = [
-          { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
+          { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
           { key: 'siteNames', label: 'Site(s)' }, { key: 'sitePurposes', label: 'Purpose(s)' },
           { key: 'amount', label: 'Remitted (₹)', isNumeric: true }, { key: 'date', label: 'Remitted Date' },
         ];
@@ -657,7 +659,7 @@ export default function DashboardPage() {
       } else if ((account === 'SBI' || account === 'STSB') && type === 'debit') {
         title = `${account} - Withdrawal Details`;
         columnsForDialog = [
-          { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
+          { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
           { key: 'siteNames', label: 'Site(s)' }, { key: 'sitePurposes', label: 'Purpose(s)' },
           { key: 'amount', label: 'Paid (₹)', isNumeric: true }, { key: 'date', label: 'Payment Date' },
         ];
@@ -676,7 +678,7 @@ export default function DashboardPage() {
       } else if (account === 'RevenueHead' && type === 'credit') {
         title = 'Revenue Head - Credit Details';
         columnsForDialog = [
-          { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
+          { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
           { key: 'siteNames', label: 'Site(s)' }, { key: 'sitePurposes', label: 'Purpose(s)' },
           { key: 'source', label: 'Source' }, { key: 'amount', label: 'Credited (₹)', isNumeric: true },
           { key: 'date', label: 'Credited Date' },
@@ -703,10 +705,12 @@ export default function DashboardPage() {
         });
       }
     });
+
+    const dataWithSlNo = dataForDialog.map((item, index) => ({ slNo: index + 1, ...item }));
   
     setDetailDialogTitle(title);
     setDetailDialogColumns(columnsForDialog);
-    setDetailDialogData(dataForDialog);
+    setDetailDialogData(dataWithSlNo);
     setIsDetailDialogOpen(true);
   };
 
@@ -814,7 +818,7 @@ export default function DashboardPage() {
 
   const handleAgeCardClick = (category: keyof NonNullable<typeof dashboardData>['filesByAgeData'], title: string) => {
     if (!dashboardData) return;
-    const dataForDialog = dashboardData.filesByAgeData[category].map(entry => {
+    const dataForDialog = dashboardData.filesByAgeData[category].map((entry, index) => {
       const latestRemittanceDate = entry.remittanceDetails
         ?.map(rd => (rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null))
         .filter((d): d is Date => d !== null && isValid(d))
@@ -823,6 +827,7 @@ export default function DashboardPage() {
       const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite).filter(Boolean).join(', ') || 'N/A';
 
       return {
+        slNo: index + 1,
         fileNo: entry.fileNo || 'N/A',
         applicantName: entry.applicantName || 'N/A',
         siteNames: siteNames,
@@ -832,6 +837,7 @@ export default function DashboardPage() {
     }) || [];
 
     const columns: DetailDialogColumn[] = [
+      { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
       { key: 'applicantName', label: 'Applicant Name' },
       { key: 'siteNames', label: 'Site Name(s)' },
@@ -856,6 +862,7 @@ export default function DashboardPage() {
     if (!currentMonthStats) return;
 
     const columns: DetailDialogColumn[] = [
+        { key: 'slNo', label: 'Sl. No.' },
         { key: 'fileNo', label: 'File No.' },
         { key: 'applicantName', label: 'Applicant Name' },
         { key: 'siteName', label: 'Site Name' },
@@ -864,7 +871,8 @@ export default function DashboardPage() {
         { key: 'supervisorName', label: 'Supervisor' },
     ];
 
-    const mapSiteToDialogData = (site: SiteDetailFormData & { fileNo: string; applicantName: string; }) => ({
+    const mapSiteToDialogData = (site: SiteDetailFormData & { fileNo: string; applicantName: string; }, index: number) => ({
+        slNo: index + 1,
         fileNo: site.fileNo,
         applicantName: site.applicantName,
         siteName: site.nameOfSite,
@@ -893,7 +901,8 @@ export default function DashboardPage() {
     if (filteredData.length === 0) return;
 
     const title = `${type} '${purpose}' Works`;
-    const dialogData = filteredData.map(site => ({
+    const dialogData = filteredData.map((site, index) => ({
+      slNo: index + 1,
       fileNo: site.fileNo,
       applicantName: site.applicantName,
       siteName: site.nameOfSite,
@@ -902,6 +911,7 @@ export default function DashboardPage() {
     }));
 
     const columns: DetailDialogColumn[] = [
+      { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
       { key: 'applicantName', label: 'Applicant Name' },
       { key: 'siteName', label: 'Site Name' },
@@ -930,15 +940,21 @@ export default function DashboardPage() {
     const filteredWorks = supervisorOngoingWorks.works.filter(work => work.purpose === purpose);
   
     const columns: DetailDialogColumn[] = [
+      { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
       { key: 'applicantName', label: 'Applicant Name' },
       { key: 'siteName', label: 'Site Name' },
       { key: 'workStatus', label: 'Work Status' },
     ];
+
+    const dataWithSlNo = filteredWorks.map((work, index) => ({
+      slNo: index + 1,
+      ...work
+    }));
   
     const selectedSupervisorName = supervisorList.find(s => s.uid === selectedSupervisorId)?.name || "Selected Supervisor";
     setMonthDetailDialogTitle(`Ongoing '${purpose}' Works for ${selectedSupervisorName}`);
-    setMonthDetailDialogData(filteredWorks);
+    setMonthDetailDialogData(dataWithSlNo);
     setMonthDetailDialogColumns(columns);
     setIsMonthDetailDialogOpen(true);
   };
