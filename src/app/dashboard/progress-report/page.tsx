@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter, isEqual } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -312,11 +312,13 @@ export default function ProgressReportPage() {
         const workStatus = site.workStatus;
         const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
         
-        // --- Logic for Progress Report Counts ---
         const startedBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate);
-        const completedDuringOrAfterPeriod = !completionDate || (isValid(completionDate) && isAfter(completionDate, sDate));
         
-        const isPreviousBalance = site.additionalAS === 'No' && startedBeforePeriod && completedDuringOrAfterPeriod;
+        const isPreviousBalance =
+          site.additionalAS === 'No' &&
+          startedBeforePeriod &&
+          (!completionDate || (isValid(completionDate) && (isAfter(completionDate, sDate) || isEqual(completionDate, sDate))));
+        
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) && site.additionalAS === 'No';
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || isPreviousBalance);
