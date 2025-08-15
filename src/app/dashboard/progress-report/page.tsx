@@ -9,7 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter, isEqual } from 'date-fns';
+import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
@@ -314,13 +314,19 @@ export default function ProgressReportPage() {
         const completionDateValue = site.dateOfCompletion;
         const completionDate = completionDateValue ? new Date(completionDateValue) : null;
         
-        // Corrected Previous Balance Logic
-        const isPreviousBalance = !completionDate || !isValid(completionDate) || isAfter(completionDate, sDate) || isEqual(completionDate, sDate);
-
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
-        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        
-        const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || isPreviousBalance);
+
+        // Corrected, mutually exclusive logic for Previous Balance and Current Application
+        const isPreviousBalance =
+          firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) &&
+          (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate) || isWithinInterval(completionDate, { start: sDate, end: eDate })) &&
+          workStatus !== 'To be Refunded';
+
+        const isCurrentApplication = 
+          firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) &&
+          workStatus !== 'To be Refunded';
+
+        const isToBeRefunded = workStatus === 'To be Refunded' && (isPreviousBalance || isCurrentApplication);
         
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
