@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -99,7 +98,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const canEdit = user?.role === 'editor' || user?.role === 'site-manager';
+  const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
   const canDelete = user?.role === 'editor';
 
   const filteredEntries = useMemo(() => {
@@ -244,7 +243,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
         <p className="text-muted-foreground">
           {searchTerm
             ? "No files match your search."
-            : user?.role === 'site-manager' 
+            : user?.role === 'supervisor' 
             ? "You have no active files assigned to you."
             : "There are no file entries recorded yet. Start by adding new file data."
           }
@@ -275,8 +274,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
             </TableHeader>
             <TableBody>
               {paginatedEntries.map((entry, index) => {
-                const isFilePendingForManager = user?.role === 'site-manager' && entry.siteDetails?.some(s => s.isPending);
-                const isEditDisabled = isFilePendingForManager || (user?.role === 'site-manager' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
+                const isFilePendingForManager = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.isPending);
+                const isEditDisabled = isFilePendingForManager || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
                 
                 return (
                 <TableRow key={entry.fileNo}>
