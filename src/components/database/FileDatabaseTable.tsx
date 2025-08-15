@@ -274,8 +274,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
             </TableHeader>
             <TableBody>
               {paginatedEntries.map((entry, index) => {
-                const isFilePendingForManager = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.isPending);
-                const isEditDisabled = isFilePendingForManager || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
+                const isFilePendingForSupervisor = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.isPending);
+                const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
                 
                 return (
                 <TableRow key={entry.fileNo}>
@@ -321,12 +321,12 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={() => handleEditClick(entry)} disabled={isEditDisabled}>
-                              {isFilePendingForManager ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit3 className="h-4 w-4" />}
+                              {isFilePendingForSupervisor ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit3 className="h-4 w-4" />}
                               <span className="sr-only">Edit Entry</span>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{isFilePendingForManager ? "Pending Approval" : "Edit Entry"}</p>
+                            <p>{isFilePendingForSupervisor ? "Pending Approval" : "Edit Entry"}</p>
                           </TooltipContent>
                         </Tooltip>
                       )}

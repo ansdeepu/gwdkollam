@@ -1,4 +1,3 @@
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -405,9 +404,9 @@ export default function DataEntryFormComponent({
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
                             const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
-                            const isSitePendingForManager = isSupervisor && !!initialData.siteDetails?.[index]?.isPending;
+                            const isSitePendingForSupervisor = isSupervisor && !!initialData.siteDetails?.[index]?.isPending;
 
-                            const siteIsEditable = isEditor || (isSupervisor && isAssignedToCurrentUser && !isSitePendingForManager);
+                            const siteIsEditable = isEditor || (isSupervisor && isAssignedToCurrentUser && !isSitePendingForSupervisor);
                             
                             const purpose = watchedSiteDetails[index]?.purpose;
                             const workStatus = watchedSiteDetails[index]?.workStatus;
@@ -518,7 +517,7 @@ export default function DataEntryFormComponent({
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
-                                        {isSitePendingForManager && (
+                                        {isSitePendingForSupervisor && (
                                           <div className="mb-4 flex items-center gap-2 rounded-md border border-orange-500/50 bg-orange-500/10 p-3 text-sm text-orange-700">
                                             <Clock className="h-5 w-5" />
                                             <span>This site has an update pending admin approval. You cannot make further changes until it is reviewed.</span>
