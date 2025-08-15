@@ -398,6 +398,28 @@ export const PendingUpdateSchema = PendingUpdateFormDataSchema.extend({
 export type PendingUpdate = z.infer<typeof PendingUpdateSchema>;
 
 
+// Helper function to join values from an array of objects
+const join = (arr: any[] | undefined, key: string, separator: string = '; '): string => {
+  if (!arr || arr.length === 0) return 'N/A';
+  return arr.map(item => item[key] || 'N/A').join(separator);
+};
+
+// Helper function to sum values from an array of objects
+const sum = (arr: any[] | undefined, key: string): number => {
+  if (!arr) return 0;
+  return arr.reduce((acc, item) => acc + (Number(item[key]) || 0), 0);
+};
+
+// Helper function to format dates from an array of objects
+const formatDate = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  try {
+    return format(new Date(date), "dd/MM/yyyy");
+  } catch {
+    return 'Invalid Date';
+  }
+};
+
 export const reportableFields: Array<{ id: string; label: string; accessor: (entry: DataEntryFormData) => string | number | undefined | null }> = [
   // === Main File Details ===
   { id: 'fileNo', label: 'File No.', accessor: (entry) => entry.fileNo },
@@ -405,23 +427,40 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'phoneNo', label: 'Phone No.', accessor: (entry) => entry.phoneNo },
   { id: 'applicationType', label: 'Application Type', accessor: (entry) => entry.applicationType ? applicationTypeDisplayMap[entry.applicationType] : undefined },
   { id: 'fileStatus', label: 'File Status', accessor: (entry) => entry.fileStatus },
-  
-  // === Key Dates ===
-  { id: 'firstRemittanceDate', label: 'First Remittance Date', accessor: (entry) => entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : undefined },
-  { id: 'allSiteCompletionDates', label: 'All Site Completion Dates', accessor: (entry) => entry.siteDetails?.map(s => s.dateOfCompletion ? format(new Date(s.dateOfCompletion), "dd/MM/yyyy") : 'N/A').join('; ') },
+  { id: 'fileRemarks', label: 'File Remarks', accessor: (entry) => entry.remarks },
 
-  // === Financial Summary ===
+  // === Remittance Details (Aggregated) ===
+  { id: 'firstRemittanceDate', label: 'First Remittance Date', accessor: (entry) => formatDate(entry.remittanceDetails?.[0]?.dateOfRemittance) },
+  { id: 'allRemittanceDates', label: 'All Remittance Dates', accessor: (entry) => entry.remittanceDetails?.map(rd => formatDate(rd.dateOfRemittance)).join('; ') || 'N/A' },
   { id: 'totalRemittance', label: 'Total Remittance (₹)', accessor: (entry) => entry.totalRemittance },
+  { id: 'remittanceAccounts', label: 'Remittance Accounts', accessor: (entry) => join(entry.remittanceDetails, 'remittedAccount') },
+
+  // === Site Details (Aggregated) ===
+  { id: 'allSiteNames', label: 'Site Names', accessor: (entry) => join(entry.siteDetails, 'nameOfSite') },
+  { id: 'allSitePurposes', label: 'Site Purposes', accessor: (entry) => join(entry.siteDetails, 'purpose') },
+  { id: 'allSiteWorkStatuses', label: 'Site Work Statuses', accessor: (entry) => join(entry.siteDetails, 'workStatus') },
+  { id: 'allSiteSupervisors', label: 'Site Supervisors', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.supervisorName).filter(Boolean))].join('; ') || 'N/A' },
+  { id: 'allContractors', label: 'Contractor Names', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.contractorName).filter(Boolean))].join('; ') || 'N/A' },
+  { id: 'allSiteCompletionDates', label: 'Site Completion Dates', accessor: (entry) => join(entry.siteDetails, 'dateOfCompletion', '; ') },
+  { id: 'allTenderNos', label: 'Tender Nos.', accessor: (entry) => join(entry.siteDetails, 'tenderNo') },
+  { id: 'allTypeOfRigs', label: 'Types of Rig', accessor: (entry) => join(entry.siteDetails, 'typeOfRig') },
+
+  // === Financial Summary (Aggregated) ===
+  { id: 'totalSiteEstimate', label: 'Total Site Estimate (₹)', accessor: (entry) => sum(entry.siteDetails, 'estimateAmount') },
+  { id: 'totalSiteExpenditure', label: 'Total Site Expenditure (₹)', accessor: (entry) => sum(entry.siteDetails, 'totalExpenditure') },
   { id: 'totalPayment', label: 'Total Payment (₹)', accessor: (entry) => entry.totalPaymentAllEntries },
   { id: 'overallBalance', label: 'Overall Balance (₹)', accessor: (entry) => entry.overallBalance },
-  { id: 'allSiteExpenditures', label: 'All Site Expenditures (₹)', accessor: (entry) => entry.siteDetails?.reduce((acc, s) => acc + (Number(s.totalExpenditure) || 0), 0) },
-
-  // === Aggregated Site Details ===
-  { id: 'allSiteNames', label: 'All Site Names', accessor: (entry) => entry.siteDetails?.map(s => s.nameOfSite).join('; ') },
-  { id: 'allSitePurposes', label: 'All Site Purposes', accessor: (entry) => entry.siteDetails?.map(s => s.purpose).join('; ') },
-  { id: 'allSiteWorkStatuses', label: 'All Site Work Statuses', accessor: (entry) => entry.siteDetails?.map(s => s.workStatus).join('; ') },
-  { id: 'allSiteSupervisors', label: 'All Site Supervisors', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.supervisorName).filter(Boolean))].join('; ') },
+  
+  // === Payment Details (Aggregated) ===
+  { id: 'allPaymentDates', label: 'Payment Dates', accessor: (entry) => entry.paymentDetails?.map(pd => formatDate(pd.dateOfPayment)).join('; ') || 'N/A' },
+  { id: 'totalContractorPayment', label: 'Total Contractor Payment (₹)', accessor: (entry) => sum(entry.paymentDetails, 'contractorsPayment') },
+  { id: 'totalGst', label: 'Total GST (₹)', accessor: (entry) => sum(entry.paymentDetails, 'gst') },
+  { id: 'totalIncomeTax', label: 'Total Income Tax (₹)', accessor: (entry) => sum(entry.paymentDetails, 'incomeTax') },
+  { id: 'totalKbcwb', label: 'Total KBCWB (₹)', accessor: (entry) => sum(entry.paymentDetails, 'kbcwb') },
+  { id: 'totalRefundToParty', label: 'Total Refund to Party (₹)', accessor: (entry) => sum(entry.paymentDetails, 'refundToParty') },
+  { id: 'totalRevenueHead', label: 'Total to Revenue Head (₹)', accessor: (entry) => sum(entry.paymentDetails, 'revenueHead') },
 ];
+
 
 export const CustomReportBuilderSchema = z.object({
   selectedHeadingIds: z.array(z.string()).min(1, { message: 'Please select at least one heading to include in the report.' }),
