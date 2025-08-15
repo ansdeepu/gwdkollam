@@ -70,128 +70,99 @@ export function useAuth() {
   useEffect(() => {
     let isMounted = true; 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!isMounted) {
+      if (!isMounted) return;
+
+      if (!firebaseUser) {
+        setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
         return;
       }
 
-      let userProfile: UserProfile | null = null;
-
       try {
-        if (firebaseUser) {
-          const userDocRef = doc(db, "users", firebaseUser.uid);
-          const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        let userProfile: UserProfile | null = null;
+        let isApproved = false;
+        
+        const userDocSnap = await getDoc(userDocRef);
 
-          if (isAdminByEmail) {
-            const userDocSnap = await getDoc(userDocRef);
+        if (isAdminByEmail) {
+            isApproved = true; // Main admin is always approved
             let staffInfo: { designation?: Designation } = {};
             if (userDocSnap.exists() && userDocSnap.data().staffId) {
                 const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
                 const staffDocSnap = await getDoc(staffDocRef);
-                if (staffDocSnap.exists()) {
-                    staffInfo = staffDocSnap.data();
-                }
+                if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
             }
             const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
             userProfile = {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                name: adminName ? String(adminName) : undefined,
-                role: 'editor',
-                isApproved: true,
+                uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
+                role: 'editor', isApproved: true,
                 staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
-                designation: staffInfo.designation, // Added designation
+                designation: staffInfo.designation,
                 createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
                 lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
             };
             if (!userDocSnap.exists()) {
                 await setDoc(doc(db, "users", firebaseUser.uid), {
-                    email: firebaseUser.email,
-                    name: userProfile.name,
-                    role: 'editor',
-                    isApproved: true,
-                    createdAt: Timestamp.now(),
+                    email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
                 });
             }
-          } else { 
-            const userDocSnap = await getDoc(userDocRef);
-            if (userDocSnap.exists()) {
-                const userData = userDocSnap.data();
-                 let staffInfo: { designation?: Designation } = {};
-                 if (userData.staffId) {
-                    const staffDocRef = doc(db, "staffMembers", userData.staffId);
-                    const staffDocSnap = await getDoc(staffDocRef);
-                    if (staffDocSnap.exists()) {
-                        staffInfo = staffDocSnap.data();
-                    }
-                 }
-                userProfile = {
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    name: userData.name ? String(userData.name) : undefined,
-                    role: userData.role || 'viewer',
-                    isApproved: userData.isApproved === true,
-                    staffId: userData.staffId || undefined,
-                    designation: staffInfo.designation, // Added designation
-                    createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
-                    lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
-                };
+        } else if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            isApproved = userData.isApproved === true;
+            let staffInfo: { designation?: Designation } = {};
+            if (userData.staffId) {
+                const staffDocRef = doc(db, "staffMembers", userData.staffId);
+                const staffDocSnap = await getDoc(staffDocRef);
+                if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
             }
-          }
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
+                role: userData.role || 'viewer', isApproved: isApproved,
+                staffId: userData.staffId || undefined, designation: staffInfo.designation,
+                createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
+                lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
+            };
+        }
 
-          if (isMounted) {
-            if (userProfile && userProfile.isApproved) {
-              setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
-            } else if (userProfile && !userProfile.isApproved) {
-              if(auth.currentUser && auth.currentUser.uid === firebaseUser.uid) { 
-                await signOut(auth); 
-              }
-              setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
-              toast({
-                  title: "Account Pending Approval",
-                  description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
-                  variant: "destructive",
-                  duration: 8000
-              });
-            } else if (!userProfile) { 
-               if(auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
-                  await signOut(auth); 
-               }
-               setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+        if (!isMounted) return;
+
+        if (userProfile && isApproved) {
+            setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
+        } else {
+            if (auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
+                await signOut(auth);
             }
-          }
-
-        } else { 
-          if (isMounted) {
-            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
-          }
+            setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
+            if (userProfile && !isApproved) {
+                toast({
+                    title: "Account Pending Approval",
+                    description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
+                    variant: "destructive",
+                    duration: 8000
+                });
+            }
         }
       } catch (error: any) {
         console.error('[Auth] Error in onAuthStateChanged callback:', error);
         if (isMounted) {
-          if (error.code === 'resource-exhausted') {
-            toast({
-                title: "Database Quota Exceeded",
-                description: "The application has exceeded its database usage limits for the day. Please try again later.",
-                variant: "destructive",
-                duration: 9000
-            });
-          }
-          if (auth.currentUser) {
-              try { 
-                await signOut(auth); 
-              } catch (signOutError) { 
-                console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); 
-              }
-          }
-          setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+            if (error.code === 'resource-exhausted') {
+                toast({
+                    title: "Database Quota Exceeded",
+                    description: "The application has exceeded its database usage limits for the day. Please try again later.",
+                    variant: "destructive",
+                    duration: 9000
+                });
+            }
+            if (auth.currentUser) {
+                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); }
+            }
+            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
         }
       }
     });
 
-    return () => {
-      isMounted = false; 
-      unsubscribe();
-    }
+    return () => { isMounted = false; unsubscribe(); };
   }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
