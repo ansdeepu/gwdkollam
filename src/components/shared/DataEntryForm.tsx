@@ -65,7 +65,6 @@ const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
   estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
-  additionalAS: 'No', // Default to No
   tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
   outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
   waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
@@ -194,25 +193,6 @@ export default function DataEntryFormComponent({
       'Private_Industry'
     ].includes(applicationType);
   }, [applicationType]);
-
-  // Effect to manage 'Additional AS' field default value
-  useEffect(() => {
-    watchedSiteDetails.forEach((site, index) => {
-      const estimate = site.estimateAmount ?? 0;
-      const remitted = site.remittedAmount ?? 0;
-      const currentAS = form.getValues(`siteDetails.${index}.additionalAS`);
-
-      // Only set the default if the field is not already set by the user or from initial data
-      if (currentAS === undefined || currentAS === null) {
-        if (remitted >= estimate && estimate > 0) {
-          form.setValue(`siteDetails.${index}.additionalAS`, 'Yes', { shouldValidate: true });
-        } else {
-          form.setValue(`siteDetails.${index}.additionalAS`, 'No', { shouldValidate: true });
-        }
-      }
-    });
-  }, [watchedSiteDetails, form]);
-
 
   useEffect(() => {
     if (userRole === 'editor') {
@@ -479,7 +459,7 @@ export default function DataEntryFormComponent({
                                         name={`siteDetails.${index}.supervisorUid`}
                                         render={({ field }) => (
                                         <FormItem>
-                                        <FormLabel>Site Manager</FormLabel>
+                                        <FormLabel>Supervisor</FormLabel>
                                         {isEditor ? (
                                             <Select
                                             disabled={!isEditor}
@@ -494,9 +474,9 @@ export default function DataEntryFormComponent({
                                                 }
                                             }}
                                             value={field.value || ''}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Assign a site manager" /></SelectTrigger></FormControl>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                             <SelectContent>
-                                                <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); field.onChange(null); formSetValue(`siteDetails.${index}.supervisorName`, null); }}>-- Unassign Site Manager --</SelectItem>
+                                                <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); field.onChange(null); formSetValue(`siteDetails.${index}.supervisorName`, null); }}>-- Unassign Supervisor --</SelectItem>
                                                 {supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>)}
                                             </SelectContent>
                                             </Select>
