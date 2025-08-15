@@ -288,10 +288,10 @@ export default function ProgressReportPage() {
         });
       }
       
-      // Revenue Head Calculation - From Payment Details
+      // Corrected Revenue Head Calculation
       entry.paymentDetails?.forEach(pd => {
           const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
-          if (paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
+          if (pd.revenueHead && paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
               const revenueAmount = Number(pd.revenueHead) || 0;
               if (revenueAmount > 0) {
                   totalRevenueHeadAmount += revenueAmount;
@@ -308,24 +308,21 @@ export default function ProgressReportPage() {
           }
       });
       
-      // Revenue Head Calculation - From Direct Remittance
       entry.remittanceDetails?.forEach(rd => {
-        if (rd.remittedAccount === 'RevenueHead') {
-          const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
-          if(remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
-            const remittedAmount = Number(rd.amountRemitted) || 0;
-            if (remittedAmount > 0) {
-              totalRevenueHeadAmount += remittedAmount;
-              revenueHeadDetails.push({
-                slNo: revenueHeadDetails.length + 1,
-                applicantName: entry.applicantName || 'N/A',
-                siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
-                fileStatus: entry.fileStatus || 'N/A',
-                amount: remittedAmount,
-                date: format(remDate, 'dd/MM/yyyy'),
-                source: 'Direct Remittance',
-              });
-            }
+        const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
+        if (rd.remittedAccount === 'RevenueHead' && remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+          const remittedAmount = Number(rd.amountRemitted) || 0;
+          if (remittedAmount > 0) {
+            totalRevenueHeadAmount += remittedAmount;
+            revenueHeadDetails.push({
+              slNo: revenueHeadDetails.length + 1,
+              applicantName: entry.applicantName || 'N/A',
+              siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+              fileStatus: entry.fileStatus || 'N/A',
+              amount: remittedAmount,
+              date: format(remDate, 'dd/MM/yyyy'),
+              source: 'Direct Remittance',
+            });
           }
         }
       });
@@ -821,4 +818,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
