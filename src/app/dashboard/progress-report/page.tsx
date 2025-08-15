@@ -1,3 +1,4 @@
+
 // src/app/dashboard/progress-report/page.tsx
 "use client";
 
@@ -65,7 +66,9 @@ interface RevenueHeadDetail {
     applicantName: string;
     siteNames: string;
     fileStatus: string;
-    paymentAmount: number;
+    amount: number;
+    date: string;
+    source: 'Direct Remittance' | 'From Payment';
 }
 
 
@@ -285,9 +288,10 @@ export default function ProgressReportPage() {
         });
       }
       
+      // Revenue Head Calculation - From Payment Details
       entry.paymentDetails?.forEach(pd => {
           const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
-          if (paymentDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
+          if (paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
               const revenueAmount = Number(pd.revenueHead) || 0;
               if (revenueAmount > 0) {
                   totalRevenueHeadAmount += revenueAmount;
@@ -296,10 +300,34 @@ export default function ProgressReportPage() {
                       applicantName: entry.applicantName || 'N/A',
                       siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
                       fileStatus: entry.fileStatus || 'N/A',
-                      paymentAmount: revenueAmount
+                      amount: revenueAmount,
+                      date: format(paymentDate, 'dd/MM/yyyy'),
+                      source: 'From Payment',
                   });
               }
           }
+      });
+      
+      // Revenue Head Calculation - From Direct Remittance
+      entry.remittanceDetails?.forEach(rd => {
+        if (rd.remittedAccount === 'RevenueHead') {
+          const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
+          if(remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+            const remittedAmount = Number(rd.amountRemitted) || 0;
+            if (remittedAmount > 0) {
+              totalRevenueHeadAmount += remittedAmount;
+              revenueHeadDetails.push({
+                slNo: revenueHeadDetails.length + 1,
+                applicantName: entry.applicantName || 'N/A',
+                siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                fileStatus: entry.fileStatus || 'N/A',
+                amount: remittedAmount,
+                date: format(remDate, 'dd/MM/yyyy'),
+                source: 'Direct Remittance',
+              });
+            }
+          }
+        }
       });
 
       (entry.siteDetails || []).forEach(site => {
@@ -614,9 +642,11 @@ export default function ProgressReportPage() {
             { key: 'applicantName', label: 'Name of Applicant' },
             { key: 'siteNames', label: 'Name of Site' },
             { key: 'fileStatus', label: 'File Status' },
-            { key: 'paymentAmount', label: 'Payments (₹)' }
+            { key: 'date', label: 'Date' },
+            { key: 'source', label: 'Source' },
+            { key: 'amount', label: 'Amount (₹)' }
         ]);
-        setDetailDialogData(reportData.revenueHeadDetails.map(d => ({...d, paymentAmount: d.paymentAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })));
+        setDetailDialogData(reportData.revenueHeadDetails.map(d => ({...d, amount: d.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })));
         setIsDetailDialogOpen(true);
     };
   
@@ -791,3 +821,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
