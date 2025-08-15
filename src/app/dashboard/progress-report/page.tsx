@@ -1,4 +1,3 @@
-
 // src/app/dashboard/progress-report/page.tsx
 "use client";
 
@@ -317,10 +316,10 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
 
         // A site is a "Current Application" if it started within the reporting period.
-        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) && workStatus !== 'Addl. AS Awaited';
+        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
 
         // A site is part of the "Previous Balance" if it started before the reporting period and was still active when it began.
-        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate)) && workStatus !== 'Addl. AS Awaited';
+        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
 
         // A site is "To be Refunded" if its status is 'To be Refunded' at any point up to the end date of the report.
         const isToBeRefunded = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, eDate);
