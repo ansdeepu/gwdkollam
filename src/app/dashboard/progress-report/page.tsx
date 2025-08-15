@@ -310,21 +310,20 @@ export default function ProgressReportPage() {
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
-
         const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
         
-        const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
-        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) && site.additionalAS === 'No';
-        
+        // --- Logic for Progress Report Counts ---
         const startedBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate);
         const completedDuringOrAfterPeriod = !completionDate || (isValid(completionDate) && isAfter(completionDate, sDate));
-        const wasActiveBeforePeriod = site.additionalAS === 'No' && startedBeforePeriod && completedDuringOrAfterPeriod;
-
-        const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || wasActiveBeforePeriod);
         
+        const isPreviousBalance = site.additionalAS === 'No' && startedBeforePeriod && completedDuringOrAfterPeriod;
+        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) && site.additionalAS === 'No';
+        const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
+        const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || isPreviousBalance);
+
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
-            if (wasActiveBeforePeriod) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
+            if (isPreviousBalance) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
             if (isCompletedInPeriod) { statsObj.completed++; statsObj.completedData.push(siteWithFileContext); }
             if (isToBeRefunded) { 
                 statsObj.toBeRefunded++; 
