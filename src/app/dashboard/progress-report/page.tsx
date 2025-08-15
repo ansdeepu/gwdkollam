@@ -288,24 +288,24 @@ export default function ProgressReportPage() {
         });
       }
       
-      // Corrected Revenue Head Calculation
+      // Revenue Head Calculation
       entry.paymentDetails?.forEach(pd => {
-          const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
-          if (pd.revenueHead && paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
-              const revenueAmount = Number(pd.revenueHead) || 0;
-              if (revenueAmount > 0) {
-                  totalRevenueHeadAmount += revenueAmount;
-                  revenueHeadDetails.push({
-                      slNo: revenueHeadDetails.length + 1,
-                      applicantName: entry.applicantName || 'N/A',
-                      siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
-                      fileStatus: entry.fileStatus || 'N/A',
-                      amount: revenueAmount,
-                      date: format(paymentDate, 'dd/MM/yyyy'),
-                      source: 'From Payment',
-                  });
-              }
-          }
+        const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
+        if (pd.revenueHead && paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
+            const revenueAmount = Number(pd.revenueHead) || 0;
+            if (revenueAmount > 0) {
+                totalRevenueHeadAmount += revenueAmount;
+                revenueHeadDetails.push({
+                    slNo: revenueHeadDetails.length + 1,
+                    applicantName: entry.applicantName || 'N/A',
+                    siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
+                    fileStatus: entry.fileStatus || 'N/A',
+                    amount: revenueAmount,
+                    date: format(paymentDate, 'dd/MM/yyyy'),
+                    source: 'From Payment',
+                });
+            }
+        }
       });
       
       entry.remittanceDetails?.forEach(rd => {
