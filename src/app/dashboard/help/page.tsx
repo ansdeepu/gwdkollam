@@ -1,12 +1,37 @@
-
 // src/app/dashboard/help/page.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, LifeBuoy } from "lucide-react";
+import { HelpCircle, LifeBuoy, Building, Server } from "lucide-react";
 
 export default function HelpPage() {
   return (
     <div className="space-y-6">
+       <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-3">
+            <Building className="h-6 w-6 text-primary" />
+            <CardTitle>About the Ground Water Department</CardTitle>
+          </div>
+          <CardDescription>
+            An overview of the department and the purpose of this application.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <h3 className="font-semibold text-foreground mb-2">Ground Water Department, Kollam</h3>
+            <p className="text-sm text-muted-foreground">
+              The Ground Water Department is the state-level agency entrusted with the development, management, conservation, and regulation of precious ground water resources. The department provides technical guidance for various schemes, including well construction, groundwater recharge projects, and water supply systems for both government and private sectors. Its key services involve hydrogeological surveys, drilling, and monitoring to ensure the sustainable use of groundwater for drinking, agriculture, and industrial purposes.
+            </p>
+          </div>
+           <div className="pt-4 border-t">
+            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2"><Server className="h-4 w-4" /> Purpose of This Web Application</h3>
+            <p className="text-sm text-muted-foreground">
+              This digital dashboard is designed to streamline the operations of the Ground Water Department, Kollam. It serves as a centralized platform for managing file entries, tracking the progress of various projects from application to completion, overseeing staff and user accounts, and generating detailed reports. By digitizing these workflows, the application aims to enhance efficiency, improve data accuracy, and provide a clear, real-time overview of all departmental activities.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Frequently Asked Questions (FAQ)</CardTitle>
