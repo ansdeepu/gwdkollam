@@ -25,6 +25,7 @@ import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
 
 // Define the structure for the progress report data
 interface ProgressStats {
@@ -186,7 +187,7 @@ const WellTypeProgressTable = ({
 
 
 export default function ProgressReportPage() {
-  const { fileEntries, isLoading: entriesLoading } = useFileEntries();
+  const { reportEntries: fileEntries, isReportLoading: entriesLoading } = useAllFileEntriesForReports();
   const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
   const [isFiltering, setIsFiltering] = useState(true);
@@ -247,7 +248,6 @@ export default function ProgressReportPage() {
         (entry.siteDetails || []).forEach(site => {
             const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
             if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
-                // Use a key that includes file number, site name, AND purpose to ensure uniqueness
                 const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
                 if (!uniqueCompletedSites.has(siteKey)) {
                     uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType });
@@ -303,7 +303,7 @@ export default function ProgressReportPage() {
       });
 
       (entry.siteDetails || []).forEach(site => {
-        if (!site) return;
+        if (!site || site.workStatus === 'Addl. AS Awaited') return;
         
         const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType };
         const purpose = site.purpose as SitePurpose;
@@ -315,13 +315,10 @@ export default function ProgressReportPage() {
         
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
 
-        // A site is a "Current Application" if it started within the reporting period.
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
 
-        // A site is part of the "Previous Balance" if it started before the reporting period and was still active when it began.
         const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
-
-        // A site is "To be Refunded" if its status is 'To be Refunded' at any point up to the end date of the report.
+        
         const isToBeRefunded = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, eDate);
 
         const updateStats = (statsObj: ProgressStats) => {
@@ -352,7 +349,6 @@ export default function ProgressReportPage() {
       const purpose = site.purpose as SitePurpose;
       if (purpose && financialSummaryOrder.includes(purpose)) {
         const isPrivate = site.applicationType ? PRIVATE_APPLICATION_TYPES.includes(site.applicationType) : false;
-        // If applicationType is missing, default to government/other for counting purposes.
         const targetSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
         targetSummary[purpose].completedData.push(site);
         targetSummary[purpose].totalCompleted++;
@@ -363,7 +359,6 @@ export default function ProgressReportPage() {
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
         stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
         const totalApplicationSites = [...stats.previousBalanceData, ...stats.currentApplicationsData];
-        // Filter out refunded sites from the total applications data pool
         stats.totalApplicationsData = totalApplicationSites.filter(
             site => !stats.toBeRefundedData.some(refundedSite =>
                 refundedSite.nameOfSite === site.nameOfSite && refundedSite.fileNo === site.fileNo
@@ -371,7 +366,6 @@ export default function ProgressReportPage() {
         );
 
         stats.balance = stats.totalApplications - stats.completed;
-        // The balance data should be the total applications minus the completed ones
         stats.balanceData = stats.totalApplicationsData.filter(
             item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo)
         );
