@@ -1,3 +1,4 @@
+
 // src/app/dashboard/help/page.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -19,7 +20,7 @@ export default function HelpPage() {
                 There are three main roles in this application, each with different permissions:
                 <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
                   <li><strong>Editor:</strong> Has full access to all features. Editors can create, edit, and delete all file entries, manage staff and user accounts, approve pending updates, and set GWD rates.</li>
-                  <li><strong>Site Manager:</strong> Has a focused view. Site Managers can only see and edit the specific sites they are assigned to via the 'File Manager' page. They cannot create new files and their changes must be approved by an Editor.</li>
+                  <li><strong>Supervisor:</strong> Has a focused view. Supervisors can only see and edit the specific sites they are assigned to via the 'File Manager' page. They cannot create new files and their changes must be approved by an Editor.</li>
                   <li><strong>Viewer:</strong> Has read-only access. Viewers can see most data, including all files, reports, and user lists, but cannot make any changes.</li>
                 </ul>
               </AccordionContent>
@@ -33,7 +34,7 @@ export default function HelpPage() {
             <AccordionItem value="item-3">
               <AccordionTrigger>Why can't I edit a file entry?</AccordionTrigger>
               <AccordionContent>
-                Editing permissions are based on user roles. 'Editor' roles can create and edit all parts of a file entry. 'Site Manager' roles can only edit specific fields on sites that are assigned to them and are still active. 'Viewer' roles have read-only access and cannot make any changes. If a Site Manager has submitted an update for a site, it will be locked until an Editor reviews it.
+                Editing permissions are based on user roles. 'Editor' roles can create and edit all parts of a file entry. 'Supervisor' roles can only edit specific fields on sites that are assigned to them and are still active. 'Viewer' roles have read-only access and cannot make any changes. If a Supervisor has submitted an update for a site, it will be locked until an Editor reviews it.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-4">
@@ -45,7 +46,7 @@ export default function HelpPage() {
              <AccordionItem value="item-5">
               <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
               <AccordionContent>
-                Supervisors (Site Managers) can edit their assigned sites through the 'File Manager'. After making changes, clicking the "Save Changes" button will submit their updates to an administrator for review. The changes will not be applied to the main file until an admin approves them from the "Pending Updates" page. The site will be hidden from the manager's view once an update is submitted and will reappear only if the update is rejected.
+                Supervisors can edit their assigned sites through the 'File Manager'. After making changes, clicking the "Save Changes" button will submit their updates to an administrator for review. The changes will not be applied to the main file until an admin approves them from the "Pending Updates" page. The site will be hidden from the manager's view once an update is submitted and will reappear only if the update is rejected.
               </AccordionContent>
             </AccordionItem>
              <AccordionItem value="item-6">

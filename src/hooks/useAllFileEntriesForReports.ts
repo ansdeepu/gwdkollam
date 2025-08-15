@@ -1,3 +1,4 @@
+
 // src/hooks/useAllFileEntriesForReports.ts
 "use client";
 
@@ -76,8 +77,8 @@ export function useAllFileEntriesForReports(): ReportEntriesState {
     setIsReportLoading(true);
     try {
       let q;
-      if (user.role === 'site-manager' && user.uid) {
-        // Fetch all files ever assigned to this site manager.
+      if (user.role === 'supervisor' && user.uid) {
+        // Fetch all files ever assigned to this supervisor.
         q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
       } else {
         // Editors and viewers get all files.

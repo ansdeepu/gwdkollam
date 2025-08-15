@@ -14,12 +14,12 @@ import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hoo
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  // The useFileEntries hook now handles all complex filtering logic for site managers.
+  // The useFileEntries hook now handles all complex filtering logic for supervisors.
   // The fileEntries it returns are already correctly filtered.
   const { fileEntries } = useFileEntries(); 
   const { user } = useAuth();
   
-  // No additional filtering is needed here for site managers.
+  // No additional filtering is needed here for supervisors.
   // The hook provides the pre-filtered list.
   const filteredFileEntriesForManager = useMemo(() => {
     return fileEntries;
@@ -43,7 +43,7 @@ export default function FileManagerPage() {
         <CardHeader>
           <CardTitle>File Manager</CardTitle>
           <CardDescription>
-            {user?.role === 'site-manager'
+            {user?.role === 'supervisor'
               ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
               : 'List of all files in the system.'
             }

@@ -214,10 +214,10 @@ export default function DataEntryPage() {
         title = "Edit File Data";
         description = `Editing details for File No: ${fileNoToEdit}. Please make your changes and submit.`;
       }
-    } else if (user?.role === 'site-manager') {
+    } else if (user?.role === 'supervisor') {
        if (isCreatingNew) {
          title = "Access Denied";
-         description = "Site Managers cannot create new files.";
+         description = "Supervisors cannot create new files.";
        } else {
          title = "Edit Assigned Site Details";
          description = `Editing assigned sites for File No: ${fileNoToEdit}. Submit your changes for approval.`;
@@ -236,7 +236,7 @@ export default function DataEntryPage() {
     if (!user || !pageData || staffMembers.length === 0) return [];
     
     const activeSupervisors = pageData.allUsers
-      .filter(u => u.role === 'site-manager' && u.isApproved && u.staffId)
+      .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
       .map(userProfile => {
         const staffInfo = staffMembers.find(s => s.id === userProfile.staffId && s.status === 'Active');
         if (staffInfo) {
@@ -264,7 +264,7 @@ export default function DataEntryPage() {
     );
   }
   
-  const isDeniedAccess = (user?.role === 'viewer' && !fileNoToEdit) || (user?.role === 'site-manager' && !fileNoToEdit);
+  const isDeniedAccess = (user?.role === 'viewer' && !fileNoToEdit) || (user?.role === 'supervisor' && !fileNoToEdit);
 
   if (isDeniedAccess) {
      return (

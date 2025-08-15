@@ -274,7 +274,7 @@ export default function DashboardPage() {
             .catch(error => console.error("Error fetching users for dashboard:", error))
             .finally(() => setUsersLoading(false));
         } else {
-             // For site-managers or other roles, no need to fetch all users
+             // For supervisors or other roles, no need to fetch all users
              setAllUsers([]);
              setActiveUsers([]);
              setUsersLoading(false);
@@ -285,11 +285,11 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (entriesLoading || staffLoading || !fileEntries || !currentUser) return null;
     
-    const isSiteManager = currentUser.role === 'site-manager';
+    const isSupervisor = currentUser.role === 'supervisor';
     const activeSupervisorStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
 
-    // Use `fileEntries` from `useFileEntries` which is already filtered for the site manager's active view.
-    const entriesForCards = isSiteManager
+    // Use `fileEntries` from `useFileEntries` which is already filtered for the supervisor's active view.
+    const entriesForCards = isSupervisor
       ? fileEntries.map(entry => {
           const relevantSites = entry.siteDetails?.filter(site =>
             site.supervisorUid === currentUser.uid &&
@@ -410,7 +410,7 @@ export default function DashboardPage() {
     }
     
     let finalWorkStatusData = initialWorkStatusData;
-    if (isSiteManager) {
+    if (isSupervisor) {
         finalWorkStatusData = initialWorkStatusData.filter(row => row.total.count > 0 || row.statusCategory === "Total No. of Applications");
     }
 
@@ -453,14 +453,14 @@ export default function DashboardPage() {
     const completedThisMonthSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
     
-    const isSiteManager = currentUser.role === 'site-manager';
+    const isSupervisor = currentUser.role === 'supervisor';
 
     // Use `reportEntries` here to ensure we can find completed works from the past.
     for (const entry of reportEntries) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
-        // Site Manager specific filtering remains crucial
-        if (isSiteManager && site.supervisorUid !== currentUser.uid) {
+        // Supervisor specific filtering remains crucial
+        if (isSupervisor && site.supervisorUid !== currentUser.uid) {
             continue; // Skip sites not assigned to this manager
         }
 
@@ -474,7 +474,7 @@ export default function DashboardPage() {
         
         // Check for ongoing works
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
-            // No need for a sub-check for site manager, the outer loop already handles it
+            // No need for a sub-check for supervisor, the outer loop already handles it
             ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
       }
@@ -508,7 +508,7 @@ export default function DashboardPage() {
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
     return allUsers
-        .filter(u => u.role === 'site-manager' && u.isApproved && u.staffId)
+        .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
         .map(u => {
             const staffInfo = staffMembers.find(s => s.id === u.staffId);
             return {
@@ -1468,16 +1468,16 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
-                  Site Manager's Ongoing Work
+                  Supervisor's Ongoing Work
                 </CardTitle>
                 <CardDescription>
-                  Select a Site Manager to view their assigned ongoing projects by category.
+                  Select a Supervisor to view their assigned ongoing projects by category.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Select value={selectedSupervisorId} onValueChange={setSelectedSupervisorId}>
                   <SelectTrigger className="w-full sm:w-[300px]">
-                      <SelectValue placeholder="Select a Site Manager" />
+                      <SelectValue placeholder="Select a Supervisor" />
                   </SelectTrigger>
                   <SelectContent>
                       {supervisorList.length > 0 ? (
@@ -1487,7 +1487,7 @@ export default function DashboardPage() {
                               </SelectItem>
                           ))
                       ) : (
-                          <SelectItem value="no-supervisors" disabled>No Site Managers available</SelectItem>
+                          <SelectItem value="no-supervisors" disabled>No Supervisors available</SelectItem>
                       )}
                   </SelectContent>
                 </Select>
@@ -1520,7 +1520,7 @@ export default function DashboardPage() {
                       </Table>
                   ) : (
                       <div className="flex h-full items-center justify-center">
-                          <p className="text-muted-foreground text-center text-sm">Please select a Site Manager to see their work.</p>
+                          <p className="text-muted-foreground text-center text-sm">Please select a Supervisor to see their work.</p>
                       </div>
                   )}
                 </ScrollArea>
@@ -1566,7 +1566,7 @@ export default function DashboardPage() {
                               variant={usr.role === 'editor' ? 'default' : 'secondary'}
                               className="text-xs whitespace-nowrap ml-2"
                             >
-                              {usr.role === 'site-manager' ? 'Site Manager' : (usr.role.charAt(0).toUpperCase() + usr.role.slice(1))}
+                              {usr.role === 'supervisor' ? 'Supervisor' : (usr.role.charAt(0).toUpperCase() + usr.role.slice(1))}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">

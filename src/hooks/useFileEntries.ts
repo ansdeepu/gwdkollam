@@ -166,7 +166,7 @@ export function useFileEntries(): FileEntriesState {
         // Construct the query based on user role for security.
         if (user.role === 'editor' || user.role === 'viewer') {
             q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
-        } else if (user.role === 'site-manager') {
+        } else if (user.role === 'supervisor') {
             q = query(
                 collection(db, FILE_ENTRIES_COLLECTION),
                 where("fileNo", "==", fileNo),
@@ -185,8 +185,8 @@ export function useFileEntries(): FileEntriesState {
         
         let entry = convertTimestampsToDates({ id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() });
 
-        // For site manager, we need to mark which sites are pending
-        if (user.role === 'site-manager' && user.uid && entry.siteDetails) {
+        // For supervisor, we need to mark which sites are pending
+        if (user.role === 'supervisor' && user.uid && entry.siteDetails) {
             const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo);
             const userPendingUpdate = pendingUpdates.find(p => p.submittedByUid === user.uid);
             if (userPendingUpdate) {
@@ -221,7 +221,7 @@ export function useFileEntries(): FileEntriesState {
     setIsLoading(true);
     try {
       let q;
-      if (user.role === 'site-manager' && user.uid) {
+      if (user.role === 'supervisor' && user.uid) {
         q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
       } else {
         q = query(collection(db, FILE_ENTRIES_COLLECTION));
@@ -233,8 +233,8 @@ export function useFileEntries(): FileEntriesState {
           entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
       }
       
-      // Site Manager Specific Filtering Logic
-      if (user.role === 'site-manager' && user.uid) {
+      // Supervisor Specific Filtering Logic
+      if (user.role === 'supervisor' && user.uid) {
           const allManagerPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
           const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];
           const activeStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
