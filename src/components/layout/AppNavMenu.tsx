@@ -11,6 +11,8 @@ import {
 import { LayoutDashboard, FilePlus2, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
+import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
+import { Badge } from '@/components/ui/badge'; // Import the Badge component
 
 export interface NavItem {
   href: string;
@@ -35,12 +37,15 @@ export const allNavItems: NavItem[] = [
 export default function AppNavMenu() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { pendingUpdates } = usePendingUpdates(); // Get pending updates
 
   const accessibleNavItems = allNavItems.filter(item => {
     if (!user || !user.isApproved) return false;
     if (!item.roles || item.roles.length === 0) return true;
     return item.roles.includes(user.role);
   });
+
+  const pendingCount = pendingUpdates.length;
 
   return (
     <SidebarMenu>
@@ -53,9 +58,16 @@ export default function AppNavMenu() {
               tooltip={{ children: item.label, side: "right", align: "center" }}
               className="justify-start"
             >
-              <div>
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </div>
+                {item.href === '/dashboard/pending-updates' && pendingCount > 0 && (
+                  <Badge className="h-5 px-2 text-xs font-semibold leading-none rounded-full bg-destructive text-destructive-foreground group-data-[collapsible=icon]:hidden">
+                    {pendingCount}
+                  </Badge>
+                )}
               </div>
             </SidebarMenuButton>
           </Link>
