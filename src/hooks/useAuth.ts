@@ -79,11 +79,11 @@ export function useAuth() {
 
       try {
         const userDocRef = doc(db, "users", firebaseUser.uid);
-        const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        const userDocSnap = await getDoc(userDocRef);
+
         let userProfile: UserProfile | null = null;
         let isApproved = false;
-        
-        const userDocSnap = await getDoc(userDocRef);
+        const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
         if (isAdminByEmail) {
             isApproved = true; // Main admin is always approved
@@ -110,12 +110,14 @@ export function useAuth() {
         } else if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
             isApproved = userData.isApproved === true;
+            
             let staffInfo: { designation?: Designation } = {};
             if (userData.staffId) {
                 const staffDocRef = doc(db, "staffMembers", userData.staffId);
                 const staffDocSnap = await getDoc(staffDocRef);
                 if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
             }
+
             userProfile = {
                 uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
                 role: userData.role || 'viewer', isApproved: isApproved,
@@ -127,14 +129,17 @@ export function useAuth() {
 
         if (!isMounted) return;
 
-        if (userProfile && isApproved) {
+        if (userProfile && userProfile.isApproved) {
             setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
         } else {
+            // This is the key logic: if a user exists but is not approved, sign them out and show a toast.
+            // If the profile doesn't exist at all, they also get signed out.
             if (auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
                 await signOut(auth);
             }
             setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
-            if (userProfile && !isApproved) {
+            
+            if (userProfile && !userProfile.isApproved) {
                 toast({
                     title: "Account Pending Approval",
                     description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
@@ -168,6 +173,7 @@ export function useAuth() {
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // The onAuthStateChanged listener will handle the rest of the logic (profile fetching, approval check, etc.)
       return { success: true };
     } catch (error: any) {
       console.error(`[Auth] Login failed for ${email}:`, error);
