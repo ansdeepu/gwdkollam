@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown } from 'lucide-react';
+import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown, Landmark } from 'lucide-react';
 import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
@@ -192,6 +192,8 @@ export default function ProgressReportPage() {
     progressSummaryData: OtherServiceProgress;
     privateFinancialSummaryData: FinancialSummaryReport;
     governmentFinancialSummaryData: FinancialSummaryReport;
+    totalRevenueHeadCredit: number;
+    revenueHeadCreditData: any[];
   } | null>(null);
 
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
@@ -231,6 +233,9 @@ export default function ProgressReportPage() {
         governmentFinancialSummary[p] = initialFinancialSummary();
     });
     
+    let totalRevenueHeadCredit = 0;
+    const revenueHeadCreditData: any[] = [];
+
     const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
     fileEntries.forEach(entry => {
         (entry.siteDetails || []).forEach(site => {
@@ -335,6 +340,44 @@ export default function ProgressReportPage() {
       }
     });
 
+    fileEntries.forEach(entry => {
+        // Direct Remittances to Revenue Head
+        entry.remittanceDetails?.forEach(rd => {
+            const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
+            if (rd.remittedAccount === 'RevenueHead' && remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+                const amount = Number(rd.amountRemitted) || 0;
+                if (amount > 0) {
+                    totalRevenueHeadCredit += amount;
+                    revenueHeadCreditData.push({
+                        fileNo: entry.fileNo,
+                        applicantName: entry.applicantName,
+                        date: formatDate(remDate),
+                        amount: amount,
+                        source: 'Direct Remittance',
+                    });
+                }
+            }
+        });
+    
+        // Revenue from Payment Entries
+        entry.paymentDetails?.forEach(pd => {
+            const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
+            if (paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
+                const amount = Number(pd.revenueHead) || 0;
+                if (amount > 0) {
+                    totalRevenueHeadCredit += amount;
+                    revenueHeadCreditData.push({
+                        fileNo: entry.fileNo,
+                        applicantName: entry.applicantName,
+                        date: formatDate(paymentDate),
+                        amount: amount,
+                        source: 'From Payment',
+                    });
+                }
+            }
+        });
+    });
+
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
         stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
         const totalApplicationSites = [...stats.previousBalanceData, ...stats.currentApplicationsData];
@@ -356,7 +399,7 @@ export default function ProgressReportPage() {
     });
     allServicePurposesForSummary.forEach(p => calculateBalanceAndTotal(progressSummaryData[p]));
     
-    setReportData({ bwcData, twcData, progressSummaryData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary });
+    setReportData({ bwcData, twcData, progressSummaryData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary, totalRevenueHeadCredit, revenueHeadCreditData });
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate, toast]);
   
@@ -387,7 +430,7 @@ export default function ProgressReportPage() {
     setReportData(null);
   };
 
- const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData>, title: string) => {
+ const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData | Record<string, any>>, title: string) => {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
     
@@ -396,7 +439,21 @@ export default function ProgressReportPage() {
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
 
-    if (isSiteData) {
+    if (title.startsWith("Revenue Head")) {
+      columns = [
+        { key: 'slNo', label: 'Sl. No.' },
+        { key: 'fileNo', label: 'File No.' },
+        { key: 'applicantName', label: 'Applicant' },
+        { key: 'date', label: 'Date' },
+        { key: 'source', label: 'Source' },
+        { key: 'amount', label: 'Amount (₹)' },
+      ];
+      dialogData = data.map((item, index) => ({
+        slNo: index + 1,
+        ...item,
+        amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      }));
+    } else if (isSiteData) {
         if (title.toLowerCase().includes('application completed')) {
              columns = [
                 { key: 'slNo', label: 'Sl. No.' },
@@ -682,6 +739,30 @@ export default function ProgressReportPage() {
             <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
             <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
             
+             <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Landmark className="h-5 w-5 text-primary" />
+                  Revenue Head Summary
+                </CardTitle>
+                <CardDescription>
+                  Total amount credited to the Revenue Head within the selected period.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <button
+                  className="flex w-full flex-col items-center justify-center rounded-lg bg-secondary/30 p-6 text-center transition-colors hover:bg-secondary/50 disabled:cursor-not-allowed disabled:opacity-70"
+                  onClick={() => handleCountClick(reportData.revenueHeadCreditData, `Revenue Head Credit Details`)}
+                  disabled={reportData.totalRevenueHeadCredit === 0}
+                >
+                  <span className="text-sm font-medium text-muted-foreground">Total Credited Amount</span>
+                  <span className="text-3xl font-bold text-primary">
+                    ₹{reportData.totalRevenueHeadCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </button>
+              </CardContent>
+            </Card>
+
             <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['110 mm (4.5”)']} onCountClick={handleCountClick} />
             <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
             <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
