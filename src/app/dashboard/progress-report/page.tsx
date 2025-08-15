@@ -310,7 +310,6 @@ export default function ProgressReportPage() {
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
-
         const completionDateValue = site.dateOfCompletion;
         const completionDate = completionDateValue ? new Date(completionDateValue) : null;
 
@@ -320,8 +319,7 @@ export default function ProgressReportPage() {
             firstRemittanceDate &&
             isValid(firstRemittanceDate) &&
             isBefore(firstRemittanceDate, sDate) &&
-            (!completionDate || (isValid(completionDate) && (isAfter(completionDate, sDate) || isEqual(completionDate, sDate))));
-
+            (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate) || isEqual(completionDate, sDate));
         
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
