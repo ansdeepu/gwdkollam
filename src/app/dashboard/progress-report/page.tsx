@@ -212,6 +212,23 @@ export default function ProgressReportPage() {
     const sDate = startOfDay(startDate);
     const eDate = endOfDay(endDate);
 
+    // Robust date parser
+    const safeParseDate = (dateInput: any): Date | null => {
+        if (!dateInput) return null;
+        if (dateInput instanceof Date && isValid(dateInput)) return dateInput;
+        // The hook already converts Timestamps, but we handle it here for safety.
+        if (dateInput.toDate && typeof dateInput.toDate === 'function') {
+            const d = dateInput.toDate();
+            return isValid(d) ? d : null;
+        }
+        if (typeof dateInput === 'string') {
+            const d = parseISO(dateInput);
+            if (isValid(d)) return d;
+        }
+        return null;
+    };
+
+
     const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, toBeRefunded: 0, totalApplications: 0, completed: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], toBeRefundedData: [], totalApplicationsData: [], completedData: [], balanceData: [] });
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
     const twcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
@@ -239,8 +256,8 @@ export default function ProgressReportPage() {
     const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
     fileEntries.forEach(entry => {
         (entry.siteDetails || []).forEach(site => {
-            const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
-            if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
+            const completionDate = safeParseDate(site.dateOfCompletion);
+            if (completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
                 const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
                 if (!uniqueCompletedSites.has(siteKey)) {
                     uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType });
@@ -251,17 +268,16 @@ export default function ProgressReportPage() {
     const allCompletedSitesInPeriod = Array.from(uniqueCompletedSites.values());
 
     fileEntries.forEach(entry => {
-      const firstRemittanceDateValue = entry.remittanceDetails?.[0]?.dateOfRemittance;
-      const firstRemittanceDate = firstRemittanceDateValue ? new Date(firstRemittanceDateValue) : null;
+      const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
       
       const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }));
 
-      if (entry.applicationType && firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
+      if (entry.applicationType && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
         const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
         const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
         const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
-          const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
-          if (remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+          const remDate = safeParseDate(rd.dateOfRemittance);
+          if (remDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
               return sum + (Number(rd.amountRemitted) || 0);
           }
           return sum;
@@ -285,16 +301,15 @@ export default function ProgressReportPage() {
         const diameter = site.diameter;
         const workStatus = site.workStatus;
 
-        const completionDateValue = site.dateOfCompletion;
-        const completionDate = completionDateValue ? new Date(completionDateValue) : null;
+        const completionDate = safeParseDate(site.dateOfCompletion);
         
-        const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
-        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
+        const isCurrentApplication = firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         
-        const wasActiveBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate) && (!completionDate || !isValid(completionDate) || isAfter(completionDate, sDate));
+        const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && (!completionDate || isAfter(completionDate, sDate));
         
-        const isToBeRefundedInPeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        const wasToBeRefundedBeforePeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate);
+        const isToBeRefundedInPeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        const wasToBeRefundedBeforePeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isBefore(firstRemittanceDate, sDate);
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication && workStatus !== 'Addl. AS Awaited') { 
@@ -340,18 +355,19 @@ export default function ProgressReportPage() {
       }
     });
 
+    // --- Start of Corrected Revenue Head Calculation ---
     fileEntries.forEach(entry => {
         // Direct Remittances to Revenue Head
         entry.remittanceDetails?.forEach(rd => {
-            const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
-            if (rd.remittedAccount === 'RevenueHead' && remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+            const remDate = safeParseDate(rd.dateOfRemittance);
+            if (rd.remittedAccount === 'RevenueHead' && remDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
                 const amount = Number(rd.amountRemitted) || 0;
                 if (amount > 0) {
                     totalRevenueHeadCredit += amount;
                     revenueHeadCreditData.push({
                         fileNo: entry.fileNo,
                         applicantName: entry.applicantName,
-                        date: formatDate(remDate),
+                        date: format(remDate, 'dd/MM/yyyy'),
                         amount: amount,
                         source: 'Direct Remittance',
                     });
@@ -361,15 +377,15 @@ export default function ProgressReportPage() {
     
         // Revenue from Payment Entries
         entry.paymentDetails?.forEach(pd => {
-            const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
-            if (paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
+            const paymentDate = safeParseDate(pd.dateOfPayment);
+            if (paymentDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
                 const amount = Number(pd.revenueHead) || 0;
                 if (amount > 0) {
                     totalRevenueHeadCredit += amount;
                     revenueHeadCreditData.push({
                         fileNo: entry.fileNo,
                         applicantName: entry.applicantName,
-                        date: formatDate(paymentDate),
+                        date: format(paymentDate, 'dd/MM/yyyy'),
                         amount: amount,
                         source: 'From Payment',
                     });
@@ -377,6 +393,8 @@ export default function ProgressReportPage() {
             }
         });
     });
+    // --- End of Corrected Revenue Head Calculation ---
+
 
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
         stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
