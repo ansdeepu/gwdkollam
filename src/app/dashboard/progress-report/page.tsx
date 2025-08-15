@@ -61,16 +61,6 @@ interface FinancialSummary {
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
 
-interface RevenueHeadDetail {
-    slNo: number;
-    applicantName: string;
-    siteNames: string;
-    fileStatus: string;
-    amount: number;
-    date: string;
-    source: 'Direct Remittance' | 'From Payment';
-}
-
 
 const BWC_DIAMETERS = ['110 mm (4.5”)', '150 mm (6”)'];
 const TWC_DIAMETERS = ['150 mm (6”)', '200 mm (8”)'];
@@ -202,8 +192,6 @@ export default function ProgressReportPage() {
     progressSummaryData: OtherServiceProgress;
     privateFinancialSummaryData: FinancialSummaryReport;
     governmentFinancialSummaryData: FinancialSummaryReport;
-    revenueHeadTotal: number;
-    revenueHeadDetails: RevenueHeadDetail[];
   } | null>(null);
 
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
@@ -242,49 +230,6 @@ export default function ProgressReportPage() {
         privateFinancialSummary[p] = initialFinancialSummary();
         governmentFinancialSummary[p] = initialFinancialSummary();
     });
-
-    // --- New, Isolated Revenue Head Calculation Logic ---
-    let totalRevenueHeadAmount = 0;
-    const revenueHeadDetails: RevenueHeadDetail[] = [];
-
-    fileEntries.forEach(entry => {
-        // Source 1: From Payment Details within date range
-        entry.paymentDetails?.forEach(pd => {
-            const paymentDate = pd.dateOfPayment ? new Date(pd.dateOfPayment) : null;
-            const revenueAmount = Number(pd.revenueHead) || 0;
-            if (revenueAmount > 0 && paymentDate && isValid(paymentDate) && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
-                totalRevenueHeadAmount += revenueAmount;
-                revenueHeadDetails.push({
-                    slNo: revenueHeadDetails.length + 1,
-                    applicantName: entry.applicantName || 'N/A',
-                    siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
-                    fileStatus: entry.fileStatus || 'N/A',
-                    amount: revenueAmount,
-                    date: format(paymentDate, 'dd/MM/yyyy'),
-                    source: 'From Payment',
-                });
-            }
-        });
-
-        // Source 2: From Direct Remittance Details within date range
-        entry.remittanceDetails?.forEach(rd => {
-            const remDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
-            const remittedAmount = Number(rd.amountRemitted) || 0;
-            if (rd.remittedAccount === 'RevenueHead' && remittedAmount > 0 && remDate && isValid(remDate) && isWithinInterval(remDate, { start: sDate, end: eDate })) {
-                totalRevenueHeadAmount += remittedAmount;
-                revenueHeadDetails.push({
-                    slNo: revenueHeadDetails.length + 1,
-                    applicantName: entry.applicantName || 'N/A',
-                    siteNames: entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A',
-                    fileStatus: entry.fileStatus || 'N/A',
-                    amount: remittedAmount,
-                    date: format(remDate, 'dd/MM/yyyy'),
-                    source: 'Direct Remittance',
-                });
-            }
-        });
-    });
-    // --- End of Revenue Head Calculation ---
     
     const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
     fileEntries.forEach(entry => {
@@ -411,7 +356,7 @@ export default function ProgressReportPage() {
     });
     allServicePurposesForSummary.forEach(p => calculateBalanceAndTotal(progressSummaryData[p]));
     
-    setReportData({ bwcData, twcData, progressSummaryData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary, revenueHeadTotal: totalRevenueHeadAmount, revenueHeadDetails: revenueHeadDetails });
+    setReportData({ bwcData, twcData, progressSummaryData, privateFinancialSummaryData: privateFinancialSummary, governmentFinancialSummaryData: governmentFinancialSummary });
     setIsFiltering(false);
   }, [fileEntries, startDate, endDate, toast]);
   
@@ -640,22 +585,6 @@ export default function ProgressReportPage() {
     );
   };
   
-    const handleRevenueHeadClick = () => {
-        if (!reportData || reportData.revenueHeadDetails.length === 0) return;
-        setDetailDialogTitle("Revenue Head Details");
-        setDetailDialogColumns([
-            { key: 'slNo', label: 'Sl. No' },
-            { key: 'applicantName', label: 'Name of Applicant' },
-            { key: 'siteNames', label: 'Name of Site' },
-            { key: 'fileStatus', label: 'File Status' },
-            { key: 'date', label: 'Date' },
-            { key: 'source', label: 'Source' },
-            { key: 'amount', label: 'Amount (₹)' }
-        ]);
-        setDetailDialogData(reportData.revenueHeadDetails.map(d => ({...d, amount: d.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })));
-        setIsDetailDialogOpen(true);
-    };
-  
   if (entriesLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
@@ -753,23 +682,6 @@ export default function ProgressReportPage() {
             <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
             <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
             
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle>Revenue Head Summary</CardTitle>
-                    <CardDescription>
-                        Total amount credited to the Revenue Head within the selected period.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-lg border bg-card text-card-foreground p-6 text-center">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Total Amount in Revenue Head (₹)</h3>
-                        <Button variant="link" className="p-0 h-auto text-3xl font-bold text-primary" disabled={reportData.revenueHeadTotal === 0} onClick={handleRevenueHeadClick}>
-                            {reportData.revenueHeadTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-
             <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['110 mm (4.5”)']} onCountClick={handleCountClick} />
             <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
             <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
