@@ -310,20 +310,24 @@ export default function ProgressReportPage() {
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
-        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
-        
-        const startedBeforePeriod = firstRemittanceDate && isValid(firstRemittanceDate) && isBefore(firstRemittanceDate, sDate);
-        
+
+        const completionDateValue = site.dateOfCompletion;
+        const completionDate = completionDateValue ? new Date(completionDateValue) : null;
+
         const isPreviousBalance =
             site.additionalAS === 'No' &&
             workStatus !== 'To be Refunded' &&
-            startedBeforePeriod &&
+            firstRemittanceDate &&
+            isValid(firstRemittanceDate) &&
+            isBefore(firstRemittanceDate, sDate) &&
             (!completionDate || (isValid(completionDate) && (isAfter(completionDate, sDate) || isEqual(completionDate, sDate))));
 
-        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate }) && site.additionalAS === 'No';
+        
         const isCompletedInPeriod = completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
+        const isCurrentApplication = firstRemittanceDate && isValid(firstRemittanceDate) && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        
         const isToBeRefunded = workStatus && workStatus === 'To be Refunded' && (isCurrentApplication || isPreviousBalance);
-
+        
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplication) { statsObj.currentApplications++; statsObj.currentApplicationsData.push(siteWithFileContext); }
             if (isPreviousBalance) { statsObj.previousBalance++; statsObj.previousBalanceData.push(siteWithFileContext); }
