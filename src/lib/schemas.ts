@@ -264,9 +264,16 @@ export const SiteDetailSchema = z.object({
   surveyRecommendedMsCasingPipe: z.string().optional().nullable(),
 
   // ARS specific fields
+  arsTypeOfScheme: z.string().optional().nullable(),
+  arsPanchayath: z.string().optional().nullable(),
+  arsBlock: z.string().optional().nullable(),
   arsNumberOfStructures: optionalNumber("Number of Structures must be a valid number."),
   arsStorageCapacity: optionalNumber("Storage Capacity must be a valid number."),
   arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
+  arsAsTsDetails: z.string().optional().nullable(),
+  arsSanctionedDate: optionalDate,
+  arsTenderedAmount: optionalNumber("Tendered Amount must be a valid number."),
+  arsAwardedAmount: optionalNumber("Awarded Amount must be a valid number."),
 
 }).superRefine((data, ctx) => {
     const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];

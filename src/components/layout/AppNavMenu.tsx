@@ -27,7 +27,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
-  { href: '/dashboard/ars-report', label: 'ARS Report', icon: Waves },
+  { href: '/dashboard/ars', label: 'ARS', icon: Waves },
   { href: '/dashboard/report-format-suggestion', label: 'Report Builders', icon: Settings2 },
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
