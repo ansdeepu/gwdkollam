@@ -199,7 +199,6 @@ export default function ArsPage() {
       "Completion Date": formatDateSafe(site.dateOfCompletion),
       "Expenditure (₹)": site.totalExpenditure ?? 'N/A',
       "No. of Beneficiaries": site.noOfBeneficiary || 'N/A',
-      "Remarks": site.workRemarks || 'N/A',
     }));
 
     const wb = XLSX.utils.book_new();
@@ -334,7 +333,6 @@ export default function ArsPage() {
                 <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead>Name of Site</TableHead>
                 <TableHead>Type of Scheme</TableHead><TableHead>Panchayath</TableHead>
                 <TableHead>Status</TableHead><TableHead>Completion Date</TableHead>
-                <TableHead>Remarks</TableHead>
                 <TableHead className="text-center w-[120px]">Actions</TableHead>
             </TableRow></TableHeader>
             <TableBody>
@@ -345,7 +343,6 @@ export default function ArsPage() {
                     <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
                     <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell><TableCell className="whitespace-normal break-words">{site.arsPanchayath || 'N/A'}</TableCell>
                     <TableCell>{site.workStatus ?? 'N/A'}</TableCell><TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
-                    <TableCell className="whitespace-normal break-words">{site.workRemarks || 'N/A'}</TableCell>
                     <TableCell className="text-center">
                         <div className="flex items-center justify-center space-x-1">
                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
@@ -358,7 +355,7 @@ export default function ArsPage() {
                         </div>
                     </TableCell>
                   </TableRow>
-                )) ) : ( <TableRow><TableCell colSpan={9} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
+                )) ) : ( <TableRow><TableCell colSpan={8} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
             </TableBody>
           </Table>
         </CardContent>
