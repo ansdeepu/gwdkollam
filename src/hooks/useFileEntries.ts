@@ -18,6 +18,7 @@ import {
   Timestamp,
   serverTimestamp,
   type DocumentData,
+  writeBatch,
 } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import { useAuth } from './useAuth';
@@ -146,6 +147,7 @@ interface FileEntriesState {
   deleteFileEntry: (fileNo: string) => Promise<void>;
   getFileEntry: (fileNo: string) => DataEntryFormData | undefined;
   fetchEntryForEditing: (fileNo: string) => Promise<DataEntryFormData | undefined>;
+  clearAllArsData: () => Promise<void>;
   refreshFileEntries: () => void;
 }
 
@@ -364,9 +366,39 @@ export function useFileEntries(): FileEntriesState {
     await fetchData();
   }, [user, fetchData]);
 
+  const clearAllArsData = useCallback(async () => {
+    if (!user || user.role !== 'editor') {
+        throw new Error("You do not have permission to clear ARS data.");
+    }
+
+    // This query is broad, but necessary to find all files that *might* contain an ARS site.
+    // A more targeted query would be `where("siteDetails", "array-contains", { "purpose": "ARS" })`
+    // but Firestore does not support array-contains on a map within an array.
+    const q = query(collection(db, FILE_ENTRIES_COLLECTION));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) return;
+
+    const batch = writeBatch(db);
+    querySnapshot.forEach(docSnap => {
+        const fileData = docSnap.data() as DataEntryFormData;
+        const hasArsSite = fileData.siteDetails?.some(site => site.purpose === 'ARS');
+        
+        if (hasArsSite) {
+            const updatedSiteDetails = fileData.siteDetails?.filter(site => site.purpose !== 'ARS');
+            const docRef = doc(db, FILE_ENTRIES_COLLECTION, docSnap.id);
+            batch.update(docRef, { siteDetails: updatedSiteDetails, updatedAt: serverTimestamp() });
+        }
+    });
+
+    await batch.commit();
+    await fetchData();
+  }, [user, fetchData]);
+
+
   const getFileEntry = useCallback((fileNo: string): DataEntryFormData | undefined => {
     return fileEntries.find(e => e.fileNo === fileNo);
   }, [fileEntries]);
 
-  return { fileEntries, isLoading, addFileEntry, deleteFileEntry, getFileEntry, fetchEntryForEditing, refreshFileEntries: fetchData };
+  return { fileEntries, isLoading, addFileEntry, deleteFileEntry, getFileEntry, fetchEntryForEditing, clearAllArsData, refreshFileEntries: fetchData };
 }

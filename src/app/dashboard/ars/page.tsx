@@ -8,7 +8,7 @@ import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions,
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2 } from "lucide-react";
+import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2, ShieldAlert } from "lucide-react";
 import { format, isValid, parse } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
@@ -43,7 +43,7 @@ const formatDateSafe = (dateInput: any): string => {
 };
 
 export default function ArsPage() {
-  const { fileEntries, isLoading: entriesLoading, addFileEntry, getFileEntry } = useFileEntries();
+  const { fileEntries, isLoading: entriesLoading, addFileEntry, getFileEntry, clearAllArsData } = useFileEntries();
   const [arsSites, setArsSites] = useState<ArsReportRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -61,6 +61,9 @@ export default function ArsPage() {
 
   const [deletingSite, setDeletingSite] = useState<ArsReportRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
 
   const form = useForm<NewArsEntryFormData>({
     resolver: zodResolver(NewArsEntrySchema),
@@ -227,6 +230,19 @@ export default function ArsPage() {
     }
   };
   
+  const handleClearAllArs = async () => {
+    setIsClearingAll(true);
+    try {
+        await clearAllArsData();
+        toast({ title: "All ARS Data Cleared", description: "All ARS sites have been removed from the database."});
+    } catch (error: any) {
+        toast({ title: "Clearing Failed", description: error.message, variant: "destructive" });
+    } finally {
+        setIsClearingAll(false);
+        setIsClearAllDialogOpen(false);
+    }
+  };
+
   const handleExportExcel = useCallback(() => {
     if (filteredSites.length === 0) {
       toast({ title: "No Data", description: "There is no data to export." });
@@ -331,7 +347,7 @@ export default function ArsPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div><CardTitle>Artificial Recharge Schemes (ARS)</CardTitle><CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription></div>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-              {canEdit && ( <> <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}> <Download className="mr-2 h-4 w-4" /> Download Template </Button> <Button className="w-full sm:w-auto" onClick={() => { setEditingSite(null); form.reset(); setIsFormOpen(true); }}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button> </> )}
+              {canEdit && ( <> <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}> <Download className="mr-2 h-4 w-4" /> Download Template </Button> <Button className="w-full sm:w-auto" onClick={() => { setEditingSite(null); form.reset(); setIsFormOpen(true); }}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button> <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0}> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> </> )}
               <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
             </div>
           </div>
@@ -437,6 +453,24 @@ export default function ArsPage() {
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This action will permanently delete the ARS site "{deletingSite?.nameOfSite}" from File No. {deletingSite?.fileNo}. This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteSite} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">{isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center space-x-2">
+              <ShieldAlert className="h-6 w-6 text-destructive" />
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>This action will permanently delete ALL ARS sites from every file in the database. This action cannot be undone. Please confirm you want to proceed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isClearingAll} onClick={() => setIsClearAllDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearAllArs} disabled={isClearingAll} className="bg-destructive hover:bg-destructive/90">
+              {isClearingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Yes, Clear All ARS Data"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
