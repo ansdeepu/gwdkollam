@@ -546,3 +546,36 @@ export const UpdatePasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 export type UpdatePasswordFormData = z.infer<typeof UpdatePasswordSchema>;
+
+// Schema for creating a new ARS entry from the ARS page
+export const ArsSpecificSchema = z.object({
+    arsTypeOfScheme: z.string().optional().nullable(),
+    arsPanchayath: z.string().optional().nullable(),
+    arsBlock: z.string().optional().nullable(),
+    arsNumberOfStructures: optionalNumber("Number of Structures must be a valid number."),
+    arsStorageCapacity: optionalNumber("Storage Capacity must be a valid number."),
+    arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
+    arsAsTsDetails: z.string().optional().nullable(),
+    arsSanctionedDate: optionalDate,
+    arsTenderedAmount: optionalNumber("Tendered Amount must be a valid number."),
+    arsAwardedAmount: optionalNumber("Awarded Amount must be a valid number."),
+});
+
+// A subset of SiteDetailFields that are also on the ARS form
+export const ArsAndSiteSchema = z.object({
+    nameOfSite: z.string().min(1, "Name of Site is required."),
+    latitude: optionalNumber("Latitude must be a valid number."),
+    longitude: optionalNumber("Longitude must be a valid number."),
+    estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
+    tsAmount: optionalNumber("AS/TS Amount must be a valid number."),
+    workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required."}),
+    dateOfCompletion: optionalDate,
+    totalExpenditure: optionalNumber("Expenditure must be a valid number."),
+    noOfBeneficiary: z.string().optional().nullable(),
+    workRemarks: z.string().optional().nullable(),
+});
+
+export const NewArsEntrySchema = ArsAndSiteSchema.merge(ArsSpecificSchema).extend({
+    fileNo: z.string().min(1, "File No. is required to associate this site."),
+});
+export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
