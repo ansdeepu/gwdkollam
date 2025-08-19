@@ -274,7 +274,10 @@ export default function ArsPage() {
        <Card className="shadow-lg">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex-1"><CardTitle>Artificial Recharge Schemes (ARS)</CardTitle><CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription></div>
+            <div className="flex-1">
+              <CardTitle>Artificial Recharge Schemes (ARS) ({arsSites.length})</CardTitle>
+              <CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription>
+            </div>
           </div>
           <div className="flex flex-col gap-4 pt-4">
             <div className="flex flex-wrap gap-2 w-full justify-start">
