@@ -1,10 +1,26 @@
 import type {Metadata} from 'next';
+import { Open_Sans, Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
+const openSans = Open_Sans({
+  variable: '--font-open-sans',
+  subsets: ['latin'],
+  display: 'swap',
+});
+
+const robotoMono = Roboto_Mono({
+  variable: '--font-roboto-mono',
+  subsets: ['latin'],
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'GWD Kollam 19082025',
-  description: 'A modern file explorer and editor with AI-powered documentation.',
+  title: 'GWD Kollam Dashboard', // Updated App Name
+  description: 'Dashboard for Ground Water Department, Kollam', // Updated Description
+  icons: {
+    icon: 'https://placehold.co/64x64/2563EB/FFFFFF.png?text=G',
+  },
 };
 
 export default function RootLayout({
@@ -14,12 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased">
+      <body className={`${openSans.variable} ${robotoMono.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>

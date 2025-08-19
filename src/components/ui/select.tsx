@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -82,6 +83,8 @@ const SelectContent = React.forwardRef<
       )}
       position={position}
       {...props}
+      sideOffset={8}
+      collisionPadding={10}
     >
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
@@ -158,3 +161,6 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
 }
+
+
+
