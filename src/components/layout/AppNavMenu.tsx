@@ -23,7 +23,6 @@ export interface NavItem {
 
 export const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/data-entry', label: 'File Data Entry', icon: FilePlus2, roles: ['editor'] },
   { href: '/dashboard/file-room', label: 'File Manager', icon: FolderOpen },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
