@@ -2,14 +2,14 @@
 // src/app/dashboard/ars/page.tsx
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { type DataEntryFormData, type SiteDetailFormData, SiteDetailSchema, siteWorkStatusOptions, ArsSpecificSchema, ArsAndSiteSchema, NewArsEntrySchema, type NewArsEntryFormData } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Save, X } from "lucide-react";
-import { format, isValid } from "date-fns";
+import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download } from "lucide-react";
+import { format, isValid, parse } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ export default function ArsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const canEdit = user?.role === 'editor';
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -186,11 +187,6 @@ export default function ArsPage() {
       "Panchayath": site.arsPanchayath || 'N/A',
       "Constituency": site.constituency || 'N/A',
       "Block": site.arsBlock || 'N/A',
-      "Latitude": site.latitude || 'N/A',
-      "Longitude": site.longitude || 'N/A',
-      "Number of Structures": site.arsNumberOfStructures || 'N/A',
-      "Storage Capacity (m3)": site.arsStorageCapacity || 'N/A',
-      "No. of Fillings": site.arsNumberOfFillings || 'N/A',
       "Estimate Amount": site.estimateAmount || 'N/A',
       "AS/TS Accorded Details": site.arsAsTsDetails || 'N/A',
       "AS/TS Amount": site.tsAmount || 'N/A',
@@ -200,7 +196,6 @@ export default function ArsPage() {
       "Present Status": site.workStatus || 'N/A',
       "Completion Date": formatDateSafe(site.dateOfCompletion),
       "Expenditure": site.totalExpenditure || 'N/A',
-      "No. of Beneficiaries": site.noOfBeneficiary || 'N/A',
       "Remarks": site.workRemarks || 'N/A',
     }));
 
@@ -234,6 +229,143 @@ export default function ArsPage() {
     toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
   }, [filteredSites, toast]);
 
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        "File No": "Example/123",
+        "Name of Site": "Sample ARS Site",
+        "Type of Scheme": "Check Dam",
+        "Panchayath": "Sample Panchayath",
+        "Block": "Sample Block",
+        "Latitude": 8.8932,
+        "Longitude": 76.6141,
+        "Number of Structures": 1,
+        "Storage Capacity (m3)": 500,
+        "No. of Fillings": 2,
+        "Estimate Amount": 500000,
+        "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD",
+        "AS/TS Amount": 450000,
+        "Sanctioned Date": "15/01/2023",
+        "Tendered Amount": 445000,
+        "Awarded Amount": 440000,
+        "Present Status": "Work in Progress",
+        "Completion Date": "",
+        "Expenditure": 200000,
+        "No. of Beneficiaries": "50 families",
+        "Remarks": "Work ongoing",
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "ARS_Template");
+    XLSX.writeFile(wb, "GWD_ARS_Upload_Template.xlsx");
+    toast({ title: "Template Downloaded", description: "The Excel template has been downloaded." });
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsSubmitting(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: "binary", cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+          throw new Error("The selected Excel file is empty.");
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const row of jsonData) {
+          const rowData: any = row;
+          const fileNo = String(rowData['File No'] || '').trim();
+
+          if (!fileNo) {
+            errorCount++;
+            console.warn("Skipping a row due to missing File No.");
+            continue;
+          }
+          
+          const existingFile = getFileEntry(fileNo);
+          if (!existingFile) {
+            errorCount++;
+            console.warn(`Skipping row for non-existent File No: ${fileNo}`);
+            continue;
+          }
+          
+          const parseDate = (dateValue: any) => {
+            if (!dateValue) return undefined;
+            if (dateValue instanceof Date) return dateValue;
+            let d = parse(String(dateValue), 'dd/MM/yyyy', new Date());
+            return isValid(d) ? d : undefined;
+          };
+
+          const newSiteDetail: SiteDetailFormData = {
+              nameOfSite: String(rowData['Name of Site'] || `Imported Site ${Date.now()}`),
+              purpose: 'ARS',
+              latitude: Number(rowData['Latitude']) || undefined,
+              longitude: Number(rowData['Longitude']) || undefined,
+              estimateAmount: Number(rowData['Estimate Amount']) || undefined,
+              tsAmount:  Number(rowData['AS/TS Amount']) || undefined,
+              workStatus: (rowData['Present Status'] as any) || undefined,
+              dateOfCompletion: parseDate(rowData['Completion Date']),
+              totalExpenditure: Number(rowData['Expenditure']) || undefined,
+              noOfBeneficiary: String(rowData['No. of Beneficiaries'] || ''),
+              workRemarks: String(rowData['Remarks'] || ''),
+              
+              arsTypeOfScheme: String(rowData['Type of Scheme'] || ''),
+              arsPanchayath: String(rowData['Panchayath'] || ''),
+              arsBlock: String(rowData['Block'] || ''),
+              arsNumberOfStructures: Number(rowData['Number of Structures']) || undefined,
+              arsStorageCapacity: Number(rowData['Storage Capacity (m3)']) || undefined,
+              arsNumberOfFillings: Number(rowData['No. of Fillings']) || undefined,
+              arsAsTsDetails: String(rowData['AS/TS Accorded Details'] || ''),
+              arsSanctionedDate: parseDate(rowData['Sanctioned Date']),
+              arsTenderedAmount: Number(rowData['Tendered Amount']) || undefined,
+              arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
+              
+              siteConditions: undefined, accessibleRig: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: null, supervisorName: null, surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
+          };
+
+          const updatedFile: DataEntryFormData = {
+              ...existingFile,
+              siteDetails: [...(existingFile.siteDetails || []), newSiteDetail],
+          };
+
+          try {
+            await addFileEntry(updatedFile, fileNo);
+            successCount++;
+          } catch(e) {
+            errorCount++;
+            console.error(`Failed to add site from row for File No ${fileNo}:`, e);
+          }
+        }
+        
+        toast({
+          title: "Import Complete",
+          description: `${successCount} sites imported successfully. ${errorCount} rows failed or were skipped.`,
+          variant: errorCount > 0 ? "default" : "default",
+        });
+
+      } catch (error: any) {
+        toast({ title: "Import Failed", description: error.message, variant: "destructive" });
+      } finally {
+        setIsSubmitting(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""; // Reset file input
+        }
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   if (entriesLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
@@ -252,11 +384,26 @@ export default function ArsPage() {
               <CardTitle>Artificial Recharge Schemes (ARS)</CardTitle>
               <CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               {canEdit && (
-                <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS
-                </Button>
+                <>
+                 <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept=".xlsx, .xls"
+                  />
+                  <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
+                      <FileUp className="mr-2 h-4 w-4" /> Import Excel
+                  </Button>
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}>
+                    <Download className="mr-2 h-4 w-4" /> Download Template
+                  </Button>
+                  <Button className="w-full sm:w-auto" onClick={() => setIsFormOpen(true)}>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS
+                  </Button>
+                </>
               )}
               <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto">
                 <FileDown className="mr-2 h-4 w-4" /> Export Excel
