@@ -104,24 +104,44 @@ export default function ArsEntryPage() {
         };
 
         try {
+            const existingFile = getFileEntry(data.fileNo);
             if (isEditing) {
-                const fileToUpdate = getFileEntry(fileNoToEdit!);
+                if (!fileNoToEdit || !siteNameToEdit) {
+                    throw new Error("Could not find original file details to edit.");
+                }
+                const fileToUpdate = getFileEntry(fileNoToEdit);
                 if (!fileToUpdate) throw new Error("Original file not found for update.");
+
+                // If the site name was changed, check for uniqueness in the *same* file.
+                if (data.nameOfSite !== siteNameToEdit) {
+                    const isDuplicate = fileToUpdate.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.purpose === 'ARS');
+                    if (isDuplicate) {
+                        form.setError("nameOfSite", { type: "manual", message: `An ARS site named "${data.nameOfSite}" already exists in File No. ${data.fileNo}.` });
+                        throw new Error("Duplicate site name.");
+                    }
+                }
                 
                 const updatedSiteDetails = fileToUpdate.siteDetails?.map(site => 
                   (site.nameOfSite === siteNameToEdit && site.purpose === 'ARS') ? siteData : site
                 ) ?? [];
 
                 const updatedFile: DataEntryFormData = { ...fileToUpdate, constituency: data.constituency, siteDetails: updatedSiteDetails };
-                await addFileEntry(updatedFile, fileNoToEdit!);
+                await addFileEntry(updatedFile, fileNoToEdit);
                 toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
+
             } else {
-                const existingFile = getFileEntry(data.fileNo);
                 let updatedFile: DataEntryFormData;
 
                 if (existingFile) {
+                    // Check for duplicate site name within the existing file
+                    const isDuplicate = existingFile.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.purpose === 'ARS');
+                    if (isDuplicate) {
+                        form.setError("nameOfSite", { type: "manual", message: `An ARS site named "${data.nameOfSite}" already exists in this file.` });
+                        throw new Error("Duplicate site name.");
+                    }
                     updatedFile = { ...existingFile, constituency: data.constituency, siteDetails: [...(existingFile.siteDetails || []), siteData] };
                 } else {
+                    // This is a new file, no need to check for duplicates within it.
                     updatedFile = {
                         fileNo: data.fileNo, applicantName: `Applicant for ${data.nameOfSite}`, constituency: data.constituency,
                         applicationType: 'Government_Others', fileStatus: 'File Under Process', siteDetails: [siteData],
@@ -132,7 +152,9 @@ export default function ArsEntryPage() {
             }
             router.push('/dashboard/ars');
         } catch (error: any) {
-          toast({ title: "Error Processing Site", description: error.message, variant: "destructive" });
+          if (error.message !== "Duplicate site name.") {
+             toast({ title: "Error Processing Site", description: error.message, variant: "destructive" });
+          }
         } finally {
           setIsSubmitting(false);
         }
