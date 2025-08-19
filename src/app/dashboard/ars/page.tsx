@@ -71,8 +71,8 @@ export default function ArsPage() {
       );
       
       const sortedSites = [...allArsSites].sort((a, b) => {
-        const dateA = a.arsSanctionedDate ? new Date(a.arsSanctionedDate) : null;
-        const dateB = b.arsSanctionedDate ? new Date(b.arsSanctionedDate) : null;
+        const dateA = a.dateOfCompletion ? new Date(a.dateOfCompletion) : null;
+        const dateB = b.dateOfCompletion ? new Date(b.dateOfCompletion) : null;
         if (dateA && isValid(dateA) && dateB && isValid(dateB)) return dateB.getTime() - dateA.getTime();
         if (dateA && isValid(dateA)) return -1;
         if (dateB && isValid(dateB)) return 1;
