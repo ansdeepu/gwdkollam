@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 const ITEMS_PER_PAGE = 50;
 
 interface ArsReportRow extends SiteDetailFormData {
-  id: string; // Unique identifier for the site (e.g., fileNo + nameOfSite)
+  id: string; // Unique identifier for the site
   fileNo?: string;
   applicantName?: string;
   constituency?: Constituency;
@@ -68,9 +68,9 @@ export default function ArsPage() {
       const allArsSites = fileEntries.flatMap(entry => 
         (entry.siteDetails || [])
           .filter(site => site.purpose === 'ARS')
-          .map(site => ({
+          .map((site, index) => ({
             ...site,
-            id: `${entry.fileNo}-${site.nameOfSite}`,
+            id: `${entry.fileNo}-${site.nameOfSite}-${site.purpose}-${index}`,
             fileNo: entry.fileNo,
             applicantName: entry.applicantName,
             constituency: entry.constituency
