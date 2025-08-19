@@ -190,6 +190,21 @@ export const rigAccessibilityOptions = [
 ] as const;
 export type RigAccessibility = typeof rigAccessibilityOptions[number];
 
+export const constituencyOptions = [
+    "Chadayamangalam",
+    "Chathannur",
+    "Chavara",
+    "Eravipuram",
+    "Karunagappally",
+    "Kollam",
+    "Kottarakkara",
+    "Kundara",
+    "Kunnathur",
+    "Pathanapuram",
+    "Punalur",
+] as const;
+export type Constituency = typeof constituencyOptions[number];
+
 // Helper for robust optional numeric fields
 const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
   z.preprocess((val) => {
@@ -364,7 +379,7 @@ export const DataEntrySchema = z.object({
   applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
   applicationType: z.enum(applicationTypeOptions, { required_error: "Type of Application is required."}),
-  constituency: z.string().optional(),
+  constituency: z.enum(constituencyOptions, { required_error: "Constituency is required."}),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   assignedSupervisorUids: z.array(z.string()).optional(),
 
