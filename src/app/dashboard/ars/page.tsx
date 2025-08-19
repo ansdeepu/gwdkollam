@@ -179,10 +179,7 @@ export default function ArsPage() {
     const dataForExport = filteredSites.map((site, index) => ({
       "Sl. No.": index + 1, "File No": site.fileNo || 'N/A', "Name of Site": site.nameOfSite || 'N/A',
       "Type of Scheme": site.arsTypeOfScheme || 'N/A', "Panchayath": site.arsPanchayath || 'N/A',
-      "Constituency": site.constituency || 'N/A', "Block": site.arsBlock || 'N/A',
-      "Estimate Amount": site.estimateAmount || 'N/A', "AS/TS Accorded Details": site.arsAsTsDetails || 'N/A',
-      "AS/TS Amount": site.tsAmount || 'N/A', "Sanctioned Date": formatDateSafe(site.arsSanctionedDate),
-      "Tendered Amount": site.arsTenderedAmount || 'N/A', "Awarded Amount": site.arsAwardedAmount || 'N/A',
+      "Estimate Amount": site.estimateAmount || 'N/A',
       "Present Status": site.workStatus || 'N/A', "Completion Date": formatDateSafe(site.dateOfCompletion),
       "Expenditure": site.totalExpenditure || 'N/A', "Remarks": site.workRemarks || 'N/A',
     }));
@@ -317,10 +314,9 @@ export default function ArsPage() {
           <Table>
             <TableHeader><TableRow>
                 <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead>Name of Site</TableHead>
-                <TableHead>Type of Scheme</TableHead><TableHead>Panchayath</TableHead><TableHead>Constituency</TableHead>
-                <TableHead>Block</TableHead><TableHead>Estimate (₹)</TableHead><TableHead>AS/TS Details</TableHead>
-                <TableHead>AS/TS Amount (₹)</TableHead><TableHead>Sanctioned Date</TableHead><TableHead>Tendered Amount (₹)</TableHead>
-                <TableHead>Awarded Amount (₹)</TableHead><TableHead>Status</TableHead><TableHead>Completion Date</TableHead>
+                <TableHead>Type of Scheme</TableHead><TableHead>Panchayath</TableHead>
+                <TableHead>Estimate (₹)</TableHead>
+                <TableHead>Status</TableHead><TableHead>Completion Date</TableHead>
                 <TableHead>Expenditure (₹)</TableHead><TableHead>Remarks</TableHead>
                 <TableHead className="text-center w-[120px]">Actions</TableHead>
             </TableRow></TableHeader>
@@ -330,11 +326,7 @@ export default function ArsPage() {
                     <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                     <TableCell>{site.fileNo}</TableCell><TableCell className="font-medium">{site.nameOfSite}</TableCell>
                     <TableCell>{site.arsTypeOfScheme || 'N/A'}</TableCell><TableCell>{site.arsPanchayath || 'N/A'}</TableCell>
-                    <TableCell>{site.constituency || 'N/A'}</TableCell><TableCell>{site.arsBlock || 'N/A'}</TableCell>
                     <TableCell className="text-right">{site.estimateAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                    <TableCell>{site.arsAsTsDetails || 'N/A'}</TableCell><TableCell className="text-right">{site.tsAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                    <TableCell>{formatDateSafe(site.arsSanctionedDate)}</TableCell><TableCell className="text-right">{site.arsTenderedAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                    <TableCell className="text-right">{site.arsAwardedAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                     <TableCell>{site.workStatus ?? 'N/A'}</TableCell><TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
                     <TableCell className="text-right">{site.totalExpenditure?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                     <TableCell className="max-w-xs truncate">{site.workRemarks || 'N/A'}</TableCell>
@@ -350,7 +342,7 @@ export default function ArsPage() {
                         </div>
                     </TableCell>
                   </TableRow>
-                )) ) : ( <TableRow><TableCell colSpan={18} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
+                )) ) : ( <TableRow><TableCell colSpan={11} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
             </TableBody>
           </Table>
         </CardContent>
