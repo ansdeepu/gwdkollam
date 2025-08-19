@@ -63,7 +63,6 @@ export default function ArsPage() {
   
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
-  const [clearAllConfirmationText, setClearAllConfirmationText] = useState("");
 
 
   useEffect(() => {
@@ -167,7 +166,6 @@ export default function ArsPage() {
     } finally {
         setIsClearingAll(false);
         setIsClearAllDialogOpen(false);
-        setClearAllConfirmationText("");
     }
   };
 
@@ -193,7 +191,6 @@ export default function ArsPage() {
       "Number of Structures": site.arsNumberOfStructures ?? 'N/A',
       "Storage Capacity (m3)": site.arsStorageCapacity ?? 'N/A',
       "No. of Fillings": site.arsNumberOfFillings ?? 'N/A',
-      "Estimate Amount (₹)": site.estimateAmount ?? 'N/A',
       "AS/TS Accorded Details": site.arsAsTsDetails || 'N/A',
       "AS/TS Amount (₹)": site.tsAmount ?? 'N/A',
       "Sanctioned Date": formatDateSafe(site.arsSanctionedDate),
@@ -201,7 +198,6 @@ export default function ArsPage() {
       "Awarded Amount (₹)": site.arsAwardedAmount ?? 'N/A',
       "Present Status": site.workStatus || 'N/A',
       "Completion Date": formatDateSafe(site.dateOfCompletion),
-      "Expenditure (₹)": site.totalExpenditure ?? 'N/A',
       "No. of Beneficiaries": site.noOfBeneficiary || 'N/A',
       "Remarks": site.workRemarks || 'N/A',
     }));
@@ -397,38 +393,19 @@ export default function ArsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={isClearAllDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) { setIsClearAllDialogOpen(false); setClearAllConfirmationText(""); } else { setIsClearAllDialogOpen(true); } }}>
+      <AlertDialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <div className="flex items-center space-x-2">
-              <ShieldAlert className="h-6 w-6 text-destructive" />
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            </div>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will permanently delete ALL ARS sites from every file in the database. This action cannot be undone. 
-              <br/><br/>
-              To confirm, please type <strong>DELETE</strong> in the box below.
+              This action will permanently delete ALL ARS sites from every file in the database. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-2 space-y-2">
-            <Label htmlFor="delete-confirm-input" className="text-sm font-medium text-muted-foreground">
-              Confirmation Text
-            </Label>
-            <Input
-              id="delete-confirm-input"
-              type="text"
-              value={clearAllConfirmationText}
-              onChange={(e) => setClearAllConfirmationText(e.target.value)}
-              placeholder="Type DELETE to confirm"
-              className="border-destructive focus:ring-destructive"
-              autoComplete="off"
-            />
-          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isClearingAll} onClick={() => { setIsClearAllDialogOpen(false); setClearAllConfirmationText(""); }}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isClearingAll}>No, Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleClearAllArs} 
-              disabled={isClearingAll || clearAllConfirmationText !== 'DELETE'} 
+              disabled={isClearingAll} 
               className="bg-destructive hover:bg-destructive/90"
             >
               {isClearingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Yes, Clear All ARS Data"}
