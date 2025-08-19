@@ -159,7 +159,7 @@ export default function ArsPage() {
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
               {canEdit && (
-                <Button className="w-full sm:w-auto" disabled>
+                <Button className="w-full sm:w-auto" onClick={() => alert('Add New ARS form not implemented yet.')}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS
                 </Button>
               )}
