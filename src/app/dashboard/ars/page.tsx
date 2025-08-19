@@ -179,7 +179,6 @@ export default function ArsPage() {
     const dataForExport = filteredSites.map((site, index) => ({
       "Sl. No.": index + 1,
       "File No": site.fileNo || 'N/A',
-      "Applicant Name": site.applicantName || 'N/A',
       "Name of Site": site.nameOfSite || 'N/A',
       "Constituency (LAC)": site.constituency || 'N/A',
       "Type of Scheme": site.arsTypeOfScheme || 'N/A',
@@ -332,10 +331,10 @@ export default function ArsPage() {
         <CardContent>
           <Table>
             <TableHeader><TableRow>
-                <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead className="max-w-[200px]">Name of Site</TableHead>
+                <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead>Name of Site</TableHead>
                 <TableHead>Type of Scheme</TableHead><TableHead>Panchayath</TableHead>
                 <TableHead>Status</TableHead><TableHead>Completion Date</TableHead>
-                <TableHead className="max-w-[250px]">Remarks</TableHead>
+                <TableHead>Remarks</TableHead>
                 <TableHead className="text-center w-[120px]">Actions</TableHead>
             </TableRow></TableHeader>
             <TableBody>
@@ -343,10 +342,10 @@ export default function ArsPage() {
                   <TableRow key={site.id}>
                     <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                     <TableCell>{site.fileNo}</TableCell>
-                    <TableCell className="font-medium max-w-[200px] truncate">{site.nameOfSite}</TableCell>
-                    <TableCell>{site.arsTypeOfScheme || 'N/A'}</TableCell><TableCell>{site.arsPanchayath || 'N/A'}</TableCell>
+                    <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
+                    <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell><TableCell className="whitespace-normal break-words">{site.arsPanchayath || 'N/A'}</TableCell>
                     <TableCell>{site.workStatus ?? 'N/A'}</TableCell><TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
-                    <TableCell className="max-w-[250px] truncate">{site.workRemarks || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-normal break-words">{site.workRemarks || 'N/A'}</TableCell>
                     <TableCell className="text-center">
                         <div className="flex items-center justify-center space-x-1">
                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
