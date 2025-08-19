@@ -82,7 +82,7 @@ export default function ArsPage() {
 
   useEffect(() => {
     if (!entriesLoading) {
-      let allArsSites = fileEntries.flatMap(entry => 
+      const allArsSites = fileEntries.flatMap(entry => 
         (entry.siteDetails || [])
           .filter(site => site.purpose === 'ARS')
           .map(site => ({
@@ -94,7 +94,7 @@ export default function ArsPage() {
       );
       
       // Sort by sanctioned date, with most recent first. Entries without a date are pushed to the bottom.
-      allArsSites = allArsSites.sort((a, b) => {
+      const sortedSites = [...allArsSites].sort((a, b) => {
         const dateA = a.arsSanctionedDate ? new Date(a.arsSanctionedDate) : null;
         const dateB = b.arsSanctionedDate ? new Date(b.arsSanctionedDate) : null;
         if (dateA && dateB && isValid(dateA) && isValid(dateB)) {
@@ -105,7 +105,7 @@ export default function ArsPage() {
         return 0; // Maintain original order if both have no date
       });
       
-      setArsSites(allArsSites);
+      setArsSites(sortedSites);
     }
   }, [fileEntries, entriesLoading]);
 
