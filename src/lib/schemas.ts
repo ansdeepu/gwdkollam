@@ -592,5 +592,6 @@ export const ArsAndSiteSchema = z.object({
 
 export const NewArsEntrySchema = ArsAndSiteSchema.merge(ArsSpecificSchema).extend({
     fileNo: z.string().min(1, "File No. is required to associate this site."),
+    constituency: z.enum(constituencyOptions, { required_error: "Constituency is required."}),
 });
 export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
