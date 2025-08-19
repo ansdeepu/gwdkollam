@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download } from "lucide-react";
-import { format, isValid, parse } from "date-fns";
+import { format, isValid, parse, isAfter } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ export default function ArsPage() {
 
   useEffect(() => {
     if (!entriesLoading) {
-      const allArsSites = fileEntries.flatMap(entry => 
+      let allArsSites = fileEntries.flatMap(entry => 
         (entry.siteDetails || [])
           .filter(site => site.purpose === 'ARS')
           .map(site => ({
@@ -92,6 +92,19 @@ export default function ArsPage() {
             constituency: entry.constituency
           }))
       );
+      
+      // Sort by sanctioned date, with most recent first. Entries without a date are pushed to the bottom.
+      allArsSites = allArsSites.sort((a, b) => {
+        const dateA = a.arsSanctionedDate ? new Date(a.arsSanctionedDate) : null;
+        const dateB = b.arsSanctionedDate ? new Date(b.arsSanctionedDate) : null;
+        if (dateA && dateB && isValid(dateA) && isValid(dateB)) {
+            return dateB.getTime() - dateA.getTime();
+        }
+        if (dateA && isValid(dateA)) return -1; // Keep entries with dates on top
+        if (dateB && isValid(dateB)) return 1;  // Push entries without dates to the bottom
+        return 0; // Maintain original order if both have no date
+      });
+      
       setArsSites(allArsSites);
     }
   }, [fileEntries, entriesLoading]);
