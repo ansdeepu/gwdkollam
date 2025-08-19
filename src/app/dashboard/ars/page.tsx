@@ -43,7 +43,7 @@ const formatDateSafe = (dateInput: any): string => {
 };
 
 export default function ArsPage() {
-  const { fileEntries, isLoading: entriesLoading, addFileEntry, getFileEntry, updateFileEntry } = useFileEntries();
+  const { fileEntries, isLoading: entriesLoading, addFileEntry, getFileEntry } = useFileEntries();
   const [arsSites, setArsSites] = useState<ArsReportRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -145,7 +145,7 @@ export default function ArsPage() {
         ) ?? [];
 
         const updatedFile: DataEntryFormData = { ...fileToUpdate, siteDetails: updatedSiteDetails };
-        await updateFileEntry(updatedFile, editingSite.fileNo!);
+        await addFileEntry(updatedFile, editingSite.fileNo!);
         toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
 
       } else { // Handle Add New
@@ -216,7 +216,7 @@ export default function ArsPage() {
       );
 
       const updatedFile = { ...fileToUpdate, siteDetails: updatedSiteDetails };
-      await updateFileEntry(updatedFile, deletingSite.fileNo);
+      await addFileEntry(updatedFile, deletingSite.fileNo);
       
       toast({ title: "ARS Site Deleted", description: `Site "${deletingSite.nameOfSite}" has been removed.` });
     } catch (error: any) {
