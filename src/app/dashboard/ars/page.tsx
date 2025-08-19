@@ -199,6 +199,7 @@ export default function ArsPage() {
       "Completion Date": formatDateSafe(site.dateOfCompletion),
       "Expenditure (₹)": site.totalExpenditure ?? 'N/A',
       "No. of Beneficiaries": site.noOfBeneficiary || 'N/A',
+      "Remarks": site.workRemarks || 'N/A',
     }));
 
     const wb = XLSX.utils.book_new();
@@ -288,17 +289,25 @@ export default function ArsPage() {
        <Card className="shadow-lg">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex-1">
+            <div>
               <CardTitle>Artificial Recharge Schemes (ARS) ({arsSites.length})</CardTitle>
               <CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription>
             </div>
+            <div className="flex flex-wrap items-center gap-2">
+                {canEdit && ( <> 
+                    <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
+                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm"> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> 
+                    <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Download Template </Button> 
+                    <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> 
+                </> )}
+            </div>
           </div>
-          <div className="flex flex-col gap-4 pt-4">
+          <div className="flex flex-col gap-4 pt-4 border-t mt-4">
             <div className="flex flex-wrap gap-2 w-full justify-start">
-                {canEdit && ( <> <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isUploading}> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}> <Download className="mr-2 h-4 w-4" /> Download Template </Button> <Link href="/dashboard/ars/entry" passHref><Button className="w-full sm:w-auto"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link> <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0}> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> </> )}
+                <Link href="/dashboard/ars/entry" passHref><Button className="w-full sm:w-auto"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link>
                 <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
             </div>
-            <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+            <div className="flex flex-wrap items-center gap-2 pt-4">
                  <Popover>
                     <PopoverTrigger asChild>
                         <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
