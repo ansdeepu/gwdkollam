@@ -310,26 +310,27 @@ export default function ArsPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent>
           <Table>
             <TableHeader><TableRow>
-                <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead>Name of Site</TableHead>
+                <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead className="max-w-[200px]">Name of Site</TableHead>
                 <TableHead>Type of Scheme</TableHead><TableHead>Panchayath</TableHead>
                 <TableHead>Estimate (₹)</TableHead>
                 <TableHead>Status</TableHead><TableHead>Completion Date</TableHead>
-                <TableHead>Expenditure (₹)</TableHead><TableHead>Remarks</TableHead>
+                <TableHead>Expenditure (₹)</TableHead><TableHead className="max-w-[250px]">Remarks</TableHead>
                 <TableHead className="text-center w-[120px]">Actions</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {paginatedSites.length > 0 ? ( paginatedSites.map((site, index) => (
                   <TableRow key={site.id}>
                     <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                    <TableCell>{site.fileNo}</TableCell><TableCell className="font-medium">{site.nameOfSite}</TableCell>
+                    <TableCell>{site.fileNo}</TableCell>
+                    <TableCell className="font-medium max-w-[200px] truncate">{site.nameOfSite}</TableCell>
                     <TableCell>{site.arsTypeOfScheme || 'N/A'}</TableCell><TableCell>{site.arsPanchayath || 'N/A'}</TableCell>
                     <TableCell className="text-right">{site.estimateAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                     <TableCell>{site.workStatus ?? 'N/A'}</TableCell><TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
                     <TableCell className="text-right">{site.totalExpenditure?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                    <TableCell className="max-w-xs truncate">{site.workRemarks || 'N/A'}</TableCell>
+                    <TableCell className="max-w-[250px] truncate">{site.workRemarks || 'N/A'}</TableCell>
                     <TableCell className="text-center">
                         <div className="flex items-center justify-center space-x-1">
                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
