@@ -101,21 +101,15 @@ export type PaymentAccount = typeof paymentAccountOptions[number];
 
 
 export const siteWorkStatusOptions = [
-  "Under Process",
-  "Addl. AS Awaited",
-  "To be Refunded",
-  "Awaiting Dept. Rig",
-  "To be Tendered",
-  "TS Pending",
-  "Tendered",
-  "Selection Notice Issued",
-  "Work Order Issued",
-  "Work in Progress",
-  "Work Failed",
-  "Work Completed",
-  "Bill Prepared",
-  "Payment Completed",
-  "Utilization Certificate Issued",
+    "Proposal Submitted",
+    "AS & TS Issued",
+    "Tendered",
+    "Selection Notice Issued",
+    "Work Order Issued",
+    "Work Initiated",
+    "Work Completed",
+    "Bill Prepared",
+    "Payment Completed",
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
 
@@ -154,6 +148,17 @@ export const sitePurposeOptions = [
   "ARS",
 ] as const;
 export type SitePurpose = typeof sitePurposeOptions[number];
+
+export const arsTypeOfSchemeOptions = [
+    "Dugwell Recharge(RWH)",
+    "Borewell Recharge(RWH)",
+    "Recharge Pit(RWH)",
+    "Check Dam",
+    "Sub-Surface Dyke",
+    "Pond Renovation",
+    "Percolation Ponds",
+] as const;
+export type ArsTypeOfScheme = typeof arsTypeOfSchemeOptions[number];
 
 export const siteDiameterOptions = [
   "110 mm (4.5”)",
@@ -292,7 +297,7 @@ export const SiteDetailSchema = z.object({
 
 }).superRefine((data, ctx) => {
     const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-    if (data.workStatus && finalStatuses.includes(data.workStatus) && !data.dateOfCompletion) {
+    if (data.workStatus && finalStatuses.includes(data.workStatus as SiteWorkStatus) && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: `is required when status is '${data.workStatus}'.`,

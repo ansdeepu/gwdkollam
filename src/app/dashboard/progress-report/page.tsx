@@ -73,7 +73,7 @@ const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
   "Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"
 ];
 
-const REFUNDED_STATUSES = ['To be Refunded'];
+const REFUNDED_STATUSES: SiteWorkStatus[] = [];
 
 interface DetailDialogColumn {
   key: string;
@@ -308,15 +308,15 @@ export default function ProgressReportPage() {
         
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && (!completionDate || isAfter(completionDate, sDate));
         
-        const isToBeRefundedInPeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        const wasToBeRefundedBeforePeriod = workStatus === 'To be Refunded' && firstRemittanceDate && isBefore(firstRemittanceDate, sDate);
+        const isToBeRefundedInPeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        const wasToBeRefundedBeforePeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && firstRemittanceDate && isBefore(firstRemittanceDate, sDate);
 
         const updateStats = (statsObj: ProgressStats) => {
-            if (isCurrentApplication && workStatus !== 'Addl. AS Awaited') { 
+            if (isCurrentApplication) { 
                 statsObj.currentApplications++; 
                 statsObj.currentApplicationsData.push(siteWithFileContext); 
             }
-            if (wasActiveBeforePeriod && workStatus !== 'Addl. AS Awaited') { 
+            if (wasActiveBeforePeriod) { 
                 statsObj.previousBalance++; 
                 statsObj.previousBalanceData.push(siteWithFileContext); 
             }
