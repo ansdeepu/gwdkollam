@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFileEntries } from "@/hooks/useFileEntries";
-import { type DataEntryFormData, type SiteDetailFormData, SiteDetailSchema, siteWorkStatusOptions, ArsSpecificSchema, ArsAndSiteSchema, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency } from "@/lib/schemas";
+import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency, fileStatusOptions } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -118,12 +118,7 @@ export default function ArsPage() {
   const handleFormSubmit = async (data: NewArsEntryFormData) => {
     setIsSubmitting(true);
     const existingFile = getFileEntry(data.fileNo);
-    if (!existingFile) {
-        toast({ title: "File Not Found", description: `File No. "${data.fileNo}" does not exist. Please enter a valid file number.`, variant: "destructive" });
-        setIsSubmitting(false);
-        return;
-    }
-
+    
     const newSiteDetail: SiteDetailFormData = {
         nameOfSite: data.nameOfSite,
         purpose: 'ARS',
@@ -136,8 +131,6 @@ export default function ArsPage() {
         totalExpenditure: data.totalExpenditure,
         noOfBeneficiary: data.noOfBeneficiary,
         workRemarks: data.workRemarks,
-        
-        // ARS specific fields mapped
         arsTypeOfScheme: data.arsTypeOfScheme,
         arsPanchayath: data.arsPanchayath,
         arsBlock: data.arsBlock,
@@ -148,20 +141,30 @@ export default function ArsPage() {
         arsSanctionedDate: data.arsSanctionedDate,
         arsTenderedAmount: data.arsTenderedAmount,
         arsAwardedAmount: data.arsAwardedAmount,
-        
-        // Defaulting other non-relevant fields for schema completeness
-        siteConditions: undefined, accessibleRig: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: null, supervisorName: null, surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
     };
     
-    const updatedFile: DataEntryFormData = {
-        ...existingFile,
-        constituency: data.constituency, // Update constituency on the main file entry
-        siteDetails: [...(existingFile.siteDetails || []), newSiteDetail],
-    };
+    let updatedFile: DataEntryFormData;
+
+    if (existingFile) {
+        updatedFile = {
+            ...existingFile,
+            constituency: data.constituency,
+            siteDetails: [...(existingFile.siteDetails || []), newSiteDetail],
+        };
+    } else {
+        updatedFile = {
+            fileNo: data.fileNo,
+            applicantName: `Applicant for ${data.nameOfSite}`,
+            constituency: data.constituency,
+            applicationType: 'Government_Others',
+            fileStatus: 'File Under Process',
+            siteDetails: [newSiteDetail],
+        };
+    }
 
     try {
-        await addFileEntry(updatedFile, existingFile.fileNo);
-        toast({ title: "ARS Site Added", description: `New site "${data.nameOfSite}" has been added to File No. ${data.fileNo}.` });
+        await addFileEntry(updatedFile, existingFile?.fileNo);
+        toast({ title: "ARS Site Added", description: `Site "${data.nameOfSite}" has been processed for File No. ${data.fileNo}.` });
         setIsFormOpen(false);
         form.reset();
     } catch (error: any) {
@@ -235,8 +238,9 @@ export default function ArsPage() {
     const templateData = [
       {
         "File No": "Example/123",
-        "Name of Site": "Sample ARS Site",
+        "Applicant Name": "Panchayath Office",
         "Constituency": "Kollam",
+        "Name of Site": "Sample ARS Site",
         "Type of Scheme": "Check Dam",
         "Panchayath": "Sample Panchayath",
         "Block": "Sample Block",
@@ -296,12 +300,7 @@ export default function ArsPage() {
             continue;
           }
           
-          const existingFile = getFileEntry(fileNo);
-          if (!existingFile) {
-            errorCount++;
-            console.warn(`Skipping row for non-existent File No: ${fileNo}`);
-            continue;
-          }
+          let existingFile = getFileEntry(fileNo);
           
           const parseDate = (dateValue: any) => {
             if (!dateValue) return undefined;
@@ -322,7 +321,6 @@ export default function ArsPage() {
               totalExpenditure: Number(rowData['Expenditure']) || undefined,
               noOfBeneficiary: String(rowData['No. of Beneficiaries'] || ''),
               workRemarks: String(rowData['Remarks'] || ''),
-              
               arsTypeOfScheme: String(rowData['Type of Scheme'] || ''),
               arsPanchayath: String(rowData['Panchayath'] || ''),
               arsBlock: String(rowData['Block'] || ''),
@@ -333,18 +331,28 @@ export default function ArsPage() {
               arsSanctionedDate: parseDate(rowData['Sanctioned Date']),
               arsTenderedAmount: Number(rowData['Tendered Amount']) || undefined,
               arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
-              
-              siteConditions: undefined, accessibleRig: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: null, supervisorName: null, surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
           };
-
-          const updatedFile: DataEntryFormData = {
-              ...existingFile,
-              constituency: (rowData['Constituency'] as Constituency) || existingFile.constituency,
-              siteDetails: [...(existingFile.siteDetails || []), newSiteDetail],
-          };
+          
+          let updatedFile: DataEntryFormData;
+          if (existingFile) {
+            updatedFile = {
+                ...existingFile,
+                constituency: (rowData['Constituency'] as Constituency) || existingFile.constituency,
+                siteDetails: [...(existingFile.siteDetails || []), newSiteDetail],
+            };
+          } else {
+            updatedFile = {
+                fileNo: fileNo,
+                applicantName: String(rowData['Applicant Name'] || `Applicant for ${newSiteDetail.nameOfSite}`),
+                constituency: (rowData['Constituency'] as Constituency),
+                applicationType: 'Government_Others',
+                fileStatus: 'File Under Process',
+                siteDetails: [newSiteDetail],
+            };
+          }
 
           try {
-            await addFileEntry(updatedFile, fileNo);
+            await addFileEntry(updatedFile, existingFile?.fileNo);
             successCount++;
           } catch(e) {
             errorCount++;
@@ -496,13 +504,13 @@ export default function ArsPage() {
         <DialogContent className="sm:max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Add New ARS Entry</DialogTitle>
-            <DialogDescription>Fill in the details below and associate it with an existing file number.</DialogDescription>
+            <DialogDescription>Fill in the details below. Provide an existing File No. to add a site, or a new File No. to create a new file entry.</DialogDescription>
           </DialogHeader>
           <div className="pr-2 py-2 max-h-[70vh] overflow-y-auto">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 p-1">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Existing File No." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} /></FormControl><FormMessage /></FormItem>)} />
                   <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} /></FormControl><FormMessage /></FormItem>)} />
                   <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC) <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                   <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => (<FormItem><FormLabel>Type of Scheme</FormLabel><FormControl><Input placeholder="e.g., Check Dam" {...field} /></FormControl><FormMessage /></FormItem>)} />
