@@ -285,11 +285,6 @@ export default function ArsPage() {
                 <TableHead>Panchayath</TableHead>
                 <TableHead>Constituency</TableHead>
                 <TableHead>Block</TableHead>
-                <TableHead>Latitude</TableHead>
-                <TableHead>Longitude</TableHead>
-                <TableHead>No. of Structures</TableHead>
-                <TableHead>Storage (m3)</TableHead>
-                <TableHead>No. of Fillings</TableHead>
                 <TableHead>Estimate (₹)</TableHead>
                 <TableHead>AS/TS Details</TableHead>
                 <TableHead>AS/TS Amount (₹)</TableHead>
@@ -299,7 +294,6 @@ export default function ArsPage() {
                 <TableHead>Status</TableHead>
                 <TableHead>Completion Date</TableHead>
                 <TableHead>Expenditure (₹)</TableHead>
-                <TableHead>Beneficiaries</TableHead>
                 <TableHead>Remarks</TableHead>
               </TableRow>
             </TableHeader>
@@ -314,11 +308,6 @@ export default function ArsPage() {
                     <TableCell>{site.arsPanchayath || 'N/A'}</TableCell>
                     <TableCell>{site.constituency || 'N/A'}</TableCell>
                     <TableCell>{site.arsBlock || 'N/A'}</TableCell>
-                    <TableCell>{site.latitude ?? 'N/A'}</TableCell>
-                    <TableCell>{site.longitude ?? 'N/A'}</TableCell>
-                    <TableCell>{site.arsNumberOfStructures ?? 'N/A'}</TableCell>
-                    <TableCell>{site.arsStorageCapacity ?? 'N/A'}</TableCell>
-                    <TableCell>{site.arsNumberOfFillings ?? 'N/A'}</TableCell>
                     <TableCell className="text-right">{site.estimateAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                     <TableCell>{site.arsAsTsDetails || 'N/A'}</TableCell>
                     <TableCell className="text-right">{site.tsAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
@@ -328,13 +317,12 @@ export default function ArsPage() {
                     <TableCell>{site.workStatus ?? 'N/A'}</TableCell>
                     <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
                     <TableCell className="text-right">{site.totalExpenditure?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                    <TableCell>{site.noOfBeneficiary || 'N/A'}</TableCell>
                     <TableCell className="max-w-xs truncate">{site.workRemarks || 'N/A'}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={23} className="h-24 text-center">
+                  <TableCell colSpan={17} className="h-24 text-center">
                     No ARS sites found {searchTerm ? "matching your search" : ""}.
                   </TableCell>
                 </TableRow>
