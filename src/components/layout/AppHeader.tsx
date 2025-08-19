@@ -70,11 +70,11 @@ export default function AppHeader() {
 
     // Find the best match from the nav items
     const currentNavItem = allNavItems
-        .filter(item => item.href !== '/dashboard') // Exclude the base dashboard route for more specific matching
+        .slice() // Create a copy to avoid modifying the original
+        .sort((a, b) => b.href.length - a.href.length) // Sort by length descending to match more specific paths first
         .find(item => pathname.startsWith(item.href));
         
     if (currentNavItem) return currentNavItem.label;
-    if (pathname === '/dashboard') return 'Dashboard'; // Handle base dashboard case specifically
 
     return 'Dashboard'; // Fallback
   }, [pathname]);
