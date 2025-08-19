@@ -177,9 +177,29 @@ export default function ArsPage() {
     const fileNamePrefix = "gwd_ars_report";
     
     const dataForExport = filteredSites.map((site, index) => ({
-      "Sl. No.": index + 1, "File No": site.fileNo || 'N/A', "Name of Site": site.nameOfSite || 'N/A',
-      "Type of Scheme": site.arsTypeOfScheme || 'N/A', "Panchayath": site.arsPanchayath || 'N/A',
-      "Present Status": site.workStatus || 'N/A', "Completion Date": formatDateSafe(site.dateOfCompletion),
+      "Sl. No.": index + 1,
+      "File No": site.fileNo || 'N/A',
+      "Applicant Name": site.applicantName || 'N/A',
+      "Name of Site": site.nameOfSite || 'N/A',
+      "Constituency (LAC)": site.constituency || 'N/A',
+      "Type of Scheme": site.arsTypeOfScheme || 'N/A',
+      "Panchayath": site.arsPanchayath || 'N/A',
+      "Block": site.arsBlock || 'N/A',
+      "Latitude": site.latitude ?? 'N/A',
+      "Longitude": site.longitude ?? 'N/A',
+      "Number of Structures": site.arsNumberOfStructures ?? 'N/A',
+      "Storage Capacity (m3)": site.arsStorageCapacity ?? 'N/A',
+      "No. of Fillings": site.arsNumberOfFillings ?? 'N/A',
+      "Estimate Amount (₹)": site.estimateAmount ?? 'N/A',
+      "AS/TS Accorded Details": site.arsAsTsDetails || 'N/A',
+      "AS/TS Amount (₹)": site.tsAmount ?? 'N/A',
+      "Sanctioned Date": formatDateSafe(site.arsSanctionedDate),
+      "Tendered Amount (₹)": site.arsTenderedAmount ?? 'N/A',
+      "Awarded Amount (₹)": site.arsAwardedAmount ?? 'N/A',
+      "Present Status": site.workStatus || 'N/A',
+      "Completion Date": formatDateSafe(site.dateOfCompletion),
+      "Expenditure (₹)": site.totalExpenditure ?? 'N/A',
+      "No. of Beneficiaries": site.noOfBeneficiary || 'N/A',
       "Remarks": site.workRemarks || 'N/A',
     }));
 
