@@ -179,9 +179,8 @@ export default function ArsPage() {
     const dataForExport = filteredSites.map((site, index) => ({
       "Sl. No.": index + 1, "File No": site.fileNo || 'N/A', "Name of Site": site.nameOfSite || 'N/A',
       "Type of Scheme": site.arsTypeOfScheme || 'N/A', "Panchayath": site.arsPanchayath || 'N/A',
-      "Estimate Amount": site.estimateAmount || 'N/A',
       "Present Status": site.workStatus || 'N/A', "Completion Date": formatDateSafe(site.dateOfCompletion),
-      "Expenditure": site.totalExpenditure || 'N/A', "Remarks": site.workRemarks || 'N/A',
+      "Remarks": site.workRemarks || 'N/A',
     }));
 
     const wb = XLSX.utils.book_new();
@@ -315,9 +314,8 @@ export default function ArsPage() {
             <TableHeader><TableRow>
                 <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead className="max-w-[200px]">Name of Site</TableHead>
                 <TableHead>Type of Scheme</TableHead><TableHead>Panchayath</TableHead>
-                <TableHead>Estimate (₹)</TableHead>
                 <TableHead>Status</TableHead><TableHead>Completion Date</TableHead>
-                <TableHead>Expenditure (₹)</TableHead><TableHead className="max-w-[250px]">Remarks</TableHead>
+                <TableHead className="max-w-[250px]">Remarks</TableHead>
                 <TableHead className="text-center w-[120px]">Actions</TableHead>
             </TableRow></TableHeader>
             <TableBody>
@@ -327,9 +325,7 @@ export default function ArsPage() {
                     <TableCell>{site.fileNo}</TableCell>
                     <TableCell className="font-medium max-w-[200px] truncate">{site.nameOfSite}</TableCell>
                     <TableCell>{site.arsTypeOfScheme || 'N/A'}</TableCell><TableCell>{site.arsPanchayath || 'N/A'}</TableCell>
-                    <TableCell className="text-right">{site.estimateAmount?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                     <TableCell>{site.workStatus ?? 'N/A'}</TableCell><TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
-                    <TableCell className="text-right">{site.totalExpenditure?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                     <TableCell className="max-w-[250px] truncate">{site.workRemarks || 'N/A'}</TableCell>
                     <TableCell className="text-center">
                         <div className="flex items-center justify-center space-x-1">
@@ -343,7 +339,7 @@ export default function ArsPage() {
                         </div>
                     </TableCell>
                   </TableRow>
-                )) ) : ( <TableRow><TableCell colSpan={11} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
+                )) ) : ( <TableRow><TableCell colSpan={9} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
             </TableBody>
           </Table>
         </CardContent>
