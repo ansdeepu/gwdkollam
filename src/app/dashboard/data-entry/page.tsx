@@ -34,6 +34,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
     // A safe, deep-cloned default structure.
     const getFormDefaults = (): DataEntryFormData => ({
       fileNo: "", applicantName: "", phoneNo: "", applicationType: undefined,
+      constituency: "",
       estimateAmount: undefined, assignedSupervisorUids: [],
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
       totalRemittance: 0, 
