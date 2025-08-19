@@ -297,12 +297,12 @@ export default function ArsPage() {
               <CardTitle>Artificial Recharge Schemes (ARS) ({arsSites.length})</CardTitle>
               <CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-row items-center gap-2">
                 {canEdit && ( <> 
                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
-                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm"> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> 
-                    <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Download Template </Button> 
-                    <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> 
+                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <FileUp className="mr-2 h-4 w-4" /> Import<br/>Excel </Button> 
+                    <Button variant="outline" onClick={handleDownloadTemplate} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <Download className="mr-2 h-4 w-4" /> Download<br/>Template </Button> 
+                    <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <Trash2 className="mr-2 h-4 w-4" /> Clear All<br/>ARS Data </Button> 
                 </> )}
             </div>
           </div>
