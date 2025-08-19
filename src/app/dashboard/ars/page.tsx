@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFileEntries } from "@/hooks/useFileEntries";
-import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency, fileStatusOptions } from "@/lib/schemas";
+import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions, type Constituency, fileStatusOptions } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,8 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import Link from 'next/link';
 
 const ITEMS_PER_PAGE = 50;
 
@@ -52,9 +45,7 @@ export default function ArsPage() {
   const canEdit = user?.role === 'editor';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingSite, setEditingSite] = useState<ArsReportRow | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const [viewingSite, setViewingSite] = useState<ArsReportRow | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -64,18 +55,6 @@ export default function ArsPage() {
   
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
-
-  const form = useForm<NewArsEntryFormData>({
-    resolver: zodResolver(NewArsEntrySchema),
-    defaultValues: {
-      fileNo: "", nameOfSite: "", constituency: undefined, arsTypeOfScheme: "", arsPanchayath: "",
-      arsBlock: "", latitude: undefined, longitude: undefined, arsNumberOfStructures: undefined,
-      arsStorageCapacity: undefined, arsNumberOfFillings: undefined, estimateAmount: undefined,
-      arsAsTsDetails: "", tsAmount: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined,
-      arsAwardedAmount: undefined, workStatus: undefined, dateOfCompletion: undefined,
-      totalExpenditure: undefined, noOfBeneficiary: "", workRemarks: "",
-    },
-  });
 
   useEffect(() => {
     if (!entriesLoading) {
@@ -121,90 +100,6 @@ export default function ArsPage() {
   }, [filteredSites, currentPage]);
   
   const totalPages = Math.ceil(filteredSites.length / ITEMS_PER_PAGE);
-
-  const handleFormSubmit = async (data: NewArsEntryFormData) => {
-    setIsSubmitting(true);
-    
-    const siteData: SiteDetailFormData = {
-        nameOfSite: data.nameOfSite,
-        purpose: 'ARS',
-        latitude: data.latitude, longitude: data.longitude, estimateAmount: data.estimateAmount,
-        tsAmount: data.tsAmount, workStatus: data.workStatus, dateOfCompletion: data.dateOfCompletion,
-        totalExpenditure: data.totalExpenditure, noOfBeneficiary: data.noOfBeneficiary, workRemarks: data.workRemarks,
-        arsTypeOfScheme: data.arsTypeOfScheme, arsPanchayath: data.arsPanchayath, arsBlock: data.arsBlock,
-        arsNumberOfStructures: data.arsNumberOfStructures, arsStorageCapacity: data.arsStorageCapacity,
-        arsNumberOfFillings: data.arsNumberOfFillings, arsAsTsDetails: data.arsAsTsDetails,
-        arsSanctionedDate: data.arsSanctionedDate, arsTenderedAmount: data.arsTenderedAmount,
-        arsAwardedAmount: data.arsAwardedAmount,
-    };
-
-    try {
-      if (editingSite) { // Handle Update
-        const fileToUpdate = getFileEntry(editingSite.fileNo!);
-        if (!fileToUpdate) throw new Error("Original file not found for update.");
-
-        const updatedSiteDetails = fileToUpdate.siteDetails?.map(site => 
-          (site.nameOfSite === editingSite.nameOfSite && site.purpose === 'ARS') ? siteData : site
-        ) ?? [];
-
-        const updatedFile: DataEntryFormData = { ...fileToUpdate, siteDetails: updatedSiteDetails };
-        await addFileEntry(updatedFile, editingSite.fileNo!);
-        toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
-
-      } else { // Handle Add New
-          const existingFile = getFileEntry(data.fileNo);
-          let updatedFile: DataEntryFormData;
-
-          if (existingFile) {
-              updatedFile = { ...existingFile, constituency: data.constituency, siteDetails: [...(existingFile.siteDetails || []), siteData] };
-          } else {
-              updatedFile = {
-                  fileNo: data.fileNo, applicantName: `Applicant for ${data.nameOfSite}`, constituency: data.constituency,
-                  applicationType: 'Government_Others', fileStatus: 'File Under Process', siteDetails: [siteData],
-              };
-          }
-          await addFileEntry(updatedFile, existingFile?.fileNo);
-          toast({ title: "ARS Site Added", description: `Site "${data.nameOfSite}" has been processed for File No. ${data.fileNo}.` });
-      }
-
-      setIsFormOpen(false);
-      setEditingSite(null);
-      form.reset();
-    } catch (error: any) {
-      toast({ title: "Error Processing Site", description: error.message, variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleOpenEditForm = (site: ArsReportRow) => {
-    setEditingSite(site);
-    form.reset({
-      fileNo: site.fileNo,
-      nameOfSite: site.nameOfSite,
-      constituency: site.constituency,
-      arsTypeOfScheme: site.arsTypeOfScheme,
-      arsPanchayath: site.arsPanchayath,
-      arsBlock: site.arsBlock,
-      latitude: site.latitude,
-      longitude: site.longitude,
-      arsNumberOfStructures: site.arsNumberOfStructures,
-      arsStorageCapacity: site.arsStorageCapacity,
-      arsNumberOfFillings: site.arsNumberOfFillings,
-      estimateAmount: site.estimateAmount,
-      arsAsTsDetails: site.arsAsTsDetails,
-      tsAmount: site.tsAmount,
-      arsSanctionedDate: site.arsSanctionedDate ? new Date(site.arsSanctionedDate) : undefined,
-      arsTenderedAmount: site.arsTenderedAmount,
-      arsAwardedAmount: site.arsAwardedAmount,
-      workStatus: site.workStatus,
-      dateOfCompletion: site.dateOfCompletion ? new Date(site.dateOfCompletion) : undefined,
-      totalExpenditure: site.totalExpenditure,
-      noOfBeneficiary: site.noOfBeneficiary,
-      workRemarks: site.workRemarks,
-    });
-    setIsFormOpen(true);
-  };
   
   const handleDeleteSite = async () => {
     if (!deletingSite || !deletingSite.fileNo) return;
@@ -290,7 +185,7 @@ export default function ArsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsSubmitting(true);
+    setIsUploading(true);
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
@@ -328,7 +223,7 @@ export default function ArsPage() {
       } catch (error: any) {
         toast({ title: "Import Failed", description: error.message, variant: "destructive" });
       } finally {
-        setIsSubmitting(false);
+        setIsUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     };
@@ -347,7 +242,7 @@ export default function ArsPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div><CardTitle>Artificial Recharge Schemes (ARS)</CardTitle><CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription></div>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-              {canEdit && ( <> <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}> <Download className="mr-2 h-4 w-4" /> Download Template </Button> <Button className="w-full sm:w-auto" onClick={() => { setEditingSite(null); form.reset(); setIsFormOpen(true); }}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button> <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0}> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> </> )}
+              {canEdit && ( <> <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isUploading}> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}> <Download className="mr-2 h-4 w-4" /> Download Template </Button> <Link href="/dashboard/ars/entry" passHref><Button className="w-full sm:w-auto"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link> <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0}> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> </> )}
               <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
             </div>
           </div>
@@ -383,7 +278,7 @@ export default function ArsPage() {
                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
                             {canEdit && (
                                 <>
-                                <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleOpenEditForm(site)}><Edit className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Edit Site</p></TooltipContent></Tooltip>
+                                <Tooltip><TooltipTrigger asChild><Link href={`/dashboard/ars/entry?fileNo=${encodeURIComponent(site.fileNo || '')}&siteName=${encodeURIComponent(site.nameOfSite || '')}`} passHref><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></Link></TooltipTrigger><TooltipContent><p>Edit Site</p></TooltipContent></Tooltip>
                                 <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Site</p></TooltipContent></Tooltip>
                                 </>
                             )}
@@ -397,43 +292,6 @@ export default function ArsPage() {
          {totalPages > 1 && ( <div className="p-4 border-t flex items-center justify-center"><PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} /></div> )}
       </Card>
       </TooltipProvider>
-
-      <Dialog open={isFormOpen} onOpenChange={(isOpen) => { if (!isOpen) { setIsFormOpen(false); setEditingSite(null); } else { setIsFormOpen(true); }}}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh]">
-          <DialogHeader> <DialogTitle>{editingSite ? 'Edit ARS Entry' : 'Add New ARS Entry'}</DialogTitle> <DialogDescription>{editingSite ? 'Update the details below.' : 'Fill in the details below. Provide an existing File No. to add a site, or a new File No. to create a new file entry.'}</DialogDescription> </DialogHeader>
-          <div className="pr-2 py-2 max-h-[70vh] overflow-y-auto">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 p-1">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} readOnly={!!editingSite} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC) <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                  <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => (<FormItem><FormLabel>Type of Scheme</FormLabel><FormControl><Input placeholder="e.g., Check Dam" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsPanchayath" control={form.control} render={({ field }) => (<FormItem><FormLabel>Panchayath</FormLabel><FormControl><Input placeholder="Panchayath Name" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsBlock" control={form.control} render={({ field }) => (<FormItem><FormLabel>Block</FormLabel><FormControl><Input placeholder="Block Name" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="latitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 8.8932" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="longitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 76.6141" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsNumberOfStructures" control={form.control} render={({ field }) => (<FormItem><FormLabel>Number of Structures</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsStorageCapacity" control={form.control} render={({ field }) => (<FormItem><FormLabel>Storage Capacity (m3)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsNumberOfFillings" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Fillings</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="estimateAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 500000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsAsTsDetails" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Accorded Details</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="tsAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsSanctionedDate" control={form.control} render={({ field }) => (<FormItem><FormLabel>Sanctioned Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)} />
-                  <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="workStatus" control={form.control} render={({ field }) => (<FormItem><FormLabel>Present Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{siteWorkStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
-                  <FormField name="dateOfCompletion" control={form.control} render={({ field }) => (<FormItem><FormLabel>Completion Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)} />
-                  <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField name="workRemarks" control={form.control} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Additional remarks..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                </div>
-                 <DialogFooter className="pt-8"> <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button> <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save </Button> </DialogFooter>
-              </form>
-            </Form>
-          </div>
-        </DialogContent>
-      </Dialog>
       
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
