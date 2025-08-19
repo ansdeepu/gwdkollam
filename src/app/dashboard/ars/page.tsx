@@ -8,8 +8,8 @@ import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions,
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2, ShieldAlert } from "lucide-react";
-import { format, isValid, parse } from "date-fns";
+import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2, ShieldAlert, CalendarIcon } from "lucide-react";
+import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import Link from 'next/link';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+
 
 const ITEMS_PER_PAGE = 50;
 
@@ -44,6 +48,9 @@ export default function ArsPage() {
   const { user } = useAuth();
   const canEdit = user?.role === 'editor';
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   const [isUploading, setIsUploading] = useState(false);
   
@@ -83,16 +90,38 @@ export default function ArsPage() {
   }, [fileEntries, entriesLoading]);
 
   const filteredSites = useMemo(() => {
+    let sites = [...arsSites];
+
+    // Filter by date range if specified
+    if (startDate || endDate) {
+      const sDate = startDate ? startOfDay(startDate) : null;
+      const eDate = endDate ? endOfDay(endDate) : null;
+      sites = sites.filter(site => {
+        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
+        if (!completionDate || !isValid(completionDate)) return false;
+        if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
+        if (sDate) return completionDate >= sDate;
+        if (eDate) return completionDate <= eDate;
+        return false;
+      });
+    }
+
+    // Filter by search term
     const lowercasedFilter = searchTerm.toLowerCase();
-    return arsSites.filter(site => {
-      const siteContent = Object.values(site).join(' ').toLowerCase();
-      return siteContent.includes(lowercasedFilter);
-    });
-  }, [arsSites, searchTerm]);
+    if (lowercasedFilter) {
+      sites = sites.filter(site => {
+        const siteContent = Object.values(site).join(' ').toLowerCase();
+        return siteContent.includes(lowercasedFilter);
+      });
+    }
+    
+    return sites;
+  }, [arsSites, searchTerm, startDate, endDate]);
+
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, startDate, endDate]);
 
   const paginatedSites = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -229,6 +258,11 @@ export default function ArsPage() {
     };
     reader.readAsBinaryString(file);
   };
+  
+  const handleCalendarInteraction = (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.calendar-custom-controls-container') || target.closest('[data-radix-select-content]')) e.preventDefault();
+  };
 
   if (entriesLoading) {
     return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading ARS data...</p> </div> );
@@ -240,13 +274,41 @@ export default function ArsPage() {
        <Card className="shadow-lg">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div><CardTitle>Artificial Recharge Schemes (ARS)</CardTitle><CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription></div>
-            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-              {canEdit && ( <> <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isUploading}> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}> <Download className="mr-2 h-4 w-4" /> Download Template </Button> <Link href="/dashboard/ars/entry" passHref><Button className="w-full sm:w-auto"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link> <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0}> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> </> )}
-              <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
+            <div className="flex-1"><CardTitle>Artificial Recharge Schemes (ARS)</CardTitle><CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription></div>
+          </div>
+          <div className="flex flex-col gap-4 pt-4">
+            <div className="flex flex-wrap gap-2 w-full justify-start">
+                {canEdit && ( <> <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isUploading}> <FileUp className="mr-2 h-4 w-4" /> Import Excel </Button> <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadTemplate}> <Download className="mr-2 h-4 w-4" /> Download Template </Button> <Link href="/dashboard/ars/entry" passHref><Button className="w-full sm:w-auto"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link> <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0}> <Trash2 className="mr-2 h-4 w-4" /> Clear All ARS Data </Button> </> )}
+                <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                        <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
+                    </PopoverContent>
+                </Popover>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                        <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
+                    </PopoverContent>
+                </Popover>
+                <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><X className="mr-2 h-4 w-4"/>Clear Dates</Button>
+                <div className="relative flex-grow min-w-[250px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                </div>
             </div>
           </div>
-          <div className="relative pt-4"> <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" /> <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /> </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
@@ -285,7 +347,7 @@ export default function ArsPage() {
                         </div>
                     </TableCell>
                   </TableRow>
-                )) ) : ( <TableRow><TableCell colSpan={18} className="h-24 text-center">No ARS sites found {searchTerm ? "matching your search" : ""}.</TableCell></TableRow> )}
+                )) ) : ( <TableRow><TableCell colSpan={18} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
             </TableBody>
           </Table>
         </CardContent>
