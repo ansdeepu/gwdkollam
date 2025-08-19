@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -62,6 +63,8 @@ export default function ArsPage() {
   
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
+  const [clearAllConfirmationText, setClearAllConfirmationText] = useState("");
+
 
   useEffect(() => {
     if (!entriesLoading) {
@@ -164,6 +167,7 @@ export default function ArsPage() {
     } finally {
         setIsClearingAll(false);
         setIsClearAllDialogOpen(false);
+        setClearAllConfirmationText("");
     }
   };
 
@@ -393,18 +397,40 @@ export default function ArsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+      <AlertDialog open={isClearAllDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) { setIsClearAllDialogOpen(false); setClearAllConfirmationText(""); } else { setIsClearAllDialogOpen(true); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="flex items-center space-x-2">
               <ShieldAlert className="h-6 w-6 text-destructive" />
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             </div>
-            <AlertDialogDescription>This action will permanently delete ALL ARS sites from every file in the database. This action cannot be undone. Please confirm you want to proceed.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This action will permanently delete ALL ARS sites from every file in the database. This action cannot be undone. 
+              <br/><br/>
+              To confirm, please type <strong>DELETE</strong> in the box below.
+            </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-2 space-y-2">
+            <Label htmlFor="delete-confirm-input" className="text-sm font-medium text-muted-foreground">
+              Confirmation Text
+            </Label>
+            <Input
+              id="delete-confirm-input"
+              type="text"
+              value={clearAllConfirmationText}
+              onChange={(e) => setClearAllConfirmationText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="border-destructive focus:ring-destructive"
+              autoComplete="off"
+            />
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isClearingAll} onClick={() => setIsClearAllDialogOpen(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClearAllArs} disabled={isClearingAll} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogCancel disabled={isClearingAll} onClick={() => { setIsClearAllDialogOpen(false); setClearAllConfirmationText(""); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleClearAllArs} 
+              disabled={isClearingAll || clearAllConfirmationText !== 'DELETE'} 
+              className="bg-destructive hover:bg-destructive/90"
+            >
               {isClearingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Yes, Clear All ARS Data"}
             </AlertDialogAction>
           </AlertDialogFooter>
