@@ -1031,7 +1031,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-            <Card className="h-full flex flex-col">
+            <Card className="h-[300px] flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5 text-primary" />
@@ -1085,7 +1085,7 @@ export default function DashboardPage() {
                 Work Status by Service
               </CardTitle>
               <CardDescription>
-                Breakdown of application statuses across different service categories. Click on a number to see detailed reports.
+                Breakdown of application statuses across different service categories (excluding ARS). Click on a number to see detailed reports.
               </CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
