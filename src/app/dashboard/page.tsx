@@ -732,7 +732,7 @@ export default function DashboardPage() {
               dataForDialog.push({
                 fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A', siteNames, sitePurposes,
                 amount: paymentAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                date: pd.dateOfPayment ? format(new Date(pd.dateOfPayment), 'dd/MM/yyyy') : 'N/A',
+                date: pd.dateOfPayment && isValid(new Date(pd.dateOfPayment)) ? format(new Date(pd.dateOfPayment), 'dd/MM/yyyy') : 'N/A',
               });
             }
           }
@@ -761,7 +761,7 @@ export default function DashboardPage() {
               fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A', siteNames, sitePurposes,
               source: 'From Payment Entry',
               amount: Number(pd.revenueHead).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-              date: pd.dateOfPayment ? format(new Date(pd.dateOfPayment), 'dd/MM/yyyy') : 'N/A',
+              date: pd.dateOfPayment && isValid(new Date(pd.dateOfPayment)) ? format(new Date(pd.dateOfPayment), 'dd/MM/yyyy') : 'N/A',
             });
           }
         });
@@ -1035,7 +1035,7 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-6">
            <Card className="shadow-lg flex flex-col h-full">
             <CardHeader>
