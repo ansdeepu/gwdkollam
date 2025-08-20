@@ -985,7 +985,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <div className="lg:col-span-3 space-y-6">
-          <Card className="shadow-lg flex flex-col h-[626px]">
+          <Card className="shadow-lg flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-primary" />
@@ -1019,7 +1019,7 @@ export default function DashboardPage() {
                 )}
               </div>
             </CardHeader>
-            <CardContent className="flex-1 pt-6 overflow-y-auto">
+            <CardContent className="pt-6">
               {dashboardData.fileStatusCountsData.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                   {dashboardData.fileStatusCountsData.map((item) => (
@@ -1855,5 +1855,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
 
