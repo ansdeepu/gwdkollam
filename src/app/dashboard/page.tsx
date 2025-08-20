@@ -286,11 +286,9 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
     
-    // Use filteredFileEntries for cards that should respect user role (e.g., File Status)
     const entriesForFileStatus = filteredFileEntries;
-    
-    // Use allFileEntries for cards that need a complete system view (e.g., ARS, Work Status)
     const entriesForWorkStatus = allFileEntries;
+    const entriesForArsStatus = allFileEntries;
 
     let pendingTasksCount = 0;
     
@@ -324,7 +322,6 @@ export default function DashboardPage() {
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
-    // Process entries for File Status Overview (uses filtered data)
     for (const entry of entriesForFileStatus) {
         let isFilePending = false;
         if (entry.fileStatus && fileStatusesForPending.includes(entry.fileStatus as FileStatus)) isFilePending = true;
@@ -364,44 +361,48 @@ export default function DashboardPage() {
         }
     }
 
-    // Process all entries for Work Status and ARS Status (uses all data)
     for (const entry of entriesForWorkStatus) {
         entry.siteDetails?.forEach(sd => {
-            const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
-            
-            // ARS Status Card Data
-            if (sd.purpose === 'ARS' && sd.workStatus && arsStatusCounts.has(sd.workStatus)) {
-                const current = arsStatusCounts.get(sd.workStatus)!;
-                current.count++;
-                current.data.push(siteData);
-                arsStatusCounts.set(sd.workStatus, current);
-            }
-
-            // Work Status by Service Card Data
-            if (sd.purpose && sd.workStatus) {
-                const purposeIndex = sitePurposeOptions.indexOf(sd.purpose as SitePurpose);
-                if (purposeIndex > -1) {
-                    const service = sd.purpose as SitePurpose;
-                    
-                    const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
-                    if (workStatusRow) {
-                        workStatusRow[service].count++;
-                        workStatusRow[service].data.push(siteData);
-                        workStatusRow.total.count++;
-                        workStatusRow.total.data.push(siteData);
-                    }
-                    const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
-                    if (totalAppsRow) {
-                        totalAppsRow[service].count++;
-                        totalAppsRow[service].data.push(siteData);
-                        totalAppsRow.total.count++;
-                        totalAppsRow.total.data.push(siteData);
+            if (sd.purpose !== 'ARS') {
+                const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
+                if (sd.purpose && sd.workStatus) {
+                    const purposeIndex = sitePurposeOptions.indexOf(sd.purpose as SitePurpose);
+                    if (purposeIndex > -1) {
+                        const service = sd.purpose as SitePurpose;
+                        const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
+                        if (workStatusRow) {
+                            workStatusRow[service].count++;
+                            workStatusRow[service].data.push(siteData);
+                            workStatusRow.total.count++;
+                            workStatusRow.total.data.push(siteData);
+                        }
+                        const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
+                        if (totalAppsRow) {
+                            totalAppsRow[service].count++;
+                            totalAppsRow[service].data.push(siteData);
+                            totalAppsRow.total.count++;
+                            totalAppsRow.total.data.push(siteData);
+                        }
                     }
                 }
             }
         });
     }
 
+    for (const entry of entriesForArsStatus) {
+        entry.siteDetails?.forEach(sd => {
+            if (sd.purpose === 'ARS') {
+                const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
+                if (sd.workStatus && arsStatusCounts.has(sd.workStatus)) {
+                    const current = arsStatusCounts.get(sd.workStatus)!;
+                    current.count++;
+                    current.data.push(siteData);
+                    arsStatusCounts.set(sd.workStatus, current);
+                }
+            }
+        });
+    }
+    
     const today = new Date();
     const todayMonth = today.getMonth();
     const todayDate = today.getDate();
@@ -449,12 +450,11 @@ export default function DashboardPage() {
         fileStatusCountsData,
         arsStatusCountsData,
         totalArsSites,
-        totalFiles: entriesForFileStatus.length, // Total files based on the user's view (File Manager data)
+        totalFiles: entriesForFileStatus.length,
     };
   }, [filteredEntriesLoading, allEntriesLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
   const currentMonthStats = useMemo(() => {
-    // Use the `reportEntries` hook which contains ALL files, not just active ones.
     if (allEntriesLoading || !currentUser) return null;
 
     const startOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth(), 1);
@@ -467,16 +467,13 @@ export default function DashboardPage() {
     const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName: string; }>();
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
 
-    // Use `allFileEntries` here to ensure we can find completed works from the past.
     for (const entry of allFileEntries) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
-        // Supervisor specific filtering remains crucial
         if (isSupervisor && site.supervisorUid !== currentUser.uid) {
-            continue; // Skip sites not assigned to this manager
+            continue; 
         }
 
-        // Check for completed works within the selected month
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = new Date(site.dateOfCompletion);
           if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
@@ -487,9 +484,7 @@ export default function DashboardPage() {
           }
         }
         
-        // Check for ongoing works
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
-            // No need for a sub-check for supervisor, the outer loop already handles it
             ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
       }
@@ -572,7 +567,6 @@ export default function DashboardPage() {
 
 
   const handleFileStatusCardClick = (status: string) => {
-    // This function should use the same filtered data as the card itself
     const dataForDialog = filteredFileEntries
       .filter(entry => entry.fileStatus === status)
       .map((entry, index) => {
@@ -991,7 +985,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <div className="lg:col-span-3 space-y-6">
-          <Card className="shadow-lg flex flex-col">
+          <Card className="shadow-lg flex flex-col h-[626px]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-primary" />
@@ -1073,7 +1067,7 @@ export default function DashboardPage() {
           </Card>
         </div>
         <div className="lg:col-span-2">
-          <Card className="shadow-lg flex flex-col">
+          <Card className="shadow-lg flex flex-col h-[626px]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
@@ -1108,7 +1102,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[450px]">
+              <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[350px]">
                 <h4 className="text-sm font-semibold text-orange-600 mb-2 flex items-center gap-2 shrink-0 p-2 bg-orange-100 rounded-t-md">
                   <Megaphone className="h-4 w-4" />
                   📢 Important Updates ({dashboardData.workAlerts.length})
@@ -1848,4 +1842,3 @@ export default function DashboardPage() {
   );
 }
 
-    
