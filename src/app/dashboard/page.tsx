@@ -286,7 +286,9 @@ export default function DashboardPage() {
     if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
     
     const entriesForFileStatus = filteredFileEntries;
-    const entriesForWorkStatus = filteredFileEntries; 
+    const entriesForWorkStatus = filteredFileEntries.filter(entry => 
+        !entry.siteDetails?.some(site => site.purpose === 'ARS')
+    );
     
     let pendingTasksCount = 0;
     
@@ -296,7 +298,7 @@ export default function DashboardPage() {
     
     const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
         const serviceCounts: { [service: string]: { count: number, data: any[] } } = {};
-        [...sitePurposeOptions].forEach(service => {
+        [...sitePurposeOptions].filter(p => p !== 'ARS').forEach(service => {
             serviceCounts[service] = { count: 0, data: [] };
         });
         return { statusCategory, ...serviceCounts, total: { count: 0, data: [] } };
@@ -1059,7 +1061,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col marquee-v-container">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <div className={cn("flex-1 no-scrollbar h-[200px]", shouldAnimateUpdates && "marquee-v-container")}>
+                        <div className={cn("flex-1 no-scrollbar h-[150px]", shouldAnimateUpdates && "marquee-v-container")}>
                             {dashboardData.workAlerts.length > 0 ? (
                                 <div className={cn(shouldAnimateUpdates && "marquee-v-content")}>
                                     {dashboardData.workAlerts.map((alert, index) => (
