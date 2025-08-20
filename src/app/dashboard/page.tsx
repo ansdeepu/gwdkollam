@@ -1033,7 +1033,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </CardContent>
-          </Card>
+           </Card>
         </div>
         
         <div className="lg:col-span-2 shadow-lg flex flex-col">
@@ -1124,7 +1124,7 @@ export default function DashboardPage() {
                         {sitePurposeOptions.map(service => (
                           <TableCell key={service} className="text-center">
                             {(row as any)[service].count > 0 ? (
-                                <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
+                                <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
                             ) : (
                                 0
                             )}
@@ -1370,7 +1370,6 @@ export default function DashboardPage() {
           </CardContent>
       </Card>
         
-
         { (currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
             <Card>
                 <CardHeader>
@@ -1420,7 +1419,7 @@ export default function DashboardPage() {
                                                 <TableRow key={purpose}>
                                                     <TableCell className="font-medium">{purpose}</TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)}>
+                                                        <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose as string)}>
                                                             {count}
                                                         </Button>
                                                     </TableCell>
