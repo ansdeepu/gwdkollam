@@ -379,7 +379,6 @@ export default function DashboardPage() {
                         const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
                         if (totalAppsRow) {
                             totalAppsRow[service].count++;
-                            totalAppsRow[service].data.push(siteData);
                             totalAppsRow.total.count++;
                             totalAppsRow.total.data.push(siteData);
                         }
@@ -985,7 +984,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <div className="lg:col-span-3 space-y-6">
-          <Card className="shadow-lg flex flex-col">
+           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-primary" />
@@ -1015,600 +1014,444 @@ export default function DashboardPage() {
                     <AgeStatCard title="> 5 Years" count={dashboardData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Calculating age data...</p>
+                  <p>Calculating age data...</p>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
-              {dashboardData.fileStatusCountsData.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {dashboardData.fileStatusCountsData.map((item) => (
-                    <Card
-                      key={item.status}
-                      className={cn(
-                        'shadow-sm transition-all',
-                        item.count > 0
-                          ? 'cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30'
-                          : 'cursor-not-allowed opacity-75'
-                      )}
-                      onClick={() =>
-                        item.count > 0 && handleFileStatusCardClick(item.status)
-                      }
-                      role="button"
-                      tabIndex={item.count > 0 ? 0 : -1}
-                      aria-disabled={item.count === 0}
-                      aria-label={`View details for status: ${item.status}`}
-                      onKeyDown={(e) => {
-                        if (
-                          item.count > 0 &&
-                          (e.key === 'Enter' || e.key === ' ')
-                        )
-                          handleFileStatusCardClick(item.status);
-                      }}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <p
-                            className="text-sm font-medium text-foreground"
-                            title={item.status}
-                          >
-                            {item.status}
-                          </p>
-                          <Badge
-                            variant={item.count > 0 ? 'default' : 'secondary'}
-                            className={cn(
-                              'text-sm font-semibold',
-                              item.count === 0 &&
-                                'bg-muted text-muted-foreground'
-                            )}
-                          >
-                            {item.count}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-10 h-full">
-                  <ListX className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No file status data available.
-                  </p>
-                </div>
-              )}
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                {dashboardData.fileStatusCountsData.map((item) => (
+                  <button
+                    key={item.status}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-secondary/30 text-left hover:bg-secondary/50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    onClick={() => handleFileStatusCardClick(item.status)}
+                    disabled={item.count === 0}
+                  >
+                    <span className="text-sm font-medium text-foreground">{item.status}</span>
+                    <span className="text-lg font-bold text-primary">{item.count}</span>
+                  </button>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
-        <div className="lg:col-span-2">
-          <Card className="shadow-lg flex flex-col h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" />
-                Notice Board
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 overflow-hidden p-3 pt-0 flex-1">
-              <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[150px]">
-                <h4 className="text-sm font-semibold text-accent-foreground mb-2 flex items-center gap-2 shrink-0 p-2 bg-accent rounded-t-md text-white">
-                  <Cake className="h-4 w-4" />
-                  Today's Birthdays ({dashboardData.birthdayWishes.length})
-                </h4>
-                <div className="flex-1 marquee-v-container no-scrollbar bg-white p-2 rounded-b-md">
-                  {dashboardData.birthdayWishes.length > 0 ? (
-                    <div className={cn("space-y-4 py-2", shouldAnimateBirthdays && "marquee-v-content")}>
-                      {[
-                        ...dashboardData.birthdayWishes,
-                        ...(shouldAnimateBirthdays ? dashboardData.birthdayWishes : []),
-                      ].map((staff, index) => (
-                        <div key={index} className="text-center">
-                          <p className="text-sm text-accent/90 font-medium">Wishing you a Happy Birthday!</p>
-                          <p className="font-bold text-lg text-primary">{staff.name}</p>
-                          <p className="text-xs text-muted-foreground">{staff.designation}</p>
+        
+        <div className="lg:col-span-2 shadow-lg flex flex-col">
+            <Card className="h-full">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                    <Megaphone className="h-5 w-5 text-primary" />
+                    Notice Board
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col gap-4 pt-0">
+                    <div className="flex-1 border rounded-lg p-3 bg-background">
+                        <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
+                        <div className="relative h-12 overflow-hidden">
+                            {dashboardData.birthdayWishes.length > 0 ? (
+                                <div className={cn("absolute inset-0 flex flex-col", shouldAnimateBirthdays && "marquee-v-container")}>
+                                    <div className={cn(shouldAnimateBirthdays && "marquee-v-content")}>
+                                        {[...dashboardData.birthdayWishes, ...dashboardData.birthdayWishes].map((staff, index) => (
+                                            <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 h-12 flex flex-col justify-center">
+                                                <p className="font-semibold text-pink-700 -mb-1">Happy Birthday!</p>
+                                                <p className="font-bold text-base text-pink-800 ">{staff.name}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No birthdays today.</p>
+                            )}
                         </div>
-                      ))}
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-sm text-muted-foreground italic">No birthdays today.</p>
+                    <div className="flex-1 border rounded-lg p-3 bg-background">
+                        <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
+                        <ScrollArea className="h-12 pr-3">
+                            {dashboardData.workAlerts.length > 0 ? (
+                                <div className="space-y-2">
+                                    {dashboardData.workAlerts.map((alert, index) => (
+                                        <div key={index} className="p-2 rounded-md bg-amber-500/10">
+                                            <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
+                                            <p className="text-xs text-amber-600">{alert.details}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No important updates.</p>
+                            )}
+                        </ScrollArea>
                     </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 flex-1 min-h-[350px]">
-                <h4 className="text-sm font-semibold text-orange-600 mb-2 flex items-center gap-2 shrink-0 p-2 bg-orange-100 rounded-t-md">
-                  <Megaphone className="h-4 w-4" />
-                  📢 Important Updates ({dashboardData.workAlerts.length})
-                </h4>
-                <div className="flex-1 marquee-v-container no-scrollbar bg-white p-2 rounded-b-md">
-                  {dashboardData.workAlerts.length > 0 ? (
-                    <div className="marquee-v-content space-y-3">
-                      {[...dashboardData.workAlerts, ...dashboardData.workAlerts].map((alert, index) => (
-                        <div key={index} className="border-b border-border/50 pb-3 last:border-b-0">
-                          <p className="font-semibold text-sm text-orange-500">{alert.title}</p>
-                          <p className="text-sm text-muted-foreground">{alert.details}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-sm text-muted-foreground italic">No important updates.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+            </Card>
         </div>
       </div>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-primary" />
-            Work Status by Service
-          </CardTitle>
-          <CardDescription>
-            Breakdown of application statuses across different service categories. Click on a number to see detailed reports.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {dashboardData.workStatusByServiceData.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px] font-semibold px-2 py-2">Work Category</TableHead>
-                  {sitePurposeOptions.map(service => (
-                    <TableHead key={service} className="text-center px-2 py-2 max-w-20 whitespace-normal">
-                      {
-                        service === "Pumping Scheme" ? (<>Pumping<br />Scheme</>) :
-                        service === "BW Dev" ? (<>BW<br />Dev</>) :
-                        service === "TW Dev" ? (<>TW<br />Dev</>) :
-                        service === "FPW Dev" ? (<>FPW<br />Dev</>) :
-                        service === "MWSS Ext" ? (<>MWSS<br />Ext</>) :
-                        service === "MWSS Pump Reno" ? (<>MWSS<br />Pump<br />Reno</>) :
-                        (service)
-                      }
-                    </TableHead>
-                  ))}
-                  <TableHead className="text-center font-semibold px-2 py-2 max-w-20 whitespace-normal">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dashboardData.workStatusByServiceData.map((row) => (
-                  <TableRow key={row.statusCategory}>
-                    <TableCell 
-                      className={cn(
-                        "px-2 py-2", 
-                        row.statusCategory === "Total No. of Applications" ? "font-bold text-accent" : "font-medium"
-                      )}
-                    >
-                      {row.statusCategory}
-                    </TableCell>
-                    {sitePurposeOptions.map(service => (
-                      <TableCell 
-                        key={`${row.statusCategory}-${service}`} 
-                        className="text-center px-2 py-2"
-                      >
-                        {(row as any)[service].count > 0 ? (
-                          <Button 
-                            variant="link" 
-                            className={cn(
-                              "p-0 h-auto hover:underline font-semibold",
-                              row.statusCategory === "Total No. of Applications" 
-                                ? "text-accent font-bold" 
-                                : "text-primary"
-                            )}
-                            onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}
-                            aria-label={`View details for ${row.statusCategory} under ${service}`}
-                          >
-                            {(row as any)[service].count}
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground font-normal">0</span>
-                        )}
-                      </TableCell>
-                    ))}
-                    <TableCell className="text-center px-2 py-2">
-                       {(row as any)['total'].count > 0 ? (
-                        <Button
-                          variant="link"
-                          className={cn(
-                            "p-0 h-auto hover:underline font-bold",
-                             row.statusCategory === "Total No. of Applications" 
-                               ? "text-accent" 
-                               : "text-primary",
-                          )}
-                           onClick={() => handleWorkStatusCellClick((row as any).total.data, `Total for ${row.statusCategory}`)}
-                          aria-label={`View details for total of ${row.statusCategory}`}
-                        >
-                            {(row as any)['total'].count}
-                        </Button>
-                      ) : (
-                        <span className="text-muted-foreground font-medium">0</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              {dashboardData.workStatusByServiceData.length === 0 && (
-                 <caption className="py-4 text-muted-foreground">No work status data available for services.</caption>
-              )}
-            </Table>
-          ) : (
-             <div className="flex flex-col items-center justify-center py-10">
-              <ListX className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No work status data available for services.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-lg">
+      <Card>
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                  <Waves className="h-5 w-5 text-primary" />
-                  ARS Status Overview
+                <Activity className="h-5 w-5 text-primary" />
+                Work Status by Service
               </CardTitle>
               <CardDescription>
-                  Current count of ARS sites by their work status.
+                Breakdown of application statuses across different service categories. Click on a number to see detailed reports.
               </CardDescription>
-                <div className="mt-2">
-                  <div className="inline-flex items-baseline gap-2 p-3 rounded-lg shadow-sm bg-primary/10 border border-primary/20">
-                  <h4 className="text-sm font-medium text-primary">Total ARS Sites</h4>
-                  <p className="text-2xl font-bold text-primary">{dashboardData.totalArsSites}</p>
-                  </div>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            {dashboardData.workStatusByServiceData && dashboardData.workStatusByServiceData.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-semibold whitespace-nowrap">Work Category</TableHead>
+                      {sitePurposeOptions.map(service => (
+                          <TableHead key={service} className="text-center font-semibold whitespace-nowrap">
+                            { service === 'Pumping Scheme' ? 'Pumping<br/>Scheme' :
+                              service === 'BW Dev' ? 'BW<br/>Dev' :
+                              service === 'TW Dev' ? 'TW<br/>Dev' :
+                              service === 'FPW Dev' ? 'FPW<br/>Dev' :
+                              service === 'MWSS Ext' ? 'MWSS<br/>Ext' :
+                              service === 'MWSS Pump Reno' ? 'MWSS<br/>Pump<br/>Reno' :
+                              service
+                            }
+                          </TableHead>
+                      ))}
+                      <TableHead className="text-center font-semibold">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dashboardData.workStatusByServiceData.map((row) => (
+                      <TableRow key={row.statusCategory}>
+                        <TableCell className="font-medium whitespace-nowrap">{row.statusCategory}</TableCell>
+                        {sitePurposeOptions.map(service => (
+                          <TableCell key={service} className="text-center">
+                            {(row as any)[service].count > 0 ? (
+                                <Button variant="link" className="p-0 h-auto" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
+                            ) : (
+                                0
+                            )}
+                          </TableCell>
+                        ))}
+                        <TableCell className="text-center font-bold">
+                           {(row as any)['total'].count > 0 ? (
+                             <Button variant="link" className="p-0 h-auto font-bold" onClick={() => handleWorkStatusCellClick((row as any)['total'].data, `${row.statusCategory} - Total`)}>{(row as any)['total'].count}</Button>
+                          ) : (
+                            0
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+            ) : (
+                <p className="text-center text-muted-foreground py-4">No work status data available for services.</p>
+            )}
+          </CardContent>
+      </Card>
+      
+      <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                  <CardTitle className="flex items-center gap-2">
+                      <Waves className="h-5 w-5 text-primary" />
+                      ARS Status Overview
+                  </CardTitle>
+                  <CardDescription>
+                      Current count of ARS sites by their work status.
+                  </CardDescription>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total ARS Sites</p>
+                <p className="text-3xl font-bold text-primary">{dashboardData.totalArsSites}</p>
               </div>
           </CardHeader>
           <CardContent>
               {dashboardData.arsStatusCountsData.length > 0 ? (
-                  <ScrollArea className="h-[150px] no-scrollbar">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                          {dashboardData.arsStatusCountsData.map((item) => (
-                              <Card 
-                                  key={item.status} 
-                                  className="shadow-sm transition-all cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30"
-                                  onClick={() => handleWorkStatusCellClick(item.data, `ARS Sites - ${item.status}`)}
-                              >
-                                  <CardContent className="p-3">
-                                      <div className="flex items-center justify-between">
-                                          <p className="text-sm font-medium text-foreground" title={item.status}>{item.status}</p>
-                                          <Badge variant="default" className="text-sm font-semibold">{item.count}</Badge>
-                                      </div>
-                                  </CardContent>
-                              </Card>
-                          ))}
-                      </div>
-                  </ScrollArea>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {dashboardData.arsStatusCountsData.map((item) => (
+                          <button
+                              key={item.status}
+                              className="flex items-center justify-between p-3 rounded-lg border bg-secondary/30 text-left hover:bg-secondary/50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                              onClick={() => handleWorkStatusCellClick(item.data, `ARS - ${item.status}`)}
+                              disabled={item.count === 0}
+                          >
+                              <span className="text-sm font-medium text-foreground">{item.status}</span>
+                              <span className="text-lg font-bold text-primary">{item.count}</span>
+                          </button>
+                      ))}
+                  </div>
               ) : (
-                  <div className="flex flex-col items-center justify-center py-10 h-full">
-                      <ListX className="h-12 w-12 text-muted-foreground mb-4" />
+                  <div className="py-10 text-center">
                       <p className="text-muted-foreground">No ARS sites found.</p>
                   </div>
               )}
           </CardContent>
       </Card>
-      
-      <Card className="shadow-lg"> 
+
+      <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Landmark className="h-5 w-5 text-primary" />
-              Finance Overview
-            </CardTitle>
-            <CardDescription>
-              Summary of credits, withdrawals and balance. Defaults to all-time data. Click amounts for details.
-            </CardDescription>
-            <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-3">
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                 Finance Overview
+              </CardTitle>
+              <CardDescription>
+                Summary of credits, withdrawals and balance. Defaults to all-time data. Click amounts for details.
+              </CardDescription>
+            <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2 pt-4 border-t mt-4">
               <Popover>
-                  <PopoverTrigger asChild>
-                      <Button variant={"outline"} className={cn("w-full sm:w-auto justify-start text-left font-normal", !financeStartDate && "text-muted-foreground")}>
-                      <CalendarIconLucide className="mr-2 h-4 w-4" />{financeStartDate ? format(financeStartDate, "dd/MM/yyyy") : <span>From Date</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                      <Calendar 
-                        mode="single" 
-                        selected={financeStartDate} 
-                        onSelect={setFinanceStartDate} 
-                        disabled={(date) => (financeEndDate ? date > financeEndDate : false) || date > new Date()} 
-                        initialFocus
-                      />
-                  </PopoverContent>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className={cn("w-full sm:w-[150px] justify-start text-left font-normal", !financeStartDate && "text-muted-foreground")}>
+                    <CalendarIconLucide className="mr-2 h-4 w-4" />{financeStartDate ? format(financeStartDate, "dd/MM/yyyy") : "From Date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <Calendar mode="single" selected={financeStartDate} onSelect={setFinanceStartDate} disabled={(date) => (financeEndDate ? date > financeEndDate : false) || date > new Date()} initialFocus />
+                </PopoverContent>
               </Popover>
               <Popover>
-                  <PopoverTrigger asChild>
-                      <Button variant={"outline"} className={cn("w-full sm:w-auto justify-start text-left font-normal", !financeEndDate && "text-muted-foreground")}>
-                      <CalendarIconLucide className="mr-2 h-4 w-4" />{financeEndDate ? format(financeEndDate, "dd/MM/yyyy") : <span>To Date</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                      <Calendar 
-                        mode="single" 
-                        selected={financeEndDate} 
-                        onSelect={setFinanceEndDate} 
-                        disabled={(date) => (financeStartDate ? date < financeStartDate : false) || date > new Date()} 
-                        initialFocus
-                      />
-                  </PopoverContent>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className={cn("w-full sm:w-[150px] justify-start text-left font-normal", !financeEndDate && "text-muted-foreground")}>
+                    <CalendarIconLucide className="mr-2 h-4 w-4" />{financeEndDate ? format(financeEndDate, "dd/MM/yyyy") : "To Date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <Calendar mode="single" selected={financeEndDate} onSelect={setFinanceEndDate} disabled={(date) => (financeStartDate ? date < financeStartDate : false) || date > new Date()} initialFocus />
+                </PopoverContent>
               </Popover>
-              <Button onClick={calculateFinanceData} disabled={financeLoading || !financeStartDate || !financeEndDate} className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-                  {financeLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                  Apply Dates
-              </Button>
-              <Button onClick={handleClearFinanceDates} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Clear Dates
-              </Button>
+               <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
+              <div className="flex-grow text-sm text-muted-foreground text-center sm:text-right">
+                {financeStartDate && financeEndDate ? (
+                  <span>Displaying data for period: <strong>{format(financeStartDate, "dd/MM/yyyy")} - {format(financeEndDate, "dd/MM/yyyy")}</strong></span>
+                ) : (
+                  <span>Displaying all-time financial data.</span>
+                )}
+              </div>
             </div>
-             {(financeStartDate && financeEndDate) ? (
-                <p className="text-xs text-muted-foreground pt-2">
-                    Displaying data for period: {format(financeStartDate, "dd/MM/yyyy")} - {format(financeEndDate, "dd/MM/yyyy")}
-                </p>
-            ) : (
-                 <p className="text-xs text-muted-foreground pt-2">Displaying all-time financial data.</p>
-            )}
           </CardHeader>
           <CardContent>
             {financeLoading ? (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+                <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : transformedFinanceMetrics ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-semibold text-left">Account</TableHead>
-                    <TableHead className="text-right font-semibold">
-                       <div className="flex items-center justify-end gap-1 flex-wrap">
-                        <TrendingUp className="h-4 w-4 text-green-700" />
-                        <span>Credit (₹)</span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right font-semibold">
-                      <div className="flex items-center justify-end gap-1 flex-wrap">
-                        <TrendingDown className="h-4 w-4 text-red-700" />
-                        <span>Withdrawal (₹)</span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right font-semibold">
-                      <div className="flex items-center justify-end gap-1 flex-wrap">
-                        <DollarSign className="h-4 w-4 text-blue-700" />
-                        <span>Balance (₹)</span>
-                      </div>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
+              <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-semibold">Account</TableHead>
+                        <TableHead className="text-right font-semibold">
+                          <span className="text-green-600">Credit (₹)</span>
+                        </TableHead>
+                        <TableHead className="text-right font-semibold">
+                          <span className="text-red-600">Withdrawal (₹)</span>
+                        </TableHead>
+                        <TableHead className="text-right font-semibold">
+                          <span className="text-blue-600">Balance (₹)</span>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
                         <TableCell className="font-medium">SBI</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto font-medium text-green-700 hover:underline" onClick={() => handleAmountClick('SBI', 'credit')}>
-                            {transformedFinanceMetrics.sbiCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </Button>
+                          <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleAmountClick('SBI', 'credit')} disabled={transformedFinanceMetrics.sbiCredit === 0}>{transformedFinanceMetrics.sbiCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
                         </TableCell>
                         <TableCell className="text-right">
-                           <Button variant="link" className="p-0 h-auto font-medium text-red-700 hover:underline" onClick={() => handleAmountClick('SBI', 'debit')}>
-                            {transformedFinanceMetrics.sbiDebit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </Button>
+                           <Button variant="link" className="p-0 h-auto text-red-600" onClick={() => handleAmountClick('SBI', 'debit')} disabled={transformedFinanceMetrics.sbiDebit === 0}>{transformedFinanceMetrics.sbiDebit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
                         </TableCell>
-                         <TableCell className={cn("text-right font-medium", transformedFinanceMetrics.sbiBalance >= 0 ? "text-blue-700" : "text-destructive")}>
-                            {transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
+                        <TableCell className={cn("text-right font-bold", transformedFinanceMetrics.sbiBalance < 0 ? 'text-red-600' : 'text-blue-600')}>{transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      </TableRow>
                     </TableRow>
-                    <TableRow>
+                      <TableRow>
                         <TableCell className="font-medium">STSB</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto font-medium text-green-700 hover:underline" onClick={() => handleAmountClick('STSB', 'credit')}>
-                            {transformedFinanceMetrics.stsbCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                           </Button>
+                          <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleAmountClick('STSB', 'credit')} disabled={transformedFinanceMetrics.stsbCredit === 0}>{transformedFinanceMetrics.stsbCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto font-medium text-red-700 hover:underline" onClick={() => handleAmountClick('STSB', 'debit')}>
-                            {transformedFinanceMetrics.stsbDebit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </Button>
+                          <Button variant="link" className="p-0 h-auto text-red-600" onClick={() => handleAmountClick('STSB', 'debit')} disabled={transformedFinanceMetrics.stsbDebit === 0}>{transformedFinanceMetrics.stsbDebit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
                         </TableCell>
-                         <TableCell className={cn("text-right font-medium", transformedFinanceMetrics.stsbBalance >= 0 ? "text-blue-700" : "text-destructive")}>
-                            {transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
+                        <TableCell className={cn("text-right font-bold", transformedFinanceMetrics.stsbBalance < 0 ? 'text-red-600' : 'text-blue-600')}>{transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      </TableRow>
+                      <TableRow>
                         <TableCell className="font-medium">Revenue Head</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto font-medium text-green-700 hover:underline" onClick={() => handleAmountClick('RevenueHead', 'credit')}>
-                            {transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </Button>
+                          <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleAmountClick('RevenueHead', 'credit')} disabled={transformedFinanceMetrics.revenueHeadCredit === 0}>{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
                         </TableCell>
-                        <TableCell className="text-right font-medium text-muted-foreground">-</TableCell>
-                        <TableCell className={cn("text-right font-medium", transformedFinanceMetrics.revenueHeadBalance >= 0 ? "text-blue-700" : "text-destructive")}>
-                            {transformedFinanceMetrics.revenueHeadBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-muted-foreground text-center py-4">No financial data available.</p>
-            )}
-          </CardContent>
-           <CardFooter className="text-xs text-muted-foreground pt-3 border-t">
-               Note: Withdrawals for SBI/STSB are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.
-          </CardFooter>
-        </Card>
-      
-      <div className="space-y-6 mt-6">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <div className="flex-1">
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarCheck className="h-5 w-5 text-primary" />
-                  Work Progress for {format(workReportMonth, 'MMMM yyyy')}
-                </CardTitle>
-                <CardDescription>
-                  Summary of completed and ongoing work. Select a month to view its report.
-                </CardDescription>
-              </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className="w-full sm:w-auto">
-                    <CalendarIconLucide className="mr-2 h-4 w-4" />
-                    {format(workReportMonth, 'MMMM yyyy')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                  <Calendar
-                    mode="single"
-                    month={workReportMonth}
-                    onMonthChange={setWorkReportMonth}
-                    initialFocus
-                    captionLayout="dropdown-buttons"
-                    fromYear={2020}
-                    toYear={new Date().getFullYear()}
-                    className="p-0 [&_td]:hidden [&_th]:hidden [&_.rdp-day_selected]:bg-transparent [&_.rdp-day_selected]:text-foreground"
-                   />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-semibold text-foreground">Completed in {format(workReportMonth, 'MMMM')}</h4>
-                  <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('completed')} disabled={!currentMonthStats || currentMonthStats.completedSummary.totalCount === 0}>
-                    View All ({currentMonthStats?.completedSummary.totalCount ?? 0})
-                  </Button>
+                        <TableCell className="text-right">-</TableCell>
+                        <TableCell className={cn("text-right font-bold", transformedFinanceMetrics.revenueHeadBalance < 0 ? 'text-red-600' : 'text-blue-600')}>{transformedFinanceMetrics.revenueHeadBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
-                <div className="p-2 bg-background rounded-md shadow-inner">
-                  {currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
-                    <div className="space-y-2">
-                      {sitePurposeOptions
+            ) : (
+              <p>No financial data available.</p>
+            )}
+           <CardFooter className="text-xs text-muted-foreground pt-4">Note: Withdrawals for SBI/STSB are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.</CardFooter>
+      </Card>
+      
+      <Card>
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarCheck className="h-5 w-5 text-primary" />
+                 Work Progress for {format(workReportMonth, 'MMMM yyyy')}
+              </CardTitle>
+              <CardDescription>
+                Summary of completed and ongoing work. Select a month to view its report.
+              </CardDescription>
+             <div className="pt-4 border-t mt-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={"outline"} className="w-[200px] justify-start text-left font-normal">
+                      <CalendarIconLucide className="mr-2 h-4 w-4" />{format(workReportMonth, 'MMMM yyyy')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={workReportMonth}
+                        onSelect={(date) => date && setWorkReportMonth(date)}
+                        initialFocus
+                        captionLayout="dropdown-buttons"
+                        fromYear={2020}
+                        toYear={new Date().getFullYear()}
+                    />
+                  </PopoverContent>
+                </Popover>
+             </div>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-green-600"/>
+                      Completed in {format(workReportMonth, 'MMMM')}
+                    </h3>
+                    <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('completed')} disabled={(currentMonthStats?.completedSummary.totalCount ?? 0) === 0}>View All ({currentMonthStats?.completedSummary.totalCount ?? 0})</Button>
+                  </div>
+                  <div className="space-y-2">
+                    { currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
+                       <div className="grid grid-cols-2 gap-2">
+                         {sitePurposeOptions
                         .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose] || 0) > 0)
                         .map((purpose) => (
-                          <div key={purpose} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{purpose}</span>
-                            <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
-                              {currentMonthStats.completedSummary.byPurpose[purpose] || 0}
-                            </Button>
-                          </div>
+                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
+                            <span className="font-medium">{purpose}</span>
+                            <span className="font-bold text-green-700">{currentMonthStats.completedSummary.byPurpose[purpose] || 0}</span>
+                          </button>
                         ))}
-                    </div>
-                  ) : (
-                    <div className="flex h-[150px] items-center justify-center">
-                      <p className="text-muted-foreground text-center text-sm">No works completed this month.</p>
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic text-center py-4">No works completed this month.</p>
+                    )}
+                  </div>
               </div>
 
-              <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-semibold text-foreground">Total Ongoing Works</h4>
-                  <Button variant="outline" size="sm" onClick={() => handleMonthStatClick('ongoing')} disabled={!currentMonthStats || currentMonthStats.ongoingSummary.totalCount === 0}>
-                    View All ({currentMonthStats?.ongoingSummary.totalCount ?? 0})
-                  </Button>
-                </div>
-                <div className="p-2 bg-background rounded-md shadow-inner">
-                  {currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
-                    <div className="space-y-2">
-                       {sitePurposeOptions
+              <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <Hourglass className="h-5 w-5 text-orange-600"/>
+                      Total Ongoing Works
+                    </h3>
+                    <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('ongoing')} disabled={(currentMonthStats?.ongoingSummary.totalCount ?? 0) === 0}>View All ({currentMonthStats?.ongoingSummary.totalCount ?? 0})</Button>
+                  </div>
+                  <div className="space-y-2">
+                    { currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
+                       <div className="grid grid-cols-2 gap-2">
+                         {sitePurposeOptions
                         .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose] || 0) > 0)
                         .map((purpose) => (
-                          <div key={purpose} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{purpose}</span>
-                            <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
-                              {currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}
-                            </Button>
-                          </div>
+                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
+                            <span className="font-medium">{purpose}</span>
+                            <span className="font-bold text-orange-700">{currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}</span>
+                          </button>
                         ))}
-                    </div>
-                  ) : (
-                    <div className="flex h-[150px] items-center justify-center">
-                       <p className="text-muted-foreground text-center text-sm">No ongoing works found.</p>
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic text-center py-4">No ongoing works found.</p>
+                    )}
+                  </div>
               </div>
-            </div>
           </CardContent>
-        </Card>
+      </Card>
+        
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
-            <Card className="shadow-lg">
+        { (currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5 text-primary" />
+                        Supervisor's Ongoing Work
+                    </CardTitle>
+                    <CardDescription>
+                        Select a Supervisor to view their assigned ongoing projects by category.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-3 gap-6">
+                    <div className="md:col-span-1">
+                        <Select onValueChange={setSelectedSupervisorId} value={selectedSupervisorId}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a Supervisor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {supervisorList.length > 0 ? (
+                                    supervisorList.map(supervisor => (
+                                        <SelectItem key={supervisor.uid} value={supervisor.uid}>
+                                            {supervisor.name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <p className="p-2 text-sm text-muted-foreground">No Supervisors available</p>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="md:col-span-2">
+                        { selectedSupervisorId ? (
+                            supervisorOngoingWorks.totalCount > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Category</TableHead>
+                                            <TableHead className="text-right">Count</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {sitePurposeOptions
+                                        .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose] || 0) > 0)
+                                        .map((purpose) => {
+                                            const count = supervisorOngoingWorks.byPurpose[purpose] || 0;
+                                            return (
+                                                <TableRow key={purpose}>
+                                                    <TableCell className="font-medium">{purpose}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)}>
+                                                            {count}
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <p className="text-muted-foreground italic mt-2">No ongoing works found for this supervisor.</p>
+                            )
+                        ) : (
+                            <p className="text-muted-foreground italic mt-2">Please select a Supervisor to see their work.</p>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        )}
+
+        { (currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Supervisor's Ongoing Work
-                </CardTitle>
-                <CardDescription>
-                  Select a Supervisor to view their assigned ongoing projects by category.
-                </CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    User Activity
+                  </CardTitle>
+                  <CardDescription>
+                   Showing users by their most recent activity (top 5).
+                  </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select value={selectedSupervisorId} onValueChange={setSelectedSupervisorId}>
-                  <SelectTrigger className="w-full sm:w-[300px]">
-                      <SelectValue placeholder="Select a Supervisor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {supervisorList.length > 0 ? (
-                          supervisorList.map(supervisor => (
-                              <SelectItem key={supervisor.uid} value={supervisor.uid}>
-                                  {supervisor.name}
-                              </SelectItem>
-                          ))
-                      ) : (
-                          <SelectItem value="no-supervisors" disabled>No Supervisors available</SelectItem>
-                      )}
-                  </SelectContent>
-                </Select>
-                <ScrollArea className="h-[250px] pr-4 bg-background rounded-md p-2 shadow-inner border">
-                  {selectedSupervisorId ? (
-                     <Table>
-                      <TableHeader>
-                          <TableRow>
-                          <TableHead>Category</TableHead>
-                          <TableHead className="text-right">Count</TableHead>
-                          </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                          {sitePurposeOptions
-                            .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose] || 0) > 0)
-                            .map((purpose) => {
-                              const count = supervisorOngoingWorks.byPurpose[purpose] || 0;
-                              return (
-                                  <TableRow key={purpose}>
-                                      <TableCell className="font-medium">{purpose}</TableCell>
-                                      <TableCell className="text-right">
-                                          <Button variant="link" className="p-0 h-auto" onClick={() => handleSupervisorWorkClick(purpose)} disabled={count === 0}>
-                                              {count}
-                                          </Button>
-                                      </TableCell>
-                                  </TableRow>
-                              );
-                          })}
-                      </TableBody>
-                      </Table>
-                  ) : (
-                      <div className="flex h-full items-center justify-center">
-                          <p className="text-muted-foreground text-center text-sm">Please select a Supervisor to see their work.</p>
-                      </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
-
-          {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  User Activity
-                </CardTitle>
-                <CardDescription>Showing users by their most recent activity (top 5).</CardDescription>
-              </CardHeader>
-              <CardContent>
                 {activeUsers.length > 0 ? (
                   <ul className="space-y-3">
                     {activeUsers.map((usr) => {
@@ -1616,50 +1459,35 @@ export default function DashboardPage() {
                       const photoUrl = staffInfo?.photoUrl;
                       const avatarColorClass = getColorClass(usr.name || usr.email || 'user');
                       return (
-                      <li key={usr.uid} className="flex items-center space-x-3 p-2 hover:bg-secondary/50 rounded-md">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage
-                            src={photoUrl || undefined}
-                            alt={usr.name || 'User'}
-                            data-ai-hint="person user"
-                          />
-                          <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(usr.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p
-                              className="text-sm font-medium text-foreground truncate"
-                              title={usr.name || usr.email?.split('@')[0]}
-                            >
-                              {usr.name || usr.email?.split('@')[0]}
-                            </p>
-                            <Badge
-                              variant={usr.role === 'editor' ? 'default' : 'secondary'}
-                              className="text-xs whitespace-nowrap ml-2"
-                            >
-                              {usr.role === 'supervisor' ? 'Supervisor' : (usr.role.charAt(0).toUpperCase() + usr.role.slice(1))}
-                            </Badge>
+                      <li key={usr.uid} className="flex items-center gap-4 p-2 rounded-lg hover:bg-secondary/50">
+                          <Avatar className="h-10 w-10">
+                              <AvatarImage src={photoUrl || undefined} alt={usr.name || 'user'} />
+                              <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(usr.name)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                              <div className="flex items-baseline gap-2">
+                                <p className="font-semibold text-foreground">{usr.name || usr.email?.split('@')[0]}</p>
+                                <Badge variant="outline" className="text-xs">{(usr.role.charAt(0).toUpperCase() + usr.role.slice(1))}</Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {usr.lastActiveAt
+                                ? <>Last active: {formatDistanceToNow(usr.lastActiveAt, { addSuffix: true })}
+                                <span className="hidden sm:inline"> ({format(usr.lastActiveAt, 'dd MMM, p')})</span>
+                                </>
+                                : (usr.createdAt ? `Registered: ${format(usr.createdAt, 'dd MMM yyyy, p')} (No activity logged)` : 'Activity status unknown')
+                                }
+                                {!usr.isApproved && (<Badge variant="destructive" className="ml-2">Pending</Badge>)}
+                              </p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {usr.lastActiveAt
-                              ? <>Last active: {formatDistanceToNow(usr.lastActiveAt, { addSuffix: true })}
-                                <span className="text-muted-foreground/70"> ({format(usr.lastActiveAt, 'dd MMM, p')})</span>
-                              </>
-                              : (usr.createdAt ? `Registered: {format(usr.createdAt, 'dd MMM yyyy, p')} (No activity logged)` : 'Activity status unknown')
-                            }
-                            {!usr.isApproved && <span className="ml-2 text-orange-500 font-medium">(Pending)</span>}
-                          </p>
-                        </div>
                       </li>
                     )})}
                   </ul>
                 ) : (
-                  <p className="text-muted-foreground text-center py-4">No user activity data to display.</p>
+                  <p className="text-muted-foreground italic">No user activity data to display.</p>
                 )}
               </CardContent>
             </Card>
-          )}
-        </div>
+        )}
       </div>
 
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
@@ -1676,7 +1504,7 @@ export default function DashboardPage() {
                 <TableHeader>
                   <TableRow>
                     {detailDialogColumns.map(col => (
-                      <TableHead key={col.key} className={cn(col.isNumeric && "text-right")}>{col.label}</TableHead>
+                      <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
@@ -1684,7 +1512,7 @@ export default function DashboardPage() {
                   {detailDialogData.map((row, rowIndex) => (
                     <TableRow key={rowIndex}>
                       {detailDialogColumns.map(col => (
-                        <TableCell key={`${rowIndex}-${col.key}`} className={cn("text-xs", col.isNumeric && "text-right font-mono")}>
+                        <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>
                           {row[col.key]}
                         </TableCell>
                       ))}
@@ -1693,168 +1521,156 @@ export default function DashboardPage() {
                 </TableBody>
               </Table>
             ) : (
-              <p className="py-4 text-center text-muted-foreground">No details found for the selected criteria.</p>
+              <p className="text-center text-muted-foreground py-8">No details found for the selected criteria.</p>
             )}
           </ScrollArea>
-           <DialogFooter className="pt-4">
-              <Button variant="outline" onClick={handleDialogExcelExport} disabled={detailDialogData.length === 0}>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleDialogExcelExport} disabled={detailDialogData.length === 0}>
                 <FileDown className="mr-2 h-4 w-4" /> Export Excel
-              </Button>
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  Close
-                </Button>
-              </DialogClose>
-            </DialogFooter>
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Close</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isAgeDetailDialogOpen} onOpenChange={setIsAgeDetailDialogOpen}>
-        <DialogContent className="sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{ageDetailDialogTitle}</DialogTitle>
-            <DialogDescription>
-              Showing files based on their age from the last remittance date.
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            {ageDetailDialogData.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {ageDetailDialogColumns.map(col => (
-                      <TableHead key={col.key} className={cn(col.isNumeric && "text-right")}>{col.label}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ageDetailDialogData.map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
+          <DialogContent className="sm:max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>{ageDetailDialogTitle}</DialogTitle>
+              <DialogDescription>
+                Showing files based on their age from the last remittance date.
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+              {ageDetailDialogData.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
                       {ageDetailDialogColumns.map(col => (
-                        <TableCell key={`${rowIndex}-${col.key}`} className={cn("text-xs", col.isNumeric && "text-right font-mono")}>
-                          {row[col.key]}
-                        </TableCell>
+                        <TableHead key={col.key}>{col.label}</TableHead>
                       ))}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="py-4 text-center text-muted-foreground">No files found in this age category.</p>
-            )}
-          </ScrollArea>
-           <DialogFooter className="pt-4">
-              <Button variant="outline" onClick={handleAgeDialogExcelExport} disabled={ageDetailDialogData.length === 0}>
-                <FileDown className="mr-2 h-4 w-4" /> Export Excel
-              </Button>
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  Close
+                  </TableHeader>
+                  <TableBody>
+                    {ageDetailDialogData.map((row, rowIndex) => (
+                      <TableRow key={rowIndex}>
+                        {ageDetailDialogColumns.map(col => (
+                          <TableCell key={col.key} className="text-xs">
+                            {row[col.key]}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No files found in this age category.</p>
+              )}
+            </ScrollArea>
+            <DialogFooter>
+                <Button variant="outline" onClick={handleAgeDialogExcelExport} disabled={ageDetailDialogData.length === 0}>
+                   <FileDown className="mr-2 h-4 w-4" /> Export Excel
                 </Button>
-              </DialogClose>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">Close</Button>
+                </DialogClose>
             </DialogFooter>
-        </DialogContent>
+          </DialogContent>
       </Dialog>
       
       <Dialog open={isMonthDetailDialogOpen} onOpenChange={setIsMonthDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{monthDetailDialogTitle}</DialogTitle>
-            <DialogDescription>
-              {monthDetailDialogTitle.includes('Ongoing')
-                ? 'List of sites currently in an ongoing work status.'
-                : `List of sites completed in ${format(workReportMonth, 'MMMM yyyy')}.`}
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            {monthDetailDialogData.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {monthDetailDialogColumns.map(col => (
-                      <TableHead key={col.key}>{col.label}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthDetailDialogData.map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
-                      {monthDetailDialogColumns.map(col => (
-                        <TableCell key={`${rowIndex}-${col.key}`} className="text-xs">
-                          {row[col.key]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="py-4 text-center text-muted-foreground">No details found for this category.</p>
-            )}
-          </ScrollArea>
-          <DialogFooter className="pt-4">
-            <Button variant="outline" onClick={handleMonthDialogExcelExport} disabled={monthDetailDialogData.length === 0}>
-              <FileDown className="mr-2 h-4 w-4" /> Export Excel
-            </Button>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary">
-                Close
-              </Button>
-            </DialogClose>
-          </DialogFooter>
+            <DialogHeader>
+                <DialogTitle>{monthDetailDialogTitle}</DialogTitle>
+                <DialogDescription>
+                  {monthDetailDialogTitle.includes('Ongoing')
+                    ? 'List of sites currently in an ongoing work status.'
+                    : `List of sites completed in ${format(workReportMonth, 'MMMM yyyy')}.`}
+                </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+                {monthDetailDialogData.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                {monthDetailDialogColumns.map(col => (
+                                    <TableHead key={col.key}>{col.label}</TableHead>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {monthDetailDialogData.map((row, rowIndex) => (
+                                <TableRow key={rowIndex}>
+                                    {monthDetailDialogColumns.map(col => (
+                                        <TableCell key={col.key} className="text-xs">
+                                            {row[col.key]}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <p className="text-center text-muted-foreground py-8">No details found for this category.</p>
+                )}
+            </ScrollArea>
+            <DialogFooter>
+                <Button variant="outline" onClick={handleMonthDialogExcelExport} disabled={monthDetailDialogData.length === 0}>
+                    <FileDown className="mr-2 h-4 w-4" /> Export Excel
+                </Button>
+                 <DialogClose asChild>
+                    <Button type="button" variant="secondary">Close</Button>
+                </DialogClose>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isFileStatusDetailDialogOpen} onOpenChange={setIsFileStatusDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{fileStatusDetailDialogTitle}</DialogTitle>
-            <DialogDescription>
-              List of all files matching the selected status.
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            {fileStatusDetailDialogData.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {fileStatusDetailDialogColumns.map(col => (
-                      <TableHead key={col.key}>{col.label}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fileStatusDetailDialogData.map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
-                      {fileStatusDetailDialogColumns.map(col => (
-                        <TableCell key={`${rowIndex}-${col.key}`} className="text-xs">
-                          {row[col.key]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="py-4 text-center text-muted-foreground">No files found with this status.</p>
-            )}
-          </ScrollArea>
-          <DialogFooter className="pt-4">
-            <Button variant="outline" onClick={() => exportDialogDataToExcel(fileStatusDetailDialogTitle, fileStatusDetailDialogColumns, fileStatusDetailDialogData)} disabled={fileStatusDetailDialogData.length === 0}>
-              <FileDown className="mr-2 h-4 w-4" /> Export Excel
-            </Button>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary">
-                Close
-              </Button>
-            </DialogClose>
-          </DialogFooter>
+            <DialogHeader>
+                <DialogTitle>{fileStatusDetailDialogTitle}</DialogTitle>
+                <DialogDescription>
+                  List of all files matching the selected status.
+                </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+                {fileStatusDetailDialogData.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                {fileStatusDetailDialogColumns.map(col => (
+                                    <TableHead key={col.key}>{col.label}</TableHead>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {fileStatusDetailDialogData.map((row, rowIndex) => (
+                                <TableRow key={rowIndex}>
+                                    {fileStatusDetailDialogColumns.map(col => (
+                                        <TableCell key={col.key} className="text-xs">
+                                            {row[col.key]}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <p className="text-center text-muted-foreground py-8">No files found with this status.</p>
+                )}
+            </ScrollArea>
+            <DialogFooter>
+                 <Button variant="outline" onClick={() => exportDialogDataToExcel(fileStatusDetailDialogTitle, fileStatusDetailDialogColumns, fileStatusDetailDialogData)} disabled={fileStatusDetailDialogData.length === 0}>
+                   <FileDown className="mr-2 h-4 w-4" /> Export Excel
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">Close</Button>
+                </DialogClose>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
-
-
-
