@@ -326,8 +326,15 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
     
-    const entriesForFileStatus = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
-    const entriesForWorkStatus = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
+    const nonArsEntries = (currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries)
+        .map(entry => ({
+            ...entry,
+            siteDetails: entry.siteDetails?.filter(site => site.purpose !== 'ARS')
+        }))
+        .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+
+    const entriesForFileStatus = nonArsEntries;
+    const entriesForWorkStatus = nonArsEntries;
     
     let pendingTasksCount = 0;
     
@@ -417,7 +424,6 @@ export default function DashboardPage() {
             }
         });
         
-        // This calculates the 'Total No. of Applications' row separately at the end.
         const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
         if (totalAppsRow) {
             const seenSitesInFile = new Set<string>();
@@ -613,7 +619,7 @@ export default function DashboardPage() {
 
   const handleFileStatusCardClick = (status: string) => {
     const dataForDialog = filteredFileEntries
-      .filter(entry => entry.fileStatus === status)
+      .filter(entry => entry.fileStatus === status && entry.siteDetails?.some(site => site.purpose !== 'ARS'))
       .map((entry, index) => {
         const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance;
         const siteNames = entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A';
@@ -1029,7 +1035,7 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <div className="lg:col-span-3 space-y-6">
            <Card className="shadow-lg flex flex-col h-full">
             <CardHeader>

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
@@ -15,16 +16,22 @@ import Link from 'next/link';
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  // The useFileEntries hook now handles all complex filtering logic for supervisors.
-  // The fileEntries it returns are already correctly filtered.
   const { fileEntries } = useFileEntries(); 
   const { user } = useAuth();
   
-  // No additional filtering is needed here for supervisors.
-  // The hook provides the pre-filtered list.
   const filteredFileEntriesForManager = useMemo(() => {
+    // For editors and viewers, filter out files that ONLY contain ARS sites.
+    if (user?.role === 'editor' || user?.role === 'viewer') {
+      return fileEntries.filter(entry => {
+        if (!entry.siteDetails || entry.siteDetails.length === 0) {
+          return true; // Keep files with no sites
+        }
+        return entry.siteDetails.some(site => site.purpose !== 'ARS');
+      });
+    }
+    // For supervisors, the useFileEntries hook already provides the correct, pre-filtered list.
     return fileEntries;
-  }, [fileEntries]);
+  }, [fileEntries, user?.role]);
 
 
   return (
@@ -55,7 +62,7 @@ export default function FileManagerPage() {
           <CardDescription>
             {user?.role === 'supervisor'
               ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
-              : 'List of all files in the system.'
+              : 'List of all non-ARS files in the system. ARS schemes are managed separately.'
             }
           </CardDescription>
         </CardHeader>
