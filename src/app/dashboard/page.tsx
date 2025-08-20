@@ -296,7 +296,7 @@ export default function DashboardPage() {
     
     const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
         const serviceCounts: { [service: string]: { count: number, data: any[] } } = {};
-        sitePurposeOptions.forEach(service => {
+        [...sitePurposeOptions, 'ARS'].forEach(service => {
             serviceCounts[service] = { count: 0, data: [] };
         });
         return { statusCategory, ...serviceCounts, total: { count: 0, data: [] } };
@@ -364,7 +364,7 @@ export default function DashboardPage() {
             const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
             const purpose = sd.purpose as SitePurpose;
             if (sd.purpose && sd.workStatus) {
-                if (sitePurposeOptions.includes(purpose)) {
+                if (sitePurposeOptions.includes(purpose) || purpose === 'ARS') {
                     const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
                     if (workStatusRow) {
                         workStatusRow[purpose].count++;
@@ -482,13 +482,13 @@ export default function DashboardPage() {
     const completedThisMonthSites = Array.from(uniqueCompletedSites.values());
 
     const createSummary = (sites: typeof completedThisMonthSites): WorkSummary => {
-        const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
-          acc[purpose] = 0;
+        const byPurpose = [...sitePurposeOptions, 'ARS'].reduce((acc, purpose) => {
+          acc[purpose as SitePurpose] = 0;
           return acc;
         }, {} as Record<SitePurpose, number>);
 
         sites.forEach(site => {
-          if (site.purpose && sitePurposeOptions.includes(site.purpose as SitePurpose)) {
+          if (site.purpose && (sitePurposeOptions.includes(site.purpose as SitePurpose) || site.purpose === 'ARS')) {
             byPurpose[site.purpose as SitePurpose]++;
           }
         });
@@ -522,8 +522,8 @@ export default function DashboardPage() {
 
 
   const supervisorOngoingWorks = useMemo(() => {
-    const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
-        acc[purpose] = 0;
+    const byPurpose = [...sitePurposeOptions, 'ARS'].reduce((acc, purpose) => {
+        acc[purpose as SitePurpose] = 0;
         return acc;
     }, {} as Record<SitePurpose, number>);
     
@@ -545,7 +545,7 @@ export default function DashboardPage() {
                     purpose: site.purpose,
                     supervisorName: site.supervisorName,
                 });
-                if(site.purpose && sitePurposeOptions.includes(site.purpose as SitePurpose)) {
+                if(site.purpose && ([...sitePurposeOptions, 'ARS'].includes(site.purpose as SitePurpose))) {
                     byPurpose[site.purpose as SitePurpose]++;
                 }
             }
@@ -1091,7 +1091,7 @@ export default function DashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="font-semibold whitespace-nowrap">Work Category</TableHead>
-                      {sitePurposeOptions.map(service => (
+                      {[...sitePurposeOptions, 'ARS'].map(service => (
                           <TableHead key={service} className="text-center font-semibold whitespace-nowrap">
                             { service === 'Pumping Scheme' ? 'Pumping<br/>Scheme' :
                               service === 'BW Dev' ? 'BW<br/>Dev' :
@@ -1110,7 +1110,7 @@ export default function DashboardPage() {
                     {dashboardData.workStatusByServiceData.map((row) => (
                       <TableRow key={row.statusCategory}>
                         <TableCell className="font-medium whitespace-nowrap">{row.statusCategory}</TableCell>
-                        {sitePurposeOptions.map(service => (
+                        {[...sitePurposeOptions, 'ARS'].map(service => (
                           <TableCell key={service} className="text-center">
                             {(row as any)[service].count > 0 ? (
                                 <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
@@ -1315,12 +1315,12 @@ export default function DashboardPage() {
                   <div className="space-y-2">
                     { currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
                        <div className="grid grid-cols-2 gap-2">
-                         {sitePurposeOptions
-                        .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose] || 0) > 0)
+                         {[...sitePurposeOptions, 'ARS']
+                        .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
                         .map((purpose) => (
-                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose, 'Completed')}>
+                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose as SitePurpose, 'Completed')}>
                             <span className="font-medium">{purpose}</span>
-                            <span className="font-bold text-green-700">{currentMonthStats.completedSummary.byPurpose[purpose] || 0}</span>
+                            <span className="font-bold text-green-700">{currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0}</span>
                           </button>
                         ))}
                       </div>
@@ -1341,12 +1341,12 @@ export default function DashboardPage() {
                   <div className="space-y-2">
                     { currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
                        <div className="grid grid-cols-2 gap-2">
-                         {sitePurposeOptions
-                        .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose] || 0) > 0)
+                         {[...sitePurposeOptions, 'ARS']
+                        .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
                         .map((purpose) => (
-                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose, 'Ongoing')}>
+                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose as SitePurpose, 'Ongoing')}>
                             <span className="font-medium">{purpose}</span>
-                            <span className="font-bold text-orange-700">{currentMonthStats.ongoingSummary.byPurpose[purpose] || 0}</span>
+                            <span className="font-bold text-orange-700">{currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0}</span>
                           </button>
                         ))}
                       </div>
@@ -1399,10 +1399,10 @@ export default function DashboardPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {sitePurposeOptions
-                                        .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose] || 0) > 0)
+                                        {[...sitePurposeOptions, 'ARS']
+                                        .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose as SitePurpose] || 0) > 0)
                                         .map((purpose) => {
-                                            const count = supervisorOngoingWorks.byPurpose[purpose] || 0;
+                                            const count = supervisorOngoingWorks.byPurpose[purpose as SitePurpose] || 0;
                                             return (
                                                 <TableRow key={purpose}>
                                                     <TableCell className="font-medium">{purpose}</TableCell>
