@@ -103,13 +103,24 @@ export type PaymentAccount = typeof paymentAccountOptions[number];
 export const siteWorkStatusOptions = [
     "Proposal Submitted",
     "AS & TS Issued",
+    "AS Awaited",
+    "Addl. AS Awaited",
+    "TS Awaited",
+    "TS Pending",
     "Tendered",
+    "To be Tendered",
     "Selection Notice Issued",
     "Work Order Issued",
+    "Work in Progress",
+    "Awaiting Dept. Rig",
     "Work Initiated",
     "Work Completed",
+    "Work Failed",
     "Bill Prepared",
     "Payment Completed",
+    "To be Refunded",
+    "Utilization Certificate Issued",
+    "Under Process"
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
 
