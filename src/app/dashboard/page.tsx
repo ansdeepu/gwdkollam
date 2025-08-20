@@ -1036,22 +1036,20 @@ export default function DashboardPage() {
                 <CardContent className="flex flex-col gap-4 pt-0">
                     <div className="border rounded-lg p-3 bg-background">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
-                        <div className="relative h-10 overflow-hidden">
+                        <ScrollArea className="h-10 pr-2">
                             {dashboardData.birthdayWishes.length > 0 ? (
-                                <div className={cn("absolute inset-0 flex flex-col", shouldAnimateBirthdays && "marquee-v-container")}>
-                                    <div className={cn(shouldAnimateBirthdays && "marquee-v-content")}>
-                                        {[...dashboardData.birthdayWishes, ...dashboardData.birthdayWishes].map((staff, index) => (
-                                            <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 h-10 flex flex-col justify-center">
-                                                <p className="font-semibold text-pink-700 text-xs -mb-1">Happy Birthday!</p>
-                                                <p className="font-bold text-sm text-pink-800 ">{staff.name}</p>
-                                            </div>
-                                        ))}
-                                    </div>
+                                <div className="space-y-2">
+                                    {dashboardData.birthdayWishes.map((staff, index) => (
+                                        <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 h-10 flex flex-col justify-center">
+                                            <p className="font-semibold text-pink-700 text-xs -mb-1">Happy Birthday!</p>
+                                            <p className="font-bold text-sm text-pink-800 ">{staff.name}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No birthdays today.</p>
                             )}
-                        </div>
+                        </ScrollArea>
                     </div>
                     <div className="border rounded-lg p-3 bg-background">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
@@ -1271,6 +1269,7 @@ export default function DashboardPage() {
               <p>No financial data available.</p>
             )}
            <CardFooter className="text-xs text-muted-foreground pt-4">Note: Withdrawals for SBI/STSB are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.</CardFooter>
+      </CardContent>
       </Card>
       
       <Card>
