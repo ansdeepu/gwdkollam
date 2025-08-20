@@ -977,7 +977,7 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <div className="lg:col-span-3 space-y-6">
            <Card className="shadow-lg flex flex-col h-full">
             <CardHeader>
@@ -1032,7 +1032,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-lg flex flex-col h-full">
+            <Card className="shadow-lg flex flex-col h-[300px]">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5 text-primary" />
@@ -1671,5 +1671,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
