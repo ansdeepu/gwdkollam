@@ -75,6 +75,31 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 
+// Define the exact order for the report as seen in the image
+const dashboardWorkStatusOrder: SiteWorkStatus[] = [
+    "Under Process",
+    "Addl. AS Awaited",
+    "To be Refunded",
+    "Awaiting Dept. Rig",
+    "To be Tendered",
+    "TS Pending",
+    "Tendered",
+    "Selection Notice Issued",
+    "Work Order Issued",
+    "Work in Progress",
+    "Work Failed",
+    "Work Completed",
+    "Bill Prepared",
+    "Payment Completed",
+    "Utilization Certificate Issued",
+];
+const dashboardServiceOrder: SitePurpose[] = [
+    "BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev",
+    "MWSS", "MWSS Ext", "Pumping Scheme", "MWSS Pump Reno",
+    "HPS", "HPR", "ARS"
+];
+
+
 interface TransformedFinanceMetrics {
   sbiCredit: number;
   sbiDebit: number;
@@ -285,18 +310,18 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
     
-    const entriesForFileStatus = filteredFileEntries;
-    const entriesForWorkStatus = filteredFileEntries;
+    const entriesForFileStatus = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
+    const entriesForWorkStatus = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
     
     let pendingTasksCount = 0;
     
-    const workStatusRows = [...siteWorkStatusOptions];
+    const workStatusRows = [...dashboardWorkStatusOrder];
     const totalApplicationsRow = "Total No. of Applications";
     const reorderedRowLabels = [...workStatusRows, totalApplicationsRow];
     
     const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
         const serviceCounts: { [service: string]: { count: number, data: any[] } } = {};
-        [...sitePurposeOptions].filter(p => p !== 'ARS').forEach(service => {
+        dashboardServiceOrder.forEach(service => {
             serviceCounts[service] = { count: 0, data: [] };
         });
         return { statusCategory, ...serviceCounts, total: { count: 0, data: [] } };
@@ -364,7 +389,7 @@ export default function DashboardPage() {
             const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
             const purpose = sd.purpose as SitePurpose;
             if (sd.purpose && sd.workStatus) {
-                if (sitePurposeOptions.includes(purpose) && purpose !== 'ARS') {
+                if (dashboardServiceOrder.includes(purpose)) {
                     const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
                     if (workStatusRow) {
                         workStatusRow[purpose].count++;
@@ -372,15 +397,26 @@ export default function DashboardPage() {
                         workStatusRow.total.count++;
                         workStatusRow.total.data.push(siteData);
                     }
-                    const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
-                    if (totalAppsRow) {
-                        totalAppsRow[purpose].count++;
-                        totalAppsRow.total.count++;
-                        totalAppsRow.total.data.push(siteData);
-                    }
                 }
             }
         });
+        
+        // This calculates the 'Total No. of Applications' row separately at the end.
+        const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
+        if (totalAppsRow) {
+            const seenSitesInFile = new Set<string>();
+            entry.siteDetails?.forEach(sd => {
+                const siteIdentifier = `${entry.fileNo}-${sd.nameOfSite}`;
+                if (sd.purpose && dashboardServiceOrder.includes(sd.purpose as SitePurpose) && !seenSitesInFile.has(siteIdentifier)) {
+                    const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
+                    totalAppsRow[sd.purpose as SitePurpose].count++;
+                    totalAppsRow[sd.purpose as SitePurpose].data.push(siteData);
+                    totalAppsRow.total.count++;
+                    totalAppsRow.total.data.push(siteData);
+                    seenSitesInFile.add(siteIdentifier);
+                }
+            });
+        }
     }
 
     allFileEntries.forEach(entry => {
@@ -726,7 +762,7 @@ export default function DashboardPage() {
     const fileNamePrefix = `gwd_report_${sheetName}`;
 
     if (dataRows.length === 0) {
-      toast({ title: "No Data to Export", description: "There is no data to export.", variant: "default" });
+      toast({ title: "No Data to Export", description: "No data in the dialog to export.", variant: "default" });
       return;
     }
 
@@ -1092,7 +1128,7 @@ export default function DashboardPage() {
                 Work Status by Service
               </CardTitle>
               <CardDescription>
-                Breakdown of application statuses across different service categories (excluding ARS). Click on a number to see detailed reports.
+                Breakdown of application statuses across different service categories. Click on a number to see detailed reports.
               </CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
@@ -1101,7 +1137,7 @@ export default function DashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="font-semibold whitespace-nowrap">Work Category</TableHead>
-                      {[...sitePurposeOptions].filter(p => p !== 'ARS').map(service => (
+                      {dashboardServiceOrder.map(service => (
                           <TableHead key={service} className="text-center font-semibold whitespace-nowrap">
                             { service === 'Pumping Scheme' ? 'Pumping<br/>Scheme' :
                               service === 'BW Dev' ? 'BW<br/>Dev' :
@@ -1120,7 +1156,7 @@ export default function DashboardPage() {
                     {dashboardData.workStatusByServiceData.map((row) => (
                       <TableRow key={row.statusCategory}>
                         <TableCell className="font-medium whitespace-nowrap">{row.statusCategory}</TableCell>
-                        {[...sitePurposeOptions].filter(p => p !== 'ARS').map(service => (
+                        {dashboardServiceOrder.map(service => (
                           <TableCell key={service} className="text-center">
                             {(row as any)[service].count > 0 ? (
                                 <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
