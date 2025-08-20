@@ -136,7 +136,7 @@ const getColorClass = (nameOrEmail: string): string => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries: filteredFileEntries } = useFileEntries(); // Filtered view for dashboard cards
+  const { fileEntries: filteredFileEntries, isLoading: filteredEntriesLoading } = useFileEntries(); // Filtered view for dashboard cards (File Manager Data)
   const { reportEntries: allFileEntries, isReportLoading: allEntriesLoading } = useAllFileEntriesForReports(); // Unfiltered view for totals and reports
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
@@ -284,10 +284,14 @@ export default function DashboardPage() {
   }, [authLoading, currentUser, fetchAllUsers]);
 
   const dashboardData = useMemo(() => {
-    if (allEntriesLoading || staffLoading || !allFileEntries || !currentUser) return null;
+    if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
     
-    const entriesForCards = (currentUser.role === 'supervisor') ? filteredFileEntries : allFileEntries;
+    // Use filteredFileEntries for cards that should respect user role (e.g., File Status)
+    const entriesForFileStatus = filteredFileEntries;
     
+    // Use allFileEntries for cards that need a complete system view (e.g., ARS, Work Status)
+    const entriesForWorkStatus = allFileEntries;
+
     let pendingTasksCount = 0;
     
     const workStatusRows = [...siteWorkStatusOptions];
@@ -320,12 +324,48 @@ export default function DashboardPage() {
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
-    for (const entry of entriesForCards) {
+    // Process entries for File Status Overview (uses filtered data)
+    for (const entry of entriesForFileStatus) {
         let isFilePending = false;
         if (entry.fileStatus && fileStatusesForPending.includes(entry.fileStatus as FileStatus)) isFilePending = true;
         else if (entry.siteDetails?.some(sd => sd.workStatus && siteWorkStatusesForPending.includes(sd.workStatus as SiteWorkStatus))) isFilePending = true;
         if (isFilePending) pendingTasksCount++;
         
+        entry.siteDetails?.forEach(site => {
+            if (site.workStatus && siteWorkStatusAlerts.includes(site.workStatus as SiteWorkStatus)) {
+                const details = `Site: ${site.nameOfSite || 'Unnamed Site'}, App: ${entry.applicantName}, File: ${entry.fileNo}`;
+                const key = `${entry.fileNo}-${site.nameOfSite}-${site.workStatus}`;
+                if (!workAlertsMap.has(key)) {
+                    workAlertsMap.set(key, { title: site.workStatus, details });
+                }
+            }
+        });
+
+        const latestRemittanceDate = entry.remittanceDetails
+            ?.map(rd => (rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null))
+            .filter((d): d is Date => d !== null && isValid(d))
+            .sort((a, b) => b.getTime() - a.getTime())[0];
+
+        const basisDate = latestRemittanceDate || (entry.createdAt ? new Date(entry.createdAt) : null);
+
+        if (basisDate && isValid(basisDate)) {
+            const ageInMs = now.getTime() - basisDate.getTime();
+            const ageInYears = ageInMs / (1000 * 3600 * 24 * 365.25);
+            if (ageInYears < 1) ageGroups.lessThan1.push(entry);
+            else if (ageInYears >= 1 && ageInYears < 2) ageGroups.between1And2.push(entry);
+            else if (ageInYears >= 2 && ageInYears < 3) ageGroups.between2And3.push(entry);
+            else if (ageInYears >= 3 && ageInYears < 4) ageGroups.between3And4.push(entry);
+            else if (ageInYears >= 4 && ageInYears < 5) ageGroups.between4And5.push(entry);
+            else if (ageInYears >= 5) ageGroups.above5.push(entry);
+        }
+
+        if (entry.fileStatus && fileStatusCounts.has(entry.fileStatus)) {
+            fileStatusCounts.set(entry.fileStatus, (fileStatusCounts.get(entry.fileStatus) || 0) + 1);
+        }
+    }
+
+    // Process all entries for Work Status and ARS Status (uses all data)
+    for (const entry of entriesForWorkStatus) {
         entry.siteDetails?.forEach(sd => {
             const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
             
@@ -360,38 +400,6 @@ export default function DashboardPage() {
                 }
             }
         });
-
-        entry.siteDetails?.forEach(site => {
-            if (site.workStatus && siteWorkStatusAlerts.includes(site.workStatus as SiteWorkStatus)) {
-                const details = `Site: ${site.nameOfSite || 'Unnamed Site'}, App: ${entry.applicantName}, File: ${entry.fileNo}`;
-                const key = `${entry.fileNo}-${site.nameOfSite}-${site.workStatus}`;
-                if (!workAlertsMap.has(key)) {
-                    workAlertsMap.set(key, { title: site.workStatus, details });
-                }
-            }
-        });
-
-        const latestRemittanceDate = entry.remittanceDetails
-            ?.map(rd => (rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null))
-            .filter((d): d is Date => d !== null && isValid(d))
-            .sort((a, b) => b.getTime() - a.getTime())[0];
-
-        const basisDate = latestRemittanceDate || (entry.createdAt ? new Date(entry.createdAt) : null);
-
-        if (basisDate && isValid(basisDate)) {
-            const ageInMs = now.getTime() - basisDate.getTime();
-            const ageInYears = ageInMs / (1000 * 3600 * 24 * 365.25);
-            if (ageInYears < 1) ageGroups.lessThan1.push(entry);
-            else if (ageInYears >= 1 && ageInYears < 2) ageGroups.between1And2.push(entry);
-            else if (ageInYears >= 2 && ageInYears < 3) ageGroups.between2And3.push(entry);
-            else if (ageInYears >= 3 && ageInYears < 4) ageGroups.between3And4.push(entry);
-            else if (ageInYears >= 4 && ageInYears < 5) ageGroups.between4And5.push(entry);
-            else if (ageInYears >= 5) ageGroups.above5.push(entry);
-        }
-
-        if (entry.fileStatus && fileStatusCounts.has(entry.fileStatus)) {
-            fileStatusCounts.set(entry.fileStatus, (fileStatusCounts.get(entry.fileStatus) || 0) + 1);
-        }
     }
 
     const today = new Date();
@@ -441,9 +449,9 @@ export default function DashboardPage() {
         fileStatusCountsData,
         arsStatusCountsData,
         totalArsSites,
-        totalFiles: allFileEntries.length, // Corrected to use allFileEntries
+        totalFiles: entriesForFileStatus.length, // Total files based on the user's view (File Manager data)
     };
-  }, [allEntriesLoading, allFileEntries, filteredFileEntries, staffLoading, staffMembers, currentUser]);
+  }, [filteredEntriesLoading, allEntriesLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
   const currentMonthStats = useMemo(() => {
     // Use the `reportEntries` hook which contains ALL files, not just active ones.
@@ -564,7 +572,8 @@ export default function DashboardPage() {
 
 
   const handleFileStatusCardClick = (status: string) => {
-    const dataForDialog = allFileEntries
+    // This function should use the same filtered data as the card itself
+    const dataForDialog = filteredFileEntries
       .filter(entry => entry.fileStatus === status)
       .map((entry, index) => {
         const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance;
@@ -968,7 +977,7 @@ export default function DashboardPage() {
   };
 
 
-  if (allEntriesLoading || authLoading || usersLoading || staffLoading || !dashboardData || !currentMonthStats) { 
+  if (filteredEntriesLoading || allEntriesLoading || authLoading || usersLoading || staffLoading || !dashboardData || !currentMonthStats) { 
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -989,11 +998,11 @@ export default function DashboardPage() {
                 File Status Overview
               </CardTitle>
               <CardDescription>
-                Current count of files by status. Click on a status to see details.
+                Current count of files by status, based on your visible files. Click a status to see details.
               </CardDescription>
               <div className="mt-2">
                 <div className="inline-flex items-baseline gap-2 p-3 rounded-lg shadow-sm bg-primary/10 border border-primary/20">
-                  <h4 className="text-sm font-medium text-primary">Total Files</h4>
+                  <h4 className="text-sm font-medium text-primary">Total Visible Files</h4>
                   <p className="text-2xl font-bold text-primary">{dashboardData.totalFiles}</p>
                 </div>
               </div>
@@ -1838,3 +1847,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
