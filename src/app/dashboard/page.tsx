@@ -977,7 +977,7 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
         <div className="lg:col-span-3 space-y-6">
            <Card className="shadow-lg flex flex-col h-full">
             <CardHeader>
@@ -1032,7 +1032,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-lg flex flex-col h-[600px]">
+            <Card className="shadow-lg flex flex-col h-full">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5 text-primary" />
@@ -1057,12 +1057,11 @@ export default function DashboardPage() {
                             )}
                         </ScrollArea>
                     </div>
-                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
+                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <ScrollArea className="flex-1 pr-2 h-[350px]">
-                        <div className={cn("no-scrollbar", shouldAnimateUpdates && "marquee-v-container")}>
+                        <div className={cn("no-scrollbar flex-1 relative", shouldAnimateUpdates && "marquee-v-container")}>
                             {dashboardData.workAlerts.length > 0 ? (
-                                <div className={cn(shouldAnimateUpdates && "marquee-v-content")}>
+                                <div className={cn("absolute inset-0", shouldAnimateUpdates && "marquee-v-content")}>
                                     {dashboardData.workAlerts.map((alert, index) => (
                                         <div key={index} className="p-2 rounded-md bg-amber-500/10 mb-2">
                                             <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
@@ -1080,7 +1079,6 @@ export default function DashboardPage() {
                                 <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No important updates.</p>
                             )}
                         </div>
-                        </ScrollArea>
                     </div>
                 </CardContent>
             </Card>
