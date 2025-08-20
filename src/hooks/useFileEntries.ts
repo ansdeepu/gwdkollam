@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -235,14 +234,9 @@ export function useFileEntries(): FileEntriesState {
           entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
       }
       
-      // Post-process to remove ARS sites for File Manager view
-      let processedEntries = entriesFromFirestore.map(entry => {
-        const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS') ?? [];
-        return { ...entry, siteDetails: nonArsSites };
-      }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0); // Remove files that only had ARS sites
+      let processedEntries = entriesFromFirestore;
 
-
-      // Supervisor Specific Filtering Logic
+      // Supervisor Specific Filtering Logic for the File Manager
       if (user.role === 'supervisor' && user.uid) {
           const allManagerPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
           const finalSubmittedStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed"];

@@ -1,9 +1,9 @@
-
 // src/app/dashboard/ars/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFileEntries } from "@/hooks/useFileEntries";
+import { useArsEntries, type ArsReportRow } from "@/hooks/useArsEntries"; // Import the new hook
 import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions, type Constituency, fileStatusOptions } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,13 +27,6 @@ import { Label } from "@/components/ui/label";
 
 const ITEMS_PER_PAGE = 50;
 
-interface ArsReportRow extends SiteDetailFormData {
-  id: string; // Unique identifier for the site
-  fileNo?: string;
-  applicantName?: string;
-  constituency?: Constituency;
-}
-
 const formatDateSafe = (dateInput: any): string => {
   if (!dateInput) return 'N/A';
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
@@ -41,8 +34,8 @@ const formatDateSafe = (dateInput: any): string => {
 };
 
 export default function ArsPage() {
-  const { fileEntries, isLoading: entriesLoading, addFileEntry, getFileEntry, clearAllArsData } = useFileEntries();
-  const [arsSites, setArsSites] = useState<ArsReportRow[]>([]);
+  const { addFileEntry, getFileEntry, clearAllArsData } = useFileEntries();
+  const { arsSites, isLoading: entriesLoading, refreshArsEntries } = useArsEntries(); // Use the new hook
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
@@ -63,33 +56,6 @@ export default function ArsPage() {
   
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
-
-
-  useEffect(() => {
-    if (!entriesLoading) {
-      const allArsSites = fileEntries.flatMap(entry => 
-        (entry.siteDetails || [])
-          .filter(site => site.purpose === 'ARS')
-          .map((site, index) => ({
-            ...site,
-            id: `${entry.fileNo}-${site.nameOfSite}-${site.purpose}-${index}`,
-            fileNo: entry.fileNo,
-            applicantName: entry.applicantName,
-            constituency: entry.constituency
-          }))
-      );
-      
-      const sortedSites = [...allArsSites].sort((a, b) => {
-        const dateA = a.dateOfCompletion ? new Date(a.dateOfCompletion) : null;
-        const dateB = b.dateOfCompletion ? new Date(b.dateOfCompletion) : null;
-        if (dateA && isValid(dateA) && dateB && isValid(dateB)) return dateB.getTime() - dateA.getTime();
-        if (dateA && isValid(dateA)) return -1;
-        if (dateB && isValid(dateB)) return 1;
-        return 0;
-      });
-      setArsSites(sortedSites);
-    }
-  }, [fileEntries, entriesLoading]);
 
   const filteredSites = useMemo(() => {
     let sites = [...arsSites];
@@ -148,6 +114,7 @@ export default function ArsPage() {
       await addFileEntry(updatedFile, deletingSite.fileNo);
       
       toast({ title: "ARS Site Deleted", description: `Site "${deletingSite.nameOfSite}" has been removed.` });
+      refreshArsEntries(); // Refresh the data
     } catch (error: any) {
       toast({ title: "Deletion Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -161,6 +128,7 @@ export default function ArsPage() {
     try {
         await clearAllArsData();
         toast({ title: "All ARS Data Cleared", description: "All ARS sites have been removed from the database."});
+        refreshArsEntries(); // Refresh the data
     } catch (error: any) {
         toast({ title: "Clearing Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -264,6 +232,7 @@ export default function ArsPage() {
           } catch(e) { errorCount++; console.error(`Failed to add site from row for File No ${fileNo}:`, e); }
         }
         toast({ title: "Import Complete", description: `${successCount} sites imported. ${errorCount} rows failed.` });
+        refreshArsEntries(); // Refresh the data
       } catch (error: any) {
         toast({ title: "Import Failed", description: error.message, variant: "destructive" });
       } finally {
