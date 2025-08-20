@@ -977,7 +977,7 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
         <div className="lg:col-span-3 space-y-6">
            <Card className="shadow-lg flex flex-col h-full">
             <CardHeader>
@@ -1645,7 +1645,7 @@ export default function DashboardPage() {
                         <TableBody>
                             {fileStatusDetailDialogData.map((row, rowIndex) => (
                                 <TableRow key={rowIndex}>
-                                    {monthDetailDialogColumns.map(col => (
+                                    {fileStatusDetailDialogColumns.map(col => (
                                         <TableCell key={col.key} className="text-xs">
                                             {row[col.key]}
                                         </TableCell>
