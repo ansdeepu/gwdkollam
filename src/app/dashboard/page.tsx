@@ -1032,7 +1032,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-lg flex flex-col h-[300px]">
+            <Card className="shadow-lg flex flex-col h-[600px]">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5 text-primary" />
@@ -1059,7 +1059,8 @@ export default function DashboardPage() {
                     </div>
                     <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <div className={cn("flex-1 no-scrollbar", shouldAnimateUpdates && "marquee-v-container")}>
+                        <ScrollArea className="flex-1 pr-2 h-[350px]">
+                        <div className={cn("no-scrollbar", shouldAnimateUpdates && "marquee-v-container")}>
                             {dashboardData.workAlerts.length > 0 ? (
                                 <div className={cn(shouldAnimateUpdates && "marquee-v-content")}>
                                     {dashboardData.workAlerts.map((alert, index) => (
@@ -1079,6 +1080,7 @@ export default function DashboardPage() {
                                 <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No important updates.</p>
                             )}
                         </div>
+                        </ScrollArea>
                     </div>
                 </CardContent>
             </Card>
