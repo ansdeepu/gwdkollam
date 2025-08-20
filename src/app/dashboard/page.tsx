@@ -1042,7 +1042,7 @@ export default function DashboardPage() {
                 <CardContent className="flex flex-col gap-4 pt-0 flex-1">
                     <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
-                        <ScrollArea className="flex-1 pr-2 h-[100px]">
+                        <ScrollArea className="flex-1 pr-2">
                             {dashboardData.birthdayWishes.length > 0 ? (
                                 <div className="space-y-2">
                                     {dashboardData.birthdayWishes.map((staff, index) => (
@@ -1059,7 +1059,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <div className={cn("flex-1 no-scrollbar h-[10px]", shouldAnimateUpdates && "marquee-v-container")}>
+                        <div className={cn("flex-1 no-scrollbar", shouldAnimateUpdates && "marquee-v-container")}>
                             {dashboardData.workAlerts.length > 0 ? (
                                 <div className={cn(shouldAnimateUpdates && "marquee-v-content")}>
                                     {dashboardData.workAlerts.map((alert, index) => (
