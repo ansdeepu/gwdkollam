@@ -364,7 +364,7 @@ export default function DashboardPage() {
             const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
             const purpose = sd.purpose as SitePurpose;
             if (sd.purpose && sd.workStatus) {
-                if (sitePurposeOptions.includes(purpose)) {
+                if (sitePurposeOptions.includes(purpose) && purpose !== 'ARS') {
                     const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
                     if (workStatusRow) {
                         workStatusRow[purpose].count++;
@@ -1031,21 +1031,21 @@ export default function DashboardPage() {
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-            <Card className="h-full">
+            <Card className="h-full h-[600px] flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5 text-primary" />
                     Notice Board
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4 pt-0">
-                    <div className="border rounded-lg p-3 bg-background">
+                <CardContent className="flex flex-col gap-4 pt-0 flex-1">
+                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
-                        <ScrollArea className="h-10 pr-2">
+                        <ScrollArea className="flex-1 pr-2">
                             {dashboardData.birthdayWishes.length > 0 ? (
                                 <div className="space-y-2">
                                     {dashboardData.birthdayWishes.map((staff, index) => (
-                                        <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 h-10 flex flex-col justify-center">
+                                        <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 flex flex-col justify-center">
                                             <p className="font-semibold text-pink-700 text-xs -mb-1">Happy Birthday!</p>
                                             <p className="font-bold text-sm text-pink-800 ">{staff.name}</p>
                                         </div>
@@ -1056,9 +1056,9 @@ export default function DashboardPage() {
                             )}
                         </ScrollArea>
                     </div>
-                    <div className="border rounded-lg p-3 bg-background">
+                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <ScrollArea className="h-20 pr-2">
+                        <ScrollArea className="flex-1 pr-2">
                             {dashboardData.workAlerts.length > 0 ? (
                                 <div className="space-y-2">
                                     {dashboardData.workAlerts.map((alert, index) => (
@@ -1094,7 +1094,7 @@ export default function DashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="font-semibold whitespace-nowrap">Work Category</TableHead>
-                      {[...sitePurposeOptions].map(service => (
+                      {[...sitePurposeOptions].filter(p => p !== 'ARS').map(service => (
                           <TableHead key={service} className="text-center font-semibold whitespace-nowrap">
                             { service === 'Pumping Scheme' ? 'Pumping<br/>Scheme' :
                               service === 'BW Dev' ? 'BW<br/>Dev' :
@@ -1113,7 +1113,7 @@ export default function DashboardPage() {
                     {dashboardData.workStatusByServiceData.map((row) => (
                       <TableRow key={row.statusCategory}>
                         <TableCell className="font-medium whitespace-nowrap">{row.statusCategory}</TableCell>
-                        {[...sitePurposeOptions].map(service => (
+                        {[...sitePurposeOptions].filter(p => p !== 'ARS').map(service => (
                           <TableCell key={service} className="text-center">
                             {(row as any)[service].count > 0 ? (
                                 <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
