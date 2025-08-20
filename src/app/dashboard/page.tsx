@@ -1019,48 +1019,62 @@ export default function DashboardPage() {
                 )}
               </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden pt-6">
+            <CardContent className="flex-1 pt-6 overflow-y-auto">
               {dashboardData.fileStatusCountsData.length > 0 ? (
-                <ScrollArea className="h-[150px] no-scrollbar">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {dashboardData.fileStatusCountsData.map((item) => (
-                      <Card 
-                        key={item.status} 
-                        className={cn(
-                          "shadow-sm transition-all",
-                          item.count > 0 ? "cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30" : "cursor-not-allowed opacity-75"
-                        )}
-                        onClick={() => item.count > 0 && handleFileStatusCardClick(item.status)}
-                        role="button"
-                        tabIndex={item.count > 0 ? 0 : -1}
-                        aria-disabled={item.count === 0}
-                        aria-label={`View details for status: ${item.status}`}
-                        onKeyDown={(e) => { if (item.count > 0 && (e.key === 'Enter' || e.key === ' ')) handleFileStatusCardClick(item.status)}}
-                      >
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-foreground" title={item.status}>
-                              {item.status}
-                            </p>
-                            <Badge 
-                              variant={item.count > 0 ? "default" : "secondary"}
-                              className={cn(
-                                "text-sm font-semibold",
-                                item.count === 0 && "bg-muted text-muted-foreground"
-                              )}
-                            >
-                              {item.count}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {dashboardData.fileStatusCountsData.map((item) => (
+                    <Card
+                      key={item.status}
+                      className={cn(
+                        'shadow-sm transition-all',
+                        item.count > 0
+                          ? 'cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30'
+                          : 'cursor-not-allowed opacity-75'
+                      )}
+                      onClick={() =>
+                        item.count > 0 && handleFileStatusCardClick(item.status)
+                      }
+                      role="button"
+                      tabIndex={item.count > 0 ? 0 : -1}
+                      aria-disabled={item.count === 0}
+                      aria-label={`View details for status: ${item.status}`}
+                      onKeyDown={(e) => {
+                        if (
+                          item.count > 0 &&
+                          (e.key === 'Enter' || e.key === ' ')
+                        )
+                          handleFileStatusCardClick(item.status);
+                      }}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <p
+                            className="text-sm font-medium text-foreground"
+                            title={item.status}
+                          >
+                            {item.status}
+                          </p>
+                          <Badge
+                            variant={item.count > 0 ? 'default' : 'secondary'}
+                            className={cn(
+                              'text-sm font-semibold',
+                              item.count === 0 &&
+                                'bg-muted text-muted-foreground'
+                            )}
+                          >
+                            {item.count}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 h-full">
                   <ListX className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No file status data available.</p>
+                  <p className="text-muted-foreground">
+                    No file status data available.
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -1841,4 +1855,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
