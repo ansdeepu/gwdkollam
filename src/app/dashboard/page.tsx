@@ -658,7 +658,7 @@ export default function DashboardPage() {
       } else if ((account === 'SBI' || account === 'STSB') && type === 'debit') {
         title = `${account} - Withdrawal Details`;
         columnsForDialog = [
-          { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: "Applicant Name" },
+          { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
           { key: 'siteNames', label: 'Site(s)' }, { key: 'sitePurposes', label: 'Purpose(s)' },
           { key: 'amount', label: 'Paid (₹)', isNumeric: true }, { key: 'date', label: 'Payment Date' },
         ];
@@ -1055,7 +1055,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="border rounded-lg p-3 bg-background">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <ScrollArea className="h-40 pr-2">
+                        <ScrollArea className="h-20 pr-2">
                             {dashboardData.workAlerts.length > 0 ? (
                                 <div className="space-y-2">
                                     {dashboardData.workAlerts.map((alert, index) => (
@@ -1660,4 +1660,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
