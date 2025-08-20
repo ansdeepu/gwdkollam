@@ -136,8 +136,8 @@ const getColorClass = (nameOrEmail: string): string => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries, isLoading: entriesLoading } = useFileEntries(); // For dashboard cards and general view
-  const { reportEntries, isReportLoading } = useAllFileEntriesForReports(); // For progress report card
+  const { fileEntries: filteredFileEntries } = useFileEntries(); // Filtered view for dashboard cards
+  const { reportEntries: allFileEntries, isReportLoading: allEntriesLoading } = useAllFileEntriesForReports(); // Unfiltered view for totals and reports
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
@@ -181,7 +181,7 @@ export default function DashboardPage() {
   };
 
   const calculateFinanceData = useCallback(() => {
-    if (entriesLoading) return;
+    if (allEntriesLoading) return;
     setFinanceLoading(true);
     
     let sDate: Date | null = null;
@@ -199,7 +199,7 @@ export default function DashboardPage() {
     let sbiDebit = 0;
     let stsbDebit = 0;
 
-    fileEntries.forEach(entry => {
+    allFileEntries.forEach(entry => {
       entry.remittanceDetails?.forEach(rd => {
         const remittedDate = rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null;
         const isInPeriod = !isDateFilterActive || (remittedDate && isValid(remittedDate) && sDate && eDate && isWithinInterval(remittedDate, { start: sDate, end: eDate }));
@@ -243,11 +243,11 @@ export default function DashboardPage() {
       revenueHeadBalance,
     });
     setFinanceLoading(false);
-  }, [financeStartDate, financeEndDate, fileEntries, entriesLoading]);
+  }, [financeStartDate, financeEndDate, allFileEntries, allEntriesLoading]);
   
   useEffect(() => {
-    if (!entriesLoading) calculateFinanceData();
-  }, [financeStartDate, financeEndDate, fileEntries, entriesLoading, calculateFinanceData]); 
+    if (!allEntriesLoading) calculateFinanceData();
+  }, [financeStartDate, financeEndDate, allFileEntries, allEntriesLoading, calculateFinanceData]); 
 
   const handleClearFinanceDates = () => {
     setFinanceStartDate(undefined);
@@ -284,28 +284,10 @@ export default function DashboardPage() {
   }, [authLoading, currentUser, fetchAllUsers]);
 
   const dashboardData = useMemo(() => {
-    if (entriesLoading || staffLoading || !fileEntries || !currentUser) return null;
+    if (allEntriesLoading || staffLoading || !allFileEntries || !currentUser) return null;
     
-    const isSupervisor = currentUser.role === 'supervisor';
-    const activeSupervisorStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
-
-    // Use `fileEntries` from `useFileEntries` which is already filtered for the supervisor's active view.
-    const entriesForCards = isSupervisor
-      ? fileEntries.map(entry => {
-          const relevantSites = entry.siteDetails?.filter(site =>
-            site.supervisorUid === currentUser.uid &&
-            site.workStatus &&
-            activeSupervisorStatuses.includes(site.workStatus as SiteWorkStatus)
-          ) || [];
-          
-          if (relevantSites.length > 0) {
-            return { ...entry, siteDetails: relevantSites };
-          }
-          return null;
-        }).filter((entry): entry is DataEntryFormData => entry !== null)
-      : fileEntries;
-
-
+    const entriesForCards = (currentUser.role === 'supervisor') ? filteredFileEntries : allFileEntries;
+    
     let pendingTasksCount = 0;
     
     const workStatusRows = [...siteWorkStatusOptions];
@@ -424,7 +406,7 @@ export default function DashboardPage() {
     }
     
     let finalWorkStatusData = initialWorkStatusData;
-    if (isSupervisor) {
+    if (currentUser.role === 'supervisor') {
         finalWorkStatusData = initialWorkStatusData.filter(row => row.total.count > 0 || row.statusCategory === "Total No. of Applications");
     }
 
@@ -459,13 +441,13 @@ export default function DashboardPage() {
         fileStatusCountsData,
         arsStatusCountsData,
         totalArsSites,
-        totalFiles: entriesForCards.length,
+        totalFiles: allFileEntries.length, // Corrected to use allFileEntries
     };
-  }, [entriesLoading, fileEntries, staffLoading, staffMembers, currentUser]);
+  }, [allEntriesLoading, allFileEntries, filteredFileEntries, staffLoading, staffMembers, currentUser]);
 
   const currentMonthStats = useMemo(() => {
-    // Use the new `reportEntries` hook which contains ALL files, not just active ones.
-    if (isReportLoading || !currentUser) return null;
+    // Use the `reportEntries` hook which contains ALL files, not just active ones.
+    if (allEntriesLoading || !currentUser) return null;
 
     const startOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth(), 1);
     const endOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth() + 1, 0, 23, 59, 59);
@@ -477,8 +459,8 @@ export default function DashboardPage() {
     const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName: string; }>();
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
 
-    // Use `reportEntries` here to ensure we can find completed works from the past.
-    for (const entry of reportEntries) {
+    // Use `allFileEntries` here to ensure we can find completed works from the past.
+    for (const entry of allFileEntries) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
         // Supervisor specific filtering remains crucial
@@ -530,7 +512,7 @@ export default function DashboardPage() {
         completedSummary: createSummary(completedThisMonthSites),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [reportEntries, isReportLoading, workReportMonth, currentUser]);
+  }, [allFileEntries, allEntriesLoading, workReportMonth, currentUser]);
 
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
@@ -553,14 +535,14 @@ export default function DashboardPage() {
         return acc;
     }, {} as Record<SitePurpose, number>);
     
-    if (!selectedSupervisorId || entriesLoading) {
+    if (!selectedSupervisorId || allEntriesLoading) {
       return { works: [], byPurpose, totalCount: 0 };
     }
     
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
     let works: Array<{ fileNo: string; applicantName: string; siteName: string; workStatus: string; purpose?: SitePurpose; supervisorName?: string | null }> = [];
 
-    for (const entry of fileEntries) {
+    for (const entry of allFileEntries) {
         entry.siteDetails?.forEach(site => {
             if (site.supervisorUid === selectedSupervisorId && site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
                 works.push({
@@ -578,11 +560,11 @@ export default function DashboardPage() {
         });
     }
     return { works, byPurpose, totalCount: works.length };
-  }, [selectedSupervisorId, fileEntries, entriesLoading]);
+  }, [selectedSupervisorId, allFileEntries, allEntriesLoading]);
 
 
   const handleFileStatusCardClick = (status: string) => {
-    const dataForDialog = fileEntries
+    const dataForDialog = allFileEntries
       .filter(entry => entry.fileStatus === status)
       .map((entry, index) => {
         const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance;
@@ -662,7 +644,7 @@ export default function DashboardPage() {
       return isWithinInterval(targetDate, { start: sDateObj, end: eDateObj });
     };
   
-    fileEntries.forEach(entry => {
+    allFileEntries.forEach(entry => {
       const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite || 'N/A').filter(Boolean).join(', ') || 'N/A';
       const sitePurposes = entry.siteDetails?.map(sd => sd.purpose || 'N/A').filter(Boolean).join(', ') || 'N/A';
   
@@ -986,7 +968,7 @@ export default function DashboardPage() {
   };
 
 
-  if (entriesLoading || authLoading || usersLoading || staffLoading || isReportLoading || !dashboardData || !currentMonthStats) { 
+  if (allEntriesLoading || authLoading || usersLoading || staffLoading || !dashboardData || !currentMonthStats) { 
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -1080,51 +1062,6 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
-
-          <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Waves className="h-5 w-5 text-primary" />
-                    ARS Status Overview
-                </CardTitle>
-                <CardDescription>
-                    Current count of ARS sites by their work status.
-                </CardDescription>
-                 <div className="mt-2">
-                    <div className="inline-flex items-baseline gap-2 p-3 rounded-lg shadow-sm bg-primary/10 border border-primary/20">
-                    <h4 className="text-sm font-medium text-primary">Total ARS Sites</h4>
-                    <p className="text-2xl font-bold text-primary">{dashboardData.totalArsSites}</p>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                {dashboardData.arsStatusCountsData.length > 0 ? (
-                    <ScrollArea className="h-[150px] no-scrollbar">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                            {dashboardData.arsStatusCountsData.map((item) => (
-                                <Card 
-                                    key={item.status} 
-                                    className="shadow-sm transition-all cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30"
-                                    onClick={() => handleWorkStatusCellClick(item.data, `ARS Sites - ${item.status}`)}
-                                >
-                                    <CardContent className="p-3">
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-sm font-medium text-foreground" title={item.status}>{item.status}</p>
-                                            <Badge variant="default" className="text-sm font-semibold">{item.count}</Badge>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </ScrollArea>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-10 h-full">
-                        <ListX className="h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No ARS sites found.</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
         </div>
         <div className="lg:col-span-2">
           <Card className="shadow-lg flex flex-col">
@@ -1289,6 +1226,51 @@ export default function DashboardPage() {
             </div>
           )}
         </CardContent>
+      </Card>
+
+      <Card className="shadow-lg">
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                  <Waves className="h-5 w-5 text-primary" />
+                  ARS Status Overview
+              </CardTitle>
+              <CardDescription>
+                  Current count of ARS sites by their work status.
+              </CardDescription>
+                <div className="mt-2">
+                  <div className="inline-flex items-baseline gap-2 p-3 rounded-lg shadow-sm bg-primary/10 border border-primary/20">
+                  <h4 className="text-sm font-medium text-primary">Total ARS Sites</h4>
+                  <p className="text-2xl font-bold text-primary">{dashboardData.totalArsSites}</p>
+                  </div>
+              </div>
+          </CardHeader>
+          <CardContent>
+              {dashboardData.arsStatusCountsData.length > 0 ? (
+                  <ScrollArea className="h-[150px] no-scrollbar">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                          {dashboardData.arsStatusCountsData.map((item) => (
+                              <Card 
+                                  key={item.status} 
+                                  className="shadow-sm transition-all cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30"
+                                  onClick={() => handleWorkStatusCellClick(item.data, `ARS Sites - ${item.status}`)}
+                              >
+                                  <CardContent className="p-3">
+                                      <div className="flex items-center justify-between">
+                                          <p className="text-sm font-medium text-foreground" title={item.status}>{item.status}</p>
+                                          <Badge variant="default" className="text-sm font-semibold">{item.count}</Badge>
+                                      </div>
+                                  </CardContent>
+                              </Card>
+                          ))}
+                      </div>
+                  </ScrollArea>
+              ) : (
+                  <div className="flex flex-col items-center justify-center py-10 h-full">
+                      <ListX className="h-12 w-12 text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No ARS sites found.</p>
+                  </div>
+              )}
+          </CardContent>
       </Card>
       
       <Card className="shadow-lg"> 
