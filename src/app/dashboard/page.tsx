@@ -1420,8 +1420,9 @@ export default function DashboardPage() {
               </div>
           </CardContent>
       </Card>
-        
-        { (currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
+      
+      { (currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1488,9 +1489,7 @@ export default function DashboardPage() {
                     </div>
                 </CardContent>
             </Card>
-        )}
 
-        { (currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
             <Card>
               <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -1537,7 +1536,8 @@ export default function DashboardPage() {
                 )}
               </CardContent>
             </Card>
-        )}
+        </div>
+      )}
       
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl">
@@ -1723,3 +1723,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
