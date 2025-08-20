@@ -27,6 +27,7 @@ import {
   Cake,
   Bell,
   CalendarCheck,
+  Waves,
 } from "lucide-react";
 import { 
   Card, 
@@ -328,6 +329,9 @@ export default function DashboardPage() {
 
     const fileStatusCounts = new Map<string, number>();
     fileStatusOptions.forEach(status => fileStatusCounts.set(status, 0));
+    
+    const arsStatusCounts = new Map<string, { count: number, data: SiteDetailFormData[] }>();
+    siteWorkStatusOptions.forEach(status => arsStatusCounts.set(status, { count: 0, data: [] }));
 
     const now = new Date();
     const fileStatusesForPending: FileStatus[] = ["File Under Process"];
@@ -341,11 +345,21 @@ export default function DashboardPage() {
         if (isFilePending) pendingTasksCount++;
         
         entry.siteDetails?.forEach(sd => {
+            const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
+            
+            // ARS Status Card Data
+            if (sd.purpose === 'ARS' && sd.workStatus && arsStatusCounts.has(sd.workStatus)) {
+                const current = arsStatusCounts.get(sd.workStatus)!;
+                current.count++;
+                current.data.push(siteData);
+                arsStatusCounts.set(sd.workStatus, current);
+            }
+
+            // Work Status by Service Card Data
             if (sd.purpose && sd.workStatus) {
                 const purposeIndex = sitePurposeOptions.indexOf(sd.purpose as SitePurpose);
                 if (purposeIndex > -1) {
                     const service = sd.purpose as SitePurpose;
-                    const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
                     
                     const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
                     if (workStatusRow) {
@@ -427,6 +441,13 @@ export default function DashboardPage() {
         status,
         count: fileStatusCounts.get(status) || 0,
     }));
+    
+    const arsStatusCountsData = Array.from(arsStatusCounts.entries())
+        .map(([status, { count, data }]) => ({ status, count, data }))
+        .filter(item => item.count > 0)
+        .sort((a,b) => a.status.localeCompare(b.status));
+    
+    const totalArsSites = Array.from(arsStatusCounts.values()).reduce((sum, item) => sum + item.count, 0);
 
     return {
         pendingTasksCount,
@@ -436,6 +457,8 @@ export default function DashboardPage() {
         filesByAgeData: ageGroups,
         filesByAgeCounts,
         fileStatusCountsData,
+        arsStatusCountsData,
+        totalArsSites,
         totalFiles: entriesForCards.length,
     };
   }, [entriesLoading, fileEntries, staffLoading, staffMembers, currentUser]);
@@ -975,8 +998,8 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+        <div className="lg:col-span-3 space-y-6">
           <Card className="shadow-lg flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1013,7 +1036,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden pt-6">
               {dashboardData.fileStatusCountsData.length > 0 ? (
-                <ScrollArea className="no-scrollbar">
+                <ScrollArea className="h-[150px] no-scrollbar">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                     {dashboardData.fileStatusCountsData.map((item) => (
                       <Card 
@@ -1057,6 +1080,51 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Waves className="h-5 w-5 text-primary" />
+                    ARS Status Overview
+                </CardTitle>
+                <CardDescription>
+                    Current count of ARS sites by their work status.
+                </CardDescription>
+                 <div className="mt-2">
+                    <div className="inline-flex items-baseline gap-2 p-3 rounded-lg shadow-sm bg-primary/10 border border-primary/20">
+                    <h4 className="text-sm font-medium text-primary">Total ARS Sites</h4>
+                    <p className="text-2xl font-bold text-primary">{dashboardData.totalArsSites}</p>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                {dashboardData.arsStatusCountsData.length > 0 ? (
+                    <ScrollArea className="h-[150px] no-scrollbar">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                            {dashboardData.arsStatusCountsData.map((item) => (
+                                <Card 
+                                    key={item.status} 
+                                    className="shadow-sm transition-all cursor-pointer hover:shadow-md hover:bg-secondary/10 hover:border-primary/30"
+                                    onClick={() => handleWorkStatusCellClick(item.data, `ARS Sites - ${item.status}`)}
+                                >
+                                    <CardContent className="p-3">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-sm font-medium text-foreground" title={item.status}>{item.status}</p>
+                                            <Badge variant="default" className="text-sm font-semibold">{item.count}</Badge>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-10 h-full">
+                        <ListX className="h-12 w-12 text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">No ARS sites found.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
         </div>
         <div className="lg:col-span-2">
           <Card className="shadow-lg flex flex-col">
