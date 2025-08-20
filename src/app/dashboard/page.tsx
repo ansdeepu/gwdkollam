@@ -1032,7 +1032,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-lg flex flex-col h-full">
+            <Card className="shadow-lg flex flex-col h-[300px]">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5 text-primary" />
@@ -1042,7 +1042,7 @@ export default function DashboardPage() {
                 <CardContent className="flex flex-col gap-4 pt-0 flex-1">
                     <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
-                        <ScrollArea className="h-[200px] pr-2">
+                        <ScrollArea className="flex-1 pr-2">
                             {dashboardData.birthdayWishes.length > 0 ? (
                                 <div className="space-y-2">
                                     {dashboardData.birthdayWishes.map((staff, index) => (
