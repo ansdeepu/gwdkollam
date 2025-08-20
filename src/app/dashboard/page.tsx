@@ -978,7 +978,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
         <div className="lg:col-span-3 space-y-6">
-           <Card className="shadow-lg flex flex-col">
+           <Card className="shadow-lg flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-primary" />
@@ -1031,7 +1031,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-            <Card className="h-[300px] flex flex-col">
+            <Card className="shadow-lg flex flex-col h-full">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5 text-primary" />
@@ -1039,7 +1039,7 @@ export default function DashboardPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4 pt-0 flex-1">
-                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
+                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col" style={{ height: '600px', overflowY: 'auto' }}>
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
                         <ScrollArea className="flex-1 pr-2">
                             {dashboardData.birthdayWishes.length > 0 ? (
@@ -1056,7 +1056,7 @@ export default function DashboardPage() {
                             )}
                         </ScrollArea>
                     </div>
-                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
+                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col" style={{ height: '600px', overflowY: 'auto' }}>
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
                         <ScrollArea className="flex-1 pr-2">
                             {dashboardData.workAlerts.length > 0 ? (
