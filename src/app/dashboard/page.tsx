@@ -1067,14 +1067,14 @@ export default function DashboardPage() {
           </Card>
         </div>
         <div className="lg:col-span-2">
-          <Card className="shadow-lg flex flex-col h-[626px]">
+          <Card className="shadow-lg flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
                 Notice Board
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4 overflow-hidden p-3 pt-0">
+            <CardContent className="flex flex-col gap-4 overflow-hidden p-3 pt-0 flex-1">
               <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[150px]">
                 <h4 className="text-sm font-semibold text-accent-foreground mb-2 flex items-center gap-2 shrink-0 p-2 bg-accent rounded-t-md text-white">
                   <Cake className="h-4 w-4" />
@@ -1102,7 +1102,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 h-[350px]">
+              <div className="flex flex-col p-3 rounded-lg border bg-secondary/30 flex-1 min-h-[350px]">
                 <h4 className="text-sm font-semibold text-orange-600 mb-2 flex items-center gap-2 shrink-0 p-2 bg-orange-100 rounded-t-md">
                   <Megaphone className="h-4 w-4" />
                   📢 Important Updates ({dashboardData.workAlerts.length})
