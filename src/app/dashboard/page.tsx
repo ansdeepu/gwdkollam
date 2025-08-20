@@ -1057,9 +1057,9 @@ export default function DashboardPage() {
                             )}
                         </ScrollArea>
                     </div>
-                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col marquee-v-container">
+                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <div className={cn("flex-1 no-scrollbar h-[100px]", shouldAnimateUpdates && "marquee-v-container")}>
+                        <div className={cn("flex-1 no-scrollbar h-[10px]", shouldAnimateUpdates && "marquee-v-container")}>
                             {dashboardData.workAlerts.length > 0 ? (
                                 <div className={cn(shouldAnimateUpdates && "marquee-v-content")}>
                                     {dashboardData.workAlerts.map((alert, index) => (
