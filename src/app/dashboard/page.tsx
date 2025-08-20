@@ -973,6 +973,7 @@ export default function DashboardPage() {
   }
   
   const shouldAnimateBirthdays = dashboardData.birthdayWishes.length > 1;
+  const shouldAnimateUpdates = dashboardData.workAlerts.length > 5; // Animate only if there are many updates
   
   return (
     <div className="space-y-6">
@@ -1056,13 +1057,19 @@ export default function DashboardPage() {
                             )}
                         </ScrollArea>
                     </div>
-                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col">
+                    <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col marquee-v-container">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <ScrollArea className="flex-1 pr-2">
+                        <div className={cn("flex-1 no-scrollbar", shouldAnimateUpdates && "marquee-v-container")}>
                             {dashboardData.workAlerts.length > 0 ? (
-                                <div className="space-y-2">
+                                <div className={cn(shouldAnimateUpdates && "marquee-v-content")}>
                                     {dashboardData.workAlerts.map((alert, index) => (
-                                        <div key={index} className="p-2 rounded-md bg-amber-500/10">
+                                        <div key={index} className="p-2 rounded-md bg-amber-500/10 mb-2">
+                                            <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
+                                            <p className="text-xs text-amber-600">{alert.details}</p>
+                                        </div>
+                                    ))}
+                                    {shouldAnimateUpdates && dashboardData.workAlerts.map((alert, index) => (
+                                        <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10 mb-2" aria-hidden="true">
                                             <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
                                             <p className="text-xs text-amber-600">{alert.details}</p>
                                         </div>
@@ -1071,7 +1078,7 @@ export default function DashboardPage() {
                             ) : (
                                 <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No important updates.</p>
                             )}
-                        </ScrollArea>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
