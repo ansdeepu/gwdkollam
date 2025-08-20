@@ -73,7 +73,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
+import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 
 interface TransformedFinanceMetrics {
   sbiCredit: number;
@@ -136,8 +136,8 @@ const getColorClass = (nameOrEmail: string): string => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { fileEntries: filteredFileEntries, isLoading: filteredEntriesLoading } = useFileEntries(); // Filtered view for dashboard cards (File Manager Data)
-  const { reportEntries: allFileEntries, isReportLoading: allEntriesLoading } = useAllFileEntriesForReports(); // Unfiltered view for totals and reports
+  const { fileEntries: filteredFileEntries, isLoading: filteredEntriesLoading } = useFileEntries();
+  const { reportEntries: allFileEntries, isReportLoading: allEntriesLoading } = useAllFileEntriesForReports();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { toast } = useToast();
@@ -275,7 +275,6 @@ export default function DashboardPage() {
             .catch(error => console.error("Error fetching users for dashboard:", error))
             .finally(() => setUsersLoading(false));
         } else {
-             // For supervisors or other roles, no need to fetch all users
              setAllUsers([]);
              setActiveUsers([]);
              setUsersLoading(false);
@@ -287,9 +286,8 @@ export default function DashboardPage() {
     if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
     
     const entriesForFileStatus = filteredFileEntries;
-    const entriesForWorkStatus = allFileEntries;
-    const entriesForArsStatus = allFileEntries;
-
+    const entriesForWorkStatus = allFileEntries; 
+    
     let pendingTasksCount = 0;
     
     const workStatusRows = [...siteWorkStatusOptions];
@@ -363,35 +361,27 @@ export default function DashboardPage() {
 
     for (const entry of entriesForWorkStatus) {
         entry.siteDetails?.forEach(sd => {
-            if (sd.purpose !== 'ARS') {
-                const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
-                if (sd.purpose && sd.workStatus) {
-                    const purposeIndex = sitePurposeOptions.indexOf(sd.purpose as SitePurpose);
-                    if (purposeIndex > -1) {
-                        const service = sd.purpose as SitePurpose;
-                        const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
-                        if (workStatusRow) {
-                            workStatusRow[service].count++;
-                            workStatusRow[service].data.push(siteData);
-                            workStatusRow.total.count++;
-                            workStatusRow.total.data.push(siteData);
-                        }
-                        const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
-                        if (totalAppsRow) {
-                            totalAppsRow[service].count++;
-                            totalAppsRow.total.count++;
-                            totalAppsRow.total.data.push(siteData);
-                        }
+            const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
+            const purpose = sd.purpose as SitePurpose;
+            if (sd.purpose && sd.workStatus) {
+                if (sitePurposeOptions.includes(purpose)) {
+                    const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
+                    if (workStatusRow) {
+                        workStatusRow[purpose].count++;
+                        workStatusRow[purpose].data.push(siteData);
+                        workStatusRow.total.count++;
+                        workStatusRow.total.data.push(siteData);
+                    }
+                    const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
+                    if (totalAppsRow) {
+                        totalAppsRow[purpose].count++;
+                        totalAppsRow.total.count++;
+                        totalAppsRow.total.data.push(siteData);
                     }
                 }
             }
-        });
-    }
 
-    for (const entry of entriesForArsStatus) {
-        entry.siteDetails?.forEach(sd => {
             if (sd.purpose === 'ARS') {
-                const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
                 if (sd.workStatus && arsStatusCounts.has(sd.workStatus)) {
                     const current = arsStatusCounts.get(sd.workStatus)!;
                     current.count++;
@@ -437,7 +427,7 @@ export default function DashboardPage() {
         .filter(item => item.count > 0)
         .sort((a,b) => a.status.localeCompare(b.status));
     
-    const totalArsSites = Array.from(arsStatusCounts.values()).reduce((sum, item) => sum + item.count, 0);
+    const totalArsSites = allFileEntries.flatMap(entry => entry.siteDetails ?? []).filter(site => site.purpose === 'ARS').length;
 
     return {
         pendingTasksCount,
@@ -525,7 +515,7 @@ export default function DashboardPage() {
             return {
                 uid: u.uid,
                 name: staffInfo?.name || u.name || u.email,
-            }
+            };
         })
         .sort((a,b) => a.name.localeCompare(b.name));
   }, [allUsers, staffMembers, usersLoading, staffLoading]);
@@ -563,7 +553,6 @@ export default function DashboardPage() {
     }
     return { works, byPurpose, totalCount: works.length };
   }, [selectedSupervisorId, allFileEntries, allEntriesLoading]);
-
 
   const handleFileStatusCardClick = (status: string) => {
     const dataForDialog = filteredFileEntries
@@ -669,7 +658,7 @@ export default function DashboardPage() {
       } else if ((account === 'SBI' || account === 'STSB') && type === 'debit') {
         title = `${account} - Withdrawal Details`;
         columnsForDialog = [
-          { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
+          { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: "Applicant Name" },
           { key: 'siteNames', label: 'Site(s)' }, { key: 'sitePurposes', label: 'Purpose(s)' },
           { key: 'amount', label: 'Paid (₹)', isNumeric: true }, { key: 'date', label: 'Payment Date' },
         ];
@@ -984,7 +973,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         <div className="lg:col-span-3 space-y-6">
-           <Card className="shadow-lg">
+           <Card className="shadow-lg flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-primary" />
@@ -1018,7 +1007,7 @@ export default function DashboardPage() {
                 )}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                 {dashboardData.fileStatusCountsData.map((item) => (
                   <button
@@ -1036,7 +1025,7 @@ export default function DashboardPage() {
            </Card>
         </div>
         
-        <div className="lg:col-span-2 shadow-lg flex flex-col">
+        <div className="lg:col-span-2 space-y-6">
             <Card className="h-full">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1044,17 +1033,17 @@ export default function DashboardPage() {
                     Notice Board
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col gap-4 pt-0">
-                    <div className="flex-1 border rounded-lg p-3 bg-background">
+                <CardContent className="flex flex-col gap-4 pt-0">
+                    <div className="border rounded-lg p-3 bg-background">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
-                        <div className="relative h-12 overflow-hidden">
+                        <div className="relative h-10 overflow-hidden">
                             {dashboardData.birthdayWishes.length > 0 ? (
                                 <div className={cn("absolute inset-0 flex flex-col", shouldAnimateBirthdays && "marquee-v-container")}>
                                     <div className={cn(shouldAnimateBirthdays && "marquee-v-content")}>
                                         {[...dashboardData.birthdayWishes, ...dashboardData.birthdayWishes].map((staff, index) => (
-                                            <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 h-12 flex flex-col justify-center">
-                                                <p className="font-semibold text-pink-700 -mb-1">Happy Birthday!</p>
-                                                <p className="font-bold text-base text-pink-800 ">{staff.name}</p>
+                                            <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 h-10 flex flex-col justify-center">
+                                                <p className="font-semibold text-pink-700 text-xs -mb-1">Happy Birthday!</p>
+                                                <p className="font-bold text-sm text-pink-800 ">{staff.name}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -1064,9 +1053,9 @@ export default function DashboardPage() {
                             )}
                         </div>
                     </div>
-                    <div className="flex-1 border rounded-lg p-3 bg-background">
+                    <div className="border rounded-lg p-3 bg-background">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" /> Important Updates ({dashboardData.workAlerts.length})</h3>
-                        <ScrollArea className="h-12 pr-3">
+                        <ScrollArea className="h-40 pr-2">
                             {dashboardData.workAlerts.length > 0 ? (
                                 <div className="space-y-2">
                                     {dashboardData.workAlerts.map((alert, index) => (
@@ -1086,7 +1075,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Card>
+       <Card>
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-primary" />
@@ -1185,7 +1174,7 @@ export default function DashboardPage() {
               )}
           </CardContent>
       </Card>
-
+      
       <Card>
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1257,7 +1246,6 @@ export default function DashboardPage() {
                         </TableCell>
                         <TableCell className={cn("text-right font-bold", transformedFinanceMetrics.sbiBalance < 0 ? 'text-red-600' : 'text-blue-600')}>{transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       </TableRow>
-                    </TableRow>
                       <TableRow>
                         <TableCell className="font-medium">STSB</TableCell>
                         <TableCell className="text-right">
@@ -1460,7 +1448,7 @@ export default function DashboardPage() {
                       return (
                       <li key={usr.uid} className="flex items-center gap-4 p-2 rounded-lg hover:bg-secondary/50">
                           <Avatar className="h-10 w-10">
-                              <AvatarImage src={photoUrl || undefined} alt={usr.name || 'user'} />
+                              <AvatarImage src={photoUrl || undefined} alt={usr.name || 'user'} data-ai-hint="person user" />
                               <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(usr.name)}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
@@ -1487,8 +1475,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
         )}
-      </div>
-
+      
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
@@ -1673,3 +1660,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
