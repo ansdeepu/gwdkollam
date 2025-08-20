@@ -235,6 +235,13 @@ export function useFileEntries(): FileEntriesState {
           entriesFromFirestore.push(convertTimestampsToDates({ id: doc.id, ...doc.data() }));
       }
       
+      // Post-process to remove ARS sites for File Manager view
+      let processedEntries = entriesFromFirestore.map(entry => {
+        const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS') ?? [];
+        return { ...entry, siteDetails: nonArsSites };
+      }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0); // Remove files that only had ARS sites
+
+
       // Supervisor Specific Filtering Logic
       if (user.role === 'supervisor' && user.uid) {
           const allManagerPendingUpdates = await getPendingUpdatesForFile(null, user.uid);
@@ -251,7 +258,7 @@ export function useFileEntries(): FileEntriesState {
               });
           });
 
-          const filteredEntriesForManager = entriesFromFirestore.map(entry => {
+          const filteredEntriesForManager = processedEntries.map(entry => {
               const userPendingUpdateForThisFile = allManagerPendingUpdates.find(p => p.fileNo === entry.fileNo);
 
               const sitesToDisplay = (entry.siteDetails || [])
@@ -277,10 +284,10 @@ export function useFileEntries(): FileEntriesState {
               return { ...entry, siteDetails: sitesToDisplay };
           }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
 
-          entriesFromFirestore = filteredEntriesForManager;
+          processedEntries = filteredEntriesForManager;
       }
       
-      entriesFromFirestore.sort((a, b) => {
+      processedEntries.sort((a, b) => {
         const dateA_str = a.remittanceDetails?.[0]?.dateOfRemittance;
         const dateB_str = b.remittanceDetails?.[0]?.dateOfRemittance;
         const dateA = dateA_str ? new Date(dateA_str) : null;
@@ -308,7 +315,7 @@ export function useFileEntries(): FileEntriesState {
         }
         return detailsA.original.localeCompare(detailsB.original);
       });
-      setFileEntries(entriesFromFirestore);
+      setFileEntries(processedEntries);
     } catch (error) {
       console.error("[useFileEntries] Error fetching file entries:", error);
       setFileEntries([]);
