@@ -99,6 +99,22 @@ const dashboardServiceOrder: SitePurpose[] = [
     "HPS", "HPR", "ARS"
 ];
 
+const serviceHeaderLabels: Record<string, string> = {
+    'BWC': 'BWC',
+    'TWC': 'TWC',
+    'FPW': 'FPW',
+    'BW Dev': 'BW<br/>Dev',
+    'TW Dev': 'TW<br/>Dev',
+    'FPW Dev': 'FPW<br/>Dev',
+    'MWSS': 'MWSS',
+    'MWSS Ext': 'MWSS<br/>Ext',
+    'Pumping Scheme': 'Pumping<br/>Scheme',
+    'MWSS Pump Reno': 'MWSS<br/>Pump<br/>Reno',
+    'HPS': 'HPS',
+    'HPR': 'HPR',
+    'ARS': 'ARS',
+};
+
 
 interface TransformedFinanceMetrics {
   sbiCredit: number;
@@ -1136,28 +1152,22 @@ export default function DashboardPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-semibold whitespace-nowrap">Work Category</TableHead>
-                      {dashboardServiceOrder.map(service => (
-                          <TableHead key={service} className="text-center font-semibold whitespace-nowrap">
-                            { service === 'Pumping Scheme' ? 'Pumping<br/>Scheme' :
-                              service === 'BW Dev' ? 'BW<br/>Dev' :
-                              service === 'TW Dev' ? 'TW<br/>Dev' :
-                              service === 'FPW Dev' ? 'FPW<br/>Dev' :
-                              service === 'MWSS Ext' ? 'MWSS<br/>Ext' :
-                              service === 'MWSS Pump Reno' ? 'MWSS<br/>Pump<br/>Reno' :
-                              service
-                            }
-                          </TableHead>
+                      <TableHead className="font-semibold p-2">Work Category</TableHead>
+                      {[...dashboardServiceOrder, 'Total'].map(service => (
+                          <TableHead 
+                            key={service} 
+                            className="text-center font-semibold p-1"
+                            dangerouslySetInnerHTML={{ __html: serviceHeaderLabels[service] || service }}
+                          />
                       ))}
-                      <TableHead className="text-center font-semibold">Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {dashboardData.workStatusByServiceData.map((row) => (
                       <TableRow key={row.statusCategory}>
-                        <TableCell className="font-medium whitespace-nowrap">{row.statusCategory}</TableCell>
+                        <TableCell className="font-medium p-2 whitespace-normal break-words">{row.statusCategory}</TableCell>
                         {dashboardServiceOrder.map(service => (
-                          <TableCell key={service} className="text-center">
+                          <TableCell key={service} className="text-center p-2">
                             {(row as any)[service].count > 0 ? (
                                 <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
                             ) : (
@@ -1165,7 +1175,7 @@ export default function DashboardPage() {
                             )}
                           </TableCell>
                         ))}
-                        <TableCell className="text-center font-bold">
+                        <TableCell className="text-center p-2 font-bold">
                            {(row as any)['total'].count > 0 ? (
                              <Button variant="link" className="p-0 h-auto font-bold" onClick={() => handleWorkStatusCellClick((row as any)['total'].data, `${row.statusCategory} - Total`)}>{(row as any)['total'].count}</Button>
                           ) : (
