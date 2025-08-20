@@ -286,7 +286,7 @@ export default function DashboardPage() {
     if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
     
     const entriesForFileStatus = filteredFileEntries;
-    const entriesForWorkStatus = allFileEntries; 
+    const entriesForWorkStatus = filteredFileEntries; 
     
     let pendingTasksCount = 0;
     
@@ -296,7 +296,7 @@ export default function DashboardPage() {
     
     const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
         const serviceCounts: { [service: string]: { count: number, data: any[] } } = {};
-        [...sitePurposeOptions, 'ARS'].forEach(service => {
+        [...sitePurposeOptions].forEach(service => {
             serviceCounts[service] = { count: 0, data: [] };
         });
         return { statusCategory, ...serviceCounts, total: { count: 0, data: [] } };
@@ -364,7 +364,7 @@ export default function DashboardPage() {
             const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
             const purpose = sd.purpose as SitePurpose;
             if (sd.purpose && sd.workStatus) {
-                if (sitePurposeOptions.includes(purpose) || purpose === 'ARS') {
+                if (sitePurposeOptions.includes(purpose)) {
                     const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
                     if (workStatusRow) {
                         workStatusRow[purpose].count++;
@@ -380,8 +380,13 @@ export default function DashboardPage() {
                     }
                 }
             }
+        });
+    }
 
+    allFileEntries.forEach(entry => {
+        entry.siteDetails?.forEach(sd => {
             if (sd.purpose === 'ARS') {
+                const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
                 if (sd.workStatus && arsStatusCounts.has(sd.workStatus)) {
                     const current = arsStatusCounts.get(sd.workStatus)!;
                     current.count++;
@@ -390,7 +395,7 @@ export default function DashboardPage() {
                 }
             }
         });
-    }
+    });
     
     const today = new Date();
     const todayMonth = today.getMonth();
@@ -1089,7 +1094,7 @@ export default function DashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="font-semibold whitespace-nowrap">Work Category</TableHead>
-                      {[...sitePurposeOptions, 'ARS'].map(service => (
+                      {[...sitePurposeOptions].map(service => (
                           <TableHead key={service} className="text-center font-semibold whitespace-nowrap">
                             { service === 'Pumping Scheme' ? 'Pumping<br/>Scheme' :
                               service === 'BW Dev' ? 'BW<br/>Dev' :
@@ -1108,7 +1113,7 @@ export default function DashboardPage() {
                     {dashboardData.workStatusByServiceData.map((row) => (
                       <TableRow key={row.statusCategory}>
                         <TableCell className="font-medium whitespace-nowrap">{row.statusCategory}</TableCell>
-                        {[...sitePurposeOptions, 'ARS'].map(service => (
+                        {[...sitePurposeOptions].map(service => (
                           <TableCell key={service} className="text-center">
                             {(row as any)[service].count > 0 ? (
                                 <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
