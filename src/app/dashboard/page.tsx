@@ -1236,59 +1236,59 @@ export default function DashboardPage() {
       
       <Card>
           <CardHeader>
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                 <div>
-                    <CardTitle className="flex items-center gap-2">
-                        <Waves className="h-5 w-5 text-primary" />
-                        ARS Status Overview
-                    </CardTitle>
-                    <CardDescription>
-                        Current count of ARS sites by their work status.
-                    </CardDescription>
-                 </div>
-                 <div className="flex flex-col sm:flex-row gap-2 items-center">
-                    <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Total ARS Sites</p>
-                        <p className="text-3xl font-bold text-primary">{arsDashboardData?.totalArsSites ?? 0}</p>
-                    </div>
-                    <div className="text-right sm:ml-4">
-                        <p className="text-sm text-muted-foreground">Total Expenditure</p>
-                         <button 
-                            className="text-3xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={(arsDashboardData?.totalArsExpenditure ?? 0) === 0}
-                            onClick={() => handleWorkStatusCellClick(arsDashboardData?.arsStatusCountsData.flatMap(item => item.data) ?? [], 'All ARS Sites (Expenditure)')}
-                         >
-                          ₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}
-                        </button>
-                    </div>
-                 </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                      <Waves className="h-5 w-5 text-primary" />
+                      ARS Status Overview
+                  </CardTitle>
+                  <CardDescription>
+                      Current count of ARS sites by their work status.
+                  </CardDescription>
+                </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                      <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !arsStartDate && "text-muted-foreground")}>
+                          <CalendarIconLucide className="mr-2 h-4 w-4" />{arsStartDate ? format(arsStartDate, "dd/MM/yyyy") : <span>From Date</span>}
+                      </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                      <Calendar mode="single" selected={arsStartDate} onSelect={setArsStartDate} disabled={(date) => (arsEndDate ? date > arsEndDate : false) || date > new Date()} initialFocus />
+                  </PopoverContent>
+              </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                      <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !arsEndDate && "text-muted-foreground")}>
+                          <CalendarIconLucide className="mr-2 h-4 w-4" />{arsEndDate ? format(arsEndDate, "dd/MM/yyyy") : <span>To Date</span>}
+                      </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                      <Calendar mode="single" selected={arsEndDate} onSelect={setArsEndDate} disabled={(date) => (arsStartDate ? date < arsStartDate : false) || date > new Date()} initialFocus />
+                  </PopoverContent>
+              </Popover>
+              <Button onClick={() => {setArsStartDate(undefined); setArsEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
+              <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">
+                Filter by completion date
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-end pt-4 mt-4">
+              <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Total ARS Sites</p>
+                  <p className="text-3xl font-bold text-primary">{arsDashboardData?.totalArsSites ?? 0}</p>
               </div>
-               <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !arsStartDate && "text-muted-foreground")}>
-                            <CalendarIconLucide className="mr-2 h-4 w-4" />{arsStartDate ? format(arsStartDate, "dd/MM/yyyy") : <span>From Date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                        <Calendar mode="single" selected={arsStartDate} onSelect={setArsStartDate} disabled={(date) => (arsEndDate ? date > arsEndDate : false) || date > new Date()} initialFocus />
-                    </PopoverContent>
-                </Popover>
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !arsEndDate && "text-muted-foreground")}>
-                            <CalendarIconLucide className="mr-2 h-4 w-4" />{arsEndDate ? format(arsEndDate, "dd/MM/yyyy") : <span>To Date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                        <Calendar mode="single" selected={arsEndDate} onSelect={setArsEndDate} disabled={(date) => (arsStartDate ? date < arsStartDate : false) || date > new Date()} initialFocus />
-                    </PopoverContent>
-                </Popover>
-                <Button onClick={() => {setArsStartDate(undefined); setArsEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
-                <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">
-                  Filter by completion date
-                </p>
-               </div>
+              <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Total Expenditure</p>
+                    <button 
+                      className="text-3xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={(arsDashboardData?.totalArsExpenditure ?? 0) === 0}
+                      onClick={() => handleWorkStatusCellClick(arsDashboardData?.arsStatusCountsData.flatMap(item => item.data) ?? [], 'All ARS Sites (Expenditure)')}
+                    >
+                    ₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}
+                  </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
               {arsDashboardData && arsDashboardData.arsStatusCountsData.length > 0 ? (
