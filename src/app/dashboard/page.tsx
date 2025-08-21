@@ -190,6 +190,9 @@ export default function DashboardPage() {
   
   const [financeStartDate, setFinanceStartDate] = useState<Date | undefined>(undefined);
   const [financeEndDate, setFinanceEndDate] = useState<Date | undefined>(undefined);
+  const [arsStartDate, setArsStartDate] = useState<Date | undefined>(undefined);
+  const [arsEndDate, setArsEndDate] = useState<Date | undefined>(undefined);
+
   const [transformedFinanceMetrics, setTransformedFinanceMetrics] = useState<TransformedFinanceMetrics | null >(null);
   const [financeLoading, setFinanceLoading] = useState(false);
 
@@ -360,9 +363,6 @@ export default function DashboardPage() {
     const fileStatusCounts = new Map<string, number>();
     fileStatusOptions.forEach(status => fileStatusCounts.set(status, 0));
     
-    const arsStatusCounts = new Map<string, { count: number, data: SiteDetailFormData[] }>();
-    siteWorkStatusOptions.forEach(status => arsStatusCounts.set(status, { count: 0, data: [] }));
-
     const now = new Date();
     const fileStatusesForPending: FileStatus[] = ["File Under Process"];
     const siteWorkStatusesForPending: SiteWorkStatus[] = ["Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending"];
@@ -440,20 +440,6 @@ export default function DashboardPage() {
             });
         }
     }
-
-    allFileEntries.forEach(entry => {
-        entry.siteDetails?.forEach(sd => {
-            if (sd.purpose === 'ARS') {
-                const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
-                if (sd.workStatus && arsStatusCounts.has(sd.workStatus)) {
-                    const current = arsStatusCounts.get(sd.workStatus)!;
-                    current.count++;
-                    current.data.push(siteData);
-                    arsStatusCounts.set(sd.workStatus, current);
-                }
-            }
-        });
-    });
     
     const today = new Date();
     const todayMonth = today.getMonth();
@@ -483,15 +469,9 @@ export default function DashboardPage() {
     const fileStatusCountsData = fileStatusOptions.map(status => ({
         status,
         count: fileStatusCounts.get(status) || 0,
+        data: nonArsEntries.filter(e => e.fileStatus === status),
     }));
     
-    const arsStatusCountsData = Array.from(arsStatusCounts.entries())
-        .map(([status, { count, data }]) => ({ status, count, data }))
-        .filter(item => item.count > 0)
-        .sort((a,b) => a.status.localeCompare(b.status));
-    
-    const totalArsSites = allFileEntries.flatMap(entry => entry.siteDetails ?? []).filter(site => site.purpose === 'ARS').length;
-
     return {
         pendingTasksCount,
         workStatusByServiceData: finalWorkStatusData,
@@ -500,11 +480,67 @@ export default function DashboardPage() {
         filesByAgeData: ageGroups,
         filesByAgeCounts,
         fileStatusCountsData,
-        arsStatusCountsData,
-        totalArsSites,
         totalFiles: entriesForFileStatus.length,
     };
   }, [filteredEntriesLoading, allEntriesLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
+
+  const arsDashboardData = useMemo(() => {
+    if (allEntriesLoading) return null;
+  
+    const sDate = arsStartDate ? startOfDay(arsStartDate) : null;
+    const eDate = arsEndDate ? endOfDay(arsEndDate) : null;
+  
+    let arsSites = allFileEntries.flatMap(entry =>
+        (entry.siteDetails ?? [])
+          .filter(site => site.purpose === 'ARS')
+          .map((site, index) => ({
+            ...site,
+            id: `${entry.fileNo}-${site.nameOfSite}-${site.purpose}-${index}`,
+            fileNo: entry.fileNo,
+            applicantName: entry.applicantName,
+            constituency: entry.constituency
+          }))
+      );
+  
+    if (sDate || eDate) {
+        arsSites = arsSites.filter(site => {
+        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
+        if (!completionDate || !isValid(completionDate)) return false;
+        if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
+        if (sDate) return completionDate >= sDate;
+        if (eDate) return completionDate <= eDate;
+        return false;
+      });
+    }
+
+    const arsStatusCounts = new Map<string, { count: number, data: any[], expenditure: number }>();
+    siteWorkStatusOptions.forEach(status => arsStatusCounts.set(status, { count: 0, data: [], expenditure: 0 }));
+  
+    let totalExpenditure = 0;
+  
+    arsSites.forEach(site => {
+      if (site.workStatus && arsStatusCounts.has(site.workStatus)) {
+        const current = arsStatusCounts.get(site.workStatus)!;
+        current.count++;
+        current.data.push(site);
+        const siteExpenditure = Number(site.totalExpenditure) || 0;
+        current.expenditure += siteExpenditure;
+        totalExpenditure += siteExpenditure;
+      }
+    });
+  
+    const arsStatusCountsData = Array.from(arsStatusCounts.entries())
+      .map(([status, { count, data, expenditure }]) => ({ status, count, data, expenditure }))
+      .filter(item => item.count > 0)
+      .sort((a,b) => a.status.localeCompare(b.status));
+  
+    return {
+      totalArsSites: arsSites.length,
+      totalArsExpenditure: totalExpenditure,
+      arsStatusCountsData
+    };
+  }, [allFileEntries, allEntriesLoading, arsStartDate, arsEndDate]);
+
 
   const currentMonthStats = useMemo(() => {
     if (allEntriesLoading || !currentUser) return null;
@@ -618,9 +654,18 @@ export default function DashboardPage() {
   }, [selectedSupervisorId, allFileEntries, allEntriesLoading]);
 
   const handleFileStatusCardClick = (status: string) => {
-    const dataForDialog = filteredFileEntries
-      .filter(entry => entry.fileStatus === status && entry.siteDetails?.some(site => site.purpose !== 'ARS'))
-      .map((entry, index) => {
+    const dataForDialog = dashboardData?.fileStatusCountsData.find(item => item.status === status)?.data ?? [];
+
+    const columns: DetailDialogColumn[] = [
+      { key: 'slNo', label: 'Sl. No.' },
+      { key: 'fileNo', label: 'File No.' },
+      { key: 'applicantName', label: 'Applicant Name' },
+      { key: 'siteNames', label: 'Site(s)' },
+      { key: 'firstRemittanceDate', label: 'First Remittance' },
+      { key: 'workStatuses', label: 'Site Status(es)' },
+    ];
+    
+    const mappedData = dataForDialog.map((entry, index) => {
         const firstRemittanceDate = entry.remittanceDetails?.[0]?.dateOfRemittance;
         const siteNames = entry.siteDetails?.map(s => s.nameOfSite).join(', ') || 'N/A';
         const workStatuses = entry.siteDetails?.map(s => s.workStatus).join(', ') || 'N/A';
@@ -634,18 +679,9 @@ export default function DashboardPage() {
         };
       });
 
-    const columns: DetailDialogColumn[] = [
-      { key: 'slNo', label: 'Sl. No.' },
-      { key: 'fileNo', label: 'File No.' },
-      { key: 'applicantName', label: 'Applicant Name' },
-      { key: 'siteNames', label: 'Site(s)' },
-      { key: 'firstRemittanceDate', label: 'First Remittance' },
-      { key: 'workStatuses', label: 'Site Status(es)' },
-    ];
-
     setFileStatusDetailDialogTitle(`Files with Status: "${status}"`);
     setFileStatusDetailDialogColumns(columns);
-    setFileStatusDetailDialogData(dataForDialog);
+    setFileStatusDetailDialogData(mappedData);
     setIsFileStatusDetailDialogOpen(true);
   };
 
@@ -1163,7 +1199,7 @@ export default function DashboardPage() {
                           <TableHead 
                             key={service} 
                             className="text-center font-semibold p-1"
-                            dangerouslySetInnerHTML={{ __html: serviceHeaderLabels[service] || service }}
+                            dangerouslySetInnerHTML={{ __html: service === 'Total' ? service : (serviceHeaderLabels[service] || service) }}
                           />
                       ))}
                     </TableRow>
@@ -1199,25 +1235,65 @@ export default function DashboardPage() {
       </Card>
       
       <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                  <CardTitle className="flex items-center gap-2">
-                      <Waves className="h-5 w-5 text-primary" />
-                      ARS Status Overview
-                  </CardTitle>
-                  <CardDescription>
-                      Current count of ARS sites by their work status.
-                  </CardDescription>
+          <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                 <div>
+                    <CardTitle className="flex items-center gap-2">
+                        <Waves className="h-5 w-5 text-primary" />
+                        ARS Status Overview
+                    </CardTitle>
+                    <CardDescription>
+                        Current count of ARS sites by their work status.
+                    </CardDescription>
+                 </div>
+                 <div className="flex flex-col sm:flex-row gap-2 items-center">
+                    <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Total ARS Sites</p>
+                        <p className="text-3xl font-bold text-primary">{arsDashboardData?.totalArsSites ?? 0}</p>
+                    </div>
+                    <div className="text-right sm:ml-4">
+                        <p className="text-sm text-muted-foreground">Total Expenditure</p>
+                         <button 
+                            className="text-3xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={(arsDashboardData?.totalArsExpenditure ?? 0) === 0}
+                            onClick={() => handleWorkStatusCellClick(arsDashboardData?.arsStatusCountsData.flatMap(item => item.data) ?? [], 'All ARS Sites (Expenditure)')}
+                         >
+                          ₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}
+                        </button>
+                    </div>
+                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total ARS Sites</p>
-                <p className="text-3xl font-bold text-primary">{dashboardData.totalArsSites}</p>
-              </div>
+               <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !arsStartDate && "text-muted-foreground")}>
+                            <CalendarIconLucide className="mr-2 h-4 w-4" />{arsStartDate ? format(arsStartDate, "dd/MM/yyyy") : <span>From Date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                        <Calendar mode="single" selected={arsStartDate} onSelect={setArsStartDate} disabled={(date) => (arsEndDate ? date > arsEndDate : false) || date > new Date()} initialFocus />
+                    </PopoverContent>
+                </Popover>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !arsEndDate && "text-muted-foreground")}>
+                            <CalendarIconLucide className="mr-2 h-4 w-4" />{arsEndDate ? format(arsEndDate, "dd/MM/yyyy") : <span>To Date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                        <Calendar mode="single" selected={arsEndDate} onSelect={setArsEndDate} disabled={(date) => (arsStartDate ? date < arsStartDate : false) || date > new Date()} initialFocus />
+                    </PopoverContent>
+                </Popover>
+                <Button onClick={() => {setArsStartDate(undefined); setArsEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
+                <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">
+                  Filter by completion date
+                </p>
+               </div>
           </CardHeader>
           <CardContent>
-              {dashboardData.arsStatusCountsData.length > 0 ? (
+              {arsDashboardData && arsDashboardData.arsStatusCountsData.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                      {dashboardData.arsStatusCountsData.map((item) => (
+                      {arsDashboardData.arsStatusCountsData.map((item) => (
                           <button
                               key={item.status}
                               className="flex items-center justify-between p-3 rounded-lg border bg-secondary/30 text-left hover:bg-secondary/50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
@@ -1231,7 +1307,7 @@ export default function DashboardPage() {
                   </div>
               ) : (
                   <div className="py-10 text-center">
-                      <p className="text-muted-foreground">No ARS sites found.</p>
+                      <p className="text-muted-foreground">No ARS sites found {arsStartDate || arsEndDate ? "for the selected date range" : ""}.</p>
                   </div>
               )}
           </CardContent>
@@ -1723,4 +1799,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
