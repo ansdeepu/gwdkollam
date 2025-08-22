@@ -1,3 +1,4 @@
+
 // src/components/layout/AppNavMenu.tsx
 "use client";
 
@@ -23,7 +24,7 @@ export interface NavItem {
 
 export const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/agency-registration', label: 'Agency Registration', icon: ClipboardList, roles: ['editor', 'viewer'] },
+  { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList, roles: ['editor', 'viewer'] },
   { href: '/dashboard/file-room', label: 'File Manager', icon: FolderOpen },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },

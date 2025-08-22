@@ -1,3 +1,4 @@
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { agencyApplicationStatusOptions } from "@/lib/schemas";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -176,7 +178,7 @@ export default function AgencyRegistrationPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ClipboardList className="h-6 w-6 text-primary" />
-            Agency & Rig Registrations ({applications.length})
+            Rig Registrations ({applications.length})
           </CardTitle>
           <CardDescription>
             Manage new registrations and renewals for agencies and their rigs.
