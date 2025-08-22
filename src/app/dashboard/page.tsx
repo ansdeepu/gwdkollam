@@ -406,11 +406,8 @@ export default function DashboardPage() {
             fileStatusCounts.set(entry.fileStatus, (fileStatusCounts.get(entry.fileStatus) || 0) + 1);
         }
     }
-
-    const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
     
     for (const entry of entriesForWorkStatus) {
-        // Site-level status counting
         entry.siteDetails?.forEach(sd => {
             const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
             const purpose = sd.purpose as SitePurpose;
@@ -424,29 +421,45 @@ export default function DashboardPage() {
                 }
             }
         });
-        
-        if (totalAppsRow) {
-            const purposesInFile = new Set(entry.siteDetails?.map(sd => sd.purpose as SitePurpose).filter(p => dashboardServiceOrder.includes(p)));
-            let fileAlreadyCountedInTotal = false;
+    }
 
-            purposesInFile.forEach(purpose => {
-                const isNewPurposeForFile = !totalAppsRow[purpose].data.some((d: any) => d.fileNo === entry.fileNo);
-                if (isNewPurposeForFile) {
-                    totalAppsRow[purpose].count++;
-                    totalAppsRow[purpose].data.push(entry);
-                }
-                
-                if (!fileAlreadyCountedInTotal) {
-                    const isNewFileForTotal = !totalAppsRow.total.data.some((d: any) => d.fileNo === entry.fileNo);
-                    if (isNewFileForTotal) {
-                        totalAppsRow.total.count++;
-                        totalAppsRow.total.data.push(entry);
-                        fileAlreadyCountedInTotal = true;
-                    }
+    const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
+    if(totalAppsRow){
+        dashboardServiceOrder.forEach(service => {
+            const uniqueSites = new Set<string>();
+            const uniqueData = new Map<string, any>();
+            initialWorkStatusData.forEach(row => {
+                if (row.statusCategory !== totalApplicationsRow) {
+                    (row[service].data as any[]).forEach(site => {
+                        const fileIdentifier = site.fileNo;
+                        if (!uniqueSites.has(fileIdentifier)) {
+                            uniqueSites.add(fileIdentifier);
+                            uniqueData.set(fileIdentifier, site);
+                        }
+                    });
                 }
             });
-        }
+            totalAppsRow[service].count = uniqueSites.size;
+            totalAppsRow[service].data = Array.from(uniqueData.values());
+        });
+        
+        const grandTotalUniqueSites = new Set<string>();
+        const grandTotalUniqueData = new Map<string, any>();
+        initialWorkStatusData.forEach(row => {
+            if (row.statusCategory !== totalApplicationsRow) {
+                (row.total.data as any[]).forEach(site => {
+                    const fileIdentifier = site.fileNo;
+                     if (!grandTotalUniqueSites.has(fileIdentifier)) {
+                        grandTotalUniqueSites.add(fileIdentifier);
+                        grandTotalUniqueData.set(fileIdentifier, site);
+                    }
+                });
+            }
+        });
+        totalAppsRow.total.count = grandTotalUniqueSites.size;
+        totalAppsRow.total.data = Array.from(grandTotalUniqueData.values());
     }
+
     
     const today = new Date();
     const todayMonth = today.getMonth();
@@ -1806,3 +1819,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
