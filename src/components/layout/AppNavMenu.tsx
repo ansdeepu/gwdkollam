@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
@@ -23,6 +23,7 @@ export interface NavItem {
 
 export const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/agency-registration', label: 'Agency Registration', icon: ClipboardList, roles: ['editor', 'viewer'] },
   { href: '/dashboard/file-room', label: 'File Manager', icon: FolderOpen },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },

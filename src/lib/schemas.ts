@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import { format } from 'date-fns';
 
@@ -611,3 +612,55 @@ export const NewArsEntrySchema = ArsAndSiteSchema.merge(ArsSpecificSchema).exten
     constituency: z.enum(constituencyOptions, { required_error: "Constituency is required."}),
 });
 export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
+
+// == Agency Registration Schemas ==
+
+export const agencyApplicationStatusOptions = [
+  "Pending Payment",
+  "Pending Submission",
+  "Pending Verification",
+  "Approved",
+  "Rejected",
+  "Expired",
+] as const;
+export type AgencyApplicationStatus = typeof agencyApplicationStatusOptions[number];
+
+export const AgencyApplicationFormSchema = z.object({
+  agencyName: z.string().min(2, "Agency name is required."),
+  ownerName: z.string().min(2, "Owner name is required."),
+  address: z.string().min(10, "Address is required."),
+  phone: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required."),
+  email: z.string().email("A valid email address is required."),
+  rigDetails: z.array(z.object({
+    type: z.string().min(1, "Rig type is required"),
+    registrationNumber: z.string().min(1, "Registration number is required"),
+  })).min(1, "At least one rig detail is required."),
+  documents: z.array(z.object({
+    name: z.string(),
+    url: z.string().url(),
+  })).optional(),
+});
+export type AgencyApplicationFormData = z.infer<typeof AgencyApplicationFormSchema>;
+
+
+export const AgencyApplicationSchema = AgencyApplicationFormSchema.extend({
+  id: z.string(),
+  applicantId: z.string(), // Corresponds to user.uid
+  status: z.enum(agencyApplicationStatusOptions),
+  registrationValidTill: optionalDate,
+  rejectionReason: z.string().optional().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  paymentId: z.string().optional().nullable(),
+});
+export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
+
+export const RenewalSchema = z.object({
+    id: z.string(),
+    applicationId: z.string(),
+    applicantId: z.string(),
+    paymentId: z.string(),
+    renewalDate: z.date(),
+    validTill: z.date(),
+});
+export type Renewal = z.infer<typeof RenewalSchema>;
