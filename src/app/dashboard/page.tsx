@@ -429,12 +429,12 @@ export default function DashboardPage() {
         if (totalAppsRow) {
             const purposesInFile = new Set(entry.siteDetails?.map(sd => sd.purpose as SitePurpose).filter(p => dashboardServiceOrder.includes(p)));
             if (purposesInFile.size > 0) {
-                totalAppsRow.total.count++;
-                totalAppsRow.total.data.push(entry); // Store the whole entry for drill-down
-                purposesInFile.forEach(purpose => {
+                 totalAppsRow.total.count++;
+                 totalAppsRow.total.data.push(entry);
+                 purposesInFile.forEach(purpose => {
                     totalAppsRow[purpose].count++;
                     totalAppsRow[purpose].data.push(entry);
-                });
+                 });
             }
         }
     }
@@ -1225,6 +1225,23 @@ export default function DashboardPage() {
                       </TableRow>
                     ))}
                   </TableBody>
+                   <TableFooter>
+                    <TableRow className="bg-muted/50 font-bold">
+                        <TableHead className="p-2 text-left">Total</TableHead>
+                        {dashboardServiceOrder.map(service => (
+                            <TableCell key={`total-${service}`} className="text-center p-2">
+                                <Button variant="link" className="p-0 h-auto font-bold" disabled={(dashboardData.workStatusByServiceData.reduce((acc, row) => acc + (row as any)[service].count, 0)) === 0} onClick={() => handleWorkStatusCellClick(dashboardData.workStatusByServiceData.flatMap(row => (row as any)[service].data), `Total - ${service}`)}>
+                                  {dashboardData.workStatusByServiceData.reduce((acc, row) => acc + (row as any)[service].count, 0)}
+                                </Button>
+                            </TableCell>
+                        ))}
+                        <TableCell className="text-center p-2">
+                           <Button variant="link" className="p-0 h-auto font-bold" disabled={(dashboardData.workStatusByServiceData.reduce((acc, row) => acc + row.total.count, 0)) === 0} onClick={() => handleWorkStatusCellClick(dashboardData.workStatusByServiceData.flatMap(row => row.total.data), 'Grand Total - All Services')}>
+                              {dashboardData.workStatusByServiceData.reduce((acc, row) => acc + row.total.count, 0)}
+                           </Button>
+                        </TableCell>
+                    </TableRow>
+                </TableFooter>
                 </Table>
             ) : (
                 <p className="text-center text-muted-foreground py-4">No work status data available for services.</p>
