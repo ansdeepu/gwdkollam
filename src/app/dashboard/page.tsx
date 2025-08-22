@@ -425,17 +425,26 @@ export default function DashboardPage() {
             }
         });
         
-        // File-level counting for "Total No. of Works/Files"
         if (totalAppsRow) {
             const purposesInFile = new Set(entry.siteDetails?.map(sd => sd.purpose as SitePurpose).filter(p => dashboardServiceOrder.includes(p)));
-            if (purposesInFile.size > 0) {
-                 totalAppsRow.total.count++;
-                 totalAppsRow.total.data.push(entry);
-                 purposesInFile.forEach(purpose => {
+            let fileAlreadyCountedInTotal = false;
+
+            purposesInFile.forEach(purpose => {
+                const isNewPurposeForFile = !totalAppsRow[purpose].data.some((d: any) => d.fileNo === entry.fileNo);
+                if (isNewPurposeForFile) {
                     totalAppsRow[purpose].count++;
                     totalAppsRow[purpose].data.push(entry);
-                 });
-            }
+                }
+                
+                if (!fileAlreadyCountedInTotal) {
+                    const isNewFileForTotal = !totalAppsRow.total.data.some((d: any) => d.fileNo === entry.fileNo);
+                    if (isNewFileForTotal) {
+                        totalAppsRow.total.count++;
+                        totalAppsRow.total.data.push(entry);
+                        fileAlreadyCountedInTotal = true;
+                    }
+                }
+            });
         }
     }
     
