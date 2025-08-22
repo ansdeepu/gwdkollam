@@ -36,7 +36,7 @@ const formatDateSafe = (dateInput: any): string => {
 };
 
 export default function AgencyRegistrationPage() {
-  const { applications, isLoading: applicationsLoading, updateApplication, deleteApplication } from useAgencyApplications();
+  const { applications, isLoading: applicationsLoading, updateApplication, deleteApplication } = useAgencyApplications();
   const { user } = useAuth();
   const { toast } = useToast();
   
