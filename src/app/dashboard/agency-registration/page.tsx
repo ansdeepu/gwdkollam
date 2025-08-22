@@ -36,7 +36,7 @@ const formatDateSafe = (dateInput: any): string => {
 };
 
 export default function AgencyRegistrationPage() {
-  const { applications, isLoading: applicationsLoading, updateApplication, deleteApplication } = useAgencyApplications();
+  const { applications, isLoading: applicationsLoading, updateApplication, deleteApplication } from useAgencyApplications();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -176,13 +176,22 @@ export default function AgencyRegistrationPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ClipboardList className="h-6 w-6 text-primary" />
-            Rig Registrations ({applications.length})
-          </CardTitle>
-          <CardDescription>
-            Manage new registrations and renewals for agencies and their rigs.
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-6 w-6 text-primary" />
+                  Rig Registrations ({applications.length})
+                </CardTitle>
+                <CardDescription>
+                  Manage new registrations and renewals for agencies and their rigs.
+                </CardDescription>
+              </div>
+              {canManage && (
+                <Link href="/dashboard/agency-registration/entry" passHref>
+                  <Button><PlusCircle className="mr-2 h-4 w-4" /> New Rig Registration</Button>
+                </Link>
+              )}
+          </div>
           <div className="flex flex-col gap-4 pt-4 border-t mt-4">
             <div className="flex flex-wrap items-center gap-2 pt-4">
                 <div className="relative flex-grow min-w-[250px]">

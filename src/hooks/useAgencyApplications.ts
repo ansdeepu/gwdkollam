@@ -1,3 +1,4 @@
+
 // src/hooks/useAgencyApplications.ts
 "use client";
 
@@ -9,6 +10,7 @@ import {
   query,
   orderBy,
   doc,
+  addDoc,
   updateDoc,
   deleteDoc,
   serverTimestamp,
@@ -16,7 +18,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { AgencyApplication, AgencyApplicationStatus } from '@/lib/schemas';
+import type { AgencyApplication, AgencyApplicationStatus, AgencyApplicationFormData } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
@@ -36,6 +38,7 @@ const convertTimestampToDate = (data: DocumentData): AgencyApplication => {
 interface UseAgencyApplicationsState {
   applications: AgencyApplication[];
   isLoading: boolean;
+  addApplication: (formData: AgencyApplicationFormData) => Promise<void>;
   updateApplication: (id: string, data: Partial<Pick<AgencyApplication, 'status' | 'registrationValidTill' | 'rejectionReason'>>) => Promise<void>;
   deleteApplication: (id: string) => Promise<void>;
 }
@@ -69,6 +72,22 @@ export function useAgencyApplications(): UseAgencyApplicationsState {
     return () => unsubscribe();
   }, [user, toast]);
 
+  const addApplication = useCallback(async (formData: AgencyApplicationFormData) => {
+    if (!user || user.role !== 'editor') {
+        toast({ title: "Permission Denied", description: "You are not authorized to add new registrations.", variant: "destructive" });
+        throw new Error("Permission denied.");
+    }
+    const payload = {
+        ...formData,
+        applicantId: user.uid, // The admin creating it is the applicantId for now
+        status: 'Pending Verification' as AgencyApplicationStatus,
+        registrationValidTill: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    };
+    await addDoc(collection(db, APPLICATIONS_COLLECTION), payload);
+  }, [user, toast]);
+
   const updateApplication = useCallback(async (id: string, data: Partial<Pick<AgencyApplication, 'status' | 'registrationValidTill' | 'rejectionReason'>>) => {
     if (user?.role !== 'editor') {
       toast({ title: "Permission Denied", description: "You are not authorized to update applications.", variant: "destructive" });
@@ -88,7 +107,7 @@ export function useAgencyApplications(): UseAgencyApplicationsState {
     await deleteDoc(appDocRef);
   }, [user, toast]);
 
-  return { applications, isLoading, updateApplication, deleteApplication };
+  return { applications, isLoading, addApplication, updateApplication, deleteApplication };
 }
 
 export type { AgencyApplication };
