@@ -120,6 +120,19 @@ export const siteWorkStatusOptions = [
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
 
+export const arsWorkStatusOptions = [
+    "Proposal Submitted",
+    "AS & TS Issued",
+    "Tendered",
+    "Selection Notice Issued",
+    "Work Order Issued",
+    "Work Initiated",
+    "Work Completed",
+    "Bill Prepared",
+    "Payment Completed",
+] as const;
+export type ArsWorkStatus = typeof arsWorkStatusOptions[number];
+
 export const fileStatusOptions = [
   "File Under Process",
   "Rig Accessibility Inspection",
@@ -595,7 +608,7 @@ export const ArsAndSiteSchema = z.object({
     longitude: optionalNumber("Longitude must be a valid number."),
     estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
     tsAmount: optionalNumber("AS/TS Amount must be a valid number."),
-    workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required."}),
+    workStatus: z.enum(arsWorkStatusOptions, { required_error: "Work Status is required."}),
     dateOfCompletion: optionalDate,
     totalExpenditure: optionalNumber("Expenditure must be a valid number."),
     noOfBeneficiary: z.string().optional().nullable(),
