@@ -424,40 +424,31 @@ export default function DashboardPage() {
     }
 
     const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
-    if(totalAppsRow){
+    if (totalAppsRow) {
         dashboardServiceOrder.forEach(service => {
-            const uniqueSites = new Set<string>();
-            const uniqueData = new Map<string, any>();
+            let columnTotal = 0;
+            const columnData: any[] = [];
             initialWorkStatusData.forEach(row => {
                 if (row.statusCategory !== totalApplicationsRow) {
-                    (row[service].data as any[]).forEach(site => {
-                        const fileIdentifier = site.fileNo;
-                        if (!uniqueSites.has(fileIdentifier)) {
-                            uniqueSites.add(fileIdentifier);
-                            uniqueData.set(fileIdentifier, site);
-                        }
-                    });
+                    const serviceData = (row as any)[service];
+                    columnTotal += serviceData.count;
+                    columnData.push(...serviceData.data);
                 }
             });
-            totalAppsRow[service].count = uniqueSites.size;
-            totalAppsRow[service].data = Array.from(uniqueData.values());
+            (totalAppsRow as any)[service].count = columnTotal;
+            (totalAppsRow as any)[service].data = columnData;
         });
-        
-        const grandTotalUniqueSites = new Set<string>();
-        const grandTotalUniqueData = new Map<string, any>();
+
+        let grandTotalCount = 0;
+        const grandTotalData: any[] = [];
         initialWorkStatusData.forEach(row => {
             if (row.statusCategory !== totalApplicationsRow) {
-                (row.total.data as any[]).forEach(site => {
-                    const fileIdentifier = site.fileNo;
-                     if (!grandTotalUniqueSites.has(fileIdentifier)) {
-                        grandTotalUniqueSites.add(fileIdentifier);
-                        grandTotalUniqueData.set(fileIdentifier, site);
-                    }
-                });
+                grandTotalCount += (row as any).total.count;
+                grandTotalData.push(...(row as any).total.data);
             }
         });
-        totalAppsRow.total.count = grandTotalUniqueSites.size;
-        totalAppsRow.total.data = Array.from(grandTotalUniqueData.values());
+        (totalAppsRow as any).total.count = grandTotalCount;
+        (totalAppsRow as any).total.data = grandTotalData;
     }
 
     
@@ -1820,4 +1811,3 @@ export default function DashboardPage() {
   );
 }
 
-    
