@@ -49,7 +49,7 @@ import {
   type Designation,
 } from '@/lib/schemas';
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -342,7 +342,7 @@ export default function DashboardPage() {
     let pendingTasksCount = 0;
     
     const workStatusRows = [...dashboardWorkStatusOrder];
-    const totalApplicationsRow = "Total No. of Applications";
+    const totalApplicationsRow = "Total No. of Works/Files";
     const reorderedRowLabels = [...workStatusRows, totalApplicationsRow];
     
     const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
@@ -407,37 +407,35 @@ export default function DashboardPage() {
         }
     }
 
+    const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
+    
     for (const entry of entriesForWorkStatus) {
+        // Site-level status counting
         entry.siteDetails?.forEach(sd => {
             const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
             const purpose = sd.purpose as SitePurpose;
-            if (sd.purpose && sd.workStatus) {
-                if (dashboardServiceOrder.includes(purpose)) {
-                    const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
-                    if (workStatusRow) {
-                        workStatusRow[purpose].count++;
-                        workStatusRow[purpose].data.push(siteData);
-                        workStatusRow.total.count++;
-                        workStatusRow.total.data.push(siteData);
-                    }
+            if (sd.purpose && sd.workStatus && dashboardServiceOrder.includes(purpose)) {
+                const workStatusRow = initialWorkStatusData.find(row => row.statusCategory === sd.workStatus);
+                if (workStatusRow) {
+                    workStatusRow[purpose].count++;
+                    workStatusRow[purpose].data.push(siteData);
+                    workStatusRow.total.count++;
+                    workStatusRow.total.data.push(siteData);
                 }
             }
         });
         
-        const totalAppsRow = initialWorkStatusData.find(row => row.statusCategory === totalApplicationsRow);
+        // File-level counting for "Total No. of Works/Files"
         if (totalAppsRow) {
-            const seenSitesInFile = new Set<string>();
-            entry.siteDetails?.forEach(sd => {
-                const siteIdentifier = `${entry.fileNo}-${sd.nameOfSite}`;
-                if (sd.purpose && dashboardServiceOrder.includes(sd.purpose as SitePurpose) && !seenSitesInFile.has(siteIdentifier)) {
-                    const siteData = { ...sd, fileNo: entry.fileNo, applicantName: entry.applicantName };
-                    totalAppsRow[sd.purpose as SitePurpose].count++;
-                    totalAppsRow[sd.purpose as SitePurpose].data.push(siteData);
-                    totalAppsRow.total.count++;
-                    totalAppsRow.total.data.push(siteData);
-                    seenSitesInFile.add(siteIdentifier);
-                }
-            });
+            const purposesInFile = new Set(entry.siteDetails?.map(sd => sd.purpose as SitePurpose).filter(p => dashboardServiceOrder.includes(p)));
+            if (purposesInFile.size > 0) {
+                totalAppsRow.total.count++;
+                totalAppsRow.total.data.push(entry); // Store the whole entry for drill-down
+                purposesInFile.forEach(purpose => {
+                    totalAppsRow[purpose].count++;
+                    totalAppsRow[purpose].data.push(entry);
+                });
+            }
         }
     }
     
@@ -454,7 +452,7 @@ export default function DashboardPage() {
     
     let finalWorkStatusData = initialWorkStatusData;
     if (currentUser.role === 'supervisor') {
-        finalWorkStatusData = initialWorkStatusData.filter(row => row.total.count > 0 || row.statusCategory === "Total No. of Applications");
+        finalWorkStatusData = initialWorkStatusData.filter(row => row.total.count > 0 || row.statusCategory === totalApplicationsRow);
     }
 
     const workAlerts = Array.from(workAlertsMap.values());
