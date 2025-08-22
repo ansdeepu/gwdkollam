@@ -23,12 +23,12 @@ export interface NavItem {
 
 export const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList, roles: ['editor', 'viewer'] },
   { href: '/dashboard/file-room', label: 'File Manager', icon: FolderOpen },
+  { href: '/dashboard/ars', label: 'ARS', icon: Waves },
+  { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList, roles: ['editor', 'viewer'] },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
-  { href: '/dashboard/ars', label: 'ARS', icon: Waves },
   { href: '/dashboard/report-format-suggestion', label: 'Report Builders', icon: Settings2 },
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
