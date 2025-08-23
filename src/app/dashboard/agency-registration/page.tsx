@@ -240,7 +240,7 @@ export default function AgencyRegistrationPage() {
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>1. Application Details</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
-                                     <div className="grid md:grid-cols-2 gap-4">
+                                     <div className="grid md:grid-cols-3 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
