@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -86,7 +88,7 @@ export default function AgencyRegistrationPage() {
   const onSubmit = async (data: AgencyApplication) => {
       setIsSubmitting(true);
       try {
-          if (selectedApplicationId) {
+          if (selectedApplicationId && selectedApplicationId !== 'new') {
               await updateApplication(selectedApplicationId, data);
               toast({ title: "Application Updated", description: "The registration details have been updated." });
           } else {
