@@ -60,7 +60,7 @@ export default function AgencyRegistrationPage() {
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
 
   useEffect(() => {
-    if (selectedApplicationId) {
+    if (selectedApplicationId && selectedApplicationId !== 'new') {
       const app = applications.find(a => a.id === selectedApplicationId);
       if (app) {
         form.reset(app);
@@ -74,7 +74,7 @@ export default function AgencyRegistrationPage() {
             history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
         });
       }
-    } else {
+    } else if (selectedApplicationId === null) {
         form.reset({
             owner: createDefaultOwner(),
             partners: [],
@@ -83,6 +83,7 @@ export default function AgencyRegistrationPage() {
             history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
         });
     }
+    // If selectedApplicationId is 'new', we do nothing here, allowing handleAddNew to control the form state.
   }, [selectedApplicationId, applications, form]);
   
   const onSubmit = async (data: AgencyApplication) => {
