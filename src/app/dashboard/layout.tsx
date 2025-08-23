@@ -1,7 +1,7 @@
 // src/app/dashboard/layout.tsx
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, createContext, useContext } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   SidebarProvider,
@@ -17,6 +17,14 @@ import { updateUserLastActive } from '@/hooks/useAuth';
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
 
+// Create a context to manage the loading state
+const PageNavigationContext = createContext({
+  isNavigating: false,
+  setIsNavigating: (isNavigating: boolean) => {},
+});
+
+export const usePageNavigation = () => useContext(PageNavigationContext);
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -25,6 +33,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityFirestoreUpdateRef = useRef<number>(0); 
   const { toast } = useToast();
+  
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -100,6 +110,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
   }, [isClient, isAuthenticated, resetIdleTimer]);
 
+  // When pathname changes, navigation is complete
+  useEffect(() => {
+      setIsNavigating(false);
+  }, [pathname]);
+
 
   if (!isClient || authIsLoading) {
     return (
@@ -118,16 +133,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <SidebarProvider defaultOpen>
-      <div className="flex h-screen w-full overflow-hidden">
-        <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1 overflow-hidden">
-          <AppHeader />
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
-            {children}
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <PageNavigationContext.Provider value={{ isNavigating, setIsNavigating }}>
+      <SidebarProvider defaultOpen>
+        {isNavigating && (
+          <div className="page-transition-spinner">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        <div className="flex h-screen w-full overflow-hidden">
+          <AppSidebar />
+          <SidebarInset className="flex flex-col flex-1 overflow-hidden">
+            <AppHeader />
+            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
+              {children}
+            </main>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </PageNavigationContext.Provider>
   );
 }

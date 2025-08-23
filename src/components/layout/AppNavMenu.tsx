@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
 import { Badge } from '@/components/ui/badge'; // Import the Badge component
+import { usePageNavigation } from '@/app/dashboard/layout';
 
 export interface NavItem {
   href: string;
@@ -39,6 +40,7 @@ export default function AppNavMenu() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { pendingUpdates } = usePendingUpdates(); // Get pending updates
+  const { setIsNavigating } = usePageNavigation();
 
   const accessibleNavItems = allNavItems.filter(item => {
     if (!user || !user.isApproved) return false;
@@ -48,11 +50,17 @@ export default function AppNavMenu() {
 
   const pendingCount = pendingUpdates.length;
 
+  const handleNavigation = (href: string) => {
+    if (href !== pathname) {
+      setIsNavigating(true);
+    }
+  };
+
   return (
     <SidebarMenu>
       {accessibleNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <Link href={item.href} passHref>
+          <Link href={item.href} passHref onClick={() => handleNavigation(item.href)}>
             <SidebarMenuButton
               asChild
               isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
