@@ -1,4 +1,3 @@
-
 // src/hooks/useAgencyApplications.ts
 "use client";
 
@@ -18,7 +17,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { AgencyApplication, AgencyApplicationStatus, AgencyApplicationFormData } from '@/lib/schemas';
+import type { AgencyApplication, AgencyApplicationFormData, RigRegistration, OwnerInfo } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
@@ -26,20 +25,59 @@ const db = getFirestore(app);
 const APPLICATIONS_COLLECTION = 'agencyApplications';
 
 const convertTimestampToDate = (data: DocumentData): AgencyApplication => {
+    const toDate = (value: any): Date | undefined => {
+        if (value instanceof Timestamp) return value.toDate();
+        if (typeof value === 'string') {
+            const parsed = new Date(value);
+            if (!isNaN(parsed.getTime())) return parsed;
+        }
+        return undefined;
+    };
+
+    const convertRigs = (rigs: any[] = []): RigRegistration[] => {
+        return rigs.map(rig => ({
+            ...rig,
+            registrationDate: toDate(rig.registrationDate),
+            paymentDate: toDate(rig.paymentDate),
+            renewals: (rig.renewals || []).map((renewal: any) => ({
+                ...renewal,
+                renewalDate: toDate(renewal.renewalDate),
+                paymentDate: toDate(renewal.paymentDate),
+            }))
+        }));
+    };
+
   return {
     ...data,
     id: data.id,
-    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
-    updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
-    registrationValidTill: data.registrationValidTill instanceof Timestamp ? data.registrationValidTill.toDate() : null,
+    agencyRegistrationDate: toDate(data.agencyRegistrationDate),
+    agencyPaymentDate: toDate(data.agencyPaymentDate),
+    rigs: convertRigs(data.rigs),
+    createdAt: toDate(data.createdAt),
+    updatedAt: toDate(data.updatedAt),
   } as AgencyApplication;
 };
+
+const sanitizeForFirestore = (data: any) => {
+    if (!data) return data;
+    const sanitized = { ...data };
+    for (const key in sanitized) {
+        if (sanitized[key] === undefined) {
+            sanitized[key] = null;
+        }
+        if (sanitized[key] instanceof Date) {
+            sanitized[key] = Timestamp.fromDate(sanitized[key]);
+        }
+    }
+    return sanitized;
+};
+
 
 interface UseAgencyApplicationsState {
   applications: AgencyApplication[];
   isLoading: boolean;
   addApplication: (formData: AgencyApplicationFormData) => Promise<void>;
-  updateApplication: (id: string, data: Partial<Pick<AgencyApplication, 'status' | 'registrationValidTill' | 'rejectionReason'>>) => Promise<void>;
+  updateApplication: (id: string, data: Partial<AgencyApplicationFormData>) => Promise<void>;
   deleteApplication: (id: string) => Promise<void>;
 }
 
@@ -77,24 +115,22 @@ export function useAgencyApplications(): UseAgencyApplicationsState {
         toast({ title: "Permission Denied", description: "You are not authorized to add new registrations.", variant: "destructive" });
         throw new Error("Permission denied.");
     }
-    const payload = {
+    const payload = sanitizeForFirestore({
         ...formData,
-        applicantId: user.uid, // The admin creating it is the applicantId for now
-        status: 'Pending Verification' as AgencyApplicationStatus,
-        registrationValidTill: null,
+        applicantId: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-    };
+    });
     await addDoc(collection(db, APPLICATIONS_COLLECTION), payload);
   }, [user, toast]);
 
-  const updateApplication = useCallback(async (id: string, data: Partial<Pick<AgencyApplication, 'status' | 'registrationValidTill' | 'rejectionReason'>>) => {
+  const updateApplication = useCallback(async (id: string, data: Partial<AgencyApplicationFormData>) => {
     if (user?.role !== 'editor') {
       toast({ title: "Permission Denied", description: "You are not authorized to update applications.", variant: "destructive" });
       throw new Error("Permission denied.");
     }
     const appDocRef = doc(db, APPLICATIONS_COLLECTION, id);
-    const payload = { ...data, updatedAt: serverTimestamp() };
+    const payload = sanitizeForFirestore({ ...data, updatedAt: serverTimestamp() });
     await updateDoc(appDocRef, payload);
   }, [user, toast]);
 
@@ -110,4 +146,4 @@ export function useAgencyApplications(): UseAgencyApplicationsState {
   return { applications, isLoading, addApplication, updateApplication, deleteApplication };
 }
 
-export type { AgencyApplication };
+export type { AgencyApplication, RigRegistration, OwnerInfo };

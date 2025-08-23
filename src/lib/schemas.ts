@@ -623,45 +623,95 @@ export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
 
 // == Agency Registration Schemas ==
 
+export const rigRenewalStatusOptions = ['Active', 'Cancelled'] as const;
+export type RigRenewalStatus = typeof rigRenewalStatusOptions[number];
+
+export const RigVehicleSchema = z.object({
+  type: z.string().optional(),
+  regNo: z.string().optional(),
+  chassisNo: z.string().optional(),
+  engineNo: z.string().optional(),
+});
+export type RigVehicle = z.infer<typeof RigVehicleSchema>;
+
+export const RigRenewalSchema = z.object({
+  id: z.string(),
+  renewalDate: optionalDate,
+  renewalFee: optionalNumber("Renewal fee must be a number."),
+  paymentDate: optionalDate,
+  challanNo: z.string().optional(),
+  status: z.enum(rigRenewalStatusOptions).default('Active'),
+  remarks: z.string().optional(),
+});
+export type RigRenewal = z.infer<typeof RigRenewalSchema>;
+
+export const RigRegistrationSchema = z.object({
+  id: z.string(),
+  rigRegistrationNo: z.string().optional(),
+  registrationDate: optionalDate,
+  typeOfRig: z.string().optional(),
+  registrationFee: optionalNumber("Registration fee must be a number."),
+  paymentDate: optionalDate,
+  challanNo: z.string().optional(),
+  rigVehicle: RigVehicleSchema.optional(),
+  compressorVehicle: RigVehicleSchema.optional(),
+  supportingVehicle: RigVehicleSchema.optional(),
+  compressorDetails: z.object({
+    model: z.string().optional(),
+    capacity: z.string().optional(),
+  }).optional(),
+  generatorDetails: z.object({
+    type: z.string().optional(),
+    model: z.string().optional(),
+    capacity: z.string().optional(),
+    engineNo: z.string().optional(),
+  }).optional(),
+  renewals: z.array(RigRenewalSchema).optional(),
+  history: z.array(z.string()).optional(),
+  status: z.enum(rigRenewalStatusOptions).default('Active'),
+});
+export type RigRegistration = z.infer<typeof RigRegistrationSchema>;
+
 export const agencyApplicationStatusOptions = [
-  "Pending Payment",
-  "Pending Submission",
   "Pending Verification",
-  "Approved",
+  "Active",
   "Rejected",
   "Expired",
 ] as const;
 export type AgencyApplicationStatus = typeof agencyApplicationStatusOptions[number];
 
-export const AgencyApplicationFormSchema = z.object({
-  agencyName: z.string().min(2, "Agency name is required."),
-  ownerName: z.string().min(2, "Owner name is required."),
-  address: z.string().min(10, "Address is required."),
-  phone: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required."),
-  email: z.string().email("A valid email address is required."),
-  rigDetails: z.array(z.object({
-    type: z.string().min(1, "Rig type is required"),
-    registrationNumber: z.string().min(1, "Registration number is required"),
-  })).min(1, "At least one rig detail is required."),
-  documents: z.array(z.object({
-    name: z.string(),
-    url: z.string().url(),
-  })).optional(),
+export const OwnerInfoSchema = z.object({
+  name: z.string().min(1, "Owner name is required"),
+  address: z.string().min(1, "Owner address is required"),
+  mobile: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required."),
 });
-export type AgencyApplicationFormData = z.infer<typeof AgencyApplicationFormSchema>;
+export type OwnerInfo = z.infer<typeof OwnerInfoSchema>;
 
-
-export const AgencyApplicationSchema = AgencyApplicationFormSchema.extend({
-  id: z.string(),
-  applicantId: z.string(), // Corresponds to user.uid
-  status: z.enum(agencyApplicationStatusOptions),
-  registrationValidTill: optionalDate,
+export const AgencyApplicationSchema = z.object({
+  id: z.string().optional(),
+  fileNo: z.string().optional(),
+  owner: OwnerInfoSchema,
+  partners: z.array(OwnerInfoSchema).optional(),
+  agencyName: z.string().min(2, "Agency name is required."),
+  agencyAddress: z.string().min(10, "Agency address is required."),
+  agencyRegistrationNo: z.string().optional(),
+  agencyRegistrationDate: optionalDate,
+  agencyRegistrationFee: optionalNumber("Registration fee must be a number."),
+  agencyPaymentDate: optionalDate,
+  agencyChallanNo: z.string().optional(),
+  rigs: z.array(RigRegistrationSchema).max(3, "A maximum of 3 rigs can be registered."),
+  history: z.array(z.string()).optional(),
+  status: z.enum(agencyApplicationStatusOptions).default('Pending Verification'),
+  // Fields from the old schema that are not in the new design, kept for data integrity
+  applicantId: z.string().optional(),
   rejectionReason: z.string().optional().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
   paymentId: z.string().optional().nullable(),
+  createdAt: z.any().optional(),
+  updatedAt: z.any().optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
+export type AgencyApplicationFormData = z.infer<typeof AgencyApplicationSchema>;
+
 
 export const RenewalSchema = z.object({
     id: z.string(),
