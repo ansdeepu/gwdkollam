@@ -78,9 +78,8 @@ const AgencyTable = ({
 
 
 export default function AgencyRegistrationPage() {
-  const { applications, isLoading: applicationsLoading } = useAgencyApplications();
+  const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
-  const { addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -243,8 +242,7 @@ export default function AgencyRegistrationPage() {
                                 <AccordionContent className="pt-4 space-y-4">
                                      <div className="grid md:grid-cols-2 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="agencyName" render={({ field }) => <FormItem><FormLabel>Agency Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="agencyAddress" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                     <Separator />
                                      <div className="space-y-2">
