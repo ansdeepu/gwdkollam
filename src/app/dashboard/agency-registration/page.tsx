@@ -95,7 +95,7 @@ export default function AgencyRegistrationPage() {
               await addApplication(data);
               toast({ title: "Application Created", description: "The new agency registration has been saved." });
           }
-          setSelectedApplicationId(null); // Go back to list view
+          setSelectedApplicationId(null);
       } catch (error: any) {
           toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
       } finally {
