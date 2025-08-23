@@ -1,3 +1,4 @@
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -27,8 +28,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 export default function AgencyRegistrationPage() {
-  const { applications, isLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
-  const { user } = useAuth();
+  const { applications, isLoading: applicationsLoading } = useAgencyApplications();
+  const { user, isLoading: authLoading } = useAuth();
+  const { addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -141,7 +143,7 @@ export default function AgencyRegistrationPage() {
     });
   };
 
-  if (isLoading) {
+  if (applicationsLoading || authLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -340,3 +342,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
