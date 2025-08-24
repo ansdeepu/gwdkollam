@@ -77,7 +77,7 @@ const AgencyTable = ({
     </Table>
 );
 
-const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewalForm, onRenewSubmit }: { control: any, index: number, field: any, removeRig: (index: number) => void, isReadOnly: boolean, renewalForm: any, onRenewSubmit: (data: any) => void }) => {
+const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewalForm, onRenewSubmit, onToggleStatus }: { control: any, index: number, field: any, removeRig: (index: number) => void, isReadOnly: boolean, renewalForm: any, onRenewSubmit: (data: any) => void, onToggleStatus: (index: number, status: 'Active' | 'Cancelled') => void }) => {
     const rigTypeValue = useWatch({
         control,
         name: `rigs.${index}.typeOfRig`,
@@ -118,6 +118,12 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewa
                 </div>
             </div>
             <AccordionContent className="pt-4 space-y-4">
+                {field.status === 'Cancelled' && (
+                    <div className="p-4 bg-destructive/10 border-l-4 border-destructive text-center rounded-r-md">
+                        <p className="font-semibold text-destructive mb-2">This rig registration is Cancelled.</p>
+                         <Button type="button" size="sm" onClick={() => onToggleStatus(index, 'Active')}><RefreshCw className="mr-2 h-4 w-4" />Re-Activate Rig</Button>
+                    </div>
+                )}
                 {/* Rig registration details form fields go here */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <FormField name={`rigs.${index}.rigRegistrationNo`} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
@@ -552,6 +558,7 @@ export default function AgencyRegistrationPage() {
                                                       isReadOnly={isReadOnly}
                                                       renewalForm={renewalForm}
                                                       onRenewSubmit={onRenewSubmit}
+                                                      onToggleStatus={toggleRigStatus}
                                                   />
                                                );
                                             })}
