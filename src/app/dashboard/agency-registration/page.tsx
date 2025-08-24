@@ -278,6 +278,7 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
   const [editingRigId, setEditingRigId] = useState<string | null>(null);
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([]);
 
   const canManage = user?.role === 'editor';
 
@@ -322,6 +323,7 @@ export default function AgencyRegistrationPage() {
     if (selectedApplicationId === 'new') {
         // Do nothing, let the handleAddNew function control the form state
         setEditingRigId(null);
+        setOpenAccordionItems([]);
         return;
     }
     if (selectedApplicationId) {
@@ -348,6 +350,7 @@ export default function AgencyRegistrationPage() {
         });
     }
     setEditingRigId(null); // Reset editing rig when application changes
+    setOpenAccordionItems([]);
   }, [selectedApplicationId, applications, form]);
   
   const onSubmit = async (data: AgencyApplication) => {
@@ -362,6 +365,7 @@ export default function AgencyRegistrationPage() {
           }
           setSelectedApplicationId(null);
           setEditingRigId(null);
+          setOpenAccordionItems([]);
       } catch (error: any) {
           toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
       } finally {
@@ -372,6 +376,7 @@ export default function AgencyRegistrationPage() {
   const handleAddNew = () => {
     setSelectedApplicationId('new');
     setEditingRigId(null);
+    setOpenAccordionItems([]);
     form.reset({
         owner: createDefaultOwner(),
         partners: [],
@@ -384,6 +389,7 @@ export default function AgencyRegistrationPage() {
   const handleCancelEdit = () => {
     setSelectedApplicationId(null);
     setEditingRigId(null);
+    setOpenAccordionItems([]);
   }
 
   const filteredApplications = useMemo(() => {
@@ -425,6 +431,11 @@ export default function AgencyRegistrationPage() {
         challanNo: '',
         remarks: ''
     });
+    const rigIndex = rigFields.findIndex(r => r.id === rig.id);
+    if (rigIndex !== -1) {
+        const accordionValue = `rig-${rigIndex}`;
+        setOpenAccordionItems(prev => [...new Set([...prev, accordionValue])]); 
+    }
   }
   
   const onRenewSubmit = (renewalData: RigRenewalFormData) => {
@@ -545,7 +556,7 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      {rigFields.length > 0 ? (
-                                        <Accordion type="multiple" className="w-full space-y-2">
+                                        <Accordion type="multiple" className="w-full space-y-2" value={openAccordionItems} onValueChange={setOpenAccordionItems}>
                                             {rigFields.map((field, index) => {
                                                const isExpired = field.status === 'Active' && field.registrationDate && isBefore(addYears(new Date(field.registrationDate), 1), new Date());
                                                const isCurrentlyEditing = field.id === editingRigId;
