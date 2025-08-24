@@ -623,6 +623,16 @@ export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
 
 // == Agency Registration Schemas ==
 
+export const rigTypeOptions = [
+  "Hand Bore",
+  "Filter Point Rig",
+  "Calyx Rig",
+  "DTH Rig",
+  "Rotary Rig",
+  "DTH cum Rotary Rig",
+] as const;
+export type RigType = typeof rigTypeOptions[number];
+
 export const rigRenewalStatusOptions = ['Active', 'Cancelled'] as const;
 export type RigRenewalStatus = typeof rigRenewalStatusOptions[number];
 
@@ -649,7 +659,7 @@ export const RigRegistrationSchema = z.object({
   id: z.string(),
   rigRegistrationNo: z.string().optional(),
   registrationDate: optionalDate,
-  typeOfRig: z.string().optional(),
+  typeOfRig: z.enum(rigTypeOptions).optional(),
   registrationFee: optionalNumber("Registration fee must be a number."),
   paymentDate: optionalDate,
   challanNo: z.string().optional(),
