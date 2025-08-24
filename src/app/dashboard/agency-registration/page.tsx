@@ -244,8 +244,6 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [renewingRig, setRenewingRig] = useState<RigRegistration | null>(null);
-  
   const canManage = user?.role === 'editor';
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '' });
@@ -265,11 +263,6 @@ export default function AgencyRegistrationPage() {
       status: 'Pending Verification',
       history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
     },
-  });
-
-  const renewalForm = useForm<RigRenewalFormData>({
-    resolver: zodResolver(RigRenewalSchema),
-    defaultValues: { renewalFee: undefined, renewalDate: new Date() }
   });
   
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
@@ -340,72 +333,6 @@ export default function AgencyRegistrationPage() {
       }
   };
 
-  const onRenewSubmit = async () => {
-    if (!renewingRig || !selectedApplicationId || selectedApplicationId === 'new') {
-      toast({ title: "Error", description: "No rig or application selected for renewal.", variant: "destructive" });
-      return;
-    }
-
-    const isValid = await renewalForm.trigger();
-    if (!isValid) {
-      toast({ title: "Invalid Renewal Data", description: "Please check the renewal fields for errors.", variant: "destructive" });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-        const renewalData = renewalForm.getValues();
-        // Use a fresh copy of the application data to avoid stale state
-        const currentApplicationData = applications.find(app => app.id === selectedApplicationId);
-        if (!currentApplicationData) {
-            throw new Error("Could not find the application to update.");
-        }
-        
-        const rigIndex = currentApplicationData.rigs.findIndex(r => r.id === renewingRig.id);
-        if (rigIndex === -1) {
-            throw new Error("Could not find the rig to renew in the current application data.");
-        }
-
-        const rigToUpdate = { ...currentApplicationData.rigs[rigIndex] };
-        
-        const newRenewal: RigRenewal = {
-            ...renewalData,
-            id: uuidv4(),
-            validTill: addYears(renewalData.renewalDate, 1)
-        };
-
-        const updatedRig: RigRegistration = {
-            ...rigToUpdate,
-            registrationDate: renewalData.renewalDate, // This is the key update for validity
-            renewals: [...(rigToUpdate.renewals || []), newRenewal],
-            history: [...(rigToUpdate.history || []), `Renewed on ${format(new Date(), 'dd/MM/yyyy')}`]
-        };
-        
-        const updatedRigs = [...currentApplicationData.rigs];
-        updatedRigs[rigIndex] = updatedRig;
-
-        const finalApplicationData: AgencyApplication = {
-            ...currentApplicationData,
-            rigs: updatedRigs,
-        };
-        
-        await updateApplication(selectedApplicationId, finalApplicationData);
-        toast({ title: "Rig Renewed", description: `Rig ${updatedRig.rigRegistrationNo} has been successfully renewed.` });
-        
-        // After successful update, update the local form state to reflect the change
-        form.reset(finalApplicationData);
-        setRenewingRig(null);
-        renewalForm.reset();
-
-    } catch (error: any) {
-        console.error("Renewal Error:", error);
-        toast({ title: "Renewal Failed", description: error.message, variant: "destructive" });
-    } finally {
-        setIsSubmitting(false);
-    }
-};
-
   const handleAddNew = () => {
     setSelectedApplicationId('new');
     form.reset({
@@ -449,12 +376,6 @@ export default function AgencyRegistrationPage() {
       history: [...(rig.history || []), historyEntry]
     });
   };
-
-  const handleStartRenewal = (rig: RigRegistration) => {
-    setRenewingRig(rig);
-    renewalForm.reset({ renewalDate: new Date(), renewalFee: undefined, paymentDate: undefined, challanNo: "", remarks: "" });
-  };
-  
 
   if (applicationsLoading || authLoading) {
     return (
@@ -575,9 +496,6 @@ export default function AgencyRegistrationPage() {
                                                 {rig.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
                                               </CardTitle>
                                               <div className="flex gap-2">
-                                                 <Button type="button" size="sm" onClick={() => handleStartRenewal(rig)}>
-                                                    <RotateCcw className="mr-2 h-4 w-4" /> Renew
-                                                </Button>
                                                 <Button type="button" size="sm" variant="destructive" onClick={() => toggleRigStatus(allRigs.findIndex(r => r.id === rig.id), 'Cancelled')}>
                                                   <X className="mr-2 h-4 w-4" /> Cancel
                                                 </Button>
@@ -669,60 +587,6 @@ export default function AgencyRegistrationPage() {
         </CardContent>
       </Card>
     </div>
-
-    {/* Renewal Dialog */}
-    <Dialog open={!!renewingRig} onOpenChange={(isOpen) => !isOpen && setRenewingRig(null)}>
-        <DialogContent className="sm:max-w-4xl">
-            <DialogHeader>
-                <DialogTitle>Renew Rig Registration</DialogTitle>
-                <DialogDescription>
-                    Renewing rig: {renewingRig?.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === renewingRig?.id) + 1}`} - {renewingRig?.typeOfRig}
-                </DialogDescription>
-            </DialogHeader>
-            <FormProvider {...renewalForm}>
-              <form onSubmit={(e) => { e.preventDefault(); onRenewSubmit(); }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-                    {/* Rig Details Display */}
-                    <div className="space-y-4">
-                        <h4 className="font-semibold text-primary border-b pb-2">Rig Details</h4>
-                        <ScrollArea className="h-96 pr-4">
-                            <div className="space-y-2 text-sm">
-                                <p><strong>Rig Reg. No:</strong> {renewingRig?.rigRegistrationNo || 'N/A'}</p>
-                                <p><strong>Type:</strong> {renewingRig?.typeOfRig || 'N/A'}</p>
-                                <Separator/>
-                                <p className="font-medium">Rig Vehicle</p>
-                                <p><strong>Reg No:</strong> {renewingRig?.rigVehicle?.regNo || 'N/A'}</p>
-                                <p><strong>Chassis No:</strong> {renewingRig?.rigVehicle?.chassisNo || 'N/A'}</p>
-                                <Separator/>
-                                <p className="font-medium">Compressor Vehicle</p>
-                                <p><strong>Reg No:</strong> {renewingRig?.compressorVehicle?.regNo || 'N/A'}</p>
-                                <p><strong>Chassis No:</strong> {renewingRig?.compressorVehicle?.chassisNo || 'N/A'}</p>
-                            </div>
-                        </ScrollArea>
-                    </div>
-                    {/* Renewal Form */}
-                    <div className="space-y-4">
-                        <h4 className="font-semibold text-primary border-b pb-2">Enter Renewal Information</h4>
-                        <div className="space-y-4">
-                          <FormField control={renewalForm.control} name="renewalDate" render={({ field }) => (<FormItem><FormLabel>New Renewal Date <span className="text-destructive">*</span></FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-                          <FormField control={renewalForm.control} name="renewalFee" render={({ field }) => (<FormItem><FormLabel>Renewal Fee (₹) <span className="text-destructive">*</span></FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                          <FormField control={renewalForm.control} name="paymentDate" render={({ field }) => (<FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-                          <FormField control={renewalForm.control} name="challanNo" render={({ field }) => (<FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                          <FormField control={renewalForm.control} name="remarks" render={({ field }) => (<FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                        </div>
-                    </div>
-                </div>
-                <DialogFooter className="pt-4">
-                    <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RotateCcw className="mr-2 h-4 w-4" />}
-                        Renew Rig
-                    </Button>
-                </DialogFooter>
-              </form>
-            </FormProvider>
-        </DialogContent>
-    </Dialog>
     </>
   );
 }
