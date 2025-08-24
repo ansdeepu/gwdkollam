@@ -247,6 +247,7 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
   const canManage = user?.role === 'editor';
+  const isEditor = user?.role === 'editor';
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '' });
   const createDefaultRig = (): RigRegistration => ({
@@ -349,6 +350,11 @@ export default function AgencyRegistrationPage() {
   const handleCancelEdit = () => {
     setSelectedApplicationId(null);
   }
+
+  const handleRemoveRig = (index: number) => {
+    removeRig(index);
+    toast({ title: "Rig Removed", description: `Rig #${index + 1} has been removed from the application.` });
+  };
 
   const filteredApplications = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
@@ -459,12 +465,20 @@ export default function AgencyRegistrationPage() {
                           </AccordionItem>
                         </Accordion>
 
-                        {/* Section 3: Rig Registration */}
+                        {/* Section 3: Rig Registrations */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>3. Rig Registrations ({activeRigs.length} Active)</AccordionTrigger>
+                                <AccordionTrigger>3. Rig Registrations ({activeRigs.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
-                                     {activeRigs.length > 0 ? (
+                                    <div className="p-4 bg-secondary/30 border rounded-md">
+                                        <h4 className="font-semibold text-foreground mb-2">About Rig Registration</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                            This section lists all active rigs associated with the agency. You can add up to 3 rigs per agency application. 
+                                            Each rig's details, including vehicle and equipment information, can be managed here. 
+                                            Once a rig's validity expires, it will appear in the 'Rig Renewal' section for further action.
+                                        </p>
+                                    </div>
+                                    {activeRigs.length > 0 && (
                                         <Accordion type="multiple" className="w-full space-y-2">
                                             {activeRigs.map((field) => (
                                                 <RigAccordionItem 
@@ -472,24 +486,23 @@ export default function AgencyRegistrationPage() {
                                                     control={form.control} 
                                                     index={field.originalIndex}
                                                     field={field}
-                                                    removeRig={() => removeRig(field.originalIndex)}
+                                                    removeRig={() => handleRemoveRig(field.originalIndex)}
                                                     onToggleStatus={toggleRigStatus}
-                                                    isReadOnly={true}
+                                                    isReadOnly={isBefore(addYears(new Date(field.registrationDate || Date.now()), 1), new Date())}
                                                 />
                                             ))}
                                         </Accordion>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground p-4 text-center">No active rigs found.</p>
                                     )}
-                                    {rigFields.filter(r => r.status === 'Active').length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                                    {isEditor && rigFields.filter(r => r.status === 'Active').length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
 
+
                         {/* Section 4: Rig Renewal */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-destructive">4. Rig Renewal ({expiredRigs.length} Expired)</AccordionTrigger>
+                                <AccordionTrigger className="text-destructive">4. Rig Renewal ({expiredRigs.length} Pending)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      {expiredRigs.length > 0 ? (
                                         <Accordion type="multiple" className="w-full space-y-2">
@@ -499,7 +512,7 @@ export default function AgencyRegistrationPage() {
                                                     control={form.control} 
                                                     index={field.originalIndex}
                                                     field={field}
-                                                    removeRig={() => removeRig(field.originalIndex)}
+                                                    removeRig={() => handleRemoveRig(field.originalIndex)}
                                                     onToggleStatus={toggleRigStatus}
                                                     isReadOnly={false} // Make expired rigs editable
                                                 />
@@ -571,4 +584,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
