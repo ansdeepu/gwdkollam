@@ -83,7 +83,6 @@ const RigAccordionItem = ({
   field,
   index,
   onRemove,
-  onUpdate,
   onRenew,
   onCancel,
   form
@@ -91,7 +90,6 @@ const RigAccordionItem = ({
   field: RigRegistration;
   index: number;
   onRemove?: (index: number) => void;
-  onUpdate: (index: number) => void;
   onRenew: (index: number) => void;
   onCancel: (index: number) => void;
   form: any;
@@ -120,7 +118,6 @@ const RigAccordionItem = ({
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-            <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onUpdate(index); }}><Edit2 className="h-4 w-4 mr-2" />Update</Button>
             {isExpired && <Button type="button" size="sm" onClick={(e) => { e.stopPropagation(); onRenew(index); }}><RefreshCw className="h-4 w-4 mr-2"/>Renew</Button>}
             {field.status === 'Active' && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onCancel(index); }}><Ban className="h-4 w-4 mr-2"/>Cancel</Button>}
             {onRemove && (
@@ -338,51 +335,6 @@ export default function AgencyRegistrationPage() {
   const pendingApplications = useMemo(() => {
     return filteredApplications.filter(app => app.status === 'Pending Verification');
   }, [filteredApplications]);
-
-  const handleUpdateRig = (rigIndex: number) => {
-    const currentRig = form.getValues(`rigs.${rigIndex}`);
-    
-    // Function to recursively find non-blank fields and format them
-    const getChanges = (obj: any, prefix = ''): string[] => {
-      const changes: string[] = [];
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          const value = obj[key];
-          // Skip internal/unwanted fields
-          if (key === 'id' || key === 'history' || key === 'renewals' || key === 'status' || key.startsWith('_')) continue;
-          
-          if (value !== null && value !== undefined && value !== '') {
-            if (typeof value === 'object' && !(value instanceof Date)) {
-              // Recursively get changes from nested objects
-              const nestedPrefix = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-              changes.push(...getChanges(value, `${nestedPrefix} - `));
-            } else {
-              const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-              const formattedValue = value instanceof Date ? format(value, 'dd/MM/yyyy') : value;
-              changes.push(`${prefix}${formattedKey}: ${formattedValue}`);
-            }
-          }
-        }
-      }
-      return changes;
-    };
-  
-    const changesArray = getChanges(currentRig);
-  
-    if (changesArray.length === 0) {
-      toast({ title: "No Changes", description: "No new data was entered to update." });
-      return;
-    }
-  
-    const historyEntry = `Details updated on ${format(new Date(), 'dd/MM/yyyy')}. Updated fields: ${changesArray.join(', ')}.`;
-  
-    updateRig(rigIndex, {
-      ...currentRig,
-      history: [...(currentRig.history || []), historyEntry],
-    });
-  
-    toast({ title: "Rig Updated", description: "Rig details saved. Remember to save the entire application to make it permanent." });
-  };
   
   const handleRenewRig = (rigIndex: number) => {
       setRenewalData({ rigIndex, data: { renewalDate: new Date() } });
@@ -526,7 +478,6 @@ export default function AgencyRegistrationPage() {
                                     field={field as RigRegistration}
                                     index={index}
                                     onRemove={isEditor ? removeRig : undefined}
-                                    onUpdate={handleUpdateRig}
                                     onRenew={handleRenewRig}
                                     onCancel={handleCancelRig}
                                     form={form}
@@ -539,33 +490,6 @@ export default function AgencyRegistrationPage() {
                           </AccordionItem>
                         </Accordion>
 
-                        {/* Section 4: History Log */}
-                        <Accordion type="single" collapsible className="w-full">
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger>4. History Log</AccordionTrigger>
-                                <AccordionContent className="pt-4 space-y-4">
-                                  {rigFields.length > 0 ? (
-                                      rigFields.map((rig, index) => (
-                                          (rig.history && rig.history.length > 0) && (
-                                              <div key={rig.id} className="p-3 border rounded-md bg-secondary/50">
-                                                  <h4 className="font-semibold text-primary mb-2">
-                                                      Rig #{index + 1} - {rig.typeOfRig || 'Unspecified'}
-                                                  </h4>
-                                                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                                      {rig.history.map((entry, idx) => (
-                                                          <li key={idx}>{entry}</li>
-                                                      ))}
-                                                  </ul>
-                                              </div>
-                                          )
-                                      ))
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground text-center py-4">No history to display.</p>
-                                  )}
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
-                        
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
