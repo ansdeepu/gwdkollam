@@ -389,29 +389,45 @@ export default function AgencyRegistrationPage() {
   
   const onRenewSubmit = (renewalData: RigRenewalFormData) => {
     if (!renewingRig) return;
-    
-    const currentRigs = form.getValues('rigs');
-    const rigIndex = currentRigs.findIndex(r => r.id === renewingRig.id);
-    
+  
+    // Find the index of the rig in the form's array
+    const rigIndex = form.getValues('rigs').findIndex(r => r.id === renewingRig.id);
+  
     if (rigIndex === -1) {
-        toast({ title: "Error", description: "Could not find the rig to renew.", variant: "destructive" });
-        return;
+      toast({ title: "Error", description: "Could not find the rig to renew.", variant: "destructive" });
+      return;
     }
-
-    const rigToUpdate = { ...currentRigs[rigIndex] };
+  
+    // Get the current state of the rig to update
+    const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
+  
+    // Create the new renewal entry
     const newRenewalEntry: RigRenewal = {
-        ...renewalData,
-        id: uuidv4(),
-        validTill: addYears(new Date(renewalData.renewalDate), 1)
+      ...renewalData,
+      id: uuidv4(),
+      validTill: addYears(new Date(renewalData.renewalDate), 1)
     };
-    
-    rigToUpdate.renewals = [...(rigToUpdate.renewals || []), newRenewalEntry];
-    rigToUpdate.registrationDate = newRenewalEntry.renewalDate; // Update main registration date
-    rigToUpdate.history = [...(rigToUpdate.history || []), `Renewed on ${format(new Date(renewalData.renewalDate), 'dd/MM/yyyy')}`];
-
-    updateRig(rigIndex, rigToUpdate);
+  
+    // Update the rig's data
+    const updatedRig = {
+      ...rigToUpdate,
+      renewals: [...(rigToUpdate.renewals || []), newRenewalEntry],
+      registrationDate: newRenewalEntry.renewalDate, // This is the key update to make it "active" again
+      history: [...(rigToUpdate.history || []), `Renewed on ${format(new Date(renewalData.renewalDate), 'dd/MM/yyyy')}`]
+    };
+  
+    // Use the `update` function from useFieldArray to update the specific rig
+    updateRig(rigIndex, updatedRig);
+  
+    // Reset state and close dialog
     setRenewingRig(null);
-    renewalForm.reset();
+    renewalForm.reset({
+        renewalDate: new Date(),
+        renewalFee: undefined,
+        paymentDate: new Date(),
+        challanNo: '',
+        remarks: ''
+    });
     toast({ title: "Rig Renewed", description: `Rig "${rigToUpdate.rigRegistrationNo}" has been renewed.` });
   };
 
@@ -531,7 +547,7 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger>4. Rig Renewals ({expiredRigs.length} Pending)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-2">
                                      {expiredRigs.length > 0 ? (
-                                        expiredRigs.map((rig, index) => (
+                                        expiredRigs.map((rig) => (
                                           <Card key={rig.id} className="p-4">
                                             <CardHeader className="p-0 pb-2 flex-row justify-between items-center">
                                               <CardTitle className="text-base">
@@ -662,5 +678,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
-    
