@@ -120,9 +120,9 @@ const RigAccordionItem = ({
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onUpdate(index); }}><Edit2 className="h-4 w-4 mr-2" />Update</Button>
-            {isExpired && <Button size="sm" onClick={(e) => { e.stopPropagation(); onRenew(index); }}><RefreshCw className="h-4 w-4 mr-2"/>Renew</Button>}
-            {field.status === 'Active' && <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onCancel(index); }}><Ban className="h-4 w-4 mr-2"/>Cancel</Button>}
+            <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onUpdate(index); }}><Edit2 className="h-4 w-4 mr-2" />Update</Button>
+            {isExpired && <Button type="button" size="sm" onClick={(e) => { e.stopPropagation(); onRenew(index); }}><RefreshCw className="h-4 w-4 mr-2"/>Renew</Button>}
+            {field.status === 'Active' && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onCancel(index); }}><Ban className="h-4 w-4 mr-2"/>Cancel</Button>}
             {onRemove && (
                 <Button
                 type="button"
@@ -235,7 +235,7 @@ export default function AgencyRegistrationPage() {
   const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined } | null>(null);
+  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined }>({ rigIndex: -1, reason: '', date: new Date() });
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   
   const isEditor = user?.role === 'editor';
@@ -404,6 +404,7 @@ export default function AgencyRegistrationPage() {
         updateRig(rigIndex, {
             ...rigToUpdate,
             registrationDate: newRenewal.renewalDate, // Update the main registration date
+            status: 'Active',
             renewals: [...(rigToUpdate.renewals || []), newRenewal],
         });
         setIsRenewalDialogOpen(false);
@@ -428,7 +429,7 @@ export default function AgencyRegistrationPage() {
             cancellationReason: reason,
         });
         setIsCancelDialogOpen(false);
-        setCancellationData(null);
+        setCancellationData({ rigIndex: -1, reason: '', date: new Date() });
         toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
     }
   };
@@ -682,4 +683,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
