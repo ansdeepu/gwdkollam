@@ -81,14 +81,12 @@ const AgencyTable = ({
 const RigAccordionItem = ({
   field,
   index,
-  isReadOnly = false,
   onRemove,
   onToggleStatus,
   form
 }: {
   field: RigRegistration;
   index: number;
-  isReadOnly?: boolean;
   onRemove?: (index: number) => void;
   onToggleStatus?: (index: number, newStatus: 'Active' | 'Cancelled') => void;
   form: any;
@@ -108,7 +106,7 @@ const RigAccordionItem = ({
     : null;
 
   const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-  const finalIsReadOnly = isReadOnly || field.status === 'Cancelled' || isExpired;
+  const finalIsReadOnly = field.status === 'Cancelled' || isExpired;
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
@@ -116,7 +114,7 @@ const RigAccordionItem = ({
         <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", isExpired && "text-amber-600")}>
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
-        {!isReadOnly && onRemove && (
+        {onRemove && (
           <div className="ml-auto mr-2 shrink-0">
             <Button
               type="button"
@@ -135,7 +133,7 @@ const RigAccordionItem = ({
           {field.status === 'Cancelled' && (
             <div className="p-4 bg-destructive/10 border-l-4 border-destructive text-center rounded-r-md">
               <p className="font-semibold text-destructive mb-2">This rig registration is Cancelled.</p>
-              {!finalIsReadOnly && onToggleStatus && <Button type="button" size="sm" onClick={() => onToggleStatus(index, 'Active')}><RefreshCw className="mr-2 h-4 w-4" />Re-Activate Rig</Button>}
+              {onToggleStatus && <Button type="button" size="sm" onClick={() => onToggleStatus(index, 'Active')}><RefreshCw className="mr-2 h-4 w-4" />Re-Activate Rig</Button>}
             </div>
           )}
           {!finalIsReadOnly && field.status === 'Active' && onToggleStatus && (
@@ -443,7 +441,6 @@ export default function AgencyRegistrationPage() {
                                     key={field.id}
                                     field={field as RigRegistration}
                                     index={index}
-                                    isReadOnly={false}
                                     onRemove={isEditor ? removeRig : undefined}
                                     onToggleStatus={isEditor ? handleToggleRigStatus : undefined}
                                     form={form}
@@ -514,4 +511,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
