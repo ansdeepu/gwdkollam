@@ -102,7 +102,7 @@ const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }:
                     type="button" 
                     variant="ghost" 
                     size="icon" 
-                    className="ml-2 mr-2 text-destructive hover:text-destructive/90 shrink-0"
+                    className="ml-auto mr-2 text-destructive hover:text-destructive/90 shrink-0"
                     onClick={(e) => {
                         e.stopPropagation(); // prevent accordion from toggling
                         removeRig(index);
@@ -539,5 +539,3 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
-
-    
