@@ -28,6 +28,7 @@ import { format, addYears, isValid, isBefore } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
 
 
 const AgencyTable = ({ 
@@ -234,7 +235,7 @@ export default function AgencyRegistrationPage() {
   const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined }> | null>(null);
+  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined } | null>(null);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   
   const isEditor = user?.role === 'editor';
