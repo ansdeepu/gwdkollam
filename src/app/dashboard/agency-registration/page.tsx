@@ -89,7 +89,7 @@ const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }:
     });
 
     const validityDate = registrationDate && isValid(new Date(registrationDate)) 
-        ? addYears(new Date(registrationDate), 1) 
+        ? new Date(addYears(new Date(registrationDate), 1).getTime() - (24 * 60 * 60 * 1000))
         : null;
 
     return (
