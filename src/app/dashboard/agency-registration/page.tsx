@@ -385,7 +385,7 @@ export default function AgencyRegistrationPage() {
   };
   
   const handleRenewRig = (rigIndex: number) => {
-      setRenewalData({ rigIndex, data: {} });
+      setRenewalData({ rigIndex, data: { renewalDate: new Date() } });
       setIsRenewalDialogOpen(true);
   };
 
@@ -579,6 +579,13 @@ export default function AgencyRegistrationPage() {
                     <DialogDescription>Enter renewal details for the rig.</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right">Renewal Date</Label>
+                        <Popover>
+                        <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>{renewalData?.data.renewalDate ? format(renewalData.data.renewalDate, 'dd/MM/yyyy') : 'Select'}</Button></PopoverTrigger>
+                        <PopoverContent><Calendar mode="single" selected={renewalData?.data.renewalDate} onSelect={(date) => setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: date } }))} /></PopoverContent>
+                        </Popover>
+                    </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
                         <Input id="renewalFee" type="number" value={renewalData?.data.renewalFee || ''} onChange={(e) => setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalFee: +e.target.value } }))} className="col-span-3" />
