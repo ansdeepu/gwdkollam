@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
-import { useForm, useFieldArray, FormProvider } from "react-hook-form";
+import { useForm, useFieldArray, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AgencyApplicationSchema, rigTypeOptions } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -75,6 +75,64 @@ const AgencyTable = ({
         </TableBody>
     </Table>
 );
+
+const RigAccordionItem = ({ control, index, field, toggleRigStatus }: { control: any, index: number, field: any, toggleRigStatus: (index: number) => void }) => {
+    const rigTypeValue = useWatch({
+        control,
+        name: `rigs.${index}.typeOfRig`,
+    });
+    
+    return (
+        <AccordionItem value={`rig-${index}`} key={field.id}>
+            <AccordionTrigger className={cn("text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through")}>
+                Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} ({field.status})
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+                {/* Rig registration details form fields go here */}
+                <div className="grid md:grid-cols-3 gap-4">
+                    <FormField name={`rigs.${index}.rigRegistrationNo`} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField
+                        control={control}
+                        name={`rigs.${index}.typeOfRig`}
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Type of Rig</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    {rigTypeOptions.map(option => (
+                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField name={`rigs.${index}.registrationDate`} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
+                    <FormField name={`rigs.${index}.registrationFee`} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.paymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
+                    <FormField name={`rigs.${index}.challanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                </div>
+                <Separator />
+                <p className="font-medium">Vehicle Details</p>
+                <div className="grid md:grid-cols-3 gap-4">
+                    <FormField name={`rigs.${index}.rigVehicle.type`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.type`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                </div>
+                <div className="flex justify-end gap-2">
+                    <Button type="button" variant={field.status === 'Active' ? 'destructive' : 'secondary'} size="sm" onClick={() => toggleRigStatus(index)}>
+                        {field.status === 'Active' ? 'Cancel Rig' : 'Re-activate Rig'}
+                    </Button>
+                </div>
+            </AccordionContent>
+        </AccordionItem>
+    );
+};
 
 
 export default function AgencyRegistrationPage() {
@@ -290,54 +348,13 @@ export default function AgencyRegistrationPage() {
                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
                                         {rigFields.map((field, index) => (
-                                            <AccordionItem value={`rig-${index}`} key={field.id}>
-                                                <AccordionTrigger className={cn("text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through")}>
-                                                    Rig #{index+1} - {field.typeOfRig || 'Unspecified Type'} ({field.status})
-                                                </AccordionTrigger>
-                                                <AccordionContent className="pt-4 space-y-4">
-                                                    {/* Rig registration details form fields go here */}
-                                                    <div className="grid md:grid-cols-3 gap-4">
-                                                        <FormField name={`rigs.${index}.rigRegistrationNo`} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                        <FormField
-                                                            control={form.control}
-                                                            name={`rigs.${index}.typeOfRig`}
-                                                            render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Type of Rig</FormLabel>
-                                                                <Select onValueChange={field.onChange} value={field.value}>
-                                                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger></FormControl>
-                                                                    <SelectContent>
-                                                                        {rigTypeOptions.map(option => (
-                                                                            <SelectItem key={option} value={option}>{option}</SelectItem>
-                                                                        ))}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                            )}
-                                                        />
-                                                        <FormField name={`rigs.${index}.registrationDate`} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
-                                                        <FormField name={`rigs.${index}.registrationFee`} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>} />
-                                                        <FormField name={`rigs.${index}.paymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
-                                                        <FormField name={`rigs.${index}.challanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                    </div>
-                                                    <Separator />
-                                                    <p className="font-medium">Vehicle Details</p>
-                                                    <div className="grid md:grid-cols-3 gap-4">
-                                                        <FormField name={`rigs.${index}.rigVehicle.type`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                        <FormField name={`rigs.${index}.rigVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                        <FormField name={`rigs.${index}.rigVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                        <FormField name={`rigs.${index}.supportingVehicle.type`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                        <FormField name={`rigs.${index}.supportingVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                        <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                                                    </div>
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button type="button" variant={field.status === 'Active' ? 'destructive' : 'secondary'} size="sm" onClick={() => toggleRigStatus(index)}>
-                                                            {field.status === 'Active' ? 'Cancel Rig' : 'Re-activate Rig'}
-                                                        </Button>
-                                                    </div>
-                                                </AccordionContent>
-                                            </AccordionItem>
+                                           <RigAccordionItem 
+                                                key={field.id}
+                                                control={form.control} 
+                                                index={index}
+                                                field={field}
+                                                toggleRigStatus={toggleRigStatus}
+                                           />
                                         ))}
                                     </Accordion>
                                     {rigFields.filter(r => r.status === 'Active').length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
@@ -412,3 +429,4 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
