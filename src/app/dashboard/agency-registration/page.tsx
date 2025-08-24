@@ -465,7 +465,12 @@ export default function AgencyRegistrationPage() {
     if (rigIndex === -1) return;
 
     setEditingRigId(rigId);
-    setOpenAccordionItems([`rig-${rigIndex}`]);
+    // This is the key change: ensure the accordion item is opened.
+    setOpenAccordionItems(prev => {
+        const newItem = `rig-${rigIndex}`;
+        if (prev.includes(newItem)) return prev;
+        return [...prev, newItem];
+    });
     renewalForm.reset({ renewalDate: new Date(), renewalFee: undefined, paymentDate: undefined, challanNo: "", remarks: "" });
 
     // Scroll to the accordion item
@@ -707,3 +712,5 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
+
+    
