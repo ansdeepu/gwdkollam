@@ -113,7 +113,7 @@ const RigAccordionItem = ({
         : null;
 
     const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-    const finalIsReadOnly = field.status === 'Cancelled';
+    const finalIsReadOnly = field.status === 'Cancelled' || isExpired;
 
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border bg-background rounded-lg shadow-sm">
@@ -453,9 +453,7 @@ export default function AgencyRegistrationPage() {
                             </AccordionItem>
                         </Accordion>
                         
-                         {/* Section 4: Removed */}
-                        
-                        {/* Section 5: Agency Overview */}
+                        {/* Section 4: Agency Overview */}
                         <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>4. Agency Overview</AccordionTrigger>
