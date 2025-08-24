@@ -234,10 +234,10 @@ const RigAccordionItem = ({
     );
 };
 
-const DetailRow = ({ label, value }: { label: string, value: string | undefined | null }) => (
+const DetailRow = ({ label, value }: { label: string, value: string | undefined | null | number }) => (
     <div className="grid grid-cols-2 gap-2 py-1.5 border-b">
         <p className="font-medium text-sm text-muted-foreground">{label}</p>
-        <p className="text-sm">{value || 'N/A'}</p>
+        <p className="text-sm">{value ?? 'N/A'}</p>
     </div>
 );
 
@@ -616,7 +616,7 @@ export default function AgencyRegistrationPage() {
               <DetailRow label="Type of Rig" value={viewingRigDetails.typeOfRig} />
               <DetailRow label="Last Reg/Renewal Date" value={viewingRigDetails.registrationDate ? format(new Date(viewingRigDetails.registrationDate), 'dd/MM/yyyy') : undefined} />
               <DetailRow label="Validity Upto" value={getValidityDate(viewingRigDetails) ? format(getValidityDate(viewingRigDetails)!, 'dd/MM/yyyy') : 'N/A'} />
-              <DetailRow label="Reg. Fee" value={viewingRigDetails.registrationFee?.toString()} />
+              <DetailRow label="Reg. Fee" value={viewingRigDetails.registrationFee} />
               <DetailRow label="Payment Date" value={viewingRigDetails.paymentDate ? format(new Date(viewingRigDetails.paymentDate), 'dd/MM/yyyy') : undefined} />
               <DetailRow label="Challan No." value={viewingRigDetails.challanNo} />
 
