@@ -235,7 +235,7 @@ export default function AgencyRegistrationPage() {
   const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined } | null>(null);
+  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined }> | null>(null);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   
   const isEditor = user?.role === 'editor';
