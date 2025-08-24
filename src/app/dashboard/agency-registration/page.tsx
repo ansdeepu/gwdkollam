@@ -83,6 +83,15 @@ const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }:
         name: `rigs.${index}.typeOfRig`,
     });
     
+    const registrationDate = useWatch({
+        control,
+        name: `rigs.${index}.registrationDate`
+    });
+
+    const validityDate = registrationDate && isValid(new Date(registrationDate)) 
+        ? addYears(new Date(registrationDate), 1) 
+        : null;
+
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border-b-0">
             <div className="flex items-center w-full border-b">
@@ -104,7 +113,7 @@ const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }:
             </div>
             <AccordionContent className="pt-4 space-y-4">
                 {/* Rig registration details form fields go here */}
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <FormField name={`rigs.${index}.rigRegistrationNo`} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
                     <FormField
                         control={control}
@@ -125,6 +134,18 @@ const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }:
                         )}
                     />
                     <FormField name={`rigs.${index}.registrationDate`} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
+                    <FormItem>
+                        <FormLabel>Validity Upto</FormLabel>
+                        <FormControl>
+                            <Input 
+                                value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'}
+                                disabled 
+                                className="bg-muted/50"
+                            />
+                        </FormControl>
+                    </FormItem>
+                </div>
+                 <div className="grid md:grid-cols-3 gap-4">
                     <FormField name={`rigs.${index}.registrationFee`} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>} />
                     <FormField name={`rigs.${index}.paymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
                     <FormField name={`rigs.${index}.challanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
@@ -518,3 +539,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
