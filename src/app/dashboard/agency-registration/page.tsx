@@ -342,28 +342,32 @@ export default function AgencyRegistrationPage() {
 
   const onRenewSubmit = async () => {
     if (!renewingRig || !selectedApplicationId || selectedApplicationId === 'new') {
-        toast({ title: "Error", description: "No rig or application selected for renewal.", variant: "destructive" });
-        return;
-    }
-    
-    setIsSubmitting(true);
-    const isValid = await renewalForm.trigger();
-    if (!isValid) {
-      toast({ title: "Invalid Renewal Data", description: "Please check the renewal fields for errors.", variant: "destructive" });
-      setIsSubmitting(false);
+      toast({ title: "Error", description: "No rig or application selected for renewal.", variant: "destructive" });
       return;
     }
 
+    const isValid = await renewalForm.trigger();
+    if (!isValid) {
+      toast({ title: "Invalid Renewal Data", description: "Please check the renewal fields for errors.", variant: "destructive" });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
         const renewalData = renewalForm.getValues();
-        const currentApplicationData = form.getValues();
-        const rigIndex = currentApplicationData.rigs.findIndex(r => r.id === renewingRig.id);
+        // Use a fresh copy of the application data to avoid stale state
+        const currentApplicationData = applications.find(app => app.id === selectedApplicationId);
+        if (!currentApplicationData) {
+            throw new Error("Could not find the application to update.");
+        }
         
+        const rigIndex = currentApplicationData.rigs.findIndex(r => r.id === renewingRig.id);
         if (rigIndex === -1) {
             throw new Error("Could not find the rig to renew in the current application data.");
         }
 
-        const rigToUpdate = currentApplicationData.rigs[rigIndex];
+        const rigToUpdate = { ...currentApplicationData.rigs[rigIndex] };
         
         const newRenewal: RigRenewal = {
             ...renewalData,
@@ -389,7 +393,8 @@ export default function AgencyRegistrationPage() {
         await updateApplication(selectedApplicationId, finalApplicationData);
         toast({ title: "Rig Renewed", description: `Rig ${updatedRig.rigRegistrationNo} has been successfully renewed.` });
         
-        form.reset(finalApplicationData); // Update the form with the new data
+        // After successful update, update the local form state to reflect the change
+        form.reset(finalApplicationData);
         setRenewingRig(null);
         renewalForm.reset();
 
@@ -399,7 +404,7 @@ export default function AgencyRegistrationPage() {
     } finally {
         setIsSubmitting(false);
     }
-  };
+};
 
   const handleAddNew = () => {
     setSelectedApplicationId('new');
