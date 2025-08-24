@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -245,7 +245,7 @@ export default function AgencyRegistrationPage() {
       id: uuidv4(),
       status: 'Active',
       renewals: [],
-      history: [`Rig added on ${format(new Date(), 'dd/MM/yyyy')}`],
+      history: [],
   });
 
   const form = useForm<AgencyApplication>({
@@ -255,7 +255,7 @@ export default function AgencyRegistrationPage() {
       partners: [],
       rigs: [createDefaultRig()],
       status: 'Pending Verification',
-      history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
+      history: []
     },
   });
   
@@ -270,7 +270,7 @@ export default function AgencyRegistrationPage() {
           partners: [],
           rigs: [createDefaultRig()],
           status: 'Pending Verification',
-          history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
+          history: []
         });
       } else {
         const app = applications.find(a => a.id === selectedApplicationId);
@@ -405,7 +405,6 @@ export default function AgencyRegistrationPage() {
             ...rigToUpdate,
             registrationDate: newRenewal.renewalDate, // Update the main registration date
             renewals: [...(rigToUpdate.renewals || []), newRenewal],
-            history: [...(rigToUpdate.history || []), `Renewed on ${format(new Date(), 'dd/MM/yyyy')}`],
         });
         setIsRenewalDialogOpen(false);
         setRenewalData(null);
@@ -422,13 +421,11 @@ export default function AgencyRegistrationPage() {
     if (cancellationData) {
         const { rigIndex, reason, date } = cancellationData;
         const rigToUpdate = rigFields[rigIndex];
-        const historyEntry = `Cancelled on ${format(date!, 'dd/MM/yyyy')}. Reason: ${reason}`;
         updateRig(rigIndex, {
             ...rigToUpdate,
             status: 'Cancelled',
             cancellationDate: date,
             cancellationReason: reason,
-            history: [...(rigToUpdate.history || []), historyEntry],
         });
         setIsCancelDialogOpen(false);
         setCancellationData(null);
