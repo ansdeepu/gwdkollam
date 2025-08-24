@@ -228,7 +228,6 @@ export default function AgencyRegistrationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
-  const [renewingRig, setRenewingRig] = useState<RigRegistration | null>(null);
   
   const canManage = user?.role === 'editor';
 
@@ -251,17 +250,6 @@ export default function AgencyRegistrationPage() {
     },
   });
   
-  const renewalForm = useForm<RigRenewalFormData>({
-    resolver: zodResolver(RigRenewalSchema),
-    defaultValues: {
-        renewalDate: new Date(),
-        renewalFee: undefined,
-        paymentDate: new Date(),
-        challanNo: '',
-        remarks: ''
-    }
-  });
-
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig, replace: replaceRigs } = useFieldArray({ control: form.control, name: "rigs" });
   
@@ -387,50 +375,6 @@ export default function AgencyRegistrationPage() {
     });
   };
   
-  const onRenewSubmit = (renewalData: RigRenewalFormData) => {
-    if (!renewingRig) return;
-  
-    // Find the index of the rig in the form's array
-    const rigIndex = form.getValues('rigs').findIndex(r => r.id === renewingRig.id);
-  
-    if (rigIndex === -1) {
-      toast({ title: "Error", description: "Could not find the rig to renew.", variant: "destructive" });
-      return;
-    }
-  
-    // Get the current state of the rig to update
-    const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
-  
-    // Create the new renewal entry
-    const newRenewalEntry: RigRenewal = {
-      ...renewalData,
-      id: uuidv4(),
-      validTill: addYears(new Date(renewalData.renewalDate), 1)
-    };
-  
-    // Update the rig's data
-    const updatedRig = {
-      ...rigToUpdate,
-      renewals: [...(rigToUpdate.renewals || []), newRenewalEntry],
-      registrationDate: newRenewalEntry.renewalDate, // This is the key update to make it "active" again
-      history: [...(rigToUpdate.history || []), `Renewed on ${format(new Date(renewalData.renewalDate), 'dd/MM/yyyy')}`]
-    };
-  
-    // Use the `update` function from useFieldArray to update the specific rig
-    updateRig(rigIndex, updatedRig);
-  
-    // Reset state and close dialog
-    setRenewingRig(null);
-    renewalForm.reset({
-        renewalDate: new Date(),
-        renewalFee: undefined,
-        paymentDate: new Date(),
-        challanNo: '',
-        remarks: ''
-    });
-    toast({ title: "Rig Renewed", description: `Rig "${rigToUpdate.rigRegistrationNo}" has been renewed.` });
-  };
-
 
   if (applicationsLoading || authLoading) {
     return (
@@ -554,9 +498,6 @@ export default function AgencyRegistrationPage() {
                                                 {rig.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
                                               </CardTitle>
                                               <div className="flex gap-2">
-                                                 <Button type="button" size="sm" onClick={() => setRenewingRig(rig)}>
-                                                    <RefreshCw className="mr-2 h-4 w-4" /> Renew
-                                                </Button>
                                                 <Button type="button" size="sm" variant="destructive" onClick={() => toggleRigStatus(allRigs.findIndex(r => r.id === rig.id), 'Cancelled')}>
                                                   <X className="mr-2 h-4 w-4" /> Cancel
                                                 </Button>
@@ -648,33 +589,6 @@ export default function AgencyRegistrationPage() {
         </CardContent>
       </Card>
     </div>
-
-    {/* Renewal Dialog */}
-    <Dialog open={!!renewingRig} onOpenChange={() => setRenewingRig(null)}>
-        <DialogContent>
-             <FormProvider {...renewalForm}>
-                <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)}>
-                    <DialogHeader>
-                        <DialogTitle>Renew Rig: {renewingRig?.rigRegistrationNo}</DialogTitle>
-                        <DialogDescription>
-                            Enter the renewal details for this rig. The new validity will be one year from the renewal date.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-6 grid gap-4">
-                        <FormField control={renewalForm.control} name="renewalDate" render={({ field }) => ( <FormItem><FormLabel>Renewal Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select Date'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem> )} />
-                        <FormField control={renewalForm.control} name="renewalFee" render={({ field }) => ( <FormItem><FormLabel>Renewal Fee (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                        <FormField control={renewalForm.control} name="paymentDate" render={({ field }) => ( <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select Date'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem> )} />
-                        <FormField control={renewalForm.control} name="challanNo" render={({ field }) => ( <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                        <FormField control={renewalForm.control} name="remarks" render={({ field }) => ( <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    </div>
-                    <DialogFooter>
-                        <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                        <Button type="submit"><RefreshCw className="mr-2 h-4 w-4" />Renew Rig</Button>
-                    </DialogFooter>
-                </form>
-             </FormProvider>
-        </DialogContent>
-    </Dialog>
     </>
   );
 }
