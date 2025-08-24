@@ -341,14 +341,47 @@ export default function AgencyRegistrationPage() {
 
   const handleUpdateRig = (rigIndex: number) => {
     const currentRig = form.getValues(`rigs.${rigIndex}`);
-    const changes = Object.entries(currentRig).map(([key, value]) => `${key}: ${value}`).join(', ');
-    const historyEntry = `Details updated on ${format(new Date(), 'dd/MM/yyyy')}: ${changes}`;
     
+    // Function to recursively find non-blank fields and format them
+    const getChanges = (obj: any, prefix = ''): string[] => {
+      const changes: string[] = [];
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = obj[key];
+          // Skip internal/unwanted fields
+          if (key === 'id' || key === 'history' || key === 'renewals' || key === 'status' || key.startsWith('_')) continue;
+          
+          if (value !== null && value !== undefined && value !== '') {
+            if (typeof value === 'object' && !(value instanceof Date)) {
+              // Recursively get changes from nested objects
+              const nestedPrefix = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+              changes.push(...getChanges(value, `${nestedPrefix} - `));
+            } else {
+              const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+              const formattedValue = value instanceof Date ? format(value, 'dd/MM/yyyy') : value;
+              changes.push(`${prefix}${formattedKey}: ${formattedValue}`);
+            }
+          }
+        }
+      }
+      return changes;
+    };
+  
+    const changesArray = getChanges(currentRig);
+  
+    if (changesArray.length === 0) {
+      toast({ title: "No Changes", description: "No new data was entered to update." });
+      return;
+    }
+  
+    const historyEntry = `Details updated on ${format(new Date(), 'dd/MM/yyyy')}. Updated fields: ${changesArray.join(', ')}.`;
+  
     updateRig(rigIndex, {
       ...currentRig,
       history: [...(currentRig.history || []), historyEntry],
     });
-    toast({ title: "Rig Updated", description: "Rig details saved. Remember to save the entire application." });
+  
+    toast({ title: "Rig Updated", description: "Rig details saved. Remember to save the entire application to make it permanent." });
   };
   
   const handleRenewRig = (rigIndex: number) => {
