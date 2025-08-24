@@ -83,14 +83,12 @@ const RigAccordionItem = ({
     index, 
     field, 
     removeRig, 
-    isReadOnly, 
     onToggleStatus,
 }: { 
     control: any, 
     index: number, 
     field: any, 
     removeRig: (index: number) => void, 
-    isReadOnly: boolean, 
     onToggleStatus: (index: number, status: 'Active' | 'Cancelled') => void,
 }) => {
     const rigTypeValue = useWatch({
@@ -115,7 +113,7 @@ const RigAccordionItem = ({
         : null;
 
     const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled';
+    const finalIsReadOnly = field.status === 'Cancelled';
 
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border bg-background rounded-lg shadow-sm">
@@ -125,7 +123,7 @@ const RigAccordionItem = ({
                      ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
                 </AccordionTrigger>
                 <div className="ml-auto mr-2 shrink-0">
-                    {field.status !== 'Cancelled' && !isReadOnly && (
+                    {field.status !== 'Cancelled' && (
                         <Button 
                             type="button" 
                             variant="ghost" 
@@ -347,6 +345,7 @@ export default function AgencyRegistrationPage() {
         toast({ title: "Error", description: "No rig or application selected for renewal.", variant: "destructive" });
         return;
     }
+    
     setIsSubmitting(true);
     const isValid = await renewalForm.trigger();
     if (!isValid) {
@@ -546,7 +545,6 @@ export default function AgencyRegistrationPage() {
                                                     index={index}
                                                     field={field}
                                                     removeRig={() => removeRig(index)}
-                                                    isReadOnly={false}
                                                     onToggleStatus={toggleRigStatus}
                                                 />
                                             ))}
@@ -677,7 +675,7 @@ export default function AgencyRegistrationPage() {
                 </DialogDescription>
             </DialogHeader>
             <FormProvider {...renewalForm}>
-              <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)}>
+              <form onSubmit={(e) => { e.preventDefault(); onRenewSubmit(); }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                     {/* Rig Details Display */}
                     <div className="space-y-4">
