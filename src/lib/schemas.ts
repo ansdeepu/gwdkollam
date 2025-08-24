@@ -679,6 +679,8 @@ export const RigRegistrationSchema = z.object({
   renewals: z.array(RigRenewalSchema).optional(),
   history: z.array(z.string()).optional(),
   status: z.enum(rigStatusOptions).default('Active'),
+  cancellationDate: optionalDate,
+  cancellationReason: z.string().optional(),
 });
 export type RigRegistration = z.infer<typeof RigRegistrationSchema>;
 
