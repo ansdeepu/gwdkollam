@@ -207,7 +207,8 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewa
                 </div>
                 
                  {!isReadOnly && isExpired && (
-                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 space-y-4 rounded-r-md">
+                    <FormProvider {...renewalForm}>
+                    <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)} className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 space-y-4 rounded-r-md">
                         <h4 className="font-semibold text-lg text-blue-800">Renew This Rig</h4>
                         <div className="grid md:grid-cols-4 gap-4">
                             <FormField
@@ -255,10 +256,11 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewa
                                 )}
                             />
                         </div>
-                         <Button type="button" onClick={renewalForm.handleSubmit(onRenewSubmit)}>
+                         <Button type="submit">
                              <RefreshCw className="mr-2 h-4 w-4" /> Update & Renew Rig
                          </Button>
-                    </div>
+                    </form>
+                    </FormProvider>
                 )}
             </AccordionContent>
         </AccordionItem>
