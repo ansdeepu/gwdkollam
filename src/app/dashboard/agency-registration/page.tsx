@@ -78,167 +78,170 @@ const AgencyTable = ({
     </Table>
 );
 
-const RigAccordionItem = ({ 
-    control, 
-    index, 
-    field, 
-    removeRig, 
-    onToggleStatus,
-    isReadOnly = false,
-}: { 
-    control: any, 
-    index: number, 
-    field: any, 
-    removeRig: (index: number) => void, 
-    onToggleStatus: (index: number, status: 'Active' | 'Cancelled') => void,
-    isReadOnly?: boolean,
+const RigAccordionItem = ({
+  field,
+  index,
+  isReadOnly = false,
+  onRemove,
+  onToggleStatus,
+  onFieldChange,
+}: {
+  field: RigRegistration;
+  index: number;
+  isReadOnly?: boolean;
+  onRemove?: (index: number) => void;
+  onToggleStatus?: (index: number, newStatus: 'Active' | 'Cancelled') => void;
+  onFieldChange?: (index: number, fieldName: string, value: any) => void;
 }) => {
-    const rigTypeValue = useWatch({
-        control,
-        name: `rigs.${index}.typeOfRig`,
-    });
-    
-    const registrationDate = useWatch({
-        control,
-        name: `rigs.${index}.registrationDate`
-    });
-    
-    const latestRenewal = useMemo(() => {
-      if (!field.renewals || field.renewals.length === 0) return null;
-      return [...field.renewals].sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0];
-    }, [field.renewals]);
+  const rigTypeValue = field.typeOfRig;
+  const registrationDate = field.registrationDate;
 
-    const lastEffectiveDate = latestRenewal ? new Date(latestRenewal.renewalDate) : (registrationDate ? new Date(registrationDate) : null);
+  const latestRenewal = useMemo(() => {
+    if (!field.renewals || field.renewals.length === 0) return null;
+    return [...field.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0];
+  }, [field.renewals]);
 
-    const validityDate = lastEffectiveDate && isValid(lastEffectiveDate) 
-        ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
-        : null;
+  const lastEffectiveDate = latestRenewal ? new Date(latestRenewal.renewalDate) : (registrationDate ? new Date(registrationDate) : null);
 
-    const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled' || isExpired;
+  const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
+    ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
+    : null;
 
-    return (
-        <AccordionItem value={`rig-${index}`} key={field.id} className="border bg-background rounded-lg shadow-sm">
-            <div className="flex items-center w-full border-b">
-                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", isExpired && "text-amber-600")}>
-                    Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} 
-                     ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
-                </AccordionTrigger>
-                 {!isReadOnly && (
-                    <div className="ml-auto mr-2 shrink-0">
-                        {field.status !== 'Cancelled' && (
-                             <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="icon" 
-                                className="text-destructive hover:text-destructive/90"
-                                onClick={(e) => { e.stopPropagation(); removeRig(index); }}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-                 )}
+  const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
+  const finalIsReadOnly = isReadOnly || field.status === 'Cancelled' || isExpired;
+  
+  const handleInputChange = (fieldName: string, value: any) => {
+    if (onFieldChange) {
+      onFieldChange(index, fieldName, value);
+    }
+  };
+
+  const handleNestedInputChange = (parentKey: string, fieldName: string, value: any) => {
+    if (onFieldChange) {
+        const parentObject = (field as any)[parentKey] || {};
+        onFieldChange(index, parentKey, { ...parentObject, [fieldName]: value });
+    }
+  };
+
+  return (
+    <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
+      <div className="flex items-center w-full border-b">
+        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", isExpired && "text-amber-600")}>
+          Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
+        </AccordionTrigger>
+        {!isReadOnly && onRemove && (
+          <div className="ml-auto mr-2 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive/90"
+              onClick={(e) => { e.stopPropagation(); onRemove(index); }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+      <AccordionContent className="p-6 pt-0">
+        <div className="border-t pt-6 space-y-4">
+          {field.status === 'Cancelled' && (
+            <div className="p-4 bg-destructive/10 border-l-4 border-destructive text-center rounded-r-md">
+              <p className="font-semibold text-destructive mb-2">This rig registration is Cancelled.</p>
+              {!isReadOnly && onToggleStatus && <Button type="button" size="sm" onClick={() => onToggleStatus(index, 'Active')}><RefreshCw className="mr-2 h-4 w-4" />Re-Activate Rig</Button>}
             </div>
-            <AccordionContent className="p-6 pt-0">
-                <div className="border-t pt-6 space-y-4">
-                {field.status === 'Cancelled' && (
-                    <div className="p-4 bg-destructive/10 border-l-4 border-destructive text-center rounded-r-md">
-                        <p className="font-semibold text-destructive mb-2">This rig registration is Cancelled.</p>
-                         {!isReadOnly && <Button type="button" size="sm" onClick={() => onToggleStatus(index, 'Active')}><RefreshCw className="mr-2 h-4 w-4" />Re-Activate Rig</Button>}
-                    </div>
-                )}
-                 {!isReadOnly && field.status === 'Active' && (
-                     <div className="flex justify-end">
-                        <Button type="button" variant="destructive" size="sm" onClick={() => onToggleStatus(index, 'Cancelled')}><Ban className="mr-2 h-4 w-4" />Cancel Rig Registration</Button>
-                    </div>
-                 )}
+          )}
+          {!isReadOnly && field.status === 'Active' && onToggleStatus && (
+            <div className="flex justify-end">
+              <Button type="button" variant="destructive" size="sm" onClick={() => onToggleStatus(index, 'Cancelled')}><Ban className="mr-2 h-4 w-4" />Cancel Rig Registration</Button>
+            </div>
+          )}
 
-                {/* Rig registration details form fields go here */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.rigRegistrationNo`} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField
-                        control={control}
-                        name={`rigs.${index}.typeOfRig`}
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Type of Rig</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={finalIsReadOnly}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    {rigTypeOptions.map(option => (
-                                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField name={`rigs.${index}.registrationDate`} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full" disabled={finalIsReadOnly}><CalendarIcon className="mr-2 h-4 w-4"/>{lastEffectiveDate ? format(new Date(lastEffectiveDate), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} disabled={finalIsReadOnly} /></PopoverContent></Popover></FormItem>} />
-                    <FormItem>
-                        <FormLabel>Validity Upto</FormLabel>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input value={field.rigRegistrationNo || ''} onChange={e => handleInputChange('rigRegistrationNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+            <FormItem>
+              <FormLabel>Type of Rig</FormLabel>
+              <Select onValueChange={value => handleInputChange('typeOfRig', value)} value={field.typeOfRig} disabled={isReadOnly}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger></FormControl>
+                <SelectContent>{rigTypeOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
+              </Select>
+            </FormItem>
+            <FormItem>
+                <FormLabel>Last Reg/Renewal Date</FormLabel>
+                <Popover>
+                    <PopoverTrigger asChild>
                         <FormControl>
-                            <Input 
-                                value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'}
-                                disabled 
-                                className="bg-muted/50"
-                            />
+                            <Button variant="outline" className="w-full" disabled={isReadOnly}>
+                                <CalendarIcon className="mr-2 h-4 w-4"/>
+                                {field.registrationDate ? format(new Date(field.registrationDate), 'dd/MM/yyyy') : 'Select'}
+                            </Button>
                         </FormControl>
-                    </FormItem>
-                </div>
-                 <div className="grid md:grid-cols-3 gap-4">
-                    <FormField name={`rigs.${index}.registrationFee`} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.paymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full" disabled={finalIsReadOnly}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} disabled={finalIsReadOnly}/></PopoverContent></Popover></FormItem>} />
-                    <FormField name={`rigs.${index}.challanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                </div>
-                <Separator />
-                <p className="font-medium">Rig Vehicle Details</p>
-                <div className="grid md:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.rigVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                </div>
-                 <Separator />
-                <p className="font-medium">Compressor Vehicle Details</p>
-                <div className="grid md:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.compressorVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.compressorVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.compressorVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                </div>
-                 <Separator />
-                <p className="font-medium">Supporting Vehicle Details</p>
-                <div className="grid md:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.supportingVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                </div>
-                <Separator />
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <p className="font-medium">Compressor Details</p>
-                        <div className="grid md:grid-cols-2 gap-4 mt-2">
-                             <FormField name={`rigs.${index}.compressorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.compressorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                        </div>
-                    </div>
-                     <div>
-                        <p className="font-medium">Generator Details</p>
-                        <div className="grid md:grid-cols-2 gap-4 mt-2">
-                             <FormField name={`rigs.${index}.generatorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.generatorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.generatorDetails.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.generatorDetails.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
-                        </div>
-                    </div>
-                </div>
-                </div>
-            </AccordionContent>
-        </AccordionItem>
-    );
+                    </PopoverTrigger>
+                    <PopoverContent>
+                        <Calendar mode="single" selected={field.registrationDate ? new Date(field.registrationDate) : undefined} onSelect={date => handleInputChange('registrationDate', date)} disabled={isReadOnly} />
+                    </PopoverContent>
+                </Popover>
+            </FormItem>
+            <FormItem>
+              <FormLabel>Validity Upto</FormLabel>
+              <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
+            </FormItem>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" value={field.registrationFee || ''} onChange={e => handleInputChange('registrationFee', e.target.valueAsNumber)} readOnly={isReadOnly} /></FormControl></FormItem>
+            <FormItem>
+              <FormLabel>Payment Date</FormLabel>
+              <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full" disabled={isReadOnly}><CalendarIcon className="mr-2 h-4 w-4"/>{field.paymentDate ? format(new Date(field.paymentDate), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.paymentDate ? new Date(field.paymentDate) : undefined} onSelect={date => handleInputChange('paymentDate', date)} disabled={isReadOnly}/></PopoverContent></Popover>
+            </FormItem>
+            <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input value={field.challanNo || ''} onChange={e => handleInputChange('challanNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+          </div>
+          <Separator />
+          <p className="font-medium">Rig Vehicle Details</p>
+          <div className="grid md:grid-cols-4 gap-4">
+             <FormItem><FormLabel>Type</FormLabel><FormControl><Input value={field.rigVehicle?.type || ''} onChange={e => handleNestedInputChange('rigVehicle', 'type', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input value={field.rigVehicle?.regNo || ''} onChange={e => handleNestedInputChange('rigVehicle', 'regNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input value={field.rigVehicle?.chassisNo || ''} onChange={e => handleNestedInputChange('rigVehicle', 'chassisNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input value={field.rigVehicle?.engineNo || ''} onChange={e => handleNestedInputChange('rigVehicle', 'engineNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+          </div>
+          <Separator />
+          <p className="font-medium">Compressor Vehicle Details</p>
+          <div className="grid md:grid-cols-4 gap-4">
+             <FormItem><FormLabel>Type</FormLabel><FormControl><Input value={field.compressorVehicle?.type || ''} onChange={e => handleNestedInputChange('compressorVehicle', 'type', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input value={field.compressorVehicle?.regNo || ''} onChange={e => handleNestedInputChange('compressorVehicle', 'regNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input value={field.compressorVehicle?.chassisNo || ''} onChange={e => handleNestedInputChange('compressorVehicle', 'chassisNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input value={field.compressorVehicle?.engineNo || ''} onChange={e => handleNestedInputChange('compressorVehicle', 'engineNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+          </div>
+          <Separator />
+          <p className="font-medium">Supporting Vehicle Details</p>
+          <div className="grid md:grid-cols-4 gap-4">
+             <FormItem><FormLabel>Type</FormLabel><FormControl><Input value={field.supportingVehicle?.type || ''} onChange={e => handleNestedInputChange('supportingVehicle', 'type', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input value={field.supportingVehicle?.regNo || ''} onChange={e => handleNestedInputChange('supportingVehicle', 'regNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input value={field.supportingVehicle?.chassisNo || ''} onChange={e => handleNestedInputChange('supportingVehicle', 'chassisNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+             <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input value={field.supportingVehicle?.engineNo || ''} onChange={e => handleNestedInputChange('supportingVehicle', 'engineNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+          </div>
+          <Separator />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <p className="font-medium">Compressor Details</p>
+              <div className="grid md:grid-cols-2 gap-4 mt-2">
+                <FormItem><FormLabel>Model</FormLabel><FormControl><Input value={field.compressorDetails?.model || ''} onChange={e => handleNestedInputChange('compressorDetails', 'model', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+                <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input value={field.compressorDetails?.capacity || ''} onChange={e => handleNestedInputChange('compressorDetails', 'capacity', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+              </div>
+            </div>
+            <div>
+              <p className="font-medium">Generator Details</p>
+              <div className="grid md:grid-cols-2 gap-4 mt-2">
+                <FormItem><FormLabel>Model</FormLabel><FormControl><Input value={field.generatorDetails?.model || ''} onChange={e => handleNestedInputChange('generatorDetails', 'model', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+                <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input value={field.generatorDetails?.capacity || ''} onChange={e => handleNestedInputChange('generatorDetails', 'capacity', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+                <FormItem><FormLabel>Type</FormLabel><FormControl><Input value={field.generatorDetails?.type || ''} onChange={e => handleNestedInputChange('generatorDetails', 'type', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+                <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input value={field.generatorDetails?.engineNo || ''} onChange={e => handleNestedInputChange('generatorDetails', 'engineNo', e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
 };
 
 
@@ -250,6 +253,7 @@ export default function AgencyRegistrationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+  const [editableRigs, setEditableRigs] = useState<RigRegistration[]>([]);
   
   const canManage = user?.role === 'editor';
   const isEditor = user?.role === 'editor';
@@ -274,33 +278,46 @@ export default function AgencyRegistrationPage() {
   });
   
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
-  const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig, replace: replaceRigs } = useFieldArray({ control: form.control, name: "rigs" });
+  const { fields: rigFields, remove: removeRigFromForm, replace: replaceRigsInForm } = useFieldArray({ control: form.control, name: "rigs" });
   
   useEffect(() => {
-    if (selectedApplicationId === 'new') {
-        return;
-    }
     if (selectedApplicationId) {
-      const app = applications.find(a => a.id === selectedApplicationId);
-      if (app) {
-        form.reset(app);
+      if (selectedApplicationId === 'new') {
+        const newRig = createDefaultRig();
+        form.reset({
+          owner: createDefaultOwner(),
+          partners: [],
+          rigs: [newRig],
+          status: 'Pending Verification',
+          history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
+        });
+        setEditableRigs([newRig]);
       } else {
-        setSelectedApplicationId(null);
-        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [createDefaultRig()], status: 'Pending Verification', history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]});
+        const app = applications.find(a => a.id === selectedApplicationId);
+        if (app) {
+          form.reset(app);
+          setEditableRigs(JSON.parse(JSON.stringify(app.rigs))); // Deep copy
+        } else {
+          setSelectedApplicationId(null);
+          form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+          setEditableRigs([]);
+        }
       }
-    } else if (selectedApplicationId === null) {
-        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [createDefaultRig()], status: 'Pending Verification', history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]});
+    } else {
+        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+        setEditableRigs([]);
     }
   }, [selectedApplicationId, applications, form]);
   
   const onSubmit = async (data: AgencyApplication) => {
       setIsSubmitting(true);
       try {
+          const finalData = { ...data, rigs: editableRigs };
           if (selectedApplicationId && selectedApplicationId !== 'new') {
-              await updateApplication(selectedApplicationId, data);
+              await updateApplication(selectedApplicationId, finalData);
               toast({ title: "Application Updated", description: "The registration details have been updated." });
           } else {
-              await addApplication(data);
+              await addApplication(finalData);
               toast({ title: "Application Created", description: "The new agency registration has been saved." });
           }
           setSelectedApplicationId(null);
@@ -313,22 +330,23 @@ export default function AgencyRegistrationPage() {
 
   const handleAddNew = () => {
     setSelectedApplicationId('new');
-    form.reset({
-        owner: createDefaultOwner(),
-        partners: [],
-        rigs: [createDefaultRig()],
-        status: 'Pending Verification',
-        history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
-    });
   }
   
   const handleCancelEdit = () => {
     setSelectedApplicationId(null);
   }
 
-  const handleRemoveRig = (index: number) => {
-    removeRig(index);
+  const handleRemoveEditableRig = (index: number) => {
+    setEditableRigs(prev => prev.filter((_, i) => i !== index));
     toast({ title: "Rig Removed", description: `Rig #${index + 1} has been removed from the application.` });
+  };
+  
+  const handleAddEditableRig = () => {
+      if (editableRigs.length < 3) {
+          setEditableRigs(prev => [...prev, createDefaultRig()]);
+      } else {
+          toast({ title: "Maximum Rigs Reached", description: "You can only register a maximum of 3 rigs per agency.", variant: "default" });
+      }
   };
 
   const filteredApplications = useMemo(() => {
@@ -350,14 +368,23 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter(app => app.status === 'Pending Verification');
   }, [filteredApplications]);
 
-  const toggleRigStatus = (rigIndex: number, newStatus: 'Active' | 'Cancelled') => {
-    const rig = form.getValues(`rigs.${rigIndex}`);
-    const historyEntry = `Status changed to ${newStatus} on ${format(new Date(), 'dd/MM/yyyy')}`;
-    updateRig(rigIndex, {
-      ...rig,
-      status: newStatus,
-      history: [...(rig.history || []), historyEntry]
+  const handleToggleEditableRigStatus = (rigIndex: number, newStatus: 'Active' | 'Cancelled') => {
+    setEditableRigs(prev => {
+        const newRigs = [...prev];
+        const rig = newRigs[rigIndex];
+        const historyEntry = `Status changed to ${newStatus} on ${format(new Date(), 'dd/MM/yyyy')}`;
+        rig.status = newStatus;
+        rig.history = [...(rig.history || []), historyEntry];
+        return newRigs;
     });
+  };
+
+  const handleEditableRigFieldChange = (index: number, fieldName: string, value: any) => {
+      setEditableRigs(prev => {
+        const newRigs = [...prev];
+        (newRigs[index] as any)[fieldName] = value;
+        return newRigs;
+      });
   };
 
   if (applicationsLoading || authLoading) {
@@ -442,47 +469,49 @@ export default function AgencyRegistrationPage() {
 
                         {/* Section 3: Rig Registrations (Read-Only) */}
                         <Accordion type="single" collapsible defaultValue="item-1">
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
-                                 <AccordionContent className="pt-4 space-y-4">
-                                    <Accordion type="multiple" className="w-full space-y-2">
-                                        {rigFields.map((field, index) => (
-                                            <RigAccordionItem 
-                                                key={field.id}
-                                                control={form.control} 
-                                                index={index}
-                                                field={field}
-                                                removeRig={() => handleRemoveRig(index)}
-                                                onToggleStatus={toggleRigStatus}
-                                                isReadOnly={true}
-                                            />
-                                        ))}
-                                    </Accordion>
-                                    {isEditor && rigFields.length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
-                                </AccordionContent>
-                            </AccordionItem>
+                          <AccordionItem value="item-1">
+                            <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
+                            <AccordionContent className="pt-4 space-y-4">
+                              <Accordion type="multiple" className="w-full space-y-2">
+                                {rigFields.map((field, index) => (
+                                  <RigAccordionItem
+                                    key={field.id}
+                                    field={field as RigRegistration}
+                                    index={index}
+                                    isReadOnly={true}
+                                  />
+                                ))}
+                              </Accordion>
+                              {rigFields.length === 0 && (
+                                <div className="text-center text-muted-foreground p-4 border rounded-md">
+                                  No rigs have been registered for this agency yet. Add rigs in the 'Rig Renewal' section below.
+                                </div>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
                         </Accordion>
                         
                         {/* Section 4: Rig Renewal (Editable) */}
                         <Accordion type="single" collapsible defaultValue="item-1">
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger>4. Rig Renewal</AccordionTrigger>
-                                <AccordionContent className="pt-4 space-y-4">
-                                    <Accordion type="multiple" className="w-full space-y-2">
-                                        {rigFields.map((field, index) => (
-                                            <RigAccordionItem 
-                                                key={field.id}
-                                                control={form.control} 
-                                                index={index}
-                                                field={field}
-                                                removeRig={() => handleRemoveRig(index)}
-                                                onToggleStatus={toggleRigStatus}
-                                                isReadOnly={false}
-                                            />
-                                        ))}
-                                    </Accordion>
-                                </AccordionContent>
-                            </AccordionItem>
+                          <AccordionItem value="item-1">
+                            <AccordionTrigger>4. Rig Renewal</AccordionTrigger>
+                            <AccordionContent className="pt-4 space-y-4">
+                              <Accordion type="multiple" className="w-full space-y-2">
+                                {editableRigs.map((field, index) => (
+                                  <RigAccordionItem
+                                    key={field.id || index}
+                                    field={field}
+                                    index={index}
+                                    isReadOnly={false}
+                                    onRemove={handleRemoveEditableRig}
+                                    onToggleStatus={handleToggleEditableRigStatus}
+                                    onFieldChange={handleEditableRigFieldChange}
+                                  />
+                                ))}
+                              </Accordion>
+                               {isEditor && editableRigs.length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddEditableRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                            </AccordionContent>
+                          </AccordionItem>
                         </Accordion>
                         
                     </CardContent>
@@ -543,5 +572,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
-    
