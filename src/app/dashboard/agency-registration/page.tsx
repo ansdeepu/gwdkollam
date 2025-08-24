@@ -115,7 +115,7 @@ const RigAccordionItem = ({
         : null;
 
     const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled' || isExpired;
+    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled';
 
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border bg-background rounded-lg shadow-sm">
@@ -135,6 +135,7 @@ const RigAccordionItem = ({
                                 e.stopPropagation(); // prevent accordion from toggling
                                 removeRig(index);
                             }}
+                            disabled={isReadOnly}
                         >
                             <Trash2 className="h-4 w-4" />
                         </Button>
@@ -271,36 +272,6 @@ export default function AgencyRegistrationPage() {
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig, replace: replaceRigs } = useFieldArray({ control: form.control, name: "rigs" });
   
-  const { activeRigs, expiredRigs } = useMemo(() => {
-    const active: any[] = [];
-    const expired: any[] = [];
-
-    rigFields.forEach((rig, index) => {
-        const registrationDate = form.getValues(`rigs.${index}.registrationDate`);
-        const latestRenewal = [...(form.getValues(`rigs.${index}.renewals`) || [])]
-            .sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0];
-
-        const lastEffectiveDate = latestRenewal ? new Date(latestRenewal.renewalDate) : (registrationDate ? new Date(registrationDate) : null);
-        
-        const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
-            ? addYears(lastEffectiveDate, 1)
-            : null;
-            
-        const isExpiredFlag = rig.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-
-        const rigWithIndex = { ...rig, originalIndex: index };
-
-        if (isExpiredFlag) {
-            expired.push(rigWithIndex);
-        } else {
-            active.push(rigWithIndex);
-        }
-    });
-
-    return { activeRigs: active, expiredRigs: expired };
-  }, [rigFields, form]);
-
-
   useEffect(() => {
     if (selectedApplicationId === 'new') {
         return;
@@ -468,63 +439,25 @@ export default function AgencyRegistrationPage() {
                         {/* Section 3: Rig Registrations */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>3. Rig Registrations ({activeRigs.length} Total)</AccordionTrigger>
+                                <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
-                                    <div className="p-4 bg-secondary/30 border rounded-md">
-                                        <h4 className="font-semibold text-foreground mb-2">About Rig Registration</h4>
-                                        <p className="text-sm text-muted-foreground">
-                                            This section lists all active rigs associated with the agency. You can add up to 3 rigs per agency application. 
-                                            Each rig's details, including vehicle and equipment information, can be managed here. 
-                                            Once a rig's validity expires, it will appear in the 'Rig Renewal' section for further action.
-                                        </p>
-                                    </div>
-                                    {activeRigs.length > 0 && (
-                                        <Accordion type="multiple" className="w-full space-y-2">
-                                            {activeRigs.map((field) => (
-                                                <RigAccordionItem 
-                                                    key={field.id}
-                                                    control={form.control} 
-                                                    index={field.originalIndex}
-                                                    field={field}
-                                                    removeRig={() => handleRemoveRig(field.originalIndex)}
-                                                    onToggleStatus={toggleRigStatus}
-                                                    isReadOnly={isBefore(addYears(new Date(field.registrationDate || Date.now()), 1), new Date())}
-                                                />
-                                            ))}
-                                        </Accordion>
-                                    )}
-                                    {isEditor && rigFields.filter(r => r.status === 'Active').length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                                    <Accordion type="multiple" className="w-full space-y-2">
+                                        {rigFields.map((field, index) => (
+                                            <RigAccordionItem 
+                                                key={field.id}
+                                                control={form.control} 
+                                                index={index}
+                                                field={field}
+                                                removeRig={() => handleRemoveRig(index)}
+                                                onToggleStatus={toggleRigStatus}
+                                                isReadOnly={true}
+                                            />
+                                        ))}
+                                    </Accordion>
+                                    {isEditor && rigFields.length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
-
-
-                        {/* Section 4: Rig Renewal */}
-                        <Accordion type="single" collapsible defaultValue="item-1">
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-destructive">4. Rig Renewal ({expiredRigs.length} Pending)</AccordionTrigger>
-                                <AccordionContent className="pt-4 space-y-4">
-                                     {expiredRigs.length > 0 ? (
-                                        <Accordion type="multiple" className="w-full space-y-2">
-                                            {expiredRigs.map((field) => (
-                                                <RigAccordionItem 
-                                                    key={field.id}
-                                                    control={form.control} 
-                                                    index={field.originalIndex}
-                                                    field={field}
-                                                    removeRig={() => handleRemoveRig(field.originalIndex)}
-                                                    onToggleStatus={toggleRigStatus}
-                                                    isReadOnly={false} // Make expired rigs editable
-                                                />
-                                            ))}
-                                        </Accordion>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground p-4 text-center">No rigs requiring renewal.</p>
-                                    )}
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
-                        
                         
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
@@ -584,3 +517,4 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
+
