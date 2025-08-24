@@ -3,10 +3,10 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
+import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo, type RigRenewal } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AgencyApplicationSchema, rigTypeOptions } from "@/lib/schemas";
+import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,11 +19,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw, RefreshCw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { format } from 'date-fns';
+import { format, addYears, isValid } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -115,15 +116,49 @@ const RigAccordionItem = ({ control, index, field, toggleRigStatus }: { control:
                     <FormField name={`rigs.${index}.challanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
                 </div>
                 <Separator />
-                <p className="font-medium">Vehicle Details</p>
-                <div className="grid md:grid-cols-3 gap-4">
-                    <FormField name={`rigs.${index}.rigVehicle.type`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Rig Vehicle Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.type`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Support Vehicle Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                <p className="font-medium">Rig Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                    <FormField name={`rigs.${index}.rigVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
                 </div>
+                 <Separator />
+                <p className="font-medium">Compressor Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                    <FormField name={`rigs.${index}.compressorVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.compressorVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.compressorVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                </div>
+                 <Separator />
+                <p className="font-medium">Supporting Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                    <FormField name={`rigs.${index}.supportingVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                </div>
+                <Separator />
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <p className="font-medium">Compressor Details</p>
+                        <div className="grid md:grid-cols-2 gap-4 mt-2">
+                             <FormField name={`rigs.${index}.compressorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.compressorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                        </div>
+                    </div>
+                     <div>
+                        <p className="font-medium">Generator Details</p>
+                        <div className="grid md:grid-cols-2 gap-4 mt-2">
+                             <FormField name={`rigs.${index}.generatorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.generatorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.generatorDetails.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.generatorDetails.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                        </div>
+                    </div>
+                </div>
+
                 <div className="flex justify-end gap-2">
                     <Button type="button" variant={field.status === 'Active' ? 'destructive' : 'secondary'} size="sm" onClick={() => toggleRigStatus(index)}>
                         {field.status === 'Active' ? 'Cancel Rig' : 'Re-activate Rig'}
@@ -362,13 +397,52 @@ export default function AgencyRegistrationPage() {
                             </AccordionItem>
                         </Accordion>
                         
-                        <Accordion type="single" collapsible defaultValue="item-1">
+                         {/* Section 4: Rig Renewal */}
+                        <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>4. History</AccordionTrigger>
+                                <AccordionTrigger>4. Rig Renewals</AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-2">
+                                     <p className="text-sm text-muted-foreground">This section is for future development.</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+
+                        {/* Section 5: History */}
+                        <Accordion type="single" collapsible>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>5. History</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-2">
                                     <ul className="list-disc pl-5 text-sm text-muted-foreground">
                                         {form.getValues('history')?.map((entry, i) => <li key={i}>{entry}</li>)}
                                     </ul>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+
+                        {/* Section 6: Current Status */}
+                         <Accordion type="single" collapsible>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>6. Current Status</AccordionTrigger>
+                                <AccordionContent className="pt-4">
+                                   <FormField
+                                        control={form.control}
+                                        name="status"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Application Status</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                                                    <SelectItem value="Active">Active</SelectItem>
+                                                     <SelectItem value="Rejected">Rejected</SelectItem>
+                                                      <SelectItem value="Expired">Expired</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
@@ -429,4 +503,3 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
-

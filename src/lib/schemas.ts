@@ -633,8 +633,8 @@ export const rigTypeOptions = [
 ] as const;
 export type RigType = typeof rigTypeOptions[number];
 
-export const rigRenewalStatusOptions = ['Active', 'Cancelled'] as const;
-export type RigRenewalStatus = typeof rigRenewalStatusOptions[number];
+export const rigStatusOptions = ['Active', 'Cancelled'] as const;
+export type RigStatus = typeof rigStatusOptions[number];
 
 export const RigVehicleSchema = z.object({
   type: z.string().optional(),
@@ -646,11 +646,10 @@ export type RigVehicle = z.infer<typeof RigVehicleSchema>;
 
 export const RigRenewalSchema = z.object({
   id: z.string(),
-  renewalDate: optionalDate,
-  renewalFee: optionalNumber("Renewal fee must be a number."),
+  renewalDate: optionalDate.refine(val => val !== undefined && val !== null, { message: 'Renewal date is required.' }),
+  renewalFee: optionalNumber("Renewal fee must be a number.").refine(val => val !== undefined, { message: 'Renewal fee is required.' }),
   paymentDate: optionalDate,
   challanNo: z.string().optional(),
-  status: z.enum(rigRenewalStatusOptions).default('Active'),
   remarks: z.string().optional(),
 });
 export type RigRenewal = z.infer<typeof RigRenewalSchema>;
@@ -678,7 +677,7 @@ export const RigRegistrationSchema = z.object({
   }).optional(),
   renewals: z.array(RigRenewalSchema).optional(),
   history: z.array(z.string()).optional(),
-  status: z.enum(rigRenewalStatusOptions).default('Active'),
+  status: z.enum(rigStatusOptions).default('Active'),
 });
 export type RigRegistration = z.infer<typeof RigRegistrationSchema>;
 
