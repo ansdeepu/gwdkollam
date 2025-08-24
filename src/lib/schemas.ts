@@ -651,6 +651,7 @@ export const RigRenewalSchema = z.object({
   paymentDate: optionalDate,
   challanNo: z.string().optional(),
   remarks: z.string().optional(),
+  validTill: optionalDate,
 });
 export type RigRenewal = z.infer<typeof RigRenewalSchema>;
 

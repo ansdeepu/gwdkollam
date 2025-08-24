@@ -4,9 +4,9 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo, type RigRenewal } from "@/hooks/useAgencyApplications";
-import { useForm, useFieldArray, FormProvider, useWatch } from "react-hook-form";
+import { useForm, useFieldArray, FormProvider, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema } from "@/lib/schemas";
+import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,7 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { format, addYears, isValid } from 'date-fns';
+import { format, addYears, isValid, isBefore } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -207,6 +207,9 @@ export default function AgencyRegistrationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+  
+  const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
+  const [renewingRig, setRenewingRig] = useState<{ rig: RigRegistration, index: number } | null>(null);
 
   const canManage = user?.role === 'editor';
 
@@ -228,9 +231,25 @@ export default function AgencyRegistrationPage() {
       history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]
     },
   });
+  
+  const renewalForm = useForm<RigRenewalFormData>({
+    resolver: zodResolver(RigRenewalSchema),
+    defaultValues: {
+        renewalDate: new Date(),
+        renewalFee: undefined,
+        paymentDate: new Date(),
+        challanNo: '',
+        remarks: ''
+    }
+  });
 
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
+  
+  const validRigs = rigFields.filter(r => r.status === 'Active' && (!r.registrationDate || !isBefore(addYears(new Date(r.registrationDate), 1), new Date())));
+  const expiredRigs = rigFields.filter(r => r.status === 'Active' && r.registrationDate && isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
+  const cancelledRigs = rigFields.filter(r => r.status === 'Cancelled');
+
 
   useEffect(() => {
     if (selectedApplicationId === 'new') {
@@ -314,9 +333,8 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter(app => app.status === 'Pending Verification');
   }, [filteredApplications]);
 
-  const toggleRigStatus = (rigIndex: number) => {
+  const toggleRigStatus = (rigIndex: number, newStatus: 'Active' | 'Cancelled') => {
     const rig = form.getValues(`rigs.${rigIndex}`);
-    const newStatus = rig.status === 'Active' ? 'Cancelled' : 'Active';
     const historyEntry = `Status changed to ${newStatus} on ${format(new Date(), 'dd/MM/yyyy')}`;
     updateRig(rigIndex, {
       ...rig,
@@ -324,6 +342,44 @@ export default function AgencyRegistrationPage() {
       history: [...(rig.history || []), historyEntry]
     });
   };
+  
+  const handleOpenRenewalDialog = (rig: RigRegistration, index: number) => {
+    setRenewingRig({ rig, index });
+    renewalForm.reset({
+        renewalDate: new Date(),
+        renewalFee: undefined,
+        paymentDate: new Date(),
+        challanNo: '',
+        remarks: ''
+    });
+    setIsRenewalDialogOpen(true);
+  }
+  
+  const onRenewSubmit = (renewalData: RigRenewalFormData) => {
+    if (!renewingRig) return;
+    
+    const { rig, index } = renewingRig;
+
+    const newRenewalEntry: RigRenewal = {
+      ...renewalData,
+      id: uuidv4(),
+      validTill: addYears(renewalData.renewalDate!, 1),
+    };
+    
+    const historyEntry = `Rig renewed on ${format(new Date(), 'dd/MM/yyyy')}. New validity upto ${format(newRenewalEntry.validTill!, 'dd/MM/yyyy')}.`;
+
+    updateRig(index, {
+        ...rig,
+        registrationDate: renewalData.renewalDate, // Update the main registration date to the renewal date
+        renewals: [...(rig.renewals || []), newRenewalEntry],
+        history: [...(rig.history || []), historyEntry]
+    });
+    
+    toast({ title: "Rig Renewed", description: `The rig has been renewed successfully.` });
+    setIsRenewalDialogOpen(false);
+    setRenewingRig(null);
+  };
+
 
   if (applicationsLoading || authLoading) {
     return (
@@ -408,19 +464,24 @@ export default function AgencyRegistrationPage() {
                         {/* Section 3: Rig Registration */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>3. Rig Registrations ({rigFields.filter(r => r.status === 'Active').length} Active)</AccordionTrigger>
+                                <AccordionTrigger>3. Rig Registrations ({validRigs.length} Active)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
-                                    <Accordion type="multiple" className="w-full space-y-2">
-                                        {rigFields.map((field, index) => (
-                                           <RigAccordionItem 
-                                                key={field.id}
-                                                control={form.control} 
-                                                index={index}
-                                                field={field}
-                                                removeRig={() => removeRig(index)}
-                                           />
-                                        ))}
-                                    </Accordion>
+                                     {validRigs.length > 0 ? (
+                                        <Accordion type="multiple" className="w-full space-y-2">
+                                            {rigFields.map((field, index) => (
+                                               !expiredRigs.some(er => er.id === field.id) && field.status === 'Active' &&
+                                               <RigAccordionItem 
+                                                    key={field.id}
+                                                    control={form.control} 
+                                                    index={index}
+                                                    field={field}
+                                                    removeRig={() => removeRig(index)}
+                                               />
+                                            ))}
+                                        </Accordion>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground p-4 text-center">No active rigs found.</p>
+                                    )}
                                     {rigFields.filter(r => r.status === 'Active').length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 </AccordionContent>
                             </AccordionItem>
@@ -429,9 +490,32 @@ export default function AgencyRegistrationPage() {
                          {/* Section 4: Rig Renewal */}
                         <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>4. Rig Renewals</AccordionTrigger>
+                                <AccordionTrigger>4. Rig Renewals ({expiredRigs.length} Pending)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-2">
-                                     <p className="text-sm text-muted-foreground">This section is for future development.</p>
+                                     {expiredRigs.length > 0 ? (
+                                        expiredRigs.map((rig, index) => (
+                                          <Card key={rig.id} className="p-4">
+                                            <CardHeader className="p-0 pb-2 flex-row justify-between items-center">
+                                              <CardTitle className="text-base">
+                                                {rig.rigRegistrationNo || `Rig #${index+1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
+                                              </CardTitle>
+                                              <div className="flex gap-2">
+                                                <Button size="sm" onClick={() => handleOpenRenewalDialog(rig, rigFields.findIndex(r => r.id === rig.id))}>
+                                                  <RefreshCw className="mr-2 h-4 w-4" /> Renew
+                                                </Button>
+                                                <Button size="sm" variant="destructive" onClick={() => toggleRigStatus(rigFields.findIndex(r => r.id === rig.id), 'Cancelled')}>
+                                                  <X className="mr-2 h-4 w-4" /> Cancel
+                                                </Button>
+                                              </div>
+                                            </CardHeader>
+                                            <CardContent className="text-sm text-muted-foreground p-0">
+                                              Registration expired on: {rig.registrationDate ? format(addYears(new Date(rig.registrationDate), 1), 'dd/MM/yyyy') : 'N/A'}
+                                            </CardContent>
+                                          </Card>
+                                        ))
+                                     ) : (
+                                        <p className="text-sm text-muted-foreground p-4 text-center">No rigs require renewal.</p>
+                                     )}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
@@ -529,6 +613,70 @@ export default function AgencyRegistrationPage() {
            </Tabs>
         </CardContent>
       </Card>
+      
+        <Dialog open={isRenewalDialogOpen} onOpenChange={setIsRenewalDialogOpen}>
+            <DialogContent>
+                 <FormProvider {...renewalForm}>
+                    <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)}>
+                        <DialogHeader>
+                            <DialogTitle>Renew Rig: {renewingRig?.rig.rigRegistrationNo}</DialogTitle>
+                            <DialogDescription>Enter the renewal details for the rig. This will update the rig's registration date and extend its validity for one year.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                             <FormField
+                                control={renewalForm.control}
+                                name="renewalDate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Renewal Date</FormLabel>
+                                         <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={renewalForm.control}
+                                name="renewalFee"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Renewal Fee</FormLabel>
+                                    <FormControl><Input type="number" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={renewalForm.control}
+                                name="paymentDate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Payment Date</FormLabel>
+                                         <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={renewalForm.control}
+                                name="challanNo"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Challan No.</FormLabel>
+                                    <FormControl><Input {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                            <Button type="submit">Renew Rig</Button>
+                        </DialogFooter>
+                    </form>
+                 </FormProvider>
+            </DialogContent>
+        </Dialog>
+
     </div>
   );
 }
