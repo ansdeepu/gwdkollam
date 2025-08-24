@@ -77,7 +77,7 @@ const AgencyTable = ({
     </Table>
 );
 
-const RigAccordionItem = ({ control, index, field, removeRig }: { control: any, index: number, field: any, removeRig: (index: number) => void }) => {
+const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly }: { control: any, index: number, field: any, removeRig: (index: number) => void, isReadOnly: boolean }) => {
     const rigTypeValue = useWatch({
         control,
         name: `rigs.${index}.typeOfRig`,
@@ -92,11 +92,14 @@ const RigAccordionItem = ({ control, index, field, removeRig }: { control: any, 
         ? new Date(addYears(new Date(registrationDate), 1).getTime() - (24 * 60 * 60 * 1000))
         : null;
 
+    const isExpired = field.status === 'Active' && registrationDate && isBefore(addYears(new Date(registrationDate), 1), new Date());
+
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border-b-0">
             <div className="flex items-center w-full border-b">
-                <AccordionTrigger className={cn("flex-1 text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through")}>
-                    Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} ({field.status})
+                <AccordionTrigger className={cn("flex-1 text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through", isExpired && "text-amber-600")}>
+                    Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} 
+                    ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
                 </AccordionTrigger>
                 <Button 
                     type="button" 
@@ -114,14 +117,14 @@ const RigAccordionItem = ({ control, index, field, removeRig }: { control: any, 
             <AccordionContent className="pt-4 space-y-4">
                 {/* Rig registration details form fields go here */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.rigRegistrationNo`} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigRegistrationNo`} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
                     <FormField
                         control={control}
                         name={`rigs.${index}.typeOfRig`}
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Type of Rig</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     {rigTypeOptions.map(option => (
@@ -133,7 +136,7 @@ const RigAccordionItem = ({ control, index, field, removeRig }: { control: any, 
                         </FormItem>
                         )}
                     />
-                    <FormField name={`rigs.${index}.registrationDate`} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
+                    <FormField name={`rigs.${index}.registrationDate`} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full" disabled={isReadOnly}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} disabled={isReadOnly} /></PopoverContent></Popover></FormItem>} />
                     <FormItem>
                         <FormLabel>Validity Upto</FormLabel>
                         <FormControl>
@@ -146,50 +149,50 @@ const RigAccordionItem = ({ control, index, field, removeRig }: { control: any, 
                     </FormItem>
                 </div>
                  <div className="grid md:grid-cols-3 gap-4">
-                    <FormField name={`rigs.${index}.registrationFee`} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.paymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover></FormItem>} />
-                    <FormField name={`rigs.${index}.challanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.registrationFee`} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.paymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full" disabled={isReadOnly}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} disabled={isReadOnly}/></PopoverContent></Popover></FormItem>} />
+                    <FormField name={`rigs.${index}.challanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
                 </div>
                 <Separator />
                 <p className="font-medium">Rig Vehicle Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.rigVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.rigVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.rigVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
                 </div>
                  <Separator />
                 <p className="font-medium">Compressor Vehicle Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.compressorVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.compressorVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.compressorVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.compressorVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.compressorVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.compressorVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
                 </div>
                  <Separator />
                 <p className="font-medium">Supporting Vehicle Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
-                    <FormField name={`rigs.${index}.supportingVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                    <FormField name={`rigs.${index}.supportingVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.regNo`} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                    <FormField name={`rigs.${index}.supportingVehicle.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
                 </div>
                 <Separator />
                 <div className="grid md:grid-cols-2 gap-6">
                     <div>
                         <p className="font-medium">Compressor Details</p>
                         <div className="grid md:grid-cols-2 gap-4 mt-2">
-                             <FormField name={`rigs.${index}.compressorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.compressorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.compressorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.compressorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
                         </div>
                     </div>
                      <div>
                         <p className="font-medium">Generator Details</p>
                         <div className="grid md:grid-cols-2 gap-4 mt-2">
-                             <FormField name={`rigs.${index}.generatorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.generatorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.generatorDetails.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
-                             <FormField name={`rigs.${index}.generatorDetails.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.generatorDetails.model`} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.generatorDetails.capacity`} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.generatorDetails.type`} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                             <FormField name={`rigs.${index}.generatorDetails.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
                         </div>
                     </div>
                 </div>
@@ -246,9 +249,8 @@ export default function AgencyRegistrationPage() {
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
-  const validRigs = rigFields.filter(r => r.status === 'Active' && (!r.registrationDate || !isBefore(addYears(new Date(r.registrationDate), 1), new Date())));
+  const activeRigs = rigFields.filter(r => r.status === 'Active');
   const expiredRigs = rigFields.filter(r => r.status === 'Active' && r.registrationDate && isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
-  const cancelledRigs = rigFields.filter(r => r.status === 'Cancelled');
 
 
   useEffect(() => {
@@ -464,23 +466,27 @@ export default function AgencyRegistrationPage() {
                         {/* Section 3: Rig Registration */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>3. Rig Registrations ({validRigs.length} Active)</AccordionTrigger>
+                                <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
-                                     {validRigs.length > 0 ? (
+                                     {rigFields.length > 0 ? (
                                         <Accordion type="multiple" className="w-full space-y-2">
-                                            {rigFields.map((field, index) => (
-                                               !expiredRigs.some(er => er.id === field.id) && field.status === 'Active' &&
-                                               <RigAccordionItem 
-                                                    key={field.id}
-                                                    control={form.control} 
-                                                    index={index}
-                                                    field={field}
-                                                    removeRig={() => removeRig(index)}
-                                               />
-                                            ))}
+                                            {rigFields.map((field, index) => {
+                                               const isExpired = field.status === 'Active' && field.registrationDate && isBefore(addYears(new Date(field.registrationDate), 1), new Date());
+                                               const isReadOnly = isExpired || field.status === 'Cancelled';
+                                               return (
+                                                  <RigAccordionItem 
+                                                      key={field.id}
+                                                      control={form.control} 
+                                                      index={index}
+                                                      field={field}
+                                                      removeRig={() => removeRig(index)}
+                                                      isReadOnly={isReadOnly}
+                                                  />
+                                               );
+                                            })}
                                         </Accordion>
                                     ) : (
-                                        <p className="text-sm text-muted-foreground p-4 text-center">No active rigs found.</p>
+                                        <p className="text-sm text-muted-foreground p-4 text-center">No rigs found. Add one to get started.</p>
                                     )}
                                     {rigFields.filter(r => r.status === 'Active').length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 </AccordionContent>
