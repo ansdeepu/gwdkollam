@@ -208,58 +208,58 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewa
                 
                  {!isReadOnly && isExpired && (
                     <FormProvider {...renewalForm}>
-                    <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)} className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 space-y-4 rounded-r-md">
-                        <h4 className="font-semibold text-lg text-blue-800">Renew This Rig</h4>
-                        <div className="grid md:grid-cols-4 gap-4">
-                            <FormField
-                                control={renewalForm.control}
-                                name="renewalDate"
-                                render={({ field }) => (
+                        <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)} className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 space-y-4 rounded-r-md">
+                            <h4 className="font-semibold text-lg text-blue-800">Renew This Rig</h4>
+                            <div className="grid md:grid-cols-4 gap-4">
+                                <FormField
+                                    control={renewalForm.control}
+                                    name="renewalDate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Renewal Date</FormLabel>
+                                            <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full bg-white"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={renewalForm.control}
+                                    name="renewalFee"
+                                    render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Renewal Date</FormLabel>
-                                         <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full bg-white"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
+                                        <FormLabel>Renewal Fee</FormLabel>
+                                        <FormControl><Input type="number" {...field} className="bg-white" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={renewalForm.control}
-                                name="renewalFee"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Renewal Fee</FormLabel>
-                                    <FormControl><Input type="number" {...field} className="bg-white" /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={renewalForm.control}
-                                name="paymentDate"
-                                render={({ field }) => (
+                                    )}
+                                />
+                                <FormField
+                                    control={renewalForm.control}
+                                    name="paymentDate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Payment Date</FormLabel>
+                                            <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full bg-white"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={renewalForm.control}
+                                    name="challanNo"
+                                    render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Payment Date</FormLabel>
-                                         <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full bg-white"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
+                                        <FormLabel>Challan No.</FormLabel>
+                                        <FormControl><Input {...field} className="bg-white" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={renewalForm.control}
-                                name="challanNo"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Challan No.</FormLabel>
-                                    <FormControl><Input {...field} className="bg-white" /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                        </div>
-                         <Button type="submit">
-                             <RefreshCw className="mr-2 h-4 w-4" /> Update & Renew Rig
-                         </Button>
-                    </form>
+                                    )}
+                                />
+                            </div>
+                            <Button type="submit">
+                                <RefreshCw className="mr-2 h-4 w-4" /> Update & Renew Rig
+                            </Button>
+                        </form>
                     </FormProvider>
                 )}
             </AccordionContent>
@@ -682,3 +682,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
