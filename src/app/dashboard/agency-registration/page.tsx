@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { format, addYears, isValid, isBefore } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 const AgencyTable = ({ 
@@ -84,10 +85,6 @@ const RigAccordionItem = ({
     removeRig, 
     isReadOnly, 
     onToggleStatus,
-    isRenewing,
-    renewalForm,
-    onRenewSubmit,
-    isSubmittingRenewal
 }: { 
     control: any, 
     index: number, 
@@ -95,10 +92,6 @@ const RigAccordionItem = ({
     removeRig: (index: number) => void, 
     isReadOnly: boolean, 
     onToggleStatus: (index: number, status: 'Active' | 'Cancelled') => void,
-    isRenewing: boolean,
-    renewalForm: any,
-    onRenewSubmit: () => void,
-    isSubmittingRenewal: boolean,
 }) => {
     const rigTypeValue = useWatch({
         control,
@@ -122,7 +115,7 @@ const RigAccordionItem = ({
         : null;
 
     const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-    const finalIsReadOnly = (isReadOnly && !isRenewing) || field.status === 'Cancelled';
+    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled';
 
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border bg-background rounded-lg shadow-sm">
@@ -237,24 +230,6 @@ const RigAccordionItem = ({
                         </div>
                     </div>
                 </div>
-                {isRenewing && renewalForm && (
-                     <div className="mt-6 pt-6 border-t-2 border-primary/20">
-                        <h4 className="text-lg font-semibold text-primary mb-4">Renewal Details</h4>
-                         <div className="grid md:grid-cols-3 gap-4 p-4 border rounded-md bg-primary/5">
-                            <FormField control={renewalForm.control} name="renewalDate" render={({ field }) => (<FormItem><FormLabel>New Renewal Date <span className="text-destructive">*</span></FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-                            <FormField control={renewalForm.control} name="renewalFee" render={({ field }) => (<FormItem><FormLabel>Renewal Fee (₹) <span className="text-destructive">*</span></FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                            <FormField control={renewalForm.control} name="paymentDate" render={({ field }) => (<FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-                            <FormField control={renewalForm.control} name="challanNo" render={({ field }) => (<FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                            <FormField control={renewalForm.control} name="remarks" render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                         </div>
-                         <div className="flex justify-end mt-4">
-                             <Button type="button" onClick={onRenewSubmit} disabled={isSubmittingRenewal}>
-                                 {isSubmittingRenewal ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RotateCcw className="mr-2 h-4 w-4" />}
-                                 Update & Renew Rig
-                             </Button>
-                         </div>
-                     </div>
-                )}
                 </div>
             </AccordionContent>
         </AccordionItem>
@@ -266,14 +241,12 @@ export default function AgencyRegistrationPage() {
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
-  const rigAccordionRefs = useRef<(HTMLDivElement | null)[]>([]);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [editingRigId, setEditingRigId] = useState<string | null>(null);
-  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([]);
+  const [renewingRig, setRenewingRig] = useState<RigRegistration | null>(null);
   
   const canManage = user?.role === 'editor';
 
@@ -349,8 +322,6 @@ export default function AgencyRegistrationPage() {
     } else if (selectedApplicationId === null) {
         form.reset({ owner: createDefaultOwner(), partners: [], rigs: [createDefaultRig()], status: 'Pending Verification', history: [`Application created on ${format(new Date(), 'dd/MM/yyyy')}`]});
     }
-    setEditingRigId(null);
-    setOpenAccordionItems([]);
   }, [selectedApplicationId, applications, form]);
   
   const onSubmit = async (data: AgencyApplication) => {
@@ -372,7 +343,7 @@ export default function AgencyRegistrationPage() {
   };
 
   const onRenewSubmit = async () => {
-    if (!editingRigId) return;
+    if (!renewingRig) return;
     
     const isValid = await renewalForm.trigger();
     if (!isValid) {
@@ -382,7 +353,7 @@ export default function AgencyRegistrationPage() {
 
     const renewalData = renewalForm.getValues();
     const currentRigs = form.getValues('rigs');
-    const rigIndex = currentRigs.findIndex(r => r.id === editingRigId);
+    const rigIndex = currentRigs.findIndex(r => r.id === renewingRig.id);
     if (rigIndex === -1) {
       toast({ title: "Error", description: "Could not find the rig to renew.", variant: "destructive" });
       return;
@@ -408,7 +379,7 @@ export default function AgencyRegistrationPage() {
     // Now submit the main form
     await form.handleSubmit(onSubmit)();
     
-    setEditingRigId(null);
+    setRenewingRig(null);
     renewalForm.reset();
   };
 
@@ -425,8 +396,6 @@ export default function AgencyRegistrationPage() {
   
   const handleCancelEdit = () => {
     setSelectedApplicationId(null);
-    setEditingRigId(null);
-    setOpenAccordionItems([]);
   }
 
   const filteredApplications = useMemo(() => {
@@ -458,26 +427,9 @@ export default function AgencyRegistrationPage() {
     });
   };
 
-  const handleStartRenewal = (rigId: string) => {
-    const rigIndex = allRigs.findIndex(r => r.id === rigId);
-    if (rigIndex === -1) return;
-
-    setEditingRigId(rigId);
-    // This is the key change: ensure the accordion item is opened.
-    setOpenAccordionItems(prev => {
-        const newItem = `rig-${rigIndex}`;
-        if (prev.includes(newItem)) return prev;
-        return [...prev, newItem];
-    });
+  const handleStartRenewal = (rig: RigRegistration) => {
+    setRenewingRig(rig);
     renewalForm.reset({ renewalDate: new Date(), renewalFee: undefined, paymentDate: undefined, challanNo: "", remarks: "" });
-
-    // Scroll to the accordion item
-    setTimeout(() => {
-        const accordionElement = rigAccordionRefs.current[rigIndex];
-        if(accordionElement) {
-             accordionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, 100);
   };
   
 
@@ -567,29 +519,18 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      {rigFields.length > 0 ? (
-                                        <Accordion 
-                                            type="multiple"
-                                            value={openAccordionItems}
-                                            onValueChange={setOpenAccordionItems}
-                                            className="w-full space-y-2">
-                                            {rigFields.map((field, index) => {
-                                               return (
-                                                  <div key={field.id} ref={el => rigAccordionRefs.current[index] = el}>
-                                                      <RigAccordionItem 
-                                                          control={form.control} 
-                                                          index={index}
-                                                          field={field}
-                                                          removeRig={() => removeRig(index)}
-                                                          isReadOnly={false}
-                                                          onToggleStatus={toggleRigStatus}
-                                                          isRenewing={editingRigId === field.id}
-                                                          renewalForm={renewalForm}
-                                                          onRenewSubmit={onRenewSubmit}
-                                                          isSubmittingRenewal={isSubmitting}
-                                                      />
-                                                  </div>
-                                               );
-                                            })}
+                                        <Accordion type="multiple" className="w-full space-y-2">
+                                            {rigFields.map((field, index) => (
+                                                <RigAccordionItem 
+                                                    key={field.id}
+                                                    control={form.control} 
+                                                    index={index}
+                                                    field={field}
+                                                    removeRig={() => removeRig(index)}
+                                                    isReadOnly={false}
+                                                    onToggleStatus={toggleRigStatus}
+                                                />
+                                            ))}
                                         </Accordion>
                                     ) : (
                                         <p className="text-sm text-muted-foreground p-4 text-center">No rigs found. Add one to get started.</p>
@@ -612,7 +553,7 @@ export default function AgencyRegistrationPage() {
                                                 {rig.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
                                               </CardTitle>
                                               <div className="flex gap-2">
-                                                 <Button type="button" size="sm" onClick={() => handleStartRenewal(rig.id!)}>
+                                                 <Button type="button" size="sm" onClick={() => handleStartRenewal(rig)}>
                                                     <RotateCcw className="mr-2 h-4 w-4" /> Renew
                                                 </Button>
                                                 <Button type="button" size="sm" variant="destructive" onClick={() => toggleRigStatus(allRigs.findIndex(r => r.id === rig.id), 'Cancelled')}>
@@ -706,6 +647,59 @@ export default function AgencyRegistrationPage() {
         </CardContent>
       </Card>
     </div>
+
+    {/* Renewal Dialog */}
+    <Dialog open={!!renewingRig} onOpenChange={(isOpen) => !isOpen && setRenewingRig(null)}>
+        <DialogContent className="sm:max-w-4xl">
+            <DialogHeader>
+                <DialogTitle>Renew Rig Registration</DialogTitle>
+                <DialogDescription>
+                    Renewing rig: {renewingRig?.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === renewingRig?.id) + 1}`} - {renewingRig?.typeOfRig}
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                {/* Rig Details Display */}
+                <div className="space-y-4">
+                    <h4 className="font-semibold text-primary border-b pb-2">Rig Details</h4>
+                    <ScrollArea className="h-96 pr-4">
+                        <div className="space-y-2 text-sm">
+                            <p><strong>Rig Reg. No:</strong> {renewingRig?.rigRegistrationNo || 'N/A'}</p>
+                            <p><strong>Type:</strong> {renewingRig?.typeOfRig || 'N/A'}</p>
+                            <Separator/>
+                            <p className="font-medium">Rig Vehicle</p>
+                            <p><strong>Reg No:</strong> {renewingRig?.rigVehicle?.regNo || 'N/A'}</p>
+                            <p><strong>Chassis No:</strong> {renewingRig?.rigVehicle?.chassisNo || 'N/A'}</p>
+                             <Separator/>
+                            <p className="font-medium">Compressor Vehicle</p>
+                            <p><strong>Reg No:</strong> {renewingRig?.compressorVehicle?.regNo || 'N/A'}</p>
+                            <p><strong>Chassis No:</strong> {renewingRig?.compressorVehicle?.chassisNo || 'N/A'}</p>
+                        </div>
+                    </ScrollArea>
+                </div>
+                {/* Renewal Form */}
+                <div className="space-y-4">
+                    <h4 className="font-semibold text-primary border-b pb-2">Enter Renewal Information</h4>
+                    <FormProvider {...renewalForm}>
+                      <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)} className="space-y-4">
+                        <FormField control={renewalForm.control} name="renewalDate" render={({ field }) => (<FormItem><FormLabel>New Renewal Date <span className="text-destructive">*</span></FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
+                        <FormField control={renewalForm.control} name="renewalFee" render={({ field }) => (<FormItem><FormLabel>Renewal Fee (₹) <span className="text-destructive">*</span></FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <FormField control={renewalForm.control} name="paymentDate" render={({ field }) => (<FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
+                        <FormField control={renewalForm.control} name="challanNo" render={({ field }) => (<FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <FormField control={renewalForm.control} name="remarks" render={({ field }) => (<FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <DialogFooter className="pt-4">
+                            <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RotateCcw className="mr-2 h-4 w-4" />}
+                                Renew Rig
+                            </Button>
+                        </DialogFooter>
+                      </form>
+                    </FormProvider>
+                </div>
+            </div>
+        </DialogContent>
+    </Dialog>
     </>
   );
 }
+
