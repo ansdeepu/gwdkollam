@@ -115,7 +115,7 @@ const RigAccordionItem = ({
         : null;
 
     const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled';
+    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled' || (isExpired && isReadOnly);
 
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border bg-background rounded-lg shadow-sm">
@@ -383,6 +383,7 @@ export default function AgencyRegistrationPage() {
 
   // FORM VIEW
   if (selectedApplicationId) {
+      const activeRigCount = rigFields.filter(r => r.status !== 'Cancelled').length;
       return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -480,7 +481,7 @@ export default function AgencyRegistrationPage() {
                                             />
                                         ))}
                                     </Accordion>
-                                    {isEditor && rigFields.length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                                    {isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
