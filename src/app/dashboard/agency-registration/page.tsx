@@ -103,18 +103,20 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, onTogg
                      {isExpired && isCurrentlyEditing && <Badge variant="default" className="ml-2 bg-blue-600">Renewing</Badge>}
                 </AccordionTrigger>
                 <div className="ml-auto mr-2 shrink-0">
-                    <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="text-destructive hover:text-destructive/90"
-                        onClick={(e) => {
-                            e.stopPropagation(); // prevent accordion from toggling
-                            removeRig(index);
-                        }}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {field.status !== 'Cancelled' && (
+                        <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive hover:text-destructive/90"
+                            onClick={(e) => {
+                                e.stopPropagation(); // prevent accordion from toggling
+                                removeRig(index);
+                            }}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
                 </div>
             </div>
             <AccordionContent className="pt-4 space-y-4">
@@ -315,8 +317,13 @@ export default function AgencyRegistrationPage() {
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
-  const expiredRigs = rigFields.filter(r => r.status === 'Active' && r.registrationDate && isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
-  const fullyActiveRigs = rigFields.filter(r => r.status === 'Active' && r.registrationDate && !isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
+  const expiredRigs = useMemo(() => {
+    return rigFields.filter(r => r.status === 'Active' && r.registrationDate && isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
+  }, [rigFields]);
+
+  const fullyActiveRigs = useMemo(() => {
+    return rigFields.filter(r => r.status === 'Active' && r.registrationDate && !isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
+  }, [rigFields]);
 
 
   useEffect(() => {
@@ -422,7 +429,7 @@ export default function AgencyRegistrationPage() {
     setEditingRigId(null); // Stop editing if status is changed
   };
   
-  const handleEnableRenewalEditing = (rig: RigRegistration) => {
+  const handleEnableRenewalEditing = useCallback((rig: RigRegistration) => {
     setEditingRigId(rig.id);
     renewalForm.reset({
         renewalDate: new Date(),
@@ -434,9 +441,11 @@ export default function AgencyRegistrationPage() {
     const rigIndex = rigFields.findIndex(r => r.id === rig.id);
     if (rigIndex !== -1) {
         const accordionValue = `rig-${rigIndex}`;
-        setOpenAccordionItems(prev => [...new Set([...prev, accordionValue])]); 
+        if (!openAccordionItems.includes(accordionValue)) {
+            setOpenAccordionItems(prev => [...prev, accordionValue]); 
+        }
     }
-  }
+  }, [renewalForm, rigFields, openAccordionItems]);
   
   const onRenewSubmit = (renewalData: RigRenewalFormData) => {
     if (!editingRigId) return;
@@ -454,19 +463,17 @@ export default function AgencyRegistrationPage() {
     
     const historyEntry = `Rig renewed on ${format(new Date(), 'dd/MM/yyyy')}. New validity upto ${format(newRenewalEntry.validTill!, 'dd/MM/yyyy')}.`;
 
-    // Here, you might want to only update certain fields, not the whole rig object
-    // For now, let's assume all fields on the rig form can be corrected during renewal
     const updatedRigData = form.getValues(`rigs.${rigIndex}`);
     
     updateRig(rigIndex, {
         ...updatedRigData,
-        registrationDate: renewalData.renewalDate, // This is the key update for validity
+        registrationDate: renewalData.renewalDate,
         renewals: [...(rig.renewals || []), newRenewalEntry],
         history: [...(rig.history || []), historyEntry]
     });
     
     toast({ title: "Rig Renewed", description: `The rig has been renewed successfully.` });
-    setEditingRigId(null); // Turn off editing mode
+    setEditingRigId(null);
   };
 
 
