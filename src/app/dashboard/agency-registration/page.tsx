@@ -115,7 +115,7 @@ const RigAccordionItem = ({
         : null;
 
     const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled';
+    const finalIsReadOnly = isReadOnly || field.status === 'Cancelled' || isExpired;
 
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border bg-background rounded-lg shadow-sm">
@@ -383,7 +383,6 @@ export default function AgencyRegistrationPage() {
 
   // FORM VIEW
   if (selectedApplicationId) {
-      const activeRigCount = rigFields.filter(r => r.status !== 'Cancelled').length;
       return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -445,7 +444,7 @@ export default function AgencyRegistrationPage() {
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
-                                <AccordionContent className="pt-4 space-y-4">
+                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
                                         {rigFields.map((field, index) => (
                                             <RigAccordionItem 
@@ -459,7 +458,7 @@ export default function AgencyRegistrationPage() {
                                             />
                                         ))}
                                     </Accordion>
-                                    {isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                                    {isEditor && rigFields.length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={() => appendRig(createDefaultRig())}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
@@ -544,3 +543,5 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
+
+    
