@@ -343,44 +343,63 @@ export default function AgencyRegistrationPage() {
   };
 
   const onRenewSubmit = async () => {
-    if (!renewingRig) return;
-    
+    if (!renewingRig || !selectedApplicationId || selectedApplicationId === 'new') {
+        toast({ title: "Error", description: "No rig or application selected for renewal.", variant: "destructive" });
+        return;
+    }
+    setIsSubmitting(true);
     const isValid = await renewalForm.trigger();
     if (!isValid) {
       toast({ title: "Invalid Renewal Data", description: "Please check the renewal fields for errors.", variant: "destructive" });
+      setIsSubmitting(false);
       return;
     }
 
-    const renewalData = renewalForm.getValues();
-    const currentRigs = form.getValues('rigs');
-    const rigIndex = currentRigs.findIndex(r => r.id === renewingRig.id);
-    if (rigIndex === -1) {
-      toast({ title: "Error", description: "Could not find the rig to renew.", variant: "destructive" });
-      return;
+    try {
+        const renewalData = renewalForm.getValues();
+        const currentApplicationData = form.getValues();
+        const rigIndex = currentApplicationData.rigs.findIndex(r => r.id === renewingRig.id);
+        
+        if (rigIndex === -1) {
+            throw new Error("Could not find the rig to renew in the current application data.");
+        }
+
+        const rigToUpdate = currentApplicationData.rigs[rigIndex];
+        
+        const newRenewal: RigRenewal = {
+            ...renewalData,
+            id: uuidv4(),
+            validTill: addYears(renewalData.renewalDate, 1)
+        };
+
+        const updatedRig: RigRegistration = {
+            ...rigToUpdate,
+            registrationDate: renewalData.renewalDate, // This is the key update for validity
+            renewals: [...(rigToUpdate.renewals || []), newRenewal],
+            history: [...(rigToUpdate.history || []), `Renewed on ${format(new Date(), 'dd/MM/yyyy')}`]
+        };
+        
+        const updatedRigs = [...currentApplicationData.rigs];
+        updatedRigs[rigIndex] = updatedRig;
+
+        const finalApplicationData: AgencyApplication = {
+            ...currentApplicationData,
+            rigs: updatedRigs,
+        };
+        
+        await updateApplication(selectedApplicationId, finalApplicationData);
+        toast({ title: "Rig Renewed", description: `Rig ${updatedRig.rigRegistrationNo} has been successfully renewed.` });
+        
+        form.reset(finalApplicationData); // Update the form with the new data
+        setRenewingRig(null);
+        renewalForm.reset();
+
+    } catch (error: any) {
+        console.error("Renewal Error:", error);
+        toast({ title: "Renewal Failed", description: error.message, variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
     }
-
-    const rigToUpdate = currentRigs[rigIndex];
-    
-    const newRenewal: RigRenewal = {
-      ...renewalData,
-      id: uuidv4(),
-      validTill: addYears(renewalData.renewalDate, 1)
-    };
-
-    const updatedRig: RigRegistration = {
-      ...rigToUpdate,
-      registrationDate: renewalData.renewalDate, // Update main registration date to new renewal date
-      renewals: [...(rigToUpdate.renewals || []), newRenewal],
-      history: [...(rigToUpdate.history || []), `Renewed on ${format(new Date(), 'dd/MM/yyyy')}`]
-    };
-    
-    updateRig(rigIndex, updatedRig);
-    
-    // Now submit the main form
-    await form.handleSubmit(onSubmit)();
-    
-    setRenewingRig(null);
-    renewalForm.reset();
   };
 
   const handleAddNew = () => {
@@ -657,49 +676,50 @@ export default function AgencyRegistrationPage() {
                     Renewing rig: {renewingRig?.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === renewingRig?.id) + 1}`} - {renewingRig?.typeOfRig}
                 </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-                {/* Rig Details Display */}
-                <div className="space-y-4">
-                    <h4 className="font-semibold text-primary border-b pb-2">Rig Details</h4>
-                    <ScrollArea className="h-96 pr-4">
-                        <div className="space-y-2 text-sm">
-                            <p><strong>Rig Reg. No:</strong> {renewingRig?.rigRegistrationNo || 'N/A'}</p>
-                            <p><strong>Type:</strong> {renewingRig?.typeOfRig || 'N/A'}</p>
-                            <Separator/>
-                            <p className="font-medium">Rig Vehicle</p>
-                            <p><strong>Reg No:</strong> {renewingRig?.rigVehicle?.regNo || 'N/A'}</p>
-                            <p><strong>Chassis No:</strong> {renewingRig?.rigVehicle?.chassisNo || 'N/A'}</p>
-                             <Separator/>
-                            <p className="font-medium">Compressor Vehicle</p>
-                            <p><strong>Reg No:</strong> {renewingRig?.compressorVehicle?.regNo || 'N/A'}</p>
-                            <p><strong>Chassis No:</strong> {renewingRig?.compressorVehicle?.chassisNo || 'N/A'}</p>
+            <FormProvider {...renewalForm}>
+              <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                    {/* Rig Details Display */}
+                    <div className="space-y-4">
+                        <h4 className="font-semibold text-primary border-b pb-2">Rig Details</h4>
+                        <ScrollArea className="h-96 pr-4">
+                            <div className="space-y-2 text-sm">
+                                <p><strong>Rig Reg. No:</strong> {renewingRig?.rigRegistrationNo || 'N/A'}</p>
+                                <p><strong>Type:</strong> {renewingRig?.typeOfRig || 'N/A'}</p>
+                                <Separator/>
+                                <p className="font-medium">Rig Vehicle</p>
+                                <p><strong>Reg No:</strong> {renewingRig?.rigVehicle?.regNo || 'N/A'}</p>
+                                <p><strong>Chassis No:</strong> {renewingRig?.rigVehicle?.chassisNo || 'N/A'}</p>
+                                <Separator/>
+                                <p className="font-medium">Compressor Vehicle</p>
+                                <p><strong>Reg No:</strong> {renewingRig?.compressorVehicle?.regNo || 'N/A'}</p>
+                                <p><strong>Chassis No:</strong> {renewingRig?.compressorVehicle?.chassisNo || 'N/A'}</p>
+                            </div>
+                        </ScrollArea>
+                    </div>
+                    {/* Renewal Form */}
+                    <div className="space-y-4">
+                        <h4 className="font-semibold text-primary border-b pb-2">Enter Renewal Information</h4>
+                        <div className="space-y-4">
+                          <FormField control={renewalForm.control} name="renewalDate" render={({ field }) => (<FormItem><FormLabel>New Renewal Date <span className="text-destructive">*</span></FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
+                          <FormField control={renewalForm.control} name="renewalFee" render={({ field }) => (<FormItem><FormLabel>Renewal Fee (₹) <span className="text-destructive">*</span></FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                          <FormField control={renewalForm.control} name="paymentDate" render={({ field }) => (<FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
+                          <FormField control={renewalForm.control} name="challanNo" render={({ field }) => (<FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                          <FormField control={renewalForm.control} name="remarks" render={({ field }) => (<FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         </div>
-                    </ScrollArea>
+                    </div>
                 </div>
-                {/* Renewal Form */}
-                <div className="space-y-4">
-                    <h4 className="font-semibold text-primary border-b pb-2">Enter Renewal Information</h4>
-                    <FormProvider {...renewalForm}>
-                      <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)} className="space-y-4">
-                        <FormField control={renewalForm.control} name="renewalDate" render={({ field }) => (<FormItem><FormLabel>New Renewal Date <span className="text-destructive">*</span></FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-                        <FormField control={renewalForm.control} name="renewalFee" render={({ field }) => (<FormItem><FormLabel>Renewal Fee (₹) <span className="text-destructive">*</span></FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                        <FormField control={renewalForm.control} name="paymentDate" render={({ field }) => (<FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full"><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-                        <FormField control={renewalForm.control} name="challanNo" render={({ field }) => (<FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                        <FormField control={renewalForm.control} name="remarks" render={({ field }) => (<FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                        <DialogFooter className="pt-4">
-                            <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RotateCcw className="mr-2 h-4 w-4" />}
-                                Renew Rig
-                            </Button>
-                        </DialogFooter>
-                      </form>
-                    </FormProvider>
-                </div>
-            </div>
+                <DialogFooter className="pt-4">
+                    <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RotateCcw className="mr-2 h-4 w-4" />}
+                        Renew Rig
+                    </Button>
+                </DialogFooter>
+              </form>
+            </FormProvider>
         </DialogContent>
     </Dialog>
     </>
   );
 }
-
