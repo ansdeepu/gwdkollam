@@ -77,7 +77,7 @@ const AgencyTable = ({
     </Table>
 );
 
-const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }: { control: any, index: number, field: any, toggleRigStatus: (index: number) => void, removeRig: (index: number) => void }) => {
+const RigAccordionItem = ({ control, index, field, removeRig }: { control: any, index: number, field: any, removeRig: (index: number) => void }) => {
     const rigTypeValue = useWatch({
         control,
         name: `rigs.${index}.typeOfRig`,
@@ -192,12 +192,6 @@ const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }:
                              <FormField name={`rigs.${index}.generatorDetails.engineNo`} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>} />
                         </div>
                     </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                    <Button type="button" variant={field.status === 'Active' ? 'destructive' : 'secondary'} size="sm" onClick={() => toggleRigStatus(index)}>
-                        {field.status === 'Active' ? 'Cancel Rig' : 'Re-activate Rig'}
-                    </Button>
                 </div>
             </AccordionContent>
         </AccordionItem>
@@ -423,7 +417,6 @@ export default function AgencyRegistrationPage() {
                                                 control={form.control} 
                                                 index={index}
                                                 field={field}
-                                                toggleRigStatus={toggleRigStatus}
                                                 removeRig={() => removeRig(index)}
                                            />
                                         ))}
