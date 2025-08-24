@@ -77,17 +77,31 @@ const AgencyTable = ({
     </Table>
 );
 
-const RigAccordionItem = ({ control, index, field, toggleRigStatus }: { control: any, index: number, field: any, toggleRigStatus: (index: number) => void }) => {
+const RigAccordionItem = ({ control, index, field, toggleRigStatus, removeRig }: { control: any, index: number, field: any, toggleRigStatus: (index: number) => void, removeRig: (index: number) => void }) => {
     const rigTypeValue = useWatch({
         control,
         name: `rigs.${index}.typeOfRig`,
     });
     
     return (
-        <AccordionItem value={`rig-${index}`} key={field.id}>
-            <AccordionTrigger className={cn("text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through")}>
-                Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} ({field.status})
-            </AccordionTrigger>
+        <AccordionItem value={`rig-${index}`} key={field.id} className="border-b-0">
+            <div className="flex items-center w-full border-b">
+                <AccordionTrigger className={cn("flex-1 text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through")}>
+                    Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} ({field.status})
+                </AccordionTrigger>
+                <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="ml-2 mr-2 text-destructive hover:text-destructive/90 shrink-0"
+                    onClick={(e) => {
+                        e.stopPropagation(); // prevent accordion from toggling
+                        removeRig(index);
+                    }}
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+            </div>
             <AccordionContent className="pt-4 space-y-4">
                 {/* Rig registration details form fields go here */}
                 <div className="grid md:grid-cols-3 gap-4">
@@ -389,6 +403,7 @@ export default function AgencyRegistrationPage() {
                                                 index={index}
                                                 field={field}
                                                 toggleRigStatus={toggleRigStatus}
+                                                removeRig={() => removeRig(index)}
                                            />
                                         ))}
                                     </Accordion>
