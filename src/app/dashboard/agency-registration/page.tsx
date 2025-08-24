@@ -77,7 +77,7 @@ const AgencyTable = ({
     </Table>
 );
 
-const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewalForm, onRenewSubmit, onToggleStatus }: { control: any, index: number, field: any, removeRig: (index: number) => void, isReadOnly: boolean, renewalForm: any, onRenewSubmit: (data: any) => void, onToggleStatus: (index: number, status: 'Active' | 'Cancelled') => void }) => {
+const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, onToggleStatus, isCurrentlyEditing, onRenewSubmit, renewalForm }: { control: any, index: number, field: any, removeRig: (index: number) => void, isReadOnly: boolean, onToggleStatus: (index: number, status: 'Active' | 'Cancelled') => void, isCurrentlyEditing: boolean, onRenewSubmit: (data: any) => void, renewalForm: any }) => {
     const rigTypeValue = useWatch({
         control,
         name: `rigs.${index}.typeOfRig`,
@@ -97,10 +97,10 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewa
     return (
         <AccordionItem value={`rig-${index}`} key={field.id} className="border-b-0">
             <div className="flex items-center w-full border-b">
-                <AccordionTrigger className={cn("flex-1 text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through", isExpired && !isReadOnly && "text-blue-600", isExpired && isReadOnly && "text-amber-600")}>
+                <AccordionTrigger className={cn("flex-1 text-base font-semibold", field.status === 'Cancelled' && "text-destructive line-through", isExpired && !isCurrentlyEditing && "text-amber-600", isExpired && isCurrentlyEditing && "text-blue-600")}>
                     Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} 
                      ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
-                     {isExpired && !isReadOnly && <Badge variant="default" className="ml-2 bg-blue-600">Renewing</Badge>}
+                     {isExpired && isCurrentlyEditing && <Badge variant="default" className="ml-2 bg-blue-600">Renewing</Badge>}
                 </AccordionTrigger>
                 <div className="ml-auto mr-2 shrink-0">
                     <Button 
@@ -206,9 +206,9 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewa
                     </div>
                 </div>
                 
-                 {!isReadOnly && isExpired && (
+                 {isCurrentlyEditing && isExpired && (
                     <FormProvider {...renewalForm}>
-                        <form onSubmit={renewalForm.handleSubmit(onRenewSubmit)} className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 space-y-4 rounded-r-md">
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 space-y-4 rounded-r-md">
                             <h4 className="font-semibold text-lg text-blue-800">Renew This Rig</h4>
                             <div className="grid md:grid-cols-4 gap-4">
                                 <FormField
@@ -256,10 +256,10 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly, renewa
                                     )}
                                 />
                             </div>
-                            <Button type="submit">
+                            <Button type="button" onClick={renewalForm.handleSubmit(onRenewSubmit)}>
                                 <RefreshCw className="mr-2 h-4 w-4" /> Update & Renew Rig
                             </Button>
-                        </form>
+                        </div>
                     </FormProvider>
                 )}
             </AccordionContent>
@@ -561,6 +561,7 @@ export default function AgencyRegistrationPage() {
                                                       renewalForm={renewalForm}
                                                       onRenewSubmit={onRenewSubmit}
                                                       onToggleStatus={toggleRigStatus}
+                                                      isCurrentlyEditing={isCurrentlyEditing}
                                                   />
                                                );
                                             })}
@@ -682,5 +683,3 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
-
-    
