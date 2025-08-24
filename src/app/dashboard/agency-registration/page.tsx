@@ -538,10 +538,10 @@ export default function AgencyRegistrationPage() {
                                                 {rig.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
                                               </CardTitle>
                                               <div className="flex gap-2">
-                                                 <Button size="sm" onClick={() => setRenewingRig(rig)}>
+                                                 <Button type="button" size="sm" onClick={() => setRenewingRig(rig)}>
                                                     <RefreshCw className="mr-2 h-4 w-4" /> Renew
                                                 </Button>
-                                                <Button size="sm" variant="destructive" onClick={() => toggleRigStatus(allRigs.findIndex(r => r.id === rig.id), 'Cancelled')}>
+                                                <Button type="button" size="sm" variant="destructive" onClick={() => toggleRigStatus(allRigs.findIndex(r => r.id === rig.id), 'Cancelled')}>
                                                   <X className="mr-2 h-4 w-4" /> Cancel
                                                 </Button>
                                               </div>
@@ -662,3 +662,5 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
+
+    
