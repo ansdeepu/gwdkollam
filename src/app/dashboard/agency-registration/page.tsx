@@ -85,7 +85,6 @@ const RigAccordionItem = ({
     isReadOnly, 
     onToggleStatus,
     isRenewing,
-    onStartRenewal,
     renewalForm,
     onRenewSubmit,
     isSubmittingRenewal
@@ -97,7 +96,6 @@ const RigAccordionItem = ({
     isReadOnly: boolean, 
     onToggleStatus: (index: number, status: 'Active' | 'Cancelled') => void,
     isRenewing: boolean,
-    onStartRenewal: (index: number) => void,
     renewalForm: any,
     onRenewSubmit: () => void,
     isSubmittingRenewal: boolean,
@@ -585,7 +583,6 @@ export default function AgencyRegistrationPage() {
                                                           isReadOnly={false}
                                                           onToggleStatus={toggleRigStatus}
                                                           isRenewing={editingRigId === field.id}
-                                                          onStartRenewal={() => handleStartRenewal(field.id)}
                                                           renewalForm={renewalForm}
                                                           onRenewSubmit={onRenewSubmit}
                                                           isSubmittingRenewal={isSubmitting}
@@ -712,5 +709,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
-    
