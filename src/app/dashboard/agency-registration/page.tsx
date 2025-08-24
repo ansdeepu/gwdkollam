@@ -234,13 +234,6 @@ const RigAccordionItem = ({
     );
 };
 
-const DetailRow = ({ label, value }: { label: string, value: string | undefined | null | number }) => (
-    <div className="grid grid-cols-2 gap-2 py-1.5 border-b">
-        <p className="font-medium text-sm text-muted-foreground">{label}</p>
-        <p className="text-sm">{value ?? 'N/A'}</p>
-    </div>
-);
-
 
 export default function AgencyRegistrationPage() {
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
@@ -250,8 +243,7 @@ export default function AgencyRegistrationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
-  const [viewingRigDetails, setViewingRigDetails] = useState<RigRegistration | null>(null);
-
+  
   const canManage = user?.role === 'editor';
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '' });
@@ -276,36 +268,6 @@ export default function AgencyRegistrationPage() {
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig, replace: replaceRigs } = useFieldArray({ control: form.control, name: "rigs" });
   
-  const getValidityDate = useCallback((rig: RigRegistration) => {
-    const latestRenewal = rig.renewals && rig.renewals.length > 0 
-        ? [...rig.renewals].sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0]
-        : null;
-    const lastEffectiveDate = latestRenewal ? new Date(latestRenewal.renewalDate) : (rig.registrationDate ? new Date(rig.registrationDate) : null);
-    
-    if (!lastEffectiveDate || !isValid(lastEffectiveDate)) return null;
-
-    return new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000));
-  }, []);
-  
-  const allRigs = useWatch({ control: form.control, name: "rigs" });
-
-  const expiredRigs = useMemo(() => {
-    return allRigs.filter(r => {
-        if(r.status !== 'Active') return false;
-        const validityDate = getValidityDate(r);
-        return validityDate && isBefore(validityDate, new Date());
-    });
-  }, [allRigs, getValidityDate]);
-
-  const fullyActiveRigs = useMemo(() => {
-    return allRigs.filter(r => {
-        if(r.status !== 'Active') return false;
-        const validityDate = getValidityDate(r);
-        return validityDate && !isBefore(validityDate, new Date());
-    });
-  }, [allRigs, getValidityDate]);
-
-
   useEffect(() => {
     if (selectedApplicationId === 'new') {
         return;
@@ -491,51 +453,19 @@ export default function AgencyRegistrationPage() {
                             </AccordionItem>
                         </Accordion>
                         
-                         {/* Section 4: Rig Renewal */}
-                        <Accordion type="single" collapsible>
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger>4. Rig Renewals ({expiredRigs.length} Pending)</AccordionTrigger>
-                                <AccordionContent className="pt-4 space-y-2">
-                                     {expiredRigs.length > 0 ? (
-                                        expiredRigs.map((rig) => (
-                                          <Card 
-                                            key={rig.id} 
-                                            className="p-4 cursor-pointer hover:bg-muted/50"
-                                            onClick={() => setViewingRigDetails(rig)}
-                                          >
-                                            <CardHeader className="p-0 pb-2 flex-row justify-between items-center">
-                                              <CardTitle className="text-base">
-                                                {rig.rigRegistrationNo || `Rig #${allRigs.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
-                                              </CardTitle>
-                                              <div className="flex gap-2">
-                                                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); toggleRigStatus(allRigs.findIndex(r => r.id === rig.id), 'Cancelled')}}>
-                                                  <X className="mr-2 h-4 w-4" /> Cancel
-                                                </Button>
-                                              </div>
-                                            </CardHeader>
-                                            <CardContent className="text-sm text-muted-foreground p-0">
-                                              Registration expired on: {getValidityDate(rig) ? format(getValidityDate(rig)!, 'dd/MM/yyyy') : 'N/A'}
-                                            </CardContent>
-                                          </Card>
-                                        ))
-                                     ) : (
-                                        <p className="text-sm text-muted-foreground p-4 text-center">No rigs require renewal.</p>
-                                     )}
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
+                         {/* Section 4: Removed */}
                         
                         {/* Section 5: Agency Overview */}
                         <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>5. Agency Overview</AccordionTrigger>
+                                <AccordionTrigger>4. Agency Overview</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-2">
                                     <div className="flex items-center gap-4 p-4 bg-secondary/30 rounded-lg">
                                         <Info className="h-8 w-8 text-primary" />
                                         <div>
                                             <h4 className="font-semibold text-foreground">Application Summary</h4>
                                             <p className="text-sm text-muted-foreground">
-                                                This application has {fullyActiveRigs.length} currently active rig(s) and {expiredRigs.length} rig(s) pending renewal. 
+                                                This application has {rigFields.filter(r=>r.status === 'Active').length} currently active rig(s).
                                                 The overall status of this agency application is <Badge>{form.getValues('status')}</Badge>.
                                             </p>
                                         </div>
@@ -599,73 +529,6 @@ export default function AgencyRegistrationPage() {
         </CardContent>
       </Card>
     </div>
-
-    <Dialog open={!!viewingRigDetails} onOpenChange={() => setViewingRigDetails(null)}>
-        <DialogContent className="sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Rig Details: {viewingRigDetails?.rigRegistrationNo || 'N/A'}</DialogTitle>
-            <DialogDescription>
-              Viewing full details for rig "{viewingRigDetails?.typeOfRig || 'N/A'}".
-            </DialogDescription>
-          </DialogHeader>
-          {viewingRigDetails && (
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-4 py-4">
-              <h4 className="font-semibold text-primary">Registration Info</h4>
-              <DetailRow label="Rig Reg. No." value={viewingRigDetails.rigRegistrationNo} />
-              <DetailRow label="Type of Rig" value={viewingRigDetails.typeOfRig} />
-              <DetailRow label="Last Reg/Renewal Date" value={viewingRigDetails.registrationDate ? format(new Date(viewingRigDetails.registrationDate), 'dd/MM/yyyy') : undefined} />
-              <DetailRow label="Validity Upto" value={getValidityDate(viewingRigDetails) ? format(getValidityDate(viewingRigDetails)!, 'dd/MM/yyyy') : 'N/A'} />
-              <DetailRow label="Reg. Fee" value={viewingRigDetails.registrationFee} />
-              <DetailRow label="Payment Date" value={viewingRigDetails.paymentDate ? format(new Date(viewingRigDetails.paymentDate), 'dd/MM/yyyy') : undefined} />
-              <DetailRow label="Challan No." value={viewingRigDetails.challanNo} />
-
-              <Separator />
-              <h4 className="font-semibold text-primary">Rig Vehicle</h4>
-              <DetailRow label="Type" value={viewingRigDetails.rigVehicle?.type} />
-              <DetailRow label="Reg No" value={viewingRigDetails.rigVehicle?.regNo} />
-              <DetailRow label="Chassis No" value={viewingRigDetails.rigVehicle?.chassisNo} />
-              <DetailRow label="Engine No" value={viewingRigDetails.rigVehicle?.engineNo} />
-
-              <Separator />
-              <h4 className="font-semibold text-primary">Compressor Vehicle</h4>
-              <DetailRow label="Type" value={viewingRigDetails.compressorVehicle?.type} />
-              <DetailRow label="Reg No" value={viewingRigDetails.compressorVehicle?.regNo} />
-              <DetailRow label="Chassis No" value={viewingRigDetails.compressorVehicle?.chassisNo} />
-              <DetailRow label="Engine No" value={viewingRigDetails.compressorVehicle?.engineNo} />
-              
-              <Separator />
-              <h4 className="font-semibold text-primary">Supporting Vehicle</h4>
-              <DetailRow label="Type" value={viewingRigDetails.supportingVehicle?.type} />
-              <DetailRow label="Reg No" value={viewingRigDetails.supportingVehicle?.regNo} />
-              <DetailRow label="Chassis No" value={viewingRigDetails.supportingVehicle?.chassisNo} />
-              <DetailRow label="Engine No" value={viewingRigDetails.supportingVehicle?.engineNo} />
-
-              <Separator />
-              <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold text-primary">Compressor Details</h4>
-                    <DetailRow label="Model" value={viewingRigDetails.compressorDetails?.model} />
-                    <DetailRow label="Capacity" value={viewingRigDetails.compressorDetails?.capacity} />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-primary">Generator Details</h4>
-                    <DetailRow label="Model" value={viewingRigDetails.generatorDetails?.model} />
-                    <DetailRow label="Capacity" value={viewingRigDetails.generatorDetails?.capacity} />
-                    <DetailRow label="Type" value={viewingRigDetails.generatorDetails?.type} />
-                    <DetailRow label="Engine No" value={viewingRigDetails.generatorDetails?.engineNo} />
-                  </div>
-              </div>
-            </div>
-          </ScrollArea>
-          )}
-           <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary">Close</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
