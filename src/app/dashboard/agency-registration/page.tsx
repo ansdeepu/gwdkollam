@@ -111,7 +111,7 @@ const RigAccordionItem = ({
     : null;
 
   const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
-  const finalIsReadOnly = false; 
+  const finalIsReadOnly = false;
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
