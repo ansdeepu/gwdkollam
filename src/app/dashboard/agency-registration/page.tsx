@@ -101,18 +101,20 @@ const RigAccordionItem = ({ control, index, field, removeRig, isReadOnly }: { co
                     Rig #{index+1} - {rigTypeValue || 'Unspecified Type'} 
                     ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
                 </AccordionTrigger>
-                <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="ml-auto mr-2 text-destructive hover:text-destructive/90 shrink-0"
-                    onClick={(e) => {
-                        e.stopPropagation(); // prevent accordion from toggling
-                        removeRig(index);
-                    }}
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="ml-auto mr-2 shrink-0">
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive hover:text-destructive/90"
+                        onClick={(e) => {
+                            e.stopPropagation(); // prevent accordion from toggling
+                            removeRig(index);
+                        }}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
             <AccordionContent className="pt-4 space-y-4">
                 {/* Rig registration details form fields go here */}
@@ -503,7 +505,7 @@ export default function AgencyRegistrationPage() {
                                           <Card key={rig.id} className="p-4">
                                             <CardHeader className="p-0 pb-2 flex-row justify-between items-center">
                                               <CardTitle className="text-base">
-                                                {rig.rigRegistrationNo || `Rig #${index+1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
+                                                {rig.rigRegistrationNo || `Rig #${rigFields.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig} <Badge variant="destructive">Expired</Badge>
                                               </CardTitle>
                                               <div className="flex gap-2">
                                                 <Button size="sm" onClick={() => handleOpenRenewalDialog(rig, rigFields.findIndex(r => r.id === rig.id))}>
