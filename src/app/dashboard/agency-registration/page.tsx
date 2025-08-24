@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -597,35 +597,21 @@ export default function AgencyRegistrationPage() {
                             </AccordionItem>
                         </Accordion>
                         
-                        {/* Section 5: Active Rig Details */}
+                        {/* Section 5: Agency Overview */}
                         <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>5. Active Rig Details ({fullyActiveRigs.length} Active)</AccordionTrigger>
+                                <AccordionTrigger>5. Agency Overview</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-2">
-                                    {fullyActiveRigs.length > 0 ? (
-                                        fullyActiveRigs.map((rig) => {
-                                            const validityDate = rig.registrationDate && isValid(new Date(rig.registrationDate)) 
-                                                ? new Date(addYears(new Date(rig.registrationDate), 1).getTime() - (24 * 60 * 60 * 1000))
-                                                : null;
-
-                                            return (
-                                                <Card key={rig.id} className="p-4 bg-secondary/30">
-                                                    <CardHeader className="p-0 pb-2">
-                                                        <CardTitle className="text-base flex items-center gap-2">
-                                                            <CheckCircle className="h-5 w-5 text-green-600" />
-                                                            {rig.rigRegistrationNo || `Rig #${rigFields.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig}
-                                                            <Badge>Active</Badge>
-                                                        </CardTitle>
-                                                    </CardHeader>
-                                                    <CardContent className="text-sm text-muted-foreground p-0">
-                                                        Validity upto: {validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'}
-                                                    </CardContent>
-                                                </Card>
-                                            );
-                                        })
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground p-4 text-center">No rigs are currently active.</p>
-                                    )}
+                                    <div className="flex items-center gap-4 p-4 bg-secondary/30 rounded-lg">
+                                        <Info className="h-8 w-8 text-primary" />
+                                        <div>
+                                            <h4 className="font-semibold text-foreground">Application Summary</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                This application has {fullyActiveRigs.length} currently active rig(s) and {expiredRigs.length} rig(s) pending renewal. 
+                                                The overall status of this agency application is <Badge>{form.getValues('status')}</Badge>.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
