@@ -238,7 +238,6 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const canManage = user?.role === 'editor';
   const isEditor = user?.role === 'editor';
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '' });
@@ -362,7 +361,7 @@ export default function AgencyRegistrationPage() {
     );
   }
   
-  if (!canManage) {
+  if (!user || user.role === 'supervisor') {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
          <div className="space-y-6 p-6 text-center">
@@ -452,6 +451,7 @@ export default function AgencyRegistrationPage() {
                                 ))}
                               </Accordion>
                                {isEditor && rigFields.length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                               {isEditor && rigFields.length >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 rig registrations are allowed.</p>}
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
@@ -514,3 +514,4 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
+
