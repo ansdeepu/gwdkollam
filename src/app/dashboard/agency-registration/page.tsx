@@ -235,7 +235,7 @@ export default function AgencyRegistrationPage() {
   const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined } | null>(null);
+  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined }> | null>(null);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   
   const isEditor = user?.role === 'editor';
@@ -506,6 +506,33 @@ export default function AgencyRegistrationPage() {
                                {isEditor && rigFields.length >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 rig registrations are allowed.</p>}
                             </AccordionContent>
                           </AccordionItem>
+                        </Accordion>
+
+                        {/* Section 4: History Log */}
+                        <Accordion type="single" collapsible className="w-full">
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>4. History Log</AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-4">
+                                  {rigFields.length > 0 ? (
+                                      rigFields.map((rig, index) => (
+                                          (rig.history && rig.history.length > 0) && (
+                                              <div key={rig.id} className="p-3 border rounded-md bg-secondary/50">
+                                                  <h4 className="font-semibold text-primary mb-2">
+                                                      Rig #{index + 1} - {rig.typeOfRig || 'Unspecified'}
+                                                  </h4>
+                                                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                                      {rig.history.map((entry, idx) => (
+                                                          <li key={idx}>{entry}</li>
+                                                      ))}
+                                                  </ul>
+                                              </div>
+                                          )
+                                      ))
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground text-center py-4">No history to display.</p>
+                                  )}
+                                </AccordionContent>
+                            </AccordionItem>
                         </Accordion>
                         
                     </CardContent>
