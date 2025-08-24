@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw, RefreshCw } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, History, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -251,8 +251,8 @@ export default function AgencyRegistrationPage() {
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
-  const activeRigs = rigFields.filter(r => r.status === 'Active');
   const expiredRigs = rigFields.filter(r => r.status === 'Active' && r.registrationDate && isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
+  const fullyActiveRigs = rigFields.filter(r => r.status === 'Active' && r.registrationDate && !isBefore(addYears(new Date(r.registrationDate), 1), new Date()));
 
 
   useEffect(() => {
@@ -527,43 +527,36 @@ export default function AgencyRegistrationPage() {
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
-
-                        {/* Section 5: History */}
+                        
+                        {/* Section 5: Active Rig Details */}
                         <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>5. History</AccordionTrigger>
+                                <AccordionTrigger>5. Active Rig Details ({fullyActiveRigs.length} Active)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-2">
-                                    <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                                        {form.getValues('history')?.map((entry, i) => <li key={i}>{entry}</li>)}
-                                    </ul>
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
+                                    {fullyActiveRigs.length > 0 ? (
+                                        fullyActiveRigs.map((rig) => {
+                                            const validityDate = rig.registrationDate && isValid(new Date(rig.registrationDate)) 
+                                                ? new Date(addYears(new Date(rig.registrationDate), 1).getTime() - (24 * 60 * 60 * 1000))
+                                                : null;
 
-                        {/* Section 6: Current Status */}
-                         <Accordion type="single" collapsible>
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger>6. Current Status</AccordionTrigger>
-                                <AccordionContent className="pt-4">
-                                   <FormField
-                                        control={form.control}
-                                        name="status"
-                                        render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Application Status</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="Pending Verification">Pending Verification</SelectItem>
-                                                    <SelectItem value="Active">Active</SelectItem>
-                                                     <SelectItem value="Rejected">Rejected</SelectItem>
-                                                      <SelectItem value="Expired">Expired</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                        )}
-                                    />
+                                            return (
+                                                <Card key={rig.id} className="p-4 bg-secondary/30">
+                                                    <CardHeader className="p-0 pb-2">
+                                                        <CardTitle className="text-base flex items-center gap-2">
+                                                            <CheckCircle className="h-5 w-5 text-green-600" />
+                                                            {rig.rigRegistrationNo || `Rig #${rigFields.findIndex(r => r.id === rig.id) + 1}`} - {rig.typeOfRig}
+                                                            <Badge>Active</Badge>
+                                                        </CardTitle>
+                                                    </CardHeader>
+                                                    <CardContent className="text-sm text-muted-foreground p-0">
+                                                        Validity upto: {validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'}
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground p-4 text-center">No rigs are currently active.</p>
+                                    )}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
