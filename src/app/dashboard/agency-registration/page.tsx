@@ -283,14 +283,89 @@ export default function AgencyRegistrationPage() {
     }
   }, [selectedApplicationId, applications, form]);
   
+    const generateHistoryEntry = (rig: RigRegistration): string | null => {
+        const logParts: string[] = [];
+
+        const addPart = (label: string, value: any) => {
+            if (value !== undefined && value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)) {
+            logParts.push(`${label}: ${value}`);
+            }
+        };
+
+        const addVehiclePart = (vehicleName: string, vehicle: any) => {
+            if (!vehicle) return;
+            const vehicleParts: string[] = [];
+            if (vehicle.type) vehicleParts.push(`Type: ${vehicle.type}`);
+            if (vehicle.regNo) vehicleParts.push(`Reg No: ${vehicle.regNo}`);
+            if (vehicle.chassisNo) vehicleParts.push(`Chassis No: ${vehicle.chassisNo}`);
+            if (vehicle.engineNo) vehicleParts.push(`Engine No: ${vehicle.engineNo}`);
+            if (vehicleParts.length > 0) {
+                logParts.push(`${vehicleName}: ${vehicleParts.join(', ')}`);
+            }
+        };
+
+        const addDetailsPart = (detailsName: string, details: any) => {
+            if (!details) return;
+            const detailParts: string[] = [];
+            if (details.model) detailParts.push(`Model: ${details.model}`);
+            if (details.capacity) detailParts.push(`Capacity: ${details.capacity}`);
+            if (details.type) detailParts.push(`Type: ${details.type}`);
+            if (details.engineNo) detailParts.push(`Engine No: ${details.engineNo}`);
+             if (detailParts.length > 0) {
+                logParts.push(`${detailsName}: ${detailParts.join(', ')}`);
+            }
+        }
+
+        addPart('Rig Reg. No.', rig.rigRegistrationNo);
+        addPart('Type of Rig', rig.typeOfRig);
+        if (rig.registrationDate) {
+            addPart('Last Reg/Renewal Date', format(new Date(rig.registrationDate), 'dd/MM/yyyy'));
+        }
+
+        const lastEffectiveDate = rig.registrationDate ? new Date(rig.registrationDate) : null;
+        const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
+            ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
+            : null;
+        if(validityDate) {
+            addPart('Validity Upto', format(validityDate, 'dd/MM/yyyy'));
+        }
+        
+        addPart('Reg. Fee', rig.registrationFee);
+        if (rig.paymentDate) {
+            addPart('Payment Date', format(new Date(rig.paymentDate), 'dd/MM/yyyy'));
+        }
+        addPart('Challan No.', rig.challanNo);
+
+        addVehiclePart('Rig Vehicle', rig.rigVehicle);
+        addVehiclePart('Compressor Vehicle', rig.compressorVehicle);
+        addVehiclePart('Supporting Vehicle', rig.supportingVehicle);
+
+        addDetailsPart('Compressor Details', rig.compressorDetails);
+        addDetailsPart('Generator Details', rig.generatorDetails);
+        
+        if (logParts.length === 0) return null;
+
+        const timestamp = format(new Date(), 'dd/MM/yyyy HH:mm');
+        return `[${timestamp}] - ${logParts.join(' | ')}`;
+    };
+
   const onSubmit = async (data: AgencyApplication) => {
       setIsSubmitting(true);
       try {
+            const dataWithHistory = {
+                ...data,
+                rigs: data.rigs.map(rig => {
+                    const historyEntry = generateHistoryEntry(rig);
+                    const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
+                    return { ...rig, history: newHistory };
+                })
+            };
+
           if (selectedApplicationId && selectedApplicationId !== 'new') {
-              await updateApplication(selectedApplicationId, data);
+              await updateApplication(selectedApplicationId, dataWithHistory);
               toast({ title: "Application Updated", description: "The registration details have been updated." });
           } else {
-              await addApplication(data);
+              await addApplication(dataWithHistory);
               toast({ title: "Application Created", description: "The new agency registration has been saved." });
           }
           setSelectedApplicationId(null);
@@ -490,6 +565,34 @@ export default function AgencyRegistrationPage() {
                           </AccordionItem>
                         </Accordion>
 
+                        {/* Section 4: History Log */}
+                        <Accordion type="single" collapsible>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>4. History Log</AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-4">
+                                    {rigFields.length > 0 ? rigFields.map((rig, rigIndex) => (
+                                        <div key={rig.id} className="p-4 border rounded-lg bg-muted/30">
+                                            <h4 className="font-semibold text-primary mb-2">History for Rig #{rigIndex + 1} ({rig.rigRegistrationNo || 'N/A'})</h4>
+                                            {(rig.history && rig.history.length > 0) ? (
+                                                <ScrollArea className="h-48">
+                                                    <ul className="space-y-2 text-xs">
+                                                        {rig.history.slice().reverse().map((log, logIndex) => (
+                                                            <li key={logIndex} className="p-2 border-b last:border-b-0">
+                                                                {log}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </ScrollArea>
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground text-center py-4">No history recorded for this rig.</p>
+                                            )}
+                                        </div>
+                                    )) : (
+                                        <p className="text-sm text-muted-foreground text-center py-4">Add a rig to view its history.</p>
+                                    )}
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
