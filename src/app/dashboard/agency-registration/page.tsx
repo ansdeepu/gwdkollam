@@ -188,8 +188,8 @@ const RigAccordionItem = ({
           </div>
           <Separator />
           {field.status === 'Cancelled' && (
-            <div className="p-4 border rounded-lg bg-destructive/10 text-destructive-foreground">
-              <h4 className="font-semibold text-destructive">Cancellation Details</h4>
+            <div className="p-4 border rounded-lg bg-destructive/10 text-destructive">
+              <h4 className="font-semibold">Cancellation Details</h4>
               <p><strong>Date:</strong> {field.cancellationDate ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}</p>
               <p><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
             </div>
@@ -216,8 +216,8 @@ const RigAccordionItem = ({
                             <TableCell>{renewal.paymentDate ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                             <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
                             <TableCell className="text-center">
-                                <Button variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal.id)}><Edit className="h-4 w-4"/></Button>
-                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}><Trash2 className="h-4 w-4"/></Button>
+                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
                             </TableCell>
                             </TableRow>
                         ))}
