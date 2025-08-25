@@ -128,8 +128,8 @@ const RigAccordionItem = ({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {isExpired && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</DropdownMenuItem>}
-                    {field.status === 'Active' && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onCancel(index); }} className="text-destructive"><Ban className="mr-2 h-4 w-4" />Cancel</DropdownMenuItem>}
+                    {isExpired && field.status === 'Active' && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</DropdownMenuItem>}
+                    {field.status === 'Active' && !isExpired && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onCancel(index); }} className="text-destructive"><Ban className="mr-2 h-4 w-4" />Cancel</DropdownMenuItem>}
                     {field.status === 'Cancelled' && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
