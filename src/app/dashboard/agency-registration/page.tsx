@@ -129,7 +129,7 @@ const RigAccordionItem = ({
             {field.status === 'Active' && isExpired && (
                 <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
-            {field.status === 'Active' && !isExpired && (
+            {field.status === 'Active' && (
                 <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {field.status === 'Cancelled' && (
