@@ -543,10 +543,13 @@ export default function AgencyRegistrationPage() {
 
   const handleCancelRig = (rigIndex: number) => {
       const rig = form.getValues(`rigs.${rigIndex}`);
-      setCancellationData({ 
-        rigIndex, 
-        reason: rig.cancellationReason || '', 
-        date: rig.cancellationDate ? new Date(rig.cancellationDate) : new Date() 
+      const cancellationDateRaw = rig.cancellationDate;
+      const parsedDate = cancellationDateRaw && isValid(new Date(cancellationDateRaw)) ? new Date(cancellationDateRaw) : new Date();
+
+      setCancellationData({
+        rigIndex,
+        reason: rig.cancellationReason || '',
+        date: parsedDate,
       });
       setIsCancelDialogOpen(true);
   };
