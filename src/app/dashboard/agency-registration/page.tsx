@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,8 @@ const RigAccordionItem = ({
   onRenew,
   onCancel,
   onActivate,
+  onEditRenewal,
+  onDeleteRenewal,
   form
 }: {
   field: RigRegistration;
@@ -95,6 +98,8 @@ const RigAccordionItem = ({
   onRenew: (index: number) => void;
   onCancel: (index: number) => void;
   onActivate: (index: number) => void;
+  onEditRenewal: (rigIndex: number, renewalId: string) => void;
+  onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   form: any;
 }) => {
   const rigTypeValue = field.typeOfRig;
@@ -200,6 +205,7 @@ const RigAccordionItem = ({
                             <TableHead>Fee (₹)</TableHead>
                             <TableHead>Payment Date</TableHead>
                             <TableHead>Challan No.</TableHead>
+                            <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -209,6 +215,10 @@ const RigAccordionItem = ({
                             <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
                             <TableCell>{renewal.paymentDate ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                             <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
+                            <TableCell className="text-center">
+                                <Button variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal.id)}><Edit className="h-4 w-4"/></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}><Trash2 className="h-4 w-4"/></Button>
+                            </TableCell>
                             </TableRow>
                         ))}
                         </TableBody>
@@ -276,6 +286,8 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
   const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
+  const [editingRenewal, setEditingRenewal] = useState<{ rigIndex: number; renewal: RigRenewal } | null>(null);
+  const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
   const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined }>({ rigIndex: -1, reason: '', date: new Date() });
@@ -458,12 +470,33 @@ export default function AgencyRegistrationPage() {
   }, [filteredApplications]);
   
   const handleRenewRig = (rigIndex: number) => {
+      setEditingRenewal(null);
       setRenewalData({ rigIndex, data: { renewalDate: new Date() } });
       setIsRenewalDialogOpen(true);
   };
+  
+    const handleEditRenewal = (rigIndex: number, renewalId: string) => {
+        const rig = rigFields[rigIndex];
+        const renewalToEdit = rig.renewals?.find(r => r.id === renewalId);
+        if(renewalToEdit) {
+            setRenewalData(null);
+            setEditingRenewal({ rigIndex, renewal: { ...renewalToEdit } });
+            setIsRenewalDialogOpen(true);
+        }
+    };
+    
+    const handleDeleteRenewal = (rigIndex: number, renewalId: string) => {
+        setDeletingRenewal({ rigIndex, renewalId });
+    };
 
   const handleConfirmRenewal = () => {
-    if (renewalData) {
+      if (editingRenewal) { // Handle editing an existing renewal
+        const { rigIndex, renewal } = editingRenewal;
+        const rigToUpdate = rigFields[rigIndex];
+        const updatedRenewals = rigToUpdate.renewals?.map(r => r.id === renewal.id ? renewal : r) || [];
+        updateRig(rigIndex, { ...rigToUpdate, renewals: updatedRenewals });
+        toast({ title: "Renewal Updated", description: "Renewal details have been updated." });
+      } else if (renewalData) { // Handle adding a new renewal
         const { rigIndex, data } = renewalData;
         const rigToUpdate = rigFields[rigIndex];
         const newRenewal: RigRenewal = {
@@ -480,11 +513,23 @@ export default function AgencyRegistrationPage() {
             status: 'Active',
             renewals: [...(rigToUpdate.renewals || []), newRenewal],
         });
-        setIsRenewalDialogOpen(false);
-        setRenewalData(null);
         toast({ title: "Rig Renewed", description: "Renewal details added." });
     }
+    
+    setIsRenewalDialogOpen(false);
+    setRenewalData(null);
+    setEditingRenewal(null);
   };
+  
+    const handleConfirmDeleteRenewal = () => {
+        if (!deletingRenewal) return;
+        const { rigIndex, renewalId } = deletingRenewal;
+        const rigToUpdate = rigFields[rigIndex];
+        const updatedRenewals = rigToUpdate.renewals?.filter(r => r.id !== renewalId) || [];
+        updateRig(rigIndex, { ...rigToUpdate, renewals: updatedRenewals });
+        toast({ title: "Renewal Deleted", description: "The renewal record has been removed." });
+        setDeletingRenewal(null);
+    };
 
   const handleCancelRig = (rigIndex: number) => {
       setCancellationData({ rigIndex, reason: '', date: new Date() });
@@ -614,6 +659,8 @@ export default function AgencyRegistrationPage() {
                                     onRenew={handleRenewRig}
                                     onCancel={handleCancelRig}
                                     onActivate={handleActivateRig}
+                                    onEditRenewal={handleEditRenewal}
+                                    onDeleteRenewal={handleDeleteRenewal}
                                     form={form}
                                   />
                                 ))}
@@ -662,35 +709,79 @@ export default function AgencyRegistrationPage() {
             <Dialog open={isRenewalDialogOpen} onOpenChange={setIsRenewalDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                    <DialogTitle>Renew Rig Registration</DialogTitle>
+                    <DialogTitle>{editingRenewal ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                     <DialogDescription>Enter renewal details for the rig.</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Renewal Date</Label>
                         <Popover>
-                        <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>{renewalData?.data.renewalDate ? format(renewalData.data.renewalDate, 'dd/MM/yyyy') : 'Select'}</Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" selected={renewalData?.data.renewalDate} onSelect={(date) => setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: date } }))} /></PopoverContent>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="col-span-3">
+                                    <CalendarIcon className="mr-2 h-4 w-4"/>
+                                    {(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate) ? format(editingRenewal?.renewal.renewalDate || renewalData!.data.renewalDate!, 'dd/MM/yyyy') : 'Select'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent>
+                                <Calendar mode="single" selected={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate} 
+                                onSelect={(date) => {
+                                    if (editingRenewal) {
+                                        setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, renewalDate: date! } }));
+                                    } else {
+                                        setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: date } }));
+                                    }
+                                }}/>
+                            </PopoverContent>
                         </Popover>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
-                        <Input id="renewalFee" type="number" value={renewalData?.data.renewalFee || ''} onChange={(e) => setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalFee: +e.target.value } }))} className="col-span-3" />
+                        <Input id="renewalFee" type="number" 
+                         value={editingRenewal?.renewal.renewalFee ?? renewalData?.data.renewalFee ?? ''}
+                         onChange={(e) => {
+                            const value = +e.target.value;
+                            if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalFee: value }}));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalFee: value } }));
+                            }
+                         }}
+                        className="col-span-3" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Payment Date</Label>
                         <Popover>
-                        <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>{renewalData?.data.paymentDate ? format(renewalData.data.paymentDate, 'dd/MM/yyyy') : 'Select'}</Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" selected={renewalData?.data.paymentDate} onSelect={(date) => setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: date } }))} /></PopoverContent>
+                        <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>
+                        {(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) ? format(editingRenewal?.renewal.paymentDate || renewalData!.data.paymentDate!, 'dd/MM/yyyy') : 'Select'}
+                        </Button></PopoverTrigger>
+                        <PopoverContent><Calendar mode="single" selected={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate}
+                        onSelect={(date) => {
+                             if (editingRenewal) {
+                                setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, paymentDate: date! } }));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: date } }));
+                            }
+                        }}
+                        /></PopoverContent>
                         </Popover>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="challanNo" className="text-right">Challan No.</Label>
-                        <Input id="challanNo" value={renewalData?.data.challanNo || ''} onChange={(e) => setRenewalData(d => ({ ...d!, data: { ...d!.data, challanNo: e.target.value } }))} className="col-span-3" />
+                        <Input id="challanNo"
+                        value={editingRenewal?.renewal.challanNo ?? renewalData?.data.challanNo ?? ''}
+                         onChange={(e) => {
+                            const value = e.target.value;
+                            if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, challanNo: value }}));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, challanNo: value } }));
+                            }
+                         }}
+                        className="col-span-3" />
                     </div>
                     </div>
                     <DialogFooter>
-                    <Button onClick={handleConfirmRenewal}>Confirm Renewal</Button>
+                    <Button onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -718,6 +809,20 @@ export default function AgencyRegistrationPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <AlertDialog open={!!deletingRenewal} onOpenChange={() => setDeletingRenewal(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete this renewal record. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDeleteRenewal}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </FormProvider>
       );
   }
