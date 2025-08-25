@@ -111,13 +111,13 @@ const RigAccordionItem = ({
     ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
     : null;
 
-  const isExpired = field.status === 'Active' && validityDate && isBefore(validityDate, new Date());
+  const isExpired = validityDate ? isBefore(validityDate, new Date()) : false;
   const finalIsReadOnly = false;
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
       <div className="flex items-center w-full border-b">
-        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", isExpired && "text-amber-600")}>
+        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
@@ -128,9 +128,21 @@ const RigAccordionItem = ({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {isExpired && field.status === 'Active' && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</DropdownMenuItem>}
-                    {field.status === 'Active' && !isExpired && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onCancel(index); }} className="text-destructive"><Ban className="mr-2 h-4 w-4" />Cancel</DropdownMenuItem>}
-                    {field.status === 'Cancelled' && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</DropdownMenuItem>}
+                    {field.status === 'Active' && isExpired && (
+                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onRenew(index); }}>
+                            <RefreshCw className="mr-2 h-4 w-4" />Renew
+                        </DropdownMenuItem>
+                    )}
+                    {field.status === 'Active' && (
+                       <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onCancel(index); }} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                           <Ban className="mr-2 h-4 w-4" />Cancel
+                       </DropdownMenuItem>
+                    )}
+                    {field.status === 'Cancelled' && (
+                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onActivate(index); }}>
+                            <CheckCircle className="mr-2 h-4 w-4" />Activate
+                        </DropdownMenuItem>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
 
