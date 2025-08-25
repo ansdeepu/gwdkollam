@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, CalendarIcon, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
 const AgencyTable = ({ 
@@ -85,6 +86,7 @@ const RigAccordionItem = ({
   onRemove,
   onRenew,
   onCancel,
+  onActivate,
   form
 }: {
   field: RigRegistration;
@@ -92,6 +94,7 @@ const RigAccordionItem = ({
   onRemove?: (index: number) => void;
   onRenew: (index: number) => void;
   onCancel: (index: number) => void;
+  onActivate: (index: number) => void;
   form: any;
 }) => {
   const rigTypeValue = field.typeOfRig;
@@ -118,8 +121,19 @@ const RigAccordionItem = ({
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-            {isExpired && <Button type="button" size="sm" onClick={(e) => { e.stopPropagation(); onRenew(index); }}><RefreshCw className="h-4 w-4 mr-2"/>Renew</Button>}
-            {field.status === 'Active' && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onCancel(index); }}><Ban className="h-4 w-4 mr-2"/>Cancel</Button>}
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-5 w-5" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {isExpired && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</DropdownMenuItem>}
+                    {field.status === 'Active' && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onCancel(index); }} className="text-destructive"><Ban className="mr-2 h-4 w-4" />Cancel</DropdownMenuItem>}
+                    {field.status === 'Cancelled' && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</DropdownMenuItem>}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
             {onRemove && (
                 <Button
                 type="button"
@@ -460,6 +474,17 @@ export default function AgencyRegistrationPage() {
         toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
     }
   };
+  
+  const handleActivateRig = (rigIndex: number) => {
+    const rigToUpdate = rigFields[rigIndex];
+    updateRig(rigIndex, {
+        ...rigToUpdate,
+        status: 'Active',
+        cancellationDate: undefined,
+        cancellationReason: undefined,
+    });
+    toast({ title: "Rig Activated", description: "The rig registration has been reactivated." });
+  };
 
   if (applicationsLoading || authLoading) {
     return (
@@ -555,6 +580,7 @@ export default function AgencyRegistrationPage() {
                                     onRemove={isEditor ? removeRig : undefined}
                                     onRenew={handleRenewRig}
                                     onCancel={handleCancelRig}
+                                    onActivate={handleActivateRig}
                                     form={form}
                                   />
                                 ))}
