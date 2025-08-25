@@ -182,6 +182,41 @@ const RigAccordionItem = ({
             <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
           </div>
           <Separator />
+          {field.status === 'Cancelled' && (
+            <div className="p-4 border rounded-lg bg-destructive/10 text-destructive-foreground">
+              <h4 className="font-semibold text-destructive">Cancellation Details</h4>
+              <p><strong>Date:</strong> {field.cancellationDate ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}</p>
+              <p><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
+            </div>
+          )}
+          {field.renewals && field.renewals.length > 0 && (
+            <div className="space-y-2">
+                <h4 className="font-medium">Renewal History</h4>
+                <div className="border rounded-lg p-2">
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Renewal Date</TableHead>
+                            <TableHead>Fee (₹)</TableHead>
+                            <TableHead>Payment Date</TableHead>
+                            <TableHead>Challan No.</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {field.renewals.slice().reverse().map(renewal => (
+                            <TableRow key={renewal.id}>
+                            <TableCell>{renewal.renewalDate ? format(new Date(renewal.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                            <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
+                            <TableCell>{renewal.paymentDate ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                            <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
+          )}
+          <Separator />
           <p className="font-medium">Rig Vehicle Details</p>
           <div className="grid md:grid-cols-4 gap-4">
              <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -218,7 +253,7 @@ const RigAccordionItem = ({
               <p className="font-medium">Generator Details</p>
               <div className="grid md:grid-cols-2 gap-4 mt-2">
                 <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormMessage>
                 <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
               </div>
