@@ -188,9 +188,9 @@ const RigAccordionItem = ({
           </div>
           <Separator />
           {field.status === 'Cancelled' && (
-            <div className="p-4 border rounded-lg bg-destructive/10 text-destructive">
+            <div className="p-4 border rounded-lg bg-destructive/10">
                 <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold">Cancellation Details</h4>
+                    <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                     <div className="flex items-center space-x-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onCancel(index); }}>
                             <Edit className="h-4 w-4" />
@@ -200,8 +200,8 @@ const RigAccordionItem = ({
                         </Button>
                     </div>
                 </div>
-                <p><strong>Date:</strong> {field.cancellationDate && isValid(new Date(field.cancellationDate)) ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}</p>
-                <p><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
+                <p className="text-destructive"><strong>Date:</strong> {field.cancellationDate && isValid(new Date(field.cancellationDate)) ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}</p>
+                <p className="text-destructive"><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
             </div>
           )}
           {field.renewals && field.renewals.length > 0 && (
