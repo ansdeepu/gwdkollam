@@ -188,10 +188,20 @@ const RigAccordionItem = ({
           </div>
           <Separator />
           {field.status === 'Cancelled' && (
-            <div className="p-4 border rounded-lg bg-destructive/10 text-destructive">
-              <h4 className="font-semibold">Cancellation Details</h4>
-              <p><strong>Date:</strong> {field.cancellationDate ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}</p>
-              <p><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
+            <div className="p-4 border rounded-lg bg-destructive/10 text-destructive-foreground">
+                <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold">Cancellation Details</h4>
+                    <div className="flex items-center space-x-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive-foreground hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onCancel(index); }}>
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive-foreground hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onActivate(index); }}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+                <p><strong>Date:</strong> {field.cancellationDate ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}</p>
+                <p><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
             </div>
           )}
           {field.renewals && field.renewals.length > 0 && (
@@ -532,7 +542,12 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleCancelRig = (rigIndex: number) => {
-      setCancellationData({ rigIndex, reason: '', date: new Date() });
+      const rig = form.getValues(`rigs.${index}`);
+      setCancellationData({ 
+        rigIndex, 
+        reason: rig.cancellationReason || '', 
+        date: rig.cancellationDate ? new Date(rig.cancellationDate) : new Date() 
+      });
       setIsCancelDialogOpen(true);
   };
   
