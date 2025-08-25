@@ -121,30 +121,15 @@ const RigAccordionItem = ({
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-5 w-5" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    {field.status === 'Active' && isExpired && (
-                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onRenew(index); }}>
-                            <RefreshCw className="mr-2 h-4 w-4" />Renew
-                        </DropdownMenuItem>
-                    )}
-                    {field.status === 'Active' && (
-                       <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onCancel(index); }} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                           <Ban className="mr-2 h-4 w-4" />Cancel
-                       </DropdownMenuItem>
-                    )}
-                    {field.status === 'Cancelled' && (
-                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onActivate(index); }}>
-                            <CheckCircle className="mr-2 h-4 w-4" />Activate
-                        </DropdownMenuItem>
-                    )}
-                </DropdownMenuContent>
-            </DropdownMenu>
+            {field.status === 'Active' && isExpired && (
+                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+            )}
+            {field.status === 'Active' && (
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+            )}
+            {field.status === 'Cancelled' && (
+                <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
+            )}
 
             {onRemove && (
                 <Button
