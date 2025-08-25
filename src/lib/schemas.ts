@@ -696,6 +696,7 @@ export const OwnerInfoSchema = z.object({
   name: z.string().min(1, "Owner name is required"),
   address: z.string().min(1, "Owner address is required"),
   mobile: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required."),
+  secondaryMobile: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required.").optional().or(z.literal('')),
 });
 export type OwnerInfo = z.infer<typeof OwnerInfoSchema>;
 

@@ -251,7 +251,7 @@ export default function AgencyRegistrationPage() {
   
   const isEditor = user?.role === 'editor';
 
-  const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '' });
+  const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
   const createDefaultRig = (): RigRegistration => ({
       id: uuidv4(),
       status: 'Active',
@@ -530,10 +530,11 @@ export default function AgencyRegistrationPage() {
                                     <Separator />
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
-                                        <div className="grid md:grid-cols-3 gap-4 p-2 border rounded-md">
-                                            <FormField name="owner.name" render={({ field }) => <FormItem><FormLabel>Owner Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name="owner.address" render={({ field }) => <FormItem><FormLabel>Owner Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />
+                                        <div className="grid md:grid-cols-2 gap-4 p-2 border rounded-md">
+                                            <FormField name="owner.name" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Owner Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Owner Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
