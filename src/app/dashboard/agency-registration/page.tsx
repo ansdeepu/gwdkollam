@@ -230,6 +230,9 @@ const RigAccordionItem = ({
                     </div>
                 </div>
                 <p className="text-destructive"><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
+                <p className="text-destructive">
+                  <strong>Date:</strong> {field.cancellationDate && isValid(new Date(field.cancellationDate)) ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}
+                </p>
             </div>
           )}
           {field.renewals && field.renewals.length > 0 && (
