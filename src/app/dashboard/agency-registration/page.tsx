@@ -94,7 +94,7 @@ const RigAccordionItem = ({
   onRemove,
   onRenew,
   onActivate,
-  onEditCancellation,
+  onCancel,
   onDeleteRenewal,
   onEditRenewal,
   form,
@@ -104,7 +104,7 @@ const RigAccordionItem = ({
   onRemove?: (index: number) => void;
   onRenew: (index: number) => void;
   onActivate: (index: number) => void;
-  onEditCancellation: (rigIndex: number) => void;
+  onCancel: (rigIndex: number) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
   form: any;
@@ -127,8 +127,8 @@ const RigAccordionItem = ({
   const finalIsReadOnly = false;
   
   const cancellationDateValue = form.watch(`rigs.${index}.cancellationDate`);
-  const formattedCancellationDate = cancellationDateValue instanceof Date && isValid(cancellationDateValue)
-    ? format(cancellationDateValue, 'dd/MM/yyyy')
+  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
+    ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
     : 'N/A';
 
   return (
@@ -142,7 +142,7 @@ const RigAccordionItem = ({
                 <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditCancellation(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {field.status === 'Cancelled' && (
                 <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
@@ -204,9 +204,6 @@ const RigAccordionItem = ({
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      <div className="flex items-center space-x-1">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditCancellation(index); }}>
-                            <Edit className="h-4 w-4" />
-                        </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
                             <RotateCcw className="h-4 w-4" />
                         </Button>
@@ -319,9 +316,6 @@ export default function AgencyRegistrationPage() {
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [currentRigIndexForCancel, setCurrentRigIndexForCancel] = useState<number | null>(null);
-  
   const isEditor = user?.role === 'editor';
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
@@ -364,13 +358,14 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                // Create a deep copy to avoid mutating the original state object
+                // Create a deep copy to avoid direct mutation and issues with frozen objects
                 const processedApp = JSON.parse(JSON.stringify(app));
 
-                // Correctly parse date strings back into Date objects
+                // Correctly parse date strings back into Date objects for the main application
                 if (processedApp.agencyRegistrationDate) processedApp.agencyRegistrationDate = new Date(processedApp.agencyRegistrationDate);
                 if (processedApp.agencyPaymentDate) processedApp.agencyPaymentDate = new Date(processedApp.agencyPaymentDate);
 
+                // Correctly parse dates within the rigs array
                 processedApp.rigs = (processedApp.rigs || []).map((rig: any) => {
                     const validCancellationDate = rig.cancellationDate ? new Date(rig.cancellationDate) : null;
                     const validRegistrationDate = rig.registrationDate ? new Date(rig.registrationDate) : null;
@@ -592,17 +587,15 @@ export default function AgencyRegistrationPage() {
         setDeletingRenewal(null);
     };
 
-  const handleConfirmCancellation = () => {
-    if (currentRigIndexForCancel !== null) {
-        const rigToUpdate = form.getValues(`rigs.${currentRigIndexForCancel}`);
-        updateRig(currentRigIndexForCancel, {
-            ...rigToUpdate,
-            status: 'Cancelled',
-        });
-        setIsCancelDialogOpen(false);
-        setCurrentRigIndexForCancel(null);
-        toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
-    }
+  const handleCancelRig = (rigIndex: number) => {
+    const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
+    updateRig(rigIndex, {
+        ...rigToUpdate,
+        status: 'Cancelled',
+        cancellationDate: new Date(),
+        cancellationReason: 'Cancelled via button',
+    });
+    toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
   };
   
   const handleActivateRig = (rigIndex: number) => {
@@ -614,11 +607,6 @@ export default function AgencyRegistrationPage() {
         cancellationReason: '',
     });
     toast({ title: "Rig Activated", description: "The rig registration has been reactivated." });
-  };
-  
-  const handleEditCancellation = (rigIndex: number) => {
-    setCurrentRigIndexForCancel(rigIndex);
-    setIsCancelDialogOpen(true);
   };
 
   if (applicationsLoading || authLoading) {
@@ -716,9 +704,9 @@ export default function AgencyRegistrationPage() {
                                     onRemove={isEditor ? removeRig : undefined}
                                     onRenew={handleRenewRig}
                                     onActivate={handleActivateRig}
+                                    onCancel={handleCancelRig}
                                     onEditRenewal={handleEditRenewal}
                                     onDeleteRenewal={handleDeleteRenewal}
-                                    onEditCancellation={handleEditCancellation}
                                     form={form}
                                   />
                                 ))}
@@ -812,49 +800,6 @@ export default function AgencyRegistrationPage() {
                     </div>
                     <DialogFooter>
                     <Button type="button" onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-            <Dialog open={isCancelDialogOpen} onOpenChange={(open) => { if (!open) setCurrentRigIndexForCancel(null); setIsCancelDialogOpen(open); }}>
-                <DialogContent>
-                    <DialogHeader>
-                    <DialogTitle>Cancel Rig Registration</DialogTitle>
-                    <DialogDescription>Provide details for the cancellation.</DialogDescription>
-                    </DialogHeader>
-                     {currentRigIndexForCancel !== null && (
-                        <div className="grid gap-4 py-4">
-                           <Controller
-                            control={form.control}
-                            name={`rigs.${currentRigIndexForCancel}.cancellationDate`}
-                            render={({ field }) => (
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label className="text-right">Date of Cancellation</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="outline" className="col-span-3">
-                                                <CalendarIcon className="mr-2 h-4 w-4"/>
-                                                {field.value && isValid(new Date(field.value)) ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent>
-                                    </Popover>
-                                </div>
-                             )}
-                            />
-                             <Controller
-                                control={form.control}
-                                name={`rigs.${currentRigIndexForCancel}.cancellationReason`}
-                                render={({ field }) => (
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor={`cancellationReason-${currentRigIndexForCancel}`} className="text-right">Reason</Label>
-                                        <Textarea id={`cancellationReason-${currentRigIndexForCancel}`} {...field} className="col-span-3" />
-                                    </div>
-                                )}
-                            />
-                        </div>
-                    )}
-                    <DialogFooter>
-                    <Button type="button" onClick={handleConfirmCancellation} variant="destructive">Confirm Cancellation</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
