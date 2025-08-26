@@ -137,7 +137,8 @@ const RigAccordionItem = ({
     setIsCancelDialogOpen(true);
   };
   
-  const handleOpenEditCancelDialog = () => {
+  const handleOpenEditCancelDialog = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const cancellationDateRaw = field.cancellationDate;
     const parsedDate = cancellationDateRaw && isValid(new Date(cancellationDateRaw)) ? new Date(cancellationDateRaw) : new Date();
     setCancellationData({
@@ -221,7 +222,7 @@ const RigAccordionItem = ({
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                     <div className="flex items-center space-x-1">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenEditCancelDialog(); }}>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={handleOpenEditCancelDialog}>
                             <Edit className="h-4 w-4" />
                         </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
@@ -231,7 +232,7 @@ const RigAccordionItem = ({
                 </div>
                 <p className="text-destructive"><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
                 <p className="text-destructive">
-                  <strong>Date:</strong> {field.cancellationDate && isValid(new Date(field.cancellationDate)) ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}
+                  <strong>Date of Cancellation:</strong> {field.cancellationDate && isValid(new Date(field.cancellationDate)) ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}
                 </p>
             </div>
           )}
