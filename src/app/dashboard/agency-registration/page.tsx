@@ -81,6 +81,13 @@ const AgencyTable = ({
     </Table>
 );
 
+const getOrdinalSuffix = (n: number) => {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+};
+
+
 const RigAccordionItem = ({
   field,
   index,
@@ -213,6 +220,7 @@ const RigAccordionItem = ({
                     <Table>
                         <TableHeader>
                         <TableRow>
+                            <TableHead>Renewal No.</TableHead>
                             <TableHead>Renewal Date</TableHead>
                             <TableHead>Fee (₹)</TableHead>
                             <TableHead>Payment Date</TableHead>
@@ -221,18 +229,22 @@ const RigAccordionItem = ({
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {field.renewals.slice().reverse().map(renewal => (
-                            <TableRow key={renewal.id}>
-                            <TableCell>{renewal.renewalDate && isValid(new Date(renewal.renewalDate)) ? format(new Date(renewal.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                            <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
-                            <TableCell>{renewal.paymentDate && isValid(new Date(renewal.paymentDate)) ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                            <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
-                            <TableCell className="text-center">
-                                <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
-                                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
-                            </TableCell>
-                            </TableRow>
-                        ))}
+                        {field.renewals.map((renewal, renewalIndex) => {
+                            const renewalNum = renewalIndex + 1;
+                            return (
+                                <TableRow key={renewal.id}>
+                                <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
+                                <TableCell>{renewal.renewalDate && isValid(new Date(renewal.renewalDate)) ? format(new Date(renewal.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
+                                <TableCell>{renewal.paymentDate && isValid(new Date(renewal.paymentDate)) ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
+                                <TableCell className="text-center">
+                                    <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                </TableCell>
+                                </TableRow>
+                            );
+                        })}
                         </TableBody>
                     </Table>
                 </div>
@@ -329,6 +341,8 @@ export default function AgencyRegistrationPage() {
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
+  const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
+
   useEffect(() => {
     if (selectedApplicationId) {
       if (selectedApplicationId === 'new') {
@@ -455,10 +469,10 @@ export default function AgencyRegistrationPage() {
   }
 
   const handleAddRig = () => {
-    if (rigFields.length < 3) {
+    if (activeRigCount < 3) {
       appendRig(createDefaultRig());
     } else {
-      toast({ title: "Maximum Rigs Reached", description: "You can only register a maximum of 3 rigs per agency.", variant: "default" });
+      toast({ title: "Maximum Rigs Reached", description: "You can only register a maximum of 3 active rigs per agency.", variant: "default" });
     }
   };
 
@@ -696,8 +710,8 @@ export default function AgencyRegistrationPage() {
                                   />
                                 ))}
                               </Accordion>
-                               {isEditor && rigFields.length < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
-                               {isEditor && rigFields.length >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 rig registrations are allowed.</p>}
+                               {isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                               {isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
