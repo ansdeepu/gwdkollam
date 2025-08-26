@@ -87,6 +87,7 @@ const RigAccordionItem = ({
   onRemove,
   onRenew,
   onCancel,
+  onEditCancellation,
   onActivate,
   onEditRenewal,
   onDeleteRenewal,
@@ -97,6 +98,7 @@ const RigAccordionItem = ({
   onRemove?: (index: number) => void;
   onRenew: (index: number) => void;
   onCancel: (index: number) => void;
+  onEditCancellation: (index: number) => void;
   onActivate: (index: number) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
@@ -192,7 +194,7 @@ const RigAccordionItem = ({
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                     <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onCancel(index); }}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onEditCancellation(index); }}>
                             <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onActivate(index); }}>
@@ -542,16 +544,25 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleCancelRig = (rigIndex: number) => {
-      const rig = form.getValues(`rigs.${rigIndex}`);
-      const cancellationDateRaw = rig.cancellationDate;
-      const parsedDate = cancellationDateRaw && isValid(new Date(cancellationDateRaw)) ? new Date(cancellationDateRaw) : new Date();
-
       setCancellationData({
         rigIndex,
-        reason: rig.cancellationReason || '',
-        date: parsedDate,
+        reason: '',
+        date: new Date(),
       });
       setIsCancelDialogOpen(true);
+  };
+
+  const handleEditCancellation = (rigIndex: number) => {
+    const rig = form.getValues(`rigs.${rigIndex}`);
+    const cancellationDateRaw = rig.cancellationDate;
+    const parsedDate = cancellationDateRaw && isValid(new Date(cancellationDateRaw)) ? new Date(cancellationDateRaw) : new Date();
+
+    setCancellationData({
+      rigIndex,
+      reason: rig.cancellationReason || '',
+      date: parsedDate,
+    });
+    setIsCancelDialogOpen(true);
   };
   
   const handleConfirmCancellation = () => {
@@ -676,6 +687,7 @@ export default function AgencyRegistrationPage() {
                                     onRemove={isEditor ? removeRig : undefined}
                                     onRenew={handleRenewRig}
                                     onCancel={handleCancelRig}
+                                    onEditCancellation={handleEditCancellation}
                                     onActivate={handleActivateRig}
                                     onEditRenewal={handleEditRenewal}
                                     onDeleteRenewal={handleDeleteRenewal}
@@ -894,5 +906,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
-    
