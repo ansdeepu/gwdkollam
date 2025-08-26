@@ -96,6 +96,7 @@ const RigAccordionItem = ({
   onActivate,
   onEditRenewal,
   onDeleteRenewal,
+  onEditCancellation,
   form,
   setIsCancelDialogOpen,
   setCancellationData,
@@ -107,6 +108,7 @@ const RigAccordionItem = ({
   onActivate: (index: number) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
+  onEditCancellation: (rigIndex: number) => void;
   form: any;
   setIsCancelDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setCancellationData: React.Dispatch<React.SetStateAction<{ rigIndex: number; reason: string; date: Date | undefined; }>>;
@@ -133,18 +135,6 @@ const RigAccordionItem = ({
       rigIndex: index,
       reason: '',
       date: new Date(),
-    });
-    setIsCancelDialogOpen(true);
-  };
-  
-  const handleOpenEditCancelDialog = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const cancellationDateRaw = field.cancellationDate;
-    const parsedDate = cancellationDateRaw && isValid(new Date(cancellationDateRaw)) ? new Date(cancellationDateRaw) : new Date();
-    setCancellationData({
-      rigIndex: index,
-      reason: field.cancellationReason || '',
-      date: parsedDate,
     });
     setIsCancelDialogOpen(true);
   };
@@ -222,7 +212,7 @@ const RigAccordionItem = ({
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                     <div className="flex items-center space-x-1">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={handleOpenEditCancelDialog}>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={() => onEditCancellation(index)}>
                             <Edit className="h-4 w-4" />
                         </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
@@ -614,6 +604,16 @@ export default function AgencyRegistrationPage() {
     });
     toast({ title: "Rig Activated", description: "The rig registration has been reactivated." });
   };
+  
+  const handleEditCancellation = (rigIndex: number) => {
+    const rig = form.getValues(`rigs.${rigIndex}`);
+    setCancellationData({
+      rigIndex,
+      reason: rig.cancellationReason || '',
+      date: rig.cancellationDate ? new Date(rig.cancellationDate) : new Date(),
+    });
+    setIsCancelDialogOpen(true);
+  };
 
   if (applicationsLoading || authLoading) {
     return (
@@ -712,6 +712,7 @@ export default function AgencyRegistrationPage() {
                                     onActivate={handleActivateRig}
                                     onEditRenewal={handleEditRenewal}
                                     onDeleteRenewal={handleDeleteRenewal}
+                                    onEditCancellation={handleEditCancellation}
                                     form={form}
                                     setIsCancelDialogOpen={setIsCancelDialogOpen}
                                     setCancellationData={setCancellationData}
