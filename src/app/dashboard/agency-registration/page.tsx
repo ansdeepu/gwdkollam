@@ -813,9 +813,9 @@ export default function AgencyRegistrationPage() {
                         <Label className="text-right">Date of Cancellation</Label>
                         <Popover>
                         <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>
-                            {cancellationData?.date ? format(new Date(cancellationData.date), 'dd/MM/yyyy') : 'Select'}
+                            {cancellationData?.date && isValid(new Date(cancellationData.date)) ? format(new Date(cancellationData.date), 'dd/MM/yyyy') : 'Select'}
                         </Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" selected={cancellationData?.date} onSelect={(date) => setCancellationData(d => ({ ...d!, date: date }))} /></PopoverContent>
+                        <PopoverContent><Calendar mode="single" selected={cancellationData?.date ? new Date(cancellationData.date) : undefined} onSelect={(date) => setCancellationData(d => ({ ...d!, date: date }))} /></PopoverContent>
                         </Popover>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -893,5 +893,7 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
+
+    
 
     
