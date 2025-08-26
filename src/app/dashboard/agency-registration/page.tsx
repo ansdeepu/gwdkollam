@@ -25,7 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { format, addYears, isValid, isBefore } from 'date-fns';
+import { format, addYears, isValid, parseISO } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -94,24 +94,20 @@ const RigAccordionItem = ({
   onRemove,
   onRenew,
   onActivate,
-  onEditRenewal,
-  onDeleteRenewal,
   onEditCancellation,
+  onDeleteRenewal,
+  onEditRenewal,
   form,
-  setIsCancelDialogOpen,
-  setCancellationData,
 }: {
   field: RigRegistration;
   index: number;
   onRemove?: (index: number) => void;
   onRenew: (index: number) => void;
   onActivate: (index: number) => void;
-  onEditRenewal: (rigIndex: number, renewalId: string) => void;
-  onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditCancellation: (rigIndex: number) => void;
+  onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
+  onEditRenewal: (rigIndex: number, renewalId: string) => void;
   form: any;
-  setIsCancelDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setCancellationData: React.Dispatch<React.SetStateAction<{ rigIndex: number; reason: string; date: Date | undefined; }>>;
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = field.registrationDate;
@@ -126,18 +122,14 @@ const RigAccordionItem = ({
   const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
     ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
     : null;
-
-  const isExpired = validityDate ? isBefore(validityDate, new Date()) : false;
+    
+  const isExpired = validityDate ? new Date() > validityDate : false;
   const finalIsReadOnly = false;
   
-  const handleOpenCancelDialog = () => {
-    setCancellationData({
-      rigIndex: index,
-      reason: '',
-      date: new Date(),
-    });
-    setIsCancelDialogOpen(true);
-  };
+  const cancellationDateValue = field.cancellationDate;
+  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
+    ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
+    : 'N/A';
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
@@ -150,7 +142,7 @@ const RigAccordionItem = ({
                 <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenCancelDialog(); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditCancellation(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {field.status === 'Cancelled' && (
                 <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
@@ -211,18 +203,18 @@ const RigAccordionItem = ({
             <div className="p-4 border rounded-lg bg-destructive/10">
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
-                    <div className="flex items-center space-x-1">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={() => onEditCancellation(index)}>
+                     <div className="flex items-center space-x-1">
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditCancellation(index); }}>
                             <Edit className="h-4 w-4" />
                         </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
-                            <Trash2 className="h-4 w-4" />
+                            <RotateCcw className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
                 <p className="text-destructive"><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
-                <p className="text-destructive">
-                  <strong>Date of Cancellation:</strong> {field.cancellationDate && isValid(new Date(field.cancellationDate)) ? format(new Date(field.cancellationDate), 'dd/MM/yyyy') : 'N/A'}
+                 <p className="text-destructive">
+                  <strong>Date of Cancellation:</strong> {formattedCancellationDate}
                 </p>
             </div>
           )}
@@ -327,8 +319,9 @@ export default function AgencyRegistrationPage() {
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | undefined }>({ rigIndex: -1, reason: '', date: new Date() });
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  // State specifically for the cancellation dialog's temporary values
+  const [cancellationDialogData, setCancellationDialogData] = useState<{ rigIndex: number | null; reason: string; date?: Date | null; } | null>(null);
   
   const isEditor = user?.role === 'editor';
 
@@ -369,12 +362,13 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                // Ensure dates from Firestore are correctly parsed into Date objects for the form
+                // When loading existing data, ensure dates from Firestore are correctly parsed into Date objects.
                 const processedApp = {
                     ...app,
                     rigs: app.rigs.map(rig => ({
                         ...rig,
-                        cancellationDate: rig.cancellationDate ? new Date(rig.cancellationDate) : undefined,
+                        // Ensure `cancellationDate` is a Date object or null.
+                        cancellationDate: rig.cancellationDate ? new Date(rig.cancellationDate) : null,
                     })),
                 };
                 form.reset(processedApp);
@@ -579,8 +573,8 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleConfirmCancellation = () => {
-    if (cancellationData.rigIndex !== -1) {
-        const { rigIndex, reason, date } = cancellationData;
+    if (cancellationDialogData?.rigIndex !== null && cancellationDialogData?.rigIndex !== undefined) {
+        const { rigIndex, reason, date } = cancellationDialogData;
         const rigToUpdate = rigFields[rigIndex];
         updateRig(rigIndex, {
             ...rigToUpdate,
@@ -589,7 +583,7 @@ export default function AgencyRegistrationPage() {
             cancellationReason: reason,
         });
         setIsCancelDialogOpen(false);
-        setCancellationData({ rigIndex: -1, reason: '', date: new Date() });
+        setCancellationDialogData(null);
         toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
     }
   };
@@ -607,10 +601,13 @@ export default function AgencyRegistrationPage() {
   
   const handleEditCancellation = (rigIndex: number) => {
     const rig = form.getValues(`rigs.${rigIndex}`);
-    setCancellationData({
+    const dateValue = rig.cancellationDate;
+    const initialDate = dateValue && isValid(new Date(dateValue)) ? new Date(dateValue) : new Date();
+    
+    setCancellationDialogData({
       rigIndex,
       reason: rig.cancellationReason || '',
-      date: rig.cancellationDate ? new Date(rig.cancellationDate) : new Date(),
+      date: initialDate,
     });
     setIsCancelDialogOpen(true);
   };
@@ -714,8 +711,6 @@ export default function AgencyRegistrationPage() {
                                     onDeleteRenewal={handleDeleteRenewal}
                                     onEditCancellation={handleEditCancellation}
                                     form={form}
-                                    setIsCancelDialogOpen={setIsCancelDialogOpen}
-                                    setCancellationData={setCancellationData}
                                   />
                                 ))}
                               </Accordion>
@@ -811,7 +806,7 @@ export default function AgencyRegistrationPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+            <Dialog open={isCancelDialogOpen} onOpenChange={(open) => { if (!open) setCancellationDialogData(null); setIsCancelDialogOpen(open); }}>
                 <DialogContent>
                     <DialogHeader>
                     <DialogTitle>Cancel Rig Registration</DialogTitle>
@@ -822,14 +817,14 @@ export default function AgencyRegistrationPage() {
                         <Label className="text-right">Date of Cancellation</Label>
                         <Popover>
                         <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>
-                            {cancellationData?.date && isValid(new Date(cancellationData.date)) ? format(new Date(cancellationData.date), 'dd/MM/yyyy') : 'Select'}
+                            {cancellationDialogData?.date ? format(cancellationDialogData.date, 'dd/MM/yyyy') : 'Select'}
                         </Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" selected={cancellationData?.date ? new Date(cancellationData.date) : undefined} onSelect={(date) => setCancellationData(d => ({ ...d!, date: date }))} /></PopoverContent>
+                        <PopoverContent><Calendar mode="single" selected={cancellationDialogData?.date || undefined} onSelect={(date) => setCancellationDialogData(d => ({ ...d!, date: date }))} /></PopoverContent>
                         </Popover>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="cancellationReason" className="text-right">Reason</Label>
-                        <Textarea id="cancellationReason" value={cancellationData?.reason || ''} onChange={(e) => setCancellationData(d => ({ ...d!, reason: e.target.value }))} className="col-span-3" />
+                        <Textarea id="cancellationReason" value={cancellationDialogData?.reason || ''} onChange={(e) => setCancellationDialogData(d => ({ ...d!, reason: e.target.value }))} className="col-span-3" />
                     </div>
                     </div>
                     <DialogFooter>
@@ -902,7 +897,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
-    
-
-    
