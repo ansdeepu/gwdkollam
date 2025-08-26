@@ -361,8 +361,9 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                // Create a deep copy to avoid direct mutation and issues with frozen objects
-                const processedApp = JSON.parse(JSON.stringify(app));
+                // The issue was here: JSON.stringify turns Date objects into strings.
+                // We need to process the object manually to keep Date objects intact.
+                const processedApp = { ...app };
 
                 // Correctly parse date strings back into Date objects for the main application
                 if (processedApp.agencyRegistrationDate) processedApp.agencyRegistrationDate = new Date(processedApp.agencyRegistrationDate);
