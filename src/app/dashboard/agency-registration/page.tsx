@@ -127,8 +127,8 @@ const RigAccordionItem = ({
   const finalIsReadOnly = false;
   
   const cancellationDateValue = field.cancellationDate;
-  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
-    ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
+  const formattedCancellationDate = cancellationDateValue && isValid(cancellationDateValue)
+    ? format(cancellationDateValue, 'dd/MM/yyyy')
     : 'N/A';
 
   return (
@@ -908,3 +908,5 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
+
+    
