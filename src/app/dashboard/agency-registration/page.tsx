@@ -126,10 +126,9 @@ const RigAccordionItem = ({
   const isExpired = validityDate ? new Date() > validityDate : false;
   const finalIsReadOnly = false;
   
-  const cancellationDateValue = field.cancellationDate;
-  // This is the corrected display logic for the cancellation date.
-  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
-    ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
+  const cancellationDateValue = form.watch(`rigs.${index}.cancellationDate`);
+  const formattedCancellationDate = cancellationDateValue instanceof Date && isValid(cancellationDateValue)
+    ? format(cancellationDateValue, 'dd/MM/yyyy')
     : 'N/A';
 
   return (
@@ -365,16 +364,31 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                // Deep copy and process the application data to ensure correct types.
+                // Create a deep copy to avoid mutating the original state object
                 const processedApp = JSON.parse(JSON.stringify(app));
 
+                // Correctly parse date strings back into Date objects
+                if (processedApp.agencyRegistrationDate) processedApp.agencyRegistrationDate = new Date(processedApp.agencyRegistrationDate);
+                if (processedApp.agencyPaymentDate) processedApp.agencyPaymentDate = new Date(processedApp.agencyPaymentDate);
+
                 processedApp.rigs = (processedApp.rigs || []).map((rig: any) => {
-                    const cancellationDate = rig.cancellationDate;
-                    // Ensure cancellationDate is a valid Date object or null.
-                    const validCancellationDate = cancellationDate ? new Date(cancellationDate) : null;
+                    const validCancellationDate = rig.cancellationDate ? new Date(rig.cancellationDate) : null;
+                    const validRegistrationDate = rig.registrationDate ? new Date(rig.registrationDate) : null;
+                    const validPaymentDate = rig.paymentDate ? new Date(rig.paymentDate) : null;
+                    
+                    const validRenewals = (rig.renewals || []).map((renewal: any) => ({
+                        ...renewal,
+                        renewalDate: renewal.renewalDate ? new Date(renewal.renewalDate) : undefined,
+                        paymentDate: renewal.paymentDate ? new Date(renewal.paymentDate) : undefined,
+                        validTill: renewal.validTill ? new Date(renewal.validTill) : undefined,
+                    }));
+
                     return {
                         ...rig,
                         cancellationDate: validCancellationDate && isValid(validCancellationDate) ? validCancellationDate : null,
+                        registrationDate: validRegistrationDate && isValid(validRegistrationDate) ? validRegistrationDate : null,
+                        paymentDate: validPaymentDate && isValid(validPaymentDate) ? validPaymentDate : null,
+                        renewals: validRenewals,
                     };
                 });
                 form.reset(processedApp);
