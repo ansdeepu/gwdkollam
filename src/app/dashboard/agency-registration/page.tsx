@@ -128,7 +128,7 @@ const RigAccordionItem = ({
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-            {field.status === 'Active' && isExpired && (
+            {field.status === 'Active' && (
                 <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {field.status === 'Active' && (
@@ -544,10 +544,11 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleCancelRig = (rigIndex: number) => {
+      const rig = form.getValues(`rigs.${rigIndex}`);
       setCancellationData({
         rigIndex,
-        reason: '',
-        date: new Date(),
+        reason: rig.cancellationReason || '',
+        date: rig.cancellationDate ? new Date(rig.cancellationDate) : new Date(),
       });
       setIsCancelDialogOpen(true);
   };
@@ -701,34 +702,6 @@ export default function AgencyRegistrationPage() {
                           </AccordionItem>
                         </Accordion>
 
-                        {/* Section 4: History Log */}
-                        <Accordion type="single" collapsible>
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger>4. History Log</AccordionTrigger>
-                                <AccordionContent className="pt-4 space-y-4">
-                                    {rigFields.length > 0 ? rigFields.map((rig, rigIndex) => (
-                                        <div key={rig.id} className="p-4 border rounded-lg bg-muted/30">
-                                            <h4 className="font-semibold text-primary mb-2">History for Rig #{rigIndex + 1} ({rig.rigRegistrationNo || 'N/A'})</h4>
-                                            {(rig.history && rig.history.length > 0) ? (
-                                                <ScrollArea className="h-48">
-                                                    <ul className="space-y-2 text-xs">
-                                                        {rig.history.slice().reverse().map((log, logIndex) => (
-                                                            <li key={logIndex} className="p-2 border-b last:border-b-0">
-                                                                {log}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </ScrollArea>
-                                            ) : (
-                                                <p className="text-sm text-muted-foreground text-center py-4">No history recorded for this rig.</p>
-                                            )}
-                                        </div>
-                                    )) : (
-                                        <p className="text-sm text-muted-foreground text-center py-4">Add a rig to view its history.</p>
-                                    )}
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
@@ -826,7 +799,7 @@ export default function AgencyRegistrationPage() {
                         <Label className="text-right">Date of Cancellation</Label>
                         <Popover>
                         <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>
-                            {cancellationData?.date ? format(cancellationData.date, 'dd/MM/yyyy') : 'Select'}
+                            {cancellationData?.date ? format(new Date(cancellationData.date), 'dd/MM/yyyy') : 'Select'}
                         </Button></PopoverTrigger>
                         <PopoverContent><Calendar mode="single" selected={cancellationData?.date} onSelect={(date) => setCancellationData(d => ({ ...d!, date: date }))} /></PopoverContent>
                         </Popover>
