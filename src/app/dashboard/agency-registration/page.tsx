@@ -127,8 +127,9 @@ const RigAccordionItem = ({
   const finalIsReadOnly = false;
   
   const cancellationDateValue = field.cancellationDate;
-  const formattedCancellationDate = cancellationDateValue && isValid(cancellationDateValue)
-    ? format(cancellationDateValue, 'dd/MM/yyyy')
+  // This is the corrected display logic for the cancellation date.
+  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
+    ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
     : 'N/A';
 
   return (
@@ -350,6 +351,7 @@ export default function AgencyRegistrationPage() {
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
 
+  // Robust useEffect to handle loading and parsing data from Firestore
   useEffect(() => {
     if (selectedApplicationId) {
         if (selectedApplicationId === 'new') {
@@ -363,19 +365,18 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                // When loading existing data, ensure dates from Firestore are correctly parsed into Date objects.
-                const processedApp = {
-                    ...app,
-                    rigs: app.rigs.map(rig => {
-                        const cancellationDate = rig.cancellationDate;
-                        // Firestore timestamps can be objects; strings from JSON. Ensure it becomes a valid Date.
-                        const validCancellationDate = cancellationDate ? new Date(cancellationDate) : null;
-                        return {
-                          ...rig,
-                          cancellationDate: validCancellationDate && isValid(validCancellationDate) ? validCancellationDate : null,
-                        };
-                    }),
-                };
+                // Deep copy and process the application data to ensure correct types.
+                const processedApp = JSON.parse(JSON.stringify(app));
+
+                processedApp.rigs = (processedApp.rigs || []).map((rig: any) => {
+                    const cancellationDate = rig.cancellationDate;
+                    // Ensure cancellationDate is a valid Date object or null.
+                    const validCancellationDate = cancellationDate ? new Date(cancellationDate) : null;
+                    return {
+                        ...rig,
+                        cancellationDate: validCancellationDate && isValid(validCancellationDate) ? validCancellationDate : null,
+                    };
+                });
                 form.reset(processedApp);
             } else {
                 setSelectedApplicationId(null);
@@ -908,5 +909,3 @@ export default function AgencyRegistrationPage() {
     </>
   );
 }
-
-    
