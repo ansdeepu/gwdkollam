@@ -320,8 +320,7 @@ export default function AgencyRegistrationPage() {
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  // State specifically for the cancellation dialog's temporary values
-  const [cancellationDialogData, setCancellationDialogData] = useState<{ rigIndex: number | null; reason: string; date?: Date | null; } | null>(null);
+  const [currentRigIndexForCancel, setCurrentRigIndexForCancel] = useState<number | null>(null);
   
   const isEditor = user?.role === 'editor';
 
@@ -331,6 +330,8 @@ export default function AgencyRegistrationPage() {
       status: 'Active',
       renewals: [],
       history: [],
+      cancellationDate: null,
+      cancellationReason: undefined,
   });
 
   const form = useForm<AgencyApplication>({
@@ -577,17 +578,14 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleConfirmCancellation = () => {
-    if (cancellationDialogData?.rigIndex !== null && cancellationDialogData?.rigIndex !== undefined) {
-        const { rigIndex, reason, date } = cancellationDialogData;
-        const rigToUpdate = rigFields[rigIndex];
-        updateRig(rigIndex, {
+    if (currentRigIndexForCancel !== null) {
+        const rigToUpdate = form.getValues(`rigs.${currentRigIndexForCancel}`);
+        updateRig(currentRigIndexForCancel, {
             ...rigToUpdate,
             status: 'Cancelled',
-            cancellationDate: date,
-            cancellationReason: reason,
         });
         setIsCancelDialogOpen(false);
-        setCancellationDialogData(null);
+        setCurrentRigIndexForCancel(null);
         toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
     }
   };
@@ -597,22 +595,14 @@ export default function AgencyRegistrationPage() {
     updateRig(rigIndex, {
         ...rigToUpdate,
         status: 'Active',
-        cancellationDate: undefined,
-        cancellationReason: undefined,
+        cancellationDate: null,
+        cancellationReason: '',
     });
     toast({ title: "Rig Activated", description: "The rig registration has been reactivated." });
   };
   
   const handleEditCancellation = (rigIndex: number) => {
-    const rig = form.getValues(`rigs.${rigIndex}`);
-    const dateValue = rig.cancellationDate;
-    const initialDate = dateValue && isValid(new Date(dateValue)) ? new Date(dateValue) : new Date();
-    
-    setCancellationDialogData({
-      rigIndex,
-      reason: rig.cancellationReason || '',
-      date: initialDate,
-    });
+    setCurrentRigIndexForCancel(rigIndex);
     setIsCancelDialogOpen(true);
   };
 
@@ -810,27 +800,44 @@ export default function AgencyRegistrationPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <Dialog open={isCancelDialogOpen} onOpenChange={(open) => { if (!open) setCancellationDialogData(null); setIsCancelDialogOpen(open); }}>
+            <Dialog open={isCancelDialogOpen} onOpenChange={(open) => { if (!open) setCurrentRigIndexForCancel(null); setIsCancelDialogOpen(open); }}>
                 <DialogContent>
                     <DialogHeader>
                     <DialogTitle>Cancel Rig Registration</DialogTitle>
                     <DialogDescription>Provide details for the cancellation.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">Date of Cancellation</Label>
-                        <Popover>
-                        <PopoverTrigger asChild><Button variant="outline" className="col-span-3"><CalendarIcon className="mr-2 h-4 w-4"/>
-                            {cancellationDialogData?.date ? format(cancellationDialogData.date, 'dd/MM/yyyy') : 'Select'}
-                        </Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" selected={cancellationDialogData?.date || undefined} onSelect={(date) => setCancellationDialogData(d => ({ ...d!, date: date }))} /></PopoverContent>
-                        </Popover>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="cancellationReason" className="text-right">Reason</Label>
-                        <Textarea id="cancellationReason" value={cancellationDialogData?.reason || ''} onChange={(e) => setCancellationDialogData(d => ({ ...d!, reason: e.target.value }))} className="col-span-3" />
-                    </div>
-                    </div>
+                     {currentRigIndexForCancel !== null && (
+                        <div className="grid gap-4 py-4">
+                           <Controller
+                            control={form.control}
+                            name={`rigs.${currentRigIndexForCancel}.cancellationDate`}
+                            render={({ field }) => (
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label className="text-right">Date of Cancellation</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="outline" className="col-span-3">
+                                                <CalendarIcon className="mr-2 h-4 w-4"/>
+                                                {field.value && isValid(new Date(field.value)) ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent>
+                                    </Popover>
+                                </div>
+                             )}
+                            />
+                             <Controller
+                                control={form.control}
+                                name={`rigs.${currentRigIndexForCancel}.cancellationReason`}
+                                render={({ field }) => (
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor={`cancellationReason-${currentRigIndexForCancel}`} className="text-right">Reason</Label>
+                                        <Textarea id={`cancellationReason-${currentRigIndexForCancel}`} {...field} className="col-span-3" />
+                                    </div>
+                                )}
+                            />
+                        </div>
+                    )}
                     <DialogFooter>
                     <Button type="button" onClick={handleConfirmCancellation} variant="destructive">Confirm Cancellation</Button>
                     </DialogFooter>
