@@ -365,28 +365,35 @@ export default function AgencyRegistrationPage() {
                 // We need to process the object manually to keep Date objects intact.
                 const processedApp = { ...app };
 
+                const toDateOrNull = (value: any): Date | null => {
+                    if (!value) return null;
+                    // Firestore Timestamps have a toDate() method.
+                    if (typeof value.toDate === 'function') {
+                        return value.toDate();
+                    }
+                    // Handle ISO strings or other date string formats
+                    const parsed = new Date(value);
+                    return isValid(parsed) ? parsed : null;
+                };
+
                 // Correctly parse date strings back into Date objects for the main application
-                if (processedApp.agencyRegistrationDate) processedApp.agencyRegistrationDate = new Date(processedApp.agencyRegistrationDate);
-                if (processedApp.agencyPaymentDate) processedApp.agencyPaymentDate = new Date(processedApp.agencyPaymentDate);
+                if (processedApp.agencyRegistrationDate) processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate) ?? undefined;
+                if (processedApp.agencyPaymentDate) processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate) ?? undefined;
 
                 // Correctly parse dates within the rigs array
                 processedApp.rigs = (processedApp.rigs || []).map((rig: any) => {
-                    const validCancellationDate = rig.cancellationDate ? new Date(rig.cancellationDate) : null;
-                    const validRegistrationDate = rig.registrationDate ? new Date(rig.registrationDate) : null;
-                    const validPaymentDate = rig.paymentDate ? new Date(rig.paymentDate) : null;
-                    
                     const validRenewals = (rig.renewals || []).map((renewal: any) => ({
                         ...renewal,
-                        renewalDate: renewal.renewalDate ? new Date(renewal.renewalDate) : undefined,
-                        paymentDate: renewal.paymentDate ? new Date(renewal.paymentDate) : undefined,
-                        validTill: renewal.validTill ? new Date(renewal.validTill) : undefined,
+                        renewalDate: toDateOrNull(renewal.renewalDate) ?? undefined,
+                        paymentDate: toDateOrNull(renewal.paymentDate) ?? undefined,
+                        validTill: toDateOrNull(renewal.validTill) ?? undefined,
                     }));
 
                     return {
                         ...rig,
-                        cancellationDate: validCancellationDate && isValid(validCancellationDate) ? validCancellationDate : null,
-                        registrationDate: validRegistrationDate && isValid(validRegistrationDate) ? validRegistrationDate : null,
-                        paymentDate: validPaymentDate && isValid(validPaymentDate) ? validPaymentDate : null,
+                        cancellationDate: toDateOrNull(rig.cancellationDate),
+                        registrationDate: toDateOrNull(rig.registrationDate),
+                        paymentDate: toDateOrNull(rig.paymentDate),
                         renewals: validRenewals,
                     };
                 });
