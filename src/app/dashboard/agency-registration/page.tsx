@@ -194,10 +194,10 @@ const RigAccordionItem = ({
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                     <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onEditCancellation(index); }}>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditCancellation(index); }}>
                             <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onActivate(index); }}>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
@@ -228,8 +228,8 @@ const RigAccordionItem = ({
                             <TableCell>{renewal.paymentDate && isValid(new Date(renewal.paymentDate)) ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                             <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
                             <TableCell className="text-center">
-                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
-                                <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
+                                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
                             </TableCell>
                             </TableRow>
                         ))}
@@ -811,7 +811,7 @@ export default function AgencyRegistrationPage() {
                     </div>
                     </div>
                     <DialogFooter>
-                    <Button onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
+                    <Button type="button" onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -837,7 +837,7 @@ export default function AgencyRegistrationPage() {
                     </div>
                     </div>
                     <DialogFooter>
-                    <Button onClick={handleConfirmCancellation} variant="destructive">Confirm Cancellation</Button>
+                    <Button type="button" onClick={handleConfirmCancellation} variant="destructive">Confirm Cancellation</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
