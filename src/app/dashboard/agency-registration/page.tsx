@@ -136,10 +136,10 @@ const RigAccordionItem = ({
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
             {field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {field.status === 'Cancelled' && (
                 <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
@@ -345,23 +345,31 @@ export default function AgencyRegistrationPage() {
 
   useEffect(() => {
     if (selectedApplicationId) {
-      if (selectedApplicationId === 'new') {
-        form.reset({
-          owner: createDefaultOwner(),
-          partners: [],
-          rigs: [createDefaultRig()],
-          status: 'Pending Verification',
-          history: []
-        });
-      } else {
-        const app = applications.find(a => a.id === selectedApplicationId);
-        if (app) {
-          form.reset(app);
+        if (selectedApplicationId === 'new') {
+            form.reset({
+                owner: createDefaultOwner(),
+                partners: [],
+                rigs: [createDefaultRig()],
+                status: 'Pending Verification',
+                history: []
+            });
         } else {
-          setSelectedApplicationId(null);
-          form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+            const app = applications.find(a => a.id === selectedApplicationId);
+            if (app) {
+                // Ensure dates from Firestore are correctly parsed into Date objects for the form
+                const processedApp = {
+                    ...app,
+                    rigs: app.rigs.map(rig => ({
+                        ...rig,
+                        cancellationDate: rig.cancellationDate ? new Date(rig.cancellationDate) : undefined,
+                    })),
+                };
+                form.reset(processedApp);
+            } else {
+                setSelectedApplicationId(null);
+                form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+            }
         }
-      }
     } else {
         form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
     }
@@ -559,10 +567,12 @@ export default function AgencyRegistrationPage() {
 
   const handleCancelRig = (rigIndex: number) => {
       const rig = form.getValues(`rigs.${rigIndex}`);
+      const cancellationDateRaw = rig.cancellationDate;
+      const parsedDate = cancellationDateRaw && isValid(new Date(cancellationDateRaw)) ? new Date(cancellationDateRaw) : new Date();
       setCancellationData({
         rigIndex,
         reason: rig.cancellationReason || '',
-        date: rig.cancellationDate ? new Date(rig.cancellationDate) : new Date(),
+        date: parsedDate,
       });
       setIsCancelDialogOpen(true);
   };
