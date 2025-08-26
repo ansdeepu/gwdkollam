@@ -315,7 +315,10 @@ export default function AgencyRegistrationPage() {
   const [editingRenewal, setEditingRenewal] = useState<{ rigIndex: number; renewal: RigRenewal } | null>(null);
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
-  
+
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | null }>({ rigIndex: -1, reason: '', date: new Date() });
+
   const isEditor = user?.role === 'editor';
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
@@ -588,14 +591,23 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleCancelRig = (rigIndex: number) => {
+      setCancellationData({ rigIndex, reason: '', date: new Date() });
+      setIsCancelDialogOpen(true);
+  };
+
+  const handleConfirmCancellation = () => {
+    if (cancellationData.rigIndex === -1) return;
+    const { rigIndex, reason, date } = cancellationData;
     const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
     updateRig(rigIndex, {
         ...rigToUpdate,
         status: 'Cancelled',
-        cancellationDate: new Date(),
-        cancellationReason: 'Cancelled via button',
+        cancellationDate: date,
+        cancellationReason: reason,
     });
     toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
+    setIsCancelDialogOpen(false);
+    setCancellationData({ rigIndex: -1, reason: '', date: null });
   };
   
   const handleActivateRig = (rigIndex: number) => {
@@ -800,6 +812,50 @@ export default function AgencyRegistrationPage() {
                     </div>
                     <DialogFooter>
                     <Button type="button" onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Cancel Rig Registration</DialogTitle>
+                        <DialogDescription>
+                            Provide a reason and date for cancelling this rig. This action can be reversed later.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="cancellationReason" className="text-right">Reason</Label>
+                            <Textarea
+                                id="cancellationReason"
+                                value={cancellationData.reason}
+                                onChange={(e) => setCancellationData(d => ({ ...d!, reason: e.target.value }))}
+                                className="col-span-3"
+                                placeholder="Enter reason for cancellation"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Date of Cancellation</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="col-span-3">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {cancellationData.date ? format(cancellationData.date, 'dd/MM/yyyy') : 'Select Date'}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent>
+                                    <Calendar
+                                        mode="single"
+                                        selected={cancellationData.date ?? undefined}
+                                        onSelect={(date) => setCancellationData(d => ({ ...d!, date: date || null }))}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsCancelDialogOpen(false)}>Cancel</Button>
+                        <Button type="button" onClick={handleConfirmCancellation}>Confirm Cancellation</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
