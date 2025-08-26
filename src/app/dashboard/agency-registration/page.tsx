@@ -365,11 +365,15 @@ export default function AgencyRegistrationPage() {
                 // When loading existing data, ensure dates from Firestore are correctly parsed into Date objects.
                 const processedApp = {
                     ...app,
-                    rigs: app.rigs.map(rig => ({
-                        ...rig,
-                        // Ensure `cancellationDate` is a Date object or null.
-                        cancellationDate: rig.cancellationDate ? new Date(rig.cancellationDate) : null,
-                    })),
+                    rigs: app.rigs.map(rig => {
+                        const cancellationDate = rig.cancellationDate;
+                        // Firestore timestamps can be objects; strings from JSON. Ensure it becomes a valid Date.
+                        const validCancellationDate = cancellationDate ? new Date(cancellationDate) : null;
+                        return {
+                          ...rig,
+                          cancellationDate: validCancellationDate && isValid(validCancellationDate) ? validCancellationDate : null,
+                        };
+                    }),
                 };
                 form.reset(processedApp);
             } else {
