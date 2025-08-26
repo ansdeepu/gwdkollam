@@ -275,20 +275,13 @@ export default function ProgressReportPage() {
       if (entry.applicationType && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
         const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
         const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
-        const remittanceInRange = entry.remittanceDetails?.reduce((sum, rd) => {
-          const remDate = safeParseDate(rd.dateOfRemittance);
-          if (remDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
-              return sum + (Number(rd.amountRemitted) || 0);
-          }
-          return sum;
-        }, 0) || 0;
         
         sitesInEntry.forEach(site => {
             const purpose = site.purpose as SitePurpose;
             if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
                 targetFinancialSummary[purpose].totalApplications++;
                 targetFinancialSummary[purpose].applicationData.push(site);
-                targetFinancialSummary[purpose].totalRemittance += remittanceInRange / (sitesInEntry.length || 1);
+                targetFinancialSummary[purpose].totalRemittance += (Number(site.remittedAmount) || 0);
             }
         });
       }
