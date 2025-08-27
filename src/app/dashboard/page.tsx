@@ -503,7 +503,7 @@ export default function DashboardPage() {
   
     let arsSites = allFileEntries.flatMap(entry =>
         (entry.siteDetails ?? [])
-          .filter(site => site.purpose === 'ARS')
+          .filter(site => site.isArsImport === true)
           .map((site, index) => ({
             ...site,
             id: `${entry.fileNo}-${site.nameOfSite}-${site.purpose}-${index}`,
@@ -548,7 +548,8 @@ export default function DashboardPage() {
     return {
       totalArsSites: arsSites.length,
       totalArsExpenditure: totalExpenditure,
-      arsStatusCountsData
+      arsStatusCountsData,
+      allArsSites: arsSites,
     };
   }, [allFileEntries, allEntriesLoading, arsStartDate, arsEndDate]);
 
@@ -1289,14 +1290,20 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-end pb-4 mb-4 border-b">
                   <div className="text-right">
                       <p className="text-sm text-muted-foreground">Total ARS Sites</p>
-                      <p className="text-3xl font-bold text-primary">{arsDashboardData?.totalArsSites ?? 0}</p>
+                      <button 
+                        className="text-3xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={(arsDashboardData?.totalArsSites ?? 0) === 0}
+                        onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites')}
+                      >
+                        {arsDashboardData?.totalArsSites ?? 0}
+                      </button>
                   </div>
                   <div className="text-right">
                       <p className="text-sm text-muted-foreground">Total Expenditure</p>
                         <button 
                           className="text-3xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={(arsDashboardData?.totalArsExpenditure ?? 0) === 0}
-                          onClick={() => handleWorkStatusCellClick(arsDashboardData?.arsStatusCountsData.flatMap(item => item.data) ?? [], 'All ARS Sites (Expenditure)')}
+                          onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites (Expenditure)')}
                         >
                         ₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}
                       </button>
@@ -1810,4 +1817,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
