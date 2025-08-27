@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Edit3, Trash2, Loader2, Clock } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
@@ -353,7 +353,7 @@ export default function FileDatabaseTable({
                       : "N/A"}
                   </TableCell>
                   <TableCell>
-                    {entry.remittanceDetails?.[0]?.dateOfRemittance 
+                    {entry.remittanceDetails?.[0]?.dateOfRemittance && isValid(new Date(entry.remittanceDetails?.[0]?.dateOfRemittance))
                       ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") 
                       : "N/A"}
                   </TableCell>
@@ -624,3 +624,5 @@ export default function FileDatabaseTable({
     </TooltipProvider>
   );
 }
+
+    

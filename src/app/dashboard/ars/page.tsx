@@ -186,7 +186,7 @@ export default function ArsPage() {
   }, [filteredSites, toast]);
 
   const handleDownloadTemplate = () => {
-    const templateData = [ { "File No": "Example/123", "Applicant Name": "Panchayath Office", "Constituency": "Kollam", "Name of Site": "Sample ARS Site", "Type of Scheme": "Check Dam", "Panchayath": "Sample Panchayath", "Block": "Sample Block", "Latitude": 8.8932, "Longitude": 76.6141, "Number of Structures": 1, "Storage Capacity (m3)": 500, "No. of Fillings": 2, "Estimate Amount": 500000, "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD", "AS/TS Amount": 450000, "Sanctioned Date": "15/01/2023", "Tendered Amount": 445000, "Awarded Amount": 440000, "Present Status": "Work in Progress", "Completion Date": "", "Expenditure": 200000, "No. of Beneficiaries": "50 families", "Remarks": "Work ongoing", } ];
+    const templateData = [ { "File No": "Example/123", "Applicant Name": "Panchayath Office", "Constituency": "Kollam", "Name of Site": "Sample ARS Site", "Type of Scheme": "Check Dam", "Panchayath": "Sample Panchayath", "Block": "Sample Block", "Latitude": 8.8932, "Longitude": 76.6141, "Number of Structures": 1, "Storage Capacity (m3)": 500, "No. of Fillings": 2, "Estimate Amount": 500000, "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD", "AS/TS Amount": 450000, "Sanctioned Date": "15/01/2023", "Tendered Amount": 445000, "Awarded Amount": 440000, "Present Status": "Work in Progress", "Completion Date": "", "Total Expenditure": 200000, "No. of Beneficiaries": "50 families", "Remarks": "Work ongoing", } ];
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "ARS_Template");
@@ -210,14 +210,30 @@ export default function ArsPage() {
 
         if (jsonData.length === 0) throw new Error("The selected Excel file is empty.");
 
-        let successCount = 0; let errorCount = 0;
-        for (const row of jsonData) {
-          const rowData: any = row;
-          const fileNo = String(rowData['File No'] || '').trim();
-          if (!fileNo) { errorCount++; console.warn("Skipping a row due to missing File No."); continue; }
-          let existingFile = getFileEntry(fileNo);
-          const parseDate = (dateValue: any) => { if (!dateValue) return undefined; if (dateValue instanceof Date) return dateValue; let d = parse(String(dateValue), 'dd/MM/yyyy', new Date()); return isValid(d) ? d : undefined; };
-          const newSiteDetail: SiteDetailFormData = {
+        // Group rows by File No to process them in batches
+        const groupedByFileNo: Record<string, any[]> = {};
+        jsonData.forEach((row: any) => {
+          const fileNo = String(row['File No'] || '').trim();
+          if (fileNo) {
+            if (!groupedByFileNo[fileNo]) {
+              groupedByFileNo[fileNo] = [];
+            }
+            groupedByFileNo[fileNo].push(row);
+          }
+        });
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const fileNo in groupedByFileNo) {
+          const rowsForFile = groupedByFileNo[fileNo];
+          const firstRow = rowsForFile[0];
+
+          try {
+            let existingFile = getFileEntry(fileNo);
+            const parseDate = (dateValue: any) => { if (!dateValue) return undefined; if (dateValue instanceof Date) return dateValue; let d = parse(String(dateValue), 'dd/MM/yyyy', new Date()); return isValid(d) ? d : undefined; };
+
+            const newSiteDetails: SiteDetailFormData[] = rowsForFile.map(rowData => ({
               nameOfSite: String(rowData['Name of Site'] || `Imported Site ${Date.now()}`),
               purpose: 'ARS',
               isArsImport: true,
@@ -227,7 +243,7 @@ export default function ArsPage() {
               tsAmount:  Number(rowData['AS/TS Amount']) || undefined,
               workStatus: (rowData['Present Status'] as any) || undefined,
               dateOfCompletion: parseDate(rowData['Completion Date']),
-              totalExpenditure: Number(rowData['Expenditure']) || undefined,
+              totalExpenditure: Number(rowData['Total Expenditure']) || undefined,
               noOfBeneficiary: String(rowData['No. of Beneficiaries'] || ''),
               workRemarks: String(rowData['Remarks'] || ''),
               arsTypeOfScheme: String(rowData['Type of Scheme'] || ''),
@@ -240,15 +256,37 @@ export default function ArsPage() {
               arsSanctionedDate: parseDate(rowData['Sanctioned Date']),
               arsTenderedAmount: Number(rowData['Tendered Amount']) || undefined,
               arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
-          };
-          let updatedFile: DataEntryFormData;
-          if (existingFile) { updatedFile = { ...existingFile, constituency: (rowData['Constituency'] as Constituency) || existingFile.constituency, siteDetails: [...(existingFile.siteDetails || []), newSiteDetail] };
-          } else { updatedFile = { fileNo: fileNo, applicantName: String(rowData['Applicant Name'] || `Applicant for ${newSiteDetail.nameOfSite}`), constituency: (rowData['Constituency'] as Constituency), applicationType: 'Government_Others', fileStatus: 'File Under Process', siteDetails: [newSiteDetail] }; }
-          try { await addFileEntry(updatedFile, existingFile?.fileNo); successCount++;
-          } catch(e) { errorCount++; console.error(`Failed to add site from row for File No ${fileNo}:`, e); }
+            }));
+
+            let updatedFile: DataEntryFormData;
+            if (existingFile) {
+              const existingSiteNames = new Set(existingFile.siteDetails?.map(s => s.nameOfSite));
+              const uniqueNewSites = newSiteDetails.filter(s => !existingSiteNames.has(s.nameOfSite));
+              updatedFile = { 
+                ...existingFile, 
+                constituency: (firstRow['Constituency'] as Constituency) || existingFile.constituency, 
+                siteDetails: [...(existingFile.siteDetails || []), ...uniqueNewSites] 
+              };
+            } else {
+              updatedFile = { 
+                fileNo: fileNo, 
+                applicantName: String(firstRow['Applicant Name'] || `Applicant for ${newSiteDetails[0].nameOfSite}`), 
+                constituency: (firstRow['Constituency'] as Constituency), 
+                applicationType: 'Government_Others', 
+                fileStatus: 'File Under Process', 
+                siteDetails: newSiteDetails 
+              };
+            }
+            await addFileEntry(updatedFile, existingFile?.fileNo);
+            successCount += rowsForFile.length;
+          } catch(e) {
+            errorCount += rowsForFile.length;
+            console.error(`Failed to process file ${fileNo}:`, e);
+          }
         }
+        
         toast({ title: "Import Complete", description: `${successCount} sites imported. ${errorCount} rows failed.` });
-        refreshArsEntries(); // Refresh the data
+        refreshArsEntries();
       } catch (error: any) {
         toast({ title: "Import Failed", description: error.message, variant: "destructive" });
       } finally {
@@ -362,7 +400,7 @@ export default function ArsPage() {
           <DialogHeader><DialogTitle>ARS Site Details</DialogTitle><DialogDescription>Viewing details for {viewingSite?.nameOfSite}.</DialogDescription></DialogHeader>
           <div className="space-y-2 py-4 text-sm">
             {viewingSite && Object.entries(viewingSite).map(([key, value]) => {
-                if (['id'].includes(key) || value === null || value === undefined || value === '') return null;
+                if (['id', 'isArsImport'].includes(key) || value === null || value === undefined || value === '') return null;
                 const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                 return ( <div key={key} className="flex justify-between border-b pb-1"> <strong>{label}:</strong> <span>{value instanceof Date ? formatDateSafe(value) : String(value)}</span> </div> );
             })}
@@ -402,3 +440,5 @@ export default function ArsPage() {
     </div>
   );
 }
+
+    
