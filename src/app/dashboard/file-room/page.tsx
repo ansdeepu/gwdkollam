@@ -46,13 +46,19 @@ export default function FileManagerPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        {user?.role === 'editor' && (
-          <Link href="/dashboard/data-entry" passHref>
-            <Button className="w-full sm:w-auto">
-              <FilePlus2 className="mr-2 h-5 w-5" /> New File Data Entry
-            </Button>
-          </Link>
-        )}
+        <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="text-center sm:text-right">
+                <p className="text-sm font-medium text-muted-foreground">Total Files</p>
+                <p className="text-2xl font-bold text-primary">{filteredFileEntriesForManager.length}</p>
+            </div>
+            {user?.role === 'editor' && (
+            <Link href="/dashboard/data-entry" passHref>
+                <Button className="w-full sm:w-auto">
+                <FilePlus2 className="mr-2 h-5 w-5" /> New File Data Entry
+                </Button>
+            </Link>
+            )}
+        </div>
       </div>
 
       <Card className="shadow-lg">
