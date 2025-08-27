@@ -25,6 +25,7 @@ export default function FileManagerPage() {
         if (!entry.siteDetails || entry.siteDetails.length === 0) {
           return true; // Keep files with no sites
         }
+        // Return true if at least one site is NOT for ARS purpose
         return entry.siteDetails.some(site => site.purpose !== 'ARS');
       });
     }
@@ -46,7 +47,7 @@ export default function FileManagerPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-4 w-full sm:w-auto">
+        <div className="flex items-center gap-4 w-full sm:w-auto shrink-0">
             <div className="text-center sm:text-right">
                 <p className="text-sm font-medium text-muted-foreground">Total Files</p>
                 <p className="text-2xl font-bold text-primary">{filteredFileEntriesForManager.length}</p>
