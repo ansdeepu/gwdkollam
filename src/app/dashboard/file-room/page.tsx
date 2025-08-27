@@ -22,12 +22,14 @@ export default function FileManagerPage() {
     // For editors and viewers, filter out files that ONLY contain ARS sites.
     if (user?.role === 'editor' || user?.role === 'viewer') {
       return fileEntries.filter(entry => {
+        // If a file has no sites, it's not an ARS-specific file, so we should keep it.
         if (!entry.siteDetails || entry.siteDetails.length === 0) {
-          return true; // Keep files with no sites, as they aren't ARS-specific
+          return true; 
         }
-        // Return true only if there is at least one site that is NOT an ARS site.
-        // This will correctly exclude files where all sites are for ARS purpose.
-        return entry.siteDetails.some(site => site.purpose !== 'ARS');
+        // If a file has sites, we check if EVERY site has the purpose 'ARS'.
+        // The `every()` method returns true if all elements in an array pass a test.
+        // We want to KEEP files where this is FALSE (i.e., at least one site is NOT ARS).
+        return !entry.siteDetails.every(site => site.purpose === 'ARS');
       });
     }
     // For supervisors, the useFileEntries hook already provides the correct, pre-filtered list.
