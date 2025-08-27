@@ -1,3 +1,4 @@
+
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
@@ -26,13 +27,13 @@ export default function FileManagerPage() {
         if (!entry.siteDetails || entry.siteDetails.length === 0) {
           return true; 
         }
-        // If a file has sites, we check if EVERY site has the purpose 'ARS'.
         // The `every()` method returns true if all elements in an array pass a test.
         // We want to KEEP files where this is FALSE (i.e., at least one site is NOT ARS).
-        return !entry.siteDetails.every(site => site.purpose === 'ARS');
+        const isExclusivelyArs = entry.siteDetails.every(site => site.purpose === 'ARS');
+        return !isExclusivelyArs;
       });
     }
-    // For supervisors, the useFileEntries hook already provides the correct, pre-filtered list.
+    // For supervisors, the useFileEntries hook already provides the correct, pre-filtered list of active, non-ARS works.
     return fileEntries;
   }, [fileEntries, user?.role]);
 
