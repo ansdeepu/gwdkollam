@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -144,6 +145,7 @@ interface FileEntriesState {
   isLoading: boolean;
   addFileEntry: (entry: DataEntryFormData, originalFileNoWhileEditing?: string) => Promise<void>;
   deleteFileEntry: (fileNo: string) => Promise<void>;
+  batchDeleteFileEntries: (fileNos: string[]) => Promise<{ successCount: number; failureCount: number; }>;
   getFileEntry: (fileNo: string) => DataEntryFormData | undefined;
   fetchEntryForEditing: (fileNo: string) => Promise<DataEntryFormData | undefined>;
   clearAllArsData: () => Promise<void>;
@@ -366,6 +368,34 @@ export function useFileEntries(): FileEntriesState {
     await deleteDoc(doc(db, FILE_ENTRIES_COLLECTION, docToDelete.id));
     await fetchData();
   }, [user, fetchData]);
+  
+  const batchDeleteFileEntries = useCallback(async (fileNos: string[]): Promise<{ successCount: number; failureCount: number; }> => {
+    if (!user || user.role !== 'editor') throw new Error("User does not have permission to delete file entries.");
+    
+    let successCount = 0;
+    let failureCount = 0;
+    
+    for (const fileNo of fileNos) {
+      try {
+        const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const docToDelete = querySnapshot.docs[0];
+          await deleteDoc(doc(db, FILE_ENTRIES_COLLECTION, docToDelete.id));
+          successCount++;
+        } else {
+          failureCount++;
+        }
+      } catch(e) {
+        console.error(`Failed to delete file ${fileNo}:`, e);
+        failureCount++;
+      }
+    }
+    
+    await fetchData(); // Refresh list after deletion
+    return { successCount, failureCount };
+  }, [user, fetchData]);
+
 
   const clearAllArsData = useCallback(async () => {
     if (!user || user.role !== 'editor') {
@@ -401,5 +431,5 @@ export function useFileEntries(): FileEntriesState {
     return fileEntries.find(e => e.fileNo === fileNo);
   }, [fileEntries]);
 
-  return { fileEntries, isLoading, addFileEntry, deleteFileEntry, getFileEntry, fetchEntryForEditing, clearAllArsData, refreshFileEntries: fetchData };
+  return { fileEntries, isLoading, addFileEntry, deleteFileEntry, batchDeleteFileEntries, getFileEntry, fetchEntryForEditing, clearAllArsData, refreshFileEntries: fetchData };
 }

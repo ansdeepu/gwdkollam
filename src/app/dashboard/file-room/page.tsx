@@ -5,7 +5,7 @@
 import { useState, useMemo } from 'react';
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, FilePlus2 } from "lucide-react";
+import { Search, FilePlus2, Trash2, Loader2 } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,29 +13,57 @@ import type { SiteWorkStatus } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+
 
 export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { fileEntries } = useFileEntries(); 
+  const { fileEntries, batchDeleteFileEntries } = useFileEntries(); 
   const { user } = useAuth();
+  const { toast } = useToast();
   
+  const [selectedFileNos, setSelectedFileNos] = useState<string[]>([]);
+  const [isBatchDeleting, setIsBatchDeleting] = useState(false);
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+
   const filteredFileEntriesForManager = useMemo(() => {
-    // For editors and viewers, filter out files that ONLY contain ARS sites.
-    if (user?.role === 'editor' || user?.role === 'viewer') {
-      return fileEntries.filter(entry => {
-        // If a file has no sites, it's not an ARS-specific file, so we should keep it.
-        if (!entry.siteDetails || entry.siteDetails.length === 0) {
-          return true; 
-        }
-        // The `every()` method returns true if all elements in an array pass a test.
-        // We want to KEEP files where this is FALSE (i.e., at least one site is NOT ARS).
-        const isExclusivelyArs = entry.siteDetails.every(site => site.purpose === 'ARS');
-        return !isExclusivelyArs;
-      });
+    if (user?.role === 'supervisor') {
+      return fileEntries;
     }
-    // For supervisors, the useFileEntries hook already provides the correct, pre-filtered list of active, non-ARS works.
-    return fileEntries;
+    
+    // For editors and viewers, filter out files that ONLY contain ARS sites.
+    return fileEntries.filter(entry => {
+      // Keep files with no sites.
+      if (!entry.siteDetails || entry.siteDetails.length === 0) {
+        return true;
+      }
+      // Keep files where at least one site is NOT for ARS purpose.
+      return entry.siteDetails.some(site => site.purpose !== 'ARS');
+    });
   }, [fileEntries, user?.role]);
+  
+  const canDelete = user?.role === 'editor';
+
+  const confirmBatchDelete = async () => {
+    if (selectedFileNos.length === 0) return;
+    setIsBatchDeleting(true);
+    setShowBatchDeleteConfirm(true);
+    try {
+      const result = await batchDeleteFileEntries(selectedFileNos);
+      toast({
+        title: "Batch Deletion Complete",
+        description: `${result.successCount} file(s) removed successfully. ${result.failureCount > 0 ? `${result.failureCount} failed.` : ''}`,
+        variant: result.failureCount > 0 ? "destructive" : "default",
+      });
+    } catch (error: any) {
+      toast({ title: "Batch Deletion Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsBatchDeleting(false);
+      setShowBatchDeleteConfirm(false);
+      setSelectedFileNos([]);
+    }
+  };
 
 
   return (
@@ -65,15 +93,58 @@ export default function FileManagerPage() {
             )}
         </div>
       </div>
+      
+      {canDelete && selectedFileNos.length > 0 && (
+        <div className="mb-4 flex items-center justify-start space-x-3 p-3 bg-secondary/50 rounded-md border border-border">
+          <Button
+            variant="destructive"
+            onClick={() => setShowBatchDeleteConfirm(true)}
+            disabled={isBatchDeleting}
+            size="sm"
+          >
+            {isBatchDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+            Remove Selected ({selectedFileNos.length})
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            {selectedFileNos.length} file(s) selected for batch action.
+          </p>
+        </div>
+      )}
+
 
       <Card className="shadow-lg">
         <CardContent className="p-0">
           <FileDatabaseTable 
             searchTerm={searchTerm} 
             fileEntries={filteredFileEntriesForManager} 
+            selectedFileNos={selectedFileNos}
+            onSelectionChange={setSelectedFileNos}
           />
         </CardContent>
       </Card>
+      
+      <AlertDialog open={showBatchDeleteConfirm} onOpenChange={setShowBatchDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Batch Removal</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove the {selectedFileNos.length} selected file(s)? 
+                This action is permanent and cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowBatchDeleteConfirm(false)} disabled={isBatchDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmBatchDelete}
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                disabled={isBatchDeleting}
+              >
+                {isBatchDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : `Remove ${selectedFileNos.length} File(s)`}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -49,6 +50,7 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
@@ -83,9 +85,16 @@ function renderDetail(label: string, value: any) {
 interface FileDatabaseTableProps {
   searchTerm?: string;
   fileEntries: DataEntryFormData[];
+  selectedFileNos?: string[];
+  onSelectionChange?: (selectedIds: string[]) => void;
 }
 
-export default function FileDatabaseTable({ searchTerm = "", fileEntries }: FileDatabaseTableProps) {
+export default function FileDatabaseTable({ 
+  searchTerm = "", 
+  fileEntries,
+  selectedFileNos = [],
+  onSelectionChange 
+}: FileDatabaseTableProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { isLoading: entriesLoadingHook, deleteFileEntry } = useFileEntries(); 
@@ -175,6 +184,26 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+  
+  const handleSelectAllChange = (checked: boolean | "indeterminate") => {
+    if (checked === true) {
+      onSelectionChange?.(displayedEntries.map(entry => entry.fileNo).filter((no): no is string => !!no));
+    } else {
+      onSelectionChange?.([]);
+    }
+  };
+
+  const handleRowSelectionChange = (fileNo: string, checked: boolean) => {
+    if (checked) {
+      onSelectionChange?.([...selectedFileNos, fileNo]);
+    } else {
+      onSelectionChange?.(selectedFileNos.filter(no => no !== fileNo));
+    }
+  };
+  
+  const allOnPageSelected = paginatedEntries.length > 0 && paginatedEntries.every(entry => entry.fileNo && selectedFileNos.includes(entry.fileNo));
+  const isPageIndeterminate = paginatedEntries.some(entry => entry.fileNo && selectedFileNos.includes(entry.fileNo)) && !allOnPageSelected;
+
 
   const handleViewClick = (item: DataEntryFormData) => {
     setViewItem(item);
@@ -262,6 +291,21 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
           <Table>
             <TableHeader>
               <TableRow>
+                 {canDelete && (
+                  <TableHead className="w-[50px] px-3 py-2.5">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Checkbox
+                          checked={allOnPageSelected ? true : (isPageIndeterminate ? "indeterminate" : false)}
+                          onCheckedChange={handleSelectAllChange}
+                          aria-label="Select all files on this page"
+                          className="data-[state=checked]:bg-primary data-[state=indeterminate]:bg-primary/50"
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent><p>Select all items</p></TooltipContent>
+                    </Tooltip>
+                  </TableHead>
+                )}
                 <TableHead className="w-[80px]">Sl. No.</TableHead>
                 <TableHead className="w-[150px]">File No.</TableHead>
                 <TableHead>Institution / Applicant Name</TableHead>
@@ -278,7 +322,19 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                 const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
                 
                 return (
-                <TableRow key={entry.fileNo}>
+                <TableRow key={entry.fileNo} data-state={selectedFileNos.includes(entry.fileNo ?? '') ? "selected" : ""}>
+                   {canDelete && (
+                    <TableCell className="px-3 py-2">
+                       {entry.fileNo && (
+                        <Checkbox
+                          checked={selectedFileNos.includes(entry.fileNo)}
+                          onCheckedChange={(checked) => handleRowSelectionChange(entry.fileNo!, !!checked)}
+                          aria-label={`Select file ${entry.fileNo}`}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                       )}
+                    </TableCell>
+                  )}
                   <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                   <TableCell className="font-medium">{entry.fileNo}</TableCell>
                   <TableCell>{entry.applicantName}</TableCell>
