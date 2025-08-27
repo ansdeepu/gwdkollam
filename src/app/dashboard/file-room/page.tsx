@@ -23,9 +23,10 @@ export default function FileManagerPage() {
     if (user?.role === 'editor' || user?.role === 'viewer') {
       return fileEntries.filter(entry => {
         if (!entry.siteDetails || entry.siteDetails.length === 0) {
-          return true; // Keep files with no sites
+          return true; // Keep files with no sites, as they aren't ARS-specific
         }
-        // Return true if at least one site is NOT for ARS purpose
+        // Return true only if there is at least one site that is NOT an ARS site.
+        // This will correctly exclude files where all sites are for ARS purpose.
         return entry.siteDetails.some(site => site.purpose !== 'ARS');
       });
     }
