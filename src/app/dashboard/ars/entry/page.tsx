@@ -53,7 +53,7 @@ export default function ArsEntryPage() {
         if (isEditing && !entriesLoading) {
             const fileEntry = getFileEntry(fileNoToEdit);
             if (fileEntry) {
-                const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.purpose === 'ARS');
+                const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.isArsImport);
                 if (site) {
                     form.reset({
                         fileNo: fileNoToEdit,
@@ -80,7 +80,7 @@ export default function ArsEntryPage() {
                         workRemarks: site.workRemarks,
                     });
                 } else {
-                     toast({ title: "Error", description: `Site "${siteNameToEdit}" not found in file "${fileNoToEdit}".`, variant: "destructive" });
+                     toast({ title: "Error", description: `ARS Site "${siteNameToEdit}" not found in file "${fileNoToEdit}".`, variant: "destructive" });
                      router.push('/dashboard/ars');
                 }
             } else {
@@ -94,7 +94,7 @@ export default function ArsEntryPage() {
         setIsSubmitting(true);
         
         const siteData: SiteDetailFormData = {
-            nameOfSite: data.nameOfSite, purpose: 'ARS', latitude: data.latitude, longitude: data.longitude, 
+            nameOfSite: data.nameOfSite, purpose: 'ARS', isArsImport: true, latitude: data.latitude, longitude: data.longitude, 
             estimateAmount: data.estimateAmount, tsAmount: data.tsAmount, workStatus: data.workStatus, 
             dateOfCompletion: data.dateOfCompletion, totalExpenditure: data.totalExpenditure, 
             noOfBeneficiary: data.noOfBeneficiary, workRemarks: data.workRemarks, arsTypeOfScheme: data.arsTypeOfScheme, 
@@ -115,7 +115,7 @@ export default function ArsEntryPage() {
 
                 // If the site name was changed, check for uniqueness in the *same* file.
                 if (data.nameOfSite !== siteNameToEdit) {
-                    const isDuplicate = fileToUpdate.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.purpose === 'ARS');
+                    const isDuplicate = fileToUpdate.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.isArsImport);
                     if (isDuplicate) {
                         form.setError("nameOfSite", { type: "manual", message: `An ARS site named "${data.nameOfSite}" already exists in File No. ${data.fileNo}.` });
                         throw new Error("Duplicate site name.");
@@ -123,7 +123,7 @@ export default function ArsEntryPage() {
                 }
                 
                 const updatedSiteDetails = fileToUpdate.siteDetails?.map(site => 
-                  (site.nameOfSite === siteNameToEdit && site.purpose === 'ARS') ? siteData : site
+                  (site.nameOfSite === siteNameToEdit && site.isArsImport) ? siteData : site
                 ) ?? [];
 
                 const updatedFile: DataEntryFormData = { ...fileToUpdate, constituency: data.constituency, siteDetails: updatedSiteDetails };
@@ -135,7 +135,7 @@ export default function ArsEntryPage() {
 
                 if (existingFile) {
                     // Check for duplicate site name within the existing file
-                    const isDuplicate = existingFile.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.purpose === 'ARS');
+                    const isDuplicate = existingFile.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.isArsImport);
                     if (isDuplicate) {
                         form.setError("nameOfSite", { type: "manual", message: `An ARS site named "${data.nameOfSite}" already exists in this file.` });
                         throw new Error("Duplicate site name.");

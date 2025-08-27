@@ -1,3 +1,4 @@
+
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -85,16 +86,8 @@ export function useArsEntries(): ArsEntriesState {
 
     setIsLoading(true);
     try {
-      // Query to find documents where siteDetails array contains at least one object with purpose 'ARS'
-      const q = query(
-        collection(db, FILE_ENTRIES_COLLECTION), 
-        where("siteDetails", "array-contains-any", [
-            {purpose: "ARS"}, // This is a simplified query; Firestore doesn't support querying nested map fields directly.
-                               // We need to fetch all and filter client-side, or denormalize data.
-                               // For now, fetching all and filtering is the approach.
-        ])
-      );
-      
+      // Fetch all documents and filter client-side because Firestore doesn't
+      // support querying for a specific value in a map within an array.
       const allDocsQuery = query(collection(db, FILE_ENTRIES_COLLECTION));
       const querySnapshot = await getDocs(allDocsQuery);
       
@@ -102,7 +95,7 @@ export function useArsEntries(): ArsEntriesState {
 
       const allArsSites = entriesFromFirestore.flatMap(entry => 
         (entry.siteDetails || [])
-          .filter(site => site.purpose === 'ARS')
+          .filter(site => site.isArsImport === true) // Filter by the new isArsImport flag
           .map((site, index) => ({
             ...site,
             id: `${entry.fileNo}-${site.nameOfSite}-${site.purpose}-${index}`,

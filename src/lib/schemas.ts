@@ -165,7 +165,6 @@ export const sitePurposeOptions = [
   "MWSS Pump Reno",
   "HPS",
   "HPR",
-  "ARS",
 ] as const;
 export type SitePurpose = typeof sitePurposeOptions[number];
 
@@ -252,9 +251,10 @@ const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev
 
 export const SiteDetailSchema = z.object({
   nameOfSite: z.string().min(1, "Name of Site is required."),
+  isArsImport: z.boolean().optional(), // Flag to identify ARS-originated sites
   latitude: optionalNumber("Latitude must be a valid number."),
   longitude: optionalNumber("Longitude must be a valid number."),
-  purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required."}),
+  purpose: z.enum([...sitePurposeOptions, 'ARS'], { required_error: "Purpose is required."}),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),

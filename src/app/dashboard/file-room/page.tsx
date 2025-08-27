@@ -29,17 +29,17 @@ export default function FileManagerPage() {
 
   const filteredFileEntriesForManager = useMemo(() => {
     if (user?.role === 'supervisor') {
-      return fileEntries; // Supervisors should see all their assigned files regardless of purpose
+      return fileEntries; 
     }
     
-    // For editors and viewers, filter out files that ONLY contain ARS sites.
+    // Exclude files where *every* site was created from the ARS form
     return fileEntries.filter(entry => {
       // If there are no sites, keep the file.
       if (!entry.siteDetails || entry.siteDetails.length === 0) {
         return true;
       }
-      // If there's at least one site that is NOT for ARS purpose, keep the file.
-      return entry.siteDetails.some(site => site.purpose !== 'ARS');
+      // If there's at least one site that was NOT from the ARS form, keep the file.
+      return entry.siteDetails.some(site => !site.isArsImport);
     });
   }, [fileEntries, user?.role]);
   
