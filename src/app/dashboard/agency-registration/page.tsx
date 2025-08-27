@@ -204,6 +204,9 @@ const RigAccordionItem = ({
                 <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      <div className="flex items-center space-x-1">
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}>
+                            <Edit2 className="h-4 w-4" />
+                        </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
                             <RotateCcw className="h-4 w-4" />
                         </Button>
@@ -361,26 +364,23 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                // The issue was here: JSON.stringify turns Date objects into strings.
-                // We need to process the object manually to keep Date objects intact.
-                const processedApp = { ...app };
+                 const processedApp = { ...app };
 
                 const toDateOrNull = (value: any): Date | null => {
                     if (!value) return null;
-                    // Firestore Timestamps have a toDate() method.
-                    if (typeof value.toDate === 'function') {
+                    if (value.toDate && typeof value.toDate === 'function') { // Handle Firestore Timestamps
                         return value.toDate();
                     }
-                    // Handle ISO strings or other date string formats
-                    const parsed = new Date(value);
-                    return isValid(parsed) ? parsed : null;
+                    if (typeof value === 'string' || value instanceof Date) {
+                        const parsed = new Date(value);
+                        if (isValid(parsed)) return parsed;
+                    }
+                    return null;
                 };
 
-                // Correctly parse date strings back into Date objects for the main application
-                if (processedApp.agencyRegistrationDate) processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate) ?? undefined;
-                if (processedApp.agencyPaymentDate) processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate) ?? undefined;
+                processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate) ?? undefined;
+                processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate) ?? undefined;
 
-                // Correctly parse dates within the rigs array
                 processedApp.rigs = (processedApp.rigs || []).map((rig: any) => {
                     const validRenewals = (rig.renewals || []).map((renewal: any) => ({
                         ...renewal,
@@ -388,13 +388,15 @@ export default function AgencyRegistrationPage() {
                         paymentDate: toDateOrNull(renewal.paymentDate) ?? undefined,
                         validTill: toDateOrNull(renewal.validTill) ?? undefined,
                     }));
+                    
+                    const validCancellationDate = toDateOrNull(rig.cancellationDate);
 
                     return {
                         ...rig,
-                        cancellationDate: toDateOrNull(rig.cancellationDate),
                         registrationDate: toDateOrNull(rig.registrationDate),
                         paymentDate: toDateOrNull(rig.paymentDate),
                         renewals: validRenewals,
+                        cancellationDate: validCancellationDate,
                     };
                 });
                 form.reset(processedApp);
@@ -599,7 +601,15 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleCancelRig = (rigIndex: number) => {
-      setCancellationData({ rigIndex, reason: '', date: new Date() });
+      const rig = form.getValues(`rigs.${rigIndex}`);
+      const cancellationDate = rig.cancellationDate;
+      const parsedDate = cancellationDate ? new Date(cancellationDate) : new Date();
+
+      setCancellationData({ 
+          rigIndex, 
+          reason: rig.cancellationReason || '', 
+          date: isValid(parsedDate) ? parsedDate : new Date() 
+      });
       setIsCancelDialogOpen(true);
   };
 
