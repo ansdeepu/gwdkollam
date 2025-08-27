@@ -1,4 +1,3 @@
-
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
@@ -36,7 +35,7 @@ export default function FileManagerPage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex flex-col sm:flex-row items-center gap-4 my-4">
+       <div className="flex flex-col sm:flex-row items-center gap-4">
         <div className="relative flex-grow w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -57,16 +56,7 @@ export default function FileManagerPage() {
       </div>
 
       <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>File Manager</CardTitle>
-          <CardDescription>
-            {user?.role === 'supervisor'
-              ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
-              : 'List of all non-ARS files in the system. ARS schemes are managed separately.'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <FileDatabaseTable 
             searchTerm={searchTerm} 
             fileEntries={filteredFileEntriesForManager} 
