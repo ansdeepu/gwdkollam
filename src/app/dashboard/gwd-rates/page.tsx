@@ -391,17 +391,14 @@ export default function GwdRatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
-            {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
-        </div>
-      </div>
-      
       <Card>
         <CardHeader>
-            <CardTitle>Item Rates</CardTitle>
-            <CardDescription>A master list of all standard items and their approved rates used by the department. Use the arrow button to reorder items. {!canManage && " (View-only)"}</CardDescription>
+            <CardTitle>GWD Rates</CardTitle>
+            <CardDescription>A master list of all standard items and their approved rates used by the department.</CardDescription>
+            <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 pt-4">
+                <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
+                {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
+            </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -546,5 +543,3 @@ export default function GwdRatesPage() {
     </div>
   );
 }
-
-    

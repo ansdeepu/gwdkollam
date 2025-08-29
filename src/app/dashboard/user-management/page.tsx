@@ -1,3 +1,4 @@
+
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -126,27 +127,25 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      {canManage && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex gap-2">
-            <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
-                <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
-            </Button>
-            <Button onClick={() => setIsStaffFormOpen(true)}>
-                <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
-            </Button>
-          </div>
-        </div>
-      )}
       <Card className="shadow-xl border-border/60">
         <CardHeader>
-          <CardTitle className="text-xl">Registered Users ({allUsers.length})</CardTitle>
+          <CardTitle>User Management</CardTitle>
           <CardDescription>
             {canManage 
-              ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions. Use batch actions for efficiency where applicable."
+              ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions."
               : "View all registered users in the system. (Read-only)"
             }
           </CardDescription>
+            {canManage && (
+                <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 pt-4">
+                    <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
+                        <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
+                    </Button>
+                    <Button onClick={() => setIsStaffFormOpen(true)}>
+                        <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
+                    </Button>
+                </div>
+            )}
         </CardHeader>
         <CardContent>
           <UserManagementTable

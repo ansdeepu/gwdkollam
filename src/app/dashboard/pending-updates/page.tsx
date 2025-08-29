@@ -1,3 +1,4 @@
+
 // src/app/dashboard/pending-updates/page.tsx
 "use client";
 
@@ -31,9 +32,9 @@ export default function PendingUpdatesPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Pending Updates</CardTitle>
+          <CardTitle>Pending Supervisor Updates</CardTitle>
           <CardDescription>
-            Review and approve or reject site updates submitted by supervisors.
+            Review and approve or reject site updates submitted by supervisors to finalize the changes.
           </CardDescription>
         </CardHeader>
         <CardContent>

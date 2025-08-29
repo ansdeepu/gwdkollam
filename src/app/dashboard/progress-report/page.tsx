@@ -633,10 +633,9 @@ export default function ProgressReportPage() {
     <div className="space-y-6">
       <Card className="shadow-lg no-print">
         <CardHeader>
-          <CardTitle>Progress Report</CardTitle>
-          <CardDescription>Select a date range to generate the report.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row flex-wrap gap-2 pt-3">
+          <CardTitle>Progress Reports</CardTitle>
+          <CardDescription>Generate monthly or periodic progress reports for various schemes and services.</CardDescription>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
               <Popover>
                   <PopoverTrigger asChild>
                       <Button variant={"outline"} className={cn("w-full sm:w-auto justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
@@ -669,7 +668,8 @@ export default function ProgressReportPage() {
                 <FileDown className="mr-2 h-4 w-4" />
                 Export Excel
               </Button>
-        </CardContent>
+        </div>
+        </CardHeader>
       </Card>
       
       {isFiltering ? (

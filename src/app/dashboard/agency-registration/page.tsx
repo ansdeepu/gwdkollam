@@ -901,7 +901,9 @@ export default function AgencyRegistrationPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <CardTitle>Rig Registrations</CardTitle>
+            <CardDescription>Manage agency and rig registrations for drilling operations.</CardDescription>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
                 <div className="relative flex-grow w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 

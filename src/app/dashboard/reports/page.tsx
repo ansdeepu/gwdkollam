@@ -1,3 +1,4 @@
+
 // src/app/dashboard/reports/page.tsx
 "use client"; 
 
@@ -448,17 +449,16 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
-        <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
-            <Button onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
-        </div>
-      </div>
-
       <Card className="shadow-lg no-print">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5 text-primary" />Report Filters</CardTitle>
-          <CardDescription>Refine your report by applying various filters below. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}</CardDescription>
+          <CardTitle>Site-Wise Reports</CardTitle>
+          <CardDescription>Generate custom site-wise reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}</CardDescription>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4">
+              <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
+                  <Button onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
+              </div>
+          </div>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <Popover>
@@ -606,15 +606,15 @@ export default function ReportsPage() {
 
                           <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Drilling Details (Actuals)</h6>
                           {renderDetail("Diameter (mm)", site.diameter)}
-                          {site.purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
+                          {purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
                           {renderDetail("TD (m)", site.totalDepth)}
-                          {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
+                          {purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
                           {renderDetail("Casing Pipe (m)", site.casingPipeUsed)}
-                          {site.purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
-                          {site.purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
+                          {purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
+                          {purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
+                          {purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
                           {renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
-                          {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
+                          {purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
                           {renderDetail("Discharge (LPH)", site.yieldDischarge)}
                           {renderDetail("Zone Details (m)", site.zoneDetails)}
                           {renderDetail("Water Level (m)", site.waterLevel)}
