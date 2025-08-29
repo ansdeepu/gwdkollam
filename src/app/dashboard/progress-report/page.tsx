@@ -418,8 +418,7 @@ export default function ProgressReportPage() {
         setReportData(null);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entriesLoading]); 
+  }, [entriesLoading, startDate, endDate, handleGenerateReport]); 
 
   const handleExportExcel = () => {
     toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
@@ -431,9 +430,9 @@ export default function ProgressReportPage() {
   };
 
   const handleResetFilters = () => {
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setReportData(null);
+    const today = new Date();
+    setStartDate(startOfMonth(today));
+    setEndDate(endOfMonth(today));
   };
 
  const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData | Record<string, any>>, title: string) => {
@@ -462,15 +461,15 @@ export default function ProgressReportPage() {
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'fileNo', label: 'File No.' },
             { key: 'applicantName', label: 'Applicant' },
-            { key: 'remittedAmount', label: 'Remitted (₹)' },
             { key: 'firstRemittanceDate', label: 'First Remittance Date' },
+            { key: 'remittedAmount', label: 'Remitted (₹)' },
         ];
         dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
             slNo: index + 1,
             fileNo: entry.fileNo,
             applicantName: entry.applicantName,
-            remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
+            remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes('total application')) {
          columns = [
