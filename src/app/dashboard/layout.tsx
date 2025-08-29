@@ -1,3 +1,4 @@
+
 // src/app/dashboard/layout.tsx
 "use client";
 
@@ -8,7 +9,6 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
-import AppHeader from '@/components/layout/AppHeader';
 import { useAuth } from '@/hooks/useAuth'; 
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
@@ -143,7 +143,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex h-screen w-full overflow-hidden">
           <AppSidebar />
           <SidebarInset className="flex flex-col flex-1 overflow-hidden">
-            <AppHeader />
             <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
               {children}
             </main>
