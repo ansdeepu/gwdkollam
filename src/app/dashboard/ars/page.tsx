@@ -9,7 +9,7 @@ import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions,
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2, ShieldAlert, CalendarIcon } from "lucide-react";
+import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2, ShieldAlert, CalendarIcon, XCircle } from "lucide-react";
 import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
@@ -337,11 +337,7 @@ export default function ArsPage() {
       <TooltipProvider>
        <Card className="shadow-lg">
         <CardHeader>
-           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-             <div className="flex items-baseline gap-4">
-                <CardTitle>Artificial Recharge Schemes (ARS)</CardTitle>
-                <span className="text-muted-foreground font-medium">Total Sites: {arsSites.length}</span>
-              </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex flex-wrap items-center gap-2">
                 <Link href="/dashboard/ars/entry" passHref><Button size="sm"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link>
                 <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
@@ -377,7 +373,7 @@ export default function ArsPage() {
                     <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
                 </PopoverContent>
             </Popover>
-            <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><X className="mr-2 h-4 w-4"/>Clear Dates</Button>
+            <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
             <div className="relative flex-grow min-w-[250px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
