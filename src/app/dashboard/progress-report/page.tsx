@@ -463,12 +463,14 @@ export default function ProgressReportPage() {
             { key: 'fileNo', label: 'File No.' },
             { key: 'applicantName', label: 'Applicant' },
             { key: 'remittedAmount', label: 'Remitted (₹)' },
+            { key: 'firstRemittanceDate', label: 'First Remittance Date' },
         ];
         dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
             slNo: index + 1,
             fileNo: entry.fileNo,
             applicantName: entry.applicantName,
             remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
         }));
     } else if (title.toLowerCase().includes('total application')) {
          columns = [
