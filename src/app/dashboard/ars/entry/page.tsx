@@ -230,19 +230,14 @@ export default function ArsEntryPage() {
                                 <FormLabel>Supervisor</FormLabel>
                                     <Select
                                         onValueChange={(value) => {
-                                            if (value === '_unassign_') {
-                                                field.onChange(null);
-                                                form.setValue('supervisorName', null);
-                                            } else {
-                                                const selectedStaff = supervisorList.find(s => s.id === value);
-                                                field.onChange(selectedStaff?.id || null);
-                                                form.setValue('supervisorName', selectedStaff?.name || null);
-                                            }
+                                            const selectedStaff = supervisorList.find(s => s.id === value);
+                                            form.setValue('supervisorUid', selectedStaff?.id || null);
+                                            form.setValue('supervisorName', selectedStaff?.name || null);
                                         }}
                                         value={field.value || ''}>
                                     <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                     <SelectContent>
-                                        <SelectItem value="_unassign_">-- Unassign --</SelectItem>
+                                        <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
                                         {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                                     </SelectContent>
                                     </Select>
