@@ -445,8 +445,6 @@ export default function ProgressReportPage() {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
 
-    const isSiteData = data.length > 0 && 'nameOfSite' in data[0];
-
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
 
@@ -464,39 +462,23 @@ export default function ProgressReportPage() {
         ...item,
         amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       }));
-    } else if (isSiteData) {
-        const isCompleted = title.toLowerCase().includes('application completed');
-        const isApplication = title.toLowerCase().includes('total application');
-        
+    } else if (title.includes("Remittance")) {
         columns = [
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'fileNo', label: 'File No.' },
-            { key: 'applicantName', label: 'Applicant Name' },
-            { key: 'nameOfSite', label: 'Site Name' },
-            { key: 'purpose', label: 'Purpose' },
-            { key: 'workStatus', label: 'Work Status' },
+            { key: 'applicantName', label: 'Applicant' },
+            { key: 'siteName', label: 'Site Name'},
+            { key: 'remittedAmount', label: 'Remitted (₹)' },
+            { key: 'remittanceDate', label: 'Remittance Date' },
         ];
-        
-        dialogData = (data as SiteDetailFormData[]).map((site, index) => {
-          const baseData: Record<string, any> = {
-              slNo: index + 1,
-              ...site,
-          };
-          if (isCompleted) {
-              baseData.totalPayment = (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-          if (isApplication) {
-              baseData.totalRemittance = (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-          return baseData;
-        });
-
-        if (isCompleted) {
-            columns.push({ key: 'totalPayment', label: 'Total Payment (₹)' });
-        }
-        if (isApplication) {
-            columns.push({ key: 'totalRemittance', label: 'Total Remittance (₹)' });
-        }
+        dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+            slNo: index + 1,
+            fileNo: site.fileNo,
+            applicantName: site.applicantName,
+            siteName: site.nameOfSite,
+            remittedAmount: (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            remittanceDate: site.dateOfRemittance ? format(new Date(site.dateOfRemittance), "dd/MM/yyyy") : 'N/A'
+        }));
     } else { // Fallback for other site detail views
          columns = [
             { key: 'slNo', label: 'Sl. No.' },
@@ -506,9 +488,15 @@ export default function ProgressReportPage() {
             { key: 'purpose', label: 'Purpose' },
             { key: 'workStatus', label: 'Work Status' },
         ];
+         const isCompleted = title.toLowerCase().includes('application completed');
+         if (isCompleted) {
+             columns.push({ key: 'totalPayment', label: 'Total Payment (₹)' });
+         }
+
         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
           slNo: index + 1,
           ...site,
+          totalPayment: isCompleted ? (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : undefined,
         }));
     }
     
@@ -587,7 +575,11 @@ export default function ProgressReportPage() {
                         {data.totalApplications}
                       </Button>
                     </TableCell>
-                    <TableCell className="border p-2 text-right">{data.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-right">
+                       <Button variant="link" className="p-0 h-auto text-right" disabled={data.totalRemittance === 0} onClick={() => handleCountClick(data.applicationData, `Remittance Details for ${purpose}`)}>
+                        {data.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </Button>
+                    </TableCell>
                     <TableCell className="border p-2 text-center">
                       <Button variant="link" className="p-0 h-auto" disabled={data.totalCompleted === 0} onClick={() => handleCountClick(data.completedData, `Application Completed - ${purpose}`)}>
                         {data.totalCompleted}
@@ -606,7 +598,11 @@ export default function ProgressReportPage() {
                             {total.totalApplications}
                         </Button>
                     </TableCell>
-                    <TableCell className="border p-2 text-right">{total.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-right">
+                        <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalRemittance === 0} onClick={() => handleCountClick(total.applicationData, `Total Remittance for ${title}`)}>
+                            {total.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </Button>
+                    </TableCell>
                     <TableCell className="border p-2 text-center">
                         <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalCompleted === 0} onClick={() => handleCountClick(total.completedData, `Total Completed Applications for ${title}`)}>
                             {total.totalCompleted}
