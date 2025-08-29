@@ -20,7 +20,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { format, isValid } from "date-fns";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,7 @@ export default function ArsEntryPage() {
     const searchParams = useSearchParams();
     const { user, fetchAllUsers } = useAuth();
     const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
+    const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
     
     const fileNoToEdit = searchParams.get('fileNo');
     const siteNameToEdit = searchParams.get('siteName');
@@ -40,10 +41,27 @@ export default function ArsEntryPage() {
     
     const isEditing = !!(fileNoToEdit && siteNameToEdit);
     const canEdit = user?.role === 'editor';
+    
+    useEffect(() => {
+        if (canEdit) {
+            fetchAllUsers().then(setAllUsers);
+        }
+    }, [canEdit, fetchAllUsers]);
 
     const supervisorList = React.useMemo(() => {
-        return staffMembers.filter(s => s.designation === 'Supervisor' && s.status === 'Active');
-    }, [staffMembers]);
+        if (!canEdit) return [];
+        // Filter users by role, then find their corresponding active staff member profile
+        return allUsers
+            .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
+            .map(u => {
+                const staffInfo = staffMembers.find(s => s.id === u.staffId && s.status === 'Active');
+                if (staffInfo) {
+                    return { ...staffInfo, id: u.uid, name: staffInfo.name }; // Use user UID as the ID for selection
+                }
+                return null;
+            })
+            .filter((s): s is StaffMember & { id: string; name: string } => s !== null);
+    }, [allUsers, staffMembers, canEdit]);
 
 
     const form = useForm<NewArsEntryFormData>({
@@ -262,5 +280,3 @@ export default function ArsEntryPage() {
         </div>
     );
 }
-
-    
