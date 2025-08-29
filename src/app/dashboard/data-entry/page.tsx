@@ -291,7 +291,7 @@ export default function DataEntryPage() {
                     <CardTitle>{pageTitle}</CardTitle>
                     <CardDescription>{pageDescription}</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => router.back()}>
+                <Button variant="destructive" size="sm" onClick={() => router.back()}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                 </Button>
