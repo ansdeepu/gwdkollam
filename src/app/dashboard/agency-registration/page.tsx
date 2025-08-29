@@ -684,8 +684,7 @@ export default function AgencyRegistrationPage() {
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
                                         <div className="grid md:grid-cols-2 gap-4 p-2 border rounded-md">
-                                            <FormField name="owner.name" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Owner Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name="owner.address" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Owner Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.name" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Name & Address of Owner</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
@@ -901,23 +900,27 @@ export default function AgencyRegistrationPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-            <CardTitle>Rig Registrations</CardTitle>
-            <CardDescription>Manage agency and rig registrations for drilling operations.</CardDescription>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-                <div className="relative flex-grow w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input 
-                        type="search" 
-                        placeholder="Search by agency, owner, file no, rig no..." 
-                        className="w-full rounded-lg bg-background pl-10 shadow-sm" 
-                        value={searchTerm} 
-                        onChange={(e) => setSearchTerm(e.target.value)} 
-                    />
-                </div>
-                <Button onClick={handleAddNew} className="w-full sm:w-auto shrink-0">
-                    <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
-                </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle>Rig Registrations</CardTitle>
+              <CardDescription>Manage agency and rig registrations.</CardDescription>
             </div>
+            <div className="flex w-full sm:w-auto items-center gap-2">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                    type="search" 
+                    placeholder="Search..." 
+                    className="w-full rounded-lg bg-background pl-10 shadow-sm" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                />
+              </div>
+              <Button onClick={handleAddNew} className="shrink-0">
+                  <FilePlus className="mr-2 h-4 w-4" /> Add New
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
            <Tabs defaultValue="completed">

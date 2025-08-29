@@ -45,6 +45,7 @@ export const designationOptions = [
   "Office Attendant",
   "Watcher",
   "PTS",
+  "Supervisor",
 ] as const;
 export type Designation = typeof designationOptions[number];
 
@@ -219,7 +220,6 @@ export const constituencyOptions = [
     "Chathannur",
     "Chavara",
     "Eravipuram",
-    "Karunagappally",
     "Kollam",
     "Kottarakkara",
     "Kundara",
@@ -613,6 +613,8 @@ export const ArsAndSiteSchema = z.object({
     totalExpenditure: optionalNumber("Expenditure must be a valid number."),
     noOfBeneficiary: z.string().optional().nullable(),
     workRemarks: z.string().optional().nullable(),
+    supervisorUid: z.string().optional().nullable(),
+    supervisorName: z.string().optional().nullable(),
 });
 
 export const NewArsEntrySchema = ArsAndSiteSchema.merge(ArsSpecificSchema).extend({
@@ -693,8 +695,8 @@ export const agencyApplicationStatusOptions = [
 export type AgencyApplicationStatus = typeof agencyApplicationStatusOptions[number];
 
 export const OwnerInfoSchema = z.object({
-  name: z.string().min(1, "Owner name is required"),
-  address: z.string().min(1, "Owner address is required"),
+  name: z.string().min(1, "Name & Address of Owner is required"),
+  address: z.string().optional(), // No longer required
   mobile: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required."),
   secondaryMobile: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required.").optional().or(z.literal('')),
 });

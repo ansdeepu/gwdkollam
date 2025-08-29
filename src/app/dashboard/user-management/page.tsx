@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useRouter } from "next/navigation";
-import { Users, ShieldAlert, Loader2, UserPlus } from "lucide-react";
+import { Users, ShieldAlert, Loader2, UserPlus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -127,6 +127,10 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
+      <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+      </Button>
       <Card className="shadow-xl border-border/60">
         <CardHeader>
           <CardTitle>User Management</CardTitle>

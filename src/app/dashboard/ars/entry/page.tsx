@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useFileEntries } from "@/hooks/useFileEntries";
-import { type DataEntryFormData, type SiteDetailFormData, arsWorkStatusOptions, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency, arsTypeOfSchemeOptions } from "@/lib/schemas";
+import { type DataEntryFormData, type SiteDetailFormData, arsWorkStatusOptions, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency, arsTypeOfSchemeOptions, type StaffMember } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X, ArrowLeft } from "lucide-react";
@@ -21,11 +21,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
+import { useStaffMembers } from "@/hooks/useStaffMembers";
+
 
 export default function ArsEntryPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user } = useAuth();
+    const { user, fetchAllUsers } = useAuth();
+    const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
     
     const fileNoToEdit = searchParams.get('fileNo');
     const siteNameToEdit = searchParams.get('siteName');
@@ -37,6 +40,11 @@ export default function ArsEntryPage() {
     const isEditing = !!(fileNoToEdit && siteNameToEdit);
     const canEdit = user?.role === 'editor';
 
+    const supervisorList = React.useMemo(() => {
+        return staffMembers.filter(s => s.designation === 'Supervisor' && s.status === 'Active');
+    }, [staffMembers]);
+
+
     const form = useForm<NewArsEntryFormData>({
         resolver: zodResolver(NewArsEntrySchema),
         defaultValues: {
@@ -46,6 +54,8 @@ export default function ArsEntryPage() {
           arsAsTsDetails: "", tsAmount: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined,
           arsAwardedAmount: undefined, workStatus: undefined, dateOfCompletion: undefined,
           totalExpenditure: undefined, noOfBeneficiary: "", workRemarks: "",
+          supervisorUid: null,
+          supervisorName: null,
         },
     });
 
@@ -78,6 +88,8 @@ export default function ArsEntryPage() {
                         totalExpenditure: site.totalExpenditure,
                         noOfBeneficiary: site.noOfBeneficiary,
                         workRemarks: site.workRemarks,
+                        supervisorUid: site.supervisorUid,
+                        supervisorName: site.supervisorName,
                     });
                 } else {
                      toast({ title: "Error", description: `ARS Site "${siteNameToEdit}" not found in file "${fileNoToEdit}".`, variant: "destructive" });
@@ -102,6 +114,7 @@ export default function ArsEntryPage() {
             arsStorageCapacity: data.arsStorageCapacity, arsNumberOfFillings: data.arsNumberOfFillings, 
             arsAsTsDetails: data.arsAsTsDetails, arsSanctionedDate: data.arsSanctionedDate, 
             arsTenderedAmount: data.arsTenderedAmount, arsAwardedAmount: data.arsAwardedAmount,
+            supervisorUid: data.supervisorUid, supervisorName: data.supervisorName,
         };
 
         try {
@@ -161,7 +174,7 @@ export default function ArsEntryPage() {
         }
     };
 
-    if (entriesLoading) {
+    if (entriesLoading || staffIsLoading) {
         return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading form data...</p> </div> );
     }
 
@@ -175,9 +188,9 @@ export default function ArsEntryPage() {
     
     return (
         <div className="space-y-6">
-            <Button variant="outline" onClick={() => router.push('/dashboard/ars')}>
+            <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to ARS List
+                Back
             </Button>
             <Card className="shadow-lg">
                 <CardHeader>
@@ -209,6 +222,28 @@ export default function ArsEntryPage() {
                           <FormField name="dateOfCompletion" control={form.control} render={({ field }) => (<FormItem><FormLabel>Completion Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="w-full text-left font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>)} />
                           <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                           <FormField
+                                control={form.control}
+                                name="supervisorUid"
+                                render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Supervisor</FormLabel>
+                                    <Select
+                                        onValueChange={(value) => {
+                                            const selectedStaff = supervisorList.find(s => s.id === value);
+                                            field.onChange(selectedStaff?.id || null);
+                                            form.setValue('supervisorName', selectedStaff?.name || null);
+                                        }}
+                                        value={field.value || ''}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="">-- Unassign --</SelectItem>
+                                        {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                    </SelectContent>
+                                    </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}/>
                           <FormField name="workRemarks" control={form.control} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Additional remarks..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         <div className="flex justify-end pt-8 space-x-3">

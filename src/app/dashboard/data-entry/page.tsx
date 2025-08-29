@@ -3,8 +3,8 @@
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FilePlus2, Edit, ShieldAlert, Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { FilePlus2, Edit, ShieldAlert, Loader2, ArrowLeft } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
@@ -13,6 +13,7 @@ import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus, PendingU
 import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid } from 'date-fns';
+import { Button } from "@/components/ui/button";
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -96,6 +97,7 @@ interface PageData {
 }
 
 export default function DataEntryPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const fileNoToEdit = searchParams.get("fileNo");
   const approveUpdateId = searchParams.get("approveUpdateId");
@@ -281,6 +283,10 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
+      <Button variant="outline" onClick={() => router.back()}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
       {pageData && (
         <Card className="shadow-lg">
           <CardHeader>
