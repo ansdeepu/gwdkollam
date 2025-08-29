@@ -28,6 +28,10 @@ import {
   Bell,
   CalendarCheck,
   Waves,
+  Wrench,
+  CheckCircle,
+  AlertTriangle,
+  FileStack,
 } from "lucide-react";
 import { 
   Card, 
@@ -47,6 +51,7 @@ import {
   type SiteDetailFormData,
   type SitePurpose,
   type Designation,
+  type AgencyApplication,
 } from '@/lib/schemas';
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -55,8 +60,9 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers"; 
+import { useAgencyApplications } from '@/hooks/useAgencyApplications';
 import { Loader2 } from 'lucide-react';
-import { format, parseISO, isValid, formatDistanceToNow, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { format, parseISO, isValid, formatDistanceToNow, startOfDay, endOfDay, isWithinInterval, addYears } from 'date-fns';
 import { useAuth, type UserProfile } from '@/hooks/useAuth';
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -74,6 +80,7 @@ import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
+import Link from 'next/link';
 
 // Define the exact order for the report as seen in the image
 const dashboardWorkStatusOrder: SiteWorkStatus[] = [
@@ -181,6 +188,7 @@ export default function DashboardPage() {
   const { reportEntries: allFileEntries, isReportLoading: allEntriesLoading } = useAllFileEntriesForReports();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
+  const { applications: agencyApplications, isLoading: agenciesLoading } = useAgencyApplications();
   const { toast } = useToast();
   
   const [unapprovedUsersCount, setUnapprovedUsersCount] = useState<number>(0);
@@ -494,6 +502,42 @@ export default function DashboardPage() {
         totalFiles: entriesForFileStatus.length,
     };
   }, [filteredEntriesLoading, allEntriesLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
+
+  const rigRegistrationData = useMemo(() => {
+    if (agenciesLoading) return null;
+
+    let totalRigs = 0;
+    let activeRigs = 0;
+    let expiredRigs = 0;
+    
+    agencyApplications.forEach(app => {
+        app.rigs.forEach(rig => {
+            totalRigs++;
+            if (rig.status === 'Active') {
+                activeRigs++;
+                
+                const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
+                    ? [...rig.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate
+                    : rig.registrationDate;
+
+                if (lastEffectiveDate) {
+                    const validityDate = addYears(new Date(lastEffectiveDate), 1);
+                    if (new Date() > validityDate) {
+                        expiredRigs++;
+                    }
+                }
+            }
+        });
+    });
+
+    return {
+        totalAgencies: agencyApplications.length,
+        totalRigs,
+        activeRigs,
+        expiredRigs,
+    };
+  }, [agencyApplications, agenciesLoading]);
+
 
   const arsDashboardData = useMemo(() => {
     if (allEntriesLoading) return null;
@@ -1346,6 +1390,44 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
       
+      {rigRegistrationData && (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <FileStack className="h-5 w-5 text-primary" />
+                    Rig Registration Overview
+                </CardTitle>
+                <CardDescription>
+                    Summary of all registered rig agencies and their status.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors">
+                        <FileStack className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <p className="text-3xl font-bold">{rigRegistrationData.totalAgencies}</p>
+                        <p className="text-sm font-medium text-muted-foreground">Total Agencies</p>
+                    </Link>
+                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors">
+                        <Wrench className="h-8 w-8 text-primary mx-auto mb-2" />
+                        <p className="text-3xl font-bold">{rigRegistrationData.totalRigs}</p>
+                        <p className="text-sm font-medium text-muted-foreground">Total Rigs</p>
+                    </Link>
+                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-green-500/10 text-center hover:bg-green-500/20 transition-colors">
+                         <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                        <p className="text-3xl font-bold text-green-700">{rigRegistrationData.activeRigs}</p>
+                        <p className="text-sm font-medium text-green-800">Active Rigs</p>
+                    </Link>
+                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-amber-500/10 text-center hover:bg-amber-500/20 transition-colors">
+                        <AlertTriangle className="h-8 w-8 text-amber-600 mx-auto mb-2" />
+                        <p className="text-3xl font-bold text-amber-700">{rigRegistrationData.expiredRigs}</p>
+                        <p className="text-sm font-medium text-amber-800">Expired Rigs</p>
+                    </Link>
+                </div>
+            </CardContent>
+        </Card>
+      )}
+
       <Card>
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1733,4 +1815,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
