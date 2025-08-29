@@ -44,7 +44,7 @@ export default function HelpPage() {
               <AccordionContent>
                 There are three main roles in this application, each with different permissions:
                 <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-                  <li><strong>Editor:</strong> Has full access to all features. Editors can create, edit, and delete all file entries, manage staff and user accounts, approve pending updates, and set GWD rates.</li>
+                  <li><strong>Editor:</strong> Has full access to all features. Editors can create, edit, and delete all file entries (including ARS and Rig Registrations), manage staff and user accounts, approve pending updates, and set GWD rates.</li>
                   <li><strong>Supervisor:</strong> Has a focused view. Supervisors can only see and edit the specific sites they are assigned to via the 'File Manager' page. They cannot create new files and their changes must be approved by an Editor.</li>
                   <li><strong>Viewer:</strong> Has read-only access. Viewers can see most data, including all files, reports, and user lists, but cannot make any changes.</li>
                 </ul>
@@ -53,13 +53,13 @@ export default function HelpPage() {
             <AccordionItem value="item-2">
               <AccordionTrigger>How do I reset my password?</AccordionTrigger>
               <AccordionContent>
-                You can change your password from your Profile page. Click on your name in the top-right corner of the header, select "Profile", and use the "Change Password" form. If you have forgotten your password entirely, please contact the administrator for a reset.
+                You can change your password from your Profile page. Click on your name in the sidebar at the bottom-left, select "Profile", and use the "Change Password" form. If you have forgotten your password entirely, please contact the administrator for a reset.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-              <AccordionTrigger>Why can't I edit a file entry?</AccordionTrigger>
+              <AccordionTrigger>Why can't I edit a file or registration?</AccordionTrigger>
               <AccordionContent>
-                Editing permissions are based on user roles. 'Editor' roles can create and edit all parts of a file entry. 'Supervisor' roles can only edit specific fields on sites that are assigned to them and are still active. 'Viewer' roles have read-only access and cannot make any changes. If a Supervisor has submitted an update for a site, it will be locked until an Editor reviews it.
+                Editing permissions are based on user roles. 'Editor' roles can create and edit all parts of any entry. 'Supervisor' roles can only edit specific fields on sites that are assigned to them and are still active. 'Viewer' roles have read-only access and cannot make any changes. If a Supervisor has submitted an update for a site, it will be locked until an Editor reviews it.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-4">
@@ -75,20 +75,19 @@ export default function HelpPage() {
               </AccordionContent>
             </AccordionItem>
              <AccordionItem value="item-6">
-              <AccordionTrigger>What is the difference between the 'Reports' pages?</AccordionTrigger>
+              <AccordionTrigger>What is the difference between the 'File Manager' and 'ARS' pages?</AccordionTrigger>
               <AccordionContent>
-                The application has three different report pages for different needs:
+                The two pages manage different types of work:
                  <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-                  <li><strong>Reports:</strong> This page provides a powerful, filterable table of all site-wise data. You can apply multiple filters (like date ranges, status, purpose) to create a custom view of the raw data.</li>
-                  <li><strong>Progress Reports:</strong> This page shows a high-level, structured monthly summary of work progress, including previous balances, new applications, and completions, broken down by well type and service.</li>
-                  <li><strong>Report Builders:</strong> This is a flexible tool that allows you to generate a completely custom table by selecting the specific columns (fields) you want to see.</li>
+                  <li><strong>File Manager:</strong> This is for all standard departmental work files (BWC, TWC, MWSS, etc.). All data entry and management for these projects happen here.</li>
+                  <li><strong>ARS:</strong> This page is exclusively for managing Artificial Recharge Scheme sites. It has a dedicated data entry form and bulk Excel import functionality tailored for ARS projects. ARS data is kept separate and will not appear in the main File Manager.</li>
                 </ul>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-7">
               <AccordionTrigger>How can I export data to Excel?</AccordionTrigger>
               <AccordionContent>
-                On pages with an "Export Excel" button (like Establishment, GWD Rates, and Reports), clicking this button will generate and download an XLSX file containing the data currently displayed or filtered on that page. The pop-up windows on the Dashboard also have an export button to download the specific details you are viewing.
+                On pages with an "Export Excel" button (like Establishment, GWD Rates, ARS, and Reports), clicking this button will generate and download an XLSX file containing the data currently displayed or filtered on that page. The pop-up dialogs on the Dashboard also have an export button to download the specific details you are viewing.
               </AccordionContent>
             </AccordionItem>
           </Accordion>

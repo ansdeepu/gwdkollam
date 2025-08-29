@@ -1,4 +1,3 @@
-
 // src/components/layout/AppNavMenu.tsx
 "use client";
 
@@ -9,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
@@ -35,6 +34,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
   { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
+  { href: '/dashboard/help', label: 'Help & About', icon: HelpCircle },
 ];
 
 export default function AppNavMenu() {

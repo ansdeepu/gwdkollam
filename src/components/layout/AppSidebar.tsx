@@ -24,6 +24,32 @@ import {
 import { LogOut, User, ChevronsUpDown } from 'lucide-react'; // Import icons
 import { useRouter } from 'next/navigation';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
+import { cn } from '@/lib/utils';
+
+const hashCode = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; 
+    }
+    return hash;
+};
+
+const getColorClass = (nameOrEmail: string): string => {
+    const colors = [
+        "bg-red-200 text-red-800", "bg-orange-200 text-orange-800", "bg-amber-200 text-amber-800",
+        "bg-yellow-200 text-yellow-800", "bg-lime-200 text-lime-800", "bg-green-200 text-green-800",
+        "bg-emerald-200 text-emerald-800", "bg-teal-200 text-teal-800", "bg-cyan-200 text-cyan-800",
+        "bg-sky-200 text-sky-800", "bg-blue-200 text-blue-800", "bg-indigo-200 text-indigo-800",
+        "bg-violet-200 text-violet-800", "bg-purple-200 text-purple-800", "bg-fuchsia-200 text-fuchsia-800",
+        "bg-pink-200 text-pink-800", "bg-rose-200 text-rose-800"
+    ];
+    const hash = hashCode(nameOrEmail);
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+};
+
 
 const getInitials = (name?: string) => {
   if (!name || name.trim() === '') return 'U';
@@ -43,6 +69,8 @@ export default function AppSidebar() {
 
   const staffInfo = staffMembers.find(s => s.id === user?.staffId);
   const photoUrl = staffInfo?.photoUrl;
+  
+  const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="icon">
@@ -71,11 +99,11 @@ export default function AppSidebar() {
                 <div className="flex w-full items-center gap-2">
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={photoUrl || undefined} alt={user?.name || 'User'} />
-                        <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+                        <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(user?.name)}</AvatarFallback>
                     </Avatar>
                     <div className="hidden group-data-[collapsible=icon]:hidden flex-col items-start text-left w-full overflow-hidden">
-                        <span className="font-medium text-sm truncate">{user?.name || "User"}</span>
-                        <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                        <span className="font-medium text-sm">{user?.name || "User"}</span>
+                        <span className="text-xs text-muted-foreground">{user?.email}</span>
                     </div>
                     <ChevronsUpDown className="h-4 w-4 text-muted-foreground ml-auto hidden group-data-[collapsible=icon]:hidden" />
                 </div>
