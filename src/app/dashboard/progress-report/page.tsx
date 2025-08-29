@@ -55,8 +55,7 @@ interface FinancialSummary {
   totalRemittance: number;
   totalCompleted: number;
   totalPayment: number;
-  // Data arrays
-  applicationData: SiteDetailFormData[];
+  applicationData: DataEntryFormData[]; // Changed to hold full file entries
   completedData: SiteDetailFormData[];
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
@@ -212,11 +211,9 @@ export default function ProgressReportPage() {
     const sDate = startOfDay(startDate);
     const eDate = endOfDay(endDate);
 
-    // Robust date parser
     const safeParseDate = (dateInput: any): Date | null => {
         if (!dateInput) return null;
         if (dateInput instanceof Date && isValid(dateInput)) return dateInput;
-        // The hook already converts Timestamps, but we handle it here for safety.
         if (dateInput.toDate && typeof dateInput.toDate === 'function') {
             const d = dateInput.toDate();
             return isValid(d) ? d : null;
@@ -272,18 +269,20 @@ export default function ProgressReportPage() {
       
       const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }));
 
+      // Financial Summary Data Population
       if (entry.applicationType && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
-        const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
-        const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
-        
-        sitesInEntry.forEach(site => {
-            const purpose = site.purpose as SitePurpose;
-            if (financialSummaryOrder.includes(purpose) && targetFinancialSummary[purpose]) {
-                targetFinancialSummary[purpose].totalApplications++;
-                targetFinancialSummary[purpose].applicationData.push(site);
-                targetFinancialSummary[purpose].totalRemittance += (Number(site.remittedAmount) || 0);
-            }
-        });
+          const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
+          const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
+
+          // Process each site's purpose for the summary
+          const purposesInEntry = new Set(sitesInEntry.map(s => s.purpose));
+          purposesInEntry.forEach(purpose => {
+              if (purpose && financialSummaryOrder.includes(purpose as SitePurpose) && targetFinancialSummary[purpose as SitePurpose]) {
+                  targetFinancialSummary[purpose as SitePurpose].applicationData.push(entry);
+                  targetFinancialSummary[purpose as SitePurpose].totalApplications++;
+                  targetFinancialSummary[purpose as SitePurpose].totalRemittance += (entry.totalRemittance || 0);
+              }
+          });
       }
       
       (entry.siteDetails || []).forEach(site => {
@@ -348,9 +347,7 @@ export default function ProgressReportPage() {
       }
     });
 
-    // --- Start of Corrected Revenue Head Calculation ---
     fileEntries.forEach(entry => {
-        // Direct Remittances to Revenue Head
         entry.remittanceDetails?.forEach(rd => {
             const remDate = safeParseDate(rd.dateOfRemittance);
             if (rd.remittedAccount === 'RevenueHead' && remDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
@@ -368,7 +365,6 @@ export default function ProgressReportPage() {
             }
         });
     
-        // Revenue from Payment Entries
         entry.paymentDetails?.forEach(pd => {
             const paymentDate = safeParseDate(pd.dateOfPayment);
             if (paymentDate && isWithinInterval(paymentDate, { start: sDate, end: eDate })) {
@@ -386,7 +382,6 @@ export default function ProgressReportPage() {
             }
         });
     });
-    // --- End of Corrected Revenue Head Calculation ---
 
 
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
@@ -467,20 +462,25 @@ export default function ProgressReportPage() {
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'fileNo', label: 'File No.' },
             { key: 'applicantName', label: 'Applicant' },
-            { key: 'nameOfSite', label: 'Site Name'},
             { key: 'remittedAmount', label: 'Remitted (₹)' },
         ];
-
-        dialogData = (data as SiteDetailFormData[]).map((site, index) => {
-            const remittanceDate = site.remittanceDetails?.[0]?.dateOfRemittance;
-            return {
-                slNo: index + 1,
-                fileNo: site.fileNo,
-                applicantName: site.applicantName,
-                nameOfSite: site.nameOfSite,
-                remittedAmount: (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            };
-        });
+        dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
+            slNo: index + 1,
+            fileNo: entry.fileNo,
+            applicantName: entry.applicantName,
+            remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        }));
+    } else if (title.toLowerCase().includes('total application')) {
+         columns = [
+            { key: 'slNo', label: 'Sl. No.' },
+            { key: 'fileNo', label: 'File No.' },
+            { key: 'applicantName', label: 'Applicant' },
+        ];
+        dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
+            slNo: index + 1,
+            fileNo: entry.fileNo,
+            applicantName: entry.applicantName,
+        }));
     } else { // Fallback for other site detail views
          columns = [
             { key: 'slNo', label: 'Sl. No.' },
@@ -491,18 +491,15 @@ export default function ProgressReportPage() {
             { key: 'workStatus', label: 'Work Status' },
         ];
         
-        const isTotalApplication = title.toLowerCase().includes('total application');
-        if (!isTotalApplication) {
-          const isCompleted = title.toLowerCase().includes('completed');
-          if (isCompleted) {
-             columns.push({ key: 'totalPayment', label: 'Total Payment (₹)' });
-          }
+        const isCompleted = title.toLowerCase().includes('completed');
+        if (isCompleted) {
+            columns.push({ key: 'totalPayment', label: 'Total Payment (₹)' });
         }
 
         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
           slNo: index + 1,
           ...site,
-          totalPayment: !isTotalApplication && title.toLowerCase().includes('completed') ? (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : undefined,
+          totalPayment: isCompleted ? (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : undefined,
         }));
     }
     
