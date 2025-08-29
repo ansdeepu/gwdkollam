@@ -188,14 +188,18 @@ export default function ArsEntryPage() {
     
     return (
         <div className="space-y-6">
-            <Button variant="outline" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-            </Button>
             <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle>{isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry'}</CardTitle>
-                    <CardDescription>{isEditing ? 'Update the details for the ARS site below.' : 'Fill in the details to create a new ARS site entry.'}</CardDescription>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle>{isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry'}</CardTitle>
+                            <CardDescription>{isEditing ? 'Update the details for the ARS site below.' : 'Fill in the details to create a new ARS site entry.'}</CardDescription>
+                        </div>
+                         <Button variant="outline" size="sm" onClick={() => router.back()}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>

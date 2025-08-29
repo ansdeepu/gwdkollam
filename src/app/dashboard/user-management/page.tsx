@@ -127,19 +127,23 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-      </Button>
       <Card className="shadow-xl border-border/60">
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>
-            {canManage 
-              ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions."
-              : "View all registered users in the system. (Read-only)"
-            }
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>
+                {canManage 
+                  ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions."
+                  : "View all registered users in the system. (Read-only)"
+                }
+              </CardDescription>
+            </div>
+             <Button variant="outline" size="sm" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+            </Button>
+          </div>
             {canManage && (
                 <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 pt-4">
                     <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">

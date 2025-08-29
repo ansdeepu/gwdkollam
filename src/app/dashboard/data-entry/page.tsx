@@ -283,17 +283,19 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" onClick={() => router.back()}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button>
       {pageData && (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>{pageTitle}</CardTitle>
-            <CardDescription>
-              {pageDescription}
-            </CardDescription>
+            <div className="flex justify-between items-start">
+                <div>
+                    <CardTitle>{pageTitle}</CardTitle>
+                    <CardDescription>{pageDescription}</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => router.back()}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </div>
           </CardHeader>
           <CardContent>
              <DataEntryFormComponent
