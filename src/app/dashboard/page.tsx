@@ -807,7 +807,7 @@ export default function DashboardPage() {
           if (pd.revenueHead && Number(pd.revenueHead) > 0 && checkDateInRange(pd.dateOfPayment)) {
             dataForDialog.push({
               fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A', siteNames, sitePurposes,
-              source: 'From Payment Entry',
+              source: 'From Payment',
               amount: Number(pd.revenueHead).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
               date: pd.dateOfPayment && isValid(new Date(pd.dateOfPayment)) ? format(new Date(pd.dateOfPayment), 'dd/MM/yyyy') : 'N/A',
             });
@@ -1317,6 +1317,7 @@ export default function DashboardPage() {
                                 <TableRow>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Count</TableHead>
+                                    <TableHead className="text-right">Expenditure (₹)</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1327,6 +1328,9 @@ export default function DashboardPage() {
                                             <Button variant="link" className="p-0 h-auto" disabled={item.count === 0} onClick={() => handleWorkStatusCellClick(item.data, `ARS - ${item.status}`)}>
                                                 {item.count}
                                             </Button>
+                                        </TableCell>
+                                        <TableCell className="text-right font-mono">
+                                            {item.expenditure.toLocaleString('en-IN')}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -1729,3 +1733,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
