@@ -42,7 +42,7 @@ export default function ArsEntryPage() {
     const canEdit = user?.role === 'editor';
 
     const supervisorList = React.useMemo(() => {
-        return staffMembers.filter(s => s.designation === 'Supervisor' && s.status === 'Active');
+        return staffMembers.filter(s => s.status === 'Active');
     }, [staffMembers]);
 
 
@@ -243,7 +243,7 @@ export default function ArsEntryPage() {
                                     <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                     <SelectContent>
                                         <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
-                                        {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                        {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>)}
                                     </SelectContent>
                                     </Select>
                                 <FormMessage />
@@ -262,3 +262,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
