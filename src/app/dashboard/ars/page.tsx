@@ -338,19 +338,20 @@ export default function ArsPage() {
        <Card className="shadow-lg">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex flex-wrap items-center gap-2">
-                <Link href="/dashboard/ars/entry" passHref><Button size="sm"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link>
-                <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
-                {canEdit && ( <> 
-                    <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
-                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm"> 
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
-                        {isUploading ? 'Importing...' : 'Import Excel'}
-                    </Button> 
-                    <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Template </Button> 
-                    <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
-                </> )}
-            </div>
+              <CardTitle>Total Sites: {arsSites.length}</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                  <Link href="/dashboard/ars/entry" passHref><Button size="sm"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link>
+                  <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
+                  {canEdit && ( <> 
+                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
+                      <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm"> 
+                          {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                          {isUploading ? 'Importing...' : 'Import Excel'}
+                      </Button> 
+                      <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Template </Button> 
+                      <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
+                  </> )}
+              </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
              <Popover>

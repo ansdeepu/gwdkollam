@@ -901,17 +901,21 @@ export default function AgencyRegistrationPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-2">Rig Registrations</CardTitle>
-                <CardDescription>Manage agency and rig registrations.</CardDescription>
-              </div>
-              <Button onClick={handleAddNew}><FilePlus className="mr-2 h-4 w-4" /> Add New Registration</Button>
-          </div>
-          <div className="relative pt-4 mt-4 border-t">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input type="search" placeholder="Search by agency, owner, file no, rig no..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="relative flex-grow w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        type="search" 
+                        placeholder="Search by agency, owner, file no, rig no..." 
+                        className="w-full rounded-lg bg-background pl-10 shadow-sm" 
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                    />
+                </div>
+                <Button onClick={handleAddNew} className="w-full sm:w-auto shrink-0">
+                    <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
+                </Button>
+            </div>
         </CardHeader>
         <CardContent>
            <Tabs defaultValue="completed">
