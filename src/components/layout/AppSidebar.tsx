@@ -101,11 +101,10 @@ export default function AppSidebar() {
                         <AvatarImage src={photoUrl || undefined} alt={user?.name || 'User'} />
                         <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(user?.name)}</AvatarFallback>
                     </Avatar>
-                    <div className="hidden group-data-[collapsible=icon]:hidden flex-col items-start text-left w-full overflow-hidden">
-                        <span className="font-medium text-sm">{user?.name || "User"}</span>
-                        <span className="text-xs text-muted-foreground">{user?.email}</span>
+                    <div className="flex flex-col items-start text-left w-full overflow-hidden group-data-[collapsible=icon]:hidden">
+                        <span className="font-medium text-sm truncate">{user?.name || "User"}</span>
+                        <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
                     </div>
-                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground ml-auto hidden group-data-[collapsible=icon]:hidden" />
                 </div>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
