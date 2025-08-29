@@ -345,7 +345,10 @@ export default function ArsPage() {
             <div className="flex flex-row items-center gap-2">
                 {canEdit && ( <> 
                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
-                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <FileUp className="mr-2 h-4 w-4" /> Import<br/>Excel </Button> 
+                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> 
+                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                        {isUploading ? 'Importing...' : 'Import Excel'}
+                    </Button> 
                     <Button variant="outline" onClick={handleDownloadTemplate} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <Download className="mr-2 h-4 w-4" /> Download<br/>Template </Button> 
                     <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <Trash2 className="mr-2 h-4 w-4" /> Clear All<br/>ARS Data </Button> 
                 </> )}
