@@ -42,7 +42,7 @@ export default function ArsEntryPage() {
     const canEdit = user?.role === 'editor';
 
     const supervisorList = React.useMemo(() => {
-        return staffMembers.filter(s => s.status === 'Active');
+        return staffMembers.filter(s => s.designation === 'Supervisor' && s.status === 'Active');
     }, [staffMembers]);
 
 
