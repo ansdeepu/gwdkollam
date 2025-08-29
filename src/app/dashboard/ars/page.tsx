@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -33,6 +34,26 @@ const formatDateSafe = (dateInput: any): string => {
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
   return date instanceof Date && !isNaN(date.getTime()) ? format(date, 'dd/MM/yyyy') : 'N/A';
 };
+
+// Helper component for the view dialog
+const DetailRow = ({ label, value }: { label: string; value: any }) => {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  let displayValue = String(value);
+  if (value instanceof Date) {
+    displayValue = formatDateSafe(value);
+  } else if (typeof value === 'number') {
+    displayValue = value.toLocaleString('en-IN');
+  }
+  return (
+    <div className="grid grid-cols-2 gap-2 py-1.5 border-b border-muted/50 last:border-b-0">
+      <p className="font-medium text-sm text-muted-foreground">{label}:</p>
+      <p className="text-sm text-foreground break-words">{displayValue}</p>
+    </div>
+  );
+};
+
 
 export default function ArsPage() {
   const { addFileEntry, getFileEntry, clearAllArsData } = useFileEntries();
@@ -401,17 +422,55 @@ export default function ArsPage() {
       </TooltipProvider>
       
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader><DialogTitle>ARS Site Details</DialogTitle><DialogDescription>Viewing details for {viewingSite?.nameOfSite}.</DialogDescription></DialogHeader>
-          <div className="space-y-2 py-4 text-sm">
-            {viewingSite && Object.entries(viewingSite).map(([key, value]) => {
-                if (['id', 'isArsImport'].includes(key) || value === null || value === undefined || value === '') return null;
-                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                return ( <div key={key} className="flex justify-between border-b pb-1"> <strong>{label}:</strong> <span>{value instanceof Date ? formatDateSafe(value) : String(value)}</span> </div> );
-            })}
-          </div>
-          <DialogFooter><DialogClose asChild><Button>Close</Button></DialogClose></DialogFooter>
-        </DialogContent>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>ARS Site Details</DialogTitle>
+              <DialogDescription>
+                Viewing details for {viewingSite?.nameOfSite}.
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-4 py-4">
+              {viewingSite && (
+                <>
+                  <div>
+                    <h4 className="text-base font-semibold text-primary mb-2 border-b pb-1">Site Identification</h4>
+                    <DetailRow label="File No" value={viewingSite.fileNo} />
+                    <DetailRow label="Name of Site" value={viewingSite.nameOfSite} />
+                    <DetailRow label="Constituency (LAC)" value={viewingSite.constituency} />
+                    <DetailRow label="Panchayath" value={viewingSite.arsPanchayath} />
+                    <DetailRow label="Block" value={viewingSite.arsBlock} />
+                    <DetailRow label="Latitude" value={viewingSite.latitude} />
+                    <DetailRow label="Longitude" value={viewingSite.longitude} />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-primary mb-2 border-b pb-1">Scheme Details</h4>
+                    <DetailRow label="Type of Scheme" value={viewingSite.arsTypeOfScheme} />
+                    <DetailRow label="Number of Structures" value={viewingSite.arsNumberOfStructures} />
+                    <DetailRow label="Storage Capacity (m3)" value={viewingSite.arsStorageCapacity} />
+                    <DetailRow label="No. of Fillings" value={viewingSite.arsNumberOfFillings} />
+                    <DetailRow label="No. of Beneficiaries" value={viewingSite.noOfBeneficiary} />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-primary mb-2 border-b pb-1">Financials & Status</h4>
+                    <DetailRow label="AS/TS Accorded Details" value={viewingSite.arsAsTsDetails} />
+                    <DetailRow label="Sanctioned Date" value={viewingSite.arsSanctionedDate} />
+                    <DetailRow label="AS/TS Amount (₹)" value={viewingSite.tsAmount} />
+                    <DetailRow label="Tendered Amount (₹)" value={viewingSite.arsTenderedAmount} />
+                    <DetailRow label="Awarded Amount (₹)" value={viewingSite.arsAwardedAmount} />
+                    <DetailRow label="Present Status" value={viewingSite.workStatus} />
+                    <DetailRow label="Completion Date" value={viewingSite.dateOfCompletion} />
+                    <DetailRow label="Expenditure (₹)" value={viewingSite.totalExpenditure} />
+                    <DetailRow label="Remarks" value={viewingSite.workRemarks} />
+                  </div>
+                </>
+              )}
+            </div>
+            </ScrollArea>
+            <DialogFooter>
+              <DialogClose asChild><Button>Close</Button></DialogClose>
+            </DialogFooter>
+          </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!deletingSite} onOpenChange={() => setDeletingSite(null)}>
