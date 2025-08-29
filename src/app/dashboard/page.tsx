@@ -1247,7 +1247,7 @@ export default function DashboardPage() {
       </Card>
       
       <Card>
-          <CardHeader>
+        <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
@@ -1285,149 +1285,61 @@ export default function DashboardPage() {
                 Filter by completion date
               </p>
             </div>
-          </CardHeader>
-          <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-end pb-4 mb-4 border-b">
-                  <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Total ARS Sites</p>
-                      <button 
-                        className="text-3xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={(arsDashboardData?.totalArsSites ?? 0) === 0}
-                        onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites')}
-                      >
-                        {arsDashboardData?.totalArsSites ?? 0}
-                      </button>
-                  </div>
-                  <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Total Expenditure</p>
+        </CardHeader>
+        <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-1 flex flex-col gap-4">
+                     <div className="p-4 border rounded-lg bg-secondary/30 text-center">
+                        <p className="text-sm font-medium text-muted-foreground">Total ARS Sites</p>
                         <button 
-                          className="text-3xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={(arsDashboardData?.totalArsExpenditure ?? 0) === 0}
-                          onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites (Expenditure)')}
+                            className="text-4xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={(arsDashboardData?.totalArsSites ?? 0) === 0}
+                            onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites')}
                         >
-                        ₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}
-                      </button>
-                  </div>
-              </div>
-              {arsDashboardData && arsDashboardData.arsStatusCountsData.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                      {arsDashboardData.arsStatusCountsData.map((item) => (
-                          <button
-                              key={item.status}
-                              className="flex items-center justify-between p-3 rounded-lg border bg-secondary/30 text-left hover:bg-secondary/50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                              onClick={() => handleWorkStatusCellClick(item.data, `ARS - ${item.status}`)}
-                              disabled={item.count === 0}
-                          >
-                              <span className="text-sm font-medium text-foreground">{item.status}</span>
-                              <span className="text-lg font-bold text-primary">{item.count}</span>
-                          </button>
-                      ))}
-                  </div>
-              ) : (
-                  <div className="py-10 text-center">
-                      <p className="text-muted-foreground">No ARS sites found {arsStartDate || arsEndDate ? "for the selected date range" : ""}.</p>
-                  </div>
-              )}
-          </CardContent>
-      </Card>
-      
-      <Card>
-          <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                 Finance Overview
-              </CardTitle>
-              <CardDescription>
-                Summary of credits, withdrawals and balance. Defaults to all-time data. Click amounts for details.
-              </CardDescription>
-            <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2 pt-4 border-t mt-4">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-full sm:w-[150px] justify-start text-left font-normal", !financeStartDate && "text-muted-foreground")}>
-                    <CalendarIconLucide className="mr-2 h-4 w-4" />{financeStartDate ? format(financeStartDate, "dd/MM/yyyy") : "From Date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                  <Calendar mode="single" selected={financeStartDate} onSelect={setFinanceStartDate} disabled={(date) => (financeEndDate ? date > financeEndDate : false) || date > new Date()} initialFocus />
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-full sm:w-[150px] justify-start text-left font-normal", !financeEndDate && "text-muted-foreground")}>
-                    <CalendarIconLucide className="mr-2 h-4 w-4" />{financeEndDate ? format(financeEndDate, "dd/MM/yyyy") : "To Date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                  <Calendar mode="single" selected={financeEndDate} onSelect={setFinanceEndDate} disabled={(date) => (financeStartDate ? date < financeStartDate : false) || date > new Date()} initialFocus />
-                </PopoverContent>
-              </Popover>
-               <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
-              <div className="flex-grow text-sm text-muted-foreground text-center sm:text-right">
-                {financeStartDate && financeEndDate ? (
-                  <span>Displaying data for period: <strong>{format(financeStartDate, "dd/MM/yyyy")} - {format(financeEndDate, "dd/MM/yyyy")}</strong></span>
-                ) : (
-                  <span>Displaying all-time financial data.</span>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {financeLoading ? (
-                <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-            ) : transformedFinanceMetrics ? (
-              <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="font-semibold">Account</TableHead>
-                        <TableHead className="text-right font-semibold">
-                          <span className="text-green-600">Credit (₹)</span>
-                        </TableHead>
-                        <TableHead className="text-right font-semibold">
-                          <span className="text-red-600">Withdrawal (₹)</span>
-                        </TableHead>
-                        <TableHead className="text-right font-semibold">
-                          <span className="text-blue-600">Balance (₹)</span>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">SBI</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleAmountClick('SBI', 'credit')} disabled={transformedFinanceMetrics.sbiCredit === 0}>{transformedFinanceMetrics.sbiCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
-                        </TableCell>
-                        <TableCell className="text-right">
-                           <Button variant="link" className="p-0 h-auto text-red-600" onClick={() => handleAmountClick('SBI', 'debit')} disabled={transformedFinanceMetrics.sbiDebit === 0}>{transformedFinanceMetrics.sbiDebit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
-                        </TableCell>
-                        <TableCell className={cn("text-right font-bold", transformedFinanceMetrics.sbiBalance < 0 ? 'text-red-600' : 'text-blue-600')}>{transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">STSB</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleAmountClick('STSB', 'credit')} disabled={transformedFinanceMetrics.stsbCredit === 0}>{transformedFinanceMetrics.stsbCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto text-red-600" onClick={() => handleAmountClick('STSB', 'debit')} disabled={transformedFinanceMetrics.stsbDebit === 0}>{transformedFinanceMetrics.stsbDebit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
-                        </TableCell>
-                        <TableCell className={cn("text-right font-bold", transformedFinanceMetrics.stsbBalance < 0 ? 'text-red-600' : 'text-blue-600')}>{transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Revenue Head</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleAmountClick('RevenueHead', 'credit')} disabled={transformedFinanceMetrics.revenueHeadCredit === 0}>{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Button>
-                        </TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                        <TableCell className={cn("text-right font-bold", transformedFinanceMetrics.revenueHeadBalance < 0 ? 'text-red-600' : 'text-blue-600')}>{transformedFinanceMetrics.revenueHeadBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                            {arsDashboardData?.totalArsSites ?? 0}
+                        </button>
+                    </div>
+                    <div className="p-4 border rounded-lg bg-secondary/30 text-center">
+                        <p className="text-sm font-medium text-muted-foreground">Total Expenditure</p>
+                        <button 
+                            className="text-4xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={(arsDashboardData?.totalArsExpenditure ?? 0) === 0}
+                            onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites (Expenditure)')}
+                        >
+                            ₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}
+                        </button>
+                    </div>
                 </div>
-            ) : (
-              <p>No financial data available.</p>
-            )}
-           <CardFooter className="text-xs text-muted-foreground pt-4">Note: Withdrawals for SBI/STSB are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.</CardFooter>
-      </CardContent>
+                <div className="md:col-span-2">
+                    {arsDashboardData && arsDashboardData.arsStatusCountsData.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Count</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {arsDashboardData.arsStatusCountsData.map((item) => (
+                                    <TableRow key={item.status}>
+                                        <TableCell className="font-medium">{item.status}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="link" className="p-0 h-auto" disabled={item.count === 0} onClick={() => handleWorkStatusCellClick(item.data, `ARS - ${item.status}`)}>
+                                                {item.count}
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                         <div className="h-full flex items-center justify-center p-10 text-center border-dashed border-2 rounded-lg">
+                            <p className="text-muted-foreground">No ARS sites found {arsStartDate || arsEndDate ? "for the selected date range" : ""}.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </CardContent>
       </Card>
       
       <Card>
