@@ -230,14 +230,19 @@ export default function ArsEntryPage() {
                                 <FormLabel>Supervisor</FormLabel>
                                     <Select
                                         onValueChange={(value) => {
-                                            const selectedStaff = supervisorList.find(s => s.id === value);
-                                            field.onChange(selectedStaff?.id || null);
-                                            form.setValue('supervisorName', selectedStaff?.name || null);
+                                            if (value === '_unassign_') {
+                                                field.onChange(null);
+                                                form.setValue('supervisorName', null);
+                                            } else {
+                                                const selectedStaff = supervisorList.find(s => s.id === value);
+                                                field.onChange(selectedStaff?.id || null);
+                                                form.setValue('supervisorName', selectedStaff?.name || null);
+                                            }
                                         }}
                                         value={field.value || ''}>
                                     <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                     <SelectContent>
-                                        <SelectItem value="">-- Unassign --</SelectItem>
+                                        <SelectItem value="_unassign_">-- Unassign --</SelectItem>
                                         {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                                     </SelectContent>
                                     </Select>
