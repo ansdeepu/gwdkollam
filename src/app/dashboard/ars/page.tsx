@@ -233,30 +233,35 @@ export default function ArsPage() {
             let existingFile = getFileEntry(fileNo);
             const parseDate = (dateValue: any) => { if (!dateValue) return undefined; if (dateValue instanceof Date) return dateValue; let d = parse(String(dateValue), 'dd/MM/yyyy', new Date()); return isValid(d) ? d : undefined; };
 
-            const newSiteDetails: SiteDetailFormData[] = rowsForFile.map(rowData => ({
-              nameOfSite: String(rowData['Name of Site'] || `Imported Site ${Date.now()}`),
-              purpose: 'ARS',
-              isArsImport: true,
-              latitude: Number(rowData['Latitude']) || undefined,
-              longitude: Number(rowData['Longitude']) || undefined,
-              estimateAmount: Number(rowData['Estimate Amount']) || undefined,
-              tsAmount:  Number(rowData['AS/TS Amount']) || undefined,
-              workStatus: (rowData['Present Status'] as any) || undefined,
-              dateOfCompletion: parseDate(rowData['Completion Date']),
-              totalExpenditure: Number(rowData['Expenditure (₹)']) || undefined,
-              noOfBeneficiary: String(rowData['No. of Beneficiaries'] || ''),
-              workRemarks: String(rowData['Remarks'] || ''),
-              arsTypeOfScheme: String(rowData['Type of Scheme'] || ''),
-              arsPanchayath: String(rowData['Panchayath'] || ''),
-              arsBlock: String(rowData['Block'] || ''),
-              arsNumberOfStructures: Number(rowData['Number of Structures']) || undefined,
-              arsStorageCapacity: Number(rowData['Storage Capacity (m3)']) || undefined,
-              arsNumberOfFillings: Number(rowData['No. of Fillings']) || undefined,
-              arsAsTsDetails: String(rowData['AS/TS Accorded Details'] || ''),
-              arsSanctionedDate: parseDate(rowData['Sanctioned Date']),
-              arsTenderedAmount: Number(rowData['Tendered Amount']) || undefined,
-              arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
-            }));
+            const newSiteDetails: SiteDetailFormData[] = rowsForFile.map(rowData => {
+              const expenditureValue = String(rowData['Expenditure (₹)'] || '');
+              const cleanedExpenditure = expenditureValue.replace(/[^0-9.]/g, '');
+              
+              return {
+                nameOfSite: String(rowData['Name of Site'] || `Imported Site ${Date.now()}`),
+                purpose: 'ARS',
+                isArsImport: true,
+                latitude: Number(rowData['Latitude']) || undefined,
+                longitude: Number(rowData['Longitude']) || undefined,
+                estimateAmount: Number(rowData['Estimate Amount']) || undefined,
+                tsAmount:  Number(rowData['AS/TS Amount']) || undefined,
+                workStatus: (rowData['Present Status'] as any) || undefined,
+                dateOfCompletion: parseDate(rowData['Completion Date']),
+                totalExpenditure: cleanedExpenditure ? Number(cleanedExpenditure) : undefined,
+                noOfBeneficiary: String(rowData['No. of Beneficiaries'] || ''),
+                workRemarks: String(rowData['Remarks'] || ''),
+                arsTypeOfScheme: String(rowData['Type of Scheme'] || ''),
+                arsPanchayath: String(rowData['Panchayath'] || ''),
+                arsBlock: String(rowData['Block'] || ''),
+                arsNumberOfStructures: Number(rowData['Number of Structures']) || undefined,
+                arsStorageCapacity: Number(rowData['Storage Capacity (m3)']) || undefined,
+                arsNumberOfFillings: Number(rowData['No. of Fillings']) || undefined,
+                arsAsTsDetails: String(rowData['AS/TS Accorded Details'] || ''),
+                arsSanctionedDate: parseDate(rowData['Sanctioned Date']),
+                arsTenderedAmount: Number(rowData['Tendered Amount']) || undefined,
+                arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
+              };
+            });
 
             let updatedFile: DataEntryFormData;
             if (existingFile) {
@@ -440,6 +445,3 @@ export default function ArsPage() {
     </div>
   );
 }
-
-    
-
