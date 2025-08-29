@@ -337,54 +337,50 @@ export default function ArsPage() {
       <TooltipProvider>
        <Card className="shadow-lg">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <CardTitle>Artificial Recharge Schemes (ARS) ({arsSites.length})</CardTitle>
-              <CardDescription>A detailed report of all ARS sites recorded in the system.</CardDescription>
-            </div>
-            <div className="flex flex-row items-center gap-2">
+           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+             <div className="flex items-baseline gap-4">
+                <CardTitle>Artificial Recharge Schemes (ARS)</CardTitle>
+                <span className="text-muted-foreground font-medium">Total Sites: {arsSites.length}</span>
+              </div>
+            <div className="flex flex-wrap items-center gap-2">
+                <Link href="/dashboard/ars/entry" passHref><Button size="sm"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link>
+                <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
                 {canEdit && ( <> 
                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
-                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> 
+                    <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm"> 
                         {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
                         {isUploading ? 'Importing...' : 'Import Excel'}
                     </Button> 
-                    <Button variant="outline" onClick={handleDownloadTemplate} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <Download className="mr-2 h-4 w-4" /> Download<br/>Template </Button> 
-                    <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm" className="h-auto py-1.5 whitespace-normal leading-tight"> <Trash2 className="mr-2 h-4 w-4" /> Clear All<br/>ARS Data </Button> 
+                    <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Template </Button> 
+                    <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
                 </> )}
             </div>
           </div>
-          <div className="flex flex-col gap-4 pt-4 border-t mt-4">
-            <div className="flex flex-wrap gap-2 w-full justify-start">
-                <Link href="/dashboard/ars/entry" passHref><Button className="w-full sm:w-auto"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link>
-                <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 pt-4">
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                        <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
-                    </PopoverContent>
-                </Popover>
-                 <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                        <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
-                    </PopoverContent>
-                </Popover>
-                <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><X className="mr-2 h-4 w-4"/>Clear Dates</Button>
-                <div className="relative flex-grow min-w-[250px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                </div>
+          <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
+             <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
+                </PopoverContent>
+            </Popover>
+             <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
+                </PopoverContent>
+            </Popover>
+            <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><X className="mr-2 h-4 w-4"/>Clear Dates</Button>
+            <div className="relative flex-grow min-w-[250px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
           </div>
         </CardHeader>
