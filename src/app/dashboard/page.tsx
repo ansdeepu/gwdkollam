@@ -742,24 +742,39 @@ export default function DashboardPage() {
   };
 
   const handleWorkStatusCellClick = (data: any[], title: string) => {
-    const dialogData = data.map((site, index) => ({
-      slNo: index + 1,
-      fileNo: site.fileNo,
-      applicantName: site.applicantName,
-      siteName: site.nameOfSite,
-      purpose: site.purpose,
-      workStatus: site.workStatus,
-      supervisorName: site.supervisorName || 'N/A'
-    }));
-    const columns: DetailDialogColumn[] = [
+    const isArs = title.toLowerCase().includes('ars');
+
+    const dialogData = data.map((site, index) => {
+      const rowData: Record<string, any> = {
+        slNo: index + 1,
+        fileNo: site.fileNo,
+        siteName: site.nameOfSite,
+        purpose: site.purpose,
+        workStatus: site.workStatus,
+        supervisorName: site.supervisorName || 'N/A'
+      };
+      if (!isArs) {
+        rowData.applicantName = site.applicantName;
+      }
+      return rowData;
+    });
+
+    let columns: DetailDialogColumn[] = [
       { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
-      { key: 'applicantName', label: 'Applicant Name' },
+    ];
+
+    if (!isArs) {
+      columns.push({ key: 'applicantName', label: 'Applicant Name' });
+    }
+
+    columns.push(
       { key: 'siteName', label: 'Site Name' },
       { key: 'purpose', label: 'Purpose' },
       { key: 'workStatus', label: 'Work Status' },
       { key: 'supervisorName', label: 'Supervisor' }
-    ];
+    );
+    
     setDetailDialogTitle(title);
     setDetailDialogColumns(columns);
     setDetailDialogData(dialogData);
