@@ -322,32 +322,18 @@ export default function ProgressReportPage() {
             const summary = targetFinancialSummary[purpose as SitePurpose];
             if (summary) {
                 summary.applicationData.push(siteWithFileContext);
+                summary.totalRemittance += Number(site.remittedAmount) || 0;
             }
         }
       });
     });
 
-    // Post-process to fix counts and remittance for financial summary
+    // Post-process to fix counts for financial summary
     financialSummaryOrder.forEach(purpose => {
         const pvtSummary = privateFinancialSummary[purpose];
         const govtSummary = governmentFinancialSummary[purpose];
-
-        if (pvtSummary) {
-            pvtSummary.totalApplications = pvtSummary.applicationData.length;
-            const uniquePrivateFiles = [...new Set(pvtSummary.applicationData.map(s => s.fileNo))];
-            pvtSummary.totalRemittance = uniquePrivateFiles.reduce((acc, fileNo) => {
-                const file = fileEntries.find(f => f.fileNo === fileNo);
-                return acc + (file?.totalRemittance || 0);
-            }, 0);
-        }
-        if (govtSummary) {
-            govtSummary.totalApplications = govtSummary.applicationData.length;
-            const uniqueGovtFiles = [...new Set(govtSummary.applicationData.map(s => s.fileNo))];
-            govtSummary.totalRemittance = uniqueGovtFiles.reduce((acc, fileNo) => {
-                const file = fileEntries.find(f => f.fileNo === fileNo);
-                return acc + (file?.totalRemittance || 0);
-            }, 0);
-        }
+        if (pvtSummary) pvtSummary.totalApplications = pvtSummary.applicationData.length;
+        if (govtSummary) govtSummary.totalApplications = govtSummary.applicationData.length;
     });
 
     allCompletedSitesInPeriod.forEach(site => {
@@ -463,32 +449,15 @@ export default function ProgressReportPage() {
             amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes("remittance details")) {
-        const fileMap = new Map<string, { applicantName: string, firstRemittanceDate: string, totalRemittance: number }>();
-        (data as SiteDetailFormData[]).forEach(site => {
-            const file = fileEntries.find(f => f.fileNo === site.fileNo);
-            if (file) {
-                const firstRemittanceDate = file.remittanceDetails?.[0]?.dateOfRemittance;
-                const formattedDate = firstRemittanceDate ? format(new Date(firstRemittanceDate), "dd/MM/yyyy") : "N/A";
-                
-                if (!fileMap.has(file.fileNo!)) {
-                    fileMap.set(file.fileNo!, {
-                        applicantName: file.applicantName || 'N/A',
-                        firstRemittanceDate: formattedDate,
-                        totalRemittance: file.totalRemittance || 0,
-                    });
-                }
-            }
-        });
-        
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'totalRemittance', label: 'Total Remitted (₹)', isNumeric: true }, ];
-        
-        dialogData = Array.from(fileMap.entries()).map(([fileNo, details], index) => ({
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'remittedAmount', label: 'Remitted (₹)', isNumeric: true }, ];
+        dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
             slNo: index + 1,
-            fileNo,
-            ...details,
-            totalRemittance: details.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            fileNo: site.fileNo,
+            applicantName: site.applicantName,
+            nameOfSite: site.nameOfSite,
+            purpose: site.purpose,
+            remittedAmount: (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
-
     } else if (title.toLowerCase().includes('application completed')) {
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
          dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
