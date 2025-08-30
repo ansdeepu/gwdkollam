@@ -52,6 +52,7 @@ import {
   type SitePurpose,
   type Designation,
   type AgencyApplication,
+  type RigRegistration,
 } from '@/lib/schemas';
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -208,6 +209,11 @@ export default function DashboardPage() {
   const [detailDialogTitle, setDetailDialogTitle] = useState("");
   const [detailDialogData, setDetailDialogData] = useState<Array<Record<string, any>>>([]);
   const [detailDialogColumns, setDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
+  
+  const [isRigDetailDialogOpen, setIsRigDetailDialogOpen] = useState(false);
+  const [rigDetailDialogTitle, setRigDetailDialogTitle] = useState("");
+  const [rigDetailDialogData, setRigDetailDialogData] = useState<Array<Record<string, any>>>([]);
+  const [rigDetailDialogColumns, setRigDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
 
   const [isAgeDetailDialogOpen, setIsAgeDetailDialogOpen] = useState(false);
   const [ageDetailDialogTitle, setAgeDetailDialogTitle] = useState("");
@@ -506,15 +512,17 @@ export default function DashboardPage() {
   const rigRegistrationData = useMemo(() => {
     if (agenciesLoading) return null;
 
-    let totalRigs = 0;
-    let activeRigs = 0;
-    let expiredRigs = 0;
-    
+    const allRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
+    const activeRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
+    const expiredRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
+
     agencyApplications.forEach(app => {
         app.rigs.forEach(rig => {
-            totalRigs++;
+            const rigWithContext = { ...rig, agencyName: app.agencyName, ownerName: app.owner.name };
+            allRigs.push(rigWithContext);
+
             if (rig.status === 'Active') {
-                activeRigs++;
+                activeRigs.push(rigWithContext);
                 
                 const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
                     ? [...rig.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate
@@ -523,7 +531,7 @@ export default function DashboardPage() {
                 if (lastEffectiveDate) {
                     const validityDate = addYears(new Date(lastEffectiveDate), 1);
                     if (new Date() > validityDate) {
-                        expiredRigs++;
+                        expiredRigs.push(rigWithContext);
                     }
                 }
             }
@@ -532,9 +540,14 @@ export default function DashboardPage() {
 
     return {
         totalAgencies: agencyApplications.length,
-        totalRigs,
-        activeRigs,
-        expiredRigs,
+        totalRigs: allRigs.length,
+        activeRigs: activeRigs.length,
+        expiredRigs: expiredRigs.length,
+        
+        allAgenciesData: agencyApplications,
+        allRigsData: allRigs,
+        activeRigsData: activeRigs,
+        expiredRigsData: expiredRigs,
     };
   }, [agencyApplications, agenciesLoading]);
 
@@ -763,11 +776,7 @@ export default function DashboardPage() {
       { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
     ];
-
-    if (!isArs) {
-      columns.push({ key: 'applicantName', label: 'Applicant Name' });
-    }
-
+    
     columns.push(
       { key: 'siteName', label: 'Site Name' },
       { key: 'purpose', label: 'Purpose' },
@@ -984,6 +993,14 @@ export default function DashboardPage() {
     }
     exportDialogDataToExcel(detailDialogTitle, detailDialogColumns, detailDialogData);
   };
+  
+  const handleRigDialogExcelExport = () => {
+    if (rigDetailDialogData.length === 0 || rigDetailDialogColumns.length === 0) {
+      toast({ title: "No Data", description: "No data in the dialog to export.", variant: "default" });
+      return;
+    }
+    exportDialogDataToExcel(rigDetailDialogTitle, rigDetailDialogColumns, rigDetailDialogData);
+  };
 
   const handleAgeCardClick = (category: keyof NonNullable<typeof dashboardData>['filesByAgeData'], title: string) => {
     if (!dashboardData) return;
@@ -1126,6 +1143,65 @@ export default function DashboardPage() {
     setMonthDetailDialogData(dataWithSlNo);
     setMonthDetailDialogColumns(columns);
     setIsMonthDetailDialogOpen(true);
+  };
+  
+  const handleRigCardClick = (
+    data: (AgencyApplication | (RigRegistration & {agencyName: string, ownerName: string}))[], 
+    title: string
+  ) => {
+    if (data.length === 0) return;
+
+    let columns: DetailDialogColumn[] = [];
+    let dialogData: Record<string, any>[] = [];
+
+    setRigDetailDialogTitle(title);
+
+    if (title === 'Total Agencies') {
+        columns = [
+            { key: 'slNo', label: 'Sl. No.' },
+            { key: 'agencyName', label: 'Agency Name' },
+            { key: 'ownerName', label: 'Owner Name' },
+            { key: 'fileNo', label: 'File No.' },
+            { key: 'status', label: 'Status' },
+        ];
+        dialogData = (data as AgencyApplication[]).map((app, index) => ({
+            slNo: index + 1,
+            agencyName: app.agencyName,
+            ownerName: app.owner.name,
+            fileNo: app.fileNo || 'N/A',
+            status: app.status,
+        }));
+    } else { // Handle rig-based data
+        columns = [
+            { key: 'slNo', label: 'Sl. No.' },
+            { key: 'rigRegistrationNo', label: 'Rig Reg. No.' },
+            { key: 'agencyName', label: 'Agency Name' },
+            { key: 'ownerName', label: 'Owner' },
+            { key: 'typeOfRig', label: 'Type' },
+            { key: 'status', label: 'Status' },
+            { key: 'validity', label: 'Validity Date' },
+        ];
+        dialogData = (data as (RigRegistration & {agencyName: string, ownerName: string})[]).map((rig, index) => {
+             const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
+                    ? [...rig.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate
+                    : rig.registrationDate;
+
+            const validityDate = lastEffectiveDate ? addYears(new Date(lastEffectiveDate), 1) : null;
+            return {
+                slNo: index + 1,
+                rigRegistrationNo: rig.rigRegistrationNo || 'N/A',
+                agencyName: rig.agencyName,
+                ownerName: rig.ownerName,
+                typeOfRig: rig.typeOfRig || 'N/A',
+                status: rig.status,
+                validity: validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'
+            };
+        });
+    }
+
+    setRigDetailDialogColumns(columns);
+    setRigDetailDialogData(dialogData);
+    setIsRigDetailDialogOpen(true);
   };
 
 
@@ -1418,26 +1494,26 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors">
+                    <button onClick={() => handleRigCardClick(rigRegistrationData.allAgenciesData, 'Total Agencies')} disabled={rigRegistrationData.totalAgencies === 0} className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                         <FileStack className="h-8 w-8 text-primary mx-auto mb-2" />
                         <p className="text-3xl font-bold">{rigRegistrationData.totalAgencies}</p>
                         <p className="text-sm font-medium text-muted-foreground">Total Agencies</p>
-                    </Link>
-                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors">
+                    </button>
+                    <button onClick={() => handleRigCardClick(rigRegistrationData.allRigsData, 'Total Rigs')} disabled={rigRegistrationData.totalRigs === 0} className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                         <Wrench className="h-8 w-8 text-primary mx-auto mb-2" />
                         <p className="text-3xl font-bold">{rigRegistrationData.totalRigs}</p>
                         <p className="text-sm font-medium text-muted-foreground">Total Rigs</p>
-                    </Link>
-                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-green-500/10 text-center hover:bg-green-500/20 transition-colors">
+                    </button>
+                    <button onClick={() => handleRigCardClick(rigRegistrationData.activeRigsData, 'Active Rigs')} disabled={rigRegistrationData.activeRigs === 0} className="p-4 border rounded-lg bg-green-500/10 text-center hover:bg-green-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                          <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
                         <p className="text-3xl font-bold text-green-700">{rigRegistrationData.activeRigs}</p>
                         <p className="text-sm font-medium text-green-800">Active Rigs</p>
-                    </Link>
-                    <Link href="/dashboard/agency-registration" passHref className="p-4 border rounded-lg bg-amber-500/10 text-center hover:bg-amber-500/20 transition-colors">
+                    </button>
+                    <button onClick={() => handleRigCardClick(rigRegistrationData.expiredRigsData, 'Expired Rigs')} disabled={rigRegistrationData.expiredRigs === 0} className="p-4 border rounded-lg bg-amber-500/10 text-center hover:bg-amber-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                         <AlertTriangle className="h-8 w-8 text-amber-600 mx-auto mb-2" />
                         <p className="text-3xl font-bold text-amber-700">{rigRegistrationData.expiredRigs}</p>
                         <p className="text-sm font-medium text-amber-800">Expired Rigs</p>
-                    </Link>
+                    </button>
                 </div>
             </CardContent>
         </Card>
@@ -1682,6 +1758,51 @@ export default function DashboardPage() {
           </ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={handleDialogExcelExport} disabled={detailDialogData.length === 0}>
+                <FileDown className="mr-2 h-4 w-4" /> Export Excel
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isRigDetailDialogOpen} onOpenChange={setIsRigDetailDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{rigDetailDialogTitle}</DialogTitle>
+            <DialogDescription>
+              Showing details for {rigDetailDialogTitle}.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {rigDetailDialogData.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {rigDetailDialogColumns.map(col => (
+                      <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rigDetailDialogData.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {rigDetailDialogColumns.map(col => (
+                        <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>
+                          {row[col.key]}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">No details found for this category.</p>
+            )}
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleRigDialogExcelExport} disabled={rigDetailDialogData.length === 0}>
                 <FileDown className="mr-2 h-4 w-4" /> Export Excel
             </Button>
             <DialogClose asChild>
