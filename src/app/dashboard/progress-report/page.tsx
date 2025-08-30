@@ -314,26 +314,35 @@ export default function ProgressReportPage() {
         if (allServicePurposesForSummary.includes(purpose)) {
           updateStats(progressSummaryData[purpose]);
         }
-
-        // Financial Summary Update
-        if (isCurrentApplicationInPeriod && purpose && financialSummaryOrder.includes(purpose)) {
+      });
+        // Financial Summary Update (File-level)
+        if (isCurrentApplicationInPeriod) {
             const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType as ApplicationType);
             const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
-            const summary = targetFinancialSummary[purpose as SitePurpose];
-            if (summary) {
-                summary.applicationData.push(siteWithFileContext);
-                summary.totalRemittance += Number(site.remittedAmount) || 0;
-            }
+
+            const relevantSites = (entry.siteDetails || []).filter(site => site.purpose && financialSummaryOrder.includes(site.purpose as SitePurpose));
+            
+            // Deduplicate by purpose to count a file only once per purpose category
+            const uniquePurposesInFile = new Set(relevantSites.map(site => site.purpose as SitePurpose));
+            
+            uniquePurposesInFile.forEach(purpose => {
+                const summary = targetFinancialSummary[purpose];
+                if(summary) {
+                    const sitesForThisPurpose = relevantSites.filter(s => s.purpose === purpose).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }));
+                    summary.applicationData.push(...sitesForThisPurpose);
+                    const totalRemittanceForFile = Number(entry.remittanceDetails?.[0]?.amountRemitted) || 0;
+                    summary.totalRemittance += totalRemittanceForFile;
+                }
+            });
         }
-      });
     });
 
     // Post-process to fix counts for financial summary
     financialSummaryOrder.forEach(purpose => {
-        const pvtSummary = privateFinancialSummary[purpose];
-        const govtSummary = governmentFinancialSummary[purpose];
-        if (pvtSummary) pvtSummary.totalApplications = pvtSummary.applicationData.length;
-        if (govtSummary) govtSummary.totalApplications = govtSummary.applicationData.length;
+      const pvtSummary = privateFinancialSummary[purpose];
+      const govtSummary = governmentFinancialSummary[purpose];
+      if (pvtSummary) pvtSummary.totalApplications = pvtSummary.applicationData.length;
+      if (govtSummary) govtSummary.totalApplications = govtSummary.applicationData.length;
     });
 
     allCompletedSitesInPeriod.forEach(site => {
@@ -449,24 +458,32 @@ export default function ProgressReportPage() {
             amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes("remittance details")) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'remittedAmount', label: 'Remitted (₹)', isNumeric: true }, ];
-        dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+        const groupedByFile: Record<string, { fileNo: string; applicantName: string; sites: {nameOfSite?: string, purpose?: string}[], totalRemittance: number; firstRemittanceDate: string | null }> = {};
+        
+        (data as SiteDetailFormData[]).forEach(site => {
+            const fileNo = site.fileNo || 'N/A';
+            if (!groupedByFile[fileNo]) {
+                 const parentFile = fileEntries.find(f => f.fileNo === fileNo);
+                 const firstRemittanceDate = parentFile?.remittanceDetails?.[0]?.dateOfRemittance;
+                 groupedByFile[fileNo] = {
+                    fileNo: fileNo,
+                    applicantName: site.applicantName || 'N/A',
+                    sites: [],
+                    totalRemittance: Number(parentFile?.remittanceDetails?.[0]?.amountRemitted) || 0,
+                    firstRemittanceDate: firstRemittanceDate ? format(new Date(firstRemittanceDate), 'dd/MM/yyyy') : 'N/A',
+                 };
+            }
+            groupedByFile[fileNo].sites.push({ nameOfSite: site.nameOfSite, purpose: site.purpose });
+        });
+
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'sites', label: 'Site(s)' }, { key: 'remittedAmount', label: 'Remitted (₹)', isNumeric: true }, { key: 'remittanceDate', label: 'First Remittance Date' }];
+        dialogData = Object.values(groupedByFile).map((file, index) => ({
             slNo: index + 1,
-            fileNo: site.fileNo,
-            applicantName: site.applicantName,
-            nameOfSite: site.nameOfSite,
-            purpose: site.purpose,
-            remittedAmount: (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        }));
-    } else if (title.toLowerCase().includes('application completed')) {
-         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
-         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
-            slNo: index + 1,
-            fileNo: site.fileNo,
-            applicantName: site.applicantName,
-            nameOfSite: site.nameOfSite,
-            purpose: site.purpose,
-            workStatus: site.workStatus,
+            fileNo: file.fileNo,
+            applicantName: file.applicantName,
+            sites: file.sites.map(s => `${s.nameOfSite} (${s.purpose})`).join(', '),
+            remittedAmount: file.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            remittanceDate: file.firstRemittanceDate,
         }));
     } else if (title.toLowerCase().includes('payment for completed')) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'totalExpenditure', label: 'Payment (₹)', isNumeric: true } ];
@@ -517,7 +534,7 @@ export default function ProgressReportPage() {
   const FinancialSummaryTable = ({ title, summaryData }: { title: string; summaryData: FinancialSummaryReport }) => {
     if (!reportData) return null;
 
-    const purposesToShow = financialSummaryOrder.filter(p => summaryData[p]?.totalApplications > 0 || summaryData[p]?.totalCompleted > 0);
+    const purposesToShow = financialSummaryOrder.filter(p => summaryData[p]?.applicationData.length > 0 || summaryData[p]?.completedData.length > 0);
 
     const total: FinancialSummary = { totalApplications: 0, totalRemittance: 0, totalCompleted: 0, totalPayment: 0, applicationData: [], completedData: [] };
     purposesToShow.forEach(p => {
@@ -791,3 +808,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
