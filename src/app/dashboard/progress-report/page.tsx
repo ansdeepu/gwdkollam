@@ -272,18 +272,21 @@ export default function ProgressReportPage() {
 
       // Financial Summary Data Population
       if (entry.applicationType && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
-          const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
-          const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
+        const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
+        const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
 
-          // Process each site's purpose for the summary
-          const purposesInEntry = new Set(sitesInEntry.map(s => s.purpose));
-          purposesInEntry.forEach(purpose => {
-              if (purpose && financialSummaryOrder.includes(purpose as SitePurpose) && targetFinancialSummary[purpose as SitePurpose]) {
-                  targetFinancialSummary[purpose as SitePurpose].applicationData.push(entry);
-                  targetFinancialSummary[purpose as SitePurpose].totalApplications++;
-                  targetFinancialSummary[purpose as SitePurpose].totalRemittance += (entry.totalRemittance || 0);
-              }
-          });
+        const purposesInEntry = new Set(sitesInEntry.map(s => s.purpose));
+        
+        purposesInEntry.forEach(purpose => {
+          if (purpose && financialSummaryOrder.includes(purpose as SitePurpose)) {
+            const summary = targetFinancialSummary[purpose as SitePurpose];
+            if (summary) {
+              summary.applicationData.push(entry);
+              summary.totalApplications++;
+              summary.totalRemittance += entry.totalRemittance || 0;
+            }
+          }
+        });
       }
       
       (entry.siteDetails || []).forEach(site => {
@@ -443,7 +446,6 @@ export default function ProgressReportPage() {
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
 
-    // Helper to get a unique purpose for a title like "Remittance Details for BWC"
     const getPurposeFromTitle = (t: string): SitePurpose | null => {
         const purpose = financialSummaryOrder.find(p => t.includes(`for ${p}`));
         return purpose || null;
@@ -458,7 +460,6 @@ export default function ProgressReportPage() {
         }));
     } else if (title.toLowerCase().includes("remittance")) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'totalRemittance', label: 'Total Remittance (₹)', isNumeric: true }, ];
-        
         dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
             slNo: index + 1,
             fileNo: entry.fileNo,
@@ -477,21 +478,19 @@ export default function ProgressReportPage() {
             workStatus: site.workStatus,
         }));
     } else if (title.toLowerCase().includes('payment for completed')) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'totalPayment', label: 'Total Payment (₹)', isNumeric: true }, ];
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }];
         dialogData = (data as SiteDetailFormData[])
             .filter(site => site.totalExpenditure && site.totalExpenditure > 0)
             .map((site, index) => ({
-                slNo: index + 1,
-                ...site,
-                totalPayment: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                slNo: index + 1, ...site,
             }));
-    } else { // Fallback for other site detail views, including "Total Applications"
+    } else {
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
          const siteData = (data as Array<DataEntryFormData | SiteDetailFormData>).flatMap(item => {
-             if ('fileNo' in item && 'siteDetails' in item) { // It's a DataEntryFormData
+             if ('fileNo' in item && 'siteDetails' in item) {
                  return (item.siteDetails || []).map(site => ({...site, fileNo: item.fileNo, applicantName: item.applicantName }));
              }
-             return item as SiteDetailFormData; // It's already a SiteDetailFormData
+             return item as SiteDetailFormData;
          });
 
          dialogData = siteData.map((site, index) => ({
@@ -804,4 +803,5 @@ export default function ProgressReportPage() {
   );
 }
 
+    
     
