@@ -55,7 +55,7 @@ interface FinancialSummary {
   totalRemittance: number;
   totalCompleted: number;
   totalPayment: number;
-  applicationData: DataEntryFormData[]; // Changed to hold full file entries
+  applicationData: SiteDetailFormData[]; // Changed to hold SiteDetailFormData for consistency
   completedData: SiteDetailFormData[];
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
@@ -267,28 +267,8 @@ export default function ProgressReportPage() {
 
     fileEntries.forEach(entry => {
       const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
-      
-      const sitesInEntry = (entry.siteDetails || []).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }));
+      const isCurrentApplicationInPeriod = firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
 
-      // Financial Summary Data Population
-      if (entry.applicationType && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
-        const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
-        const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
-        
-        const purposesInFile = new Set(sitesInEntry.map(s => s.purpose));
-        
-        purposesInFile.forEach(purpose => {
-            if (purpose && financialSummaryOrder.includes(purpose as SitePurpose)) {
-                const summary = targetFinancialSummary[purpose as SitePurpose];
-                if (summary) {
-                    summary.applicationData.push(entry);
-                    summary.totalApplications++;
-                    summary.totalRemittance += entry.totalRemittance || 0;
-                }
-            }
-        });
-      }
-      
       (entry.siteDetails || []).forEach(site => {
         if (!site) return;
         
@@ -300,15 +280,12 @@ export default function ProgressReportPage() {
         const completionDate = safeParseDate(site.dateOfCompletion);
         
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
-        const isCurrentApplication = firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && (!completionDate || isAfter(completionDate, sDate));
-        
         const isToBeRefundedInPeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         const wasToBeRefundedBeforePeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && firstRemittanceDate && isBefore(firstRemittanceDate, sDate);
 
         const updateStats = (statsObj: ProgressStats) => {
-            if (isCurrentApplication) { 
+            if (isCurrentApplicationInPeriod) { 
                 statsObj.currentApplications++; 
                 statsObj.currentApplicationsData.push(siteWithFileContext); 
             }
@@ -337,7 +314,41 @@ export default function ProgressReportPage() {
         if (allServicePurposesForSummary.includes(purpose)) {
           updateStats(progressSummaryData[purpose]);
         }
+
+        // Financial Summary Update
+        if (isCurrentApplicationInPeriod && purpose && financialSummaryOrder.includes(purpose)) {
+            const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType as ApplicationType);
+            const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
+            const summary = targetFinancialSummary[purpose as SitePurpose];
+            if (summary) {
+                summary.applicationData.push(siteWithFileContext);
+                summary.totalRemittance += entry.totalRemittance || 0; // Note: this sums the file's total remittance for each site. This might need refinement if a file has multiple sites of the same purpose.
+            }
+        }
       });
+    });
+
+    // Post-process to fix counts and remittance for financial summary
+    financialSummaryOrder.forEach(purpose => {
+        const pvtSummary = privateFinancialSummary[purpose];
+        const govtSummary = governmentFinancialSummary[purpose];
+
+        if (pvtSummary) {
+            pvtSummary.totalApplications = pvtSummary.applicationData.length;
+            const uniquePrivateFiles = [...new Set(pvtSummary.applicationData.map(s => s.fileNo))];
+            pvtSummary.totalRemittance = uniquePrivateFiles.reduce((acc, fileNo) => {
+                const file = fileEntries.find(f => f.fileNo === fileNo);
+                return acc + (file?.totalRemittance || 0);
+            }, 0);
+        }
+        if (govtSummary) {
+            govtSummary.totalApplications = govtSummary.applicationData.length;
+            const uniqueGovtFiles = [...new Set(govtSummary.applicationData.map(s => s.fileNo))];
+            govtSummary.totalRemittance = uniqueGovtFiles.reduce((acc, fileNo) => {
+                const file = fileEntries.find(f => f.fileNo === fileNo);
+                return acc + (file?.totalRemittance || 0);
+            }, 0);
+        }
     });
 
     allCompletedSitesInPeriod.forEach(site => {
@@ -446,12 +457,6 @@ export default function ProgressReportPage() {
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
 
-    const getPurposeFromTitle = (t: string): SitePurpose | null => {
-        const purpose = financialSummaryOrder.find(p => t.includes(`for ${p}`) || t.includes(`- ${p}`));
-        return purpose || null;
-    };
-    const purposeContext = getPurposeFromTitle(title);
-
     if (title.startsWith("Revenue Head")) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'date', label: 'Date' }, { key: 'source', label: 'Source' }, { key: 'amount', label: 'Amount (₹)', isNumeric: true }, ];
         dialogData = data.map((item, index) => ({
@@ -460,12 +465,21 @@ export default function ProgressReportPage() {
         }));
     } else if (title.toLowerCase().includes("remittance")) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'totalRemittance', label: 'Total Remittance (₹)', isNumeric: true }, ];
-        dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
+        
+        const fileMap = new Map<string, { entry: DataEntryFormData, totalRemittance: number }>();
+        (data as SiteDetailFormData[]).forEach(site => {
+            const file = fileEntries.find(f => f.fileNo === site.fileNo);
+            if (file) {
+              fileMap.set(file.fileNo!, { entry: file, totalRemittance: file.totalRemittance || 0 });
+            }
+        });
+
+        dialogData = Array.from(fileMap.values()).map((item, index) => ({
             slNo: index + 1,
-            fileNo: entry.fileNo,
-            applicantName: entry.applicantName,
-            firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
-            totalRemittance: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            fileNo: item.entry.fileNo,
+            applicantName: item.entry.applicantName,
+            firstRemittanceDate: item.entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(item.entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
+            totalRemittance: item.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes('application completed')) {
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
@@ -486,31 +500,15 @@ export default function ProgressReportPage() {
                 totalExpenditure: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
             }));
     } else if (title.toLowerCase().includes('total application')) {
-         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
-         dialogData = (data as DataEntryFormData[]).flatMap((entry, fileIndex) => {
-            const sites = (entry.siteDetails || []).filter(site => site.purpose === purposeContext);
-            if(sites.length > 0) {
-              return sites.map((site, siteIndex) => ({
-                slNo: `${fileIndex + 1}-${siteIndex + 1}`,
-                fileNo: entry.fileNo,
-                applicantName: entry.applicantName,
-                nameOfSite: site.nameOfSite,
-                purpose: site.purpose,
-                workStatus: site.workStatus
-              }));
-            }
-            return [{
-              slNo: fileIndex + 1,
-              fileNo: entry.fileNo,
-              applicantName: entry.applicantName,
-              nameOfSite: 'N/A',
-              purpose: 'N/A',
-              workStatus: entry.fileStatus
-            }];
-         });
-         // Flatten the data and re-assign slNo
-         dialogData = dialogData.map((d, i) => ({ ...d, slNo: i + 1 }));
-
+         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }];
+         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+            slNo: index + 1,
+            fileNo: site.fileNo,
+            applicantName: site.applicantName,
+            nameOfSite: site.nameOfSite,
+            purpose: site.purpose,
+            workStatus: site.workStatus,
+        }));
     } else {
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
          const siteData = (data as Array<DataEntryFormData | SiteDetailFormData>).flatMap(item => {
@@ -597,7 +595,7 @@ export default function ProgressReportPage() {
                   <TableRow key={purpose}>
                     <TableCell className="border p-2 font-medium">{purpose}</TableCell>
                     <TableCell className="border p-2 text-center">
-                      <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Total Application - ${purpose}`)}>
+                      <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Site Details for ${purpose} Applications`)}>
                         {data.totalApplications}
                       </Button>
                     </TableCell>
@@ -624,12 +622,12 @@ export default function ProgressReportPage() {
                 <TableRow className="bg-muted/50 font-bold">
                     <TableCell className="border p-2">Total</TableCell>
                     <TableCell className="border p-2 text-center">
-                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalApplications === 0} onClick={() => handleCountClick(total.applicationData, `Total Applications for ${title}`)}>
+                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalApplications === 0} onClick={() => handleCountClick(total.applicationData, `Site Details for All ${title}`)}>
                             {total.totalApplications}
                         </Button>
                     </TableCell>
                     <TableCell className="border p-2 text-right">
-                        <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalRemittance === 0} onClick={() => handleCountClick(total.applicationData, `Total Remittance for ${title}`)}>
+                        <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalRemittance === 0} onClick={() => handleCountClick(total.applicationData, `Remittance Details for All ${title}`)}>
                             {total.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </Button>
                     </TableCell>
@@ -829,6 +827,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-    
-    
