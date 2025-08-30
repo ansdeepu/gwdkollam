@@ -457,16 +457,20 @@ export default function ProgressReportPage() {
             amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes("remittance")) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'remittedAmount', label: 'Remitted (₹)', isNumeric: true }, ];
-        const uniqueEntries = [...new Map((data as DataEntryFormData[]).map(item => [item.fileNo, item])).values()];
-        
-        dialogData = uniqueEntries.map((entry, index) => ({
-            slNo: index + 1,
-            fileNo: entry.fileNo,
-            applicantName: entry.applicantName,
-            firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
-            remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        }));
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'remittedAmount', label: 'Remitted (₹)', isNumeric: true }, ];
+        const flatData = (data as DataEntryFormData[]).flatMap(entry => 
+            (entry.siteDetails || [])
+                .filter(site => !purposeContext || site.purpose === purposeContext)
+                .map(site => ({
+                    fileNo: entry.fileNo,
+                    applicantName: entry.applicantName,
+                    nameOfSite: site.nameOfSite,
+                    purpose: site.purpose,
+                    firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
+                    remittedAmount: (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                }))
+        );
+        dialogData = flatData.map((item, index) => ({ slNo: index + 1, ...item }));
     } else if (title.toLowerCase().includes('total application')) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, ];
         const flatData = (data as DataEntryFormData[]).flatMap(entry => 
@@ -490,17 +494,21 @@ export default function ProgressReportPage() {
             purpose: site.purpose,
             workStatus: site.workStatus,
         }));
+    } else if (title.toLowerCase().includes('payment for completed')) {
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'totalPayment', label: 'Total Payment (₹)', isNumeric: true }, ];
+        dialogData = (data as SiteDetailFormData[])
+            .filter(site => site.totalExpenditure && site.totalExpenditure > 0)
+            .map((site, index) => ({
+                slNo: index + 1,
+                ...site,
+                totalPayment: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            }));
     }
     else { // Fallback for other site detail views
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
-         const isCompleted = title.toLowerCase().includes('payment'); // Check if it's the payment click
-         if (isCompleted) {
-            columns.push({ key: 'totalPayment', label: 'Total Payment (₹)', isNumeric: true });
-         }
          dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
           slNo: index + 1,
           ...site,
-          totalPayment: isCompleted ? (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : undefined,
         }));
     }
     
