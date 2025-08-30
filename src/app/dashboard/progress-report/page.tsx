@@ -274,18 +274,18 @@ export default function ProgressReportPage() {
       if (entry.applicationType && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate })) {
         const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType);
         const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
-
-        const purposesInEntry = new Set(sitesInEntry.map(s => s.purpose));
         
-        purposesInEntry.forEach(purpose => {
-          if (purpose && financialSummaryOrder.includes(purpose as SitePurpose)) {
-            const summary = targetFinancialSummary[purpose as SitePurpose];
-            if (summary) {
-              summary.applicationData.push(entry);
-              summary.totalApplications++;
-              summary.totalRemittance += entry.totalRemittance || 0;
+        const purposesInFile = new Set(sitesInEntry.map(s => s.purpose));
+        
+        purposesInFile.forEach(purpose => {
+            if (purpose && financialSummaryOrder.includes(purpose as SitePurpose)) {
+                const summary = targetFinancialSummary[purpose as SitePurpose];
+                if (summary) {
+                    summary.applicationData.push(entry);
+                    summary.totalApplications++;
+                    summary.totalRemittance += entry.totalRemittance || 0;
+                }
             }
-          }
         });
       }
       
@@ -447,7 +447,7 @@ export default function ProgressReportPage() {
     let dialogData: Array<Record<string, any>>;
 
     const getPurposeFromTitle = (t: string): SitePurpose | null => {
-        const purpose = financialSummaryOrder.find(p => t.includes(`for ${p}`));
+        const purpose = financialSummaryOrder.find(p => t.includes(`for ${p}`) || t.includes(`- ${p}`));
         return purpose || null;
     };
     const purposeContext = getPurposeFromTitle(title);
@@ -478,12 +478,39 @@ export default function ProgressReportPage() {
             workStatus: site.workStatus,
         }));
     } else if (title.toLowerCase().includes('payment for completed')) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }];
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'totalExpenditure', label: 'Payment (₹)', isNumeric: true } ];
         dialogData = (data as SiteDetailFormData[])
             .filter(site => site.totalExpenditure && site.totalExpenditure > 0)
             .map((site, index) => ({
                 slNo: index + 1, ...site,
+                totalExpenditure: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
             }));
+    } else if (title.toLowerCase().includes('total application')) {
+         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
+         dialogData = (data as DataEntryFormData[]).flatMap((entry, fileIndex) => {
+            const sites = (entry.siteDetails || []).filter(site => site.purpose === purposeContext);
+            if(sites.length > 0) {
+              return sites.map((site, siteIndex) => ({
+                slNo: `${fileIndex + 1}-${siteIndex + 1}`,
+                fileNo: entry.fileNo,
+                applicantName: entry.applicantName,
+                nameOfSite: site.nameOfSite,
+                purpose: site.purpose,
+                workStatus: site.workStatus
+              }));
+            }
+            return [{
+              slNo: fileIndex + 1,
+              fileNo: entry.fileNo,
+              applicantName: entry.applicantName,
+              nameOfSite: 'N/A',
+              purpose: 'N/A',
+              workStatus: entry.fileStatus
+            }];
+         });
+         // Flatten the data and re-assign slNo
+         dialogData = dialogData.map((d, i) => ({ ...d, slNo: i + 1 }));
+
     } else {
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
          const siteData = (data as Array<DataEntryFormData | SiteDetailFormData>).flatMap(item => {
