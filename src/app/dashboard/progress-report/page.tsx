@@ -322,7 +322,6 @@ export default function ProgressReportPage() {
             const summary = targetFinancialSummary[purpose as SitePurpose];
             if (summary) {
                 summary.applicationData.push(siteWithFileContext);
-                summary.totalRemittance += entry.totalRemittance || 0; // Note: this sums the file's total remittance for each site. This might need refinement if a file has multiple sites of the same purpose.
             }
         }
       });
@@ -464,23 +463,20 @@ export default function ProgressReportPage() {
             amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes("remittance")) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'totalRemittance', label: 'Total Remittance (₹)', isNumeric: true }, ];
-        
-        const fileMap = new Map<string, { entry: DataEntryFormData, totalRemittance: number }>();
-        (data as SiteDetailFormData[]).forEach(site => {
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'remittedAmount', label: 'Site Remittance (₹)', isNumeric: true }, ];
+        dialogData = (data as SiteDetailFormData[]).map((site, index) => {
             const file = fileEntries.find(f => f.fileNo === site.fileNo);
-            if (file) {
-              fileMap.set(file.fileNo!, { entry: file, totalRemittance: file.totalRemittance || 0 });
-            }
+            const firstRemittanceDate = file?.remittanceDetails?.[0]?.dateOfRemittance;
+            return {
+                slNo: index + 1,
+                fileNo: site.fileNo,
+                applicantName: site.applicantName,
+                nameOfSite: site.nameOfSite,
+                purpose: site.purpose,
+                remittedAmount: (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                firstRemittanceDate: firstRemittanceDate ? format(new Date(firstRemittanceDate), "dd/MM/yyyy") : "N/A",
+            };
         });
-
-        dialogData = Array.from(fileMap.values()).map((item, index) => ({
-            slNo: index + 1,
-            fileNo: item.entry.fileNo,
-            applicantName: item.entry.applicantName,
-            firstRemittanceDate: item.entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(item.entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
-            totalRemittance: item.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        }));
     } else if (title.toLowerCase().includes('application completed')) {
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
          dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
@@ -733,7 +729,7 @@ export default function ProgressReportPage() {
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.previousBalance === 0} onClick={() => handleCountClick(stats.previousBalanceData, `${purpose} - Previous Balance`)}>{stats?.previousBalance || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.currentApplications === 0} onClick={() => handleCountClick(stats.currentApplicationsData, `${purpose} - Current Applications`)}>{stats?.currentApplications || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.toBeRefunded === 0} onClick={() => handleCountClick(stats.toBeRefundedData, `${purpose} - To be Refunded`)}>{stats?.toBeRefunded || 0}</Button></TableCell>
-                                <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.totalApplications === 0} onClick={() => handleCountClick(stats.totalApplicationsData, `${purpose} - Total Applications`)}>{stats?.totalApplications || 0}</Button></TableCell>
+                                <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.totalApplications === 0} onClick={() => handleCountClick(stats.totalApplicationsData, `Site Details for ${purpose} Applications`)}>{stats?.totalApplications || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.completed === 0} onClick={() => handleCountClick(stats.completedData, `${purpose} - Completed`)}>{stats?.completed || 0}</Button></TableCell>
                                 <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.balance === 0} onClick={() => handleCountClick(stats.balanceData, `${purpose} - Balance`)}>{stats?.balance || 0}</Button></TableCell>
                             </TableRow>
