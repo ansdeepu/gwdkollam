@@ -457,33 +457,15 @@ export default function ProgressReportPage() {
             amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes("remittance")) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'remittedAmount', label: 'Remitted (₹)', isNumeric: true }, ];
-        const flatData = (data as DataEntryFormData[]).flatMap(entry => 
-            (entry.siteDetails || [])
-                .filter(site => !purposeContext || site.purpose === purposeContext)
-                .map(site => ({
-                    fileNo: entry.fileNo,
-                    applicantName: entry.applicantName,
-                    nameOfSite: site.nameOfSite,
-                    purpose: site.purpose,
-                    firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
-                    remittedAmount: (Number(site.remittedAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                }))
-        );
-        dialogData = flatData.map((item, index) => ({ slNo: index + 1, ...item }));
-    } else if (title.toLowerCase().includes('total application')) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, ];
-        const flatData = (data as DataEntryFormData[]).flatMap(entry => 
-            (entry.siteDetails || [])
-                .filter(site => !purposeContext || site.purpose === purposeContext)
-                .map(site => ({
-                    fileNo: entry.fileNo,
-                    applicantName: entry.applicantName,
-                    nameOfSite: site.nameOfSite,
-                    purpose: site.purpose,
-                }))
-        );
-        dialogData = flatData.map((item, index) => ({ slNo: index + 1, ...item }));
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'totalRemittance', label: 'Total Remittance (₹)', isNumeric: true }, ];
+        
+        dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
+            slNo: index + 1,
+            fileNo: entry.fileNo,
+            applicantName: entry.applicantName,
+            firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
+            totalRemittance: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        }));
     } else if (title.toLowerCase().includes('application completed')) {
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
          dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
@@ -503,10 +485,16 @@ export default function ProgressReportPage() {
                 ...site,
                 totalPayment: (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             }));
-    }
-    else { // Fallback for other site detail views
+    } else { // Fallback for other site detail views, including "Total Applications"
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
-         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+         const siteData = (data as Array<DataEntryFormData | SiteDetailFormData>).flatMap(item => {
+             if ('fileNo' in item && 'siteDetails' in item) { // It's a DataEntryFormData
+                 return (item.siteDetails || []).map(site => ({...site, fileNo: item.fileNo, applicantName: item.applicantName }));
+             }
+             return item as SiteDetailFormData; // It's already a SiteDetailFormData
+         });
+
+         dialogData = siteData.map((site, index) => ({
           slNo: index + 1,
           ...site,
         }));
@@ -815,3 +803,5 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
+    
