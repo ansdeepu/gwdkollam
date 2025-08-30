@@ -435,68 +435,60 @@ export default function ProgressReportPage() {
     setEndDate(endOfMonth(today));
   };
 
- const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData | Record<string, any>>, title: string) => {
+  const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData | Record<string, any>>, title: string) => {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
 
     let columns: DetailDialogColumn[];
     let dialogData: Array<Record<string, any>>;
 
+    // Helper to get a unique purpose for a title like "Remittance Details for BWC"
+    const getPurposeFromTitle = (t: string): SitePurpose | null => {
+        const purpose = financialSummaryOrder.find(p => t.includes(`for ${p}`));
+        return purpose || null;
+    };
+    const purposeContext = getPurposeFromTitle(title);
+
     if (title.startsWith("Revenue Head")) {
-      columns = [
-        { key: 'slNo', label: 'Sl. No.' },
-        { key: 'fileNo', label: 'File No.' },
-        { key: 'applicantName', label: 'Applicant' },
-        { key: 'date', label: 'Date' },
-        { key: 'source', label: 'Source' },
-        { key: 'amount', label: 'Amount (₹)' },
-      ];
-      dialogData = data.map((item, index) => ({
-        slNo: index + 1,
-        ...item,
-        amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      }));
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'date', label: 'Date' }, { key: 'source', label: 'Source' }, { key: 'amount', label: 'Amount (₹)' }, ];
+        dialogData = data.map((item, index) => ({
+            slNo: index + 1, ...item,
+            amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        }));
     } else if (title.toLowerCase().includes("remittance")) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'fileNo', label: 'File No.' },
-            { key: 'applicantName', label: 'Applicant' },
-            { key: 'firstRemittanceDate', label: 'First Remittance Date' },
-            { key: 'remittedAmount', label: 'Remitted (₹)' },
-        ];
-        dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
-            slNo: index + 1,
-            fileNo: entry.fileNo,
-            applicantName: entry.applicantName,
-            firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
-            remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        }));
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'remittedAmount', label: 'Remitted (₹)' }, ];
+        const flatData = (data as DataEntryFormData[]).flatMap(entry => 
+            (entry.siteDetails || [])
+                .filter(site => !purposeContext || site.purpose === purposeContext)
+                .map(site => ({
+                    fileNo: entry.fileNo,
+                    applicantName: entry.applicantName,
+                    nameOfSite: site.nameOfSite,
+                    purpose: site.purpose,
+                    firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
+                    remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                }))
+        );
+        dialogData = flatData.map((item, index) => ({ slNo: index + 1, ...item }));
     } else if (title.toLowerCase().includes('total application')) {
-         columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'fileNo', label: 'File No.' },
-            { key: 'applicantName', label: 'Applicant' },
-        ];
-        dialogData = (data as DataEntryFormData[]).map((entry, index) => ({
-            slNo: index + 1,
-            fileNo: entry.fileNo,
-            applicantName: entry.applicantName,
-        }));
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, ];
+        const flatData = (data as DataEntryFormData[]).flatMap(entry => 
+            (entry.siteDetails || [])
+                .filter(site => !purposeContext || site.purpose === purposeContext)
+                .map(site => ({
+                    fileNo: entry.fileNo,
+                    applicantName: entry.applicantName,
+                    nameOfSite: site.nameOfSite,
+                    purpose: site.purpose,
+                }))
+        );
+        dialogData = flatData.map((item, index) => ({ slNo: index + 1, ...item }));
     } else { // Fallback for other site detail views
-         columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'fileNo', label: 'File No.' },
-            { key: 'applicantName', label: 'Applicant Name' },
-            { key: 'nameOfSite', label: 'Site Name' },
-            { key: 'purpose', label: 'Purpose' },
-            { key: 'workStatus', label: 'Work Status' },
-        ];
-        
+         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
         const isCompleted = title.toLowerCase().includes('completed');
         if (isCompleted) {
             columns.push({ key: 'totalPayment', label: 'Total Payment (₹)' });
         }
-
         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
           slNo: index + 1,
           ...site,
