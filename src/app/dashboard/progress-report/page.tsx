@@ -77,6 +77,7 @@ const REFUNDED_STATUSES: SiteWorkStatus[] = [];
 interface DetailDialogColumn {
   key: string;
   label: string;
+  isNumeric?: boolean;
 }
 
 const WellTypeProgressTable = ({ 
@@ -450,26 +451,22 @@ export default function ProgressReportPage() {
     const purposeContext = getPurposeFromTitle(title);
 
     if (title.startsWith("Revenue Head")) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'date', label: 'Date' }, { key: 'source', label: 'Source' }, { key: 'amount', label: 'Amount (₹)' }, ];
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'date', label: 'Date' }, { key: 'source', label: 'Source' }, { key: 'amount', label: 'Amount (₹)', isNumeric: true }, ];
         dialogData = data.map((item, index) => ({
             slNo: index + 1, ...item,
             amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes("remittance")) {
-        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'remittedAmount', label: 'Remitted (₹)' }, ];
-        const flatData = (data as DataEntryFormData[]).flatMap(entry => 
-            (entry.siteDetails || [])
-                .filter(site => !purposeContext || site.purpose === purposeContext)
-                .map(site => ({
-                    fileNo: entry.fileNo,
-                    applicantName: entry.applicantName,
-                    nameOfSite: site.nameOfSite,
-                    purpose: site.purpose,
-                    firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
-                    remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                }))
-        );
-        dialogData = flatData.map((item, index) => ({ slNo: index + 1, ...item }));
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'firstRemittanceDate', label: 'First Remittance Date' }, { key: 'remittedAmount', label: 'Remitted (₹)', isNumeric: true }, ];
+        const uniqueEntries = [...new Map((data as DataEntryFormData[]).map(item => [item.fileNo, item])).values()];
+        
+        dialogData = uniqueEntries.map((entry, index) => ({
+            slNo: index + 1,
+            fileNo: entry.fileNo,
+            applicantName: entry.applicantName,
+            firstRemittanceDate: entry.remittanceDetails?.[0]?.dateOfRemittance ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") : "N/A",
+            remittedAmount: (Number(entry.totalRemittance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        }));
     } else if (title.toLowerCase().includes('total application')) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, ];
         const flatData = (data as DataEntryFormData[]).flatMap(entry => 
@@ -483,13 +480,24 @@ export default function ProgressReportPage() {
                 }))
         );
         dialogData = flatData.map((item, index) => ({ slNo: index + 1, ...item }));
-    } else { // Fallback for other site detail views
+    } else if (title.toLowerCase().includes('application completed')) {
+         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
+         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+            slNo: index + 1,
+            fileNo: site.fileNo,
+            applicantName: site.applicantName,
+            nameOfSite: site.nameOfSite,
+            purpose: site.purpose,
+            workStatus: site.workStatus,
+        }));
+    }
+    else { // Fallback for other site detail views
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
-        const isCompleted = title.toLowerCase().includes('completed');
-        if (isCompleted) {
-            columns.push({ key: 'totalPayment', label: 'Total Payment (₹)' });
-        }
-        dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+         const isCompleted = title.toLowerCase().includes('payment'); // Check if it's the payment click
+         if (isCompleted) {
+            columns.push({ key: 'totalPayment', label: 'Total Payment (₹)', isNumeric: true });
+         }
+         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
           slNo: index + 1,
           ...site,
           totalPayment: isCompleted ? (Number(site.totalExpenditure) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : undefined,
@@ -581,7 +589,11 @@ export default function ProgressReportPage() {
                         {data.totalCompleted}
                       </Button>
                     </TableCell>
-                    <TableCell className="border p-2 text-right">{data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-right">
+                      <Button variant="link" className="p-0 h-auto text-right" disabled={data.totalPayment === 0} onClick={() => handleCountClick(data.completedData, `Payment for Completed - ${purpose}`)}>
+                          {data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 )
               })}
@@ -604,7 +616,11 @@ export default function ProgressReportPage() {
                             {total.totalCompleted}
                         </Button>
                     </TableCell>
-                    <TableCell className="border p-2 text-right">{total.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="border p-2 text-right">
+                        <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalPayment === 0} onClick={() => handleCountClick(total.completedData, `Total Payment for ${title}`)}>
+                           {total.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </Button>
+                    </TableCell>
                 </TableRow>
             </TableFooter>
           </Table>
@@ -758,14 +774,14 @@ export default function ProgressReportPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {detailDialogColumns.map(col => <TableHead key={col.key}>{col.label}</TableHead>)}
+                      {detailDialogColumns.map(col => <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>)}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {detailDialogData.map((row, index) => (
                       <TableRow key={index}>
                         {detailDialogColumns.map(col => (
-                          <TableCell key={col.key} className="text-xs">
+                          <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>
                              {(row as any)[col.key] !== undefined && (row as any)[col.key] !== null ? String((row as any)[col.key]) : 'N/A'}
                           </TableCell>
                         ))}
