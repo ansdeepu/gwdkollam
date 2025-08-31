@@ -186,7 +186,7 @@ const getColorClass = (nameOrEmail: string): string => {
 export default function DashboardPage() {
   const router = useRouter();
   const { fileEntries: filteredFileEntries, isLoading: filteredEntriesLoading } = useFileEntries();
-  const { reportEntries: allFileEntries, isReportLoading: allEntriesLoading } = useAllFileEntriesForReports();
+  const { reportEntries: allFileEntries, isReportLoading } = useAllFileEntriesForReports();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { applications: agencyApplications, isLoading: agenciesLoading } = useAgencyApplications();
@@ -239,7 +239,7 @@ export default function DashboardPage() {
   };
 
   const calculateFinanceData = useCallback(() => {
-    if (allEntriesLoading) return;
+    if (isReportLoading) return;
     setFinanceLoading(true);
     
     let sDate: Date | null = null;
@@ -301,11 +301,11 @@ export default function DashboardPage() {
       revenueHeadBalance,
     });
     setFinanceLoading(false);
-  }, [financeStartDate, financeEndDate, allFileEntries, allEntriesLoading]);
+  }, [financeStartDate, financeEndDate, allFileEntries, isReportLoading]);
   
   useEffect(() => {
-    if (!allEntriesLoading) calculateFinanceData();
-  }, [financeStartDate, financeEndDate, allFileEntries, allEntriesLoading, calculateFinanceData]); 
+    if (!isReportLoading) calculateFinanceData();
+  }, [financeStartDate, financeEndDate, allFileEntries, isReportLoading, calculateFinanceData]); 
 
   const handleClearFinanceDates = () => {
     setFinanceStartDate(undefined);
@@ -341,7 +341,7 @@ export default function DashboardPage() {
   }, [authLoading, currentUser, fetchAllUsers]);
 
   const dashboardData = useMemo(() => {
-    if (filteredEntriesLoading || allEntriesLoading || staffLoading || !currentUser) return null;
+    if (filteredEntriesLoading || isReportLoading || staffLoading || !currentUser) return null;
     
     const nonArsEntries = (currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries)
         .map(entry => ({
@@ -489,6 +489,7 @@ export default function DashboardPage() {
         between2And3: ageGroups.between2And3.length,
         between3And4: ageGroups.between3And4.length,
         between4And5: ageGroups.between4And5.length,
+        above5: ageGroups.above5.length,
     };
     const fileStatusCountsData = fileStatusOptions.map(status => ({
         status,
@@ -506,7 +507,7 @@ export default function DashboardPage() {
         fileStatusCountsData,
         totalFiles: entriesForFileStatus.length,
     };
-  }, [filteredEntriesLoading, allEntriesLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
+  }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
   const rigRegistrationData = useMemo(() => {
     if (agenciesLoading) return null;
@@ -552,7 +553,7 @@ export default function DashboardPage() {
 
 
   const arsDashboardData = useMemo(() => {
-    if (allEntriesLoading) return null;
+    if (isReportLoading) return null;
   
     const sDate = arsStartDate ? startOfDay(arsStartDate) : null;
     const eDate = arsEndDate ? endOfDay(arsEndDate) : null;
@@ -607,11 +608,11 @@ export default function DashboardPage() {
       arsStatusCountsData,
       allArsSites: arsSites,
     };
-  }, [allFileEntries, allEntriesLoading, arsStartDate, arsEndDate]);
+  }, [allFileEntries, isReportLoading, arsStartDate, arsEndDate]);
 
 
   const currentMonthStats = useMemo(() => {
-    if (allEntriesLoading || !currentUser) return null;
+    if (isReportLoading || !currentUser) return null;
 
     const startOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth(), 1);
     const endOfMonth = new Date(workReportMonth.getFullYear(), workReportMonth.getMonth() + 1, 0, 23, 59, 59);
@@ -671,7 +672,7 @@ export default function DashboardPage() {
         completedSummary: createSummary(completedThisMonthSites),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [allFileEntries, allEntriesLoading, workReportMonth, currentUser]);
+  }, [allFileEntries, isReportLoading, workReportMonth, currentUser]);
 
   const supervisorList = useMemo(() => {
     if (staffLoading || usersLoading) return [];
@@ -694,7 +695,7 @@ export default function DashboardPage() {
         return acc;
     }, {} as Record<SitePurpose, number>);
     
-    if (!selectedSupervisorId || allEntriesLoading) {
+    if (!selectedSupervisorId || isReportLoading) {
       return { works: [], byPurpose, totalCount: 0 };
     }
     
@@ -719,7 +720,7 @@ export default function DashboardPage() {
         });
     }
     return { works, byPurpose, totalCount: works.length };
-  }, [selectedSupervisorId, allFileEntries, allEntriesLoading]);
+  }, [selectedSupervisorId, allFileEntries, isReportLoading]);
 
   const handleFileStatusCardClick = (status: string) => {
     const dataForDialog = dashboardData?.fileStatusCountsData.find(item => item.status === status)?.data ?? [];
@@ -1200,7 +1201,7 @@ export default function DashboardPage() {
   };
 
 
-  if (filteredEntriesLoading || allEntriesLoading || authLoading || usersLoading || staffLoading || !dashboardData || !currentMonthStats) { 
+  if (filteredEntriesLoading || isReportLoading || authLoading || usersLoading || staffLoading) { 
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -1208,6 +1209,15 @@ export default function DashboardPage() {
     );
   }
   
+  if (!dashboardData || !currentMonthStats) {
+      return (
+          <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="ml-3 text-muted-foreground">Preparing dashboard data...</p>
+          </div>
+      );
+  }
+
   const shouldAnimateBirthdays = dashboardData.birthdayWishes.length > 1;
   const shouldAnimateUpdates = dashboardData.workAlerts.length > 5; // Animate only if there are many updates
   
@@ -1946,5 +1956,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
