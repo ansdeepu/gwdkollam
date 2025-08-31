@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { reportableFields } from '@/lib/schemas';
-import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
+import { useFileEntries } from '@/hooks/useFileEntries';
 import * as XLSX from 'xlsx';
 import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,7 +23,7 @@ interface GeneratedReportRow {
 export default function CustomReportBuilderPage() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const { toast } = useToast();
-  const { reportEntries: fileEntries, isReportLoading } = useAllFileEntriesForReports();
+  const { fileEntries, isLoading: entriesLoading } = useFileEntries();
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -130,7 +130,7 @@ export default function CustomReportBuilderPage() {
     toast({ title: "Filters Cleared", description: "All selections have been reset." });
   };
   
-  if (isReportLoading) {
+  if (entriesLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -179,7 +179,7 @@ export default function CustomReportBuilderPage() {
                   <h3 className="text-lg font-semibold">Available Fields:</h3>
               </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {reportableFields.map(field => (
               <div
                 key={field.id}
