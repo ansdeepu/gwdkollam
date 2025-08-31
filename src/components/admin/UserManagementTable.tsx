@@ -192,7 +192,7 @@ export default function UserManagementTable({
                             </DropdownMenuItem>
                            ) : (
                             <DropdownMenuItem onClick={() => handleApprovalChange(user.uid, true)}>
-                                <UserCheck className="mr-2 h-4 w-4" />
+                                <CheckCircle className="mr-2 h-4 w-4" />
                                 Approve User
                             </DropdownMenuItem>
                            )}
