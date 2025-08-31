@@ -73,29 +73,48 @@ export default function EstablishmentPage() {
     };
   }, [searchTerm]);
 
-  // Main data processing logic
-  const filteredStaff = useMemo(() => {
-    let filtered = [...allStaffMembers];
+  const { activeStaff, transferredStaff, retiredStaff } = useMemo(() => {
+    const active: StaffMember[] = [];
+    const transferred: StaffMember[] = [];
+    const retired: StaffMember[] = [];
 
-    if (debouncedSearchTerm) {
-        const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
-        filtered = filtered.filter(staff =>
-          (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.phoneNo?.includes(lowerSearchTerm)) ||
-          (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-          (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-        );
+    for (const staff of allStaffMembers) {
+      if (staff.status === 'Active') {
+        active.push(staff);
+      } else if (staff.status === 'Transferred') {
+        transferred.push(staff);
+      } else if (staff.status === 'Retired') {
+        retired.push(staff);
+      }
     }
-    
-    return {
-        active: filtered.filter(s => s.status === 'Active'),
-        transferred: filtered.filter(s => s.status === 'Transferred'),
-        retired: filtered.filter(s => s.status === 'Retired'),
+    return { activeStaff: active, transferredStaff: transferred, retiredStaff: retired };
+  }, [allStaffMembers]);
+
+  // Separate memo for filtering, applied after categorization.
+  const filteredStaff = useMemo(() => {
+    const filterFunction = (staffList: StaffMember[]) => {
+      if (!debouncedSearchTerm) {
+        return staffList;
+      }
+      const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+      return staffList.filter(staff =>
+        (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.phoneNo?.includes(lowerSearchTerm)) ||
+        (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+        (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+      );
     };
-  }, [debouncedSearchTerm, allStaffMembers]);
+
+    return {
+      active: filterFunction(activeStaff),
+      transferred: filterFunction(transferredStaff),
+      retired: filterFunction(retiredStaff),
+    };
+  }, [debouncedSearchTerm, activeStaff, transferredStaff, retiredStaff]);
+  
 
   const handleAddNewStaff = () => {
     setEditingStaff(null);
@@ -257,10 +276,6 @@ export default function EstablishmentPage() {
     toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
   };
   
-  const activeStaffCount = useMemo(() => allStaffMembers.filter(s => s.status === 'Active').length, [allStaffMembers]);
-  const transferredStaffCount = useMemo(() => allStaffMembers.filter(s => s.status === 'Transferred').length, [allStaffMembers]);
-  const retiredStaffCount = useMemo(() => allStaffMembers.filter(s => s.status === 'Retired').length, [allStaffMembers]);
-  
   const isLoading = authLoading || staffLoadingHook;
 
   if (isLoading) {
@@ -311,9 +326,9 @@ export default function EstablishmentPage() {
 
       <Tabs defaultValue="activeStaff" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:w-[600px] mb-4">
-          <TabsTrigger value="activeStaff">Active ({activeStaffCount})</TabsTrigger>
-          <TabsTrigger value="transferredStaff">Transferred ({transferredStaffCount})</TabsTrigger>
-          <TabsTrigger value="retiredStaff">Retired ({retiredStaffCount})</TabsTrigger>
+          <TabsTrigger value="activeStaff">Active ({activeStaff.length})</TabsTrigger>
+          <TabsTrigger value="transferredStaff">Transferred ({transferredStaff.length})</TabsTrigger>
+          <TabsTrigger value="retiredStaff">Retired ({retiredStaff.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activeStaff" className="mt-0">
