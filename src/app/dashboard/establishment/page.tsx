@@ -54,10 +54,9 @@ export default function EstablishmentPage() {
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   
-  const [searchTerm, setSearchTerm] = useState(""); // User's live input
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(""); // Term used for filtering after delay
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [isFiltering, setIsFiltering] = useState(false);
-  const [filteredStaff, setFilteredStaff] = useState<StaffMember[]>([]);
 
   const [imageForModal, setImageForModal] = useState<string | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -225,42 +224,39 @@ export default function EstablishmentPage() {
     toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
   };
   
-  // Debounce the search term to avoid excessive re-renders and filtering
   useEffect(() => {
     const timerId = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 300); // 300ms delay
+    }, 300);
 
     return () => {
       clearTimeout(timerId);
     };
   }, [searchTerm]);
-
-  // Handle the actual filtering logic when the debounced term changes
-  useEffect(() => {
-    if (staffLoadingHook) return;
-    setIsFiltering(true);
+  
+  const filteredStaff = useMemo(() => {
+    if (staffLoadingHook) return [];
+    if (!debouncedSearchTerm) {
+      return staffMembers;
+    }
     const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
-    
-    // Using requestAnimationFrame to ensure the loader is shown before a potentially long filtering operation
-    requestAnimationFrame(() => {
-      if (!lowerSearchTerm) {
-          setFilteredStaff(staffMembers);
-      } else {
-          const filtered = staffMembers.filter(staff => 
-              (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-              (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-              (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-              (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-              (staff.phoneNo?.includes(lowerSearchTerm)) ||
-              (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-              (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-          );
-          setFilteredStaff(filtered);
-      }
-      setIsFiltering(false);
-    });
+    return staffMembers.filter(staff =>
+      (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.phoneNo?.includes(lowerSearchTerm)) ||
+      (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+      (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+    );
   }, [debouncedSearchTerm, staffMembers, staffLoadingHook]);
+
+
+  useEffect(() => {
+      setIsFiltering(true);
+      const timer = setTimeout(() => setIsFiltering(false), 500); // Simulate filtering delay
+      return () => clearTimeout(timer);
+  }, [filteredStaff]);
 
 
   const activeStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Active'), [filteredStaff]);
@@ -270,11 +266,6 @@ export default function EstablishmentPage() {
   const activeStaffCount = activeStaffList.length;
   const transferredStaffCount = transferredStaffList.length;
   const retiredStaffCount = retiredStaffList.length;
-
-  const totalActiveStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Active').length, [staffMembers]);
-  const totalTransferredStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Transferred').length, [staffMembers]);
-  const totalRetiredStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Retired').length, [staffMembers]);
-  const totalStaffMembersOverall = staffMembers.length;
 
   if (authLoading || staffLoadingHook) {
     return (
