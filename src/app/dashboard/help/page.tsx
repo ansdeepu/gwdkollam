@@ -45,7 +45,7 @@ export default function HelpPage() {
                 There are three main roles in this application, each with different permissions:
                 <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
                   <li><strong>Editor:</strong> Has full access to all features. Editors can create, edit, and delete all file entries (including ARS and Rig Registrations), manage staff and user accounts, approve pending updates, and set GWD rates.</li>
-                  <li><strong>Supervisor:</strong> Has a focused view. Supervisors can only see and edit the specific sites they are assigned to via the 'File Manager' page. They cannot create new files and their changes must be approved by an Editor.</li>
+                  <li><strong>Supervisor:</strong> Has a focused view. Supervisors can only see and edit the specific sites they are assigned to via the 'Deposit Works Files' page. They cannot create new files and their changes must be approved by an Editor.</li>
                   <li><strong>Viewer:</strong> Has read-only access. Viewers can see most data, including all files, reports, and user lists, but cannot make any changes.</li>
                 </ul>
               </AccordionContent>
@@ -71,16 +71,16 @@ export default function HelpPage() {
              <AccordionItem value="item-5">
               <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
               <AccordionContent>
-                Supervisors can edit their assigned sites through the 'File Manager'. After making changes, clicking the "Save Changes" button will submit their updates to an administrator for review. The changes will not be applied to the main file until an admin approves them from the "Pending Updates" page. The site will be hidden from the supervisor's view once an update is submitted and will reappear only if the update is rejected.
+                Supervisors can edit their assigned sites through the 'Deposit Works Files'. After making changes, clicking the "Save Changes" button will submit their updates to an administrator for review. The changes will not be applied to the main file until an admin approves them from the "Pending Updates" page. The site will be hidden from the supervisor's view once an update is submitted and will reappear only if the update is rejected.
               </AccordionContent>
             </AccordionItem>
              <AccordionItem value="item-6">
-              <AccordionTrigger>What is the difference between the 'File Manager' and 'ARS' pages?</AccordionTrigger>
+              <AccordionTrigger>What is the difference between the 'Deposit Works Files' and 'ARS' pages?</AccordionTrigger>
               <AccordionContent>
                 The two pages manage different types of work:
                  <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-                  <li><strong>File Manager:</strong> This is for all standard departmental work files (BWC, TWC, MWSS, etc.). All data entry and management for these projects happen here.</li>
-                  <li><strong>ARS:</strong> This page is exclusively for managing Artificial Recharge Scheme sites. It has a dedicated data entry form and bulk Excel import functionality tailored for ARS projects. ARS data is kept separate and will not appear in the main File Manager.</li>
+                  <li><strong>Deposit Works Files:</strong> This is for all standard departmental work files (BWC, TWC, MWSS, etc.). All data entry and management for these projects happen here.</li>
+                  <li><strong>ARS:</strong> This page is exclusively for managing Artificial Recharge Scheme sites. It has a dedicated data entry form and bulk Excel import functionality tailored for ARS projects. ARS data is kept separate and will not appear in the main Deposit Works Files.</li>
                 </ul>
               </AccordionContent>
             </AccordionItem>
