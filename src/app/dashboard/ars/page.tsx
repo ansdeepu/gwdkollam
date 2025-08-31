@@ -281,6 +281,8 @@ export default function ArsPage() {
                 arsSanctionedDate: parseDate(rowData['Sanctioned Date']),
                 arsTenderedAmount: Number(rowData['Tendered Amount']) || undefined,
                 arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
+                additionalAS: 'No', // Add missing field
+                drillingRemarks: "", // Add missing field
               };
             });
 
