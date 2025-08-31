@@ -3,9 +3,11 @@ const nextConfig = {
   transpilePackages: ['zod'],
   reactStrictMode: true,
   typescript: {
+    // Set to false to ignore build errors.
     ignoreBuildErrors: false,
   },
   eslint: {
+    // Set to false to ignore linting errors during build.
     ignoreDuringBuilds: false,
   },
   images: {
@@ -49,5 +51,5 @@ const nextConfig = {
     ],
   },
 };
-
+// Cache invalidation comment: 1718012674406
 module.exports = nextConfig;
