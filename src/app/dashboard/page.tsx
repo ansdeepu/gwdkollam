@@ -489,7 +489,6 @@ export default function DashboardPage() {
         between2And3: ageGroups.between2And3.length,
         between3And4: ageGroups.between3And4.length,
         between4And5: ageGroups.between4And5.length,
-        above5: ageGroups.above5.length,
     };
     const fileStatusCountsData = fileStatusOptions.map(status => ({
         status,
@@ -1050,7 +1049,6 @@ export default function DashboardPage() {
     const columns: DetailDialogColumn[] = [
         { key: 'slNo', label: 'Sl. No.' },
         { key: 'fileNo', label: 'File No.' },
-        { key: 'applicantName', label: 'Applicant Name' },
         { key: 'siteName', label: 'Site Name' },
         { key: 'purpose', label: 'Purpose' },
         { key: 'workStatus', label: 'Work Status' },
@@ -1060,7 +1058,6 @@ export default function DashboardPage() {
     const mapSiteToDialogData = (site: SiteDetailFormData & { fileNo: string; applicantName: string; }, index: number) => ({
         slNo: index + 1,
         fileNo: site.fileNo,
-        applicantName: site.applicantName,
         siteName: site.nameOfSite,
         purpose: site.purpose,
         workStatus: site.workStatus,
@@ -1090,7 +1087,6 @@ export default function DashboardPage() {
     const dialogData = filteredData.map((site, index) => ({
       slNo: index + 1,
       fileNo: site.fileNo,
-      applicantName: site.applicantName,
       siteName: site.nameOfSite,
       workStatus: site.workStatus,
       supervisorName: site.supervisorName || 'N/A',
@@ -1099,7 +1095,6 @@ export default function DashboardPage() {
     const columns: DetailDialogColumn[] = [
       { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
-      { key: 'applicantName', label: 'Applicant Name' },
       { key: 'siteName', label: 'Site Name' },
       { key: 'workStatus', label: 'Work Status' },
       { key: 'supervisorName', label: 'Supervisor' },
@@ -1242,12 +1237,12 @@ export default function DashboardPage() {
                 </div>
                 {dashboardData.filesByAgeCounts ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    <AgeStatCard title="< 1 Year" count={dashboardData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
+                    <AgeStatCard title="&lt; 1 Year" count={dashboardData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
                     <AgeStatCard title="1-2 Years" count={dashboardData.filesByAgeCounts.between1And2} onClick={() => handleAgeCardClick('between1And2', 'Files Aged 1-2 Years')} />
                     <AgeStatCard title="2-3 Years" count={dashboardData.filesByAgeCounts.between2And3} onClick={() => handleAgeCardClick('between2And3', 'Files Aged 2-3 Years')} />
                     <AgeStatCard title="3-4 Years" count={dashboardData.filesByAgeCounts.between3And4} onClick={() => handleAgeCardClick('between3And4', 'Files Aged 3-4 Years')} />
                     <AgeStatCard title="4-5 Years" count={dashboardData.filesByAgeCounts.between4And5} onClick={() => handleAgeCardClick('between4And5', 'Files Aged 4-5 Years')} />
-                    <AgeStatCard title="> 5 Years" count={dashboardData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
+                    <AgeStatCard title="&gt; 5 Years" count={dashboardData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
                   </div>
                 ) : (
                   <p>Calculating age data...</p>
@@ -1951,3 +1946,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
