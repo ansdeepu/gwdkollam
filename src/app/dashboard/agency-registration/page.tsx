@@ -620,7 +620,7 @@ export default function AgencyRegistrationPage() {
     updateRig(rigIndex, {
         ...rigToUpdate,
         status: 'Cancelled',
-        cancellationDate: date, // Store as Date object
+        cancellationDate: date,
         cancellationReason: reason,
     });
     toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
@@ -770,7 +770,7 @@ export default function AgencyRegistrationPage() {
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent>
-                                <Calendar mode="single" selected={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate} 
+                                <Calendar mode="single" selected={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || undefined} 
                                 onSelect={(date) => {
                                     if (editingRenewal) {
                                         setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, renewalDate: date! } }));
@@ -801,7 +801,7 @@ export default function AgencyRegistrationPage() {
                         <PopoverTrigger asChild><Button variant="outline" className={cn("col-span-3 justify-start text-left font-normal", !(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>
                         {(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) ? format(new Date(editingRenewal?.renewal.paymentDate || renewalData!.data.paymentDate!), 'dd/MM/yyyy') : 'Select'}
                         </Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" selected={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate}
+                        <PopoverContent><Calendar mode="single" selected={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || undefined}
                         onSelect={(date) => {
                              if (editingRenewal) {
                                 setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, paymentDate: date! } }));
