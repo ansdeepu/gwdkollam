@@ -84,6 +84,11 @@ export default function ArsEntryPage() {
             if (fileEntry) {
                 const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.isArsImport);
                 if (site) {
+                    // Ensure workStatus is a valid ArsWorkStatus, otherwise set to undefined
+                    const validWorkStatus = site.workStatus && arsWorkStatusOptions.includes(site.workStatus as any)
+                        ? site.workStatus as NewArsEntryFormData['workStatus']
+                        : undefined;
+
                     form.reset({
                         fileNo: fileNoToEdit,
                         nameOfSite: site.nameOfSite,
@@ -102,7 +107,7 @@ export default function ArsEntryPage() {
                         arsSanctionedDate: site.arsSanctionedDate ? new Date(site.arsSanctionedDate) : undefined,
                         arsTenderedAmount: site.arsTenderedAmount,
                         arsAwardedAmount: site.arsAwardedAmount,
-                        workStatus: site.workStatus,
+                        workStatus: validWorkStatus,
                         dateOfCompletion: site.dateOfCompletion ? new Date(site.dateOfCompletion) : undefined,
                         totalExpenditure: site.totalExpenditure,
                         noOfBeneficiary: site.noOfBeneficiary,
@@ -227,7 +232,7 @@ export default function ArsEntryPage() {
                           <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} readOnly={isEditing} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC) <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                          <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Scheme</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Type of Scheme" /></SelectTrigger></FormControl><SelectContent>{arsTypeOfSchemeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                          <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Scheme</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined}><FormControl><SelectTrigger><SelectValue placeholder="Select Type of Scheme" /></SelectTrigger></FormControl><SelectContent>{arsTypeOfSchemeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                           <FormField name="arsPanchayath" control={form.control} render={({ field }) => (<FormItem><FormLabel>Panchayath</FormLabel><FormControl><Input placeholder="Panchayath Name" {...field} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsBlock" control={form.control} render={({ field }) => (<FormItem><FormLabel>Block</FormLabel><FormControl><Input placeholder="Block Name" {...field} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="latitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 8.8932" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
