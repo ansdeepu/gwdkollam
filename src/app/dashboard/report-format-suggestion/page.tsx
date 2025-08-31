@@ -78,11 +78,10 @@ export default function CustomReportBuilderPage() {
     const headers = selectedFieldObjects.map(f => f.label);
     
     const dataForReport = filteredEntries.flatMap(entry => {
-      // If a file has site details, create a row for each site.
+      // If a file has site details, create a row for each site. This handles ARS and non-ARS sites correctly.
       if (entry.siteDetails && entry.siteDetails.length > 0) {
         return entry.siteDetails.map(site => {
           const row: GeneratedReportRow = {};
-          // Create a temporary entry object that represents a single file-site combination
           const syntheticEntry = { ...entry, siteDetails: [site] };
           selectedFieldObjects.forEach(field => {
             row[field.label] = field.accessor(syntheticEntry);
@@ -90,15 +89,17 @@ export default function CustomReportBuilderPage() {
           return row;
         });
       } 
-      // If a file has no site details at all, still include it as one row.
+      // If a file has no site details at all (e.g., an ARS file without sites), still include it as one row.
       else {
         const row: GeneratedReportRow = {};
         selectedFieldObjects.forEach(field => {
+          // The accessor will receive an entry with an empty siteDetails array.
           row[field.label] = field.accessor(entry);
         });
         return [row];
       }
     });
+
 
     setReportHeaders(headers);
     setReportData(dataForReport);
