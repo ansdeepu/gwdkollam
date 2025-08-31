@@ -71,12 +71,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return;
     }
     
-    // If auth is done loading and the user is NOT authenticated, redirect them to login.
-    // This is the primary guard for the dashboard.
-    if (!authIsLoading && !isAuthenticated) {
+    // If auth is done loading, user is NOT authenticated, AND we are not on the login page, redirect them.
+    // This prevents the redirect loop.
+    if (!authIsLoading && !isAuthenticated && pathname !== '/login') {
       router.push('/login');
     }
-  }, [isClient, authIsLoading, isAuthenticated, router]);
+  }, [isClient, authIsLoading, isAuthenticated, router, pathname]);
 
 
   useEffect(() => {
@@ -124,8 +124,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // If auth is done, but the user is not authenticated, show a loader while the redirect to login happens.
-  if (!isAuthenticated) {
+  // If auth is done, but the user is not authenticated and not on the login page, show a loader while redirecting.
+  if (!isAuthenticated && pathname !== '/login') {
        return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -133,7 +133,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       );
   }
 
-  // If the user is authenticated, render the dashboard layout.
+  // If the user is authenticated (or we are on the login page), render the content.
   return (
     <PageNavigationContext.Provider value={{ isNavigating, setIsNavigating }}>
       <SidebarProvider defaultOpen>
