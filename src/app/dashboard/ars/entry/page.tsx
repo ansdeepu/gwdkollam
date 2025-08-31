@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useFileEntries } from "@/hooks/useFileEntries";
-import { type DataEntryFormData, type SiteDetailFormData, arsWorkStatusOptions, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency, arsTypeOfSchemeOptions, type StaffMember } from "@/lib/schemas";
+import { type DataEntryFormData, type SiteDetailFormData, arsWorkStatusOptions, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X, ArrowLeft } from "lucide-react";
@@ -131,7 +131,7 @@ export default function ArsEntryPage() {
         
         const siteData: SiteDetailFormData = {
             nameOfSite: data.nameOfSite, purpose: 'ARS', isArsImport: true, latitude: data.latitude, longitude: data.longitude, 
-            estimateAmount: data.estimateAmount, tsAmount: data.tsAmount, workStatus: data.workStatus, 
+            estimateAmount: data.estimateAmount, tsAmount: data.tsAmount, workStatus: data.workStatus as SiteWorkStatus, 
             dateOfCompletion: data.dateOfCompletion, totalExpenditure: data.totalExpenditure, 
             noOfBeneficiary: data.noOfBeneficiary, workRemarks: data.workRemarks, arsTypeOfScheme: data.arsTypeOfScheme, 
             arsPanchayath: data.arsPanchayath, arsBlock: data.arsBlock, arsNumberOfStructures: data.arsNumberOfStructures, 
@@ -285,3 +285,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
