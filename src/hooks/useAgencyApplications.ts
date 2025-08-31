@@ -11,7 +11,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  type Timestamp,
+  Timestamp,
   type DocumentData,
   writeBatch,
   query,
