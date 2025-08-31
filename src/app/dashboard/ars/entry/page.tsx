@@ -139,6 +139,9 @@ export default function ArsEntryPage() {
             arsAsTsDetails: data.arsAsTsDetails ?? null, arsSanctionedDate: data.arsSanctionedDate, 
             arsTenderedAmount: data.arsTenderedAmount, arsAwardedAmount: data.arsAwardedAmount,
             supervisorUid: data.supervisorUid, supervisorName: data.supervisorName,
+            // Adding missing required fields with default values
+            additionalAS: 'No',
+            drillingRemarks: "",
         };
 
         try {
