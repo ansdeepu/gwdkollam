@@ -311,9 +311,3 @@ export default function DataEntryPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
