@@ -1,4 +1,3 @@
-
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -122,7 +121,6 @@ export default function EstablishmentPage() {
     const reportTitle = "Establishment Staff Report";
     const columnLabels = ["Sl. No.", "Name", "Designation", "PEN", "Phone No.", "Date of Birth", "Roles", "Status", "Remarks"];
     
-    // Use the unfiltered staffMembers list for a complete export
     const dataRows = staffMembers.map((staff, index) => [
       index + 1,
       staff.name,
@@ -265,10 +263,6 @@ export default function EstablishmentPage() {
       return () => clearTimeout(timer);
   }, [filteredStaff]);
 
-  const activeStaffList = filteredStaff.active;
-  const transferredStaffList = filteredStaff.transferred;
-  const retiredStaffList = filteredStaff.retired;
-  
   const activeStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Active').length, [staffMembers]);
   const transferredStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Transferred').length, [staffMembers]);
   const retiredStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Retired').length, [staffMembers]);
@@ -334,7 +328,7 @@ export default function EstablishmentPage() {
             </CardHeader>
             <CardContent>
               <StaffTable
-                staffData={activeStaffList}
+                staffData={filteredStaff.active}
                 onEdit={canManage ? handleEditStaff : undefined}
                 onDelete={canManage ? deleteStaffMember : undefined}
                 onSetStatus={canManage ? handleSetStaffStatus : undefined}
@@ -355,7 +349,7 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <TransferredStaffTable
-                        staffData={transferredStaffList}
+                        staffData={filteredStaff.transferred}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
@@ -374,7 +368,7 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <RetiredStaffTable
-                        staffData={retiredStaffList}
+                        staffData={filteredStaff.retired}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
