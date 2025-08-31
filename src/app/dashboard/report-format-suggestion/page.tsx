@@ -1,5 +1,7 @@
 
 // src/app/dashboard/report-format-suggestion/page.tsx
+"use client";
+
 import CustomReportBuilder from "@/components/ai/ReportFormatSuggester"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
