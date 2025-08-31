@@ -11,10 +11,10 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  type Timestamp,
   type DocumentData,
   query,
   orderBy,
+  Timestamp,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import type { StaffMember as StaffMemberType, StaffMemberFormData, StaffStatusType } from '@/lib/schemas';
