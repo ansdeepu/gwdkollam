@@ -71,7 +71,9 @@ export function useAuth() {
             if (userData.staffId) {
                 const staffDocRef = doc(db, "staffMembers", userData.staffId);
                 const staffDocSnap = await getDoc(staffDocRef);
-                if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
+                if (staffDocSnap.exists()) {
+                   staffInfo = staffDocSnap.data();
+                }
             }
             setUser({
               uid: fbUser.uid,
