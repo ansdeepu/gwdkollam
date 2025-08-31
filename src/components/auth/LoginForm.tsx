@@ -1,11 +1,13 @@
-
 // src/components/auth/LoginForm.tsx
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-// Link import is not needed as "Register here" is removed
-import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { LoginSchema, type LoginFormData } from "@/lib/schemas";
+import { useToast } from "@/hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -15,16 +17,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { LoginSchema, type LoginFormData } from "@/lib/schemas";
-import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Loader2, LogIn } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LoginForm() {
-  const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<LoginFormData>({
@@ -35,39 +35,36 @@ export default function LoginForm() {
     },
   });
 
-  async function onSubmit(data: LoginFormData) {
+  const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
-    try {
-      const result = await login(data.email, data.password);
+    const { success, error } = await login(data.email, data.password);
 
-      if (result.success) {
-        // On successful login & approval, redirection is handled by useAuth and DashboardLayout.
-      } else {
-        const error = result.error;
-        let errorMessage = "Login failed. Please check your credentials and try again.";
-        if (error?.message === "AUTH_PENDING_APPROVAL" || error?.code === "auth/pending-approval") {
-          errorMessage = "Your account is pending approval by an administrator. Please contact 8547650853 for activation.";
-        } else if (error?.code === 'auth/user-not-found' || error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential') {
-          errorMessage = "Invalid email or password.";
-        } else if (error?.code === 'auth/invalid-email') {
-          errorMessage = "The email address is not valid.";
-        } else if (error?.code) {
-          console.error("Firebase login error code:", error.code);
-        }
-        toast({ title: "Login Failed", description: errorMessage, variant: "destructive" });
-      }
-    } catch (e) {
-      console.error("Unexpected error during login:", e);
-      toast({ title: "Login Error", description: "An unexpected error occurred.", variant: "destructive" });
-    } finally {
-      setIsSubmitting(false); 
+    if (success) {
+      toast({
+        title: "Login Successful",
+        description: "Redirecting to your dashboard...",
+      });
+      router.push("/dashboard");
+    } else {
+      const errorMessage =
+        error?.code === 'auth/invalid-credential' || error?.code === 'auth/user-not-found'
+          ? "Invalid email or password. Please try again."
+          : error?.message || "An unknown error occurred.";
+      
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    <Card className="w-full shadow-xl border-border/60">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold text-foreground">Sign In</CardTitle>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Sign In</CardTitle>
+        <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -77,9 +74,13 @@ export default function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email Address</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="you@example.com" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="user@gwdkollam.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -92,24 +93,27 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-              Sign In
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogIn className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Signing In..." : "Sign In"}
             </Button>
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex flex-col items-center space-y-3 pt-4">
-        <p className="text-xs text-muted-foreground text-center">
-          For new accounts or approval, please contact the administrator at <strong className="font-semibold">8547650853</strong>.
-        </p>
-      </CardFooter>
     </Card>
   );
 }

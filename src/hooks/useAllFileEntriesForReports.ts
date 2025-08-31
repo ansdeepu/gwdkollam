@@ -1,122 +1,83 @@
-
 // src/hooks/useAllFileEntriesForReports.ts
 "use client";
 
-import type { DataEntryFormData } from "@/lib/schemas";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
   getFirestore,
   collection,
+  onSnapshot,
   query,
-  where,
-  getDocs,
-  Timestamp,
   type DocumentData,
-} from "firebase/firestore";
-import { app } from "@/lib/firebase";
+  Timestamp
+} from 'firebase/firestore';
+import { app } from '@/lib/firebase';
+import type { DataEntryFormData } from '@/lib/schemas';
 import { useAuth } from './useAuth';
-import { isValid, parseISO } from 'date-fns';
+import { toast } from './use-toast';
 
 const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
-// Simple in-memory cache
-let cachedEntries: DataEntryFormData[] | null = null;
-let lastFetchTimestamp: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// This is a simplified converter for report-specific data.
-const convertTimestampsToDatesForReport = (data: DocumentData): DataEntryFormData => {
-  const entry = { ...data } as any;
-
-  const toDate = (value: any): Date | null => {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    if (value instanceof Timestamp) return value.toDate();
-     if (typeof value === 'string') {
-      const d = parseISO(value);
-      if (isValid(d)) return d;
+// Helper to convert Firestore Timestamps to JS Dates recursively
+const convertTimestampsToDates = (data: DocumentData): any => {
+  const converted: { [key: string]: any } = {};
+  for (const key in data) {
+    const value = data[key];
+    if (value instanceof Timestamp) {
+      converted[key] = value.toDate();
+    } else if (Array.isArray(value)) {
+      converted[key] = value.map(item =>
+        typeof item === 'object' && item !== null && !Array.isArray(item) ? convertTimestampsToDates(item) : item
+      );
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      converted[key] = convertTimestampsToDates(value);
+    } else {
+      converted[key] = value;
     }
-    return null;
-  };
-
-  if (entry.siteDetails && Array.isArray(entry.siteDetails)) {
-    entry.siteDetails = entry.siteDetails.map((sd: any) => {
-      if (!sd) return null;
-      return { ...sd, dateOfCompletion: toDate(sd.dateOfCompletion) };
-    }).filter(Boolean);
   }
-
-  if (entry.remittanceDetails && Array.isArray(entry.remittanceDetails)) {
-    entry.remittanceDetails = entry.remittanceDetails.map((rd: any) => {
-        if (!rd) return null;
-        return {...rd, dateOfRemittance: toDate(rd.dateOfRemittance)};
-    }).filter(Boolean);
-  }
-
-  return entry as DataEntryFormData;
+  return converted;
 };
 
 
-interface ReportEntriesState {
-  reportEntries: DataEntryFormData[];
-  isReportLoading: boolean;
-}
-
-/**
- * A dedicated hook for fetching all file entries without the complex visibility
- * filtering applied in useFileEntries. This is suitable for generating historical
- * reports where completed or pending-completion items must be included in calculations.
- */
-export function useAllFileEntriesForReports(): ReportEntriesState {
-  const { user, isLoading: authIsLoading } = useAuth();
-  const [reportEntries, setReportEntries] = useState<DataEntryFormData[]>(cachedEntries || []);
+export function useAllFileEntriesForReports() {
+  const { user } = useAuth();
+  const [reportEntries, setReportEntries] = useState<DataEntryFormData[]>([]);
   const [isReportLoading, setIsReportLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    const now = Date.now();
-    if (cachedEntries && (now - lastFetchTimestamp < CACHE_DURATION)) {
-      setReportEntries(cachedEntries);
+  useEffect(() => {
+    // Only editors and viewers can fetch all data.
+    if (!user || !['editor', 'viewer'].includes(user.role)) {
+      setReportEntries([]);
       setIsReportLoading(false);
-      return;
-    }
-    
-    if (authIsLoading || !user || !user.isApproved) {
-      setIsReportLoading(true);
       return;
     }
 
     setIsReportLoading(true);
-    try {
-      let q;
-      if (user.role === 'supervisor' && user.uid) {
-        // Fetch all files ever assigned to this supervisor.
-        q = query(collection(db, FILE_ENTRIES_COLLECTION), where("assignedSupervisorUids", "array-contains", user.uid));
-      } else {
-        // Editors and viewers get all files.
-        q = query(collection(db, FILE_ENTRIES_COLLECTION));
-      }
-      
-      const querySnapshot = await getDocs(q);
-      const entriesFromFirestore = querySnapshot.docs.map(doc => 
-        convertTimestampsToDatesForReport({ id: doc.id, ...doc.data() })
-      );
-      
-      cachedEntries = entriesFromFirestore;
-      lastFetchTimestamp = now;
-      setReportEntries(entriesFromFirestore);
-
-    } catch (error) {
-      console.error("[useAllFileEntriesForReports] Error fetching report entries:", error);
-      setReportEntries([]);
-    } finally {
+    const q = query(collection(db, FILE_ENTRIES_COLLECTION));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const entriesData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const convertedData = convertTimestampsToDates(data);
+        return {
+          id: doc.id,
+          ...convertedData
+        } as DataEntryFormData;
+      });
+      setReportEntries(entriesData);
       setIsReportLoading(false);
-    }
-  }, [user, authIsLoading]);
+    }, (error) => {
+      console.error("Error fetching all file entries for reports:", error);
+      toast({
+        title: "Error Loading Report Data",
+        description: "Could not fetch the complete set of file entries.",
+        variant: "destructive",
+      });
+      setIsReportLoading(false);
+    });
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    return () => unsubscribe();
+  }, [user, toast]);
 
   return { reportEntries, isReportLoading };
 }
