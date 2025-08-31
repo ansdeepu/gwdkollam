@@ -133,10 +133,10 @@ export default function ArsEntryPage() {
             nameOfSite: data.nameOfSite, purpose: 'ARS', isArsImport: true, latitude: data.latitude, longitude: data.longitude, 
             estimateAmount: data.estimateAmount, tsAmount: data.tsAmount, workStatus: data.workStatus as SiteWorkStatus, 
             dateOfCompletion: data.dateOfCompletion, totalExpenditure: data.totalExpenditure, 
-            noOfBeneficiary: data.noOfBeneficiary, workRemarks: data.workRemarks, arsTypeOfScheme: data.arsTypeOfScheme, 
-            arsPanchayath: data.arsPanchayath, arsBlock: data.arsBlock, arsNumberOfStructures: data.arsNumberOfStructures, 
+            noOfBeneficiary: data.noOfBeneficiary ?? null, workRemarks: data.workRemarks ?? null, arsTypeOfScheme: data.arsTypeOfScheme ?? null, 
+            arsPanchayath: data.arsPanchayath ?? null, arsBlock: data.arsBlock ?? null, arsNumberOfStructures: data.arsNumberOfStructures, 
             arsStorageCapacity: data.arsStorageCapacity, arsNumberOfFillings: data.arsNumberOfFillings, 
-            arsAsTsDetails: data.arsAsTsDetails, arsSanctionedDate: data.arsSanctionedDate, 
+            arsAsTsDetails: data.arsAsTsDetails ?? null, arsSanctionedDate: data.arsSanctionedDate, 
             arsTenderedAmount: data.arsTenderedAmount, arsAwardedAmount: data.arsAwardedAmount,
             supervisorUid: data.supervisorUid, supervisorName: data.supervisorName,
         };
