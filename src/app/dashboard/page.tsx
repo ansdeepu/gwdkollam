@@ -104,7 +104,7 @@ const dashboardWorkStatusOrder: SiteWorkStatus[] = [
 const dashboardServiceOrder: SitePurpose[] = [
     "BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev",
     "MWSS", "MWSS Ext", "Pumping Scheme", "MWSS Pump Reno",
-    "HPS", "HPR", "ARS"
+    "HPS", "HPR",
 ];
 
 const serviceHeaderLabels: Record<string, string> = {
@@ -120,7 +120,6 @@ const serviceHeaderLabels: Record<string, string> = {
     'MWSS Pump Reno': 'MWSS<br/>Pump<br/>Reno',
     'HPS': 'HPS',
     'HPR': 'HPR',
-    'ARS': 'ARS',
 };
 
 
@@ -346,7 +345,7 @@ export default function DashboardPage() {
     const nonArsEntries = (currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries)
         .map(entry => ({
             ...entry,
-            siteDetails: entry.siteDetails?.filter(site => site.purpose !== 'ARS')
+            siteDetails: entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport)
         }))
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
 
