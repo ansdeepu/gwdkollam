@@ -107,6 +107,7 @@ export default function ReportsPage() {
 
 
   useEffect(() => {
+    // This now runs only on the client, after hydration
     const now = new Date();
     setCurrentDate(format(now, 'dd/MM/yyyy'));
     setCurrentTime(format(now, 'hh:mm:ss a'));
