@@ -235,20 +235,27 @@ export default function EstablishmentPage() {
   }, [searchTerm]);
   
   const filteredStaff = useMemo(() => {
-    if (staffLoadingHook) return [];
-    if (!debouncedSearchTerm) {
-      return staffMembers;
+    if (staffLoadingHook) return { active: [], transferred: [], retired: [] };
+    
+    let filtered = staffMembers;
+    if (debouncedSearchTerm) {
+        const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+        filtered = staffMembers.filter(staff =>
+          (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.phoneNo?.includes(lowerSearchTerm)) ||
+          (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+          (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+        );
     }
-    const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
-    return staffMembers.filter(staff =>
-      (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.phoneNo?.includes(lowerSearchTerm)) ||
-      (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-      (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-    );
+    
+    return {
+        active: filtered.filter(s => s.status === 'Active'),
+        transferred: filtered.filter(s => s.status === 'Transferred'),
+        retired: filtered.filter(s => s.status === 'Retired'),
+    };
   }, [debouncedSearchTerm, staffMembers, staffLoadingHook]);
 
 
@@ -258,14 +265,13 @@ export default function EstablishmentPage() {
       return () => clearTimeout(timer);
   }, [filteredStaff]);
 
-
-  const activeStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Active'), [filteredStaff]);
-  const transferredStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Transferred'), [filteredStaff]);
-  const retiredStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Retired'), [filteredStaff]);
+  const activeStaffList = filteredStaff.active;
+  const transferredStaffList = filteredStaff.transferred;
+  const retiredStaffList = filteredStaff.retired;
   
-  const activeStaffCount = activeStaffList.length;
-  const transferredStaffCount = transferredStaffList.length;
-  const retiredStaffCount = retiredStaffList.length;
+  const activeStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Active').length, [staffMembers]);
+  const transferredStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Transferred').length, [staffMembers]);
+  const retiredStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Retired').length, [staffMembers]);
 
   if (authLoading || staffLoadingHook) {
     return (

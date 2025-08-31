@@ -1,6 +1,7 @@
+
 // src/app/dashboard/report-format-suggestion/page.tsx
 "use client";
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +14,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Filter, RotateCcw, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+interface GeneratedReportRow {
+  [key: string]: string | number | undefined | null;
+}
 
 export default function CustomReportBuilderPage() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -21,6 +27,9 @@ export default function CustomReportBuilderPage() {
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  
+  const [reportData, setReportData] = useState<GeneratedReportRow[]>([]);
+  const [reportHeaders, setReportHeaders] = useState<string[]>([]);
 
   const handleCheckboxChange = (fieldId: string) => {
     setSelectedFields(prev =>
@@ -28,9 +37,11 @@ export default function CustomReportBuilderPage() {
     );
   };
   
-  const handleExportExcel = () => {
+  const handleGenerateReport = () => {
     if (selectedFields.length === 0) {
-      toast({ title: "No Fields Selected", description: "Please select at least one field to export.", variant: "destructive" });
+      toast({ title: "No Fields Selected", description: "Please select at least one field to generate a report.", variant: "destructive" });
+      setReportData([]);
+      setReportHeaders([]);
       return;
     }
     
@@ -54,21 +65,34 @@ export default function CustomReportBuilderPage() {
 
     if (filteredEntries.length === 0) {
       toast({ title: "No Data Found", description: "No entries match the selected date range.", variant: "default" });
+      setReportData([]);
+      setReportHeaders([]);
       return;
     }
 
     const selectedFieldObjects = reportableFields.filter(f => selectedFields.includes(f.id));
     const headers = selectedFieldObjects.map(f => f.label);
     
-    const dataForExport = filteredEntries.map(entry => {
-      const row: Record<string, any> = {};
+    const dataForReport = filteredEntries.map(entry => {
+      const row: GeneratedReportRow = {};
       selectedFieldObjects.forEach(field => {
         row[field.label] = field.accessor(entry);
       });
       return row;
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(dataForExport, { header: headers });
+    setReportHeaders(headers);
+    setReportData(dataForReport);
+    toast({ title: "Report Generated", description: `Report with ${dataForReport.length} rows is ready.` });
+  };
+  
+  const handleExportExcel = () => {
+    if (reportData.length === 0) {
+      toast({ title: "No Report Generated", description: "Please generate a report first before exporting.", variant: "destructive" });
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(reportData, { header: reportHeaders });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "CustomReport");
     const fileName = `Custom_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
@@ -80,6 +104,8 @@ export default function CustomReportBuilderPage() {
     setStartDate(undefined);
     setEndDate(undefined);
     setSelectedFields([]);
+    setReportData([]);
+    setReportHeaders([]);
     toast({ title: "Filters Cleared", description: "All selections have been reset." });
   };
 
@@ -145,7 +171,7 @@ export default function CustomReportBuilderPage() {
             ))}
           </div>
           <div className="mt-8 flex gap-4">
-            <Button onClick={handleExportExcel} disabled={selectedFields.length === 0}>
+            <Button onClick={handleGenerateReport} disabled={selectedFields.length === 0}>
                 <FileDown className="mr-2 h-4 w-4" />
                 Generate Report
             </Button>
@@ -155,6 +181,38 @@ export default function CustomReportBuilderPage() {
             </Button>
           </div>
         </div>
+
+        {reportData.length > 0 && (
+          <div className="pt-8 border-t">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Generated Report ({reportData.length} rows)</h3>
+              <Button onClick={handleExportExcel}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Export to Excel
+              </Button>
+            </div>
+            <div className="overflow-x-auto border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {reportHeaders.map(header => <TableHead key={header}>{header}</TableHead>)}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reportData.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {reportHeaders.map(header => (
+                        <TableCell key={`${header}-${rowIndex}`} className="whitespace-nowrap">
+                          {row[header] !== null && row[header] !== undefined ? String(row[header]) : 'N/A'}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
