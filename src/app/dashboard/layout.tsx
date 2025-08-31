@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { updateUserLastActive } from '@/hooks/useAuth';
-import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation';
+import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation.tsx';
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
