@@ -1,3 +1,4 @@
+
 // src/components/establishment/StaffTable.tsx
 "use client";
 

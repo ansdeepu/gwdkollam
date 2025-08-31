@@ -1,3 +1,4 @@
+
 // src/components/establishment/TransferredStaffTable.tsx
 "use client";
 
