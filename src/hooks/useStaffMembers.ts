@@ -26,6 +26,11 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const STAFF_MEMBERS_COLLECTION = 'staffMembers';
 
+// Simple in-memory cache
+let cachedStaffMembers: StaffMember[] | null = null;
+let lastStaffFetchTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const designationSortOrder: Record<Designation, number> = designationOptions.reduce((acc, curr, index) => {
   acc[curr] = index;
   return acc;
@@ -87,10 +92,17 @@ interface StaffMembersState {
 
 export function useStaffMembers(): StaffMembersState {
   const { user, isLoading: authIsLoading } = useAuth();
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>(cachedStaffMembers || []);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    const now = Date.now();
+    if (cachedStaffMembers && (now - lastStaffFetchTimestamp < CACHE_DURATION)) {
+      setStaffMembers(cachedStaffMembers);
+      setIsLoading(false);
+      return;
+    }
+    
     if (authIsLoading) {
       setIsLoading(true);
       return;
@@ -119,6 +131,9 @@ export function useStaffMembers(): StaffMembersState {
         if (orderA !== orderB) return orderA - orderB;
         return a.name.localeCompare(b.name);
       });
+      
+      cachedStaffMembers = membersFromFirestore;
+      lastStaffFetchTimestamp = now;
       setStaffMembers(membersFromFirestore);
     } catch(error) {
       console.error("[useStaffMembers] Error fetching staff members:", error);
@@ -126,6 +141,11 @@ export function useStaffMembers(): StaffMembersState {
       setIsLoading(false);
     }
   }, [user, authIsLoading]);
+
+  const clearCache = () => {
+    cachedStaffMembers = null;
+    lastStaffFetchTimestamp = 0;
+  };
 
   useEffect(() => {
     fetchData();
@@ -136,6 +156,7 @@ export function useStaffMembers(): StaffMembersState {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
     const payload = { ...sanitizeStaffMemberForFirestore(staffData), createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
     const docRef = await addDoc(collection(db, STAFF_MEMBERS_COLLECTION), payload);
+    clearCache();
     await fetchData();
     return docRef.id;
   }, [user, fetchData]);
@@ -152,6 +173,7 @@ export function useStaffMembers(): StaffMembersState {
     const payload = { ...sanitizeStaffMemberForFirestore(staffData), updatedAt: serverTimestamp() };
     delete payload.createdAt;
     await updateDoc(staffDocRef, payload);
+    clearCache();
     await fetchData();
   }, [user, staffMembers, fetchData]);
 
@@ -163,6 +185,7 @@ export function useStaffMembers(): StaffMembersState {
       try { await deleteObject(storageRef(storage, staffMemberToDelete.photoUrl)); } catch (e) { console.warn("Failed to delete photo:", e); }
     }
     await deleteDoc(staffDocRef);
+    clearCache();
     await fetchData();
   }, [user, staffMembers, fetchData]);
 
@@ -176,6 +199,7 @@ export function useStaffMembers(): StaffMembersState {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
     const staffDocRef = doc(db, STAFF_MEMBERS_COLLECTION, id);
     await updateDoc(staffDocRef, { status: newStatus, updatedAt: serverTimestamp() });
+    clearCache();
     await fetchData();
   }, [user, fetchData]);
 

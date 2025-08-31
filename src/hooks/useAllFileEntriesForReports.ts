@@ -20,6 +20,11 @@ import { isValid, parseISO } from 'date-fns';
 const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
+// Simple in-memory cache
+let cachedEntries: DataEntryFormData[] | null = null;
+let lastFetchTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 // This is a simplified converter for report-specific data.
 const convertTimestampsToDatesForReport = (data: DocumentData): DataEntryFormData => {
   const entry = { ...data } as any;
@@ -65,10 +70,17 @@ interface ReportEntriesState {
  */
 export function useAllFileEntriesForReports(): ReportEntriesState {
   const { user, isLoading: authIsLoading } = useAuth();
-  const [reportEntries, setReportEntries] = useState<DataEntryFormData[]>([]);
+  const [reportEntries, setReportEntries] = useState<DataEntryFormData[]>(cachedEntries || []);
   const [isReportLoading, setIsReportLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    const now = Date.now();
+    if (cachedEntries && (now - lastFetchTimestamp < CACHE_DURATION)) {
+      setReportEntries(cachedEntries);
+      setIsReportLoading(false);
+      return;
+    }
+    
     if (authIsLoading || !user || !user.isApproved) {
       setIsReportLoading(true);
       return;
@@ -90,6 +102,8 @@ export function useAllFileEntriesForReports(): ReportEntriesState {
         convertTimestampsToDatesForReport({ id: doc.id, ...doc.data() })
       );
       
+      cachedEntries = entriesFromFirestore;
+      lastFetchTimestamp = now;
       setReportEntries(entriesFromFirestore);
 
     } catch (error) {
