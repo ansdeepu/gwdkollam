@@ -1,7 +1,7 @@
 
 // src/app/dashboard/report-format-suggestion/page.tsx
 "use client";
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +15,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Filter, RotateCcw, FileDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { DataEntryFormData } from '@/lib/schemas';
 
 interface GeneratedReportRow {
   [key: string]: string | number | undefined | null;
@@ -23,7 +24,7 @@ interface GeneratedReportRow {
 export default function CustomReportBuilderPage() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const { toast } = useToast();
-  const { fileEntries, isLoading: entriesLoading } = useFileEntries();
+  const { fileEntries: allEntries, isLoading: entriesLoading } = useFileEntries();
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -31,6 +32,16 @@ export default function CustomReportBuilderPage() {
   const [reportData, setReportData] = useState<GeneratedReportRow[]>([]);
   const [reportHeaders, setReportHeaders] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const depositWorkEntries = useMemo(() => {
+    return allEntries
+      .map(entry => {
+        const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
+        return { ...entry, siteDetails: nonArsSites };
+      })
+      .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+  }, [allEntries]);
+
 
   const handleCheckboxChange = (fieldId: string) => {
     setSelectedFields(prev =>
@@ -48,7 +59,7 @@ export default function CustomReportBuilderPage() {
       return;
     }
     
-    let filteredEntries = [...fileEntries];
+    let filteredEntries = [...depositWorkEntries];
 
     if (startDate || endDate) {
         const sDate = startDate ? startOfDay(startDate) : null;
@@ -82,6 +93,7 @@ export default function CustomReportBuilderPage() {
       if (entry.siteDetails && entry.siteDetails.length > 0) {
         return entry.siteDetails.map(site => {
           const row: GeneratedReportRow = {};
+          // Create a temporary entry with only the current site for the accessor to work on
           const syntheticEntry = { ...entry, siteDetails: [site] };
           selectedFieldObjects.forEach(field => {
             row[field.label] = field.accessor(syntheticEntry);
@@ -89,7 +101,7 @@ export default function CustomReportBuilderPage() {
           return row;
         });
       } 
-      // If a file has no site details at all (e.g., an ARS file without sites), still include it as one row.
+      // If a file has no site details at all (e.g., an entry that was only for remittance)
       else {
         const row: GeneratedReportRow = {};
         selectedFieldObjects.forEach(field => {
