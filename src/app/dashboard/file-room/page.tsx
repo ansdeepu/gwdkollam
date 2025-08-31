@@ -52,10 +52,17 @@ export default function FileManagerPage() {
 
   return (
     <div className="space-y-6">
-       <Card className="shadow-sm">
+      <Card className="shadow-lg">
         <CardHeader>
-           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex-grow">
+          <CardTitle>Deposit Works Files</CardTitle>
+          <CardDescription>
+            {user?.role === 'supervisor'
+              ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
+              : `List of all non-ARS files in the system, sorted by most recent remittance. Total Files: ${depositWorkEntries.length}`
+            }
+          </CardDescription>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4">
+            <div className="flex-grow w-full">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
@@ -73,18 +80,6 @@ export default function FileManagerPage() {
               </Button>
             )}
           </div>
-        </CardHeader>
-      </Card>
-      
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>Deposit Works Files</CardTitle>
-          <CardDescription>
-            {user?.role === 'supervisor'
-              ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
-              : `List of all non-ARS files in the system, sorted by most recent remittance. Total Files: ${depositWorkEntries.length}`
-            }
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <FileDatabaseTable 
