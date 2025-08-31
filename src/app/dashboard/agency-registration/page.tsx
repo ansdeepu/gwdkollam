@@ -770,7 +770,11 @@ export default function AgencyRegistrationPage() {
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent>
-                                <Calendar mode="single" selected={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || undefined} 
+                                <Calendar mode="single" 
+                                selected={
+                                    editingRenewal?.renewal.renewalDate ? new Date(editingRenewal.renewal.renewalDate) :
+                                    renewalData?.data.renewalDate ? new Date(renewalData.data.renewalDate) : undefined
+                                } 
                                 onSelect={(date) => {
                                     if (editingRenewal) {
                                         setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, renewalDate: date! } }));
@@ -801,7 +805,11 @@ export default function AgencyRegistrationPage() {
                         <PopoverTrigger asChild><Button variant="outline" className={cn("col-span-3 justify-start text-left font-normal", !(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>
                         {(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) ? format(new Date(editingRenewal?.renewal.paymentDate || renewalData!.data.paymentDate!), 'dd/MM/yyyy') : 'Select'}
                         </Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" selected={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || undefined}
+                        <PopoverContent><Calendar mode="single" 
+                        selected={
+                            editingRenewal?.renewal.paymentDate ? new Date(editingRenewal.renewal.paymentDate) :
+                            renewalData?.data.paymentDate ? new Date(renewalData.data.paymentDate) : undefined
+                        }
                         onSelect={(date) => {
                              if (editingRenewal) {
                                 setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, paymentDate: date! } }));
@@ -863,7 +871,7 @@ export default function AgencyRegistrationPage() {
                                 <PopoverContent>
                                     <Calendar
                                         mode="single"
-                                        selected={cancellationData.date ?? undefined}
+                                        selected={cancellationData.date ? new Date(cancellationData.date) : undefined}
                                         onSelect={(date) => setCancellationData(d => ({ ...d!, date: date || null }))}
                                     />
                                 </PopoverContent>
