@@ -51,5 +51,5 @@ const nextConfig = {
     ],
   },
 };
-// Cache invalidation comment: 1756642299429
+// Cache invalidation comment: 1756643336022
 module.exports = nextConfig;
