@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo, type RigRenewal } from "@/hooks/useAgencyApplications";
+import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData } from "@/lib/schemas";
@@ -315,7 +315,7 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
   const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
-  const [editingRenewal, setEditingRenewal] = useState<{ rigIndex: number; renewal: RigRenewal } | null>(null);
+  const [editingRenewal, setEditingRenewal] = useState<{ rigIndex: number; renewal: RigRenewalFormData } | null>(null);
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
 
@@ -568,7 +568,7 @@ export default function AgencyRegistrationPage() {
       } else if (renewalData) { // Handle adding a new renewal
         const { rigIndex, data } = renewalData;
         const rigToUpdate = rigFields[rigIndex];
-        const newRenewal: RigRenewal = {
+        const newRenewal: RigRenewalFormData = {
             id: uuidv4(),
             renewalDate: data.renewalDate!,
             renewalFee: data.renewalFee!,
@@ -620,7 +620,7 @@ export default function AgencyRegistrationPage() {
     updateRig(rigIndex, {
         ...rigToUpdate,
         status: 'Cancelled',
-        cancellationDate: date ? date.toISOString() : null, // Store as ISO string
+        cancellationDate: date, // Store as Date object
         cancellationReason: reason,
     });
     toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });

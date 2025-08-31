@@ -17,7 +17,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { AgencyApplication, AgencyApplicationFormData, RigRegistration, OwnerInfo } from '@/lib/schemas';
+import type { AgencyApplication, AgencyApplicationFormData, RigRegistration, OwnerInfo, RigRenewal } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
@@ -146,4 +146,4 @@ export function useAgencyApplications(): UseAgencyApplicationsState {
   return { applications, isLoading, addApplication, updateApplication, deleteApplication };
 }
 
-export type { AgencyApplication, RigRegistration, OwnerInfo };
+export type { AgencyApplication, RigRegistration, OwnerInfo, RigRenewal };
