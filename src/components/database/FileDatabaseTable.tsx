@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
