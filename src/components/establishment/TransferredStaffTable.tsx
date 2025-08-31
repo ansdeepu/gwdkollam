@@ -6,11 +6,10 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, UserCheck, Archive } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreVertical, UserCheck, Archive, Loader2 } from 'lucide-react';
 import { type StaffMember, type StaffStatusType } from '@/lib/schemas';
 import { format, isValid } from 'date-fns';
-import { Loader2 } from 'lucide-react';
 
 
 interface TransferredStaffTableProps {
@@ -32,7 +31,7 @@ export default function TransferredStaffTable({ staffData, onSetStatus, isViewer
     return (
         <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2 text-muted-foreground">Filtering staff...</p>
+            <p className="ml-2 text-muted-foreground">Loading staff data...</p>
         </div>
     );
   }

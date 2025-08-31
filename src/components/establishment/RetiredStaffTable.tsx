@@ -7,10 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, UserCheck, UserX } from 'lucide-react';
+import { MoreVertical, UserCheck, UserX, Loader2 } from 'lucide-react';
 import { type StaffMember, type StaffStatusType } from '@/lib/schemas';
 import { format, isValid } from 'date-fns';
-import { Loader2 } from 'lucide-react';
 
 interface RetiredStaffTableProps {
   staffData: StaffMember[];
@@ -31,7 +30,7 @@ export default function RetiredStaffTable({ staffData, onSetStatus, isViewer, on
     return (
         <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2 text-muted-foreground">Filtering staff...</p>
+            <p className="ml-2 text-muted-foreground">Loading staff data...</p>
         </div>
     );
   }

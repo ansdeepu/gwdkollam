@@ -24,11 +24,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Edit, Trash2, MoreVertical, Archive, UserCheck, UserX } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, Archive, UserCheck, UserX, Loader2 } from 'lucide-react';
 import { type StaffMember, type StaffStatusType } from '@/lib/schemas';
 import { format, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
 
 interface StaffTableProps {
   staffData: StaffMember[];
@@ -60,7 +59,7 @@ export default function StaffTable({ staffData, onEdit, onDelete, onSetStatus, i
     return (
         <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2 text-muted-foreground">Filtering staff...</p>
+            <p className="ml-2 text-muted-foreground">Loading staff data...</p>
         </div>
     );
   }
@@ -125,7 +124,7 @@ export default function StaffTable({ staffData, onEdit, onDelete, onSetStatus, i
                             <span>Mark as Retired</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => setDeleteCandidate(staff)}>
+                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => setDeleteCandidate(staff)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Delete</span>
                           </DropdownMenuItem>

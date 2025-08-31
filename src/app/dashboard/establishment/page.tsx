@@ -1,3 +1,4 @@
+
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -40,7 +41,7 @@ const formatDateForSearch = (dateInput: Date | string | null | undefined): strin
 export default function EstablishmentPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { 
-    staffMembers, 
+    staffMembers: allStaffMembers, 
     isLoading: staffLoadingHook, 
     addStaffMember, 
     updateStaffMember, 
@@ -55,12 +56,46 @@ export default function EstablishmentPage() {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [isFiltering, setIsFiltering] = useState(false);
 
   const [imageForModal, setImageForModal] = useState<string | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   
   const canManage = user?.role === 'editor' && user.isApproved;
+
+  // Debounce search term to avoid re-filtering on every keystroke
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
+
+  // Main data processing logic
+  const filteredStaff = useMemo(() => {
+    let filtered = [...allStaffMembers];
+
+    if (debouncedSearchTerm) {
+        const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+        filtered = filtered.filter(staff =>
+          (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+          (staff.phoneNo?.includes(lowerSearchTerm)) ||
+          (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+          (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+        );
+    }
+    
+    return {
+        active: filtered.filter(s => s.status === 'Active'),
+        transferred: filtered.filter(s => s.status === 'Transferred'),
+        retired: filtered.filter(s => s.status === 'Retired'),
+    };
+  }, [debouncedSearchTerm, allStaffMembers]);
 
   const handleAddNewStaff = () => {
     setEditingStaff(null);
@@ -121,7 +156,7 @@ export default function EstablishmentPage() {
     const reportTitle = "Establishment Staff Report";
     const columnLabels = ["Sl. No.", "Name", "Designation", "PEN", "Phone No.", "Date of Birth", "Roles", "Status", "Remarks"];
     
-    const dataRows = staffMembers.map((staff, index) => [
+    const dataRows = allStaffMembers.map((staff, index) => [
       index + 1,
       staff.name,
       staff.designation,
@@ -222,52 +257,13 @@ export default function EstablishmentPage() {
     toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
   };
   
-  useEffect(() => {
-    const timerId = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [searchTerm]);
+  const activeStaffCount = useMemo(() => allStaffMembers.filter(s => s.status === 'Active').length, [allStaffMembers]);
+  const transferredStaffCount = useMemo(() => allStaffMembers.filter(s => s.status === 'Transferred').length, [allStaffMembers]);
+  const retiredStaffCount = useMemo(() => allStaffMembers.filter(s => s.status === 'Retired').length, [allStaffMembers]);
   
-  const filteredStaff = useMemo(() => {
-    if (staffLoadingHook) return { active: [], transferred: [], retired: [] };
-    
-    let filtered = staffMembers;
-    if (debouncedSearchTerm) {
-        const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
-        filtered = staffMembers.filter(staff =>
-          (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-          (staff.phoneNo?.includes(lowerSearchTerm)) ||
-          (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-          (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-        );
-    }
-    
-    return {
-        active: filtered.filter(s => s.status === 'Active'),
-        transferred: filtered.filter(s => s.status === 'Transferred'),
-        retired: filtered.filter(s => s.status === 'Retired'),
-    };
-  }, [debouncedSearchTerm, staffMembers, staffLoadingHook]);
+  const isLoading = authLoading || staffLoadingHook;
 
-
-  useEffect(() => {
-      setIsFiltering(true);
-      const timer = setTimeout(() => setIsFiltering(false), 500); // Simulate filtering delay
-      return () => clearTimeout(timer);
-  }, [filteredStaff]);
-
-  const activeStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Active').length, [staffMembers]);
-  const transferredStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Transferred').length, [staffMembers]);
-  const retiredStaffCount = useMemo(() => staffMembers.filter(s => s.status === 'Retired').length, [staffMembers]);
-
-  if (authLoading || staffLoadingHook) {
+  if (isLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -334,7 +330,7 @@ export default function EstablishmentPage() {
                 onSetStatus={canManage ? handleSetStaffStatus : undefined}
                 isViewer={!canManage}
                 onImageClick={handleOpenImageModal}
-                isLoading={isFiltering}
+                isLoading={staffLoadingHook}
                 searchActive={!!debouncedSearchTerm}
               />
             </CardContent>
@@ -353,7 +349,7 @@ export default function EstablishmentPage() {
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
-                        isLoading={isFiltering}
+                        isLoading={staffLoadingHook}
                         searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
@@ -372,7 +368,7 @@ export default function EstablishmentPage() {
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
-                        isLoading={isFiltering}
+                        isLoading={staffLoadingHook}
                         searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
