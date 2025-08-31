@@ -40,7 +40,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
       totalRemittance: 0, 
       siteDetails: [{
-        nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
+        nameOfSite: "", latitude: undefined, longitude: undefined, purpose: "BWC",
         estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
         additionalAS: 'No',
         tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
@@ -48,7 +48,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
         waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
         noOfBeneficiary: "", dateOfCompletion: null, typeOfRig: undefined,
         contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined,
-        workStatus: undefined, workRemarks: "",
+        workStatus: "Under Process", workRemarks: "",
         surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "",
         surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
         surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
@@ -62,7 +62,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
         refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "",
        }], 
       totalPaymentAllEntries: 0, overallBalance: 0,
-      fileStatus: undefined, remarks: "",
+      fileStatus: "File Under Process", remarks: "",
     });
 
   if (!entryToEdit) return getFormDefaults();
@@ -311,6 +311,8 @@ export default function DataEntryPage() {
     </div>
   );
 }
+
+    
 
     
 
