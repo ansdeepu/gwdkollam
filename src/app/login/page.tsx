@@ -14,24 +14,18 @@ export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
+    // If auth is not loading and user is already authenticated, push to dashboard.
+    // The layout will handle showing a loader during this redirect.
     if (!isLoading && isAuthenticated) {
       router.push('/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
+  // Let the layout handle the main loading state.
+  if (isLoading || isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (isAuthenticated) { // If already authenticated, show loader while redirecting
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-2 text-muted-foreground">Redirecting...</p>
       </div>
     );
   }

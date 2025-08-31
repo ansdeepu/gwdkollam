@@ -70,9 +70,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!isClient) {
       return;
     }
-
-    if (!authIsLoading && !isAuthenticated) {
-      if (idleTimerRef.current) { 
+    
+    // If auth is done loading, user is not authenticated, AND we are not already on the login page, redirect.
+    if (!authIsLoading && !isAuthenticated && pathname !== '/login') {
+      if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
       }
       router.push('/login');
@@ -124,8 +125,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!isAuthenticated) {
+  // If not authenticated and not on login page, show loader while redirecting
+  if (!isAuthenticated && pathname !== '/login') {
        return (
+        <div className="flex h-screen w-screen items-center justify-center bg-background">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      );
+  }
+
+  // If authenticated, but on the login page, show loader while redirecting to dashboard
+  if (isAuthenticated && pathname === '/login') {
+      return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
