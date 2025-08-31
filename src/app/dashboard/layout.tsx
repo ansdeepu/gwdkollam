@@ -1,7 +1,7 @@
 // src/app/dashboard/layout.tsx
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback, createContext, useContext } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   SidebarProvider,
@@ -12,27 +12,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { updateUserLastActive } from '@/hooks/useAuth';
+import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation';
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
 
-// Create a context to manage the loading state
-const PageNavigationContext = createContext({
-  isNavigating: false,
-  setIsNavigating: (isNavigating: boolean) => {},
-});
-
-export const usePageNavigation = () => useContext(PageNavigationContext);
-
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, logout } = useAuth();
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityFirestoreUpdateRef = useRef<number>(0); 
   const { toast } = useToast();
-  
-  const [isNavigating, setIsNavigating] = useState(false);
+  const { isNavigating, setIsNavigating } = usePageNavigation();
 
   useEffect(() => {
     // If auth is done loading and there is no user, redirect to login.
@@ -88,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
       setIsNavigating(false);
-  }, [pathname]);
+  }, [pathname, setIsNavigating]);
 
   // While checking auth state, show a full-screen loader.
   if (isLoading) {
@@ -109,24 +101,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       );
   }
 
-  // If we have a user, render the full dashboard layout.
   return (
-    <PageNavigationContext.Provider value={{ isNavigating, setIsNavigating }}>
-      <SidebarProvider defaultOpen>
-        {isNavigating && (
-          <div className="page-transition-spinner">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-        <div className="flex h-screen w-full overflow-hidden">
-          <AppSidebar />
-          <SidebarInset className="flex flex-col flex-1 overflow-hidden">
-            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
-              {children}
-            </main>
-          </SidebarInset>
+    <SidebarProvider defaultOpen>
+      {isNavigating && (
+        <div className="page-transition-spinner">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </SidebarProvider>
-    </PageNavigationContext.Provider>
+      )}
+      <div className="flex h-screen w-full overflow-hidden">
+        <AppSidebar />
+        <SidebarInset className="flex flex-col flex-1 overflow-hidden">
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
+            {children}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <PageNavigationProvider>
+      <InnerDashboardLayout>{children}</InnerDashboardLayout>
+    </PageNavigationProvider>
   );
 }

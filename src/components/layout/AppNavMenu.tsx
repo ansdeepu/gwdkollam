@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
 import { Badge } from '@/components/ui/badge'; // Import the Badge component
-import { usePageNavigation } from '@/app/dashboard/layout';
+import { usePageNavigation } from '@/hooks/usePageNavigation';
 
 export interface NavItem {
   href: string;
