@@ -1,4 +1,3 @@
-
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -9,11 +8,10 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useMemo, useEffect, useState } from "react";
-import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus, PendingUpdate } from "@/lib/schemas";
+import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus, PendingUpdate, Constituency } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid } from 'date-fns';
-import { Button } from "@/components/ui/button";
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -34,13 +32,13 @@ const safeParseDate = (dateValue: any): Date | null => {
 const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntryFormData => {
     // A safe, deep-cloned default structure.
     const getFormDefaults = (): DataEntryFormData => ({
-      fileNo: "", applicantName: "", phoneNo: "", applicationType: "Private_Domestic",
-      constituency: "Kollam",
+      fileNo: "", applicantName: "", phoneNo: "", applicationType: undefined,
+      constituency: undefined,
       estimateAmount: undefined, assignedSupervisorUids: [],
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
       totalRemittance: 0, 
       siteDetails: [{
-        nameOfSite: "", latitude: undefined, longitude: undefined, purpose: "BWC",
+        nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
         estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
         additionalAS: 'No',
         tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
@@ -48,12 +46,14 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
         waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
         noOfBeneficiary: "", dateOfCompletion: null, typeOfRig: undefined,
         contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined,
-        workStatus: "Under Process", workRemarks: "",
+        workStatus: undefined, workRemarks: "",
         surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "",
         surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
         surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
         surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
-        arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined,
+        arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined,
+        arsTenderedAmount: undefined, arsAwardedAmount: undefined,
+        arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false,
         pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
       }],
       paymentDetails: [{ 
@@ -62,7 +62,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
         refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "",
        }], 
       totalPaymentAllEntries: 0, overallBalance: 0,
-      fileStatus: "File Under Process", remarks: "",
+      fileStatus: undefined, remarks: "",
     });
 
   if (!entryToEdit) return getFormDefaults();
@@ -97,8 +97,8 @@ interface PageData {
 }
 
 export default function DataEntryPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const fileNoToEdit = searchParams.get("fileNo");
   const approveUpdateId = searchParams.get("approveUpdateId");
   
@@ -283,21 +283,21 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
-      {pageData && (
-        <Card className="shadow-lg">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-                <div>
-                    <CardTitle>{pageTitle}</CardTitle>
-                    <CardDescription>{pageDescription}</CardDescription>
-                </div>
-                <Button variant="destructive" size="sm" onClick={() => router.back()}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                </Button>
+      <Card className="shadow-lg">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>{pageTitle}</CardTitle>
+              <CardDescription>{pageDescription}</CardDescription>
             </div>
-          </CardHeader>
-          <CardContent>
+             <Button variant="destructive" size="sm" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {pageData ? (
              <DataEntryFormComponent
                 key={approveUpdateId || fileNoToEdit || 'new-entry'} 
                 fileNoToEdit={fileNoToEdit || undefined}
@@ -305,9 +305,13 @@ export default function DataEntryPage() {
                 supervisorList={supervisorList}
                 userRole={user?.role}
              />
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="flex h-64 items-center justify-center">
+              <p className="text-muted-foreground">Form data could not be loaded.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
