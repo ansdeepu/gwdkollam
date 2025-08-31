@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
 import { useAuth } from '@/hooks/useAuth'; 
@@ -111,6 +112,12 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
+           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-6 backdrop-blur-sm">
+                <SidebarTrigger className="md:hidden" />
+                <div className="flex-1">
+                    {/* Placeholder for potential breadcrumbs or page titles */}
+                </div>
+            </header>
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
             {children}
           </main>

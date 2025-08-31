@@ -72,7 +72,7 @@ const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
   "Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"
 ];
 
-const REFUNDED_STATUSES: SiteWorkStatus[] = [];
+const REFUNDED_STATUSES: SiteWorkStatus[] = ['To be Refunded'];
 
 interface DetailDialogColumn {
   key: string;
@@ -281,8 +281,8 @@ export default function ProgressReportPage() {
         
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && (!completionDate || isAfter(completionDate, sDate));
-        const isToBeRefundedInPeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-        const wasToBeRefundedBeforePeriod = workStatus && REFUNDED_STATUSES.includes(workStatus) && firstRemittanceDate && isBefore(firstRemittanceDate, sDate);
+        
+        const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplicationInPeriod) { 
@@ -297,7 +297,7 @@ export default function ProgressReportPage() {
                 statsObj.completed++; 
                 statsObj.completedData.push(siteWithFileContext); 
             }
-            if (isToBeRefundedInPeriod || wasToBeRefundedBeforePeriod) { 
+            if (isToBeRefunded) { 
                 statsObj.toBeRefunded++; 
                 statsObj.toBeRefundedData.push(siteWithFileContext); 
             }
