@@ -1,4 +1,3 @@
-
 // src/app/dashboard/layout.tsx
 "use client";
 
@@ -28,8 +27,7 @@ export const usePageNavigation = () => useContext(PageNavigationContext);
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isLoading: authIsLoading, user, logout } = useAuth();
-  const [isClient, setIsClient] = useState(false);
+  const { user, isLoading, logout } = useAuth();
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityFirestoreUpdateRef = useRef<number>(0); 
   const { toast } = useToast();
@@ -37,8 +35,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    // If auth is done loading and there is no user, redirect to login.
+    // This protects all routes wrapped by this layout.
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [isLoading, user, router]);
 
   const performIdleLogout = useCallback(() => {
     toast({
@@ -53,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
     }
-    if (isAuthenticated && user?.uid) { 
+    if (user?.uid) { 
       idleTimerRef.current = setTimeout(performIdleLogout, IDLE_TIMEOUT_DURATION);
 
       // Throttled update of last active timestamp
@@ -63,60 +65,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         updateUserLastActive(user.uid);
       }
     }
-  }, [isAuthenticated, user, performIdleLogout]);
+  }, [user, performIdleLogout]);
 
 
   useEffect(() => {
-    if (!isClient) {
-      return;
-    }
-    
-    // If auth is done loading, user is NOT authenticated, AND we are not on the login page, redirect them.
-    // This prevents the redirect loop.
-    if (!authIsLoading && !isAuthenticated && pathname !== '/login') {
-      router.push('/login');
-    }
-  }, [isClient, authIsLoading, isAuthenticated, router, pathname]);
-
-
-  useEffect(() => {
-    if (!isClient || !isAuthenticated) {
-      if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
-      }
+    if (!user) {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       return; 
     }
 
     const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
-
-    const handleUserActivity = () => {
-      resetIdleTimer();
-    };
-
+    const handleUserActivity = () => resetIdleTimer();
     resetIdleTimer(); 
 
-    activityEvents.forEach(event => {
-      window.addEventListener(event, handleUserActivity, { passive: true });
-    });
+    activityEvents.forEach(event => window.addEventListener(event, handleUserActivity, { passive: true }));
 
     return () => {
-      if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
-      }
-      activityEvents.forEach(event => {
-        window.removeEventListener(event, handleUserActivity);
-      });
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      activityEvents.forEach(event => window.removeEventListener(event, handleUserActivity));
     };
-  }, [isClient, isAuthenticated, resetIdleTimer]);
+  }, [user, resetIdleTimer]);
 
-  // When pathname changes, navigation is complete
   useEffect(() => {
       setIsNavigating(false);
   }, [pathname]);
 
-
-  // Show a loading screen while auth state is being determined.
-  if (authIsLoading) {
+  // While checking auth state, show a full-screen loader.
+  if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -124,16 +99,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // If auth is done, but the user is not authenticated and not on the login page, show a loader while redirecting.
-  if (!isAuthenticated && pathname !== '/login') {
+  // If auth is done, but there's no user, show a loader while the redirect to login happens.
+  if (!user) {
        return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-muted-foreground">Redirecting to login...</p>
         </div>
       );
   }
 
-  // If the user is authenticated (or we are on the login page), render the content.
+  // If we have a user, render the full dashboard layout.
   return (
     <PageNavigationContext.Provider value={{ isNavigating, setIsNavigating }}>
       <SidebarProvider defaultOpen>

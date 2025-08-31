@@ -1,4 +1,3 @@
-
 // src/app/login/page.tsx
 "use client";
 
@@ -11,17 +10,17 @@ import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    // If auth is done loading and the user is authenticated, redirect them to the dashboard.
-    // This is the single source of truth for this redirect.
-    if (!isLoading && isAuthenticated) {
+    // If auth is not loading and a user object exists, they are authenticated. Redirect them.
+    if (!isLoading && user) {
       router.push('/dashboard');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [user, isLoading, router]);
 
-  // If auth is still loading, show a spinner. This prevents a flash of the login page for authenticated users.
+  // While the auth state is being determined, show a full-screen loader.
+  // This prevents the login form from flashing for an already logged-in user.
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
@@ -30,9 +29,8 @@ export default function LoginPage() {
     );
   }
 
-  // If auth is done and the user is NOT authenticated, show the login page.
-  // This check prevents the login form from rendering momentarily before an authenticated user is redirected.
-  if (!isAuthenticated) {
+  // If auth is done loading and there's no user, it's safe to render the login form.
+  if (!isLoading && !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/20 p-4">
         <div className="flex w-full max-w-4xl flex-col items-center space-y-8 rounded-xl bg-card p-8 shadow-2xl md:flex-row md:space-y-0 md:space-x-10 md:p-12">
@@ -66,7 +64,7 @@ export default function LoginPage() {
     );
   }
   
-  // If authenticated, show a loader while redirecting (this state is brief).
+  // This is a fallback state for the brief moment after login but before the redirect completes.
   return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
