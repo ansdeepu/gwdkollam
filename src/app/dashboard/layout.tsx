@@ -71,14 +71,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return;
     }
     
-    // If auth is done loading, user is not authenticated, AND we are not already on the login page, redirect.
-    if (!authIsLoading && !isAuthenticated && pathname !== '/login') {
-      if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
-      }
+    // If auth is done loading and the user is NOT authenticated, redirect them to login.
+    // This is the primary guard for the dashboard.
+    if (!authIsLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isClient, authIsLoading, isAuthenticated, router, pathname]);
+  }, [isClient, authIsLoading, isAuthenticated, router]);
 
 
   useEffect(() => {
@@ -117,7 +115,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
 
-  if (!isClient || authIsLoading) {
+  // Show a loading screen while auth state is being determined.
+  if (authIsLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -125,8 +124,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // If not authenticated and not on login page, show loader while redirecting
-  if (!isAuthenticated && pathname !== '/login') {
+  // If auth is done, but the user is not authenticated, show a loader while the redirect to login happens.
+  if (!isAuthenticated) {
        return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -134,15 +133,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       );
   }
 
-  // If authenticated, but on the login page, show loader while redirecting to dashboard
-  if (isAuthenticated && pathname === '/login') {
-      return (
-        <div className="flex h-screen w-screen items-center justify-center bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-      );
-  }
-
+  // If the user is authenticated, render the dashboard layout.
   return (
     <PageNavigationContext.Provider value={{ isNavigating, setIsNavigating }}>
       <SidebarProvider defaultOpen>
