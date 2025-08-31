@@ -446,23 +446,19 @@ export const PendingUpdateSchema = PendingUpdateFormDataSchema.extend({
 export type PendingUpdate = z.infer<typeof PendingUpdateSchema>;
 
 
-// Helper function to join values from an array of objects
-const join = (arr: any[] | undefined, key: string, separator: string = '; '): string => {
-  if (!arr || arr.length === 0) return 'N/A';
-  return arr.map(item => item[key] || 'N/A').join(separator);
+// Helper function to join values from an array of objects for a single-site context
+const getSiteValue = (entry: DataEntryFormData, key: keyof SiteDetailFormData): string | number | undefined | null => {
+    const site = entry.siteDetails?.[0];
+    return site ? site[key] : undefined;
 };
 
-// Helper function to sum values from an array of objects
-const sum = (arr: any[] | undefined, key: string): number => {
-  if (!arr) return 0;
-  return arr.reduce((acc, item) => acc + (Number(item[key]) || 0), 0);
-};
-
-// Helper function to format dates from an array of objects
-const formatDate = (date: Date | string | null | undefined): string => {
+// Helper function to format dates from a single site
+const formatSiteDate = (entry: DataEntryFormData, key: keyof SiteDetailFormData): string => {
+  const site = entry.siteDetails?.[0];
+  const date = site ? site[key] : null;
   if (!date) return 'N/A';
   try {
-    return format(new Date(date), "dd/MM/yyyy");
+    return format(new Date(date as string | Date), "dd/MM/yyyy");
   } catch {
     return 'Invalid Date';
   }
@@ -477,37 +473,38 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'fileStatus', label: 'File Status', accessor: (entry) => entry.fileStatus },
   { id: 'fileRemarks', label: 'File Remarks', accessor: (entry) => entry.remarks },
 
-  // === Remittance Details (Aggregated) ===
+  // === Remittance Details (from main file) ===
   { id: 'firstRemittanceDate', label: 'First Remittance Date', accessor: (entry) => formatDate(entry.remittanceDetails?.[0]?.dateOfRemittance) },
   { id: 'allRemittanceDates', label: 'All Remittance Dates', accessor: (entry) => entry.remittanceDetails?.map(rd => formatDate(rd.dateOfRemittance)).join('; ') || 'N/A' },
   { id: 'totalRemittance', label: 'Total Remittance (₹)', accessor: (entry) => entry.totalRemittance },
-  { id: 'remittanceAccounts', label: 'Remittance Accounts', accessor: (entry) => join(entry.remittanceDetails, 'remittedAccount') },
+  { id: 'remittanceAccounts', label: 'Remittance Accounts', accessor: (entry) => entry.remittanceDetails?.map(rd => rd.remittedAccount).join('; ') || 'N/A' },
 
-  // === Site Details (Aggregated) ===
-  { id: 'allSiteNames', label: 'Site Names', accessor: (entry) => join(entry.siteDetails, 'nameOfSite') },
-  { id: 'allSitePurposes', label: 'Site Purposes', accessor: (entry) => join(entry.siteDetails, 'purpose') },
-  { id: 'allSiteWorkStatuses', label: 'Site Work Statuses', accessor: (entry) => join(entry.siteDetails, 'workStatus') },
-  { id: 'allSiteSupervisors', label: 'Site Supervisors', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.supervisorName).filter(Boolean))].join('; ') || 'N/A' },
-  { id: 'allContractors', label: 'Contractor Names', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.contractorName).filter(Boolean))].join('; ') || 'N/A' },
-  { id: 'allSiteCompletionDates', label: 'Site Completion Dates', accessor: (entry) => join(entry.siteDetails, 'dateOfCompletion', '; ') },
-  { id: 'allTenderNos', label: 'Tender Nos.', accessor: (entry) => join(entry.siteDetails, 'tenderNo') },
-  { id: 'allTypeOfRigs', label: 'Types of Rig', accessor: (entry) => join(entry.siteDetails, 'typeOfRig') },
+  // === Site Details (now specific to the one site in the row) ===
+  { id: 'siteName', label: 'Site Name', accessor: (entry) => getSiteValue(entry, 'nameOfSite') as string },
+  { id: 'sitePurpose', label: 'Site Purpose', accessor: (entry) => getSiteValue(entry, 'purpose') as string },
+  { id: 'siteWorkStatus', label: 'Site Work Status', accessor: (entry) => getSiteValue(entry, 'workStatus') as string },
+  { id: 'siteSupervisor', label: 'Site Supervisor', accessor: (entry) => getSiteValue(entry, 'supervisorName') as string },
+  { id: 'siteContractor', label: 'Contractor Name', accessor: (entry) => getSiteValue(entry, 'contractorName') as string },
+  { id: 'siteCompletionDate', label: 'Site Completion Date', accessor: (entry) => formatSiteDate(entry, 'dateOfCompletion') },
+  { id: 'tenderNo', label: 'Tender No.', accessor: (entry) => getSiteValue(entry, 'tenderNo') as string },
+  { id: 'typeOfRig', label: 'Type of Rig', accessor: (entry) => getSiteValue(entry, 'typeOfRig') as string },
 
-  // === Financial Summary (Aggregated) ===
-  { id: 'totalSiteEstimate', label: 'Total Site Estimate (₹)', accessor: (entry) => sum(entry.siteDetails, 'estimateAmount') },
-  { id: 'totalSiteExpenditure', label: 'Total Site Expenditure (₹)', accessor: (entry) => sum(entry.siteDetails, 'totalExpenditure') },
-  { id: 'totalPayment', label: 'Total Payment (₹)', accessor: (entry) => entry.totalPaymentAllEntries },
-  { id: 'overallBalance', label: 'Overall Balance (₹)', accessor: (entry) => entry.overallBalance },
+  // === Financials (File-level totals and site-specific expenditure) ===
+  { id: 'siteEstimate', label: 'Site Estimate (₹)', accessor: (entry) => getSiteValue(entry, 'estimateAmount') as number },
+  { id: 'siteExpenditure', label: 'Site Expenditure (₹)', accessor: (entry) => getSiteValue(entry, 'totalExpenditure') as number },
+  { id: 'totalPayment', label: 'Total Payment (File) (₹)', accessor: (entry) => entry.totalPaymentAllEntries },
+  { id: 'overallBalance', label: 'Overall Balance (File) (₹)', accessor: (entry) => entry.overallBalance },
   
-  // === Payment Details (Aggregated) ===
+  // === Payment Details (File-level aggregates) ===
   { id: 'allPaymentDates', label: 'Payment Dates', accessor: (entry) => entry.paymentDetails?.map(pd => formatDate(pd.dateOfPayment)).join('; ') || 'N/A' },
-  { id: 'totalContractorPayment', label: 'Total Contractor Payment (₹)', accessor: (entry) => sum(entry.paymentDetails, 'contractorsPayment') },
-  { id: 'totalGst', label: 'Total GST (₹)', accessor: (entry) => sum(entry.paymentDetails, 'gst') },
-  { id: 'totalIncomeTax', label: 'Total Income Tax (₹)', accessor: (entry) => sum(entry.paymentDetails, 'incomeTax') },
-  { id: 'totalKbcwb', label: 'Total KBCWB (₹)', accessor: (entry) => sum(entry.paymentDetails, 'kbcwb') },
-  { id: 'totalRefundToParty', label: 'Total Refund to Party (₹)', accessor: (entry) => sum(entry.paymentDetails, 'refundToParty') },
-  { id: 'totalRevenueHead', label: 'Total to Revenue Head (₹)', accessor: (entry) => sum(entry.paymentDetails, 'revenueHead') },
+  { id: 'totalContractorPayment', label: 'Total Contractor Payment (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.contractorsPayment) || 0), 0) },
+  { id: 'totalGst', label: 'Total GST (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.gst) || 0), 0) },
+  { id: 'totalIncomeTax', label: 'Total Income Tax (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.incomeTax) || 0), 0) },
+  { id: 'totalKbcwb', label: 'Total KBCWB (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.kbcwb) || 0), 0) },
+  { id: 'totalRefundToParty', label: 'Total Refund to Party (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.refundToParty) || 0), 0) },
+  { id: 'totalRevenueHead', label: 'Total to Revenue Head (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.revenueHead) || 0), 0) },
 ];
+
 
 
 export const CustomReportBuilderSchema = z.object({

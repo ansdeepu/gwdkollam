@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { reportableFields } from '@/lib/schemas';
-import { useFileEntries } from '@/hooks/useFileEntries';
+import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Changed hook
 import * as XLSX from 'xlsx';
 import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Filter, RotateCcw, FileDown } from 'lucide-react';
+import { CalendarIcon, Filter, RotateCcw, FileDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -23,13 +23,14 @@ interface GeneratedReportRow {
 export default function CustomReportBuilderPage() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const { toast } = useToast();
-  const { fileEntries } = useFileEntries();
+  const { reportEntries: fileEntries, isReportLoading } = useAllFileEntriesForReports(); // Changed hook
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   
   const [reportData, setReportData] = useState<GeneratedReportRow[]>([]);
   const [reportHeaders, setReportHeaders] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleCheckboxChange = (fieldId: string) => {
     setSelectedFields(prev =>
@@ -38,10 +39,12 @@ export default function CustomReportBuilderPage() {
   };
   
   const handleGenerateReport = () => {
+    setIsGenerating(true);
     if (selectedFields.length === 0) {
       toast({ title: "No Fields Selected", description: "Please select at least one field to generate a report.", variant: "destructive" });
       setReportData([]);
       setReportHeaders([]);
+      setIsGenerating(false);
       return;
     }
     
@@ -67,23 +70,37 @@ export default function CustomReportBuilderPage() {
       toast({ title: "No Data Found", description: "No entries match the selected date range.", variant: "default" });
       setReportData([]);
       setReportHeaders([]);
+      setIsGenerating(false);
       return;
     }
 
     const selectedFieldObjects = reportableFields.filter(f => selectedFields.includes(f.id));
     const headers = selectedFieldObjects.map(f => f.label);
     
-    const dataForReport = filteredEntries.map(entry => {
-      const row: GeneratedReportRow = {};
-      selectedFieldObjects.forEach(field => {
-        row[field.label] = field.accessor(entry);
-      });
-      return row;
+    const dataForReport = filteredEntries.flatMap(entry => {
+      if (entry.siteDetails && entry.siteDetails.length > 0) {
+        return entry.siteDetails.map(site => {
+          const row: GeneratedReportRow = {};
+          const syntheticEntry = { ...entry, siteDetails: [site] }; // Create a temporary entry with only one site
+          selectedFieldObjects.forEach(field => {
+            row[field.label] = field.accessor(syntheticEntry);
+          });
+          return row;
+        });
+      } else {
+        // Handle files with no sites
+        const row: GeneratedReportRow = {};
+        selectedFieldObjects.forEach(field => {
+          row[field.label] = field.accessor(entry);
+        });
+        return [row];
+      }
     });
 
     setReportHeaders(headers);
     setReportData(dataForReport);
     toast({ title: "Report Generated", description: `Report with ${dataForReport.length} rows is ready.` });
+    setIsGenerating(false);
   };
   
   const handleExportExcel = () => {
@@ -108,6 +125,15 @@ export default function CustomReportBuilderPage() {
     setReportHeaders([]);
     toast({ title: "Filters Cleared", description: "All selections have been reset." });
   };
+  
+  if (isReportLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2 text-muted-foreground">Loading report data...</p>
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -171,9 +197,9 @@ export default function CustomReportBuilderPage() {
             ))}
           </div>
           <div className="mt-8 flex gap-4">
-            <Button onClick={handleGenerateReport} disabled={selectedFields.length === 0}>
-                <FileDown className="mr-2 h-4 w-4" />
-                Generate Report
+            <Button onClick={handleGenerateReport} disabled={selectedFields.length === 0 || isGenerating}>
+                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+                {isGenerating ? 'Generating...' : 'Generate Report'}
             </Button>
              <Button onClick={handleClear} variant="outline">
                 <RotateCcw className="mr-2 h-4 w-4" />
@@ -191,9 +217,9 @@ export default function CustomReportBuilderPage() {
                 Export to Excel
               </Button>
             </div>
-            <div className="overflow-x-auto border rounded-lg">
+            <div className="overflow-x-auto border rounded-lg max-h-[60vh]">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-secondary">
                   <TableRow>
                     {reportHeaders.map(header => <TableHead key={header}>{header}</TableHead>)}
                   </TableRow>
