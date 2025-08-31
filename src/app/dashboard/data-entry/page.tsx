@@ -34,7 +34,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntryFormData => {
     // A safe, deep-cloned default structure.
     const getFormDefaults = (): DataEntryFormData => ({
-      fileNo: "", applicantName: "", phoneNo: "", applicationType: undefined,
+      fileNo: "", applicantName: "", phoneNo: "", applicationType: "Private_Domestic",
       constituency: "",
       estimateAmount: undefined, assignedSupervisorUids: [],
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
@@ -311,3 +311,5 @@ export default function DataEntryPage() {
     </div>
   );
 }
+
+    
