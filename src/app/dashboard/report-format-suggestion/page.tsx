@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { reportableFields } from '@/lib/schemas';
-import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Changed hook
+import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import * as XLSX from 'xlsx';
 import { format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,7 +23,7 @@ interface GeneratedReportRow {
 export default function CustomReportBuilderPage() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const { toast } = useToast();
-  const { reportEntries: fileEntries, isReportLoading } = useAllFileEntriesForReports(); // Changed hook
+  const { reportEntries: fileEntries, isReportLoading } = useAllFileEntriesForReports();
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -78,17 +78,20 @@ export default function CustomReportBuilderPage() {
     const headers = selectedFieldObjects.map(f => f.label);
     
     const dataForReport = filteredEntries.flatMap(entry => {
+      // If a file has site details, create a row for each site.
       if (entry.siteDetails && entry.siteDetails.length > 0) {
         return entry.siteDetails.map(site => {
           const row: GeneratedReportRow = {};
-          const syntheticEntry = { ...entry, siteDetails: [site] }; // Create a temporary entry with only one site
+          // Create a temporary entry object that represents a single file-site combination
+          const syntheticEntry = { ...entry, siteDetails: [site] };
           selectedFieldObjects.forEach(field => {
             row[field.label] = field.accessor(syntheticEntry);
           });
           return row;
         });
-      } else {
-        // Handle files with no sites
+      } 
+      // If a file has no site details at all, still include it as one row.
+      else {
         const row: GeneratedReportRow = {};
         selectedFieldObjects.forEach(field => {
           row[field.label] = field.accessor(entry);
