@@ -1,4 +1,3 @@
-
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -8,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useRouter } from "next/navigation";
-import { Users, ShieldAlert, Loader2, UserPlus, ArrowLeft } from "lucide-react";
+import { Users, ShieldAlert, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -127,33 +126,27 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-xl border-border/60">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>
-                {canManage 
-                  ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions."
-                  : "View all registered users in the system. (Read-only)"
-                }
-              </CardDescription>
-            </div>
-             <Button variant="destructive" size="sm" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+      {canManage && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex gap-2">
+            <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
+                <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
+            </Button>
+            <Button onClick={() => setIsStaffFormOpen(true)}>
+                <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
             </Button>
           </div>
-            {canManage && (
-                <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 pt-4">
-                    <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
-                        <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
-                    </Button>
-                    <Button onClick={() => setIsStaffFormOpen(true)}>
-                        <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
-                    </Button>
-                </div>
-            )}
+        </div>
+      )}
+      <Card className="shadow-xl border-border/60">
+        <CardHeader>
+          <CardTitle className="text-xl">Registered Users ({allUsers.length})</CardTitle>
+          <CardDescription>
+            {canManage 
+              ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions. Use batch actions for efficiency where applicable."
+              : "View all registered users in the system. (Read-only)"
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <UserManagementTable

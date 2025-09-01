@@ -1,114 +1,160 @@
 // src/components/admin/NewUserForm.tsx
 "use client";
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { type StaffMember, NewUserByAdminSchema, type NewUserByAdminFormData } from '@/lib/schemas';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Save, X, UserPlus } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { NewUserByAdminSchema, type NewUserByAdminFormData, designationOptions, type StaffMember, type Designation } from "@/lib/schemas";
+import { Loader2, UserPlus, X } from "lucide-react";
+import { useState, useMemo } from "react";
 
 interface NewUserFormProps {
   staffMembers: StaffMember[];
   staffLoading: boolean;
-  onSubmit: (data: NewUserByAdminFormData) => void;
+  onSubmit: (data: NewUserByAdminFormData) => Promise<void>;
   isSubmitting: boolean;
   onCancel: () => void;
 }
 
 export default function NewUserForm({ staffMembers, staffLoading, onSubmit, isSubmitting, onCancel }: NewUserFormProps) {
+  const [selectedDesignation, setSelectedDesignation] = useState<Designation | null>(null);
+
   const form = useForm<NewUserByAdminFormData>({
     resolver: zodResolver(NewUserByAdminSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      designation: undefined,
+      staffId: "",
+      email: "",
+      password: "",
     },
   });
-  
-  const selectedStaffId = form.watch('staffId');
-  const selectedStaffMember = staffMembers.find(s => s.id === selectedStaffId);
+
+  const filteredStaff = useMemo(() => {
+    if (!selectedDesignation) return [];
+    return staffMembers.filter(s => s.designation === selectedDesignation && s.status === 'Active');
+  }, [selectedDesignation, staffMembers]);
+
+  const handleFormSubmit = async (data: NewUserByAdminFormData) => {
+    await onSubmit(data);
+    if (form.formState.isSubmitSuccessful) {
+        form.reset();
+        setSelectedDesignation(null);
+    }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <ScrollArea className="h-[60vh] -mr-4 pr-4">
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="staffId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select Staff Member</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={staffLoading}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={staffLoading ? "Loading staff..." : "Select from establishment list"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {staffMembers.map(staff => (
-                        <SelectItem key={staff.id} value={staff.id}>
-                          {staff.name} ({staff.designation})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {selectedStaffMember && (
-                <div className="p-3 bg-secondary/50 rounded-md border text-sm">
-                    <p><strong>Selected:</strong> {selectedStaffMember.name}</p>
-                    <p><strong>Designation:</strong> {selectedStaffMember.designation}</p>
-                    <p><strong>PEN:</strong> {selectedStaffMember.pen}</p>
-                </div>
-            )}
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 pt-4">
+        <FormField
+          control={form.control}
+          name="designation"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Designation</FormLabel>
+              <Select
+                onValueChange={(value: Designation) => {
+                  field.onChange(value);
+                  setSelectedDesignation(value);
+                  form.resetField("staffId");
+                }}
+                value={field.value}
+                disabled={isSubmitting || staffLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a designation" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {designationOptions.map(option => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="staffId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name of Staff</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isSubmitting || staffLoading || !selectedDesignation || filteredStaff.length === 0}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={
+                        staffLoading ? "Loading staff..." :
+                        !selectedDesignation ? "Select designation first" :
+                        filteredStaff.length === 0 ? "No active staff found for designation" :
+                        "Select a staff member"
+                    } />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {filteredStaff.map(staff => (
+                    <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="user@gwdkollam.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </ScrollArea>
-        <div className="flex justify-end gap-2 pt-6 border-t mt-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email Address</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="user@example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="Create a temporary password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex justify-end space-x-3 pt-2">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             <X className="mr-2 h-4 w-4" /> Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting || !selectedStaffId}>
-            {isSubmitting ? (
+          <Button type="submit" disabled={isSubmitting || staffLoading}>
+            {isSubmitting || staffLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <UserPlus className="mr-2 h-4 w-4" />
             )}
-            {isSubmitting ? 'Creating User...' : 'Create User'}
+            {isSubmitting ? "Creating..." : "Create User"}
           </Button>
         </div>
       </form>

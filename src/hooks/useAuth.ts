@@ -1,3 +1,4 @@
+
 // src/hooks/useAuth.ts
 "use client";
 
@@ -37,6 +38,13 @@ export interface UserProfile {
   lastActiveAt?: Date;
 }
 
+interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: UserProfile | null;
+  firebaseUser: FirebaseUser | null;
+}
+
 export const updateUserLastActive = async (uid: string): Promise<void> => {
   if (!uid) return;
   const userDocRef = doc(db, "users", uid);
@@ -50,81 +58,122 @@ export const updateUserLastActive = async (uid: string): Promise<void> => {
 
 
 export function useAuth() {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authState, setAuthState] = useState<AuthState>({
+    isAuthenticated: false,
+    isLoading: true,
+    user: null,
+    firebaseUser: null,
+  });
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setIsLoading(true);
-      if (fbUser) {
-        setFirebaseUser(fbUser);
-        const userDocRef = doc(db, "users", fbUser.uid);
+    let isMounted = true; 
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isMounted) return;
+
+      if (!firebaseUser) {
+        setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          if (userData.isApproved || userData.email === ADMIN_EMAIL) {
+        let userProfile: UserProfile | null = null;
+        let isApproved = false;
+        const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+        if (isAdminByEmail) {
+            isApproved = true; // Main admin is always approved
+            let staffInfo: { designation?: Designation } = {};
+            if (userDocSnap.exists() && userDocSnap.data().staffId) {
+                const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
+                const staffDocSnap = await getDoc(staffDocRef);
+                if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
+            }
+            const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
+                role: 'editor', isApproved: true,
+                staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
+                designation: staffInfo.designation,
+                createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
+                lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
+            };
+            if (!userDocSnap.exists()) {
+                await setDoc(doc(db, "users", firebaseUser.uid), {
+                    email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
+                });
+            }
+        } else if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            isApproved = userData.isApproved === true;
+            
             let staffInfo: { designation?: Designation } = {};
             if (userData.staffId) {
                 const staffDocRef = doc(db, "staffMembers", userData.staffId);
                 const staffDocSnap = await getDoc(staffDocRef);
-                if (staffDocSnap.exists()) {
-                   staffInfo = staffDocSnap.data();
-                }
+                if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
             }
-            setUser({
-              uid: fbUser.uid,
-              email: fbUser.email,
-              name: userData.name || fbUser.email,
-              role: userData.role || 'viewer',
-              isApproved: userData.isApproved,
-              staffId: userData.staffId,
-              designation: staffInfo.designation,
-              createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
-              lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
-            });
-          } else {
-            // User exists but is not approved
-            toast({
-              title: "Account Pending Approval",
-              description: "Your account must be approved by an administrator. Contact 8547650853 for activation.",
-              variant: "destructive",
-              duration: 8000,
-            });
-            await signOut(auth);
-            setUser(null);
-          }
-        } else if (fbUser.email === ADMIN_EMAIL) {
-          // Admin user logging in for the first time
-          const adminProfile = {
-            uid: fbUser.uid, email: fbUser.email, name: fbUser.email.split('@')[0],
-            role: 'editor' as UserRole, isApproved: true,
-            createdAt: new Date(),
-          };
-          await setDoc(doc(db, "users", fbUser.uid), { ...adminProfile, createdAt: Timestamp.now() });
-          setUser(adminProfile);
-        } else {
-          // User exists in Auth but not in Firestore and is not admin
-          await signOut(auth);
-          setUser(null);
+
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
+                role: userData.role || 'viewer', isApproved: isApproved,
+                staffId: userData.staffId || undefined, designation: staffInfo.designation,
+                createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
+                lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
+            };
         }
-      } else {
-        // No Firebase user
-        setFirebaseUser(null);
-        setUser(null);
+
+        if (!isMounted) return;
+
+        if (userProfile && userProfile.isApproved) {
+            setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
+        } else {
+            // This is the key logic: if a user exists but is not approved, sign them out and show a toast.
+            // If the profile doesn't exist at all, they also get signed out.
+            if (auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
+                await signOut(auth);
+            }
+            setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
+            
+            if (userProfile && !userProfile.isApproved) {
+                toast({
+                    title: "Account Pending Approval",
+                    description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
+                    variant: "destructive",
+                    duration: 8000
+                });
+            }
+        }
+      } catch (error: any) {
+        console.error('[Auth] Error in onAuthStateChanged callback:', error);
+        if (isMounted) {
+            if (error.code === 'resource-exhausted') {
+                toast({
+                    title: "Database Quota Exceeded",
+                    description: "The application has exceeded its database usage limits for the day. Please try again later.",
+                    variant: "destructive",
+                    duration: 9000
+                });
+            }
+            if (auth.currentUser) {
+                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); }
+            }
+            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+        }
       }
-      setIsLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => { isMounted = false; unsubscribe(); };
   }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // The onAuthStateChanged listener will handle the rest of the logic (profile fetching, approval check, etc.)
       return { success: true };
     } catch (error: any) {
       console.error(`[Auth] Login failed for ${email}:`, error);
@@ -136,28 +185,28 @@ export function useAuth() {
   }, []);
 
   const register = useCallback(async (email: string, password: string, name?: string): Promise<{ success: boolean; error?: any }> => {
-    let fbUser: FirebaseUser | null = null;
+    let firebaseUser: FirebaseUser | null = null;
     const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      fbUser = userCredential.user;
+      firebaseUser = userCredential.user;
 
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
       const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
-        email: fbUser.email,
-        name: name || fbUser.email?.split('@')[0],
+        email: firebaseUser.email,
+        name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
         isApproved: isApprovedToAssign,
         createdAt: Timestamp.now(),
         lastActiveAt: Timestamp.now(),
       };
 
-      await setDoc(doc(db, "users", fbUser.uid), userProfileData);
+      await setDoc(doc(db, "users", firebaseUser.uid), userProfileData);
 
-      if (!isAdmin && auth.currentUser && auth.currentUser.uid === fbUser.uid) {
+      if (!isAdmin && auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
         await signOut(auth); 
       }
       
@@ -170,20 +219,23 @@ export function useAuth() {
       return { success: false, error: { message: errorMessage, code: error.code } };
     }
   }, []);
-  
+
   const createUserByAdmin = useCallback(async (email: string, password: string, name: string, staffId: string): Promise<{ success: boolean; error?: any }> => {
-    if (!user || user.role !== 'editor') {
+    if (!authState.user || authState.user.role !== 'editor') {
       return { success: false, error: { message: "You do not have permission to create users." } };
     }
   
+    // Create a temporary, secondary Firebase app instance to avoid session conflicts.
     const tempAppName = `temp-app-create-user-${Date.now()}`;
     const tempApp = initializeApp(app.options, tempAppName);
     const tempAuth = getAuth(tempApp);
   
     try {
+      // Create the new user in the temporary auth instance.
       const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
       const newFirebaseUser = userCredential.user;
   
+      // Create the user's profile in Firestore with default 'viewer' role and unapproved status.
       const userProfileData = {
         email: newFirebaseUser.email,
         name: name,
@@ -195,6 +247,7 @@ export function useAuth() {
       };
       await setDoc(doc(db, "users", newFirebaseUser.uid), userProfileData);
   
+      // Clean up: Sign out from the temporary instance and delete the app.
       await signOut(tempAuth);
       await deleteApp(tempApp);
   
@@ -205,10 +258,11 @@ export function useAuth() {
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = `The email address ${email} is already in use.`;
       }
+      // Clean up the temp app on failure as well.
       await deleteApp(tempApp).catch(e => console.error("Failed to delete temp app on error", e));
       return { success: false, error: { message: errorMessage, code: error.code } };
     }
-  }, [user]);
+  }, [authState.user]);
   
   const logout = useCallback(async () => {
     try {
@@ -220,7 +274,7 @@ export function useAuth() {
   }, [router]);
 
   const fetchAllUsers = useCallback(async (): Promise<UserProfile[]> => {
-    if (!user || !['editor', 'viewer'].includes(user.role)) {
+    if (!authState.user || !['editor', 'viewer'].includes(authState.user.role)) {
       return [];
     }
     
@@ -246,10 +300,10 @@ export function useAuth() {
       console.error(`[Auth] Error fetching users. Firestore error:`, error);
       throw error;
     }
-  }, [user]); 
+  }, [authState.user]); 
 
   const updateUserApproval = useCallback(async (targetUserUid: string, isApproved: boolean): Promise<void> => {
-    if (!user || user.role !== 'editor') {
+    if (!authState.user || authState.user.role !== 'editor') {
       throw new Error("User does not have permission to update approval.");
     }
     try {
@@ -259,10 +313,10 @@ export function useAuth() {
       console.error(`[Auth] Error updating approval for target UID ${targetUserUid}. Firestore error:`, error);
       throw error;
     }
-  }, [user]);
+  }, [authState.user]);
 
   const updateUserRole = useCallback(async (targetUserUid: string, role: UserRole, staffId?: string): Promise<void> => {
-    if (!user || user.role !== 'editor') {
+    if (!authState.user || authState.user.role !== 'editor') {
         throw new Error("User does not have permission to update role.");
     }
     try {
@@ -278,13 +332,13 @@ export function useAuth() {
         console.error(`[Auth] Error updating role for target UID ${targetUserUid}. Firestore error:`, error);
         throw error;
     }
-  }, [user]);
+  }, [authState.user]);
 
   const deleteUserDocument = useCallback(async (targetUserUid: string): Promise<void> => {
-    if (!user || user.role !== 'editor') {
+    if (!authState.user || authState.user.role !== 'editor') {
       throw new Error("User does not have permission to delete user documents.");
     }
-    if (user.uid === targetUserUid) {
+    if (authState.user.uid === targetUserUid) {
       throw new Error("You cannot delete your own user profile.");
     }
 
@@ -300,10 +354,10 @@ export function useAuth() {
       console.error(`[Auth] Error deleting document for target UID ${targetUserUid}. Firestore error:`, error);
       throw error;
     }
-  }, [user]);
+  }, [authState.user]);
 
   const batchDeleteUserDocuments = useCallback(async (targetUserUids: string[]): Promise<{ successCount: number, failureCount: number, errors: string[] }> => {
-    if (!user || user.role !== 'editor') {
+    if (!authState.user || authState.user.role !== 'editor') {
       throw new Error("User does not have permission to delete user documents.");
     }
 
@@ -312,7 +366,7 @@ export function useAuth() {
     const errorsEncountered: string[] = [];
 
     for (const targetUserUid of targetUserUids) {
-      if (user.uid === targetUserUid) {
+      if (authState.user.uid === targetUserUid) {
         failureCount++;
         errorsEncountered.push(`Cannot delete own profile (UID: ${targetUserUid}).`);
         continue;
@@ -336,18 +390,18 @@ export function useAuth() {
       }
     }
     return { successCount, failureCount, errors: errorsEncountered };
-  }, [user]);
+  }, [authState.user]);
 
   const updatePassword = useCallback(async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: any }> => {
-    const fbUser = auth.currentUser;
-    if (!fbUser || !fbUser.email) {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser || !firebaseUser.email) {
       return { success: false, error: { message: "No authenticated user found." } };
     }
 
     try {
-      const credential = EmailAuthProvider.credential(fbUser.email, currentPassword);
-      await reauthenticateWithCredential(fbUser, credential);
-      await firebaseUpdatePassword(fbUser, newPassword);
+      const credential = EmailAuthProvider.credential(firebaseUser.email, currentPassword);
+      await reauthenticateWithCredential(firebaseUser, credential);
+      await firebaseUpdatePassword(firebaseUser, newPassword);
       return { success: true };
     } catch (error: any) {
       let errorMessage = "An unexpected error occurred.";
@@ -362,20 +416,5 @@ export function useAuth() {
   }, []);
 
 
-  return { 
-    user, 
-    firebaseUser,
-    isLoading, 
-    login, 
-    logout, 
-    register, 
-    fetchAllUsers, 
-    updateUserApproval, 
-    updateUserRole, 
-    deleteUserDocument, 
-    batchDeleteUserDocuments, 
-    updateUserLastActive, 
-    createUserByAdmin, 
-    updatePassword 
-  };
+  return { ...authState, login, logout, register, fetchAllUsers, updateUserApproval, updateUserRole, deleteUserDocument, batchDeleteUserDocuments, updateUserLastActive, createUserByAdmin, updatePassword };
 }
