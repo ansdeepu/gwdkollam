@@ -82,7 +82,7 @@ export default function StaffTable({ staffData, onEdit, onDelete, onSetStatus, i
           </TableHeader>
           <TableBody>
             {staffData.length > 0 ? (
-              staffData.map((staff) => (
+              staffData.map((staff, index) => (
                 <TableRow key={staff.id}>
                   <TableCell>
                     <Avatar className="h-10 w-10 cursor-pointer" onClick={() => onImageClick(staff.photoUrl || null)}>

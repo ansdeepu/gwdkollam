@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Briefcase, UserPlus, ShieldAlert, Loader2, Expand, Search, FileDown } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +27,9 @@ import {
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
 import * as XLSX from "xlsx";
+import PaginationControls from "@/components/shared/PaginationControls";
+
+const ITEMS_PER_PAGE = 20;
 
 const isPlaceholderUrl = (url?: string | null): boolean => {
   if (!url) return false;
@@ -60,6 +63,10 @@ export default function EstablishmentPage() {
 
   const [imageForModal, setImageForModal] = useState<string | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  
+  const [activeStaffPage, setActiveStaffPage] = useState(1);
+  const [transferredStaffPage, setTransferredStaffPage] = useState(1);
+  const [retiredStaffPage, setRetiredStaffPage] = useState(1);
   
   const canManage = user?.role === 'editor' && user.isApproved;
 
@@ -125,6 +132,31 @@ export default function EstablishmentPage() {
     };
   }, [debouncedSearchTerm, activeStaff, transferredStaff, retiredStaff]);
   
+  useEffect(() => {
+      setActiveStaffPage(1);
+      setTransferredStaffPage(1);
+      setRetiredStaffPage(1);
+  }, [debouncedSearchTerm]);
+
+
+  const paginatedActiveStaff = useMemo(() => {
+    const startIndex = (activeStaffPage - 1) * ITEMS_PER_PAGE;
+    return filteredStaff.active.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredStaff.active, activeStaffPage]);
+  const activeTotalPages = Math.ceil(filteredStaff.active.length / ITEMS_PER_PAGE);
+
+  const paginatedTransferredStaff = useMemo(() => {
+    const startIndex = (transferredStaffPage - 1) * ITEMS_PER_PAGE;
+    return filteredStaff.transferred.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredStaff.transferred, transferredStaffPage]);
+  const transferredTotalPages = Math.ceil(filteredStaff.transferred.length / ITEMS_PER_PAGE);
+
+  const paginatedRetiredStaff = useMemo(() => {
+    const startIndex = (retiredStaffPage - 1) * ITEMS_PER_PAGE;
+    return filteredStaff.retired.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredStaff.retired, retiredStaffPage]);
+  const retiredTotalPages = Math.ceil(filteredStaff.retired.length / ITEMS_PER_PAGE);
+
 
   const handleAddNewStaff = () => {
     setEditingStaff(null);
@@ -336,9 +368,9 @@ export default function EstablishmentPage() {
 
       <Tabs defaultValue="activeStaff" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:w-[600px] mb-4">
-          <TabsTrigger value="activeStaff">Active ({activeStaff.length})</TabsTrigger>
-          <TabsTrigger value="transferredStaff">Transferred ({transferredStaff.length})</TabsTrigger>
-          <TabsTrigger value="retiredStaff">Retired ({retiredStaff.length})</TabsTrigger>
+          <TabsTrigger value="activeStaff">Active ({filteredStaff.active.length})</TabsTrigger>
+          <TabsTrigger value="transferredStaff">Transferred ({filteredStaff.transferred.length})</TabsTrigger>
+          <TabsTrigger value="retiredStaff">Retired ({filteredStaff.retired.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activeStaff" className="mt-0">
@@ -349,7 +381,7 @@ export default function EstablishmentPage() {
             </CardHeader>
             <CardContent>
               <StaffTable
-                staffData={filteredStaff.active}
+                staffData={paginatedActiveStaff}
                 onEdit={canManage ? handleEditStaff : undefined}
                 onDelete={canManage ? deleteStaffMember : undefined}
                 onSetStatus={canManage ? handleSetStaffStatus : undefined}
@@ -359,6 +391,11 @@ export default function EstablishmentPage() {
                 searchActive={!!debouncedSearchTerm}
               />
             </CardContent>
+            {activeTotalPages > 1 && (
+                <CardFooter className="justify-center py-4">
+                    <PaginationControls currentPage={activeStaffPage} totalPages={activeTotalPages} onPageChange={setActiveStaffPage} />
+                </CardFooter>
+            )}
           </Card>
         </TabsContent>
 
@@ -370,7 +407,7 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <TransferredStaffTable
-                        staffData={filteredStaff.transferred}
+                        staffData={paginatedTransferredStaff}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
@@ -378,6 +415,11 @@ export default function EstablishmentPage() {
                         searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
+                {transferredTotalPages > 1 && (
+                    <CardFooter className="justify-center py-4">
+                        <PaginationControls currentPage={transferredStaffPage} totalPages={transferredTotalPages} onPageChange={setTransferredStaffPage} />
+                    </CardFooter>
+                )}
             </Card>
         </TabsContent>
 
@@ -389,7 +431,7 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <RetiredStaffTable
-                        staffData={filteredStaff.retired}
+                        staffData={paginatedRetiredStaff}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
@@ -397,6 +439,11 @@ export default function EstablishmentPage() {
                         searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
+                 {retiredTotalPages > 1 && (
+                    <CardFooter className="justify-center py-4">
+                        <PaginationControls currentPage={retiredStaffPage} totalPages={retiredTotalPages} onPageChange={setRetiredStaffPage} />
+                    </CardFooter>
+                )}
             </Card>
         </TabsContent>
       </Tabs>
