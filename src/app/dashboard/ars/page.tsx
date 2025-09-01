@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2, ShieldAlert, CalendarIcon, XCircle } from "lucide-react";
-import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
+import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval, parseISO } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -105,6 +105,20 @@ export default function ArsPage() {
       });
     }
     
+    // Sort by completion date (descending)
+    sites.sort((a, b) => {
+        const dateA = a.dateOfCompletion ? new Date(a.dateOfCompletion) : null;
+        const dateB = b.dateOfCompletion ? new Date(b.dateOfCompletion) : null;
+
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1; // Put sites with no completion date at the end
+        if (!dateB) return -1; // Keep sites with a completion date at the front
+        if (!isValid(dateA)) return 1;
+        if (!isValid(dateB)) return -1;
+
+        return dateB.getTime() - dateA.getTime();
+    });
+
     return sites;
   }, [arsSites, searchTerm, startDate, endDate]);
 
