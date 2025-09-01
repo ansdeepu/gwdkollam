@@ -1049,6 +1049,7 @@ export default function DashboardPage() {
     const columns: DetailDialogColumn[] = [
         { key: 'slNo', label: 'Sl. No.' },
         { key: 'fileNo', label: 'File No.' },
+        { key: 'applicantName', label: 'Applicant Name' },
         { key: 'siteName', label: 'Site Name' },
         { key: 'purpose', label: 'Purpose' },
         { key: 'workStatus', label: 'Work Status' },
@@ -1058,6 +1059,7 @@ export default function DashboardPage() {
     const mapSiteToDialogData = (site: SiteDetailFormData & { fileNo: string; applicantName: string; }, index: number) => ({
         slNo: index + 1,
         fileNo: site.fileNo,
+        applicantName: site.applicantName,
         siteName: site.nameOfSite,
         purpose: site.purpose,
         workStatus: site.workStatus,
@@ -1087,6 +1089,7 @@ export default function DashboardPage() {
     const dialogData = filteredData.map((site, index) => ({
       slNo: index + 1,
       fileNo: site.fileNo,
+      applicantName: site.applicantName,
       siteName: site.nameOfSite,
       workStatus: site.workStatus,
       supervisorName: site.supervisorName || 'N/A',
@@ -1095,6 +1098,7 @@ export default function DashboardPage() {
     const columns: DetailDialogColumn[] = [
       { key: 'slNo', label: 'Sl. No.' },
       { key: 'fileNo', label: 'File No.' },
+      { key: 'applicantName', label: 'Applicant Name' },
       { key: 'siteName', label: 'Site Name' },
       { key: 'workStatus', label: 'Work Status' },
       { key: 'supervisorName', label: 'Supervisor' },
