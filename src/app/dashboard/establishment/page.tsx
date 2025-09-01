@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Briefcase, UserPlus, ShieldAlert, Loader2, Expand, Search, FileDown } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +15,6 @@ import RetiredStaffTable from "@/components/establishment/RetiredStaffTable";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import type { StaffMember, StaffMemberFormData, StaffStatusType } from "@/lib/schemas";
-import { designationOptions } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -27,9 +26,6 @@ import {
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
 import * as XLSX from "xlsx";
-import PaginationControls from "@/components/shared/PaginationControls";
-
-const ITEMS_PER_PAGE = 20;
 
 const isPlaceholderUrl = (url?: string | null): boolean => {
   if (!url) return false;
@@ -45,7 +41,7 @@ const formatDateForSearch = (dateInput: Date | string | null | undefined): strin
 export default function EstablishmentPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { 
-    staffMembers: allStaffMembers, 
+    staffMembers, 
     isLoading: staffLoadingHook, 
     addStaffMember, 
     updateStaffMember, 
@@ -58,85 +54,15 @@ export default function EstablishmentPage() {
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // User's live input
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(""); // Term used for filtering after delay
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filteredStaff, setFilteredStaff] = useState<StaffMember[]>([]);
 
   const [imageForModal, setImageForModal] = useState<string | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   
-  const [activeStaffPage, setActiveStaffPage] = useState(1);
-  const [transferredStaffPage, setTransferredStaffPage] = useState(1);
-  const [retiredStaffPage, setRetiredStaffPage] = useState(1);
-  
   const canManage = user?.role === 'editor' && user.isApproved;
-
-  // Debounce search term
-  useEffect(() => {
-    const timerId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
-    return () => clearTimeout(timerId);
-  }, [searchTerm]);
-  
-  const designationOrderMap = useMemo(() => new Map(designationOptions.map((d, i) => [d, i])), []);
-  
-  const sortStaff = useCallback((a: StaffMember, b: StaffMember) => {
-    const orderA = designationOrderMap.get(a.designation) ?? Infinity;
-    const orderB = designationOrderMap.get(b.designation) ?? Infinity;
-    if (orderA !== orderB) return orderA - orderB;
-    return a.name.localeCompare(b.name);
-  }, [designationOrderMap]);
-
-  // Centralized data processing logic
-  const { 
-    paginatedActive, activeTotalPages, allActiveStaff,
-    paginatedTransferred, transferredTotalPages, allTransferredStaff,
-    paginatedRetired, retiredTotalPages, allRetiredStaff
-  } = useMemo(() => {
-    const allActive = allStaffMembers.filter(s => s.status === 'Active').sort(sortStaff);
-    const allTransferred = allStaffMembers.filter(s => s.status === 'Transferred').sort(sortStaff);
-    const allRetired = allStaffMembers.filter(s => s.status === 'Retired').sort(sortStaff);
-
-    const searchFilter = (staff: StaffMember) => {
-      if (!debouncedSearchTerm) return true;
-      const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
-      return (
-        (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.phoneNo?.includes(lowerSearchTerm)) ||
-        (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-        (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-      );
-    };
-
-    const filteredActive = allActive.filter(searchFilter);
-    const filteredTransferred = allTransferred.filter(searchFilter);
-    const filteredRetired = allRetired.filter(searchFilter);
-    
-    const paginate = (data: StaffMember[], page: number) => {
-      const startIndex = (page - 1) * ITEMS_PER_PAGE;
-      return data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-    };
-
-    return {
-      allActiveStaff: allActive,
-      paginatedActive: paginate(filteredActive, activeStaffPage),
-      activeTotalPages: Math.ceil(filteredActive.length / ITEMS_PER_PAGE),
-      allTransferredStaff: allTransferred,
-      paginatedTransferred: paginate(filteredTransferred, transferredStaffPage),
-      transferredTotalPages: Math.ceil(filteredTransferred.length / ITEMS_PER_PAGE),
-      allRetiredStaff: allRetired,
-      paginatedRetired: paginate(filteredRetired, retiredStaffPage),
-      retiredTotalPages: Math.ceil(filteredRetired.length / ITEMS_PER_PAGE),
-    };
-  }, [allStaffMembers, debouncedSearchTerm, sortStaff, activeStaffPage, transferredStaffPage, retiredStaffPage]);
-  
-  useEffect(() => {
-    setActiveStaffPage(1);
-    setTransferredStaffPage(1);
-    setRetiredStaffPage(1);
-  }, [debouncedSearchTerm]);
-
 
   const handleAddNewStaff = () => {
     setEditingStaff(null);
@@ -197,7 +123,8 @@ export default function EstablishmentPage() {
     const reportTitle = "Establishment Staff Report";
     const columnLabels = ["Sl. No.", "Name", "Designation", "PEN", "Phone No.", "Date of Birth", "Roles", "Status", "Remarks"];
     
-    const dataRows = allStaffMembers.map((staff, index) => [
+    // Use the unfiltered staffMembers list for a complete export
+    const dataRows = staffMembers.map((staff, index) => [
       index + 1,
       staff.name,
       staff.designation,
@@ -298,9 +225,58 @@ export default function EstablishmentPage() {
     toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
   };
   
-  const isLoading = authLoading || staffLoadingHook;
+  // Debounce the search term to avoid excessive re-renders and filtering
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
 
-  if (isLoading) {
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
+
+  // Handle the actual filtering logic when the debounced term changes
+  useEffect(() => {
+    if (staffLoadingHook) return;
+    setIsFiltering(true);
+    const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+    
+    // Using requestAnimationFrame to ensure the loader is shown before a potentially long filtering operation
+    requestAnimationFrame(() => {
+      if (!lowerSearchTerm) {
+          setFilteredStaff(staffMembers);
+      } else {
+          const filtered = staffMembers.filter(staff => 
+              (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+              (staff.phoneNo?.includes(lowerSearchTerm)) ||
+              (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+              (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+          );
+          setFilteredStaff(filtered);
+      }
+      setIsFiltering(false);
+    });
+  }, [debouncedSearchTerm, staffMembers, staffLoadingHook]);
+
+
+  const activeStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Active'), [filteredStaff]);
+  const transferredStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Transferred'), [filteredStaff]);
+  const retiredStaffList = useMemo(() => filteredStaff.filter(s => s.status === 'Retired'), [filteredStaff]);
+  
+  const activeStaffCount = activeStaffList.length;
+  const transferredStaffCount = transferredStaffList.length;
+  const retiredStaffCount = retiredStaffList.length;
+
+  const totalActiveStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Active').length, [staffMembers]);
+  const totalTransferredStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Transferred').length, [staffMembers]);
+  const totalRetiredStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Retired').length, [staffMembers]);
+  const totalStaffMembersOverall = staffMembers.length;
+
+  if (authLoading || staffLoadingHook) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -348,9 +324,9 @@ export default function EstablishmentPage() {
 
       <Tabs defaultValue="activeStaff" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:w-[600px] mb-4">
-          <TabsTrigger value="activeStaff">Active ({allActiveStaff.length})</TabsTrigger>
-          <TabsTrigger value="transferredStaff">Transferred ({allTransferredStaff.length})</TabsTrigger>
-          <TabsTrigger value="retiredStaff">Retired ({allRetiredStaff.length})</TabsTrigger>
+          <TabsTrigger value="activeStaff">Active ({activeStaffCount})</TabsTrigger>
+          <TabsTrigger value="transferredStaff">Transferred ({transferredStaffCount})</TabsTrigger>
+          <TabsTrigger value="retiredStaff">Retired ({retiredStaffCount})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activeStaff" className="mt-0">
@@ -361,21 +337,16 @@ export default function EstablishmentPage() {
             </CardHeader>
             <CardContent>
               <StaffTable
-                staffData={paginatedActive}
+                staffData={activeStaffList}
                 onEdit={canManage ? handleEditStaff : undefined}
                 onDelete={canManage ? deleteStaffMember : undefined}
                 onSetStatus={canManage ? handleSetStaffStatus : undefined}
                 isViewer={!canManage}
                 onImageClick={handleOpenImageModal}
-                isLoading={staffLoadingHook}
+                isLoading={isFiltering}
                 searchActive={!!debouncedSearchTerm}
               />
             </CardContent>
-            {activeTotalPages > 1 && (
-                <CardFooter className="justify-center py-4">
-                    <PaginationControls currentPage={activeStaffPage} totalPages={activeTotalPages} onPageChange={setActiveStaffPage} />
-                </CardFooter>
-            )}
           </Card>
         </TabsContent>
 
@@ -387,19 +358,14 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <TransferredStaffTable
-                        staffData={paginatedTransferred}
+                        staffData={transferredStaffList}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
-                        isLoading={staffLoadingHook}
+                        isLoading={isFiltering}
                         searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
-                {transferredTotalPages > 1 && (
-                    <CardFooter className="justify-center py-4">
-                        <PaginationControls currentPage={transferredStaffPage} totalPages={transferredTotalPages} onPageChange={setTransferredStaffPage} />
-                    </CardFooter>
-                )}
             </Card>
         </TabsContent>
 
@@ -411,19 +377,14 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <RetiredStaffTable
-                        staffData={paginatedRetired}
+                        staffData={retiredStaffList}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
-                        isLoading={staffLoadingHook}
+                        isLoading={isFiltering}
                         searchActive={!!debouncedSearchTerm}
                     />
                 </CardContent>
-                 {retiredTotalPages > 1 && (
-                    <CardFooter className="justify-center py-4">
-                        <PaginationControls currentPage={retiredStaffPage} totalPages={retiredTotalPages} onPageChange={setRetiredStaffPage} />
-                    </CardFooter>
-                )}
             </Card>
         </TabsContent>
       </Tabs>

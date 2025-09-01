@@ -1,5 +1,4 @@
 
-
 import { z } from 'zod';
 import { format } from 'date-fns';
 
@@ -45,7 +44,6 @@ export const designationOptions = [
   "Office Attendant",
   "Watcher",
   "PTS",
-  "Supervisor",
 ] as const;
 export type Designation = typeof designationOptions[number];
 
@@ -103,36 +101,23 @@ export type PaymentAccount = typeof paymentAccountOptions[number];
 
 
 export const siteWorkStatusOptions = [
-    "Under Process",
-    "Addl. AS Awaited",
-    "To be Refunded",
-    "Awaiting Dept. Rig",
-    "To be Tendered",
-    "TS Pending",
-    "Tendered",
-    "Selection Notice Issued",
-    "Work Order Issued",
-    "Work in Progress",
-    "Work Failed",
-    "Work Completed",
-    "Bill Prepared",
-    "Payment Completed",
-    "Utilization Certificate Issued",
+  "Under Process",
+  "Addl. AS Awaited",
+  "To be Refunded",
+  "Awaiting Dept. Rig",
+  "To be Tendered",
+  "TS Pending",
+  "Tendered",
+  "Selection Notice Issued",
+  "Work Order Issued",
+  "Work in Progress",
+  "Work Failed",
+  "Work Completed",
+  "Bill Prepared",
+  "Payment Completed",
+  "Utilization Certificate Issued",
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
-
-export const arsWorkStatusOptions = [
-    "Proposal Submitted",
-    "AS & TS Issued",
-    "Tendered",
-    "Selection Notice Issued",
-    "Work Order Issued",
-    "Work Initiated",
-    "Work Completed",
-    "Bill Prepared",
-    "Payment Completed",
-] as const;
-export type ArsWorkStatus = typeof arsWorkStatusOptions[number];
 
 export const fileStatusOptions = [
   "File Under Process",
@@ -166,19 +151,9 @@ export const sitePurposeOptions = [
   "MWSS Pump Reno",
   "HPS",
   "HPR",
+  "ARS",
 ] as const;
 export type SitePurpose = typeof sitePurposeOptions[number];
-
-export const arsTypeOfSchemeOptions = [
-    "Dugwell Recharge(RWH)",
-    "Borewell Recharge(RWH)",
-    "Recharge Pit(RWH)",
-    "Check Dam",
-    "Sub-Surface Dyke",
-    "Pond Renovation",
-    "Percolation Ponds",
-] as const;
-export type ArsTypeOfScheme = typeof arsTypeOfSchemeOptions[number];
 
 export const siteDiameterOptions = [
   "110 mm (4.5”)",
@@ -215,20 +190,6 @@ export const rigAccessibilityOptions = [
 ] as const;
 export type RigAccessibility = typeof rigAccessibilityOptions[number];
 
-export const constituencyOptions = [
-    "Chadayamangalam",
-    "Chathannur",
-    "Chavara",
-    "Eravipuram",
-    "Kollam",
-    "Kottarakkara",
-    "Kundara",
-    "Kunnathur",
-    "Pathanapuram",
-    "Punalur",
-] as const;
-export type Constituency = typeof constituencyOptions[number];
-
 // Helper for robust optional numeric fields
 const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
   z.preprocess((val) => {
@@ -251,10 +212,9 @@ const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev
 
 export const SiteDetailSchema = z.object({
   nameOfSite: z.string().min(1, "Name of Site is required."),
-  isArsImport: z.boolean().optional(), // Flag to identify ARS-originated sites
   latitude: optionalNumber("Latitude must be a valid number."),
   longitude: optionalNumber("Longitude must be a valid number."),
-  purpose: z.enum([...sitePurposeOptions, 'ARS'], { required_error: "Purpose is required."}),
+  purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required."}),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
@@ -307,17 +267,18 @@ export const SiteDetailSchema = z.object({
   arsTypeOfScheme: z.string().optional().nullable(),
   arsPanchayath: z.string().optional().nullable(),
   arsBlock: z.string().optional().nullable(),
-  arsNumberOfStructures: optionalNumber("Number of Structures must be a valid number."),
-  arsStorageCapacity: optionalNumber("Storage Capacity must be a valid number."),
-  arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
   arsAsTsDetails: z.string().optional().nullable(),
   arsSanctionedDate: optionalDate,
   arsTenderedAmount: optionalNumber("Tendered Amount must be a valid number."),
   arsAwardedAmount: optionalNumber("Awarded Amount must be a valid number."),
+  arsNumberOfStructures: optionalNumber("Number of Structures must be a valid number."),
+  arsStorageCapacity: optionalNumber("Storage Capacity must be a valid number."),
+  arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
+  isArsImport: z.boolean().optional(),
 
 }).superRefine((data, ctx) => {
     const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-    if (data.workStatus && finalStatuses.includes(data.workStatus as SiteWorkStatus) && !data.dateOfCompletion) {
+    if (data.workStatus && finalStatuses.includes(data.workStatus) && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: `is required when status is '${data.workStatus}'.`,
@@ -397,14 +358,28 @@ export const PaymentDetailSchema = z.object({
 });
 export type PaymentDetailFormData = z.infer<typeof PaymentDetailSchema>;
 
+export const constituencyOptions = [
+    "Chadayamangalam",
+    "Chathannoor",
+    "Chavara",
+    "Eravipuram",
+    "Karunagappally",
+    "Kollam",
+    "Kottarakkara",
+    "Kundara",
+    "Kunnathur",
+    "Pathanapuram",
+    "Punalur"
+] as const;
+export type Constituency = typeof constituencyOptions[number];
 
 export const DataEntrySchema = z.object({
   id: z.string().optional(),
   fileNo: z.string().min(1, "File No. is required."),
   applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
+  constituency: z.enum(constituencyOptions).optional(),
   applicationType: z.enum(applicationTypeOptions, { required_error: "Type of Application is required."}),
-  constituency: z.enum(constituencyOptions, { required_error: "Constituency is required."}),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   assignedSupervisorUids: z.array(z.string()).optional(),
 
@@ -446,19 +421,23 @@ export const PendingUpdateSchema = PendingUpdateFormDataSchema.extend({
 export type PendingUpdate = z.infer<typeof PendingUpdateSchema>;
 
 
-// Helper function to join values from an array of objects for a single-site context
-const getSiteValue = (entry: DataEntryFormData, key: keyof SiteDetailFormData): string | number | undefined | null => {
-    const site = entry.siteDetails?.[0];
-    return site ? site[key] : undefined;
+// Helper function to join values from an array of objects
+const join = (arr: any[] | undefined, key: string, separator: string = '; '): string => {
+  if (!arr || arr.length === 0) return 'N/A';
+  return arr.map(item => item[key] || 'N/A').join(separator);
 };
 
-// Helper function to format dates from a single site
-const formatSiteDate = (entry: DataEntryFormData, key: keyof SiteDetailFormData): string => {
-  const site = entry.siteDetails?.[0];
-  const date = site ? site[key] : null;
+// Helper function to sum values from an array of objects
+const sum = (arr: any[] | undefined, key: string): number => {
+  if (!arr) return 0;
+  return arr.reduce((acc, item) => acc + (Number(item[key]) || 0), 0);
+};
+
+// Helper function to format dates from an array of objects
+const formatDate = (date: Date | string | null | undefined): string => {
   if (!date) return 'N/A';
   try {
-    return format(new Date(date as string | Date), "dd/MM/yyyy");
+    return format(new Date(date), "dd/MM/yyyy");
   } catch {
     return 'Invalid Date';
   }
@@ -473,38 +452,37 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'fileStatus', label: 'File Status', accessor: (entry) => entry.fileStatus },
   { id: 'fileRemarks', label: 'File Remarks', accessor: (entry) => entry.remarks },
 
-  // === Remittance Details (from main file) ===
+  // === Remittance Details (Aggregated) ===
   { id: 'firstRemittanceDate', label: 'First Remittance Date', accessor: (entry) => formatDate(entry.remittanceDetails?.[0]?.dateOfRemittance) },
   { id: 'allRemittanceDates', label: 'All Remittance Dates', accessor: (entry) => entry.remittanceDetails?.map(rd => formatDate(rd.dateOfRemittance)).join('; ') || 'N/A' },
   { id: 'totalRemittance', label: 'Total Remittance (₹)', accessor: (entry) => entry.totalRemittance },
-  { id: 'remittanceAccounts', label: 'Remittance Accounts', accessor: (entry) => entry.remittanceDetails?.map(rd => rd.remittedAccount).join('; ') || 'N/A' },
+  { id: 'remittanceAccounts', label: 'Remittance Accounts', accessor: (entry) => join(entry.remittanceDetails, 'remittedAccount') },
 
-  // === Site Details (now specific to the one site in the row) ===
-  { id: 'siteName', label: 'Site Name', accessor: (entry) => getSiteValue(entry, 'nameOfSite') as string },
-  { id: 'sitePurpose', label: 'Site Purpose', accessor: (entry) => getSiteValue(entry, 'purpose') as string },
-  { id: 'siteWorkStatus', label: 'Site Work Status', accessor: (entry) => getSiteValue(entry, 'workStatus') as string },
-  { id: 'siteSupervisor', label: 'Site Supervisor', accessor: (entry) => getSiteValue(entry, 'supervisorName') as string },
-  { id: 'siteContractor', label: 'Contractor Name', accessor: (entry) => getSiteValue(entry, 'contractorName') as string },
-  { id: 'siteCompletionDate', label: 'Site Completion Date', accessor: (entry) => formatSiteDate(entry, 'dateOfCompletion') },
-  { id: 'tenderNo', label: 'Tender No.', accessor: (entry) => getSiteValue(entry, 'tenderNo') as string },
-  { id: 'typeOfRig', label: 'Type of Rig', accessor: (entry) => getSiteValue(entry, 'typeOfRig') as string },
+  // === Site Details (Aggregated) ===
+  { id: 'allSiteNames', label: 'Site Names', accessor: (entry) => join(entry.siteDetails, 'nameOfSite') },
+  { id: 'allSitePurposes', label: 'Site Purposes', accessor: (entry) => join(entry.siteDetails, 'purpose') },
+  { id: 'allSiteWorkStatuses', label: 'Site Work Statuses', accessor: (entry) => join(entry.siteDetails, 'workStatus') },
+  { id: 'allSiteSupervisors', label: 'Site Supervisors', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.supervisorName).filter(Boolean))].join('; ') || 'N/A' },
+  { id: 'allContractors', label: 'Contractor Names', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.contractorName).filter(Boolean))].join('; ') || 'N/A' },
+  { id: 'allSiteCompletionDates', label: 'Site Completion Dates', accessor: (entry) => join(entry.siteDetails, 'dateOfCompletion', '; ') },
+  { id: 'allTenderNos', label: 'Tender Nos.', accessor: (entry) => join(entry.siteDetails, 'tenderNo') },
+  { id: 'allTypeOfRigs', label: 'Types of Rig', accessor: (entry) => join(entry.siteDetails, 'typeOfRig') },
 
-  // === Financials (File-level totals and site-specific expenditure) ===
-  { id: 'siteEstimate', label: 'Site Estimate (₹)', accessor: (entry) => getSiteValue(entry, 'estimateAmount') as number },
-  { id: 'siteExpenditure', label: 'Site Expenditure (₹)', accessor: (entry) => getSiteValue(entry, 'totalExpenditure') as number },
-  { id: 'totalPayment', label: 'Total Payment (File) (₹)', accessor: (entry) => entry.totalPaymentAllEntries },
-  { id: 'overallBalance', label: 'Overall Balance (File) (₹)', accessor: (entry) => entry.overallBalance },
+  // === Financial Summary (Aggregated) ===
+  { id: 'totalSiteEstimate', label: 'Total Site Estimate (₹)', accessor: (entry) => sum(entry.siteDetails, 'estimateAmount') },
+  { id: 'totalSiteExpenditure', label: 'Total Site Expenditure (₹)', accessor: (entry) => sum(entry.siteDetails, 'totalExpenditure') },
+  { id: 'totalPayment', label: 'Total Payment (₹)', accessor: (entry) => entry.totalPaymentAllEntries },
+  { id: 'overallBalance', label: 'Overall Balance (₹)', accessor: (entry) => entry.overallBalance },
   
-  // === Payment Details (File-level aggregates) ===
+  // === Payment Details (Aggregated) ===
   { id: 'allPaymentDates', label: 'Payment Dates', accessor: (entry) => entry.paymentDetails?.map(pd => formatDate(pd.dateOfPayment)).join('; ') || 'N/A' },
-  { id: 'totalContractorPayment', label: 'Total Contractor Payment (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.contractorsPayment) || 0), 0) },
-  { id: 'totalGst', label: 'Total GST (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.gst) || 0), 0) },
-  { id: 'totalIncomeTax', label: 'Total Income Tax (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.incomeTax) || 0), 0) },
-  { id: 'totalKbcwb', label: 'Total KBCWB (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.kbcwb) || 0), 0) },
-  { id: 'totalRefundToParty', label: 'Total Refund to Party (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.refundToParty) || 0), 0) },
-  { id: 'totalRevenueHead', label: 'Total to Revenue Head (₹)', accessor: (entry) => entry.paymentDetails?.reduce((sum, pd) => sum + (Number(pd.revenueHead) || 0), 0) },
+  { id: 'totalContractorPayment', label: 'Total Contractor Payment (₹)', accessor: (entry) => sum(entry.paymentDetails, 'contractorsPayment') },
+  { id: 'totalGst', label: 'Total GST (₹)', accessor: (entry) => sum(entry.paymentDetails, 'gst') },
+  { id: 'totalIncomeTax', label: 'Total Income Tax (₹)', accessor: (entry) => sum(entry.paymentDetails, 'incomeTax') },
+  { id: 'totalKbcwb', label: 'Total KBCWB (₹)', accessor: (entry) => sum(entry.paymentDetails, 'kbcwb') },
+  { id: 'totalRefundToParty', label: 'Total Refund to Party (₹)', accessor: (entry) => sum(entry.paymentDetails, 'refundToParty') },
+  { id: 'totalRevenueHead', label: 'Total to Revenue Head (₹)', accessor: (entry) => sum(entry.paymentDetails, 'revenueHead') },
 ];
-
 
 
 export const CustomReportBuilderSchema = z.object({
@@ -584,152 +562,135 @@ export const UpdatePasswordSchema = z.object({
 });
 export type UpdatePasswordFormData = z.infer<typeof UpdatePasswordSchema>;
 
-// Schema for creating a new ARS entry from the ARS page
-export const ArsSpecificSchema = z.object({
-    arsTypeOfScheme: z.string().optional().nullable(),
-    arsPanchayath: z.string().optional().nullable(),
-    arsBlock: z.string().optional().nullable(),
-    arsNumberOfStructures: optionalNumber("Number of Structures must be a valid number."),
-    arsStorageCapacity: optionalNumber("Storage Capacity must be a valid number."),
-    arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
-    arsAsTsDetails: z.string().optional().nullable(),
-    arsSanctionedDate: optionalDate,
-    arsTenderedAmount: optionalNumber("Tendered Amount must be a valid number."),
-    arsAwardedAmount: optionalNumber("Awarded Amount must be a valid number."),
+// Agency Registration Schemas
+const OwnerInfoSchema = z.object({
+  name: z.string().min(1, "Owner name is required."),
+  address: z.string().optional(),
+  mobile: z.string().optional(),
+  secondaryMobile: z.string().optional(),
 });
+export type OwnerInfo = z.infer<typeof OwnerInfoSchema>;
 
-// A subset of SiteDetailFields that are also on the ARS form
-export const ArsAndSiteSchema = z.object({
-    nameOfSite: z.string().min(1, "Name of Site is required."),
-    latitude: optionalNumber("Latitude must be a valid number."),
-    longitude: optionalNumber("Longitude must be a valid number."),
-    estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
-    tsAmount: optionalNumber("AS/TS Amount must be a valid number."),
-    workStatus: z.enum(arsWorkStatusOptions, { required_error: "Work Status is required."}),
-    dateOfCompletion: optionalDate,
-    totalExpenditure: optionalNumber("Expenditure must be a valid number."),
-    noOfBeneficiary: z.string().optional().nullable(),
-    workRemarks: z.string().optional().nullable(),
-    supervisorUid: z.string().optional().nullable(),
-    supervisorName: z.string().optional().nullable(),
-});
-
-export const NewArsEntrySchema = ArsAndSiteSchema.merge(ArsSpecificSchema).extend({
-    fileNo: z.string().min(1, "File No. is required to associate this site."),
-    constituency: z.enum(constituencyOptions, { required_error: "Constituency is required."}),
-});
-export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
-
-// == Agency Registration Schemas ==
-
-export const rigTypeOptions = [
-  "Hand Bore",
-  "Filter Point Rig",
-  "Calyx Rig",
-  "DTH Rig",
-  "Rotary Rig",
-  "DTH cum Rotary Rig",
-] as const;
-export type RigType = typeof rigTypeOptions[number];
-
-export const rigStatusOptions = ['Active', 'Cancelled'] as const;
-export type RigStatus = typeof rigStatusOptions[number];
-
-export const RigVehicleSchema = z.object({
+const VehicleDetailsSchema = z.object({
   type: z.string().optional(),
   regNo: z.string().optional(),
   chassisNo: z.string().optional(),
   engineNo: z.string().optional(),
-});
-export type RigVehicle = z.infer<typeof RigVehicleSchema>;
+}).optional();
+
+const CompressorDetailsSchema = z.object({
+  model: z.string().optional(),
+  capacity: z.string().optional(),
+}).optional();
+
+const GeneratorDetailsSchema = z.object({
+  model: z.string().optional(),
+  capacity: z.string().optional(),
+  type: z.string().optional(),
+  engineNo: z.string().optional(),
+}).optional();
+
+export const rigTypeOptions = [
+    "DTH",
+    "DTH Cum Rotary",
+    "Filter Point",
+    "Others",
+] as const;
+export type RigType = typeof rigTypeOptions[number];
 
 export const RigRenewalSchema = z.object({
-  id: z.string(),
-  renewalDate: optionalDate.refine(val => val !== undefined && val !== null, { message: 'Renewal date is required.' }),
-  renewalFee: optionalNumber("Renewal fee must be a number.").refine(val => val !== undefined, { message: 'Renewal fee is required.' }),
-  paymentDate: optionalDate,
-  challanNo: z.string().optional(),
-  remarks: z.string().optional(),
-  validTill: optionalDate,
+    id: z.string(),
+    renewalDate: optionalDate.refine(val => val !== undefined, { message: "Renewal date is required." }),
+    renewalFee: optionalNumber("Renewal fee is required."),
+    paymentDate: optionalDate,
+    challanNo: z.string().optional(),
+    validTill: optionalDate,
 });
 export type RigRenewal = z.infer<typeof RigRenewalSchema>;
 
 export const RigRegistrationSchema = z.object({
-  id: z.string(),
-  rigRegistrationNo: z.string().optional(),
-  registrationDate: optionalDate,
-  typeOfRig: z.enum(rigTypeOptions).optional(),
-  registrationFee: optionalNumber("Registration fee must be a number."),
-  paymentDate: optionalDate,
-  challanNo: z.string().optional(),
-  rigVehicle: RigVehicleSchema.optional(),
-  compressorVehicle: RigVehicleSchema.optional(),
-  supportingVehicle: RigVehicleSchema.optional(),
-  compressorDetails: z.object({
-    model: z.string().optional(),
-    capacity: z.string().optional(),
-  }).optional(),
-  generatorDetails: z.object({
-    type: z.string().optional(),
-    model: z.string().optional(),
-    capacity: z.string().optional(),
-    engineNo: z.string().optional(),
-  }).optional(),
-  renewals: z.array(RigRenewalSchema).optional(),
-  history: z.array(z.string()).optional(),
-  status: z.enum(rigStatusOptions).default('Active'),
-  cancellationDate: optionalDate,
-  cancellationReason: z.string().optional(),
+    id: z.string(),
+    rigRegistrationNo: z.string().optional(),
+    typeOfRig: z.enum(rigTypeOptions).optional(),
+    registrationDate: optionalDate,
+    registrationFee: optionalNumber(),
+    paymentDate: optionalDate,
+    challanNo: z.string().optional(),
+    rigVehicle: VehicleDetailsSchema,
+    compressorVehicle: VehicleDetailsSchema,
+    supportingVehicle: VehicleDetailsSchema,
+    compressorDetails: CompressorDetailsSchema,
+    generatorDetails: GeneratorDetailsSchema,
+    status: z.enum(['Active', 'Cancelled']),
+    renewals: z.array(RigRenewalSchema).optional(),
+    history: z.array(z.string()).optional(),
+    cancellationDate: optionalDate,
+    cancellationReason: z.string().optional(),
 });
 export type RigRegistration = z.infer<typeof RigRegistrationSchema>;
-
-export const agencyApplicationStatusOptions = [
-  "Pending Verification",
-  "Active",
-  "Rejected",
-  "Expired",
-] as const;
-export type AgencyApplicationStatus = typeof agencyApplicationStatusOptions[number];
-
-export const OwnerInfoSchema = z.object({
-  name: z.string().min(1, "Name & Address of Owner is required"),
-  address: z.string().optional(), // No longer required
-  mobile: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required."),
-  secondaryMobile: z.string().regex(/^\d{10}$/, "A valid 10-digit phone number is required.").optional().or(z.literal('')),
-});
-export type OwnerInfo = z.infer<typeof OwnerInfoSchema>;
 
 export const AgencyApplicationSchema = z.object({
   id: z.string().optional(),
   fileNo: z.string().optional(),
+  agencyName: z.string().min(1, "Agency name & address is required."),
   owner: OwnerInfoSchema,
   partners: z.array(OwnerInfoSchema).optional(),
-  agencyName: z.string().min(2, "Agency Name & Address is required."),
   agencyRegistrationNo: z.string().optional(),
   agencyRegistrationDate: optionalDate,
-  agencyRegistrationFee: optionalNumber("Registration fee must be a number."),
+  agencyRegistrationFee: optionalNumber(),
   agencyPaymentDate: optionalDate,
   agencyChallanNo: z.string().optional(),
-  rigs: z.array(RigRegistrationSchema).max(3, "A maximum of 3 rigs can be registered."),
+  rigs: z.array(RigRegistrationSchema),
+  status: z.enum(['Active', 'Pending Verification']),
   history: z.array(z.string()).optional(),
-  status: z.enum(agencyApplicationStatusOptions).default('Pending Verification'),
-  // Fields from the old schema that are not in the new design, kept for data integrity
-  applicantId: z.string().optional(),
-  rejectionReason: z.string().optional().nullable(),
-  paymentId: z.string().optional().nullable(),
-  createdAt: z.any().optional(),
-  updatedAt: z.any().optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
-export type AgencyApplicationFormData = z.infer<typeof AgencyApplicationSchema>;
 
+// ARS Schemas
+export const arsWorkStatusOptions = [
+    "Work Started",
+    "Work in Progress",
+    "Work Completed",
+    "Work Not Started",
+    "Dropped"
+] as const;
 
-export const RenewalSchema = z.object({
-    id: z.string(),
-    applicationId: z.string(),
-    applicantId: z.string(),
-    paymentId: z.string(),
-    renewalDate: z.date(),
-    validTill: z.date(),
+export const arsTypeOfSchemeOptions = [
+    "Check Dam",
+    "CD cum Vented Dam",
+    "Vented Dam",
+    "Regulator Cum Bridge",
+    "Head water control weir",
+    "Side Weir",
+    "Sub surface dyke",
+    "Percolation Tank",
+    "Farm Pond"
+] as const;
+
+export const NewArsEntrySchema = z.object({
+  fileNo: z.string().min(1, 'File No. is required.'),
+  nameOfSite: z.string().min(1, 'Name of Site is required.'),
+  constituency: z.enum(constituencyOptions, { required_error: 'Constituency is required.' }),
+  arsTypeOfScheme: z.enum(arsTypeOfSchemeOptions).optional(),
+  arsPanchayath: z.string().optional(),
+  arsBlock: z.string().optional(),
+  latitude: optionalNumber(),
+  longitude: optionalNumber(),
+  arsNumberOfStructures: optionalNumber(),
+  arsStorageCapacity: optionalNumber(),
+  arsNumberOfFillings: optionalNumber(),
+  estimateAmount: optionalNumber(),
+  arsAsTsDetails: z.string().optional(),
+  tsAmount: optionalNumber(),
+  arsSanctionedDate: optionalDate,
+  arsTenderedAmount: optionalNumber(),
+  arsAwardedAmount: optionalNumber(),
+  workStatus: z.enum(arsWorkStatusOptions, { required_error: "Present status is required." }),
+  dateOfCompletion: optionalDate,
+  totalExpenditure: optionalNumber(),
+  noOfBeneficiary: z.string().optional(),
+  workRemarks: z.string().optional(),
+  supervisorUid: z.string().optional().nullable(),
+  supervisorName: z.string().optional().nullable(),
 });
-export type Renewal = z.infer<typeof RenewalSchema>;
+export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
