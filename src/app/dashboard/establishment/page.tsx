@@ -85,29 +85,29 @@ export default function EstablishmentPage() {
     return a.name.localeCompare(b.name);
   }, [designationOrderMap]);
 
-  const searchFilter = useCallback((staff: StaffMember) => {
-    if (!debouncedSearchTerm) return true;
-    const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
-    return (
-      (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-      (staff.phoneNo?.includes(lowerSearchTerm)) ||
-      (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-      (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-    );
-  }, [debouncedSearchTerm]);
-
   // Centralized data processing logic
   const { 
-    paginatedActive, activeTotalPages, 
-    paginatedTransferred, transferredTotalPages, 
-    paginatedRetired, retiredTotalPages 
+    paginatedActive, activeTotalPages, allActiveStaff,
+    paginatedTransferred, transferredTotalPages, allTransferredStaff,
+    paginatedRetired, retiredTotalPages, allRetiredStaff
   } = useMemo(() => {
     const allActive = allStaffMembers.filter(s => s.status === 'Active').sort(sortStaff);
     const allTransferred = allStaffMembers.filter(s => s.status === 'Transferred').sort(sortStaff);
     const allRetired = allStaffMembers.filter(s => s.status === 'Retired').sort(sortStaff);
+
+    const searchFilter = (staff: StaffMember) => {
+      if (!debouncedSearchTerm) return true;
+      const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+      return (
+        (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+        (staff.phoneNo?.includes(lowerSearchTerm)) ||
+        (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+        (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+      );
+    };
 
     const filteredActive = allActive.filter(searchFilter);
     const filteredTransferred = allTransferred.filter(searchFilter);
@@ -119,14 +119,17 @@ export default function EstablishmentPage() {
     };
 
     return {
+      allActiveStaff: allActive,
       paginatedActive: paginate(filteredActive, activeStaffPage),
       activeTotalPages: Math.ceil(filteredActive.length / ITEMS_PER_PAGE),
+      allTransferredStaff: allTransferred,
       paginatedTransferred: paginate(filteredTransferred, transferredStaffPage),
       transferredTotalPages: Math.ceil(filteredTransferred.length / ITEMS_PER_PAGE),
+      allRetiredStaff: allRetired,
       paginatedRetired: paginate(filteredRetired, retiredStaffPage),
       retiredTotalPages: Math.ceil(filteredRetired.length / ITEMS_PER_PAGE),
     };
-  }, [allStaffMembers, searchFilter, sortStaff, activeStaffPage, transferredStaffPage, retiredStaffPage]);
+  }, [allStaffMembers, debouncedSearchTerm, sortStaff, activeStaffPage, transferredStaffPage, retiredStaffPage]);
   
   useEffect(() => {
     setActiveStaffPage(1);
@@ -345,9 +348,9 @@ export default function EstablishmentPage() {
 
       <Tabs defaultValue="activeStaff" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:w-[600px] mb-4">
-          <TabsTrigger value="activeStaff">Active ({allStaffMembers.filter(s => s.status === 'Active').length})</TabsTrigger>
-          <TabsTrigger value="transferredStaff">Transferred ({allStaffMembers.filter(s => s.status === 'Transferred').length})</TabsTrigger>
-          <TabsTrigger value="retiredStaff">Retired ({allStaffMembers.filter(s => s.status === 'Retired').length})</TabsTrigger>
+          <TabsTrigger value="activeStaff">Active ({allActiveStaff.length})</TabsTrigger>
+          <TabsTrigger value="transferredStaff">Transferred ({allTransferredStaff.length})</TabsTrigger>
+          <TabsTrigger value="retiredStaff">Retired ({allRetiredStaff.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activeStaff" className="mt-0">
