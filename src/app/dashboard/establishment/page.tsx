@@ -15,6 +15,7 @@ import RetiredStaffTable from "@/components/establishment/RetiredStaffTable";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import type { StaffMember, StaffMemberFormData, StaffStatusType } from "@/lib/schemas";
+import { designationOptions } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -74,19 +75,28 @@ export default function EstablishmentPage() {
   }, [searchTerm]);
 
   const { activeStaff, transferredStaff, retiredStaff } = useMemo(() => {
+    const designationOrderMap = new Map(designationOptions.map((d, i) => [d, i]));
+    const sortStaff = (a: StaffMember, b: StaffMember) => {
+        const orderA = designationOrderMap.get(a.designation) ?? Infinity;
+        const orderB = designationOrderMap.get(b.designation) ?? Infinity;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.name.localeCompare(b.name);
+    };
+
     const active: StaffMember[] = [];
     const transferred: StaffMember[] = [];
     const retired: StaffMember[] = [];
 
     for (const staff of allStaffMembers) {
-      if (staff.status === 'Active') {
-        active.push(staff);
-      } else if (staff.status === 'Transferred') {
-        transferred.push(staff);
-      } else if (staff.status === 'Retired') {
-        retired.push(staff);
-      }
+      if (staff.status === 'Active') active.push(staff);
+      else if (staff.status === 'Transferred') transferred.push(staff);
+      else if (staff.status === 'Retired') retired.push(staff);
     }
+    
+    active.sort(sortStaff);
+    transferred.sort(sortStaff);
+    retired.sort(sortStaff);
+
     return { activeStaff: active, transferredStaff: transferred, retiredStaff: retired };
   }, [allStaffMembers]);
 
