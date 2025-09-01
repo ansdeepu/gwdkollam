@@ -27,7 +27,7 @@ interface StaffTableProps {
   searchActive?: boolean; 
 }
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 20;
 
 const getInitials = (name?: string) => {
   if (!name || name.trim() === '') return 'U';

@@ -23,7 +23,7 @@ interface TransferredStaffTableProps {
   searchActive?: boolean;
 }
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 20;
 
 const getInitials = (name?: string) => {
   if (!name || name.trim() === '') return 'U';
@@ -194,8 +194,3 @@ export default function TransferredStaffTable({
     </TooltipProvider>
   );
 }
-
-    
-
-
-
