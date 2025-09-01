@@ -1,4 +1,3 @@
-
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -368,9 +367,9 @@ export default function EstablishmentPage() {
 
       <Tabs defaultValue="activeStaff" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:w-[600px] mb-4">
-          <TabsTrigger value="activeStaff">Active ({filteredStaff.active.length})</TabsTrigger>
-          <TabsTrigger value="transferredStaff">Transferred ({filteredStaff.transferred.length})</TabsTrigger>
-          <TabsTrigger value="retiredStaff">Retired ({filteredStaff.retired.length})</TabsTrigger>
+          <TabsTrigger value="activeStaff">Active ({activeStaff.length})</TabsTrigger>
+          <TabsTrigger value="transferredStaff">Transferred ({transferredStaff.length})</TabsTrigger>
+          <TabsTrigger value="retiredStaff">Retired ({retiredStaff.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activeStaff" className="mt-0">
