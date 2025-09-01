@@ -80,83 +80,63 @@ export default function EstablishmentPage() {
       clearTimeout(timerId);
     };
   }, [searchTerm]);
-
-  const { activeStaff, transferredStaff, retiredStaff } = useMemo(() => {
-    const designationOrderMap = new Map(designationOptions.map((d, i) => [d, i]));
-    const sortStaff = (a: StaffMember, b: StaffMember) => {
-        const orderA = designationOrderMap.get(a.designation) ?? Infinity;
-        const orderB = designationOrderMap.get(b.designation) ?? Infinity;
-        if (orderA !== orderB) return orderA - orderB;
-        return a.name.localeCompare(b.name);
-    };
-
-    const active: StaffMember[] = [];
-    const transferred: StaffMember[] = [];
-    const retired: StaffMember[] = [];
-
-    for (const staff of allStaffMembers) {
-        if (staff.status === 'Active') active.push(staff);
-        else if (staff.status === 'Transferred') transferred.push(staff);
-        else if (staff.status === 'Retired') retired.push(staff);
-    }
-    
-    active.sort(sortStaff);
-    transferred.sort(sortStaff);
-    retired.sort(sortStaff);
-
-    return { activeStaff: active, transferredStaff: transferred, retiredStaff: retired };
-  }, [allStaffMembers]);
   
-  const filteredStaff = useMemo(() => {
-    const filterFunction = (staffList: StaffMember[]) => {
-      if (!debouncedSearchTerm) {
-        return staffList;
-      }
-      const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
-      return staffList.filter(staff =>
-        (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
-        (staff.phoneNo?.includes(lowerSearchTerm)) ||
-        (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
-        (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
-      );
-    };
-
-    return {
-      active: filterFunction(activeStaff),
-      transferred: filterFunction(transferredStaff),
-      retired: filterFunction(retiredStaff),
-    };
-  }, [debouncedSearchTerm, activeStaff, transferredStaff, retiredStaff]);
-
+  const designationOrderMap = useMemo(() => new Map(designationOptions.map((d, i) => [d, i])), []);
   
-  useEffect(() => {
-      setActiveStaffPage(1);
-      setTransferredStaffPage(1);
-      setRetiredStaffPage(1);
+  const sortStaff = useCallback((a: StaffMember, b: StaffMember) => {
+    const orderA = designationOrderMap.get(a.designation) ?? Infinity;
+    const orderB = designationOrderMap.get(b.designation) ?? Infinity;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.name.localeCompare(b.name);
+  }, [designationOrderMap]);
+
+  const searchFilter = useCallback((staff: StaffMember) => {
+    if (!debouncedSearchTerm) return true;
+    const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+    return (
+      (staff.name?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.designation?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.pen?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.roles?.toLowerCase().includes(lowerSearchTerm)) ||
+      (staff.phoneNo?.includes(lowerSearchTerm)) ||
+      (formatDateForSearch(staff.dateOfBirth).includes(lowerSearchTerm)) ||
+      (staff.remarks?.toLowerCase().includes(lowerSearchTerm))
+    );
   }, [debouncedSearchTerm]);
 
 
+  // === Data Processing Logic ===
+  const activeStaff = useMemo(() => allStaffMembers.filter(s => s.status === 'Active').sort(sortStaff), [allStaffMembers, sortStaff]);
+  const transferredStaff = useMemo(() => allStaffMembers.filter(s => s.status === 'Transferred').sort(sortStaff), [allStaffMembers, sortStaff]);
+  const retiredStaff = useMemo(() => allStaffMembers.filter(s => s.status === 'Retired').sort(sortStaff), [allStaffMembers, sortStaff]);
+
+  const filteredActiveStaff = useMemo(() => activeStaff.filter(searchFilter), [activeStaff, searchFilter]);
+  const filteredTransferredStaff = useMemo(() => transferredStaff.filter(searchFilter), [transferredStaff, searchFilter]);
+  const filteredRetiredStaff = useMemo(() => retiredStaff.filter(searchFilter), [retiredStaff, searchFilter]);
+
+  useEffect(() => {
+    setActiveStaffPage(1);
+    setTransferredStaffPage(1);
+    setRetiredStaffPage(1);
+  }, [debouncedSearchTerm]);
+
   const paginatedActiveStaff = useMemo(() => {
     const startIndex = (activeStaffPage - 1) * ITEMS_PER_PAGE;
-    return filteredStaff.active.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredStaff.active, activeStaffPage]);
-  const activeTotalPages = Math.ceil(filteredStaff.active.length / ITEMS_PER_PAGE);
+    return filteredActiveStaff.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredActiveStaff, activeStaffPage]);
+  const activeTotalPages = Math.ceil(filteredActiveStaff.length / ITEMS_PER_PAGE);
 
   const paginatedTransferredStaff = useMemo(() => {
     const startIndex = (transferredStaffPage - 1) * ITEMS_PER_PAGE;
-    return filteredStaff.transferred.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredStaff.transferred, transferredStaffPage]);
-  const transferredTotalPages = Math.ceil(filteredStaff.transferred.length / ITEMS_PER_PAGE);
+    return filteredTransferredStaff.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredTransferredStaff, transferredStaffPage]);
+  const transferredTotalPages = Math.ceil(filteredTransferredStaff.length / ITEMS_PER_PAGE);
 
   const paginatedRetiredStaff = useMemo(() => {
     const startIndex = (retiredStaffPage - 1) * ITEMS_PER_PAGE;
-    return filteredStaff.retired.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredStaff.retired, retiredStaffPage]);
-  const retiredTotalPages = Math.ceil(filteredStaff.retired.length / ITEMS_PER_PAGE);
-
+    return filteredRetiredStaff.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredRetiredStaff, retiredStaffPage]);
+  const retiredTotalPages = Math.ceil(filteredRetiredStaff.length / ITEMS_PER_PAGE);
 
   const handleAddNewStaff = () => {
     setEditingStaff(null);
