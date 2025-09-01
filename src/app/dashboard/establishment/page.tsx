@@ -70,15 +70,10 @@ export default function EstablishmentPage() {
   
   const canManage = user?.role === 'editor' && user.isApproved;
 
-  // Debounce search term to avoid re-filtering on every keystroke
+  // Debounce search term
   useEffect(() => {
-    const timerId = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-
-    return () => {
-      clearTimeout(timerId);
-    };
+    const timerId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(timerId);
   }, [searchTerm]);
   
   const designationOrderMap = useMemo(() => new Map(designationOptions.map((d, i) => [d, i])), []);
@@ -104,39 +99,41 @@ export default function EstablishmentPage() {
     );
   }, [debouncedSearchTerm]);
 
+  // Centralized data processing logic
+  const { 
+    paginatedActive, activeTotalPages, 
+    paginatedTransferred, transferredTotalPages, 
+    paginatedRetired, retiredTotalPages 
+  } = useMemo(() => {
+    const allActive = allStaffMembers.filter(s => s.status === 'Active').sort(sortStaff);
+    const allTransferred = allStaffMembers.filter(s => s.status === 'Transferred').sort(sortStaff);
+    const allRetired = allStaffMembers.filter(s => s.status === 'Retired').sort(sortStaff);
 
-  // === Data Processing Logic ===
-  const activeStaff = useMemo(() => allStaffMembers.filter(s => s.status === 'Active').sort(sortStaff), [allStaffMembers, sortStaff]);
-  const transferredStaff = useMemo(() => allStaffMembers.filter(s => s.status === 'Transferred').sort(sortStaff), [allStaffMembers, sortStaff]);
-  const retiredStaff = useMemo(() => allStaffMembers.filter(s => s.status === 'Retired').sort(sortStaff), [allStaffMembers, sortStaff]);
+    const filteredActive = allActive.filter(searchFilter);
+    const filteredTransferred = allTransferred.filter(searchFilter);
+    const filteredRetired = allRetired.filter(searchFilter);
+    
+    const paginate = (data: StaffMember[], page: number) => {
+      const startIndex = (page - 1) * ITEMS_PER_PAGE;
+      return data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    };
 
-  const filteredActiveStaff = useMemo(() => activeStaff.filter(searchFilter), [activeStaff, searchFilter]);
-  const filteredTransferredStaff = useMemo(() => transferredStaff.filter(searchFilter), [transferredStaff, searchFilter]);
-  const filteredRetiredStaff = useMemo(() => retiredStaff.filter(searchFilter), [retiredStaff, searchFilter]);
-
+    return {
+      paginatedActive: paginate(filteredActive, activeStaffPage),
+      activeTotalPages: Math.ceil(filteredActive.length / ITEMS_PER_PAGE),
+      paginatedTransferred: paginate(filteredTransferred, transferredStaffPage),
+      transferredTotalPages: Math.ceil(filteredTransferred.length / ITEMS_PER_PAGE),
+      paginatedRetired: paginate(filteredRetired, retiredStaffPage),
+      retiredTotalPages: Math.ceil(filteredRetired.length / ITEMS_PER_PAGE),
+    };
+  }, [allStaffMembers, searchFilter, sortStaff, activeStaffPage, transferredStaffPage, retiredStaffPage]);
+  
   useEffect(() => {
     setActiveStaffPage(1);
     setTransferredStaffPage(1);
     setRetiredStaffPage(1);
   }, [debouncedSearchTerm]);
 
-  const paginatedActiveStaff = useMemo(() => {
-    const startIndex = (activeStaffPage - 1) * ITEMS_PER_PAGE;
-    return filteredActiveStaff.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredActiveStaff, activeStaffPage]);
-  const activeTotalPages = Math.ceil(filteredActiveStaff.length / ITEMS_PER_PAGE);
-
-  const paginatedTransferredStaff = useMemo(() => {
-    const startIndex = (transferredStaffPage - 1) * ITEMS_PER_PAGE;
-    return filteredTransferredStaff.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredTransferredStaff, transferredStaffPage]);
-  const transferredTotalPages = Math.ceil(filteredTransferredStaff.length / ITEMS_PER_PAGE);
-
-  const paginatedRetiredStaff = useMemo(() => {
-    const startIndex = (retiredStaffPage - 1) * ITEMS_PER_PAGE;
-    return filteredRetiredStaff.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredRetiredStaff, retiredStaffPage]);
-  const retiredTotalPages = Math.ceil(filteredRetiredStaff.length / ITEMS_PER_PAGE);
 
   const handleAddNewStaff = () => {
     setEditingStaff(null);
@@ -348,9 +345,9 @@ export default function EstablishmentPage() {
 
       <Tabs defaultValue="activeStaff" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:w-[600px] mb-4">
-          <TabsTrigger value="activeStaff">Active ({activeStaff.length})</TabsTrigger>
-          <TabsTrigger value="transferredStaff">Transferred ({transferredStaff.length})</TabsTrigger>
-          <TabsTrigger value="retiredStaff">Retired ({retiredStaff.length})</TabsTrigger>
+          <TabsTrigger value="activeStaff">Active ({allStaffMembers.filter(s => s.status === 'Active').length})</TabsTrigger>
+          <TabsTrigger value="transferredStaff">Transferred ({allStaffMembers.filter(s => s.status === 'Transferred').length})</TabsTrigger>
+          <TabsTrigger value="retiredStaff">Retired ({allStaffMembers.filter(s => s.status === 'Retired').length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activeStaff" className="mt-0">
@@ -361,7 +358,7 @@ export default function EstablishmentPage() {
             </CardHeader>
             <CardContent>
               <StaffTable
-                staffData={paginatedActiveStaff}
+                staffData={paginatedActive}
                 onEdit={canManage ? handleEditStaff : undefined}
                 onDelete={canManage ? deleteStaffMember : undefined}
                 onSetStatus={canManage ? handleSetStaffStatus : undefined}
@@ -387,7 +384,7 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <TransferredStaffTable
-                        staffData={paginatedTransferredStaff}
+                        staffData={paginatedTransferred}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
@@ -411,7 +408,7 @@ export default function EstablishmentPage() {
                 </CardHeader>
                 <CardContent>
                     <RetiredStaffTable
-                        staffData={paginatedRetiredStaff}
+                        staffData={paginatedRetired}
                         onSetStatus={canManage ? handleSetStaffStatus : undefined}
                         isViewer={!canManage}
                         onImageClick={handleOpenImageModal}
