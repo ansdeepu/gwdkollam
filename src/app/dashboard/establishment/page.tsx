@@ -1,3 +1,4 @@
+
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -94,9 +95,9 @@ export default function EstablishmentPage() {
     const retired: StaffMember[] = [];
 
     for (const staff of allStaffMembers) {
-      if (staff.status === 'Active') active.push(staff);
-      else if (staff.status === 'Transferred') transferred.push(staff);
-      else if (staff.status === 'Retired') retired.push(staff);
+        if (staff.status === 'Active') active.push(staff);
+        else if (staff.status === 'Transferred') transferred.push(staff);
+        else if (staff.status === 'Retired') retired.push(staff);
     }
     
     active.sort(sortStaff);
@@ -105,8 +106,7 @@ export default function EstablishmentPage() {
 
     return { activeStaff: active, transferredStaff: transferred, retiredStaff: retired };
   }, [allStaffMembers]);
-
-  // Separate memo for filtering, applied after categorization.
+  
   const filteredStaff = useMemo(() => {
     const filterFunction = (staffList: StaffMember[]) => {
       if (!debouncedSearchTerm) {
@@ -130,6 +130,7 @@ export default function EstablishmentPage() {
       retired: filterFunction(retiredStaff),
     };
   }, [debouncedSearchTerm, activeStaff, transferredStaff, retiredStaff]);
+
   
   useEffect(() => {
       setActiveStaffPage(1);
