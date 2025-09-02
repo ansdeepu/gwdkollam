@@ -36,7 +36,7 @@ function HeaderContent() {
   return (
     <>
       <div className="flex items-center gap-4">
-        <SidebarTrigger className="md:hidden" />
+        <SidebarTrigger />
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
