@@ -35,7 +35,7 @@ export default function ArsEntryPage() {
     const fileNoToEdit = searchParams.get('fileNo');
     const siteNameToEdit = searchParams.get('siteName');
     
-    const { isLoading: entriesLoading, addFileEntry, getFileEntry } = useFileEntries();
+    const { isLoading: entriesLoading, addFileEntry, getFileEntry, fetchEntryForEditing } = useFileEntries();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
@@ -79,52 +79,54 @@ export default function ArsEntryPage() {
     });
 
     useEffect(() => {
-        if (isEditing && !entriesLoading) {
-            const fileEntry = getFileEntry(fileNoToEdit);
-            if (fileEntry) {
-                const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.isArsImport);
-                if (site) {
-                    // Ensure workStatus is a valid ArsWorkStatus, otherwise set to undefined
-                    const validWorkStatus = site.workStatus && arsWorkStatusOptions.includes(site.workStatus as any)
-                        ? site.workStatus as NewArsEntryFormData['workStatus']
-                        : undefined;
+        const loadArsEntry = async () => {
+            if (isEditing) {
+                const fileEntry = await fetchEntryForEditing(fileNoToEdit);
+                if (fileEntry) {
+                    const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.isArsImport);
+                    if (site) {
+                        const validWorkStatus = site.workStatus && arsWorkStatusOptions.includes(site.workStatus as any)
+                            ? site.workStatus as NewArsEntryFormData['workStatus']
+                            : undefined;
 
-                    form.reset({
-                        fileNo: fileNoToEdit,
-                        nameOfSite: site.nameOfSite,
-                        constituency: fileEntry.constituency,
-                        arsTypeOfScheme: site.arsTypeOfScheme,
-                        arsPanchayath: site.arsPanchayath,
-                        arsBlock: site.arsBlock,
-                        latitude: site.latitude,
-                        longitude: site.longitude,
-                        arsNumberOfStructures: site.arsNumberOfStructures,
-                        arsStorageCapacity: site.arsStorageCapacity,
-                        arsNumberOfFillings: site.arsNumberOfFillings,
-                        estimateAmount: site.estimateAmount,
-                        arsAsTsDetails: site.arsAsTsDetails,
-                        tsAmount: site.tsAmount,
-                        arsSanctionedDate: site.arsSanctionedDate ? new Date(site.arsSanctionedDate) : undefined,
-                        arsTenderedAmount: site.arsTenderedAmount,
-                        arsAwardedAmount: site.arsAwardedAmount,
-                        workStatus: validWorkStatus,
-                        dateOfCompletion: site.dateOfCompletion ? new Date(site.dateOfCompletion) : undefined,
-                        totalExpenditure: site.totalExpenditure,
-                        noOfBeneficiary: site.noOfBeneficiary,
-                        workRemarks: site.workRemarks,
-                        supervisorUid: site.supervisorUid,
-                        supervisorName: site.supervisorName,
-                    });
+                        form.reset({
+                            fileNo: fileNoToEdit,
+                            nameOfSite: site.nameOfSite,
+                            constituency: fileEntry.constituency,
+                            arsTypeOfScheme: site.arsTypeOfScheme,
+                            arsPanchayath: site.arsPanchayath,
+                            arsBlock: site.arsBlock,
+                            latitude: site.latitude,
+                            longitude: site.longitude,
+                            arsNumberOfStructures: site.arsNumberOfStructures,
+                            arsStorageCapacity: site.arsStorageCapacity,
+                            arsNumberOfFillings: site.arsNumberOfFillings,
+                            estimateAmount: site.estimateAmount,
+                            arsAsTsDetails: site.arsAsTsDetails,
+                            tsAmount: site.tsAmount,
+                            arsSanctionedDate: site.arsSanctionedDate ? new Date(site.arsSanctionedDate) : undefined,
+                            arsTenderedAmount: site.arsTenderedAmount,
+                            arsAwardedAmount: site.arsAwardedAmount,
+                            workStatus: validWorkStatus,
+                            dateOfCompletion: site.dateOfCompletion ? new Date(site.dateOfCompletion) : undefined,
+                            totalExpenditure: site.totalExpenditure,
+                            noOfBeneficiary: site.noOfBeneficiary,
+                            workRemarks: site.workRemarks,
+                            supervisorUid: site.supervisorUid,
+                            supervisorName: site.supervisorName,
+                        });
+                    } else {
+                        toast({ title: "Error", description: `ARS Site "${siteNameToEdit}" not found in file "${fileNoToEdit}".`, variant: "destructive" });
+                        router.push('/dashboard/ars');
+                    }
                 } else {
-                     toast({ title: "Error", description: `ARS Site "${siteNameToEdit}" not found in file "${fileNoToEdit}".`, variant: "destructive" });
-                     router.push('/dashboard/ars');
+                    toast({ title: "Error", description: `File "${fileNoToEdit}" not found.`, variant: "destructive" });
+                    router.push('/dashboard/ars');
                 }
-            } else {
-                 toast({ title: "Error", description: `File "${fileNoToEdit}" not found.`, variant: "destructive" });
-                 router.push('/dashboard/ars');
             }
-        }
-    }, [isEditing, fileNoToEdit, siteNameToEdit, entriesLoading, getFileEntry, form, router, toast]);
+        };
+        loadArsEntry();
+    }, [isEditing, fileNoToEdit, siteNameToEdit, fetchEntryForEditing, form, router, toast]);
 
     const handleFormSubmit = async (data: NewArsEntryFormData) => {
         setIsSubmitting(true);
@@ -160,12 +162,12 @@ export default function ArsEntryPage() {
         };
 
         try {
-            const existingFile = getFileEntry(data.fileNo);
+            const existingFile = await fetchEntryForEditing(data.fileNo);
             if (isEditing) {
                 if (!fileNoToEdit || !siteNameToEdit) {
                     throw new Error("Could not find original file details to edit.");
                 }
-                const fileToUpdate = getFileEntry(fileNoToEdit);
+                const fileToUpdate = await fetchEntryForEditing(fileNoToEdit);
                 if (!fileToUpdate) throw new Error("Original file not found for update.");
 
                 // If the site name was changed, check for uniqueness in the *same* file.
