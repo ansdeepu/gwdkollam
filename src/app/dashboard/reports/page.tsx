@@ -41,6 +41,7 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 
 export interface FlattenedReportRow {
@@ -84,6 +85,11 @@ function renderDetail(label: string, value: any) {
 
 
 export default function ReportsPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Reports', 'Generate custom reports by applying a combination of filters.');
+  }, [setHeader]);
+
   const searchParams = useSearchParams();
   const router = useRouter(); 
   const { fileEntries, isLoading: entriesLoading, getFileEntry } = useFileEntries();
@@ -336,14 +342,14 @@ export default function ReportsPage() {
   };
 
   const handleExportExcel = () => {
-    const reportTitle = "Site-Wise Report";
+    const reportTitle = "Custom Report";
     const columnLabels = [ "File No", "Applicant Name", "Date of Remittance", "Site Purpose", "File Status", "Site Name", "Site Work Status", "Site Total Expenditure (₹)" ];
     const dataRows = filteredReportRows.map(row => [
         row.fileNo, row.applicantName, row.fileFirstRemittanceDate, row.sitePurpose, row.fileStatus,
         row.siteName, row.siteWorkStatus, row.siteTotalExpenditure
     ]);
-    const sheetName = "SiteWiseReport";
-    const fileNamePrefix = "gwd_site_wise_report";
+    const sheetName = "Report";
+    const fileNamePrefix = "gwd_report";
 
     if (dataRows.length === 0) {
       toast({ title: "No Data to Export", description: "There is no data to export.", variant: "default" });
@@ -452,13 +458,6 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Site-Wise Reports</h1>
-        <p className="text-muted-foreground">
-            Generate custom reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
-        </p>
-      </div>
-
       <Card className="shadow-lg no-print">
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5 text-primary" />Report Filters</CardTitle>
@@ -533,16 +532,16 @@ export default function ReportsPage() {
                     {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                 <div className="flex justify-end gap-2 p-0 pt-4">
-                    <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
-                    <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
-                </div>
             </div>
+             <CardFooter className="flex justify-end gap-2 p-0 pt-4">
+                <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
+                <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
+            </CardFooter>
         </CardContent>
       </Card>
 
       <div className="print-only-block my-4 text-center">
-        <p className="font-semibold text-sm text-foreground mb-1">GWD Kollam - Site-Wise Report</p>
+        <p className="font-semibold text-sm text-foreground mb-1">GWD Kollam - Report</p>
         {(currentDate && currentTime) && (<p className="text-xs text-muted-foreground">Report generated on: {currentDate} at {currentTime}</p>)}
       </div>
       

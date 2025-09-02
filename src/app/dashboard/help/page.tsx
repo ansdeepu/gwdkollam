@@ -1,5 +1,5 @@
-
 // src/app/dashboard/help/page.tsx
+"use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle, LifeBuoy, Building, Server } from "lucide-react";
@@ -7,14 +7,10 @@ import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
 
 export default function HelpPage() {
-  // This is a client component, but we can still use hooks.
-  // However, since `usePageHeader` is a client hook, this component must be a client component.
-  // Add "use client" at the top of the file.
-  // I will assume this is already done or will be done.
-  // const { setHeader } = usePageHeader();
-  // useEffect(() => {
-  //   setHeader("Help & About", "Find answers to common questions and learn more about the application.");
-  // }, [setHeader]);
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader("Help & About", "Find answers to common questions and learn more about the application.");
+  }, [setHeader]);
 
   return (
     <div className="space-y-6">

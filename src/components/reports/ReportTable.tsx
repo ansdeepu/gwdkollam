@@ -70,7 +70,7 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
     <TooltipProvider>
       <div className="space-y-4">
         <div className="border rounded-lg">
-          <Table className="table-fixed w-full">
+          <Table>
             <TableHeader className="bg-secondary">
               <TableRow>
                 <TableHead className="sticky top-0 bg-secondary z-10 px-2 w-[6%]">Sl. No.</TableHead>
