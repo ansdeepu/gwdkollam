@@ -1,4 +1,3 @@
-
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -121,7 +120,7 @@ export default function DataEntryPage() {
       if (!user) return; // Wait for user profile
       setDataLoading(true);
       
-      const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
+      const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit, 'non-ARS') : Promise.resolve(null);
       const pendingUpdatePromise = approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null);
       
       try {

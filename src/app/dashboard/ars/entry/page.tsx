@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -81,7 +80,7 @@ export default function ArsEntryPage() {
     useEffect(() => {
         const loadArsEntry = async () => {
             if (isEditing && fileNoToEdit) {
-                const fileEntry = await fetchEntryForEditing(fileNoToEdit);
+                const fileEntry = await fetchEntryForEditing(fileNoToEdit, 'ARS');
                 if (fileEntry) {
                     const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.isArsImport);
                     if (site) {
@@ -93,6 +92,7 @@ export default function ArsEntryPage() {
                             ? site.arsTypeOfScheme as NewArsEntryFormData['arsTypeOfScheme']
                             : undefined;
                         
+                        // Use constituency from the site first, then fall back to the file entry's constituency
                         const constituency = site.constituency || fileEntry.constituency;
 
                         form.reset({
@@ -168,12 +168,12 @@ export default function ArsEntryPage() {
         };
 
         try {
-            const existingFile = await fetchEntryForEditing(data.fileNo);
+            const existingFile = await fetchEntryForEditing(data.fileNo, 'ARS');
             if (isEditing) {
                 if (!fileNoToEdit || !siteNameToEdit) {
                     throw new Error("Could not find original file details to edit.");
                 }
-                const fileToUpdate = await fetchEntryForEditing(fileNoToEdit);
+                const fileToUpdate = await fetchEntryForEditing(fileNoToEdit, 'ARS');
                 if (!fileToUpdate) throw new Error("Original file not found for update.");
 
                 if (data.nameOfSite !== siteNameToEdit) {

@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -21,7 +20,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { DataEntryFormData, SiteDetailFormData } from '@/lib/schemas';
+import type { DataEntryFormData, SiteDetailFormData, SitePurpose } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { usePendingUpdates } from './usePendingUpdates';
@@ -198,16 +197,42 @@ export function useFileEntries() {
     return cachedFileEntries.find(entry => entry.fileNo === fileNo);
   }, []);
 
-  const fetchEntryForEditing = useCallback(async (fileNo: string): Promise<DataEntryFormData | null> => {
+  const fetchEntryForEditing = useCallback(async (
+    fileNo: string,
+    purposeType?: 'ARS' | 'non-ARS'
+  ): Promise<DataEntryFormData | null> => {
     if (!user) return null;
 
-    const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
+    let q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
+    
+    // This is the new logic to differentiate between ARS and non-ARS files
+    // if a purposeType is specified.
+    if (purposeType === 'ARS') {
+      q = query(q, where('siteDetails.isArsImport', '==', true));
+    } else if (purposeType === 'non-ARS') {
+      // This is trickier as Firestore doesn't support '!=' on arrays.
+      // We'll fetch and filter client-side for this case.
+    }
+    
     try {
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
-            console.warn(`[fetchEntryForEditing] No file found with fileNo: ${fileNo}`);
+            console.warn(`[fetchEntryForEditing] No file found with fileNo: ${fileNo} and purposeType: ${purposeType}`);
             return null;
         }
+
+        if (purposeType === 'non-ARS') {
+           const docToReturn = querySnapshot.docs.find(doc => {
+              const data = doc.data() as DataEntryFormData;
+              return data.siteDetails?.some(site => site.isArsImport !== true);
+           });
+           if (docToReturn) {
+             const data = convertTimestampsToDates(docToReturn.data());
+             return { id: docToReturn.id, ...data } as DataEntryFormData;
+           }
+           return null;
+        }
+
         const docSnap = querySnapshot.docs[0];
         const data = convertTimestampsToDates(docSnap.data());
         return { id: docSnap.id, ...data } as DataEntryFormData;
