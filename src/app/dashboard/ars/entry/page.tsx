@@ -80,7 +80,7 @@ export default function ArsEntryPage() {
 
     useEffect(() => {
         const loadArsEntry = async () => {
-            if (isEditing) {
+            if (isEditing && fileNoToEdit) {
                 const fileEntry = await fetchEntryForEditing(fileNoToEdit);
                 if (fileEntry) {
                     const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.isArsImport);
