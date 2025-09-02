@@ -1,24 +1,26 @@
 
 // src/app/dashboard/reports/page.tsx
-"use client"; 
+"use client";
 
-import ReportTable from "@/components/reports/ReportTable";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
-import { CalendarIcon, FileText, Filter, RotateCcw, Loader2, FileDown } from "lucide-react";
-import React, { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CalendarIcon, FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
+import ReportTable from "@/components/reports/ReportTable";
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription 
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -39,6 +41,7 @@ import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
+
 
 export interface FlattenedReportRow {
   fileNo: string; 
@@ -306,7 +309,6 @@ export default function ReportsPage() {
     applicationTypeFilter, typeOfRigFilter, searchParams, authIsLoading, user
   ]);
 
-  const handleSearch = () => applyFilters();
 
   const handleResetFilters = () => {
     setStartDate(undefined);
@@ -450,90 +452,98 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Site-Wise Reports</h1>
-        <p className="text-muted-foreground">
-            Generate custom site-wise reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+          <p className="text-muted-foreground">
+              Generate custom site-wise reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+           <Button variant="outline" onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
+           <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
+        </div>
       </div>
+
 
       <Card className="shadow-lg no-print">
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5 text-primary" />Report Filters</CardTitle>
+          <CardDescription>Refine your report by applying various filters below.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-              <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
-            </PopoverContent>
-          </Popover>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-              <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
-            </PopoverContent>
-          </Popover>
-          <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
-            <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">-- Clear Selection --</SelectItem>
-              <SelectItem value="remittance">Date of Remittance</SelectItem>
-              <SelectItem value="completion">Date of Completion</SelectItem>
-              <SelectItem value="payment">Date of Payment</SelectItem>
-            </SelectContent>
-          </Select>
-          <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="xl:col-span-1"/>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
-            <SelectContent>
-                <SelectItem value="all">All File Statuses</SelectItem>
-                {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
-            </SelectContent>
-          </Select>
-          <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
-              <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
-              <SelectContent>
-                  <SelectItem value="all">All Site Work Categories</SelectItem>
-                  {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
-              </SelectContent>
-          </Select>
-          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
-              <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
-              <SelectContent>
-                  <SelectItem value="all">All Site Service Types</SelectItem>
-                  {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
-              </SelectContent>
-          </Select>
-          
-          <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
-            <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Application Types</SelectItem>
-              {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
-            </SelectContent>
-          </Select>
-          <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
-            <SelectTrigger><SelectValue placeholder="Filter by Site Type of Rig" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Site Rig Types</SelectItem>
-              {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-2 xl:col-span-3">
-            <Button onClick={handleSearch} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Apply Filters</Button>
-            <Button variant="outline" onClick={handleExportExcel} className="w-full"><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
-            <Button onClick={handleResetFilters} variant="destructive" className="w-full"><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
-          </div>
+        <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
+                    </PopoverContent>
+                </Popover>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
+                    </PopoverContent>
+                </Popover>
+                <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
+                    <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">-- Clear Selection --</SelectItem>
+                    <SelectItem value="remittance">Date of Remittance</SelectItem>
+                    <SelectItem value="completion">Date of Completion</SelectItem>
+                    <SelectItem value="payment">Date of Payment</SelectItem>
+                    </SelectContent>
+                </Select>
+                 <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            </div>
+             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All File Statuses</SelectItem>
+                        {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Site Work Categories</SelectItem>
+                        {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Site Service Types</SelectItem>
+                        {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">All Application Types</SelectItem>
+                    {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by Site Type of Rig" /></SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">All Site Rig Types</SelectItem>
+                    {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="flex justify-end pt-2">
+                <Button onClick={applyFilters} className="w-full sm:w-auto">Apply Filters</Button>
+            </div>
         </CardContent>
       </Card>
 
@@ -657,7 +667,7 @@ export default function ReportsPage() {
                         </>
                       )}
 
-                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status &amp; Financials</h6>
+                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status & Financials</h6>
                       {renderDetail("Estimate (₹)", site.estimateAmount)}
                       {renderDetail("TS Amount (₹)", site.tsAmount)}
                       {renderDetail("Tender No.", site.tenderNo)}
@@ -696,7 +706,7 @@ export default function ReportsPage() {
               )}
               
               <div className="pt-2">
-                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status &amp; Remarks:</h4>
+                 <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status & Remarks:</h4>
                 {renderDetail("File Status", viewItem?.fileStatus)}
                 {renderDetail("Remarks", viewItem?.remarks)}
               </div>

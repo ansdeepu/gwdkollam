@@ -70,30 +70,36 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        <div className="border rounded-lg overflow-auto max-h-[60vh]">
+        <div className="border rounded-lg overflow-x-auto">
           <Table>
-            <TableHeader className="sticky top-0 bg-secondary z-10">
+            <TableHeader className="bg-secondary">
               <TableRow>
-                <TableHead onClick={() => requestSort('fileNo')} className="cursor-pointer">File No {getSortIndicator('fileNo')}</TableHead>
-                <TableHead onClick={() => requestSort('applicantName')} className="cursor-pointer">Applicant {getSortIndicator('applicantName')}</TableHead>
-                <TableHead onClick={() => requestSort('siteName')} className="cursor-pointer">Site Name(s) {getSortIndicator('siteName')}</TableHead>
-                <TableHead onClick={() => requestSort('fileStatus')} className="cursor-pointer">File Status {getSortIndicator('fileStatus')}</TableHead>
-                <TableHead onClick={() => requestSort('siteWorkStatus')} className="cursor-pointer">Work Status {getSortIndicator('siteWorkStatus')}</TableHead>
-                <TableHead className="text-right">Expenditure (₹)</TableHead>
-                <TableHead className="text-center w-[80px]">Actions</TableHead>
+                <TableHead className="sticky top-0 bg-secondary z-10 px-2">Sl. No.</TableHead>
+                <TableHead onClick={() => requestSort('fileNo')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">File No {getSortIndicator('fileNo')}</TableHead>
+                <TableHead onClick={() => requestSort('applicantName')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Applicant Name {getSortIndicator('applicantName')}</TableHead>
+                <TableHead onClick={() => requestSort('siteName')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Site Name {getSortIndicator('siteName')}</TableHead>
+                <TableHead onClick={() => requestSort('fileFirstRemittanceDate')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Date of Remittance {getSortIndicator('fileFirstRemittanceDate')}</TableHead>
+                <TableHead onClick={() => requestSort('fileStatus')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">File Status {getSortIndicator('fileStatus')}</TableHead>
+                <TableHead onClick={() => requestSort('sitePurpose')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Site Purpose {getSortIndicator('sitePurpose')}</TableHead>
+                <TableHead onClick={() => requestSort('siteWorkStatus')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Site Work Status {getSortIndicator('siteWorkStatus')}</TableHead>
+                <TableHead className="sticky top-0 bg-secondary z-10 text-right px-2">Site Total Expenditure</TableHead>
+                <TableHead className="sticky top-0 bg-secondary z-10 text-center px-2">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedData.length > 0 ? (
                 paginatedData.map((row, index) => (
                   <TableRow key={`${row.fileNo}-${row.siteName}-${index}`}>
-                    <TableCell className="font-medium whitespace-nowrap">{row.fileNo}</TableCell>
-                    <TableCell className="whitespace-normal break-words">{row.applicantName}</TableCell>
-                    <TableCell className="whitespace-normal break-words max-w-xs">{row.siteName}</TableCell>
-                    <TableCell className="whitespace-nowrap">{row.fileStatus}</TableCell>
-                    <TableCell className="whitespace-nowrap">{row.siteWorkStatus}</TableCell>
-                    <TableCell className="text-right font-mono">{row.siteTotalExpenditure}</TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="px-2 py-2">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                    <TableCell className="font-medium whitespace-nowrap px-2 py-2">{row.fileNo}</TableCell>
+                    <TableCell className="whitespace-normal break-words max-w-xs px-2 py-2">{row.applicantName}</TableCell>
+                    <TableCell className="whitespace-normal break-words max-w-xs px-2 py-2">{row.siteName}</TableCell>
+                    <TableCell className="whitespace-nowrap px-2 py-2">{row.fileFirstRemittanceDate}</TableCell>
+                    <TableCell className="whitespace-nowrap px-2 py-2">{row.fileStatus}</TableCell>
+                    <TableCell className="whitespace-nowrap px-2 py-2">{row.sitePurpose}</TableCell>
+                    <TableCell className="whitespace-nowrap px-2 py-2">{row.siteWorkStatus}</TableCell>
+                    <TableCell className="text-right font-mono px-2 py-2">{row.siteTotalExpenditure}</TableCell>
+                    <TableCell className="text-center px-2 py-2">
                         <Tooltip>
                             <TooltipTrigger asChild>
                                <Button variant="ghost" size="icon" onClick={() => onViewDetailsClick(row.fileNo)}>
@@ -107,7 +113,7 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={10} className="h-24 text-center">
                     No results found for the selected filters.
                   </TableCell>
                 </TableRow>
