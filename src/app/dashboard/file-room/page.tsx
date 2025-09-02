@@ -63,20 +63,18 @@ export default function FileManagerPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex-grow w-full">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search all fields by File No, Applicant, Site, Purpose, Status..."
-                  className="w-full rounded-lg bg-background pl-10 shadow-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+       <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="relative flex-grow w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search all fields by File No, Applicant, Site, Purpose, Status..."
+                className="w-full rounded-lg bg-background pl-10 shadow-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             {canCreate && (
               <Button onClick={() => router.push('/dashboard/data-entry')} className="w-full sm:w-auto shrink-0">
@@ -84,8 +82,10 @@ export default function FileManagerPage() {
               </Button>
             )}
           </div>
-        </CardHeader>
-        <CardContent>
+        </CardContent>
+      </Card>
+      <Card className="shadow-lg">
+        <CardContent className="pt-6">
           <FileDatabaseTable 
             searchTerm={searchTerm} 
             fileEntries={depositWorkEntries} 

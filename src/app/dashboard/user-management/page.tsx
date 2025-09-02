@@ -135,16 +135,15 @@ export default function UserManagementPage() {
     <div className="space-y-6">
       {canManage && (
         <Card>
-          <CardHeader>
-            <CardTitle>Create New User</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-4">
-            <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
-                <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
-            </Button>
-            <Button onClick={() => setIsStaffFormOpen(true)}>
-                <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
-            </Button>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
+                  <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
+              </Button>
+              <Button onClick={() => setIsStaffFormOpen(true)}>
+                  <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

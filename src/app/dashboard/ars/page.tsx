@@ -357,8 +357,8 @@ export default function ArsPage() {
   return (
     <div className="space-y-6">
       <TooltipProvider>
-       <Card className="shadow-lg">
-        <CardHeader>
+       <Card>
+        <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="relative flex-grow min-w-[250px] order-2 sm:order-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -402,8 +402,10 @@ export default function ArsPage() {
               </Popover>
               <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
             </div>
-        </CardHeader>
-        <CardContent>
+        </CardContent>
+       </Card>
+       <Card className="shadow-lg">
+        <CardContent className="pt-6">
           <Table>
             <TableHeader><TableRow>
                 <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead>Name of Site</TableHead>
