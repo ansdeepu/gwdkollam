@@ -2,7 +2,7 @@
 // src/app/dashboard/layout.tsx
 "use client";
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   SidebarProvider,
@@ -11,21 +11,42 @@ import {
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
 import { useAuth, updateUserLastActive } from '@/hooks/useAuth'; 
-import { Loader2 } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation.tsx';
 import { PageHeaderProvider, usePageHeader } from '@/hooks/usePageHeader';
+import { format } from 'date-fns';
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
 
 function HeaderContent() {
   const { title, description } = usePageHeader();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, []);
+
+
   return (
-    <div className="flex-1">
-      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-      {description && <p className="text-sm text-muted-foreground">{description}</p>}
-    </div>
+    <>
+      <div className="flex items-center gap-4">
+        <SidebarTrigger className="md:hidden" />
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        <Clock className="h-4 w-4" />
+        <span>{format(currentTime, 'dd/MM/yyyy, hh:mm:ss a')}</span>
+      </div>
+    </>
   );
 }
 
@@ -123,8 +144,7 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
-           <header className="sticky top-0 z-10 flex h-[57px] items-center gap-4 border-b bg-background/95 px-6 backdrop-blur-sm">
-                <SidebarTrigger className="md:hidden" />
+           <header className="sticky top-0 z-10 flex h-[57px] items-center justify-between gap-4 border-b bg-background/95 px-6 backdrop-blur-sm">
                 <HeaderContent />
             </header>
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
