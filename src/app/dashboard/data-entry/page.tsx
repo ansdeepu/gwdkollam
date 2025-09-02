@@ -285,15 +285,17 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-            <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
-            <p className="text-muted-foreground">{pageDescription}</p>
+      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
+        <div className="flex justify-between items-start">
+          <div>
+              <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+              <p className="text-muted-foreground">{pageDescription}</p>
+          </div>
+          <Button variant="destructive" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+          </Button>
         </div>
-        <Button variant="destructive" size="sm" onClick={() => router.back()}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-        </Button>
       </div>
       <Card className="shadow-lg">
         <CardContent className="pt-6">

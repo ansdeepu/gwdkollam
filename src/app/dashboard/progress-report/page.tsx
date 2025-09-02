@@ -640,7 +640,7 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-       <div className="space-y-2">
+      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
         <h1 className="text-3xl font-bold tracking-tight">Progress Reports</h1>
         <p className="text-muted-foreground">Generate monthly or periodic progress reports for various schemes and services.</p>
       </div>

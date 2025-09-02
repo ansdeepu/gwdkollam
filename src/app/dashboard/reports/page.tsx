@@ -1,3 +1,4 @@
+
 // src/app/dashboard/reports/page.tsx
 "use client";
 
@@ -451,7 +452,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
+      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
         <h1 className="text-3xl font-bold tracking-tight">Site-Wise Reports</h1>
         <p className="text-muted-foreground">
             Generate custom reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
@@ -463,7 +464,7 @@ export default function ReportsPage() {
           <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5 text-primary" />Report Filters</CardTitle>
           <CardDescription>Refine your report by applying various filters below.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                  <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
@@ -496,7 +497,7 @@ export default function ReportsPage() {
                     </PopoverContent>
                 </Popover>
             </div>
-             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
                     <SelectContent>
@@ -532,11 +533,11 @@ export default function ReportsPage() {
                     {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
                     </SelectContent>
                 </Select>
+                 <div className="flex justify-end gap-2 p-0 pt-4">
+                    <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
+                    <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
+                </div>
             </div>
-             <CardFooter className="flex justify-end gap-2 p-0 pt-4">
-                <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
-                <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
-            </CardFooter>
         </CardContent>
       </Card>
 
@@ -702,7 +703,7 @@ export default function ReportsPage() {
               <div className="pt-2">
                  <h4 className="text-md font-semibold text-primary mb-1 border-b pb-1">File Status & Remarks:</h4>
                 {renderDetail("File Status", viewItem?.fileStatus)}
-                {renderDetail("Remarks", viewItem?.remarks)}
+                {renderDetail("Final Remarks", viewItem?.remarks)}
               </div>
             </div>
           </ScrollArea>
