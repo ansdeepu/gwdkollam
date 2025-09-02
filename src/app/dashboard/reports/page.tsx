@@ -450,16 +450,16 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Site-Wise Reports</h1>
+        <p className="text-muted-foreground">
+            Generate custom site-wise reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
+        </p>
+      </div>
+
       <Card className="shadow-lg no-print">
         <CardHeader>
-          <CardTitle>Site-Wise Reports</CardTitle>
-          <CardDescription>Generate custom site-wise reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}</CardDescription>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4">
-              <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
-                  <Button onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
-              </div>
-          </div>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <Popover>
@@ -529,7 +529,11 @@ export default function ReportsPage() {
               {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Button onClick={handleSearch} className="w-full xl:col-span-3 bg-primary hover:bg-primary/90 text-primary-foreground">Apply Filters</Button>
+          <div className="flex items-center gap-2 xl:col-span-3">
+            <Button onClick={handleSearch} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Apply Filters</Button>
+            <Button variant="outline" onClick={handleExportExcel} className="w-full"><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
+            <Button onClick={handleResetFilters} variant="destructive" className="w-full"><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
+          </div>
         </CardContent>
       </Card>
 

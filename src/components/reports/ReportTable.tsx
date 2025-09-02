@@ -1,3 +1,4 @@
+
 // src/components/reports/ReportTable.tsx
 "use client";
 
@@ -69,9 +70,9 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-auto max-h-[60vh]">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-secondary z-10">
               <TableRow>
                 <TableHead onClick={() => requestSort('fileNo')} className="cursor-pointer">File No {getSortIndicator('fileNo')}</TableHead>
                 <TableHead onClick={() => requestSort('applicantName')} className="cursor-pointer">Applicant {getSortIndicator('applicantName')}</TableHead>
