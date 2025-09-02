@@ -35,7 +35,7 @@ export default function ArsEntryPage() {
     const fileNoToEdit = searchParams.get('fileNo');
     const siteNameToEdit = searchParams.get('siteName');
     
-    const { isLoading: entriesLoading, addFileEntry, getFileEntry, fetchEntryForEditing } = useFileEntries();
+    const { isLoading: entriesLoading, addFileEntry, fetchEntryForEditing } = useFileEntries();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
