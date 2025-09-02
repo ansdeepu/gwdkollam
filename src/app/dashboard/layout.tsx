@@ -23,7 +23,7 @@ function HeaderContent() {
   const { title, description } = usePageHeader();
   return (
     <div className="flex-1">
-      <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
       {description && <p className="text-sm text-muted-foreground">{description}</p>}
     </div>
   );
