@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    allowedDevOrigins: [
+      'https://*.cloudworkstations.dev',
+      'https://*.firebase.studio',
+    ],
+  },
   transpilePackages: ['zod'],
   reactStrictMode: true,
   typescript: {
@@ -43,7 +49,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https'
         hostname: 'i.postimg.cc',
         port: '',
         pathname: '/**',
@@ -51,5 +57,5 @@ const nextConfig = {
     ],
   },
 };
-// Cache invalidation comment: 1756646190001
+// Cache invalidation comment: 1756643762000
 module.exports = nextConfig;
