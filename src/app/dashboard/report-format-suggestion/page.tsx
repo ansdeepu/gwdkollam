@@ -1,7 +1,7 @@
 
 // src/app/dashboard/report-format-suggestion/page.tsx
 "use client";
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,12 +16,18 @@ import { CalendarIcon, Filter, RotateCcw, FileDown, Loader2 } from 'lucide-react
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { DataEntryFormData } from '@/lib/schemas';
+import { usePageHeader } from '@/hooks/usePageHeader';
 
 interface GeneratedReportRow {
   [key: string]: string | number | undefined | null;
 }
 
 export default function CustomReportBuilderPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Report Builder', 'Create a custom report by selecting the columns you need.');
+  }, [setHeader]);
+
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const { toast } = useToast();
   const { fileEntries: allEntries, isLoading: entriesLoading } = useFileEntries();
@@ -153,13 +159,13 @@ export default function CustomReportBuilderPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Report Builder</h1>
-        <p className="text-muted-foreground">
-          Select report filters & fields. Choose a date range (based on first remittance date) and the columns you want to include in your custom report. If no date range is selected, all data will be considered.
-        </p>
-      </div>
       <Card>
+        <CardHeader>
+          <CardTitle>Report Filters</CardTitle>
+           <CardDescription>
+             Choose a date range (based on first remittance date) to filter the entries. If no date range is selected, all data will be considered.
+           </CardDescription>
+        </CardHeader>
         <CardContent className="space-y-8 pt-6">
           <div className="flex flex-wrap items-center gap-4">
               <Popover>
@@ -182,13 +188,20 @@ export default function CustomReportBuilderPage() {
                     <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
                 </PopoverContent>
             </Popover>
+             <Button onClick={handleClear} variant="outline">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Clear Filters
+              </Button>
           </div>
-          <div className="pt-8 border-t">
-            <div className="flex justify-between items-center mb-4">
-                <div>
-                    <h3 className="text-lg font-semibold">Available Fields:</h3>
-                </div>
-            </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle>Available Fields</CardTitle>
+            <CardDescription>Select the columns you want to include in your report.</CardDescription>
+        </CardHeader>
+        <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {reportableFields.map(field => (
                 <div
@@ -215,46 +228,45 @@ export default function CustomReportBuilderPage() {
                   {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
                   {isGenerating ? 'Generating...' : 'Generate Report'}
               </Button>
-              <Button onClick={handleClear} variant="outline">
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Clear Filters & Selection
-              </Button>
             </div>
-          </div>
-
-          {reportData.length > 0 && (
-            <div className="pt-8 border-t">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Generated Report ({reportData.length} rows)</h3>
-                <Button onClick={handleExportExcel}>
-                  <FileDown className="mr-2 h-4 w-4" />
-                  Export to Excel
-                </Button>
-              </div>
-              <div className="overflow-x-auto border rounded-lg max-h-[60vh]">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-secondary">
-                    <TableRow>
-                      {reportHeaders.map(header => <TableHead key={header}>{header}</TableHead>)}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {reportData.map((row, rowIndex) => (
-                      <TableRow key={rowIndex}>
-                        {reportHeaders.map(header => (
-                          <TableCell key={`${header}-${rowIndex}`} className="whitespace-nowrap">
-                            {row[header] !== null && row[header] !== undefined ? String(row[header]) : 'N/A'}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
+
+      {reportData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Generated Report ({reportData.length} rows)</CardTitle>
+              <Button onClick={handleExportExcel}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Export to Excel
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto border rounded-lg max-h-[60vh]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-secondary">
+                  <TableRow>
+                    {reportHeaders.map(header => <TableHead key={header}>{header}</TableHead>)}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reportData.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {reportHeaders.map(header => (
+                        <TableCell key={`${header}-${rowIndex}`} className="whitespace-nowrap">
+                          {row[header] !== null && row[header] !== undefined ? String(row[header]) : 'N/A'}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

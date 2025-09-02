@@ -21,8 +21,14 @@ import NewUserForm from "@/components/admin/NewUserForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import type { NewUserByAdminFormData } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 export default function UserManagementPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('User Management', 'Oversee user accounts, manage roles, and perform administrative actions.');
+  }, [setHeader]);
+
   const { user, isLoading, fetchAllUsers, updateUserApproval, updateUserRole, deleteUserDocument, batchDeleteUserDocuments, createUserByAdmin } = useAuth();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const router = useRouter();
@@ -127,16 +133,6 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <p className="text-muted-foreground">
-          {canManage 
-            ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions."
-            : "View all registered users in the system. (Read-only)"
-          }
-        </p>
-      </div>
-
       {canManage && (
         <Card>
           <CardHeader>

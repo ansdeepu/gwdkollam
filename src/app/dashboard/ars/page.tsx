@@ -25,6 +25,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -56,6 +57,11 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 
 
 export default function ArsPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Artificial Recharge Schemes (ARS)', 'A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.');
+  }, [setHeader]);
+
   const { addFileEntry, getFileEntry, clearAllArsData } = useFileEntries();
   const { arsSites, isLoading: entriesLoading, refreshArsEntries } = useArsEntries(); // Use the new hook
   const [searchTerm, setSearchTerm] = useState("");
@@ -350,10 +356,6 @@ export default function ArsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Artificial Recharge Schemes (ARS)</h1>
-        <p className="text-muted-foreground">A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.</p>
-      </div>
       <TooltipProvider>
        <Card className="shadow-lg">
         <CardHeader>

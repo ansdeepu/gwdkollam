@@ -2,7 +2,7 @@
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, FilePlus2 } from "lucide-react";
@@ -14,11 +14,21 @@ import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
 import { parseISO, isValid } from 'date-fns';
+import { usePageHeader } from '@/hooks/usePageHeader';
 
 export default function FileManagerPage() {
+  const { setHeader } = usePageHeader();
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    const description = user?.role === 'supervisor'
+      ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
+      : 'List of all non-ARS files in the system, sorted by most recent remittance.';
+    setHeader('Deposit Works Files', description);
+  }, [setHeader, user]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const { fileEntries } = useFileEntries(); 
-  const { user } = useAuth();
   const router = useRouter();
   
   const canCreate = user?.role === 'editor';
@@ -53,15 +63,6 @@ export default function FileManagerPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Deposit Works Files</h1>
-        <p className="text-muted-foreground">
-            {user?.role === 'supervisor'
-              ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
-              : `List of all non-ARS files in the system, sorted by most recent remittance. Total Files: ${depositWorkEntries.length}`
-            }
-        </p>
-      </div>
       <Card className="shadow-lg">
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

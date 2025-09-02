@@ -6,8 +6,15 @@ import PendingUpdatesTable from "@/components/admin/PendingUpdatesTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ShieldAlert } from "lucide-react";
+import { usePageHeader } from "@/hooks/usePageHeader";
+import { useEffect } from "react";
 
 export default function PendingUpdatesPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Pending Supervisor Updates', 'Review and approve or reject site updates submitted by supervisors to finalize the changes.');
+  }, [setHeader]);
+
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
@@ -30,10 +37,6 @@ export default function PendingUpdatesPage() {
   
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Pending Supervisor Updates</h1>
-        <p className="text-muted-foreground">Review and approve or reject site updates submitted by supervisors to finalize the changes.</p>
-      </div>
       <Card>
         <CardContent className="pt-6">
           <PendingUpdatesTable />

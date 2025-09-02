@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
+import { usePageHeader } from '@/hooks/usePageHeader';
 
 // Define the structure for the progress report data
 interface ProgressStats {
@@ -180,6 +181,11 @@ const WellTypeProgressTable = ({
 
 
 export default function ProgressReportPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Progress Reports', 'Generate monthly or periodic progress reports for various schemes and services.');
+  }, [setHeader]);
+
   const { reportEntries: fileEntries, isReportLoading: entriesLoading } = useAllFileEntriesForReports();
   const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
@@ -640,10 +646,6 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Progress Reports</h1>
-        <p className="text-muted-foreground">Generate monthly or periodic progress reports for various schemes and services.</p>
-      </div>
       <Card className="shadow-lg no-print">
         <CardHeader>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">

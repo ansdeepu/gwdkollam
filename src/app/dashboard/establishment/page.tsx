@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
 import * as XLSX from "xlsx";
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 const isPlaceholderUrl = (url?: string | null): boolean => {
   if (!url) return false;
@@ -39,6 +40,11 @@ const formatDateForSearch = (dateInput: Date | string | null | undefined): strin
 };
 
 export default function EstablishmentPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Establishment', 'Manage all staff members of the Ground Water Department, Kollam.');
+  }, [setHeader]);
+
   const { user, isLoading: authLoading } = useAuth();
   const { 
     staffMembers, 
@@ -299,10 +305,6 @@ export default function EstablishmentPage() {
   
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Establishment</h1>
-        <p className="text-muted-foreground">Manage all staff members of the Ground Water Department, Kollam.</p>
-      </div>
       <div className="my-4 flex flex-col sm:flex-row items-center gap-4">
         <div className="relative flex-grow w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

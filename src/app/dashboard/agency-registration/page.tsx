@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 
 const AgencyTable = ({ 
@@ -306,6 +307,11 @@ const RigAccordionItem = ({
 
 
 export default function AgencyRegistrationPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Rig Registrations', 'Manage agency and rig registrations.');
+  }, [setHeader]);
+
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -905,10 +911,6 @@ export default function AgencyRegistrationPage() {
   // LIST VIEW
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Rig Registrations</h1>
-        <p className="text-muted-foreground">Manage agency and rig registrations.</p>
-      </div>
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

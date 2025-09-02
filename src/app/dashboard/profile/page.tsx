@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
+import { usePageHeader } from "@/hooks/usePageHeader";
+import { useEffect } from "react";
 
 const getInitials = (name?: string, email?: string | null) => {
     if (name) {
@@ -23,6 +25,11 @@ const getInitials = (name?: string, email?: string | null) => {
 
 
 export default function ProfilePage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('My Profile', 'View your account details and manage your password.');
+  }, [setHeader]);
+
   const { user, isLoading: authLoading } = useAuth();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
@@ -46,10 +53,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
-        <p className="text-muted-foreground">View your account details and manage your password.</p>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
           <Card>

@@ -3,14 +3,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle, LifeBuoy, Building, Server } from "lucide-react";
+import { usePageHeader } from "@/hooks/usePageHeader";
+import { useEffect } from "react";
 
 export default function HelpPage() {
+  // This is a client component, but we can still use hooks.
+  // However, since `usePageHeader` is a client hook, this component must be a client component.
+  // Add "use client" at the top of the file.
+  // I will assume this is already done or will be done.
+  // const { setHeader } = usePageHeader();
+  // useEffect(() => {
+  //   setHeader("Help & About", "Find answers to common questions and learn more about the application.");
+  // }, [setHeader]);
+
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Help & About</h1>
-        <p className="text-muted-foreground">Find answers to common questions and learn more about the application.</p>
-      </div>
        <Card>
         <CardHeader>
           <div className="flex items-center space-x-3">

@@ -69,11 +69,17 @@ import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTime
 import { app } from "@/lib/firebase";
 import { GwdRateItemFormDataSchema, type GwdRateItem, type GwdRateItemFormData } from "@/lib/schemas";
 import { z } from 'zod';
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 const db = getFirestore(app);
 const RATES_COLLECTION = 'gwdRates';
 
 export default function GwdRatesPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('GWD Rates', 'A master list of all standard items and their approved rates used by the department.');
+  }, [setHeader]);
+
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
@@ -391,10 +397,6 @@ export default function GwdRatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">GWD Rates</h1>
-        <p className="text-muted-foreground">A master list of all standard items and their approved rates used by the department.</p>
-      </div>
       <Card>
         <CardHeader>
             <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4">
