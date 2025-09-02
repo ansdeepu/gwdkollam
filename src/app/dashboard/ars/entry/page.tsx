@@ -89,11 +89,15 @@ export default function ArsEntryPage() {
                             ? site.workStatus as NewArsEntryFormData['workStatus']
                             : undefined;
 
+                        const validSchemeType = site.arsTypeOfScheme && arsTypeOfSchemeOptions.includes(site.arsTypeOfScheme as any)
+                            ? site.arsTypeOfScheme as NewArsEntryFormData['arsTypeOfScheme']
+                            : undefined;
+
                         form.reset({
                             fileNo: fileNoToEdit,
                             nameOfSite: site.nameOfSite,
                             constituency: fileEntry.constituency,
-                            arsTypeOfScheme: site.arsTypeOfScheme ?? undefined,
+                            arsTypeOfScheme: validSchemeType,
                             arsPanchayath: site.arsPanchayath ?? undefined,
                             arsBlock: site.arsBlock ?? undefined,
                             latitude: site.latitude,
