@@ -654,13 +654,14 @@ export default function DashboardPage() {
     const completedThisMonthSites = Array.from(uniqueCompletedSites.values());
 
     const createSummary = (sites: typeof completedThisMonthSites): WorkSummary => {
-        const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
-          acc[purpose as SitePurpose] = 0;
+        const allPurposesForMonthStats: SitePurpose[] = [...sitePurposeOptions];
+        const byPurpose = allPurposesForMonthStats.reduce((acc, purpose) => {
+          acc[purpose] = 0;
           return acc;
         }, {} as Record<SitePurpose, number>);
 
         sites.forEach(site => {
-          if (site.purpose && sitePurposeOptions.includes(site.purpose as SitePurpose)) {
+          if (site.purpose && allPurposesForMonthStats.includes(site.purpose as SitePurpose)) {
             byPurpose[site.purpose as SitePurpose]++;
           }
         });
@@ -694,8 +695,9 @@ export default function DashboardPage() {
 
 
   const supervisorOngoingWorks = useMemo(() => {
-    const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
-        acc[purpose as SitePurpose] = 0;
+    const allPurposesForSupervisorWorks: SitePurpose[] = [...sitePurposeOptions];
+    const byPurpose = allPurposesForSupervisorWorks.reduce((acc, purpose) => {
+        acc[purpose] = 0;
         return acc;
     }, {} as Record<SitePurpose, number>);
     
@@ -717,7 +719,7 @@ export default function DashboardPage() {
                     purpose: site.purpose,
                     supervisorName: site.supervisorName,
                 });
-                if(site.purpose && (sitePurposeOptions.includes(site.purpose as SitePurpose))) {
+                if(site.purpose && (allPurposesForSupervisorWorks.includes(site.purpose as SitePurpose))) {
                     byPurpose[site.purpose as SitePurpose]++;
                 }
             }
@@ -1581,7 +1583,7 @@ export default function DashboardPage() {
                        {sitePurposeOptions
                       .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
                       .map((purpose) => (
-                        <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose as SitePurpose, 'Completed')}>
+                        <button key={`${purpose}-completed`} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose as SitePurpose, 'Completed')}>
                           <span className="font-medium">{purpose}</span>
                           <span className="font-bold text-green-700">{currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0}</span>
                         </button>
@@ -1607,7 +1609,7 @@ export default function DashboardPage() {
                        {sitePurposeOptions
                       .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
                       .map((purpose) => (
-                        <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose as SitePurpose, 'Ongoing')}>
+                        <button key={`${purpose}-ongoing`} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose as SitePurpose, 'Ongoing')}>
                           <span className="font-medium">{purpose}</span>
                           <span className="font-bold text-orange-700">{currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0}</span>
                         </button>
@@ -1968,14 +1970,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
-
-    
-
-
-
-
-    
-
-    
