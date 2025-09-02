@@ -303,6 +303,7 @@ export default function ArsPage() {
                 arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
                 additionalAS: 'No', // Add missing field
                 drillingRemarks: "", // Add missing field
+                constituency: (firstRow['Constituency'] as Constituency),
               };
             });
 

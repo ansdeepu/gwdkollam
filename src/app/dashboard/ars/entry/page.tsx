@@ -92,11 +92,14 @@ export default function ArsEntryPage() {
                         const validSchemeType = site.arsTypeOfScheme && arsTypeOfSchemeOptions.includes(site.arsTypeOfScheme as any)
                             ? site.arsTypeOfScheme as NewArsEntryFormData['arsTypeOfScheme']
                             : undefined;
+                        
+                        // Use constituency from the site first, then fallback to the file entry's constituency
+                        const constituency = site.constituency || fileEntry.constituency;
 
                         form.reset({
                             fileNo: fileNoToEdit,
                             nameOfSite: site.nameOfSite,
-                            constituency: fileEntry.constituency,
+                            constituency: constituency,
                             arsTypeOfScheme: validSchemeType,
                             arsPanchayath: site.arsPanchayath ?? undefined,
                             arsBlock: site.arsBlock ?? undefined,
@@ -163,6 +166,7 @@ export default function ArsEntryPage() {
             // Adding missing required fields with default values
             additionalAS: 'No',
             drillingRemarks: "",
+            constituency: data.constituency,
         };
 
         try {
