@@ -1528,89 +1528,93 @@ export default function DashboardPage() {
       )}
 
       <Card>
-          <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarCheck className="h-5 w-5 text-primary" />
-                 Work Progress for {format(workReportMonth, 'MMMM yyyy')}
-              </CardTitle>
-              <CardDescription>
-                Summary of completed and ongoing work. Select a month to view its report.
-              </CardDescription>
-             <div className="pt-4 border-t mt-4">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant={"outline"} className="w-[200px] justify-start text-left font-normal">
-                      <CalendarIconLucide className="mr-2 h-4 w-4" />{format(workReportMonth, 'MMMM yyyy')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={workReportMonth}
-                        onSelect={(date) => date && setWorkReportMonth(date)}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={2020}
-                        toYear={new Date().getFullYear()}
-                    />
-                  </PopoverContent>
-                </Popover>
-             </div>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-base font-semibold flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-green-600"/>
-                      Completed in {format(workReportMonth, 'MMMM')}
-                    </h3>
-                    <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('completed')} disabled={(currentMonthStats?.completedSummary.totalCount ?? 0) === 0}>View All ({currentMonthStats?.completedSummary.totalCount ?? 0})</Button>
-                  </div>
-                  <div className="space-y-2">
-                    { currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
-                       <div className="grid grid-cols-2 gap-2">
-                         {[...sitePurposeOptions, 'ARS']
-                        .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
-                        .map((purpose) => (
-                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose as SitePurpose, 'Completed')}>
-                            <span className="font-medium">{purpose}</span>
-                            <span className="font-bold text-green-700">{currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic text-center py-4">No works completed this month.</p>
-                    )}
-                  </div>
-              </div>
+        <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex-grow">
+                    <CardTitle className="flex items-center gap-2">
+                        <CalendarCheck className="h-5 w-5 text-primary" />
+                        Work Progress for {format(workReportMonth, 'MMMM yyyy')}
+                    </CardTitle>
+                    <CardDescription>
+                        Summary of completed and ongoing work.
+                    </CardDescription>
+                </div>
+                <div className="shrink-0">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant={"outline"} className="w-full sm:w-[200px] justify-start text-left font-normal">
+                                <CalendarIconLucide className="mr-2 h-4 w-4" />{format(workReportMonth, 'MMMM yyyy')}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                                mode="single"
+                                selected={workReportMonth}
+                                onSelect={(date) => date && setWorkReportMonth(date)}
+                                initialFocus
+                                captionLayout="dropdown-buttons"
+                                fromYear={2020}
+                                toYear={new Date().getFullYear()}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+            </div>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-base font-semibold flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-600"/>
+                    Completed in {format(workReportMonth, 'MMMM')}
+                  </h3>
+                  <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('completed')} disabled={(currentMonthStats?.completedSummary.totalCount ?? 0) === 0}>View All ({currentMonthStats?.completedSummary.totalCount ?? 0})</Button>
+                </div>
+                <div className="space-y-2">
+                  { currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
+                     <div className="grid grid-cols-2 gap-2">
+                       {[...sitePurposeOptions, 'ARS']
+                      .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
+                      .map((purpose) => (
+                        <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose as SitePurpose, 'Completed')}>
+                          <span className="font-medium">{purpose}</span>
+                          <span className="font-bold text-green-700">{currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic text-center py-4">No works completed this month.</p>
+                  )}
+                </div>
+            </div>
 
-              <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-base font-semibold flex items-center gap-2">
-                      <Hourglass className="h-5 w-5 text-orange-600"/>
-                      Total Ongoing Works
-                    </h3>
-                    <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('ongoing')} disabled={(currentMonthStats?.ongoingSummary.totalCount ?? 0) === 0}>View All ({currentMonthStats?.ongoingSummary.totalCount ?? 0})</Button>
-                  </div>
-                  <div className="space-y-2">
-                    { currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
-                       <div className="grid grid-cols-2 gap-2">
-                         {[...sitePurposeOptions, 'ARS']
-                        .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
-                        .map((purpose) => (
-                          <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose as SitePurpose, 'Ongoing')}>
-                            <span className="font-medium">{purpose}</span>
-                            <span className="font-bold text-orange-700">{currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic text-center py-4">No ongoing works found.</p>
-                    )}
-                  </div>
-              </div>
-          </CardContent>
-      </Card>
+            <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-base font-semibold flex items-center gap-2">
+                    <Hourglass className="h-5 w-5 text-orange-600"/>
+                    Total Ongoing Works
+                  </h3>
+                  <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('ongoing')} disabled={(currentMonthStats?.ongoingSummary.totalCount ?? 0) === 0}>View All ({currentMonthStats?.ongoingSummary.totalCount ?? 0})</Button>
+                </div>
+                <div className="space-y-2">
+                  { currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
+                     <div className="grid grid-cols-2 gap-2">
+                       {[...sitePurposeOptions, 'ARS']
+                      .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
+                      .map((purpose) => (
+                        <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose as SitePurpose, 'Ongoing')}>
+                          <span className="font-medium">{purpose}</span>
+                          <span className="font-bold text-orange-700">{currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic text-center py-4">No ongoing works found.</p>
+                  )}
+                </div>
+            </div>
+        </CardContent>
+    </Card>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         { (currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
