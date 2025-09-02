@@ -1,4 +1,3 @@
-
 // src/components/reports/ReportTable.tsx
 "use client";
 
@@ -70,35 +69,31 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        <div className="border rounded-lg overflow-x-auto">
-          <Table>
+        <div className="border rounded-lg">
+          <Table className="table-fixed w-full">
             <TableHeader className="bg-secondary">
               <TableRow>
-                <TableHead className="sticky top-0 bg-secondary z-10 px-2">Sl. No.</TableHead>
-                <TableHead onClick={() => requestSort('fileNo')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">File No {getSortIndicator('fileNo')}</TableHead>
-                <TableHead onClick={() => requestSort('applicantName')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Applicant Name {getSortIndicator('applicantName')}</TableHead>
-                <TableHead onClick={() => requestSort('siteName')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Site Name {getSortIndicator('siteName')}</TableHead>
-                <TableHead onClick={() => requestSort('fileFirstRemittanceDate')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Date of Remittance {getSortIndicator('fileFirstRemittanceDate')}</TableHead>
-                <TableHead onClick={() => requestSort('fileStatus')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">File Status {getSortIndicator('fileStatus')}</TableHead>
-                <TableHead onClick={() => requestSort('sitePurpose')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Site Purpose {getSortIndicator('sitePurpose')}</TableHead>
-                <TableHead onClick={() => requestSort('siteWorkStatus')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2">Site Work Status {getSortIndicator('siteWorkStatus')}</TableHead>
-                <TableHead className="sticky top-0 bg-secondary z-10 text-right px-2">Site Total Expenditure</TableHead>
-                <TableHead className="sticky top-0 bg-secondary z-10 text-center px-2">Actions</TableHead>
+                <TableHead className="sticky top-0 bg-secondary z-10 px-2 w-[6%]">Sl. No.</TableHead>
+                <TableHead onClick={() => requestSort('fileNo')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2 w-[12%]">File No {getSortIndicator('fileNo')}</TableHead>
+                <TableHead onClick={() => requestSort('applicantName')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2 w-[20%]">Applicant Name {getSortIndicator('applicantName')}</TableHead>
+                <TableHead onClick={() => requestSort('siteName')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2 w-[20%]">Site Name {getSortIndicator('siteName')}</TableHead>
+                <TableHead onClick={() => requestSort('fileFirstRemittanceDate')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2 w-[10%]">Date of Remittance {getSortIndicator('fileFirstRemittanceDate')}</TableHead>
+                <TableHead onClick={() => requestSort('fileStatus')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2 w-[12%]">File Status {getSortIndicator('fileStatus')}</TableHead>
+                <TableHead onClick={() => requestSort('siteWorkStatus')} className="sticky top-0 bg-secondary z-10 cursor-pointer px-2 w-[12%]">Site Work Status {getSortIndicator('siteWorkStatus')}</TableHead>
+                <TableHead className="sticky top-0 bg-secondary z-10 text-center px-2 w-[8%]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedData.length > 0 ? (
                 paginatedData.map((row, index) => (
                   <TableRow key={`${row.fileNo}-${row.siteName}-${index}`}>
-                    <TableCell className="px-2 py-2">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                    <TableCell className="font-medium whitespace-nowrap px-2 py-2">{row.fileNo}</TableCell>
-                    <TableCell className="whitespace-normal break-words max-w-xs px-2 py-2">{row.applicantName}</TableCell>
-                    <TableCell className="whitespace-normal break-words max-w-xs px-2 py-2">{row.siteName}</TableCell>
-                    <TableCell className="whitespace-nowrap px-2 py-2">{row.fileFirstRemittanceDate}</TableCell>
-                    <TableCell className="whitespace-nowrap px-2 py-2">{row.fileStatus}</TableCell>
-                    <TableCell className="whitespace-nowrap px-2 py-2">{row.sitePurpose}</TableCell>
-                    <TableCell className="whitespace-nowrap px-2 py-2">{row.siteWorkStatus}</TableCell>
-                    <TableCell className="text-right font-mono px-2 py-2">{row.siteTotalExpenditure}</TableCell>
+                    <TableCell className="px-2 py-2 text-center">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                    <TableCell className="font-medium whitespace-normal break-words px-2 py-2">{row.fileNo}</TableCell>
+                    <TableCell className="whitespace-normal break-words px-2 py-2">{row.applicantName}</TableCell>
+                    <TableCell className="whitespace-normal break-words px-2 py-2">{row.siteName}</TableCell>
+                    <TableCell className="whitespace-normal break-words px-2 py-2">{row.fileFirstRemittanceDate}</TableCell>
+                    <TableCell className="whitespace-normal break-words px-2 py-2">{row.fileStatus}</TableCell>
+                    <TableCell className="whitespace-normal break-words px-2 py-2">{row.siteWorkStatus}</TableCell>
                     <TableCell className="text-center px-2 py-2">
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -113,7 +108,7 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={10} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     No results found for the selected filters.
                   </TableCell>
                 </TableRow>
