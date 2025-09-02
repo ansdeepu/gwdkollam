@@ -227,7 +227,7 @@ export default function ArsPage() {
   }, [filteredSites, toast]);
 
   const handleDownloadTemplate = () => {
-    const templateData = [ { "File No": "Example/123", "Applicant Name": "Panchayath Office", "Constituency": "Kollam", "Name of Site": "Sample ARS Site", "Type of Scheme": "Check Dam", "Panchayath": "Sample Panchayath", "Block": "Sample Block", "Latitude": 8.8932, "Longitude": 76.6141, "Number of Structures": 1, "Storage Capacity (m3)": 500, "No. of Fillings": 2, "Estimate Amount": 500000, "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD", "AS/TS Amount": 450000, "Sanctioned Date": "15/01/2023", "Tendered Amount": 445000, "Awarded Amount": 440000, "Present Status": "Work in Progress", "Completion Date": "", "Expenditure (₹)": 200000, "No. of Beneficiaries": "50 families", "Remarks": "Work ongoing", } ];
+    const templateData = [ { "File No": "Example/123", "Name of Site": "Sample ARS Site", "Constituency": "Kollam", "Type of Scheme": "Check Dam", "Panchayath": "Sample Panchayath", "Block": "Sample Block", "Latitude": 8.8932, "Longitude": 76.6141, "Number of Structures": 1, "Storage Capacity (m3)": 500, "No. of Fillings": 2, "Estimate Amount": 500000, "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD", "AS/TS Amount": 450000, "Sanctioned Date": "15/01/2023", "Tendered Amount": 445000, "Awarded Amount": 440000, "Present Status": "Work in Progress", "Completion Date": "", "Expenditure (₹)": 200000, "No. of Beneficiaries": "50 families", "Remarks": "Work ongoing", } ];
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "ARS_Template");
@@ -318,7 +318,7 @@ export default function ArsPage() {
             } else {
               updatedFile = { 
                 fileNo: fileNo, 
-                applicantName: String(firstRow['Applicant Name'] || `Applicant for ${newSiteDetails[0].nameOfSite}`), 
+                applicantName: `ARS Import for ${fileNo}`, 
                 constituency: (firstRow['Constituency'] as Constituency), 
                 applicationType: 'Government_Others', 
                 fileStatus: 'File Under Process', 
