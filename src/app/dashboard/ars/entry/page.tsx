@@ -93,7 +93,7 @@ export default function ArsEntryPage() {
                             fileNo: fileNoToEdit,
                             nameOfSite: site.nameOfSite,
                             constituency: fileEntry.constituency,
-                            arsTypeOfScheme: site.arsTypeOfScheme,
+                            arsTypeOfScheme: site.arsTypeOfScheme ?? undefined,
                             arsPanchayath: site.arsPanchayath,
                             arsBlock: site.arsBlock,
                             latitude: site.latitude,
