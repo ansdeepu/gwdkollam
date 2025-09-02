@@ -1,10 +1,9 @@
-
 // src/app/dashboard/reports/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -452,15 +451,12 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Site-Wise Reports</h1>
-          <p className="text-muted-foreground">
-              Generate custom reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
-          </p>
-        </div>
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Site-Wise Reports</h1>
+        <p className="text-muted-foreground">
+            Generate custom reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
+        </p>
       </div>
-
 
       <Card className="shadow-lg no-print">
         <CardHeader>
@@ -468,7 +464,7 @@ export default function ReportsPage() {
           <CardDescription>Refine your report by applying various filters below.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                  <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
                     <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
@@ -715,4 +711,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
