@@ -1,7 +1,7 @@
 // src/app/dashboard/layout.tsx
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   SidebarProvider,
@@ -12,11 +12,21 @@ import AppSidebar from '@/components/layout/AppSidebar';
 import { useAuth } from '@/hooks/useAuth'; 
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { updateUserLastActive } from '@/hooks/useAuth';
 import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation.tsx';
+import { PageHeaderProvider, usePageHeader } from '@/hooks/usePageHeader';
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
+
+function HeaderContent() {
+  const { title, description } = usePageHeader();
+  return (
+    <div className="flex-1">
+      <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+    </div>
+  );
+}
 
 function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -112,11 +122,9 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
-           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-6 backdrop-blur-sm">
+           <header className="sticky top-0 z-10 flex h-[57px] items-center gap-4 border-b bg-background/95 px-6 backdrop-blur-sm">
                 <SidebarTrigger className="md:hidden" />
-                <div className="flex-1">
-                    {/* Placeholder for potential breadcrumbs or page titles */}
-                </div>
+                <HeaderContent />
             </header>
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
             {children}
@@ -131,7 +139,9 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <PageNavigationProvider>
-      <InnerDashboardLayout>{children}</InnerDashboardLayout>
+      <PageHeaderProvider>
+        <InnerDashboardLayout>{children}</InnerDashboardLayout>
+      </PageHeaderProvider>
     </PageNavigationProvider>
   );
 }

@@ -82,6 +82,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import Link from 'next/link';
+import { usePageHeader } from '@/hooks/usePageHeader';
 
 // Define the exact order for the report as seen in the image
 const dashboardWorkStatusOrder: SiteWorkStatus[] = [
@@ -183,6 +184,11 @@ const getColorClass = (nameOrEmail: string): string => {
 
 
 export default function DashboardPage() {
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader('Dashboard', 'A high-level overview of all departmental activities and key metrics.');
+  }, [setHeader]);
+
   const router = useRouter();
   const { fileEntries: filteredFileEntries, isLoading: filteredEntriesLoading } = useFileEntries();
   const { reportEntries: allFileEntries, isReportLoading } = useAllFileEntriesForReports();
@@ -1226,10 +1232,6 @@ export default function DashboardPage() {
   
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">A high-level overview of all departmental activities and key metrics.</p>
-      </div>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-6">
            <Card className="shadow-lg flex flex-col h-full">
@@ -1971,4 +1973,5 @@ export default function DashboardPage() {
     
 
     
+
 
