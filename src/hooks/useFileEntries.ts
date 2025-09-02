@@ -205,13 +205,14 @@ export function useFileEntries() {
     try {
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
+            console.warn(`[fetchEntryForEditing] No file found with fileNo: ${fileNo}`);
             return null;
         }
         const docSnap = querySnapshot.docs[0];
         const data = convertTimestampsToDates(docSnap.data());
         return { id: docSnap.id, ...data } as DataEntryFormData;
     } catch (error) {
-        console.error("Error fetching single document for editing:", error);
+        console.error(`[fetchEntryForEditing] Error fetching fileNo ${fileNo}:`, error);
         return null;
     }
   }, [user]);
