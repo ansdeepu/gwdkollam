@@ -115,10 +115,14 @@ const RigAccordionItem = ({
 
   const latestRenewal = useMemo(() => {
     if (!field.renewals || field.renewals.length === 0) return null;
-    return [...field.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0];
+    return [...field.renewals].sort((a, b) => {
+        const dateA = a.renewalDate ? new Date(a.renewalDate).getTime() : 0;
+        const dateB = b.renewalDate ? new Date(b.renewalDate).getTime() : 0;
+        return dateB - dateA;
+    })[0];
   }, [field.renewals]);
 
-  const lastEffectiveDate = latestRenewal ? new Date(latestRenewal.renewalDate) : (registrationDate ? new Date(registrationDate) : null);
+  const lastEffectiveDate = latestRenewal?.renewalDate ? new Date(latestRenewal.renewalDate) : (registrationDate ? new Date(registrationDate) : null);
 
   const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
     ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
