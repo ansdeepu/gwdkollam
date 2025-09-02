@@ -40,7 +40,7 @@ const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntry
       remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
       totalRemittance: 0, 
       siteDetails: [{
-        nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
+        nameOfSite: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
         estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
         additionalAS: 'No',
         tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",

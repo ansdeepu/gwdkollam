@@ -208,10 +208,25 @@ const optionalDate = z.preprocess((val) => {
 }, z.date().optional().nullable());
 
 
+export const constituencyOptions = [
+    "Chadayamangalam",
+    "Chathannoor",
+    "Chavara",
+    "Eravipuram",
+    "Kollam",
+    "Kottarakkara",
+    "Kundara",
+    "Kunnathur",
+    "Pathanapuram",
+    "Punalur"
+] as const;
+export type Constituency = typeof constituencyOptions[number];
+
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 
 export const SiteDetailSchema = z.object({
   nameOfSite: z.string().min(1, "Name of Site is required."),
+  constituency: z.enum(constituencyOptions).optional(),
   latitude: optionalNumber("Latitude must be a valid number."),
   longitude: optionalNumber("Longitude must be a valid number."),
   purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required."}),
@@ -357,20 +372,6 @@ export const PaymentDetailSchema = z.object({
     }
 });
 export type PaymentDetailFormData = z.infer<typeof PaymentDetailSchema>;
-
-export const constituencyOptions = [
-    "Chadayamangalam",
-    "Chathannoor",
-    "Chavara",
-    "Eravipuram",
-    "Kollam",
-    "Kottarakkara",
-    "Kundara",
-    "Kunnathur",
-    "Pathanapuram",
-    "Punalur"
-] as const;
-export type Constituency = typeof constituencyOptions[number];
 
 export const DataEntrySchema = z.object({
   id: z.string().optional(),
@@ -671,7 +672,7 @@ export const arsTypeOfSchemeOptions = [
 export const NewArsEntrySchema = z.object({
   fileNo: z.string().min(1, 'File No. is required.'),
   nameOfSite: z.string().min(1, 'Name of Site is required.'),
-  constituency: z.enum(constituencyOptions, { required_error: 'Constituency is required.' }),
+  constituency: z.enum(constituencyOptions).optional(),
   arsTypeOfScheme: z.enum(arsTypeOfSchemeOptions).optional(),
   arsPanchayath: z.string().optional(),
   arsBlock: z.string().optional(),

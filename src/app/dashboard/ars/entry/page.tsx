@@ -93,7 +93,6 @@ export default function ArsEntryPage() {
                             ? site.arsTypeOfScheme as NewArsEntryFormData['arsTypeOfScheme']
                             : undefined;
                         
-                        // Use constituency from the site first, then fallback to the file entry's constituency
                         const constituency = site.constituency || fileEntry.constituency;
 
                         form.reset({
@@ -140,6 +139,7 @@ export default function ArsEntryPage() {
         
         const siteData: SiteDetailFormData = {
             nameOfSite: data.nameOfSite, 
+            constituency: data.constituency,
             purpose: 'ARS', 
             isArsImport: true, 
             latitude: data.latitude, 
@@ -163,10 +163,8 @@ export default function ArsEntryPage() {
             arsAwardedAmount: data.arsAwardedAmount,
             supervisorUid: data.supervisorUid, 
             supervisorName: data.supervisorName,
-            // Adding missing required fields with default values
             additionalAS: 'No',
             drillingRemarks: "",
-            constituency: data.constituency,
         };
 
         try {
@@ -178,7 +176,6 @@ export default function ArsEntryPage() {
                 const fileToUpdate = await fetchEntryForEditing(fileNoToEdit);
                 if (!fileToUpdate) throw new Error("Original file not found for update.");
 
-                // If the site name was changed, check for uniqueness in the *same* file.
                 if (data.nameOfSite !== siteNameToEdit) {
                     const isDuplicate = fileToUpdate.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.isArsImport);
                     if (isDuplicate) {
@@ -199,7 +196,6 @@ export default function ArsEntryPage() {
                 let updatedFile: DataEntryFormData;
 
                 if (existingFile) {
-                    // Check for duplicate site name within the existing file
                     const isDuplicate = existingFile.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.isArsImport);
                     if (isDuplicate) {
                         form.setError("nameOfSite", { type: "manual", message: `An ARS site named "${data.nameOfSite}" already exists in this file.` });
@@ -207,7 +203,6 @@ export default function ArsEntryPage() {
                     }
                     updatedFile = { ...existingFile, constituency: data.constituency, siteDetails: [...(existingFile.siteDetails || []), siteData] };
                 } else {
-                    // This is a new file, no need to check for duplicates within it.
                     updatedFile = {
                         fileNo: data.fileNo, applicantName: `Applicant for ${data.nameOfSite}`, constituency: data.constituency,
                         applicationType: 'Government_Others', fileStatus: 'File Under Process', siteDetails: [siteData],
@@ -259,7 +254,7 @@ export default function ArsEntryPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} readOnly={isEditing} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                          <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC) <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                          <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                           <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Scheme</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined}><FormControl><SelectTrigger><SelectValue placeholder="Select Type of Scheme" /></SelectTrigger></FormControl><SelectContent>{arsTypeOfSchemeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                           <FormField name="arsPanchayath" control={form.control} render={({ field }) => (<FormItem><FormLabel>Panchayath</FormLabel><FormControl><Input placeholder="Panchayath Name" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsBlock" control={form.control} render={({ field }) => (<FormItem><FormLabel>Block</FormLabel><FormControl><Input placeholder="Block Name" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>)} />

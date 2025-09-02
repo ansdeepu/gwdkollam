@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -64,7 +65,7 @@ const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
 });
 
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
-  nameOfSite: "", latitude: undefined, longitude: undefined, purpose: undefined,
+  nameOfSite: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
   estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
   additionalAS: 'No',
   tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
@@ -352,7 +353,7 @@ export default function DataEntryFormComponent({
                         <div className="grid md:grid-cols-3 gap-6">
                            <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                            <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem><FormLabel>Name &amp; Address of Institution / Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                           <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC) <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                           <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                         </div>
                         <div className="grid md:grid-cols-2 gap-6">
                             <FormField control={form.control} name="phoneNo" render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
@@ -528,9 +529,10 @@ export default function DataEntryFormComponent({
                                           </div>
                                         )}
                                         <div className="border-t pt-6 space-y-6">
-                                            <div className="grid md:grid-cols-2 gap-6">
+                                            <div className="grid md:grid-cols-3 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField control={form.control} name={`siteDetails.${index}.purpose`} render={({ field }) => (<FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/>
+                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.latitude`} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
