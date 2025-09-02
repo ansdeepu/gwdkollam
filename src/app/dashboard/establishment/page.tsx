@@ -299,6 +299,10 @@ export default function EstablishmentPage() {
   
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Establishment</h1>
+        <p className="text-muted-foreground">Manage all staff members of the Ground Water Department, Kollam.</p>
+      </div>
       <div className="my-4 flex flex-col sm:flex-row items-center gap-4">
         <div className="relative flex-grow w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

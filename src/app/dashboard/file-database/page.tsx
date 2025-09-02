@@ -7,17 +7,15 @@ import { Database } from "lucide-react";
 export default function FileDatabasePage() {
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">All File Entries</h1>
+        <p className="text-muted-foreground">Browse, view, edit, or delete submitted file entries.</p>
+      </div>
       <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>All File Entries</CardTitle>
-          <CardDescription>Browse, view, edit, or delete submitted file entries.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <FileDatabaseTable />
         </CardContent>
       </Card>
     </div>
   );
 }
-
-    

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -126,26 +127,37 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
+       <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+        <p className="text-muted-foreground">
+          {canManage 
+            ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions."
+            : "View all registered users in the system. (Read-only)"
+          }
+        </p>
+      </div>
+
       {canManage && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex gap-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New User</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row gap-4">
             <Button onClick={() => setIsGuestFormOpen(true)} variant="outline">
                 <UserPlus className="mr-2 h-5 w-5" /> Add Guest User
             </Button>
             <Button onClick={() => setIsStaffFormOpen(true)}>
                 <UserPlus className="mr-2 h-5 w-5" /> Add New User (from Staff)
             </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
+
       <Card className="shadow-xl border-border/60">
         <CardHeader>
           <CardTitle className="text-xl">Registered Users ({allUsers.length})</CardTitle>
           <CardDescription>
-            {canManage 
-              ? "Oversee user accounts, manage roles, approval statuses, and perform administrative actions. Use batch actions for efficiency where applicable."
-              : "View all registered users in the system. (Read-only)"
-            }
+            A list of all user accounts in the system.
           </CardDescription>
         </CardHeader>
         <CardContent>

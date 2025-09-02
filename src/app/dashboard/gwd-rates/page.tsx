@@ -391,11 +391,13 @@ export default function GwdRatesPage() {
 
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">GWD Rates</h1>
+        <p className="text-muted-foreground">A master list of all standard items and their approved rates used by the department.</p>
+      </div>
       <Card>
         <CardHeader>
-            <CardTitle>GWD Rates</CardTitle>
-            <CardDescription>A master list of all standard items and their approved rates used by the department.</CardDescription>
-            <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4">
                 <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
                 {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
             </div>

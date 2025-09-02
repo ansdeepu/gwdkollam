@@ -230,20 +230,18 @@ export default function ArsEntryPage() {
     
     return (
         <div className="space-y-6">
+            <div className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">{isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry'}</h1>
+                    <p className="text-muted-foreground">{isEditing ? 'Update the details for the ARS site below.' : 'Fill in the details to create a new ARS site entry.'}</p>
+                </div>
+                 <Button variant="destructive" size="sm" onClick={() => router.back()}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </div>
             <Card className="shadow-lg">
-                <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>{isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry'}</CardTitle>
-                            <CardDescription>{isEditing ? 'Update the details for the ARS site below.' : 'Fill in the details to create a new ARS site entry.'}</CardDescription>
-                        </div>
-                         <Button variant="destructive" size="sm" onClick={() => router.back()}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 p-1">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

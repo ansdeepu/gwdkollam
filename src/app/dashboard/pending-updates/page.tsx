@@ -30,14 +30,12 @@ export default function PendingUpdatesPage() {
   
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Pending Supervisor Updates</h1>
+        <p className="text-muted-foreground">Review and approve or reject site updates submitted by supervisors to finalize the changes.</p>
+      </div>
       <Card>
-        <CardHeader>
-          <CardTitle>Pending Supervisor Updates</CardTitle>
-          <CardDescription>
-            Review and approve or reject site updates submitted by supervisors to finalize the changes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <PendingUpdatesTable />
         </CardContent>
       </Card>

@@ -905,14 +905,13 @@ export default function AgencyRegistrationPage() {
   // LIST VIEW
   return (
     <>
-    <div className="space-y-6">
+      <div className="space-y-2 mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Rig Registrations</h1>
+        <p className="text-muted-foreground">Manage agency and rig registrations.</p>
+      </div>
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <CardTitle>Rig Registrations</CardTitle>
-              <CardDescription>Manage agency and rig registrations.</CardDescription>
-            </div>
             <div className="flex w-full sm:w-auto items-center gap-2">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -955,7 +954,6 @@ export default function AgencyRegistrationPage() {
            </Tabs>
         </CardContent>
       </Card>
-    </div>
     </>
   );
 }

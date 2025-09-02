@@ -640,10 +640,12 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
+       <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Progress Reports</h1>
+        <p className="text-muted-foreground">Generate monthly or periodic progress reports for various schemes and services.</p>
+      </div>
       <Card className="shadow-lg no-print">
         <CardHeader>
-          <CardTitle>Progress Reports</CardTitle>
-          <CardDescription>Generate monthly or periodic progress reports for various schemes and services.</CardDescription>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
               <Popover>
                   <PopoverTrigger asChild>
@@ -808,4 +810,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-

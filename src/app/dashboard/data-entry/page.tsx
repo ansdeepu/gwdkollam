@@ -1,3 +1,4 @@
+
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -284,20 +285,18 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+            <p className="text-muted-foreground">{pageDescription}</p>
+        </div>
+        <Button variant="destructive" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+        </Button>
+      </div>
       <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle>{pageTitle}</CardTitle>
-              <CardDescription>{pageDescription}</CardDescription>
-            </div>
-             <Button variant="destructive" size="sm" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {pageData ? (
              <DataEntryFormComponent
                 key={approveUpdateId || fileNoToEdit || 'new-entry'} 

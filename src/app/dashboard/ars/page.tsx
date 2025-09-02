@@ -350,12 +350,14 @@ export default function ArsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Artificial Recharge Schemes (ARS)</h1>
+        <p className="text-muted-foreground">A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.</p>
+      </div>
       <TooltipProvider>
        <Card className="shadow-lg">
         <CardHeader>
-            <CardTitle>Artificial Recharge Schemes (ARS)</CardTitle>
-            <CardDescription>A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.</CardDescription>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="relative flex-grow min-w-[250px] order-2 sm:order-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />

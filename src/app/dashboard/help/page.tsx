@@ -1,3 +1,4 @@
+
 // src/app/dashboard/help/page.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -6,6 +7,10 @@ import { HelpCircle, LifeBuoy, Building, Server } from "lucide-react";
 export default function HelpPage() {
   return (
     <div className="space-y-6">
+       <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Help & About</h1>
+        <p className="text-muted-foreground">Find answers to common questions and learn more about the application.</p>
+      </div>
        <Card>
         <CardHeader>
           <div className="flex items-center space-x-3">
