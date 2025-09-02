@@ -46,11 +46,11 @@ import * as XLSX from 'xlsx';
 export interface FlattenedReportRow {
   fileNo: string; 
   applicantName: string; 
-  fileFirstRemittanceDate: string; 
+  fileFirstRemittanceDate: string;
+  sitePurpose: string;
   fileStatus: string; 
   
   siteName: string; 
-  sitePurpose: string; 
   siteWorkStatus: string; 
   siteTotalExpenditure: string; 
 }
@@ -337,10 +337,10 @@ export default function ReportsPage() {
 
   const handleExportExcel = () => {
     const reportTitle = "Site-Wise Report";
-    const columnLabels = [ "File No", "Applicant Name", "Site Name", "File First Remittance Date", "File Status", "Site Purpose", "Site Work Status", "Site Total Expenditure (₹)" ];
+    const columnLabels = [ "File No", "Applicant Name", "Date of Remittance", "Site Purpose", "File Status", "Site Name", "Site Work Status", "Site Total Expenditure (₹)" ];
     const dataRows = filteredReportRows.map(row => [
-        row.fileNo, row.applicantName, row.siteName, row.fileFirstRemittanceDate, row.fileStatus,
-        row.sitePurpose, row.siteWorkStatus, row.siteTotalExpenditure
+        row.fileNo, row.applicantName, row.fileFirstRemittanceDate, row.sitePurpose, row.fileStatus,
+        row.siteName, row.siteWorkStatus, row.siteTotalExpenditure
     ]);
     const sheetName = "SiteWiseReport";
     const fileNamePrefix = "gwd_site_wise_report";
@@ -454,14 +454,10 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Site-Wise Reports</h1>
           <p className="text-muted-foreground">
-              Generate custom site-wise reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
+              Generate custom reports by applying a combination of filters. {searchParams.get("reportType") === "pendingDashboardTasks" && <span className="font-semibold text-destructive"> (Showing Pending Tasks from Dashboard)</span>}
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-           <Button variant="outline" onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export Excel</Button>
-           <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset Filters</Button>
         </div>
       </div>
 
@@ -472,8 +468,18 @@ export default function ReportsPage() {
           <CardDescription>Refine your report by applying various filters below.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Popover>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                 <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                  <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
+                    <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">-- Clear Date Type --</SelectItem>
+                    <SelectItem value="remittance">Date of Remittance</SelectItem>
+                    <SelectItem value="completion">Date of Completion</SelectItem>
+                    <SelectItem value="payment">Date of Payment</SelectItem>
+                    </SelectContent>
+                </Select>
+                 <Popover>
                     <PopoverTrigger asChild>
                     <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
@@ -493,18 +499,8 @@ export default function ReportsPage() {
                     <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
                     </PopoverContent>
                 </Popover>
-                <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
-                    <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="all">-- Clear Selection --</SelectItem>
-                    <SelectItem value="remittance">Date of Remittance</SelectItem>
-                    <SelectItem value="completion">Date of Completion</SelectItem>
-                    <SelectItem value="payment">Date of Payment</SelectItem>
-                    </SelectContent>
-                </Select>
-                 <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
                     <SelectContent>
@@ -541,9 +537,10 @@ export default function ReportsPage() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex justify-end pt-2">
-                <Button onClick={applyFilters} className="w-full sm:w-auto">Apply Filters</Button>
-            </div>
+             <CardFooter className="flex justify-end gap-2 p-0 pt-4">
+                <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
+                <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
+            </CardFooter>
         </CardContent>
       </Card>
 
@@ -593,10 +590,11 @@ export default function ReportsPage() {
                 <div className="pt-4">
                   <h4 className="text-md font-semibold text-primary mb-2 border-b pb-1">Site Details:</h4>
                   {viewItem.siteDetails.map((site, index) => {
-                    const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(site.purpose as SitePurpose);
-                    const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(site.purpose as SitePurpose);
-                    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(site.purpose as SitePurpose);
-                    const isHPSPurpose = ['HPS', 'HPR'].includes(site.purpose as SitePurpose);
+                    const purpose = site.purpose as SitePurpose;
+                    const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
+                    const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
+                    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
+                    const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
 
                     return (
                     <div key={index} className="mb-4 p-3 border rounded-md bg-secondary/30">
@@ -621,15 +619,15 @@ export default function ReportsPage() {
 
                           <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Drilling Details (Actuals)</h6>
                           {renderDetail("Diameter (mm)", site.diameter)}
-                          {purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
+                          {site.purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
                           {renderDetail("TD (m)", site.totalDepth)}
-                          {purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
+                          {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
                           {renderDetail("Casing Pipe (m)", site.casingPipeUsed)}
-                          {purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
-                          {purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
-                          {purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
+                          {site.purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
+                          {site.purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
+                          {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
                           {renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
-                          {purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
+                          {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
                           {renderDetail("Discharge (LPH)", site.yieldDischarge)}
                           {renderDetail("Zone Details (m)", site.zoneDetails)}
                           {renderDetail("Water Level (m)", site.waterLevel)}
@@ -717,3 +715,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
