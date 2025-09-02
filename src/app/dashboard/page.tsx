@@ -654,13 +654,13 @@ export default function DashboardPage() {
     const completedThisMonthSites = Array.from(uniqueCompletedSites.values());
 
     const createSummary = (sites: typeof completedThisMonthSites): WorkSummary => {
-        const byPurpose = [...sitePurposeOptions, 'ARS'].reduce((acc, purpose) => {
+        const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
           acc[purpose as SitePurpose] = 0;
           return acc;
         }, {} as Record<SitePurpose, number>);
 
         sites.forEach(site => {
-          if (site.purpose && (sitePurposeOptions.includes(site.purpose as SitePurpose) || site.purpose === 'ARS')) {
+          if (site.purpose && sitePurposeOptions.includes(site.purpose as SitePurpose)) {
             byPurpose[site.purpose as SitePurpose]++;
           }
         });
@@ -694,7 +694,7 @@ export default function DashboardPage() {
 
 
   const supervisorOngoingWorks = useMemo(() => {
-    const byPurpose = [...sitePurposeOptions, 'ARS'].reduce((acc, purpose) => {
+    const byPurpose = sitePurposeOptions.reduce((acc, purpose) => {
         acc[purpose as SitePurpose] = 0;
         return acc;
     }, {} as Record<SitePurpose, number>);
@@ -717,7 +717,7 @@ export default function DashboardPage() {
                     purpose: site.purpose,
                     supervisorName: site.supervisorName,
                 });
-                if(site.purpose && ([...sitePurposeOptions, 'ARS'].includes(site.purpose as SitePurpose))) {
+                if(site.purpose && (sitePurposeOptions.includes(site.purpose as SitePurpose))) {
                     byPurpose[site.purpose as SitePurpose]++;
                 }
             }
@@ -1578,7 +1578,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   { currentMonthStats && currentMonthStats.completedSummary.totalCount > 0 ? (
                      <div className="grid grid-cols-2 gap-2">
-                       {[...sitePurposeOptions, 'ARS']
+                       {sitePurposeOptions
                       .filter(purpose => (currentMonthStats.completedSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
                       .map((purpose) => (
                         <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-green-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.completedSummary.data, purpose as SitePurpose, 'Completed')}>
@@ -1604,7 +1604,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   { currentMonthStats && currentMonthStats.ongoingSummary.totalCount > 0 ? (
                      <div className="grid grid-cols-2 gap-2">
-                       {[...sitePurposeOptions, 'ARS']
+                       {sitePurposeOptions
                       .filter(purpose => (currentMonthStats.ongoingSummary.byPurpose[purpose as SitePurpose] || 0) > 0)
                       .map((purpose) => (
                         <button key={purpose} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-orange-100/50" onClick={() => handleMonthPurposeClick(currentMonthStats.ongoingSummary.data, purpose as SitePurpose, 'Ongoing')}>
@@ -1663,7 +1663,7 @@ export default function DashboardPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {[...sitePurposeOptions, 'ARS']
+                                        {sitePurposeOptions
                                         .filter(purpose => (supervisorOngoingWorks.byPurpose[purpose as SitePurpose] || 0) > 0)
                                         .map((purpose) => {
                                             const count = supervisorOngoingWorks.byPurpose[purpose as SitePurpose] || 0;
