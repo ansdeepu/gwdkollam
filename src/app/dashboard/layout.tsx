@@ -1,3 +1,4 @@
+
 // src/app/dashboard/layout.tsx
 "use client";
 
@@ -9,7 +10,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
-import { useAuth } from '@/hooks/useAuth'; 
+import { useAuth, updateUserLastActive } from '@/hooks/useAuth'; 
 import { Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation.tsx';
