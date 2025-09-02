@@ -363,7 +363,6 @@ export const constituencyOptions = [
     "Chathannoor",
     "Chavara",
     "Eravipuram",
-    "Karunagappally",
     "Kollam",
     "Kottarakkara",
     "Kundara",
@@ -648,23 +647,25 @@ export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
 
 // ARS Schemas
 export const arsWorkStatusOptions = [
-    "Work Started",
-    "Work in Progress",
-    "Work Completed",
-    "Work Not Started",
-    "Dropped"
+  "Proposal Submitted",
+  "AS & TS Issued",
+  "Tendered",
+  "Selection Notice Issued",
+  "Work Order Issued",
+  "Work Initiated",
+  "Work Completed",
+  "Bill Prepared",
+  "Payment Completed",
 ] as const;
 
 export const arsTypeOfSchemeOptions = [
-    "Check Dam",
-    "CD cum Vented Dam",
-    "Vented Dam",
-    "Regulator Cum Bridge",
-    "Head water control weir",
-    "Side Weir",
-    "Sub surface dyke",
-    "Percolation Tank",
-    "Farm Pond"
+  "Dugwell Recharge(RWH)",
+  "Borewell Recharge(RWH)",
+  "Recharge Pit(RWH)",
+  "Check Dam",
+  "Sub-Surface Dyke",
+  "Pond Renovation",
+  "Percolation Ponds",
 ] as const;
 
 export const NewArsEntrySchema = z.object({
