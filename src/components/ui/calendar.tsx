@@ -30,8 +30,8 @@ export function Calendar({
   onSelect,
   initialFocus,
   disabled,
-  fromYear = new Date().getFullYear() - 100,
-  toYear = new Date().getFullYear(),
+  fromYear = 2020,
+  toYear = 2050,
 }: CalendarProps) {
   const [currentDate, setCurrentDate] = React.useState(selected || new Date())
   const [showMonthPicker, setShowMonthPicker] = React.useState(false)
@@ -113,13 +113,13 @@ export function Calendar({
       <div className="relative">
         <div className="flex items-center justify-between px-2 py-1.5">
           <button
-            onClick={() => setShowYearPicker(!showYearPicker)}
+            onClick={() => { setShowYearPicker(!showYearPicker); setShowMonthPicker(false); }}
             className="px-2 py-1 rounded-md text-sm font-semibold hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {currentDate.getFullYear()}
           </button>
           <button
-            onClick={() => setShowMonthPicker(!showMonthPicker)}
+            onClick={() => { setShowMonthPicker(!showMonthPicker); setShowYearPicker(false); }}
             className="px-2 py-1 rounded-md text-sm font-semibold hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {MONTHS[currentDate.getMonth()]}
@@ -183,5 +183,3 @@ export function Calendar({
   )
 }
 Calendar.displayName = "Calendar"
-
-    
