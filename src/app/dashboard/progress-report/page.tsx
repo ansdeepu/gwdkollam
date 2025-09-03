@@ -439,11 +439,6 @@ export default function ProgressReportPage() {
     toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
   };
 
-  const handleCalendarInteraction = (e: Event) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.calendar-custom-controls-container') || target.closest('[data-radix-select-content]')) e.preventDefault();
-  };
-
   const handleResetFilters = () => {
     const today = new Date();
     setStartDate(startOfMonth(today));
@@ -532,7 +527,7 @@ export default function ProgressReportPage() {
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Details");
-    const safeTitle = detailDialogTitle.replace(/[\/\\?*%[\]:]/g, '-').substring(0, 30);
+    const safeTitle = detailDialogTitle.replace(/[^\\w]/g, '-').substring(0, 30);
     XLSX.writeFile(workbook, `Report_Details_${safeTitle}.xlsx`);
     toast({ title: "Exported!", description: "The detailed list has been exported to Excel." });
   };
@@ -655,8 +650,8 @@ export default function ProgressReportPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" side="top" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
+                  <PopoverContent className="w-auto p-0" align="start" side="top">
+                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} captionLayout="dropdown-buttons" fromYear={2010} toYear={new Date().getFullYear()} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
                   </PopoverContent>
               </Popover>
               <Popover>
@@ -665,8 +660,8 @@ export default function ProgressReportPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" side="top" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                      <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
+                  <PopoverContent className="w-auto p-0" align="start" side="top">
+                      <Calendar mode="single" selected={endDate} onSelect={setEndDate} captionLayout="dropdown-buttons" fromYear={2010} toYear={new Date().getFullYear()} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
                   </PopoverContent>
               </Popover>
               <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>
