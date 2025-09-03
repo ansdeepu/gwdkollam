@@ -62,7 +62,7 @@ const AgencyTable = ({
                         <TableCell>{app.fileNo || 'N/A'}</TableCell>
                         <TableCell className="font-medium">{app.agencyName}</TableCell>
                         <TableCell>{app.owner.name}</TableCell>
-                        <TableCell>{app.rigs.filter(r => r.status === 'Active').length} / {app.rigs.length}</TableCell>
+                        <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
                         <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
                         <TableCell className="text-center">
                             <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
@@ -107,7 +107,7 @@ const RigAccordionItem = ({
   onCancel: (rigIndex: number) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
-  form: UseFormReturn<AgencyApplication>;
+  form: UseFormReturn<any>;
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = field.registrationDate;
@@ -390,24 +390,28 @@ export default function AgencyRegistrationPage() {
                 processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate) ?? undefined;
                 processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate) ?? undefined;
 
-                processedApp.rigs = (processedApp.rigs || []).map((rig: RigRegistration) => {
-                    const validRenewals = (rig.renewals || []).map((renewal: RigRenewalFormData) => ({
-                        ...renewal,
-                        renewalDate: toDateOrNull(renewal.renewalDate) ?? undefined,
-                        paymentDate: toDateOrNull(renewal.paymentDate) ?? undefined,
-                        validTill: toDateOrNull(renewal.validTill) ?? undefined,
-                    }));
-                    
-                    const validCancellationDate = toDateOrNull(rig.cancellationDate);
-
-                    return {
-                        ...rig,
-                        registrationDate: toDateOrNull(rig.registrationDate),
-                        paymentDate: toDateOrNull(rig.paymentDate),
-                        renewals: validRenewals,
-                        cancellationDate: validCancellationDate,
-                    };
-                });
+                if (processedApp.rigs) {
+                    processedApp.rigs = (processedApp.rigs || []).map((rig: RigRegistration) => {
+                        const validRenewals = (rig.renewals || []).map((renewal: RigRenewalFormData) => ({
+                            ...renewal,
+                            renewalDate: toDateOrNull(renewal.renewalDate) ?? undefined,
+                            paymentDate: toDateOrNull(renewal.paymentDate) ?? undefined,
+                            validTill: toDateOrNull(renewal.validTill) ?? undefined,
+                        }));
+                        
+                        const validCancellationDate = toDateOrNull(rig.cancellationDate);
+    
+                        return {
+                            ...rig,
+                            registrationDate: toDateOrNull(rig.registrationDate),
+                            paymentDate: toDateOrNull(rig.paymentDate),
+                            renewals: validRenewals,
+                            cancellationDate: validCancellationDate,
+                        };
+                    });
+                } else {
+                    processedApp.rigs = [];
+                }
                 form.reset(processedApp);
             } else {
                 setSelectedApplicationId(null);
