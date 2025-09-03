@@ -184,18 +184,18 @@ const getColorClass = (nameOrEmail: string): string => {
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
-  if (dateValue instanceof Date) return dateValue;
-  // Handle Firestore Timestamps which are objects with seconds/nanoseconds
-  if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number') {
-    return new Date(dateValue.seconds * 1000);
+  // Handle Firestore Timestamps which might be serialized as objects with seconds
+  if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
+    return new Date((dateValue as any).seconds * 1000);
   }
-  // Handle string or number dates
-  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+  // Handle JS Date objects and valid date strings
+  if (dateValue instanceof Date || typeof dateValue === 'string' || typeof dateValue === 'number') {
     const parsed = new Date(dateValue);
     if (isValid(parsed)) return parsed;
   }
   return null;
 };
+
 
 
 export default function DashboardPage() {
@@ -1227,7 +1227,7 @@ export default function DashboardPage() {
   };
 
 
-  const isPageLoading = filteredEntriesLoading || isReportLoading || authLoading || usersLoading || staffLoading;
+  const isPageLoading = authLoading || usersLoading || staffLoading || isReportLoading || agenciesLoading;
   
   if (isPageLoading) {
     return (
@@ -1237,16 +1237,17 @@ export default function DashboardPage() {
       </div>
     );
   }
-  
+
+  // Guard against rendering if dashboard data isn't ready
   if (!dashboardData || !currentMonthStats) {
       return (
         <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="ml-3 text-muted-foreground">Preparing dashboard data...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-3 text-muted-foreground">Preparing dashboard data...</p>
         </div>
       );
   }
-
+  
   const shouldAnimateBirthdays = dashboardData.birthdayWishes.length > 1;
   const shouldAnimateUpdates = dashboardData.workAlerts.length > 5; // Animate only if there are many updates
   
@@ -1985,3 +1986,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
