@@ -48,6 +48,7 @@ const processDataForClient = (data: any): any => {
         const processed: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
+                // Recursively process each property of the object
                 processed[key] = processDataForClient(data[key]);
             }
         }
