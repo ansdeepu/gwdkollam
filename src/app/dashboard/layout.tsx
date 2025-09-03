@@ -22,9 +22,12 @@ const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiv
 
 function HeaderContent() {
   const { title, description } = usePageHeader();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
+    // Set the time only on the client-side to avoid hydration mismatch
+    setCurrentTime(new Date());
+    
     const timerId = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -44,7 +47,11 @@ function HeaderContent() {
       </div>
       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
         <Clock className="h-4 w-4" />
-        <span>{format(currentTime, 'dd/MM/yyyy, hh:mm:ss a')}</span>
+        {currentTime ? (
+          <span>{format(currentTime, 'dd/MM/yyyy, hh:mm:ss a')}</span>
+        ) : (
+          <span className="w-40 h-4 bg-muted-foreground/20 rounded-md animate-pulse" />
+        )}
       </div>
     </>
   );
