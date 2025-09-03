@@ -1345,13 +1345,14 @@ export default function DashboardPage() {
                                           <PartyPopper className="absolute top-8 right-6 h-5 w-5 text-blue-400 rotate-12" />
                                           <PartyPopper className="absolute bottom-6 left-8 h-5 w-5 text-red-400 rotate-6" />
                                           <PartyPopper className="absolute bottom-2 right-4 h-6 w-6 text-green-400 -rotate-12" />
+                                          <PartyPopper className="absolute top-20 left-2 h-4 w-4 text-purple-400 rotate-45" />
+                                          <PartyPopper className="absolute bottom-20 right-2 h-4 w-4 text-orange-400 -rotate-12" />
                                           <Avatar className="h-32 w-32 mb-4 border-4 border-white shadow-lg">
                                             <AvatarImage src={selectedBirthday?.photoUrl || undefined} alt={selectedBirthday?.name} />
                                             <AvatarFallback className="text-4xl">{getInitials(selectedBirthday?.name)}</AvatarFallback>
                                           </Avatar>
                                           <h2 className="text-2xl font-bold text-primary">Happy Birthday, {selectedBirthday?.name}!</h2>
-                                          <p className="text-muted-foreground">{selectedBirthday?.designation}</p>
-                                          <p className="mt-4 text-foreground">Wishing you a fantastic day from everyone at GWD Kollam!</p>
+                                          <p className="mt-4 text-foreground">Wishing you a fantastic day!</p>
                                       </div>
                                     </DialogContent>
                                   </Dialog>
@@ -2014,4 +2015,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
