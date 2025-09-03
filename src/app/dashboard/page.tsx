@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -407,7 +408,7 @@ export default function DashboardPage() {
             .filter((d): d is Date => d !== null && isValid(d))
             .sort((a, b) => b.getTime() - a.getTime())[0];
 
-        const basisDate = latestRemittanceDate || (entry.createdAt ? new Date(entry.createdAt) : null);
+        const basisDate = latestRemittanceDate || (('createdAt' in entry && entry.createdAt) ? new Date(entry.createdAt) : null);
 
         if (basisDate && isValid(basisDate)) {
             const ageInMs = now.getTime() - basisDate.getTime();
