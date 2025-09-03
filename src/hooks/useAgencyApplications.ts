@@ -41,12 +41,17 @@ const convertTimestamps = (data: DocumentData): any => {
     const value = data[key];
     if (value instanceof Timestamp) {
       converted[key] = value.toDate();
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+       // Check for seconds and nanoseconds to identify Timestamp-like objects from JSON serialization
+      if (typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+        converted[key] = new Timestamp(value.seconds, value.nanoseconds).toDate();
+      } else {
+        converted[key] = convertTimestamps(value); // Recurse for nested objects
+      }
     } else if (Array.isArray(value)) {
-      converted[key] = value.map(item =>
-        typeof item === 'object' && item !== null && !Array.isArray(item) ? convertTimestamps(item) : item
+       converted[key] = value.map(item =>
+        item && typeof item === 'object' && !Array.isArray(item) ? convertTimestamps(item) : item
       );
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      converted[key] = convertTimestamps(value);
     } else {
       converted[key] = value;
     }

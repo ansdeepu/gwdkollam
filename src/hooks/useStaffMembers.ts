@@ -16,6 +16,7 @@ import {
   serverTimestamp,
   getDocs, // Changed from onSnapshot
   getDoc,
+  type DocumentData,
 } from "firebase/firestore";
 import { getStorage, ref as storageRef, deleteObject } from "firebase/storage"; 
 import { app } from "@/lib/firebase";
@@ -32,13 +33,15 @@ const designationSortOrder: Record<Designation, number> = designationOptions.red
 }, {} as Record<Designation, number>);
 
 
-const convertStaffMemberTimestamps = (data: any): StaffMember => {
+const convertStaffMemberTimestamps = (data: DocumentData): StaffMember => {
   const staff: any = { ...data }; 
   if (staff.dateOfBirth instanceof Timestamp) {
     staff.dateOfBirth = staff.dateOfBirth.toDate();
   } else if (typeof staff.dateOfBirth === 'string') {
     const parsedDate = new Date(staff.dateOfBirth);
     staff.dateOfBirth = isValid(parsedDate) ? parsedDate : null;
+  } else if (staff.dateOfBirth && typeof staff.dateOfBirth === 'object' && typeof staff.dateOfBirth.seconds === 'number') {
+    staff.dateOfBirth = new Timestamp(staff.dateOfBirth.seconds, staff.dateOfBirth.nanoseconds).toDate();
   } else {
     staff.dateOfBirth = null;
   }

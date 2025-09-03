@@ -189,6 +189,7 @@ const safeParseDate = (dateValue: any): Date | null => {
   if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number') {
     return new Date(dateValue.seconds * 1000);
   }
+  // Handle string or number dates
   if (typeof dateValue === 'string' || typeof dateValue === 'number') {
     const parsed = new Date(dateValue);
     if (isValid(parsed)) return parsed;
@@ -1226,20 +1227,23 @@ export default function DashboardPage() {
   };
 
 
-  if (filteredEntriesLoading || isReportLoading || authLoading || usersLoading || staffLoading) { 
+  const isPageLoading = filteredEntriesLoading || isReportLoading || authLoading || usersLoading || staffLoading;
+  
+  if (isPageLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Loading Dashboard...</p>
       </div>
     );
   }
   
   if (!dashboardData || !currentMonthStats) {
       return (
-          <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="ml-3 text-muted-foreground">Preparing dashboard data...</p>
-          </div>
+        <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="ml-3 text-muted-foreground">Preparing dashboard data...</p>
+        </div>
       );
   }
 

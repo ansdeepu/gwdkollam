@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -192,18 +193,31 @@ export function useFileEntries() {
         console.warn(`[fetchEntryForEditing] No file found with fileNo: ${fileNo}`);
         return null;
       }
-
-      // If multiple docs match (e.g. legacy data), we can't reliably pick one.
-      // The new ARS structure should prevent this from happening going forward.
-      // For now, we just pick the first one.
+      
       const docSnap = querySnapshot.docs[0];
       const data = convertTimestampsToDates(docSnap.data());
-      return { id: docSnap.id, ...data } as DataEntryFormData;
+      
+      const entry = { id: docSnap.id, ...data } as DataEntryFormData;
+      
+      if(user.role === 'supervisor') {
+          const pendingUpdates = await getPendingUpdatesForFile(fileNo, user.uid);
+          if(pendingUpdates.length > 0) {
+              const pendingSiteNames = new Set(pendingUpdates.flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite)));
+              if(entry.siteDetails) {
+                  entry.siteDetails = entry.siteDetails.map(site => ({
+                      ...site,
+                      isPending: pendingSiteNames.has(site.nameOfSite)
+                  }));
+              }
+          }
+      }
+
+      return entry;
     } catch (error) {
       console.error(`[fetchEntryForEditing] Error fetching fileNo ${fileNo}:`, error);
       return null;
     }
-  }, [user]);
+  }, [user, getPendingUpdatesForFile]);
 
   return { 
       fileEntries, 
