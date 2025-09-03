@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -19,8 +18,8 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  fromYear = 2010,
-  toYear = 2050,
+  fromYear = new Date().getFullYear() - 100,
+  toYear = new Date().getFullYear(),
   ...props
 }: CalendarProps) {
 
@@ -67,7 +66,7 @@ function Calendar({
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
         Dropdown: (dropdownProps: DropdownProps) => {
-           const { fromDate, toDate, fromMonth, toMonth, fromYear, toYear } = dropdownProps;
+           const { fromDate, toDate, fromMonth, toMonth, fromYear: dropdownFromYear, toYear: dropdownToYear } = dropdownProps;
            const { month, onChange: onDropdownChange, name } = dropdownProps;
            
            if (name === "months") {
@@ -94,7 +93,7 @@ function Calendar({
               </Select>
             );
           } else if (name === "years") {
-            const years = Array.from({ length: (toYear || 0) - (fromYear || 0) + 1 }, (_, i) => (fromYear || 0) + i);
+            const years = Array.from({ length: (dropdownToYear || 0) - (dropdownFromYear || 0) + 1 }, (_, i) => (dropdownFromYear || 0) + i);
             return (
               <Select
                 value={month?.getFullYear().toString()}
