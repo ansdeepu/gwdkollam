@@ -18,7 +18,7 @@ function CustomCaptionLabel({ displayMonth }: { displayMonth: Date }) {
   const { goToMonth, currentMonth, previousMonth, nextMonth } = useNavigation();
 
   // Add a guard to handle undefined displayMonth on initial render
-  const initialYear = displayMonth ? displayMonth.getFullYear().toString() : "";
+  const initialYear = displayMonth ? displayMonth.getFullYear().toString() : new Date().getFullYear().toString();
   const [yearInputValue, setYearInputValue] = React.useState(initialYear);
   const [isYearInputFocused, setIsYearInputFocused] = React.useState(false); 
 
