@@ -32,6 +32,8 @@ import {
   CheckCircle,
   AlertTriangle,
   FileStack,
+  Gift,
+  PartyPopper,
 } from "lucide-react";
 import { 
   Card, 
@@ -250,6 +252,8 @@ export default function DashboardPage() {
   const [fileStatusDetailDialogTitle, setFileStatusDetailDialogTitle] = useState("");
   const [fileStatusDetailDialogData, setFileStatusDetailDialogData] = useState<Array<Record<string, any>>>([]);
   const [fileStatusDetailDialogColumns, setFileStatusDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
+  
+  const [selectedBirthday, setSelectedBirthday] = useState<(typeof dashboardData.birthdayWishes)[0] | null>(null);
 
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string | undefined>(undefined);
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
@@ -1322,18 +1326,35 @@ export default function DashboardPage() {
                         <ScrollArea className="flex-1 pr-2">
                             {dashboardData.birthdayWishes.length > 0 ? (
                                 <div className="space-y-3">
+                                  <Dialog open={!!selectedBirthday} onOpenChange={() => setSelectedBirthday(null)}>
                                     {dashboardData.birthdayWishes.map((staff, index) => (
-                                        <div key={index} className="p-2 rounded-md bg-pink-500/10 flex items-center gap-3">
+                                       <button key={index} onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
                                             <Avatar className="h-10 w-10 border-2 border-pink-200">
                                                 <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
                                                 <AvatarFallback className="bg-pink-100 text-pink-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <p className="font-semibold text-pink-700 text-xs -mb-1">Happy Birthday!</p>
+                                                <p className="font-semibold text-pink-700 text-xs -mb-1 flex items-center gap-1.5"><Gift className="h-3 w-3" />Happy Birthday!</p>
                                                 <p className="font-bold text-sm text-pink-800">{staff.name}</p>
                                             </div>
-                                        </div>
+                                        </button>
                                     ))}
+                                    <DialogContent>
+                                      <div className="p-4 flex flex-col items-center text-center relative overflow-hidden">
+                                          <PartyPopper className="absolute top-2 left-4 h-6 w-6 text-yellow-400 -rotate-45" />
+                                          <PartyPopper className="absolute top-8 right-6 h-5 w-5 text-blue-400 rotate-12" />
+                                          <PartyPopper className="absolute bottom-6 left-8 h-5 w-5 text-red-400 rotate-6" />
+                                          <PartyPopper className="absolute bottom-2 right-4 h-6 w-6 text-green-400 -rotate-12" />
+                                          <Avatar className="h-32 w-32 mb-4 border-4 border-white shadow-lg">
+                                            <AvatarImage src={selectedBirthday?.photoUrl || undefined} alt={selectedBirthday?.name} />
+                                            <AvatarFallback className="text-4xl">{getInitials(selectedBirthday?.name)}</AvatarFallback>
+                                          </Avatar>
+                                          <h2 className="text-2xl font-bold text-primary">Happy Birthday, {selectedBirthday?.name}!</h2>
+                                          <p className="text-muted-foreground">{selectedBirthday?.designation}</p>
+                                          <p className="mt-4 text-foreground">Wishing you a fantastic day from everyone at GWD Kollam!</p>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
                                 </div>
                             ) : (
                                 <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No birthdays today.</p>
@@ -1993,3 +2014,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
