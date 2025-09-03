@@ -378,15 +378,23 @@ export default function AgencyRegistrationPage() {
 
                 const toDateOrNull = (value: any): Date | null => {
                     if (!value) return null;
-                    const date = new Date(value);
-                    return isValid(date) ? date : null;
+                    if (value instanceof Date && isValid(value)) return value;
+                    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+                        const date = new Date(value.seconds * 1000);
+                        return isValid(date) ? date : null;
+                    }
+                    if (typeof value === 'string' || typeof value === 'number') {
+                        const date = new Date(value);
+                        return isValid(date) ? date : null;
+                    }
+                    return null;
                 };
 
                 processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate);
                 processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate);
 
-                if (processedApp.rigs && Array.isArray(processedApp.rigs)) {
-                    processedApp.rigs = processedApp.rigs.map((rig: RigRegistration) => {
+                if (processedApp.rigs) {
+                    processedApp.rigs = (processedApp.rigs || []).map((rig: RigRegistration) => {
                         const validRenewals = (rig.renewals || []).map((renewal: RigRenewalFormData) => ({
                             ...renewal,
                             renewalDate: toDateOrNull(renewal.renewalDate),
