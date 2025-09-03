@@ -198,76 +198,30 @@ export function useFileEntries() {
   }, []);
 
   const fetchEntryForEditing = useCallback(async (
-    fileNo: string,
-    purposeType?: 'ARS' | 'non-ARS'
+    fileNo: string
   ): Promise<DataEntryFormData | null> => {
     if (!user) return null;
 
     let q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
     
-    // This is the new logic to differentiate between ARS and non-ARS files
-    // if a purposeType is specified.
-    if (purposeType === 'ARS') {
-      q = query(q, where('siteDetails.isArsImport', '==', true));
-    } else if (purposeType === 'non-ARS') {
-      // This is trickier as Firestore doesn't support '!=' on arrays.
-      // We'll fetch and filter client-side for this case.
-    }
-    
     try {
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-            console.warn(`[fetchEntryForEditing] No file found with fileNo: ${fileNo} and purposeType: ${purposeType}`);
-            return null;
-        }
-
-        if (purposeType === 'non-ARS') {
-           const docToReturn = querySnapshot.docs.find(doc => {
-              const data = doc.data() as DataEntryFormData;
-              return data.siteDetails?.some(site => site.isArsImport !== true);
-           });
-           if (docToReturn) {
-             const data = convertTimestampsToDates(docToReturn.data());
-             return { id: docToReturn.id, ...data } as DataEntryFormData;
-           }
-           return null;
-        }
-
-        const docSnap = querySnapshot.docs[0];
-        const data = convertTimestampsToDates(docSnap.data());
-        return { id: docSnap.id, ...data } as DataEntryFormData;
-    } catch (error) {
-        console.error(`[fetchEntryForEditing] Error fetching fileNo ${fileNo}:`, error);
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        console.warn(`[fetchEntryForEditing] No file found with fileNo: ${fileNo}`);
         return null;
+      }
+
+      // If multiple docs match (e.g. legacy data), we can't reliably pick one.
+      // The new ARS structure should prevent this from happening going forward.
+      // For now, we just pick the first one.
+      const docSnap = querySnapshot.docs[0];
+      const data = convertTimestampsToDates(docSnap.data());
+      return { id: docSnap.id, ...data } as DataEntryFormData;
+    } catch (error) {
+      console.error(`[fetchEntryForEditing] Error fetching fileNo ${fileNo}:`, error);
+      return null;
     }
   }, [user]);
-
-  const clearAllArsData = useCallback(async () => {
-    if (user?.role !== 'editor') {
-        toast({ title: "Permission Denied", variant: "destructive" });
-        return;
-    }
-    const batch = writeBatch(db);
-    const q = query(collection(db, FILE_ENTRIES_COLLECTION));
-    const querySnapshot = await getDocs(q);
-
-    for (const docSnap of querySnapshot.docs) {
-        const entry = docSnap.data() as DataEntryFormData;
-        const sitesToKeep = entry.siteDetails?.filter(site => !site.isArsImport);
-        
-        if (sitesToKeep && sitesToKeep.length < (entry.siteDetails?.length || 0)) {
-            if (sitesToKeep.length === 0 && entry.siteDetails?.length) {
-                // If removing all sites leaves the file empty, and it was primarily an ARS file, delete it.
-                batch.delete(docSnap.ref);
-            } else {
-                // Otherwise, update the file to remove only the ARS sites.
-                batch.update(docSnap.ref, { siteDetails: sitesToKeep });
-            }
-        }
-    }
-
-    await batch.commit();
-  }, [user, toast]);
 
   return { 
       fileEntries, 
@@ -276,7 +230,6 @@ export function useFileEntries() {
       deleteFileEntry, 
       batchDeleteFileEntries,
       getFileEntry,
-      fetchEntryForEditing,
-      clearAllArsData,
+      fetchEntryForEditing
     };
 }

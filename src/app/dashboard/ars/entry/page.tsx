@@ -3,9 +3,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useFileEntries } from "@/hooks/useFileEntries";
-import { type DataEntryFormData, type SiteDetailFormData, arsWorkStatusOptions, NewArsEntrySchema, type NewArsEntryFormData, constituencyOptions, type Constituency, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus } from "@/lib/schemas";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useArsEntries } from "@/hooks/useArsEntries"; // Updated hook
+import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember } from "@/lib/schemas";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,6 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
 
-
 export default function ArsEntryPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -31,14 +30,13 @@ export default function ArsEntryPage() {
     const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
     
-    const fileNoToEdit = searchParams.get('fileNo');
-    const siteNameToEdit = searchParams.get('siteName');
+    const entryIdToEdit = searchParams.get('id');
     
-    const { isLoading: entriesLoading, addFileEntry, fetchEntryForEditing } = useFileEntries();
+    const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry } = useArsEntries();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
-    const isEditing = !!(fileNoToEdit && siteNameToEdit);
+    const isEditing = !!entryIdToEdit;
     const canEdit = user?.role === 'editor';
     
     useEffect(() => {
@@ -49,24 +47,22 @@ export default function ArsEntryPage() {
 
     const supervisorList = React.useMemo(() => {
         if (!canEdit) return [];
-        // Filter users by role, then find their corresponding active staff member profile
         return allUsers
             .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
             .map(u => {
                 const staffInfo = staffMembers.find(s => s.id === u.staffId && s.status === 'Active');
                 if (staffInfo) {
-                    return { ...staffInfo, id: u.uid, name: staffInfo.name }; // Use user UID as the ID for selection
+                    return { ...staffInfo, id: u.uid, name: staffInfo.name };
                 }
                 return null;
             })
             .filter((s): s is StaffMember & { id: string; name: string } => s !== null);
     }, [allUsers, staffMembers, canEdit]);
 
-
-    const form = useForm<NewArsEntryFormData>({
-        resolver: zodResolver(NewArsEntrySchema),
+    const form = useForm<ArsEntryFormData>({
+        resolver: zodResolver(ArsEntrySchema),
         defaultValues: {
-          fileNo: fileNoToEdit || "", nameOfSite: siteNameToEdit || "", constituency: undefined, arsTypeOfScheme: undefined, arsPanchayath: "",
+          fileNo: "", nameOfSite: "", constituency: undefined, arsTypeOfScheme: undefined, arsPanchayath: "",
           arsBlock: "", latitude: undefined, longitude: undefined, arsNumberOfStructures: undefined,
           arsStorageCapacity: undefined, arsNumberOfFillings: undefined, estimateAmount: undefined,
           arsAsTsDetails: "", tsAmount: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined,
@@ -79,143 +75,40 @@ export default function ArsEntryPage() {
 
     useEffect(() => {
         const loadArsEntry = async () => {
-            if (isEditing && fileNoToEdit) {
-                const fileEntry = await fetchEntryForEditing(fileNoToEdit, 'ARS');
-                if (fileEntry) {
-                    const site = fileEntry.siteDetails?.find(s => s.nameOfSite === siteNameToEdit && s.isArsImport);
-                    if (site) {
-                        const validWorkStatus = site.workStatus && arsWorkStatusOptions.includes(site.workStatus as any)
-                            ? site.workStatus as NewArsEntryFormData['workStatus']
-                            : undefined;
-
-                        const validSchemeType = site.arsTypeOfScheme && arsTypeOfSchemeOptions.includes(site.arsTypeOfScheme as any)
-                            ? site.arsTypeOfScheme as NewArsEntryFormData['arsTypeOfScheme']
-                            : undefined;
-                        
-                        // Use constituency from the site first, then fall back to the file entry's constituency
-                        const constituency = site.constituency || fileEntry.constituency;
-
-                        form.reset({
-                            fileNo: fileNoToEdit,
-                            nameOfSite: site.nameOfSite,
-                            constituency: constituency,
-                            arsTypeOfScheme: validSchemeType,
-                            arsPanchayath: site.arsPanchayath ?? undefined,
-                            arsBlock: site.arsBlock ?? undefined,
-                            latitude: site.latitude,
-                            longitude: site.longitude,
-                            arsNumberOfStructures: site.arsNumberOfStructures,
-                            arsStorageCapacity: site.arsStorageCapacity,
-                            arsNumberOfFillings: site.arsNumberOfFillings,
-                            estimateAmount: site.estimateAmount,
-                            arsAsTsDetails: site.arsAsTsDetails ?? undefined,
-                            tsAmount: site.tsAmount,
-                            arsSanctionedDate: site.arsSanctionedDate ? new Date(site.arsSanctionedDate) : undefined,
-                            arsTenderedAmount: site.arsTenderedAmount,
-                            arsAwardedAmount: site.arsAwardedAmount,
-                            workStatus: validWorkStatus,
-                            dateOfCompletion: site.dateOfCompletion ? new Date(site.dateOfCompletion) : undefined,
-                            totalExpenditure: site.totalExpenditure,
-                            noOfBeneficiary: site.noOfBeneficiary ?? undefined,
-                            workRemarks: site.workRemarks ?? undefined,
-                            supervisorUid: site.supervisorUid,
-                            supervisorName: site.supervisorName,
-                        });
-                    } else {
-                        toast({ title: "Error", description: `ARS Site "${siteNameToEdit}" not found in file "${fileNoToEdit}".`, variant: "destructive" });
-                        router.push('/dashboard/ars');
-                    }
+            if (isEditing && entryIdToEdit) {
+                const entry = await getArsEntryById(entryIdToEdit);
+                if (entry) {
+                    // Directly use the fetched entry data to reset the form
+                    form.reset({
+                        ...entry,
+                        arsSanctionedDate: entry.arsSanctionedDate ? new Date(entry.arsSanctionedDate) : undefined,
+                        dateOfCompletion: entry.dateOfCompletion ? new Date(entry.dateOfCompletion) : undefined,
+                    });
                 } else {
-                    toast({ title: "Error", description: `File "${fileNoToEdit}" not found.`, variant: "destructive" });
+                    toast({ title: "Error", description: `ARS Entry with ID "${entryIdToEdit}" not found.`, variant: "destructive" });
                     router.push('/dashboard/ars');
                 }
             }
         };
         loadArsEntry();
-    }, [isEditing, fileNoToEdit, siteNameToEdit, fetchEntryForEditing, form, router, toast]);
+    }, [isEditing, entryIdToEdit, getArsEntryById, form, router, toast]);
 
-    const handleFormSubmit = async (data: NewArsEntryFormData) => {
+    const handleFormSubmit = async (data: ArsEntryFormData) => {
         setIsSubmitting(true);
         
-        const siteData: SiteDetailFormData = {
-            nameOfSite: data.nameOfSite, 
-            constituency: data.constituency,
-            purpose: 'ARS', 
-            isArsImport: true, 
-            latitude: data.latitude, 
-            longitude: data.longitude, 
-            estimateAmount: data.estimateAmount, 
-            tsAmount: data.tsAmount, 
-            workStatus: data.workStatus as SiteWorkStatus, 
-            dateOfCompletion: data.dateOfCompletion, 
-            totalExpenditure: data.totalExpenditure, 
-            noOfBeneficiary: data.noOfBeneficiary ?? null, 
-            workRemarks: data.workRemarks ?? null, 
-            arsTypeOfScheme: data.arsTypeOfScheme ?? null, 
-            arsPanchayath: data.arsPanchayath ?? null, 
-            arsBlock: data.arsBlock ?? null, 
-            arsNumberOfStructures: data.arsNumberOfStructures, 
-            arsStorageCapacity: data.arsStorageCapacity, 
-            arsNumberOfFillings: data.arsNumberOfFillings, 
-            arsAsTsDetails: data.arsAsTsDetails ?? null, 
-            arsSanctionedDate: data.arsSanctionedDate, 
-            arsTenderedAmount: data.arsTenderedAmount, 
-            arsAwardedAmount: data.arsAwardedAmount,
-            supervisorUid: data.supervisorUid, 
-            supervisorName: data.supervisorName,
-            additionalAS: 'No',
-            drillingRemarks: "",
-        };
-
         try {
-            const existingFile = await fetchEntryForEditing(data.fileNo, 'ARS');
-            if (isEditing) {
-                if (!fileNoToEdit || !siteNameToEdit) {
-                    throw new Error("Could not find original file details to edit.");
-                }
-                const fileToUpdate = await fetchEntryForEditing(fileNoToEdit, 'ARS');
-                if (!fileToUpdate) throw new Error("Original file not found for update.");
-
-                if (data.nameOfSite !== siteNameToEdit) {
-                    const isDuplicate = fileToUpdate.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.isArsImport);
-                    if (isDuplicate) {
-                        form.setError("nameOfSite", { type: "manual", message: `An ARS site named "${data.nameOfSite}" already exists in File No. ${data.fileNo}.` });
-                        throw new Error("Duplicate site name.");
-                    }
-                }
-                
-                const updatedSiteDetails = fileToUpdate.siteDetails?.map(site => 
-                  (site.nameOfSite === siteNameToEdit && site.isArsImport) ? siteData : site
-                ) ?? [];
-
-                const updatedFile: DataEntryFormData = { ...fileToUpdate, constituency: data.constituency, siteDetails: updatedSiteDetails };
-                await addFileEntry(updatedFile, fileNoToEdit);
+            if (isEditing && entryIdToEdit) {
+                // Update existing document
+                await updateArsEntry(entryIdToEdit, data);
                 toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
-
             } else {
-                let updatedFile: DataEntryFormData;
-
-                if (existingFile) {
-                    const isDuplicate = existingFile.siteDetails?.some(s => s.nameOfSite === data.nameOfSite && s.isArsImport);
-                    if (isDuplicate) {
-                        form.setError("nameOfSite", { type: "manual", message: `An ARS site named "${data.nameOfSite}" already exists in this file.` });
-                        throw new Error("Duplicate site name.");
-                    }
-                    updatedFile = { ...existingFile, constituency: data.constituency, siteDetails: [...(existingFile.siteDetails || []), siteData] };
-                } else {
-                    updatedFile = {
-                        fileNo: data.fileNo, applicantName: `Applicant for ${data.nameOfSite}`, constituency: data.constituency,
-                        applicationType: 'Government_Others', fileStatus: 'File Under Process', siteDetails: [siteData],
-                    };
-                }
-                await addFileEntry(updatedFile, existingFile?.fileNo);
-                toast({ title: "ARS Site Added", description: `Site "${data.nameOfSite}" has been processed for File No. ${data.fileNo}.` });
+                // Create new document
+                await addArsEntry(data);
+                toast({ title: "ARS Site Added", description: `Site "${data.nameOfSite}" has been created.` });
             }
             router.push('/dashboard/ars');
         } catch (error: any) {
-          if (error.message !== "Duplicate site name.") {
              toast({ title: "Error Processing Site", description: error.message, variant: "destructive" });
-          }
         } finally {
           setIsSubmitting(false);
         }
@@ -252,7 +145,7 @@ export default function ArsEntryPage() {
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 p-1">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} readOnly={isEditing} /></FormControl><FormMessage /></FormItem>)} />
+                          <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                           <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Scheme</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined}><FormControl><SelectTrigger><SelectValue placeholder="Select Type of Scheme" /></SelectTrigger></FormControl><SelectContent>{arsTypeOfSchemeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>

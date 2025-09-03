@@ -1,16 +1,13 @@
-
 // src/app/dashboard/ars/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useFileEntries } from "@/hooks/useFileEntries";
-import { useArsEntries, type ArsReportRow } from "@/hooks/useArsEntries"; // Import the new hook
-import { type DataEntryFormData, type SiteDetailFormData, siteWorkStatusOptions, type Constituency, fileStatusOptions } from "@/lib/schemas";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useArsEntries, type ArsEntry } from "@/hooks/useArsEntries";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Save, X, FileUp, Download, Eye, Edit, Trash2, ShieldAlert, CalendarIcon, XCircle } from "lucide-react";
-import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval, parseISO } from "date-fns";
+import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle } from "lucide-react";
+import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -23,9 +20,10 @@ import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
+import { CalendarIcon } from "lucide-react";
+import type { ArsEntryFormData } from "@/lib/schemas";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -55,15 +53,13 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
   );
 };
 
-
 export default function ArsPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
     setHeader('Artificial Recharge Schemes (ARS)', 'A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.');
   }, [setHeader]);
 
-  const { addFileEntry, getFileEntry, clearAllArsData } = useFileEntries();
-  const { arsSites, isLoading: entriesLoading, refreshArsEntries } = useArsEntries(); // Use the new hook
+  const { arsEntries, isLoading: entriesLoading, refreshArsEntries, deleteArsEntry, clearAllArsData, addArsEntry } = useArsEntries();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
@@ -76,19 +72,18 @@ export default function ArsPage() {
 
   const [isUploading, setIsUploading] = useState(false);
   
-  const [viewingSite, setViewingSite] = useState<ArsReportRow | null>(null);
+  const [viewingSite, setViewingSite] = useState<ArsEntry | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
-  const [deletingSite, setDeletingSite] = useState<ArsReportRow | null>(null);
+  const [deletingSite, setDeletingSite] = useState<ArsEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
 
   const filteredSites = useMemo(() => {
-    let sites = [...arsSites];
+    let sites = [...arsEntries];
 
-    // Filter by date range if specified
     if (startDate || endDate) {
       const sDate = startDate ? startOfDay(startDate) : null;
       const eDate = endDate ? endOfDay(endDate) : null;
@@ -102,7 +97,6 @@ export default function ArsPage() {
       });
     }
 
-    // Filter by search term
     const lowercasedFilter = searchTerm.toLowerCase();
     if (lowercasedFilter) {
       sites = sites.filter(site => {
@@ -111,14 +105,13 @@ export default function ArsPage() {
       });
     }
     
-    // Sort by completion date (descending)
     sites.sort((a, b) => {
-        const dateA = a.dateOfCompletion ? new Date(a.dateOfCompletion) : null;
-        const dateB = b.dateOfCompletion ? new Date(b.dateOfCompletion) : null;
+        const dateA = a.createdAt ? new Date(a.createdAt) : null;
+        const dateB = b.createdAt ? new Date(b.createdAt) : null;
 
         if (!dateA && !dateB) return 0;
-        if (!dateA) return 1; // Put sites with no completion date at the end
-        if (!dateB) return -1; // Keep sites with a completion date at the front
+        if (!dateA) return 1;
+        if (!dateB) return -1;
         if (!isValid(dateA)) return 1;
         if (!isValid(dateB)) return -1;
 
@@ -126,8 +119,7 @@ export default function ArsPage() {
     });
 
     return sites;
-  }, [arsSites, searchTerm, startDate, endDate]);
-
+  }, [arsEntries, searchTerm, startDate, endDate]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -141,22 +133,12 @@ export default function ArsPage() {
   const totalPages = Math.ceil(filteredSites.length / ITEMS_PER_PAGE);
   
   const handleDeleteSite = async () => {
-    if (!deletingSite || !deletingSite.fileNo) return;
+    if (!deletingSite || !deletingSite.id) return;
     setIsDeleting(true);
-
     try {
-      const fileToUpdate = getFileEntry(deletingSite.fileNo);
-      if (!fileToUpdate) throw new Error("File not found for deletion.");
-
-      const updatedSiteDetails = fileToUpdate.siteDetails?.filter(site => 
-          !(site.nameOfSite === deletingSite.nameOfSite && site.purpose === 'ARS')
-      );
-
-      const updatedFile = { ...fileToUpdate, siteDetails: updatedSiteDetails };
-      await addFileEntry(updatedFile, deletingSite.fileNo);
-      
+      await deleteArsEntry(deletingSite.id);
       toast({ title: "ARS Site Deleted", description: `Site "${deletingSite.nameOfSite}" has been removed.` });
-      refreshArsEntries(); // Refresh the data
+      refreshArsEntries();
     } catch (error: any) {
       toast({ title: "Deletion Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -170,7 +152,7 @@ export default function ArsPage() {
     try {
         await clearAllArsData();
         toast({ title: "All ARS Data Cleared", description: "All ARS sites have been removed from the database."});
-        refreshArsEntries(); // Refresh the data
+        refreshArsEntries();
     } catch (error: any) {
         toast({ title: "Clearing Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -251,90 +233,49 @@ export default function ArsPage() {
 
         if (jsonData.length === 0) throw new Error("The selected Excel file is empty.");
 
-        // Group rows by File No to process them in batches
-        const groupedByFileNo: Record<string, any[]> = {};
-        jsonData.forEach((row: any) => {
-          const fileNo = String(row['File No'] || '').trim();
-          if (fileNo) {
-            if (!groupedByFileNo[fileNo]) {
-              groupedByFileNo[fileNo] = [];
-            }
-            groupedByFileNo[fileNo].push(row);
-          }
-        });
-
         let successCount = 0;
         let errorCount = 0;
 
-        for (const fileNo in groupedByFileNo) {
-          const rowsForFile = groupedByFileNo[fileNo];
-          const firstRow = rowsForFile[0];
-
+        for (const rowData of jsonData) {
           try {
-            let existingFile = getFileEntry(fileNo);
             const parseDate = (dateValue: any) => { if (!dateValue) return undefined; if (dateValue instanceof Date) return dateValue; let d = parse(String(dateValue), 'dd/MM/yyyy', new Date()); return isValid(d) ? d : undefined; };
+            const expenditureValue = String((rowData as any)['Expenditure (₹)'] || '');
+            const cleanedExpenditure = expenditureValue.replace(/[^0-9.]/g, '');
 
-            const newSiteDetails: SiteDetailFormData[] = rowsForFile.map(rowData => {
-              const expenditureValue = String(rowData['Expenditure (₹)'] || '');
-              const cleanedExpenditure = expenditureValue.replace(/[^0-9.]/g, '');
-              
-              return {
-                nameOfSite: String(rowData['Name of Site'] || `Imported Site ${Date.now()}`),
-                purpose: 'ARS',
-                isArsImport: true,
-                latitude: Number(rowData['Latitude']) || undefined,
-                longitude: Number(rowData['Longitude']) || undefined,
-                estimateAmount: Number(rowData['Estimate Amount']) || undefined,
-                tsAmount:  Number(rowData['AS/TS Amount']) || undefined,
-                workStatus: (rowData['Present Status'] as any) || undefined,
-                dateOfCompletion: parseDate(rowData['Completion Date']),
-                totalExpenditure: cleanedExpenditure ? Number(cleanedExpenditure) : undefined,
-                noOfBeneficiary: String(rowData['No. of Beneficiaries'] || ''),
-                workRemarks: String(rowData['Remarks'] || ''),
-                arsTypeOfScheme: String(rowData['Type of Scheme'] || ''),
-                arsPanchayath: String(rowData['Panchayath'] || ''),
-                arsBlock: String(rowData['Block'] || ''),
-                arsNumberOfStructures: Number(rowData['Number of Structures']) || undefined,
-                arsStorageCapacity: Number(rowData['Storage Capacity (m3)']) || undefined,
-                arsNumberOfFillings: Number(rowData['No. of Fillings']) || undefined,
-                arsAsTsDetails: String(rowData['AS/TS Accorded Details'] || ''),
-                arsSanctionedDate: parseDate(rowData['Sanctioned Date']),
-                arsTenderedAmount: Number(rowData['Tendered Amount']) || undefined,
-                arsAwardedAmount: Number(rowData['Awarded Amount']) || undefined,
-                additionalAS: 'No', // Add missing field
-                drillingRemarks: "", // Add missing field
-                constituency: (firstRow['Constituency'] as Constituency),
-              };
-            });
+            const newEntry: ArsEntryFormData = {
+              fileNo: String((rowData as any)['File No'] || `Imported ${Date.now()}`),
+              nameOfSite: String((rowData as any)['Name of Site'] || `Imported Site ${Date.now()}`),
+              constituency: (rowData as any)['Constituency'] || undefined,
+              arsTypeOfScheme: (rowData as any)['Type of Scheme'] || undefined,
+              arsPanchayath: String((rowData as any)['Panchayath'] || ''),
+              arsBlock: String((rowData as any)['Block'] || ''),
+              latitude: Number((rowData as any)['Latitude']) || undefined,
+              longitude: Number((rowData as any)['Longitude']) || undefined,
+              arsNumberOfStructures: Number((rowData as any)['Number of Structures']) || undefined,
+              arsStorageCapacity: Number((rowData as any)['Storage Capacity (m3)']) || undefined,
+              arsNumberOfFillings: Number((rowData as any)['No. of Fillings']) || undefined,
+              estimateAmount: Number((rowData as any)['Estimate Amount']) || undefined,
+              arsAsTsDetails: String((rowData as any)['AS/TS Accorded Details'] || ''),
+              tsAmount: Number((rowData as any)['AS/TS Amount']) || undefined,
+              arsSanctionedDate: parseDate((rowData as any)['Sanctioned Date']),
+              arsTenderedAmount: Number((rowData as any)['Tendered Amount']) || undefined,
+              arsAwardedAmount: Number((rowData as any)['Awarded Amount']) || undefined,
+              workStatus: (rowData as any)['Present Status'] || undefined,
+              dateOfCompletion: parseDate((rowData as any)['Completion Date']),
+              totalExpenditure: cleanedExpenditure ? Number(cleanedExpenditure) : undefined,
+              noOfBeneficiary: String((rowData as any)['No. of Beneficiaries'] || ''),
+              workRemarks: String((rowData as any)['Remarks'] || ''),
+            };
 
-            let updatedFile: DataEntryFormData;
-            if (existingFile) {
-              const existingSiteNames = new Set(existingFile.siteDetails?.map(s => s.nameOfSite));
-              const uniqueNewSites = newSiteDetails.filter(s => !existingSiteNames.has(s.nameOfSite));
-              updatedFile = { 
-                ...existingFile, 
-                constituency: (firstRow['Constituency'] as Constituency) || existingFile.constituency, 
-                siteDetails: [...(existingFile.siteDetails || []), ...uniqueNewSites] 
-              };
-            } else {
-              updatedFile = { 
-                fileNo: fileNo, 
-                applicantName: `ARS Import for ${fileNo}`, 
-                constituency: (firstRow['Constituency'] as Constituency), 
-                applicationType: 'Government_Others', 
-                fileStatus: 'File Under Process', 
-                siteDetails: newSiteDetails 
-              };
-            }
-            await addFileEntry(updatedFile, existingFile?.fileNo);
-            successCount += rowsForFile.length;
+            await addArsEntry(newEntry);
+            successCount++;
           } catch(e) {
-            errorCount += rowsForFile.length;
-            console.error(`Failed to process file ${fileNo}:`, e);
+            console.error("Failed to process row:", rowData, e);
+            errorCount++;
           }
         }
         
-        toast({ title: "Import Complete", description: `${successCount} sites imported. ${errorCount} rows failed.` });
+        toast({ title: "Import Complete", description: `${successCount} sites imported successfully. ${errorCount} rows failed.` });
         refreshArsEntries();
       } catch (error: any) {
         toast({ title: "Import Failed", description: error.message, variant: "destructive" });
@@ -371,16 +312,16 @@ export default function ArsPage() {
                   {canEdit && ( <> 
                       <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
                       <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm"> 
-                          {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                          {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
                           {isUploading ? 'Importing...' : 'Import Excel'}
                       </Button> 
                       <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Template </Button> 
-                      <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsSites.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
+                      <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsEntries.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
                   </> )}
                 </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-              <div className="font-medium text-sm pr-4">Total Sites: {arsSites.length}</div>
+              <div className="font-medium text-sm pr-4">Total Sites: {arsEntries.length}</div>
               <Popover>
                   <PopoverTrigger asChild>
                       <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
@@ -427,7 +368,7 @@ export default function ArsPage() {
                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
                             {canEdit && (
                                 <>
-                                <Tooltip><TooltipTrigger asChild><Link href={`/dashboard/ars/entry?fileNo=${encodeURIComponent(site.fileNo || '')}&siteName=${encodeURIComponent(site.nameOfSite || '')}`} passHref><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></Link></TooltipTrigger><TooltipContent><p>Edit Site</p></TooltipContent></Tooltip>
+                                <Tooltip><TooltipTrigger asChild><Link href={`/dashboard/ars/entry?id=${site.id}`} passHref><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></Link></TooltipTrigger><TooltipContent><p>Edit Site</p></TooltipContent></Tooltip>
                                 <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Site</p></TooltipContent></Tooltip>
                                 </>
                             )}
@@ -496,7 +437,7 @@ export default function ArsPage() {
 
       <AlertDialog open={!!deletingSite} onOpenChange={() => setDeletingSite(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This action will permanently delete the ARS site "{deletingSite?.nameOfSite}" from File No. {deletingSite?.fileNo}. This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This action will permanently delete the ARS site "{deletingSite?.nameOfSite}". This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteSite} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">{isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -506,7 +447,7 @@ export default function ArsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will permanently delete ALL ARS sites from every file in the database. This action cannot be undone.
+              This action will permanently delete ALL ARS sites from the database. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

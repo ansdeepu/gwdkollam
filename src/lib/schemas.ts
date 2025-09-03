@@ -669,7 +669,7 @@ export const arsTypeOfSchemeOptions = [
   "Percolation Ponds",
 ] as const;
 
-export const NewArsEntrySchema = z.object({
+export const ArsEntrySchema = z.object({
   fileNo: z.string().min(1, 'File No. is required.'),
   nameOfSite: z.string().min(1, 'Name of Site is required.'),
   constituency: z.enum(constituencyOptions).optional(),
@@ -695,4 +695,7 @@ export const NewArsEntrySchema = z.object({
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
 });
-export type NewArsEntryFormData = z.infer<typeof NewArsEntrySchema>;
+export type ArsEntryFormData = z.infer<typeof ArsEntrySchema>;
+
+// This is the type that includes the ID from Firestore
+export type ArsEntry = ArsEntryFormData & { id: string };

@@ -1,54 +1,148 @@
 // src/hooks/useArsEntries.ts
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useFileEntries } from './useFileEntries';
-import type { SiteDetailFormData, Constituency, ArsTypeOfScheme, SiteWorkStatus } from '@/lib/schemas';
+import { useState, useEffect, useCallback } from 'react';
+import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
+import type { ArsEntryFormData } from '@/lib/schemas';
+import { useAuth } from './useAuth';
+import { toast } from './use-toast';
 
-// This will be the shape of each row in our ARS report table
-export interface ArsReportRow extends SiteDetailFormData {
+const db = getFirestore(app);
+const ARS_COLLECTION = 'arsEntries';
+
+// This is the shape of the data as it's stored and used in the app
+export type ArsEntry = ArsEntryFormData & {
   id: string;
-  fileNo?: string;
-  applicantName?: string;
-  constituency?: Constituency;
-}
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+// Helper to safely convert Firestore Timestamps to JS Dates
+const convertTimestamps = (data: DocumentData): any => {
+  const converted: { [key: string]: any } = {};
+  for (const key in data) {
+    const value = data[key];
+    if (value instanceof Timestamp) {
+      converted[key] = value.toDate();
+    } else {
+      converted[key] = value;
+    }
+  }
+  return converted;
+};
+
 
 export function useArsEntries() {
-  const { fileEntries, isLoading: entriesLoading, addFileEntry } = useFileEntries();
-  const [arsSites, setArsSites] = useState<ArsReportRow[]>([]);
+  const { user } = useAuth();
+  const [arsEntries, setArsEntries] = useState<ArsEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const processArsSites = useCallback(() => {
-    if (entriesLoading) {
-      setIsLoading(true);
+  const fetchArsEntries = useCallback(() => {
+    if (!user) {
+      setArsEntries([]);
+      setIsLoading(false);
       return;
     }
 
-    const allArsSites = fileEntries.flatMap(entry =>
-      (entry.siteDetails ?? [])
-        .filter(site => site.isArsImport === true)
-        .map((site, index) => ({
-          ...site,
-          // Create a unique ID for each site row
-          id: `${entry.fileNo}-${site.nameOfSite}-${site.purpose}-${index}`,
-          fileNo: entry.fileNo,
-          applicantName: entry.applicantName,
-          constituency: entry.constituency
-        }))
-    );
-    setArsSites(allArsSites);
-    setIsLoading(false);
-  }, [fileEntries, entriesLoading]);
+    setIsLoading(true);
+    const q = collection(db, ARS_COLLECTION);
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const entriesData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const convertedData = convertTimestamps(data);
+        return {
+          id: doc.id,
+          ...convertedData
+        } as ArsEntry;
+      });
+      setArsEntries(entriesData);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching ARS entries:", error);
+      toast({
+        title: "Error Loading Data",
+        description: "Could not fetch ARS entries.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    });
 
-  // Initial processing
+    return unsubscribe;
+  }, [user, toast]);
+
   useEffect(() => {
-    processArsSites();
-  }, [processArsSites]);
+    const unsubscribe = fetchArsEntries();
+    return () => unsubscribe && unsubscribe();
+  }, [fetchArsEntries]);
 
-  // Function to allow components to manually trigger a refresh
+  const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
+    if (!user) throw new Error("User must be logged in to add an entry.");
+    const payload = {
+        ...entryData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    };
+    await addDoc(collection(db, ARS_COLLECTION), payload);
+  }, [user]);
+
+  const updateArsEntry = useCallback(async (id: string, entryData: Partial<ArsEntryFormData>) => {
+    if (!user) throw new Error("User must be logged in to update an entry.");
+    const docRef = doc(db, ARS_COLLECTION, id);
+    const payload = {
+        ...entryData,
+        updatedAt: serverTimestamp(),
+    };
+    await updateDoc(docRef, payload);
+  }, [user]);
+  
+  const deleteArsEntry = useCallback(async (id: string) => {
+    if (!user || user.role !== 'editor') {
+        toast({ title: "Permission Denied", description: "You don't have permission to delete entries.", variant: "destructive" });
+        return;
+    }
+    await deleteDoc(doc(db, ARS_COLLECTION, id));
+  }, [user, toast]);
+  
+  const getArsEntryById = useCallback(async (id: string): Promise<ArsEntry | null> => {
+    try {
+        const docRef = doc(db, ARS_COLLECTION, id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return convertTimestamps({ id: docSnap.id, ...docSnap.data() }) as ArsEntry;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching ARS entry by ID:", error);
+        return null;
+    }
+  }, []);
+
+  const clearAllArsData = useCallback(async () => {
+    if (!user || user.role !== 'editor') {
+        toast({ title: "Permission Denied", variant: "destructive" });
+        return;
+    }
+    const q = query(collection(db, ARS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  }, [user, toast]);
+  
   const refreshArsEntries = useCallback(() => {
-    processArsSites();
-  }, [processArsSites]);
+    fetchArsEntries();
+  }, [fetchArsEntries]);
 
-  return { arsSites, isLoading, refreshArsEntries };
+  return { 
+    arsEntries, 
+    isLoading, 
+    addArsEntry, 
+    updateArsEntry, 
+    deleteArsEntry, 
+    getArsEntryById,
+    clearAllArsData,
+    refreshArsEntries 
+  };
 }
