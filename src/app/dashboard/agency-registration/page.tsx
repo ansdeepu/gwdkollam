@@ -1,3 +1,4 @@
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -394,9 +395,9 @@ export default function AgencyRegistrationPage() {
                     processedApp.rigs = (processedApp.rigs || []).map((rig: RigRegistration) => {
                         const validRenewals = (rig.renewals || []).map((renewal: RigRenewalFormData) => ({
                             ...renewal,
-                            renewalDate: toDateOrNull(renewal.renewalDate) ?? undefined,
-                            paymentDate: toDateOrNull(renewal.paymentDate) ?? undefined,
-                            validTill: toDateOrNull(renewal.validTill) ?? undefined,
+                            renewalDate: toDateOrNull(renewal.renewalDate),
+                            paymentDate: toDateOrNull(renewal.paymentDate),
+                            validTill: toDateOrNull(renewal.validTill),
                         }));
                         
                         const validCancellationDate = toDateOrNull(rig.cancellationDate);
