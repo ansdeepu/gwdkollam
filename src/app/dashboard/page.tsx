@@ -578,7 +578,7 @@ export default function DashboardPage() {
         arsSites = arsSites.filter(site => {
         const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
         if (!completionDate || !isValid(completionDate)) return false;
-        if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
+        if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: sDate });
         if (sDate) return completionDate >= sDate;
         if (eDate) return completionDate <= eDate;
         return false;
@@ -1451,13 +1451,9 @@ export default function DashboardPage() {
                     </div>
                     <div className="p-4 border rounded-lg bg-secondary/30 text-center">
                         <p className="text-sm font-medium text-muted-foreground">Total Expenditure</p>
-                        <button 
-                            className="text-4xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={(arsDashboardData?.totalArsExpenditure ?? 0) === 0}
-                            onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites (Expenditure)')}
-                        >
+                        <p className="text-4xl font-bold text-primary">
                             ₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}
-                        </button>
+                        </p>
                     </div>
                 </div>
                 <div className="md:col-span-2">

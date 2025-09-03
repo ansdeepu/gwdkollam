@@ -1,10 +1,9 @@
-
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
-import { useForm, useFieldArray, FormProvider, useWatch, Controller } from "react-hook-form";
+import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -108,7 +107,7 @@ const RigAccordionItem = ({
   onCancel: (rigIndex: number) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
-  form: any;
+  form: UseFormReturn<AgencyApplication>;
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = field.registrationDate;
@@ -391,8 +390,8 @@ export default function AgencyRegistrationPage() {
                 processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate) ?? undefined;
                 processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate) ?? undefined;
 
-                processedApp.rigs = (processedApp.rigs || []).map((rig: any) => {
-                    const validRenewals = (rig.renewals || []).map((renewal: any) => ({
+                processedApp.rigs = (processedApp.rigs || []).map((rig: RigRegistration) => {
+                    const validRenewals = (rig.renewals || []).map((renewal: RigRenewalFormData) => ({
                         ...renewal,
                         renewalDate: toDateOrNull(renewal.renewalDate) ?? undefined,
                         paymentDate: toDateOrNull(renewal.paymentDate) ?? undefined,
