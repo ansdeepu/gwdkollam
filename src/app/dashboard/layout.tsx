@@ -13,7 +13,7 @@ import AppSidebar from '@/components/layout/AppSidebar';
 import { useAuth, updateUserLastActive } from '@/hooks/useAuth'; 
 import { Clock, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation.tsx';
+import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation';
 import { PageHeaderProvider, usePageHeader } from '@/hooks/usePageHeader';
 import { format } from 'date-fns';
 
