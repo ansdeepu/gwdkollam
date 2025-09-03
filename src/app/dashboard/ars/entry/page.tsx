@@ -1,3 +1,4 @@
+
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -22,8 +23,10 @@ import { format, isValid } from "date-fns";
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 export default function ArsEntryPage() {
+    const { setHeader } = usePageHeader();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, fetchAllUsers } = useAuth();
@@ -39,6 +42,14 @@ export default function ArsEntryPage() {
     const isEditing = !!entryIdToEdit;
     const canEdit = user?.role === 'editor';
     
+     useEffect(() => {
+        const title = isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry';
+        const description = isEditing 
+            ? 'Update the details for the ARS site below.' 
+            : 'Fill in the details to create a new ARS site entry.';
+        setHeader(title, description);
+    }, [isEditing, setHeader]);
+
     useEffect(() => {
         if (canEdit) {
             fetchAllUsers().then(setAllUsers);
@@ -128,17 +139,11 @@ export default function ArsEntryPage() {
     
     return (
         <div className="space-y-6">
-            <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry'}</h1>
-                        <p className="text-muted-foreground">{isEditing ? 'Update the details for the ARS site below.' : 'Fill in the details to create a new ARS site entry.'}</p>
-                    </div>
-                     <Button variant="destructive" size="sm" onClick={() => router.back()}>
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
-                    </Button>
-                </div>
+            <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => router.back()}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                </Button>
             </div>
             <Card className="shadow-lg">
                 <CardContent className="pt-6">
