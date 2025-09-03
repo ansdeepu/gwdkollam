@@ -70,7 +70,7 @@ export function useArsEntries() {
     });
 
     return unsubscribe;
-  }, [user, toast]);
+  }, [user]);
 
   useEffect(() => {
     const unsubscribe = fetchArsEntries();

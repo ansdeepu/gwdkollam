@@ -34,9 +34,15 @@ const designationSortOrder: Record<Designation, number> = designationOptions.red
 
 const convertStaffMemberTimestamps = (data: any): StaffMember => {
   const staff: any = { ...data }; 
-  if (staff.dateOfBirth instanceof Timestamp) staff.dateOfBirth = staff.dateOfBirth.toDate();
-  else if (typeof staff.dateOfBirth === 'string') staff.dateOfBirth = new Date(staff.dateOfBirth);
-  else staff.dateOfBirth = null;
+  if (staff.dateOfBirth instanceof Timestamp) {
+    staff.dateOfBirth = staff.dateOfBirth.toDate();
+  } else if (typeof staff.dateOfBirth === 'string') {
+    const parsedDate = new Date(staff.dateOfBirth);
+    staff.dateOfBirth = isValid(parsedDate) ? parsedDate : null;
+  } else {
+    staff.dateOfBirth = null;
+  }
+
   staff.createdAt = staff.createdAt instanceof Timestamp ? staff.createdAt.toDate() : new Date();
   staff.updatedAt = staff.updatedAt instanceof Timestamp ? staff.updatedAt.toDate() : new Date();
 

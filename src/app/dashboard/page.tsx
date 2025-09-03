@@ -182,6 +182,20 @@ const getColorClass = (nameOrEmail: string): string => {
     return colors[index];
 };
 
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  // Handle Firestore Timestamps which are objects with seconds/nanoseconds
+  if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number') {
+    return new Date(dateValue.seconds * 1000);
+  }
+  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+    const parsed = new Date(dateValue);
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
+
 
 export default function DashboardPage() {
   const { setHeader } = usePageHeader();
@@ -408,10 +422,8 @@ export default function DashboardPage() {
             .filter((d): d is Date => d !== null && isValid(d))
             .sort((a, b) => b.getTime() - a.getTime())[0];
 
-        const createdAtValue = 'createdAt' in entry ? entry.createdAt : null;
-        const createdAtDate = createdAtValue instanceof Date ? createdAtValue : null;
-
-        const basisDate = latestRemittanceDate || createdAtDate;
+        const createdAtValue = entry.createdAt;
+        const basisDate = latestRemittanceDate || (createdAtValue && isValid(new Date(createdAtValue)) ? new Date(createdAtValue) : null);
 
         if (basisDate && isValid(basisDate)) {
             const ageInMs = now.getTime() - basisDate.getTime();
@@ -640,8 +652,8 @@ export default function DashboardPage() {
         }
 
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
-          const completionDate = new Date(site.dateOfCompletion);
-          if (isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
+          const completionDate = safeParseDate(site.dateOfCompletion);
+          if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonth, end: endOfMonth })) {
              const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
              if (!uniqueCompletedSites.has(siteKey)) {
                 uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });

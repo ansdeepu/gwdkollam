@@ -374,25 +374,19 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                 const processedApp = { ...app };
+                 const processedApp = JSON.parse(JSON.stringify(app));
 
                 const toDateOrNull = (value: any): Date | null => {
                     if (!value) return null;
-                    if (value.toDate && typeof value.toDate === 'function') { // Handle Firestore Timestamps
-                        return value.toDate();
-                    }
-                    if (typeof value === 'string' || value instanceof Date) {
-                        const parsed = new Date(value);
-                        if (isValid(parsed)) return parsed;
-                    }
-                    return null;
+                    const date = new Date(value);
+                    return isValid(date) ? date : null;
                 };
 
-                processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate) ?? undefined;
-                processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate) ?? undefined;
+                processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate);
+                processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate);
 
-                if (processedApp.rigs) {
-                    processedApp.rigs = (processedApp.rigs || []).map((rig: RigRegistration) => {
+                if (processedApp.rigs && Array.isArray(processedApp.rigs)) {
+                    processedApp.rigs = processedApp.rigs.map((rig: RigRegistration) => {
                         const validRenewals = (rig.renewals || []).map((renewal: RigRenewalFormData) => ({
                             ...renewal,
                             renewalDate: toDateOrNull(renewal.renewalDate),
@@ -400,14 +394,12 @@ export default function AgencyRegistrationPage() {
                             validTill: toDateOrNull(renewal.validTill),
                         }));
                         
-                        const validCancellationDate = toDateOrNull(rig.cancellationDate);
-    
                         return {
                             ...rig,
                             registrationDate: toDateOrNull(rig.registrationDate),
                             paymentDate: toDateOrNull(rig.paymentDate),
                             renewals: validRenewals,
-                            cancellationDate: validCancellationDate,
+                            cancellationDate: toDateOrNull(rig.cancellationDate),
                         };
                     });
                 } else {

@@ -92,7 +92,7 @@ export function useAgencyApplications() {
     });
 
     return () => unsubscribe();
-  }, [user, toast]);
+  }, [user]);
 
   const addApplication = useCallback(async (applicationData: Omit<AgencyApplication, 'id'>) => {
     if (!user) throw new Error("User must be logged in to add an application.");
