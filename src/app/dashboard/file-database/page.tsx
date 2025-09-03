@@ -4,7 +4,7 @@
 
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database } from "lucide-react";
+import { useFileEntries } from "@/hooks/useFileEntries";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
 
@@ -14,11 +14,13 @@ export default function FileDatabasePage() {
     setHeader('All File Entries', 'Browse, view, edit, or delete submitted file entries.');
   }, [setHeader]);
 
+  const { fileEntries } = useFileEntries();
+
   return (
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardContent className="pt-6">
-          <FileDatabaseTable />
+          <FileDatabaseTable fileEntries={fileEntries} />
         </CardContent>
       </Card>
     </div>
