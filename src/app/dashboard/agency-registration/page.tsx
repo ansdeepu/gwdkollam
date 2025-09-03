@@ -33,6 +33,46 @@ import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
 
+// This robust helper function ensures any date-like value from Firestore is safely converted to a Date object or null.
+const toDateOrNull = (value: any): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date && isValid(value)) return value;
+  // Handle serialized date strings
+  if (typeof value === 'string') {
+    const parsed = parseISO(value);
+    if (isValid(parsed)) return parsed;
+  }
+  // This handles the case where a Firestore Timestamp object gets serialized to a plain object
+  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
+    if (isValid(date)) return date;
+  }
+  return null;
+};
+
+// Recursively processes an object to convert all date-like strings/objects to Date objects.
+const processDataForForm = (data: any): any => {
+    if (!data) return data;
+    if (Array.isArray(data)) {
+        return data.map(item => processDataForForm(item));
+    }
+    if (typeof data === 'object' && data !== null) {
+        const processed: { [key: string]: any } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                const value = data[key];
+                 if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
+                    processed[key] = toDateOrNull(value);
+                } else {
+                    processed[key] = processDataForForm(value);
+                }
+            }
+        }
+        return processed;
+    }
+    return data;
+};
+
 
 const AgencyTable = ({ 
   applications, 
@@ -374,7 +414,9 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                 form.reset(app);
+                 // Safely process all date-like fields before resetting the form
+                 const processedApp = processDataForForm(app);
+                 form.reset(processedApp);
             } else {
                 setSelectedApplicationId(null);
                 form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });

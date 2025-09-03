@@ -35,43 +35,25 @@ export type AgencyApplication = Omit<AgencyApplicationFormData, 'rigs'> & {
   updatedAt?: Date;
 };
 
-// Helper to safely convert Firestore Timestamps and serialized date objects to JS Dates
-const safeParseDate = (value: any): Date | null => {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    if (value instanceof Timestamp) return value.toDate();
-    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-        return new Timestamp(value.seconds, value.nanoseconds).toDate();
+// Helper to safely convert Firestore Timestamps and serialized date objects to a serializable format (ISO string)
+const processDataForClient = (data: any): any => {
+    if (!data) return data;
+    if (Array.isArray(data)) {
+        return data.map(item => processDataForClient(item));
     }
-    if (typeof value === 'string' || typeof value === 'number') {
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) return date;
+    if (data instanceof Timestamp) {
+        return data.toDate().toISOString();
     }
-    return null;
-};
-
-const processAgencyData = (data: DocumentData): any => {
-    const processed: { [key: string]: any } = {};
-    for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-            const value = data[key];
-            if (key.toLowerCase().includes('date') || key.toLowerCase().includes('at') || key.toLowerCase().includes('till')) {
-                processed[key] = safeParseDate(value);
-            } else if (key === 'rigs' && Array.isArray(value)) {
-                processed[key] = value.map(rig => processAgencyData(rig));
-            } else if (key === 'renewals' && Array.isArray(value)) {
-                processed[key] = value.map(renewal => processAgencyData(renewal));
-            } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-                processed[key] = processAgencyData(value);
-            } else if (Array.isArray(value)) {
-                 processed[key] = value.map(item => (item && typeof item === 'object') ? processAgencyData(item) : item);
-            }
-            else {
-                processed[key] = value;
+    if (typeof data === 'object' && data !== null) {
+        const processed: { [key: string]: any } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                processed[key] = processDataForClient(data[key]);
             }
         }
+        return processed;
     }
-    return processed;
+    return data;
 };
 
 
@@ -93,10 +75,11 @@ export function useAgencyApplications() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const appsData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const convertedData = processAgencyData(data);
+        // Process data to make it serializable and safe for the client
+        const serializableData = processDataForClient(data);
         return {
           id: doc.id,
-          ...convertedData
+          ...serializableData
         } as AgencyApplication;
       });
       setApplications(appsData);

@@ -19,11 +19,37 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { format, isValid } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
 import { usePageHeader } from "@/hooks/usePageHeader";
+
+const toDateOrNull = (value: any): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date && isValid(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = parseISO(value);
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
+
+const processDataForForm = (data: any): any => {
+    if (!data) return data;
+    const processed: { [key: string]: any } = {};
+    for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const value = data[key];
+             if (key.toLowerCase().includes('date')) {
+                processed[key] = toDateOrNull(value);
+            } else {
+                processed[key] = value;
+            }
+        }
+    }
+    return processed;
+};
 
 export default function ArsEntryPage() {
     const { setHeader } = usePageHeader();
@@ -89,7 +115,7 @@ export default function ArsEntryPage() {
             if (isEditing && entryIdToEdit) {
                 const entry = await getArsEntryById(entryIdToEdit);
                 if (entry) {
-                    form.reset(entry);
+                    form.reset(processDataForForm(entry));
                 } else {
                     toast({ title: "Error", description: `ARS Entry with ID "${entryIdToEdit}" not found.`, variant: "destructive" });
                     router.push('/dashboard/ars');

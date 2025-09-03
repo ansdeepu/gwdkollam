@@ -1,4 +1,3 @@
-
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -19,39 +18,28 @@ export type ArsEntry = ArsEntryFormData & {
   updatedAt?: Date;
 };
 
-// Helper to safely convert Firestore Timestamps and serialized date objects to JS Dates
-const safeParseDate = (value: any): Date | null => {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    if (value instanceof Timestamp) return value.toDate();
-    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-        return new Timestamp(value.seconds, value.nanoseconds).toDate();
+// Helper to safely convert Firestore Timestamps and serialized date objects to a serializable format (ISO string)
+const processDataForClient = (data: DocumentData): any => {
+    if (!data) return data;
+    const processed: { [key: string]: any } = {};
+    for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const value = data[key];
+            if (value instanceof Timestamp) {
+                // Convert Timestamps to ISO strings for serialization
+                processed[key] = value.toDate().toISOString();
+            } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+                // Recursively process nested objects
+                processed[key] = processDataForClient(value);
+            } else if (Array.isArray(value)) {
+                // Recursively process arrays of objects
+                processed[key] = value.map(item => (item && typeof item === 'object') ? processDataForClient(item) : item);
+            } else {
+                processed[key] = value;
+            }
+        }
     }
-    if (typeof value === 'string' || typeof value === 'number') {
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) return date;
-    }
-    return null;
-};
-
-const convertTimestamps = (data: DocumentData): any => {
-  if (!data) return data;
-  const converted: { [key: string]: any } = {};
-  for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
-      const value = data[key];
-       if (key.toLowerCase().includes('date') || key.toLowerCase().includes('at')) {
-           converted[key] = safeParseDate(value);
-       } else if (Array.isArray(value)) {
-          converted[key] = value.map(item => (item && typeof item === 'object') ? convertTimestamps(item) : item);
-       } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-          converted[key] = convertTimestamps(value);
-       } else {
-          converted[key] = value;
-       }
-    }
-  }
-  return converted;
+    return processed;
 };
 
 
@@ -73,10 +61,10 @@ export function useArsEntries() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const convertedData = convertTimestamps(data);
+        const serializableData = processDataForClient(data);
         return {
           id: doc.id,
-          ...convertedData
+          ...serializableData
         } as ArsEntry;
       });
       setArsEntries(entriesData);
@@ -132,7 +120,7 @@ export function useArsEntries() {
         const docRef = doc(db, ARS_COLLECTION, id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            return convertTimestamps({ id: docSnap.id, ...docSnap.data() }) as ArsEntry;
+            return processDataForClient({ id: docSnap.id, ...docSnap.data() }) as ArsEntry;
         }
         return null;
     } catch (error) {
