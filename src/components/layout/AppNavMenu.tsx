@@ -11,8 +11,8 @@ import {
 import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
-import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
-import { Badge } from '@/components/ui/badge'; // Import the Badge component
+import { usePendingUpdates } from '@/hooks/usePendingUpdates'; 
+import { Badge } from '@/components/ui/badge'; 
 import { usePageNavigation } from '@/hooks/usePageNavigation.tsx';
 
 export interface NavItem {
@@ -40,7 +40,7 @@ export const allNavItems: NavItem[] = [
 export default function AppNavMenu() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { pendingUpdates } = usePendingUpdates(); // Get pending updates
+  const { pendingUpdates } = usePendingUpdates();
   const { setIsNavigating } = usePageNavigation();
 
   const accessibleNavItems = allNavItems.filter(item => {
