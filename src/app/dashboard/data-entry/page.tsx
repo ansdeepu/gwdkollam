@@ -132,7 +132,7 @@ export default function DataEntryPage() {
                     processedSupervisorUpdates.map(site => [site.nameOfSite, site])
                   );
                   
-                  // 4. Intelligently merge the processed updates into the original site details.
+                  // 4. Intelligently merge the processed updates into the original site data.
                   mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
                       if (updatedSitesMap.has(originalSite.nameOfSite)) {
                           // Merge only the fields from the update into the original site data.
