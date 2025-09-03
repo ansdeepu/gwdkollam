@@ -374,46 +374,7 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                 const processedApp = JSON.parse(JSON.stringify(app));
-
-                const toDateOrNull = (value: any): Date | null => {
-                    if (!value) return null;
-                    if (value instanceof Date && isValid(value)) return value;
-                    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
-                        const date = new Date(value.seconds * 1000);
-                        return isValid(date) ? date : null;
-                    }
-                    if (typeof value === 'string' || typeof value === 'number') {
-                        const date = new Date(value);
-                        return isValid(date) ? date : null;
-                    }
-                    return null;
-                };
-
-                processedApp.agencyRegistrationDate = toDateOrNull(processedApp.agencyRegistrationDate);
-                processedApp.agencyPaymentDate = toDateOrNull(processedApp.agencyPaymentDate);
-
-                if (processedApp.rigs) {
-                    processedApp.rigs = (processedApp.rigs || []).map((rig: RigRegistration) => {
-                        const validRenewals = (rig.renewals || []).map((renewal: RigRenewalFormData) => ({
-                            ...renewal,
-                            renewalDate: toDateOrNull(renewal.renewalDate),
-                            paymentDate: toDateOrNull(renewal.paymentDate),
-                            validTill: toDateOrNull(renewal.validTill),
-                        }));
-                        
-                        return {
-                            ...rig,
-                            registrationDate: toDateOrNull(rig.registrationDate),
-                            paymentDate: toDateOrNull(rig.paymentDate),
-                            renewals: validRenewals,
-                            cancellationDate: toDateOrNull(rig.cancellationDate),
-                        };
-                    });
-                } else {
-                    processedApp.rigs = [];
-                }
-                form.reset(processedApp);
+                 form.reset(app);
             } else {
                 setSelectedApplicationId(null);
                 form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });

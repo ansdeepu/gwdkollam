@@ -1,3 +1,4 @@
+
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -18,26 +19,36 @@ export type ArsEntry = ArsEntryFormData & {
   updatedAt?: Date;
 };
 
-// Helper to safely convert Firestore Timestamps to JS Dates
+// Helper to safely convert Firestore Timestamps and serialized date objects to JS Dates
+const safeParseDate = (value: any): Date | null => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (value instanceof Timestamp) return value.toDate();
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+        return new Timestamp(value.seconds, value.nanoseconds).toDate();
+    }
+    if (typeof value === 'string' || typeof value === 'number') {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) return date;
+    }
+    return null;
+};
+
 const convertTimestamps = (data: DocumentData): any => {
+  if (!data) return data;
   const converted: { [key: string]: any } = {};
   for (const key in data) {
-    const value = data[key];
-    if (value instanceof Timestamp) {
-      converted[key] = value.toDate();
-    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-       // Check for seconds and nanoseconds to identify Timestamp-like objects from JSON serialization
-      if (typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-        converted[key] = new Timestamp(value.seconds, value.nanoseconds).toDate();
-      } else {
-        converted[key] = convertTimestamps(value); // Recurse for nested objects
-      }
-    } else if (Array.isArray(value)) {
-       converted[key] = value.map(item =>
-        item && typeof item === 'object' && !Array.isArray(item) ? convertTimestamps(item) : item
-      );
-    } else {
-      converted[key] = value;
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      const value = data[key];
+       if (key.toLowerCase().includes('date') || key.toLowerCase().includes('at')) {
+           converted[key] = safeParseDate(value);
+       } else if (Array.isArray(value)) {
+          converted[key] = value.map(item => (item && typeof item === 'object') ? convertTimestamps(item) : item);
+       } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          converted[key] = convertTimestamps(value);
+       } else {
+          converted[key] = value;
+       }
     }
   }
   return converted;

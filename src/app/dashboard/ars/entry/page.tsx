@@ -89,12 +89,7 @@ export default function ArsEntryPage() {
             if (isEditing && entryIdToEdit) {
                 const entry = await getArsEntryById(entryIdToEdit);
                 if (entry) {
-                    // Directly use the fetched entry data to reset the form
-                    form.reset({
-                        ...entry,
-                        arsSanctionedDate: entry.arsSanctionedDate ? new Date(entry.arsSanctionedDate) : undefined,
-                        dateOfCompletion: entry.dateOfCompletion ? new Date(entry.dateOfCompletion) : undefined,
-                    });
+                    form.reset(entry);
                 } else {
                     toast({ title: "Error", description: `ARS Entry with ID "${entryIdToEdit}" not found.`, variant: "destructive" });
                     router.push('/dashboard/ars');

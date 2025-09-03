@@ -33,21 +33,26 @@ const designationSortOrder: Record<Designation, number> = designationOptions.red
 }, {} as Record<Designation, number>);
 
 
+const safeParseDate = (value: any): Date | null => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (value instanceof Timestamp) return value.toDate();
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+        return new Timestamp(value.seconds, value.nanoseconds).toDate();
+    }
+    if (typeof value === 'string' || typeof value === 'number') {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) return date;
+    }
+    return null;
+};
+
+
 const convertStaffMemberTimestamps = (data: DocumentData): StaffMember => {
   const staff: any = { ...data }; 
-  if (staff.dateOfBirth instanceof Timestamp) {
-    staff.dateOfBirth = staff.dateOfBirth.toDate();
-  } else if (typeof staff.dateOfBirth === 'string') {
-    const parsedDate = new Date(staff.dateOfBirth);
-    staff.dateOfBirth = isValid(parsedDate) ? parsedDate : null;
-  } else if (staff.dateOfBirth && typeof staff.dateOfBirth === 'object' && typeof staff.dateOfBirth.seconds === 'number') {
-    staff.dateOfBirth = new Timestamp(staff.dateOfBirth.seconds, staff.dateOfBirth.nanoseconds).toDate();
-  } else {
-    staff.dateOfBirth = null;
-  }
-
-  staff.createdAt = staff.createdAt instanceof Timestamp ? staff.createdAt.toDate() : new Date();
-  staff.updatedAt = staff.updatedAt instanceof Timestamp ? staff.updatedAt.toDate() : new Date();
+  staff.dateOfBirth = safeParseDate(staff.dateOfBirth);
+  staff.createdAt = safeParseDate(staff.createdAt) || new Date();
+  staff.updatedAt = safeParseDate(staff.updatedAt) || new Date();
 
   // Determine status, prioritizing the 'status' field.
   let determinedStatus: StaffStatusType = 'Active'; // Default status
