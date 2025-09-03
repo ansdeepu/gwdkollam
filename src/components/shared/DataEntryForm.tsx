@@ -78,7 +78,7 @@ const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
   surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
   surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
-  arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined,
+  arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false,
   pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
 });
 
