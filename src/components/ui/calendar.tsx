@@ -17,29 +17,35 @@ function CustomCaptionLabel({ displayMonth }: { displayMonth: Date }) {
   const { fromDate, toDate, fromYear: dpFromYear, toYear: dpToYear, locale } = useDayPicker();
   const { goToMonth, currentMonth, previousMonth, nextMonth } = useNavigation();
 
-  const [yearInputValue, setYearInputValue] = React.useState(displayMonth.getFullYear().toString());
-  const [isYearInputFocused, setIsYearInputFocused] = React.useState(false); // New focus state
+  // Add a guard to handle undefined displayMonth on initial render
+  const initialYear = displayMonth ? displayMonth.getFullYear().toString() : "";
+  const [yearInputValue, setYearInputValue] = React.useState(initialYear);
+  const [isYearInputFocused, setIsYearInputFocused] = React.useState(false); 
 
-  const minYearForInput = React.useMemo(() => dpFromYear || (fromDate ? fromDate.getFullYear() : 1900), [dpFromYear, fromDate]);
-  const maxYearForInput = React.useMemo(() => dpToYear || (toDate ? toDate.getFullYear() : 2100), [dpToYear, toDate]);
-
-  // Sync input with external changes to displayMonth (e.g., prev/next buttons, month select)
-  // Only update if the input is NOT focused
   React.useEffect(() => {
-    if (!isYearInputFocused) {
+    // Only update from displayMonth if it exists and the input is not focused
+    if (displayMonth && !isYearInputFocused) {
       setYearInputValue(displayMonth.getFullYear().toString());
     }
   }, [displayMonth, isYearInputFocused]);
 
+  // Return null or a placeholder if displayMonth is not yet available
+  if (!displayMonth) {
+    return null; 
+  }
+
+  const minYearForInput = React.useMemo(() => dpFromYear || (fromDate ? fromDate.getFullYear() : 1900), [dpFromYear, fromDate]);
+  const maxYearForInput = React.useMemo(() => dpToYear || (toDate ? toDate.getFullYear() : 2100), [dpToYear, toDate]);
+
   const handleYearInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setYearInputValue(e.target.value); // Allow user to type freely
+    setYearInputValue(e.target.value); 
   };
 
   const applyYearChange = React.useCallback(() => {
     let userEnteredYear = parseInt(yearInputValue, 10);
 
     if (isNaN(userEnteredYear)) {
-      setYearInputValue(displayMonth.getFullYear().toString()); // Revert to current if invalid
+      setYearInputValue(displayMonth.getFullYear().toString()); 
       return;
     }
 
@@ -48,9 +54,6 @@ function CustomCaptionLabel({ displayMonth }: { displayMonth: Date }) {
     if (clampedYear !== displayMonth.getFullYear() || displayMonth.getMonth() !== currentMonth.getMonth()) {
       goToMonth(new Date(clampedYear, displayMonth.getMonth()));
     }
-    // After goToMonth, DayPicker updates displayMonth, which triggers the useEffect above
-    // to setYearInputValue if the input is not focused (which it won't be after blur).
-    // If the clamped year is different from what was typed, ensure input reflects clamped value on blur.
      if (clampedYear.toString() !== yearInputValue) {
         setYearInputValue(clampedYear.toString());
     }
@@ -63,7 +66,7 @@ function CustomCaptionLabel({ displayMonth }: { displayMonth: Date }) {
 
   const handleYearInputBlur = () => {
     setIsYearInputFocused(false);
-    applyYearChange(); // Apply change on blur
+    applyYearChange(); 
   };
 
   const handleYearInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -78,7 +81,7 @@ function CustomCaptionLabel({ displayMonth }: { displayMonth: Date }) {
     const newMonth = parseInt(value, 10);
     let targetYear = parseInt(yearInputValue, 10);
     if (isNaN(targetYear) || targetYear < minYearForInput || targetYear > maxYearForInput) {
-        targetYear = displayMonth.getFullYear(); // Use current display year if input is invalid or out of range
+        targetYear = displayMonth.getFullYear(); 
     }
     goToMonth(new Date(targetYear, newMonth));
   };

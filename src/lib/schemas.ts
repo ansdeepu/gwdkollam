@@ -654,6 +654,7 @@ export const arsWorkStatusOptions = [
   "Selection Notice Issued",
   "Work Order Issued",
   "Work Initiated",
+  "Work in Progress",
   "Work Completed",
   "Bill Prepared",
   "Payment Completed",
