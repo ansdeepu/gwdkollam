@@ -1,3 +1,4 @@
+
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -63,7 +64,7 @@ export default function ArsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const canEdit = user?.role === 'editor';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,8 +101,20 @@ export default function ArsPage() {
     const lowercasedFilter = searchTerm.toLowerCase();
     if (lowercasedFilter) {
       sites = sites.filter(site => {
-        const siteContent = Object.values(site).join(' ').toLowerCase();
-        return siteContent.includes(lowercasedFilter);
+        // Robust search through specific fields
+        const searchableContent = [
+          site.fileNo,
+          site.nameOfSite,
+          site.constituency,
+          site.arsTypeOfScheme,
+          site.arsPanchayath,
+          site.arsBlock,
+          site.workStatus,
+          site.supervisorName,
+          site.workRemarks
+        ].filter(Boolean).map(String).join(' ').toLowerCase();
+
+        return searchableContent.includes(lowercasedFilter);
       });
     }
     
@@ -245,7 +258,7 @@ export default function ArsPage() {
             const newEntry: ArsEntryFormData = {
               fileNo: String((rowData as any)['File No'] || `Imported ${Date.now()}`),
               nameOfSite: String((rowData as any)['Name of Site'] || `Imported Site ${Date.now()}`),
-              constituency: (rowData as any)['Constituency'] || undefined,
+              constituency: (rowData as any)['Constituency (LAC)'] || undefined,
               arsTypeOfScheme: (rowData as any)['Type of Scheme'] || undefined,
               arsPanchayath: String((rowData as any)['Panchayath'] || ''),
               arsBlock: String((rowData as any)['Block'] || ''),
@@ -265,6 +278,8 @@ export default function ArsPage() {
               totalExpenditure: cleanedExpenditure ? Number(cleanedExpenditure) : undefined,
               noOfBeneficiary: String((rowData as any)['No. of Beneficiaries'] || ''),
               workRemarks: String((rowData as any)['Remarks'] || ''),
+              supervisorName: null,
+              supervisorUid: null
             };
 
             await addArsEntry(newEntry);
@@ -292,7 +307,7 @@ export default function ArsPage() {
     if (target.closest('.calendar-custom-controls-container') || target.closest('[data-radix-select-content]')) e.preventDefault();
   };
 
-  if (entriesLoading) {
+  if (entriesLoading || authLoading) {
     return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading ARS data...</p> </div> );
   }
 
