@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker, DropdownProps, useDayPicker } from "react-day-picker"
+import { DayPicker, DropdownProps } from "react-day-picker"
 import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
@@ -24,10 +24,10 @@ function Calendar({
   ...props
 }: CalendarProps) {
   
-  function CustomCaption(props: DropdownProps) {
-    const { fromDate, toDate } = useDayPicker();
-
-    const currentYear = props.displayMonth.getFullYear();
+  function CustomCaption(captionProps: DropdownProps) {
+    const { fromDate, toDate, goToMonth, displayMonth } = props;
+    
+    const currentYear = displayMonth.getFullYear();
     const fromYearValue = fromDate?.getFullYear() ?? fromYear;
     const toYearValue = toDate?.getFullYear() ?? toYear;
     
@@ -44,15 +44,15 @@ function Calendar({
     return (
       <div className="flex justify-between items-center gap-2 px-2">
         <Select
-          value={String(props.displayMonth.getMonth())}
+          value={String(displayMonth.getMonth())}
           onValueChange={(newMonth) => {
-            const newDate = new Date(props.displayMonth);
+            const newDate = new Date(displayMonth);
             newDate.setMonth(parseInt(newMonth, 10));
-            props.onMonthChange?.(newDate);
+            goToMonth(newDate);
           }}
         >
           <SelectTrigger className="w-[60%] h-8 focus:ring-0 focus:ring-offset-0">
-            <SelectValue>{format(props.displayMonth, 'MMMM')}</SelectValue>
+            <SelectValue>{format(displayMonth, 'MMMM')}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {monthOptions.map((month) => (
@@ -66,9 +66,9 @@ function Calendar({
         <Select
           value={String(currentYear)}
           onValueChange={(newYear) => {
-            const newDate = new Date(props.displayMonth);
+            const newDate = new Date(displayMonth);
             newDate.setFullYear(parseInt(newYear, 10));
-            props.onMonthChange?.(newDate);
+            goToMonth(newDate);
           }}
         >
           <SelectTrigger className="w-[40%] h-8 focus:ring-0 focus:ring-offset-0">
@@ -126,7 +126,7 @@ function Calendar({
       components={{
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
-        Caption: CustomCaption,
+        Caption: props.captionLayout === "dropdown-buttons" ? CustomCaption : undefined,
       }}
       {...props}
     />
