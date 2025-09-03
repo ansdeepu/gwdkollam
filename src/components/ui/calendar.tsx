@@ -30,7 +30,7 @@ export function Calendar({
   onSelect,
   initialFocus,
   disabled,
-  fromYear = 2020,
+  fromYear = 2010,
   toYear = 2050,
 }: CalendarProps) {
   const [currentDate, setCurrentDate] = React.useState(selected || new Date())
