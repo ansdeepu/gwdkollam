@@ -129,7 +129,7 @@
     overflow: hidden;
   }
   .marquee-v-content {
-    animation: marquee-vertical-animation 40s linear infinite;
+    animation: marquee-vertical-animation 30s linear infinite;
   }
   .marquee-v-content:hover {
     animation-play-state: paused;
@@ -147,6 +147,18 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+
+  /* Page transition spinner styles */
+  .page-transition-spinner {
+    @apply fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
 }
 
 /* Initially hide elements meant only for print */
