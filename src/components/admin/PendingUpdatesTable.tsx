@@ -1,8 +1,8 @@
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
-import React, { useState } from 'react';
-import { usePendingUpdates } from '@/hooks/usePendingUpdates';
+import React, { useState, useEffect } from 'react';
+import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -21,10 +21,24 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function PendingUpdatesTable() {
-  const { pendingUpdates, isLoading, rejectUpdate } = usePendingUpdates();
+  const { rejectUpdate, getPendingUpdatesForFile } = usePendingUpdates();
   const { toast } = useToast();
+  
+  const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [updateToReject, setUpdateToReject] = useState<string | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
+
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      setIsLoading(true);
+      const updates = await getPendingUpdatesForFile(null);
+      setPendingUpdates(updates);
+      setIsLoading(false);
+    };
+    fetchUpdates();
+  }, [getPendingUpdatesForFile]);
+
 
   const handleReject = async () => {
     if (!updateToReject) return;
@@ -36,6 +50,9 @@ export default function PendingUpdatesTable() {
         title: "Update Rejected",
         description: "The supervisor's changes have been rejected and they have been notified.",
       });
+      // Refetch the data after rejection
+      const updates = await getPendingUpdatesForFile(null);
+      setPendingUpdates(updates);
     } catch (error: any) {
       toast({
         title: "Rejection Failed",

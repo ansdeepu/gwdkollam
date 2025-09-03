@@ -14,6 +14,7 @@ import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; 
 import { Badge } from '@/components/ui/badge'; 
 import { usePageNavigation } from '@/hooks/usePageNavigation.tsx';
+import { useEffect, useState } from 'react';
 
 export interface NavItem {
   href: string;
@@ -40,16 +41,29 @@ export const allNavItems: NavItem[] = [
 export default function AppNavMenu() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { pendingUpdates } = usePendingUpdates();
+  const { getPendingUpdatesForFile } = usePendingUpdates();
   const { setIsNavigating } = usePageNavigation();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+        if (user?.role === 'editor') {
+            const updates = await getPendingUpdatesForFile(null);
+            setPendingCount(updates.length);
+        }
+    };
+    fetchPendingCount();
+    // Re-fetch every 30 seconds to keep the badge somewhat fresh
+    const interval = setInterval(fetchPendingCount, 30000); 
+    return () => clearInterval(interval);
+  }, [user, getPendingUpdatesForFile]);
+
 
   const accessibleNavItems = allNavItems.filter(item => {
     if (!user || !user.isApproved) return false;
     if (!item.roles || item.roles.length === 0) return true;
     return item.roles.includes(user.role);
   });
-
-  const pendingCount = pendingUpdates.length;
 
   const handleNavigation = (href: string) => {
     if (href !== pathname) {

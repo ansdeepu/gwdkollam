@@ -37,8 +37,6 @@ const convertTimestampToDate = (data: DocumentData): PendingUpdate => {
 };
 
 interface PendingUpdatesState {
-  pendingUpdates: PendingUpdate[];
-  isLoading: boolean;
   createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
   rejectUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
@@ -48,34 +46,7 @@ interface PendingUpdatesState {
 
 export function usePendingUpdates(): PendingUpdatesState {
   const { user } = useAuth();
-  const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user || user.role !== 'editor') {
-      setIsLoading(false);
-      setPendingUpdates([]);
-      return;
-    }
-
-    setIsLoading(true);
-    const q = query(
-      collection(db, PENDING_UPDATES_COLLECTION),
-      where('status', '==', 'pending'),
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const updates = snapshot.docs.map(doc => convertTimestampToDate({ id: doc.id, ...doc.data() }));
-      setPendingUpdates(updates);
-      setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching pending updates:", error);
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
+  
   const hasPendingUpdateForFile = useCallback(async (fileNo: string, submittedByUid: string): Promise<boolean> => {
     try {
       const q = query(
@@ -125,7 +96,6 @@ export function usePendingUpdates(): PendingUpdatesState {
       throw new Error("Invalid user profile for submitting an update.");
     }
 
-    // Critical Check: Ensure no pending updates exist for the sites being submitted.
     const siteNamesBeingUpdated = new Set(updatedSites.map(s => s.nameOfSite));
     const existingUpdates = await getPendingUpdatesForFile(fileNo, currentUser.uid);
 
@@ -170,12 +140,9 @@ export function usePendingUpdates(): PendingUpdatesState {
       reviewedByUid: user.uid,
       reviewedAt: serverTimestamp(),
     });
-    // The onSnapshot listener will automatically update the local state.
   }, [user]);
 
   return {
-    pendingUpdates,
-    isLoading,
     createPendingUpdate,
     rejectUpdate,
     getPendingUpdateById,
@@ -183,3 +150,6 @@ export function usePendingUpdates(): PendingUpdatesState {
     getPendingUpdatesForFile,
   };
 }
+
+// Re-export type for use in other components
+export type { PendingUpdate };
