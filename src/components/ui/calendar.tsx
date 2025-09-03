@@ -18,8 +18,8 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  fromYear = new Date().getFullYear() - 100,
-  toYear = new Date().getFullYear(),
+  fromYear = 2010,
+  toYear = 2050,
   ...props
 }: CalendarProps) {
 
