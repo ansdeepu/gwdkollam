@@ -408,7 +408,10 @@ export default function DashboardPage() {
             .filter((d): d is Date => d !== null && isValid(d))
             .sort((a, b) => b.getTime() - a.getTime())[0];
 
-        const basisDate = latestRemittanceDate || (('createdAt' in entry && entry.createdAt) ? new Date(entry.createdAt) : null);
+        const createdAtValue = 'createdAt' in entry ? entry.createdAt : null;
+        const createdAtDate = createdAtValue instanceof Date ? createdAtValue : null;
+
+        const basisDate = latestRemittanceDate || createdAtDate;
 
         if (basisDate && isValid(basisDate)) {
             const ageInMs = now.getTime() - basisDate.getTime();
@@ -522,7 +525,7 @@ export default function DashboardPage() {
     const expiredRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
 
     agencyApplications.forEach(app => {
-        app.rigs.forEach(rig => {
+        (app.rigs || []).forEach(rig => {
             const rigWithContext = { ...rig, agencyName: app.agencyName, ownerName: app.owner.name };
             allRigs.push(rigWithContext);
 
