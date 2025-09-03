@@ -184,12 +184,13 @@ const getColorClass = (nameOrEmail: string): string => {
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
   // Handle Firestore Timestamps which might be serialized as objects with seconds
   if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
     return new Date((dateValue as any).seconds * 1000);
   }
   // Handle JS Date objects and valid date strings
-  if (dateValue instanceof Date || typeof dateValue === 'string' || typeof dateValue === 'number') {
+  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
     const parsed = new Date(dateValue);
     if (isValid(parsed)) return parsed;
   }
@@ -387,7 +388,7 @@ export default function DashboardPage() {
         return { statusCategory, ...serviceCounts, total: { count: 0, data: [] } };
     });
 
-    const birthdayWishes: { name: string, designation?: Designation }[] = [];
+    const birthdayWishes: { name: string, designation?: Designation, photoUrl?: string | null }[] = [];
     const workAlertsMap = new Map<string, { title: string; details: string; }>();
     
     const ageGroups: Record<string, DataEntryFormData[]> = {
@@ -493,7 +494,7 @@ export default function DashboardPage() {
         if (!staff.dateOfBirth) continue;
         const dob = new Date(staff.dateOfBirth);
         if (isValid(dob) && dob.getMonth() === todayMonth && dob.getDate() === todayDate) {
-            birthdayWishes.push({ name: staff.name, designation: staff.designation });
+            birthdayWishes.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl });
         }
     }
     
@@ -1316,15 +1317,21 @@ export default function DashboardPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4 pt-0 flex-1">
-                    <div className="border rounded-lg p-3 bg-background flex flex-col h-[100px]">
+                    <div className="border rounded-lg p-3 bg-background flex flex-col h-[200px]">
                         <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({dashboardData.birthdayWishes.length})</h3>
                         <ScrollArea className="flex-1 pr-2">
                             {dashboardData.birthdayWishes.length > 0 ? (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {dashboardData.birthdayWishes.map((staff, index) => (
-                                        <div key={index} className="p-2 rounded-md bg-pink-500/10 mb-2 flex flex-col justify-center">
-                                            <p className="font-semibold text-pink-700 text-xs -mb-1">Happy Birthday!</p>
-                                            <p className="font-bold text-sm text-pink-800 ">{staff.name}</p>
+                                        <div key={index} className="p-2 rounded-md bg-pink-500/10 flex items-center gap-3">
+                                            <Avatar className="h-10 w-10 border-2 border-pink-200">
+                                                <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                                                <AvatarFallback className="bg-pink-100 text-pink-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-semibold text-pink-700 text-xs -mb-1">Happy Birthday!</p>
+                                                <p className="font-bold text-sm text-pink-800">{staff.name}</p>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -1986,4 +1993,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
