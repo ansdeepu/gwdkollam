@@ -418,12 +418,11 @@ export default function DashboardPage() {
         });
 
         const latestRemittanceDate = entry.remittanceDetails
-            ?.map(rd => (rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null))
+            ?.map(rd => safeParseDate(rd.dateOfRemittance))
             .filter((d): d is Date => d !== null && isValid(d))
             .sort((a, b) => b.getTime() - a.getTime())[0];
 
-        const createdAtValue = entry.createdAt;
-        const basisDate = latestRemittanceDate || (createdAtValue && isValid(new Date(createdAtValue)) ? new Date(createdAtValue) : null);
+        const basisDate = latestRemittanceDate || safeParseDate(entry.createdAt);
 
         if (basisDate && isValid(basisDate)) {
             const ageInMs = now.getTime() - basisDate.getTime();

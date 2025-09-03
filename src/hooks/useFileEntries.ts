@@ -79,7 +79,7 @@ export function useFileEntries() {
       q = query(fileEntriesRef);
     }
     
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       let entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
         const convertedData = convertTimestampsToDates(data);
@@ -88,24 +88,6 @@ export function useFileEntries() {
           ...convertedData,
         } as DataEntryFormData;
       });
-
-      // For supervisors, further filter the sites within each file
-      if (user.role === 'supervisor') {
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingSiteNames = new Set(
-            pendingUpdates.flatMap(update => 
-                update.updatedSiteDetails.map(site => `${update.fileNo}-${site.nameOfSite}`)
-            )
-        );
-
-        entriesData = entriesData.map(entry => ({
-            ...entry,
-            siteDetails: entry.siteDetails?.filter(site => 
-                site.supervisorUid === user.uid && 
-                !pendingSiteNames.has(`${entry.fileNo}-${site.nameOfSite}`)
-            )
-        })).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
-      }
       
       cachedFileEntries = entriesData;
       setFileEntries(entriesData);
@@ -122,7 +104,7 @@ export function useFileEntries() {
     });
 
     return () => unsubscribe();
-  }, [user, toast, getPendingUpdatesForFile]);
+  }, [user, toast]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null) => {
     if (!user) throw new Error("User must be logged in to add an entry.");
