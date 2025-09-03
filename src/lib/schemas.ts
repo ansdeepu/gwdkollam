@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { format } from 'date-fns';
 
@@ -229,7 +228,7 @@ export const SiteDetailSchema = z.object({
   constituency: z.enum(constituencyOptions).optional(),
   latitude: optionalNumber("Latitude must be a valid number."),
   longitude: optionalNumber("Longitude must be a valid number."),
-  purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required."}),
+  purpose: z.enum(sitePurposeOptions).optional(),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
@@ -259,7 +258,7 @@ export const SiteDetailSchema = z.object({
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
-  workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required."}),
+  workStatus: z.enum(siteWorkStatusOptions).optional(),
   workRemarks: z.string().optional().nullable().default(""),
 
   // Survey fields (Actuals)
@@ -379,7 +378,7 @@ export const DataEntrySchema = z.object({
   applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
   constituency: z.enum(constituencyOptions).optional(),
-  applicationType: z.enum(applicationTypeOptions, { required_error: "Type of Application is required."}).optional(),
+  applicationType: z.enum(applicationTypeOptions).optional(),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   assignedSupervisorUids: z.array(z.string()).optional(),
 
@@ -396,7 +395,7 @@ export const DataEntrySchema = z.object({
   totalPaymentAllEntries: z.coerce.number().optional(),
   overallBalance: z.coerce.number().optional(),
 
-  fileStatus: z.enum(fileStatusOptions, { required_error: "File Status is required."}),
+  fileStatus: z.enum(fileStatusOptions).optional(),
   remarks: z.string().optional(),
 });
 export type DataEntryFormData = z.infer<typeof DataEntrySchema>;

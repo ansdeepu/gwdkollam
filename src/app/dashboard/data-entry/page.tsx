@@ -28,68 +28,40 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-
 // Helper function to create default form values, ensuring consistency.
-const mapEntryToFormValues = (entryToEdit?: DataEntryFormData | null): DataEntryFormData => {
-    // A safe, deep-cloned default structure.
-    const getFormDefaults = (): DataEntryFormData => ({
-      fileNo: "", applicantName: "", phoneNo: "", applicationType: undefined,
-      constituency: undefined,
-      estimateAmount: undefined, assignedSupervisorUids: [],
-      remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
-      totalRemittance: 0, 
-      siteDetails: [{
-        nameOfSite: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
-        estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
-        additionalAS: 'No',
-        tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
-        outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
-        waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
-        noOfBeneficiary: "", dateOfCompletion: null, typeOfRig: undefined,
-        contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined,
-        workStatus: undefined, workRemarks: "",
-        surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "",
-        surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
-        surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
-        surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
-        arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined,
-        arsTenderedAmount: undefined, arsAwardedAmount: undefined,
-        arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false,
-        pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
-      }],
-      paymentDetails: [{ 
-        dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
-        contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined,
-        refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "",
-       }], 
-      totalPaymentAllEntries: 0, overallBalance: 0,
-      fileStatus: undefined, remarks: "",
-    });
-
-  if (!entryToEdit) return getFormDefaults();
-  
-  // Start with a deep copy of defaults to ensure all keys are present.
-  const defaults = getFormDefaults();
-  const mergedData = JSON.parse(JSON.stringify(defaults));
-
-  // Merge the editable entry into the default structure.
-  Object.assign(mergedData, entryToEdit);
-  
-  // Ensure nested arrays are correctly initialized and dates are parsed.
-  mergedData.remittanceDetails = (entryToEdit.remittanceDetails && entryToEdit.remittanceDetails.length > 0)
-    ? entryToEdit.remittanceDetails.map((rd: any) => ({ ...rd, dateOfRemittance: safeParseDate(rd.dateOfRemittance) }))
-    : defaults.remittanceDetails;
-
-  mergedData.paymentDetails = (entryToEdit.paymentDetails && entryToEdit.paymentDetails.length > 0)
-    ? entryToEdit.paymentDetails.map((pd: any) => ({ ...pd, dateOfPayment: safeParseDate(pd.dateOfPayment) }))
-    : defaults.paymentDetails;
-
-  mergedData.siteDetails = (entryToEdit.siteDetails && entryToEdit.siteDetails.length > 0)
-    ? entryToEdit.siteDetails.map((sd: any) => ({ ...sd, dateOfCompletion: safeParseDate(sd.dateOfCompletion) }))
-    : defaults.siteDetails;
-
-  return mergedData;
-};
+const getFormDefaults = (): DataEntryFormData => ({
+  fileNo: "", applicantName: "", phoneNo: "", applicationType: undefined,
+  constituency: undefined,
+  estimateAmount: undefined, assignedSupervisorUids: [],
+  remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
+  totalRemittance: 0, 
+  siteDetails: [{
+    nameOfSite: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
+    estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
+    additionalAS: 'No',
+    tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
+    outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
+    waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
+    noOfBeneficiary: "", dateOfCompletion: null, typeOfRig: undefined,
+    contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined,
+    workStatus: undefined, workRemarks: "",
+    surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "",
+    surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
+    surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
+    surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
+    arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined,
+    arsTenderedAmount: undefined, arsAwardedAmount: undefined,
+    arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false,
+    pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
+  }],
+  paymentDetails: [{ 
+    dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
+    contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined,
+    refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "",
+   }], 
+  totalPaymentAllEntries: 0, overallBalance: 0,
+  fileStatus: undefined, remarks: "",
+});
 
 
 interface PageData {
@@ -120,7 +92,7 @@ export default function DataEntryPage() {
       if (!user) return; // Wait for user profile
       setDataLoading(true);
       
-      const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit, 'non-ARS') : Promise.resolve(null);
+      const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
       const pendingUpdatePromise = approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null);
       
       try {
@@ -136,11 +108,12 @@ export default function DataEntryPage() {
             toast({ title: "Error", description: `File No. ${fileNoToEdit} not found or you do not have permission to view it.`, variant: "destructive" });
           }
 
-          let dataForForm: DataEntryFormData | null = originalEntry;
+          let dataForForm: DataEntryFormData;
 
           if (approveUpdateId && pendingUpdate && originalEntry) {
               if (pendingUpdate.status !== 'pending') {
                   toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
+                  dataForForm = originalEntry;
               } else {
                   // This is the new, more robust merging logic.
                   // 1. Create a deep copy of the original entry to modify.
@@ -173,10 +146,12 @@ export default function DataEntryPage() {
 
                   toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
               }
+          } else {
+            dataForForm = originalEntry || getFormDefaults();
           }
           
           setPageData({
-            initialData: mapEntryToFormValues(dataForForm),
+            initialData: dataForForm,
             allUsers: allUsersResult,
           });
         }
@@ -185,7 +160,7 @@ export default function DataEntryPage() {
         toast({ title: "Error Loading Data", description: "Could not load all required data. Please try again.", variant: "destructive" });
         if(isMounted) {
            setPageData({
-            initialData: mapEntryToFormValues(null),
+            initialData: getFormDefaults(),
             allUsers: [],
           });
         }
