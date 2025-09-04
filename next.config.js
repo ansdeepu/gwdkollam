@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: [
-    'https://*.cloudworkstations.dev',
-    'https://*.firebase.studio',
-  ],
-  transpilePackages: [],
   reactStrictMode: true,
   typescript: {
     // Set to false to ignore build errors.
