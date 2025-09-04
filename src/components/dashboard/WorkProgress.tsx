@@ -135,7 +135,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
           <div className="shrink-0">
             <Popover>
               <PopoverTrigger asChild><Button variant={"outline"} className="w-full sm:w-[200px] justify-start text-left font-normal"><CalendarIconLucide className="mr-2 h-4 w-4" />{format(workReportMonth, 'MMMM yyyy')}</Button></PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end"><Calendar mode="single" selected={workReportMonth} onSelect={(date) => date && setWorkReportMonth(date)} initialFocus captionLayout="dropdown-buttons" fromYear={2020} toYear={new Date().getFullYear()} /></PopoverContent>
+              <PopoverContent className="w-auto p-0" align="end"><Calendar mode="single" selected={workReportMonth} onSelect={(date) => date && setWorkReportMonth(date)} /></PopoverContent>
             </Popover>
           </div>
         </div>
