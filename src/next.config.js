@@ -36,7 +36,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https' ,
         hostname: 'i.imgur.com',
         port: '',
         pathname: '/**',
@@ -50,5 +50,5 @@ const nextConfig = {
     ],
   },
 };
-
+// Cache invalidation comment: 1756643762002
 export default nextConfig;
