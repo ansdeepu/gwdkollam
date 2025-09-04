@@ -23,10 +23,6 @@ function Calendar({
   ...props
 }: CalendarProps) {
 
-  const handleCalendarInteraction = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-  }
-
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -93,7 +89,7 @@ function Calendar({
               </Select>
             );
           } else if (name === "years") {
-            const years = Array.from({ length: (dropdownToYear || 0) - (dropdownFromYear || 0) + 1 }, (_, i) => (dropdownFromYear || 0) + i);
+            const years = Array.from({ length: (toYear || 0) - (fromYear || 0) + 1 }, (_, i) => (fromYear || 0) + i);
             return (
               <Select
                 value={month?.getFullYear().toString()}
