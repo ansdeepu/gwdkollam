@@ -17,8 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Loader2, Save, X, ImageUp, Unplug, Expand, Info, CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2, Save, X, ImageUp, Unplug, Expand, Info } from "lucide-react";
 import { StaffMemberFormDataSchema, type StaffMemberFormData, designationOptions, staffStatusOptions, type StaffStatusType } from "@/lib/schemas";
 import type { StaffMember } from "@/lib/schemas";
 import React, { useState, useEffect } from "react";
@@ -30,8 +29,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 
 interface StaffFormProps {
   onSubmit: (data: StaffMemberFormData) => Promise<void>;
@@ -204,40 +201,13 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
             control={form.control}
             name="dateOfBirth"
             render={({ field }) => (
-                <FormItem className="flex flex-col">
+              <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <FormControl>
-                        <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                        )}
-                        >
-                        {field.value ? (
-                            format(field.value, "PPP")
-                        ) : (
-                            <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                    </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                        }
-                    />
-                    </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Input placeholder="dd/mm/yyyy" {...field} />
+                </FormControl>
                 <FormMessage />
-                </FormItem>
+              </FormItem>
             )}
             />
            <FormField

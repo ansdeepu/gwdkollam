@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, CalendarIcon } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +31,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
-import { Calendar } from "@/components/ui/calendar";
 
 // This robust helper function ensures any date-like value from Firestore is safely converted to a Date object or null.
 const toDateOrNull = (value: any): Date | null => {
@@ -358,7 +357,7 @@ export default function AgencyRegistrationPage() {
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: Date | null }>({ rigIndex: -1, reason: '', date: new Date() });
+  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: string }>({ rigIndex: -1, reason: '', date: '' });
 
   const isEditor = user?.role === 'editor';
 
@@ -608,12 +607,12 @@ export default function AgencyRegistrationPage() {
   const handleCancelRig = (rigIndex: number) => {
       const rig = form.getValues(`rigs.${rigIndex}`);
       const cancellationDate = rig.cancellationDate;
-      const parsedDate = cancellationDate ? new Date(cancellationDate) : new Date();
+      const formattedDate = cancellationDate && isValid(new Date(cancellationDate)) ? format(new Date(cancellationDate), 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy');
 
       setCancellationData({ 
           rigIndex, 
           reason: rig.cancellationReason || '', 
-          date: isValid(parsedDate) ? parsedDate : new Date() 
+          date: formattedDate
       });
       setIsCancelDialogOpen(true);
   };
@@ -622,15 +621,20 @@ export default function AgencyRegistrationPage() {
     if (cancellationData.rigIndex === -1) return;
     const { rigIndex, reason, date } = cancellationData;
     const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
+    
+    // Convert dd/mm/yyyy string back to a Date object for storing
+    const [day, month, year] = date.split('/');
+    const dateObject = new Date(`${year}-${month}-${day}`);
+    
     updateRig(rigIndex, {
         ...rigToUpdate,
         status: 'Cancelled',
-        cancellationDate: date,
+        cancellationDate: isValid(dateObject) ? dateObject : new Date(),
         cancellationReason: reason,
     });
     toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
     setIsCancelDialogOpen(false);
-    setCancellationData({ rigIndex: -1, reason: '', date: null });
+    setCancellationData({ rigIndex: -1, reason: '', date: '' });
   };
   
   const handleActivateRig = (rigIndex: number) => {
@@ -842,18 +846,15 @@ export default function AgencyRegistrationPage() {
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Date of Cancellation</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <Button variant={"outline"} className={cn("col-span-3 justify-start text-left font-normal", !cancellationData.date && "text-muted-foreground")}>
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {cancellationData.date ? format(cancellationData.date, "PPP") : <span>Pick a date</span>}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                <Calendar mode="single" selected={cancellationData.date ? new Date(cancellationData.date) : undefined} onSelect={(date) => setCancellationData(d => ({...d, date: date || null }))} />
-                                </PopoverContent>
-                            </Popover>
+                            <Label htmlFor="cancellationDate" className="text-right">Date</Label>
+                            <Input
+                                id="cancellationDate"
+                                type="text"
+                                placeholder="dd/mm/yyyy"
+                                value={cancellationData.date}
+                                onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))}
+                                className="col-span-3"
+                            />
                         </div>
                     </div>
                     <DialogFooter>

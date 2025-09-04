@@ -1,3 +1,4 @@
+
 // src/app/dashboard/reports/page.tsx
 "use client";
 
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
-import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye, CalendarIcon } from "lucide-react";
+import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
 import ReportTable from "@/components/reports/ReportTable";
 import { 
   Dialog, 
@@ -39,8 +40,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 import { usePageHeader } from "@/hooks/usePageHeader";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 
 
 export interface FlattenedReportRow {
@@ -96,8 +95,8 @@ export default function ReportsPage() {
   const [filteredReportRows, setFilteredReportRows] = useState<FlattenedReportRow[]>([]);
   const { toast } = useToast();
 
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); 
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all"); 
@@ -147,8 +146,8 @@ export default function ReportsPage() {
     if ((startDate || endDate) && dateFilterType && dateFilterType !== 'all') {
       currentEntries = currentEntries.filter(entry => {
         let dateFoundInRange = false;
-        const from = startDate ? startOfDay(startDate) : null;
-        const to = endDate ? endOfDay(endDate) : null;
+        const from = startDate ? startOfDay(new Date(startDate)) : null;
+        const to = endDate ? endOfDay(new Date(endDate)) : null;
 
         const checkDate = (targetDateValue: Date | string | null | undefined): boolean => {
           if (!targetDateValue) return false;
@@ -316,8 +315,8 @@ export default function ReportsPage() {
 
 
   const handleResetFilters = () => {
-    setStartDate(undefined);
-    setEndDate(undefined);
+    setStartDate("");
+    setEndDate("");
     setSearchTerm("");
     setStatusFilter("all");
     setServiceTypeFilter("all");
@@ -469,22 +468,8 @@ export default function ReportsPage() {
                     <SelectItem value="payment">Date of Payment</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, 'PPP') : <span>From Date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} /></PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, 'PPP') : <span>To Date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} /></PopoverContent>
-                </Popover>
+                <Input placeholder="From Date (dd/mm/yyyy)" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input placeholder="To Date (dd/mm/yyyy)" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
