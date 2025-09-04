@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['zod'],
   reactStrictMode: true,
   typescript: {
     // Set to false to ignore build errors.
