@@ -228,7 +228,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                       selected={field.value ? new Date(field.value) : undefined}
                       onSelect={field.onChange}
                       initialFocus
-                      captionLayout="dropdown-buttons"
+                      
                       fromYear={1950}
                       toYear={new Date().getFullYear() - 18}
                     />
