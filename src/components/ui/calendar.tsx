@@ -18,14 +18,6 @@ function Calendar({
   ...props
 }: CalendarProps) {
   
-  const handleCalendarInteraction = (e: React.MouseEvent | React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.rdp-dropdown_year') || target.closest('.rdp-dropdown_month')) {
-      e.preventDefault();
-    }
-  };
-
-
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
