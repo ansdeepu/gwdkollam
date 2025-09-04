@@ -4,7 +4,7 @@ const nextConfig = {
     'https://*.cloudworkstations.dev',
     'https://*.firebase.studio',
   ],
-  transpilePackages: ['zod'],
+  transpilePackages: [],
   reactStrictMode: true,
   typescript: {
     // Set to false to ignore build errors.
