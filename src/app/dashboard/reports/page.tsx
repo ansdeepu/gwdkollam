@@ -1,4 +1,3 @@
-
 // src/app/dashboard/reports/page.tsx
 "use client";
 
@@ -9,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
-import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
+import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye, CalendarIcon } from "lucide-react";
 import ReportTable from "@/components/reports/ReportTable";
 import { 
   Dialog, 
@@ -40,6 +39,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 import { usePageHeader } from "@/hooks/usePageHeader";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 
 export interface FlattenedReportRow {
@@ -468,8 +469,22 @@ export default function ReportsPage() {
                     <SelectItem value="payment">Date of Payment</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Input type="text" placeholder="From Date (dd/mm/yyyy)" value={startDate ? format(startDate, 'dd/MM/yyyy') : ''} onChange={e => setStartDate(new Date(e.target.value))} />
-                <Input type="text" placeholder="To Date (dd/mm/yyyy)" value={endDate ? format(endDate, 'dd/MM/yyyy') : ''} onChange={e => setEndDate(new Date(e.target.value))} />
+                 <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, 'PPP') : <span>From Date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus /></PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, 'PPP') : <span>To Date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus /></PopoverContent>
+                </Popover>
             </div>
              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -570,82 +585,84 @@ export default function ReportsPage() {
                     return (
                     <div key={index} className="mb-4 p-3 border rounded-md bg-secondary/30">
                       <h5 className="text-sm font-semibold mb-1.5">Site #{index + 1}: {site.nameOfSite}</h5>
-                      {renderDetail("Purpose", site.purpose)}
+                      <div className="space-y-1 pt-2 border-t">
+                        {renderDetail("Purpose", site.purpose)}
 
-                      {isWellPurpose && (
-                        <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Survey Details</h6>
-                          {renderDetail("Recommended Diameter (mm)", site.surveyRecommendedDiameter)}
-                          {renderDetail("TD (m)", site.surveyRecommendedTD)}
-                          {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyRecommendedOB)}
-                          {site.purpose === 'BWC' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
-                          {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
-                          {site.purpose === 'FPW' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
-                          {renderDetail("Latitude", site.latitude)}
-                          {renderDetail("Longitude", site.longitude)}
-                          {renderDetail("Location", site.surveyLocation)}
-                          {renderDetail("Remarks", site.surveyRemarks)}
+                        {isWellPurpose && (
+                          <>
+                            <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Survey Details</h6>
+                            {renderDetail("Recommended Diameter (mm)", site.surveyRecommendedDiameter)}
+                            {renderDetail("TD (m)", site.surveyRecommendedTD)}
+                            {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyRecommendedOB)}
+                            {site.purpose === 'BWC' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                            {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
+                            {site.purpose === 'TWC' && renderDetail("Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
+                            {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
+                            {site.purpose === 'FPW' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                            {renderDetail("Latitude", site.latitude)}
+                            {renderDetail("Longitude", site.longitude)}
+                            {renderDetail("Location", site.surveyLocation)}
+                            {renderDetail("Remarks", site.surveyRemarks)}
 
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Drilling Details (Actuals)</h6>
-                          {renderDetail("Diameter (mm)", site.diameter)}
-                          {site.purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
-                          {renderDetail("TD (m)", site.totalDepth)}
-                          {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
-                          {renderDetail("Casing Pipe (m)", site.casingPipeUsed)}
-                          {site.purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
-                          {site.purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
-                          {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
-                          {renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
-                          {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
-                          {renderDetail("Discharge (LPH)", site.yieldDischarge)}
-                          {renderDetail("Zone Details (m)", site.zoneDetails)}
-                          {renderDetail("Water Level (m)", site.waterLevel)}
-                        </>
-                      )}
-                      
-                      {isDevPurpose && (
-                        <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Developing Details</h6>
-                          {renderDetail("Diameter (mm)", site.diameter)}
-                          {renderDetail("TD (m)", site.totalDepth)}
-                          {renderDetail("Discharge (LPH)", site.yieldDischarge)}
-                          {renderDetail("Water Level (m)", site.waterLevel)}
-                        </>
-                      )}
+                            <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Drilling Details (Actuals)</h6>
+                            {renderDetail("Diameter (mm)", site.diameter)}
+                            {site.purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
+                            {renderDetail("TD (m)", site.totalDepth)}
+                            {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
+                            {renderDetail("Casing Pipe (m)", site.casingPipeUsed)}
+                            {site.purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
+                            {site.purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
+                            {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
+                            {renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
+                            {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
+                            {renderDetail("Discharge (LPH)", site.yieldDischarge)}
+                            {renderDetail("Zone Details (m)", site.zoneDetails)}
+                            {renderDetail("Water Level (m)", site.waterLevel)}
+                          </>
+                        )}
+                        
+                        {isDevPurpose && (
+                          <>
+                            <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Developing Details</h6>
+                            {renderDetail("Diameter (mm)", site.diameter)}
+                            {renderDetail("TD (m)", site.totalDepth)}
+                            {renderDetail("Discharge (LPH)", site.yieldDischarge)}
+                            {renderDetail("Water Level (m)", site.waterLevel)}
+                          </>
+                        )}
 
-                      {isMWSSSchemePurpose && (
-                        <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
-                          {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
-                          {renderDetail("Pump Details", site.pumpDetails)}
-                          {renderDetail("Pumping Line Length (m)", site.pumpingLineLength)}
-                          {renderDetail("Delivery Line Length (m)", site.deliveryLineLength)}
-                          {renderDetail("Water Tank (L)", site.waterTankCapacity)}
-                          {renderDetail("Tap Connections", site.noOfTapConnections)}
-                          {renderDetail("Beneficiaries", site.noOfBeneficiary)}
-                        </>
-                      )}
-                      
-                      {isHPSPurpose && (
-                        <>
-                          <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
-                          {renderDetail("Depth Erected (m)", site.totalDepth)}
-                          {renderDetail("Water Level (m)", site.waterLevel)}
-                        </>
-                      )}
+                        {isMWSSSchemePurpose && (
+                          <>
+                            <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
+                            {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
+                            {renderDetail("Pump Details", site.pumpDetails)}
+                            {renderDetail("Pumping Line Length (m)", site.pumpingLineLength)}
+                            {renderDetail("Delivery Line Length (m)", site.deliveryLineLength)}
+                            {renderDetail("Water Tank (L)", site.waterTankCapacity)}
+                            {renderDetail("Tap Connections", site.noOfTapConnections)}
+                            {renderDetail("Beneficiaries", site.noOfBeneficiary)}
+                          </>
+                        )}
+                        
+                        {isHPSPurpose && (
+                          <>
+                            <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Scheme Details</h6>
+                            {renderDetail("Depth Erected (m)", site.totalDepth)}
+                            {renderDetail("Water Level (m)", site.waterLevel)}
+                          </>
+                        )}
 
-                      <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status & Financials</h6>
-                      {renderDetail("Estimate (₹)", site.estimateAmount)}
-                      {renderDetail("TS Amount (₹)", site.tsAmount)}
-                      {renderDetail("Tender No.", site.tenderNo)}
-                      {renderDetail("Contractor Name", site.contractorName)}
-                      {renderDetail("Assigned Supervisor", site.supervisorName)}
-                      {renderDetail("Date of Completion", site.dateOfCompletion)}
-                      {renderDetail("Total Expenditure (₹)", site.totalExpenditure)}
-                      {renderDetail("Work Status", site.workStatus)}
-                      {renderDetail("Work Remarks", site.workRemarks)}
+                        <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Status & Financials</h6>
+                        {renderDetail("Estimate (₹)", site.estimateAmount)}
+                        {renderDetail("TS Amount (₹)", site.tsAmount)}
+                        {renderDetail("Tender No.", site.tenderNo)}
+                        {renderDetail("Contractor Name", site.contractorName)}
+                        {renderDetail("Assigned Supervisor", site.supervisorName)}
+                        {renderDetail("Date of Completion", site.dateOfCompletion)}
+                        {renderDetail("Total Expenditure (₹)", site.totalExpenditure)}
+                        {renderDetail("Work Status", site.workStatus)}
+                        {renderDetail("Work Remarks", site.workRemarks)}
+                      </div>
                     </div>
                   )})}
                 </div>

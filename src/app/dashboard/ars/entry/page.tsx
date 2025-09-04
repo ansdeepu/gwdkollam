@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -8,7 +7,7 @@ import { useArsEntries } from "@/hooks/useArsEntries"; // Updated hook
 import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember } from "@/lib/schemas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, X, ArrowLeft } from "lucide-react";
+import { Loader2, Save, X, ArrowLeft, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -22,6 +21,7 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
 import { usePageHeader } from "@/hooks/usePageHeader";
+import { Calendar } from "@/components/ui/calendar";
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
@@ -183,14 +183,44 @@ export default function ArsEntryPage() {
                           <FormField name="estimateAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 500000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAsTsDetails" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Accorded Details</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="tsAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                          <FormField
+                           <FormField
                             name="arsSanctionedDate"
                             control={form.control}
                             render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Sanctioned Date</FormLabel>
-                                <Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} />
-                                <FormMessage />
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Sanctioned Date</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full pl-3 text-left font-normal",
+                                                !field.value && "text-muted-foreground"
+                                            )}
+                                            >
+                                            {field.value ? (
+                                                format(field.value, "PPP")
+                                            ) : (
+                                                <span>Pick a date</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value ?? undefined}
+                                            onSelect={field.onChange}
+                                            disabled={(date) =>
+                                            date > new Date() || date < new Date("1900-01-01")
+                                            }
+                                            initialFocus
+                                        />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                             />
@@ -201,10 +231,40 @@ export default function ArsEntryPage() {
                                 name="dateOfCompletion"
                                 control={form.control}
                                 render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Completion Date</FormLabel>
-                                    <Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} />
-                                    <FormMessage />
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Completion Date</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                    "w-full pl-3 text-left font-normal",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                                >
+                                                {field.value ? (
+                                                    format(field.value, "PPP")
+                                                ) : (
+                                                    <span>Pick a date</span>
+                                                )}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={field.value ?? undefined}
+                                                onSelect={field.onChange}
+                                                disabled={(date) =>
+                                                date > new Date() || date < new Date("1900-01-01")
+                                                }
+                                                initialFocus
+                                            />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                                 />

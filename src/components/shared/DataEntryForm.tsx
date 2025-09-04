@@ -1,4 +1,3 @@
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -20,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Loader2, Trash2, PlusCircle, X, Save, Clock } from "lucide-react";
+import { Loader2, Trash2, PlusCircle, X, Save, Clock, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
@@ -55,6 +54,8 @@ import type { StaffMember } from "@/lib/schemas";
 import type { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
   dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
@@ -385,7 +386,25 @@ export default function DataEntryFormComponent({
                                     </AccordionTrigger>
                                     <AccordionContent className="p-4 pt-0">
                                         <div className="p-4 grid md:grid-cols-3 gap-6 border-t">
-                                            <FormField control={form.control} name={`remittanceDetails.${index}.dateOfRemittance`} render={({ field }) => ( <FormItem><FormLabel>Date{isDateAndAccountRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField control={form.control} name={`remittanceDetails.${index}.dateOfRemittance`} render={({ field }) => ( 
+                                                <FormItem className="flex flex-col">
+                                                    <FormLabel>Date{isDateAndAccountRequired && <span className="text-destructive">*</span>}</FormLabel>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                        <FormControl>
+                                                            <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                                            {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                            </Button>
+                                                        </FormControl>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                        <Calendar mode="single" selected={field.value ?? undefined} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date("1900-01-01")} initialFocus />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                    <FormMessage />
+                                                </FormItem> 
+                                            )}/>
                                             <FormField control={form.control} name={`remittanceDetails.${index}.amountRemitted`} render={({ field }) => ( <FormItem><FormLabel>Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" placeholder="0.00" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                                             <FormField control={form.control} name={`remittanceDetails.${index}.remittedAccount`} render={({ field }) => ( <FormItem><FormLabel>Account{isDateAndAccountRequired && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                                         </div>
@@ -623,16 +642,21 @@ export default function DataEntryFormComponent({
                                             <h4 className="text-md font-medium text-primary mb-2">Work Status</h4>
                                             <div className="grid md:grid-cols-3 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.dateOfCompletion`} render={({ field }) => ( 
-                                                    <FormItem>
+                                                    <FormItem className="flex flex-col">
                                                         <FormLabel>Date of Completion{isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel>
-                                                        <div className="flex items-center gap-2">
-                                                            <Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} readOnly={isReadOnly || !siteIsEditable} />
-                                                            {siteIsEditable && field.value && (
-                                                                <Button variant="ghost" size="icon" className="h-9 w-9" type="button" onClick={() => field.onChange(null)} aria-label="Clear date">
-                                                                    <X className="h-4 w-4" />
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                            <FormControl>
+                                                                <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")} disabled={isReadOnly || !siteIsEditable}>
+                                                                {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                                 </Button>
-                                                            )}
-                                                        </div>
+                                                            </FormControl>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar mode="single" selected={field.value ?? undefined} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date("1900-01-01")} initialFocus />
+                                                            </PopoverContent>
+                                                        </Popover>
                                                         <FormMessage />
                                                     </FormItem> 
                                                 )}/>
@@ -704,7 +728,25 @@ export default function DataEntryFormComponent({
                                     <AccordionContent className="p-6 pt-0">
                                     <div className="border-t pt-6 space-y-6">
                                         <div className="grid md:grid-cols-3 gap-6">
-                                        <FormField control={form.control} name={`paymentDetails.${index}.dateOfPayment`} render={({ field }) => ( <FormItem><FormLabel>Date{hasAnyAmount && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField control={form.control} name={`paymentDetails.${index}.dateOfPayment`} render={({ field }) => ( 
+                                            <FormItem className="flex flex-col">
+                                                <FormLabel>Date{hasAnyAmount && <span className="text-destructive">*</span>}</FormLabel>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                    <FormControl>
+                                                        <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")} disabled={isReadOnly || !isEditor}>
+                                                        {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                        </Button>
+                                                    </FormControl>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-0" align="start">
+                                                    <Calendar mode="single" selected={field.value ?? undefined} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date("1900-01-01")} initialFocus />
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <FormMessage />
+                                            </FormItem> 
+                                        )}/>
                                         <FormField control={form.control} name={`paymentDetails.${index}.paymentAccount`} render={({ field }) => ( <FormItem><FormLabel>Account{hasAnyAmount && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                                         <FormField control={form.control} name={`paymentDetails.${index}.revenueHead`} render={({ field }) => ( <FormItem><FormLabel>Revenue Head (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                                         <FormField control={form.control} name={`paymentDetails.${index}.contractorsPayment`} render={({ field }) => ( <FormItem><FormLabel>Contractor's Pay (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
