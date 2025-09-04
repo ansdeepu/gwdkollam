@@ -1,3 +1,4 @@
+
 // src/app/dashboard/progress-report/page.tsx
 "use client";
 
@@ -5,7 +6,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown, Landmark } from 'lucide-react';
 import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter } from 'date-fns';
@@ -27,6 +27,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
 import { usePageHeader } from '@/hooks/usePageHeader';
+import { Input } from '@/components/ui/input';
+
 
 // Define the structure for the progress report data
 interface ProgressStats {
@@ -643,26 +645,9 @@ export default function ProgressReportPage() {
       <Card className="shadow-lg no-print">
         <CardHeader>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
-              <Popover>
-                  <PopoverTrigger asChild>
-                      <Button variant={"outline"} className={cn("w-full sm:w-auto justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
-                  </PopoverContent>
-              </Popover>
-              <Popover>
-                  <PopoverTrigger asChild>
-                      <Button variant={"outline"} className={cn("w-full sm:w-auto justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
-                  </PopoverContent>
-              </Popover>
+              <Input type="text" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, "dd/MM/yyyy") : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
+              <Input type="text" placeholder="To Date" className="w-full sm:w-auto" value={endDate ? format(endDate, "dd/MM/yyyy") : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
+
               <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>
                 {isFiltering ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Play className="mr-2 h-4 w-4" />}
                 Generate Report

@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -220,13 +219,7 @@ const RigAccordionItem = ({
                     <FormMessage />
                 </FormItem>
             )} />
-            <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Last Reg/Renewal Date</FormLabel>
-                    <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")} disabled={finalIsReadOnly}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value && isValid(new Date(field.value)) ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value && isValid(new Date(field.value)) ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
-                    <FormMessage />
-                </FormItem>
-            )} />
+            <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
             <FormItem>
               <FormLabel>Validity Upto</FormLabel>
               <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
@@ -234,13 +227,7 @@ const RigAccordionItem = ({
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
-            <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Payment Date</FormLabel>
-                    <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")} disabled={finalIsReadOnly}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value && isValid(new Date(field.value)) ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value && isValid(new Date(field.value)) ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover>
-                    <FormMessage />
-                </FormItem>
-            )} />
+            <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
             <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
           </div>
           <Separator />
@@ -728,9 +715,9 @@ export default function AgencyRegistrationPage() {
                             <AccordionTrigger>2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value && isValid(new Date(field.value)) ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select Date'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value && isValid(new Date(field.value)) ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value && isValid(new Date(field.value)) ? format(new Date(field.value), 'dd/MM/yyyy') : 'Select Date'}</Button></FormControl></PopoverTrigger><PopoverContent><Calendar mode="single" selected={field.value && isValid(new Date(field.value)) ? new Date(field.value) : undefined} onSelect={field.onChange} /></PopoverContent></Popover><FormMessage /></FormItem>} />
+                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                             </AccordionContent>
                           </AccordionItem>
@@ -779,28 +766,14 @@ export default function AgencyRegistrationPage() {
                     <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Renewal Date</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className={cn("col-span-3 justify-start text-left font-normal", !(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate) && "text-muted-foreground")}>
-                                    <CalendarIcon className="mr-2 h-4 w-4"/>
-                                    {(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate) ? format(new Date(editingRenewal?.renewal.renewalDate || renewalData!.data.renewalDate!), 'dd/MM/yyyy') : 'Select'}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent>
-                                <Calendar mode="single" 
-                                selected={
-                                    editingRenewal?.renewal.renewalDate ? new Date(editingRenewal.renewal.renewalDate) :
-                                    renewalData?.data.renewalDate ? new Date(renewalData.data.renewalDate) : undefined
-                                } 
-                                onSelect={(date) => {
-                                    if (editingRenewal) {
-                                        setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, renewalDate: date! } }));
-                                    } else {
-                                        setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: date } }));
-                                    }
-                                }}/>
-                            </PopoverContent>
-                        </Popover>
+                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate) ? format(new Date(editingRenewal?.renewal.renewalDate || renewalData!.data.renewalDate!), 'dd/MM/yyyy') : ''} onChange={(e) => {
+                            const date = new Date(e.target.value);
+                             if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: date }}));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: date } }));
+                            }
+                        }}/>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
@@ -818,24 +791,15 @@ export default function AgencyRegistrationPage() {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Payment Date</Label>
-                        <Popover>
-                        <PopoverTrigger asChild><Button variant="outline" className={cn("col-span-3 justify-start text-left font-normal", !(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>
-                        {(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) ? format(new Date(editingRenewal?.renewal.paymentDate || renewalData!.data.paymentDate!), 'dd/MM/yyyy') : 'Select'}
-                        </Button></PopoverTrigger>
-                        <PopoverContent><Calendar mode="single" 
-                        selected={
-                            editingRenewal?.renewal.paymentDate ? new Date(editingRenewal.renewal.paymentDate) :
-                            renewalData?.data.paymentDate ? new Date(renewalData.data.paymentDate) : undefined
-                        }
-                        onSelect={(date) => {
-                             if (editingRenewal) {
-                                setEditingRenewal(e => ({ ...e!, renewal: { ...e!.renewal, paymentDate: date! } }));
+                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) ? format(new Date(editingRenewal?.renewal.paymentDate || renewalData!.data.paymentDate!), 'dd/MM/yyyy') : ''} onChange={(e) => {
+                            const date = new Date(e.target.value);
+                            if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: date }}));
                             } else {
                                 setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: date } }));
                             }
-                        }}
-                        /></PopoverContent>
-                        </Popover>
+                        }} />
+
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="challanNo" className="text-right">Challan No.</Label>
@@ -878,21 +842,7 @@ export default function AgencyRegistrationPage() {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label className="text-right">Date of Cancellation</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className={cn("col-span-3 justify-start text-left font-normal", !cancellationData.date && "text-muted-foreground")}>
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {cancellationData.date ? format(cancellationData.date, 'dd/MM/yyyy') : 'Select Date'}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent>
-                                    <Calendar
-                                        mode="single"
-                                        selected={cancellationData.date ? new Date(cancellationData.date) : undefined}
-                                        onSelect={(date) => setCancellationData(d => ({ ...d!, date: date || null }))}
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                             <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={cancellationData.date ? format(cancellationData.date, 'dd/MM/yyyy') : ''} onChange={(e) => setCancellationData(d => ({...d, date: new Date(e.target.value)}))} />
                         </div>
                     </div>
                     <DialogFooter>

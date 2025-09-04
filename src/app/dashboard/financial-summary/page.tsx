@@ -1,11 +1,11 @@
+
 // src/app/dashboard/financial-summary/page.tsx
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Loader2, TrendingUp, TrendingDown, RefreshCw, XCircle, CalendarIcon as CalendarIconLucide, Landmark } from "lucide-react";
@@ -13,6 +13,7 @@ import { format, startOfDay, endOfDay, isWithinInterval, isValid, parseISO } fro
 import { cn } from "@/lib/utils";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, ApplicationType } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
+import { Input } from '@/components/ui/input';
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
 
@@ -124,8 +125,8 @@ export default function FinancialSummaryPage() {
                     <Button variant="ghost" size="icon" onClick={() => {}} disabled={isReportLoading}><RefreshCw className={cn("h-4 w-4", isReportLoading && "animate-spin")} /></Button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !financeStartDate && "text-muted-foreground")}><CalendarIconLucide className="mr-2 h-4 w-4" />{financeStartDate ? format(financeStartDate, "dd/MM/yyyy") : <span>From Date</span>}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={financeStartDate} onSelect={setFinanceStartDate} disabled={(date) => (financeEndDate ? date > financeEndDate : false) || date > new Date()} /></PopoverContent></Popover>
-                  <Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !financeEndDate && "text-muted-foreground")}><CalendarIconLucide className="mr-2 h-4 w-4" />{financeEndDate ? format(financeEndDate, "dd/MM/yyyy") : <span>To Date</span>}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={financeEndDate} onSelect={setFinanceEndDate} disabled={(date) => (financeStartDate ? date < financeStartDate : false) || date > new Date()} /></PopoverContent></Popover>
+                  <Input type="text" placeholder="From Date" className="w-[150px]" value={financeStartDate ? format(financeStartDate, "dd/MM/yyyy") : ''} onChange={(e) => setFinanceStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
+                  <Input type="text" placeholder="To Date" className="w-[150px]" value={financeEndDate ? format(financeEndDate, "dd/MM/yyyy") : ''} onChange={(e) => setFinanceEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>

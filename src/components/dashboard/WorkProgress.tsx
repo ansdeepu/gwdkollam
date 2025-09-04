@@ -6,11 +6,11 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { CalendarCheck, Hourglass, TrendingUp, CalendarIcon as CalendarIconLucide } from "lucide-react";
 import { format, isWithinInterval, startOfMonth, endOfMonth, isValid } from 'date-fns';
 import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus, UserProfile } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
+import { Input } from '@/components/ui/input';
 
 interface WorkProgressProps {
   allFileEntries: DataEntryFormData[];
@@ -134,10 +134,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
             <CardDescription>Summary of completed and ongoing work.</CardDescription>
           </div>
           <div className="shrink-0">
-            <Popover>
-              <PopoverTrigger asChild><Button variant={"outline"} className="w-full sm:w-[200px] justify-start text-left font-normal"><CalendarIconLucide className="mr-2 h-4 w-4" />{format(workReportMonth, 'MMMM yyyy')}</Button></PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end"><Calendar mode="single" selected={workReportMonth} onSelect={(date) => date && setWorkReportMonth(date)} /></PopoverContent>
-            </Popover>
+             <Input type="text" placeholder="Month (e.g. yyyy-mm)" className="w-full sm:w-[200px]" value={format(workReportMonth, 'yyyy-MM')} onChange={(e) => setWorkReportMonth(new Date(e.target.value))} />
           </div>
         </div>
       </CardHeader>

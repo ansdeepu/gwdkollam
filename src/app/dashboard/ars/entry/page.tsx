@@ -16,7 +16,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { format, isValid, parseISO } from "date-fns";
@@ -191,23 +190,7 @@ export default function ArsEntryPage() {
                             render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Sanctioned Date</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                    <FormControl>
-                                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}>
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {field.value && isValid(new Date(field.value)) ? format(new Date(field.value), "dd/MM/yyyy") : <span>Pick a date</span>}
-                                        </Button>
-                                    </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={field.value ? new Date(field.value) : undefined}
-                                        onSelect={(date) => field.onChange(date ?? undefined)}
-                                    />
-                                    </PopoverContent>
-                                </Popover>
+                                <Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} />
                                 <FormMessage />
                                 </FormItem>
                             )}
@@ -221,23 +204,7 @@ export default function ArsEntryPage() {
                                 render={({ field }) => (
                                     <FormItem>
                                     <FormLabel>Completion Date</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}>
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {field.value && isValid(new Date(field.value)) ? format(new Date(field.value), "dd/MM/yyyy") : <span>Pick a date</span>}
-                                            </Button>
-                                        </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value ? new Date(field.value) : undefined}
-                                            onSelect={(date) => field.onChange(date ?? undefined)}
-                                        />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} />
                                     <FormMessage />
                                     </FormItem>
                                 )}

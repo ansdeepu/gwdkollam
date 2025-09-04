@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Loader2, Save, X, ImageUp, Unplug, Expand, Info } from "lucide-react";
@@ -213,26 +212,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Date of Birth</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                      >
-                        {field.value ? format(new Date(field.value), "dd/MM/yyyy") : <span>Pick a date</span>}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
-                      onSelect={field.onChange}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} />
                 <FormMessage />
               </FormItem>
             )}

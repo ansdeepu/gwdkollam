@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
 import { CalendarIcon, FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
 import ReportTable from "@/components/reports/ReportTable";
@@ -470,26 +469,8 @@ export default function ReportsPage() {
                     <SelectItem value="payment">Date of Payment</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Popover>
-                    <PopoverTrigger asChild>
-                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
-                    </PopoverContent>
-                </Popover>
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
-                    </PopoverContent>
-                </Popover>
+                 <Input type="text" placeholder="From Date (dd/mm/yyyy)" value={startDate ? format(startDate, 'dd/MM/yyyy') : ''} onChange={e => setStartDate(new Date(e.target.value))} />
+                <Input type="text" placeholder="To Date (dd/mm/yyyy)" value={endDate ? format(endDate, 'dd/MM/yyyy') : ''} onChange={e => setEndDate(new Date(e.target.value))} />
             </div>
              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>

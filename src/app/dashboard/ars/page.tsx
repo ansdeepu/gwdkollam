@@ -19,7 +19,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
@@ -332,26 +331,8 @@ export default function ArsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
               <div className="font-medium text-sm pr-4">Total Sites: {arsEntries.length}</div>
-              <Popover>
-                  <PopoverTrigger asChild>
-                      <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
-                  </PopoverContent>
-              </Popover>
-               <Popover>
-                  <PopoverTrigger asChild>
-                      <Button variant={"outline"} className={cn("w-[150px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
-                  </PopoverContent>
-              </Popover>
+              <Input type="text" placeholder="From Date" className="w-[150px]" value={startDate ? format(startDate, "dd/MM/yyyy") : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
+              <Input type="text" placeholder="To Date" className="w-[150px]" value={endDate ? format(endDate, "dd/MM/yyyy") : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
               <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
             </div>
         </CardContent>
