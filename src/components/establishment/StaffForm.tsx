@@ -1,3 +1,4 @@
+
 // src/components/establishment/StaffForm.tsx
 "use client";
 
@@ -121,6 +122,9 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
     } else if (watchedPhotoUrl === "" || isPlaceholderUrl(watchedPhotoUrl)) {
       setImagePreview(null);
       setImageLoadError(false);
+    } else {
+      setImagePreview(null); 
+      if (watchedPhotoUrl !== "") setImageLoadError(true);
     }
   }, [watchedPhotoUrl]);
 
@@ -221,7 +225,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={field.value ? new Date(field.value) : undefined}
