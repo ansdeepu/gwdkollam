@@ -650,7 +650,7 @@ export default function ProgressReportPage() {
                       </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start" side="top">
-                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
+                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
                   </PopoverContent>
               </Popover>
               <Popover>
@@ -660,7 +660,7 @@ export default function ProgressReportPage() {
                       </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start" side="top">
-                      <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
+                      <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
                   </PopoverContent>
               </Popover>
               <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>

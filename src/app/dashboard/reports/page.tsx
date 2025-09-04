@@ -1,4 +1,3 @@
-
 // src/app/dashboard/reports/page.tsx
 "use client";
 
@@ -482,7 +481,7 @@ export default function ReportsPage() {
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} initialFocus />
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
                     </PopoverContent>
                 </Popover>
                 <Popover>
@@ -492,7 +491,7 @@ export default function ReportsPage() {
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
-                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} initialFocus />
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
                     </PopoverContent>
                 </Popover>
             </div>

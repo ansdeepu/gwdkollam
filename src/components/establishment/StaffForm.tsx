@@ -1,4 +1,3 @@
-
 // src/components/establishment/StaffForm.tsx
 "use client";
 
@@ -227,10 +226,6 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                       mode="single"
                       selected={field.value ? new Date(field.value) : undefined}
                       onSelect={field.onChange}
-                      initialFocus
-                      
-                      fromYear={1950}
-                      toYear={new Date().getFullYear() - 18}
                     />
                   </PopoverContent>
                 </Popover>
