@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle, Landmark } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; 
@@ -28,6 +28,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/file-room', label: 'Deposit Works Files', icon: FolderOpen },
   { href: '/dashboard/ars', label: 'ARS', icon: Waves },
   { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList, roles: ['editor', 'viewer'] },
+  { href: '/dashboard/financial-summary', label: 'Financial Summary', icon: Landmark, roles: ['editor', 'viewer'] },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
@@ -53,7 +54,6 @@ export default function AppNavMenu() {
         }
     };
     fetchPendingCount();
-    // Re-fetch every 30 seconds to keep the badge somewhat fresh
     const interval = setInterval(fetchPendingCount, 30000); 
     return () => clearInterval(interval);
   }, [user, getPendingUpdatesForFile]);

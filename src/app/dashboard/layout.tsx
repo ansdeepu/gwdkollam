@@ -67,8 +67,6 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
   const { isNavigating, setIsNavigating } = usePageNavigation();
 
   useEffect(() => {
-    // If auth is done loading and there is no user, redirect to login.
-    // This protects all routes wrapped by this layout.
     if (!isLoading && !user) {
       router.push('/login');
     }
@@ -89,8 +87,6 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
     }
     if (user?.uid) { 
       idleTimerRef.current = setTimeout(performIdleLogout, IDLE_TIMEOUT_DURATION);
-
-      // Throttled update of last active timestamp
       const now = Date.now();
       if (now - lastActivityFirestoreUpdateRef.current > LAST_ACTIVE_UPDATE_INTERVAL) {
         lastActivityFirestoreUpdateRef.current = now;
@@ -105,13 +101,10 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       return; 
     }
-
     const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
     const handleUserActivity = () => resetIdleTimer();
     resetIdleTimer(); 
-
     activityEvents.forEach(event => window.addEventListener(event, handleUserActivity, { passive: true }));
-
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       activityEvents.forEach(event => window.removeEventListener(event, handleUserActivity));
@@ -122,7 +115,6 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
       setIsNavigating(false);
   }, [pathname, setIsNavigating]);
 
-  // While checking auth state, show a full-screen loader.
   if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
@@ -131,7 +123,6 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If auth is done, but there's no user, show a loader while the redirect to login happens.
   if (!user) {
        return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
