@@ -24,7 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { format, addYears, isValid, parseISO } from 'date-fns';
+import { format, addYears, isValid, parseISO, parse } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,24 +32,26 @@ import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
 
-// This robust helper function ensures any date-like value from Firestore is safely converted to a Date object or null.
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
-  // Handle serialized date strings
-  if (typeof value === 'string') {
-    const parsed = parseISO(value);
-    if (isValid(parsed)) return parsed;
-  }
-  // This handles the case where a Firestore Timestamp object gets serialized to a plain object
+  // Handle Firestore Timestamp objects
   if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
     const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
     if (isValid(date)) return date;
   }
+  if (typeof value === 'string') {
+    // First, try to parse dd/MM/yyyy format, which is common in our app's manual entry
+    let parsed = parse(value, 'dd/MM/yyyy', new Date());
+    if (isValid(parsed)) return parsed;
+    // Then, try to parse ISO format, which is how dates are often stored/transmitted
+    parsed = parseISO(value);
+    if (isValid(parsed)) return parsed;
+  }
   return null;
 };
 
-// Recursively processes an object to convert all date-like strings/objects to Date objects.
+// Recursively processes an object to convert all date-like values to Date objects.
 const processDataForForm = (data: any): any => {
     if (!data) return data;
     if (Array.isArray(data)) {
@@ -60,9 +62,11 @@ const processDataForForm = (data: any): any => {
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
+                 // Check for keys that typically represent dates
                  if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
                     processed[key] = toDateOrNull(value);
                 } else {
+                    // Recursively process nested objects/arrays
                     processed[key] = processDataForForm(value);
                 }
             }
@@ -219,7 +223,7 @@ const RigAccordionItem = ({
                     <FormMessage />
                 </FormItem>
             )} />
-            <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
+            <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
             <FormItem>
               <FormLabel>Validity Upto</FormLabel>
               <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
@@ -227,7 +231,7 @@ const RigAccordionItem = ({
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
-            <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
+            <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
             <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
           </div>
           <Separator />
@@ -403,7 +407,17 @@ export default function AgencyRegistrationPage() {
             if (app) {
                  // Safely process all date-like fields before resetting the form
                  const processedApp = processDataForForm(app);
-                 form.reset(processedApp);
+                 const formattedApp = {
+                    ...processedApp,
+                    agencyRegistrationDate: processedApp.agencyRegistrationDate ? format(new Date(processedApp.agencyRegistrationDate), 'dd/MM/yyyy') : '',
+                    agencyPaymentDate: processedApp.agencyPaymentDate ? format(new Date(processedApp.agencyPaymentDate), 'dd/MM/yyyy') : '',
+                    rigs: (processedApp.rigs || []).map((rig: any) => ({
+                        ...rig,
+                        registrationDate: rig.registrationDate ? format(new Date(rig.registrationDate), 'dd/MM/yyyy') : '',
+                        paymentDate: rig.paymentDate ? format(new Date(rig.paymentDate), 'dd/MM/yyyy') : '',
+                    }))
+                 };
+                 form.reset(formattedApp);
             } else {
                 setSelectedApplicationId(null);
                 form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
@@ -720,9 +734,9 @@ export default function AgencyRegistrationPage() {
                             <AccordionTrigger>2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} onChange={e => field.onChange(e.target.value)} value={field.value ? format(new Date(field.value), 'dd/MM/yyyy') : ''} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                             </AccordionContent>
                           </AccordionItem>

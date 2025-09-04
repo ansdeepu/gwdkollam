@@ -1,3 +1,4 @@
+
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -38,7 +39,9 @@ const processDataForForm = (data: any): any => {
         if (Object.prototype.hasOwnProperty.call(data, key)) {
             const value = data[key];
              if (key.toLowerCase().includes('date')) {
-                processed[key] = toDateOrNull(value);
+                const date = toDateOrNull(value);
+                // For text inputs, we format to dd/MM/yyyy. For other types, we keep as Date object.
+                processed[key] = date ? format(date, 'dd/MM/yyyy') : '';
             } else {
                 processed[key] = value;
             }
@@ -112,9 +115,6 @@ export default function ArsEntryPage() {
                 const entry = await getArsEntryById(entryIdToEdit);
                 if (entry) {
                     const formData = processDataForForm(entry);
-                    // Convert dates to dd/MM/yyyy format for text input display
-                    if (formData.arsSanctionedDate) formData.arsSanctionedDate = format(formData.arsSanctionedDate, 'dd/MM/yyyy');
-                    if (formData.dateOfCompletion) formData.dateOfCompletion = format(formData.dateOfCompletion, 'dd/MM/yyyy');
                     form.reset(formData);
                 } else {
                     toast({ title: "Error", description: `ARS Entry with ID "${entryIdToEdit}" not found.`, variant: "destructive" });

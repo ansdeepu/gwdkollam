@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 
 export const LoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -198,13 +198,14 @@ const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
 }, z.coerce.number({ invalid_type_error: errorMessage }).min(0, "Cannot be negative.").optional());
 
 const optionalDate = z.preprocess((val) => {
-  if (!val) return undefined;
-  if (typeof val === 'string' || val instanceof Date) {
-    const date = new Date(val);
-    return isNaN(date.getTime()) ? undefined : date;
+  if (typeof val === "string") {
+    // Allows empty string, dd/mm/yyyy, and ISO
+    if (val.trim() === "") return null;
+    const parsedDate = parse(val, 'dd/MM/yyyy', new Date());
+    return isValid(parsedDate) ? parsedDate : val; // Return string if invalid, Zod will catch it
   }
-  return undefined;
-}, z.date().optional().nullable());
+  return val;
+}, z.date({ invalid_type_error: "Invalid date, use dd/mm/yyyy format." }).optional().nullable());
 
 
 export const constituencyOptions = [
@@ -289,6 +290,7 @@ export const SiteDetailSchema = z.object({
   arsStorageCapacity: optionalNumber("Storage Capacity must be a valid number."),
   arsNumberOfFillings: optionalNumber("Number of Fillings must be a valid number."),
   isArsImport: z.boolean().optional(),
+  isPending: z.boolean().optional(), // Internal state, not part of form
 
 }).superRefine((data, ctx) => {
     const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
@@ -433,7 +435,7 @@ const sum = (arr: any[] | undefined, key: string): number => {
 };
 
 // Helper function to format dates from an array of objects
-const formatDate = (date: Date | string | null | undefined): string => {
+const formatDateHelper = (date: Date | string | null | undefined): string => {
   if (!date) return 'N/A';
   try {
     return format(new Date(date), "dd/MM/yyyy");
@@ -452,8 +454,8 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'fileRemarks', label: 'File Remarks', accessor: (entry) => entry.remarks },
 
   // === Remittance Details (Aggregated) ===
-  { id: 'firstRemittanceDate', label: 'First Remittance Date', accessor: (entry) => formatDate(entry.remittanceDetails?.[0]?.dateOfRemittance) },
-  { id: 'allRemittanceDates', label: 'All Remittance Dates', accessor: (entry) => entry.remittanceDetails?.map(rd => formatDate(rd.dateOfRemittance)).join('; ') || 'N/A' },
+  { id: 'firstRemittanceDate', label: 'First Remittance Date', accessor: (entry) => formatDateHelper(entry.remittanceDetails?.[0]?.dateOfRemittance) },
+  { id: 'allRemittanceDates', label: 'All Remittance Dates', accessor: (entry) => entry.remittanceDetails?.map(rd => formatDateHelper(rd.dateOfRemittance)).join('; ') || 'N/A' },
   { id: 'totalRemittance', label: 'Total Remittance (₹)', accessor: (entry) => entry.totalRemittance },
   { id: 'remittanceAccounts', label: 'Remittance Accounts', accessor: (entry) => join(entry.remittanceDetails, 'remittedAccount') },
 
@@ -474,7 +476,7 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'overallBalance', label: 'Overall Balance (₹)', accessor: (entry) => entry.overallBalance },
   
   // === Payment Details (Aggregated) ===
-  { id: 'allPaymentDates', label: 'Payment Dates', accessor: (entry) => entry.paymentDetails?.map(pd => formatDate(pd.dateOfPayment)).join('; ') || 'N/A' },
+  { id: 'allPaymentDates', label: 'Payment Dates', accessor: (entry) => entry.paymentDetails?.map(pd => formatDateHelper(pd.dateOfPayment)).join('; ') || 'N/A' },
   { id: 'totalContractorPayment', label: 'Total Contractor Payment (₹)', accessor: (entry) => sum(entry.paymentDetails, 'contractorsPayment') },
   { id: 'totalGst', label: 'Total GST (₹)', accessor: (entry) => sum(entry.paymentDetails, 'gst') },
   { id: 'totalIncomeTax', label: 'Total Income Tax (₹)', accessor: (entry) => sum(entry.paymentDetails, 'incomeTax') },
@@ -519,7 +521,7 @@ export const StaffMemberFormDataSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   designation: z.enum(designationOptions, { required_error: "Designation is required." }),
   pen: z.string().min(1, { message: "PEN is required." }),
-  dateOfBirth: z.date({ required_error: "Date of Birth is required." }),
+  dateOfBirth: optionalDate,
   phoneNo: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }).optional().or(z.literal("")),
   roles: z.string().optional(),
   status: z.enum(staffStatusOptions).default('Active'),
