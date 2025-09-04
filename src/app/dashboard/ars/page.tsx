@@ -301,11 +301,6 @@ export default function ArsPage() {
     reader.readAsBinaryString(file);
   };
   
-  const handleCalendarInteraction = (e: Event) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.calendar-custom-controls-container') || target.closest('[data-radix-select-content]')) e.preventDefault();
-  };
-
   if (entriesLoading || authLoading) {
     return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading ARS data...</p> </div> );
   }
@@ -342,7 +337,7 @@ export default function ArsPage() {
                           <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <PopoverContent className="w-auto p-0" align="start">
                       <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
                   </PopoverContent>
               </Popover>
@@ -352,7 +347,7 @@ export default function ArsPage() {
                           <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                  <PopoverContent className="w-auto p-0" align="start">
                       <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
                   </PopoverContent>
               </Popover>

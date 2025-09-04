@@ -335,11 +335,6 @@ export default function ReportsPage() {
     toast({ title: "Filters Reset", description: "All report filters have been cleared." });
   };
 
-  const handleCalendarInteraction = (e: Event) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.calendar-custom-controls-container') || target.closest('[data-radix-select-content]')) e.preventDefault();
-  };
-
   const handleExportExcel = () => {
     const reportTitle = "Custom Report";
     const columnLabels = [ "File No", "Applicant Name", "Date of Remittance", "Site Purpose", "File Status", "Site Name", "Site Work Status", "Site Total Expenditure (₹)" ];
@@ -480,7 +475,7 @@ export default function ReportsPage() {
                         <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
                     </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                    <PopoverContent className="w-auto p-0" align="start">
                     <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
                     </PopoverContent>
                 </Popover>
@@ -490,7 +485,7 @@ export default function ReportsPage() {
                         <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
                     </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start" onFocusOutside={handleCalendarInteraction} onPointerDownOutside={handleCalendarInteraction}>
+                    <PopoverContent className="w-auto p-0" align="start">
                     <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
                     </PopoverContent>
                 </Popover>

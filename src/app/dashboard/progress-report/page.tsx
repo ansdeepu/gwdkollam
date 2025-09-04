@@ -649,7 +649,7 @@ export default function ProgressReportPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "dd/MM/yyyy") : <span>From Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" side="top">
+                  <PopoverContent className="w-auto p-0" align="start">
                       <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => (endDate ? date > endDate : false) || date > new Date()} />
                   </PopoverContent>
               </Popover>
@@ -659,7 +659,7 @@ export default function ProgressReportPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "dd/MM/yyyy") : <span>To Date</span>}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" side="top">
+                  <PopoverContent className="w-auto p-0" align="start">
                       <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => (startDate ? date < startDate : false) || date > new Date()} />
                   </PopoverContent>
               </Popover>
