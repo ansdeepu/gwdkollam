@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
-import { CalendarIcon, FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
+import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
 import ReportTable from "@/components/reports/ReportTable";
 import { 
   Dialog, 

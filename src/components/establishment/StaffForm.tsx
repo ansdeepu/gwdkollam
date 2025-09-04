@@ -16,10 +16,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Loader2, Save, X, ImageUp, Unplug, Expand, Info } from "lucide-react";
+import { Loader2, Save, X, ImageUp, Unplug, Expand, Info } from "lucide-react";
 import { format } from "date-fns";
 import { StaffMemberFormDataSchema, type StaffMemberFormData, designationOptions, staffStatusOptions, type StaffStatusType } from "@/lib/schemas";
 import type { StaffMember } from "@/lib/schemas";
@@ -126,12 +125,6 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
       if (watchedPhotoUrl !== "") setImageLoadError(true);
     }
   }, [watchedPhotoUrl]);
-
-
-  const handleCalendarInteraction = (e: Event) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.calendar-custom-controls-container') || target.closest('[data-radix-select-content]')) e.preventDefault();
-  };
 
   const handleFormSubmitInternal = (data: StaffMemberFormData) => {
     const dataToSubmit = {...data, remarks: data.remarks || "" }; 

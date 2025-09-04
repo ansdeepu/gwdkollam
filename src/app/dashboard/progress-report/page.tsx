@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { BarChart3, CalendarIcon, XCircle, Loader2, Play, FileDown, Landmark } from 'lucide-react';
+import { BarChart3, XCircle, Loader2, Play, FileDown, Landmark } from 'lucide-react';
 import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";

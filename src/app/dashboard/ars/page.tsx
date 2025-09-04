@@ -22,7 +22,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
-import { CalendarIcon } from "lucide-react";
 import type { ArsEntryFormData } from "@/lib/schemas";
 
 
