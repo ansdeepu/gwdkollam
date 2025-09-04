@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ArsStatusOverview.tsx
 "use client";
 
@@ -8,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Waves, CalendarIcon, XCircle } from "lucide-react";
-import { format, startOfDay, endOfDay, isValid, isWithinInterval } from 'date-fns';
+import { Waves, XCircle } from "lucide-react";
+import { format, startOfDay, endOfDay, isValid, isWithinInterval, parse } from 'date-fns';
 import type { DataEntryFormData, SiteWorkStatus } from '@/lib/schemas';
 import { siteWorkStatusOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
@@ -88,11 +87,10 @@ export default function ArsStatusOverview({ allFileEntries, onOpenDialog, dates,
     onOpenDialog(dialogData, title, columns, 'detail');
   };
 
-  const handleCalendarInteraction = (e: Event) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.calendar-custom-controls-container') || target.closest('[data-radix-select-content]') || target.closest('.rdp-caption_label input')) {
-      e.preventDefault();
-    }
+  const parseDateFromString = (dateString: string): Date | undefined => {
+    if (!dateString) return undefined;
+    const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+    return isValid(parsedDate) ? parsedDate : undefined;
   };
 
   return (
@@ -105,8 +103,20 @@ export default function ArsStatusOverview({ allFileEntries, onOpenDialog, dates,
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-          <Input type="text" placeholder="From Date" className="w-[150px]" value={dates.start ? format(dates.start, 'dd/MM/yyyy') : ''} onChange={(e) => onSetDates({ ...dates, start: e.target.value ? new Date(e.target.value) : undefined })} />
-          <Input type="text" placeholder="To Date" className="w-[150px]" value={dates.end ? format(dates.end, 'dd/MM/yyyy') : ''} onChange={(e) => onSetDates({ ...dates, end: e.target.value ? new Date(e.target.value) : undefined })} />
+          <Input 
+              type="text" 
+              placeholder="From: dd/mm/yyyy" 
+              className="w-[180px]" 
+              value={dates.start ? format(dates.start, 'dd/MM/yyyy') : ''} 
+              onChange={(e) => onSetDates({ ...dates, start: parseDateFromString(e.target.value) })}
+          />
+          <Input 
+              type="text" 
+              placeholder="To: dd/mm/yyyy" 
+              className="w-[180px]" 
+              value={dates.end ? format(dates.end, 'dd/MM/yyyy') : ''} 
+              onChange={(e) => onSetDates({ ...dates, end: parseDateFromString(e.target.value) })}
+          />
           <Button onClick={() => onSetDates({ start: undefined, end: undefined })} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4" />Clear Dates</Button>
           <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date</p>
         </div>

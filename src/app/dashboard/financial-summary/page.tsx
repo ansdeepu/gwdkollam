@@ -1,15 +1,13 @@
-
 // src/app/dashboard/financial-summary/page.tsx
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, TrendingUp, TrendingDown, RefreshCw, XCircle, CalendarIcon as CalendarIconLucide, Landmark } from "lucide-react";
-import { format, startOfDay, endOfDay, isWithinInterval, isValid, parseISO } from 'date-fns';
+import { Loader2, RefreshCw, XCircle, Landmark } from "lucide-react";
+import { format, startOfDay, endOfDay, isWithinInterval, isValid, parseISO, parse } from 'date-fns';
 import { cn } from "@/lib/utils";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, ApplicationType } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
@@ -105,6 +103,13 @@ export default function FinancialSummaryPage() {
         setFinanceEndDate(undefined);
     };
 
+    const parseDateFromString = (dateString: string): Date | undefined => {
+        if (!dateString) return undefined;
+        const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+        return isValid(parsedDate) ? parsedDate : undefined;
+    };
+
+
     if (isReportLoading) {
       return (
         <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
@@ -125,8 +130,8 @@ export default function FinancialSummaryPage() {
                     <Button variant="ghost" size="icon" onClick={() => {}} disabled={isReportLoading}><RefreshCw className={cn("h-4 w-4", isReportLoading && "animate-spin")} /></Button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Input type="text" placeholder="From Date" className="w-[150px]" value={financeStartDate ? format(financeStartDate, "dd/MM/yyyy") : ''} onChange={(e) => setFinanceStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
-                  <Input type="text" placeholder="To Date" className="w-[150px]" value={financeEndDate ? format(financeEndDate, "dd/MM/yyyy") : ''} onChange={(e) => setFinanceEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
+                  <Input type="text" placeholder="From: dd/mm/yyyy" className="w-[180px]" value={financeStartDate ? format(financeStartDate, "dd/MM/yyyy") : ''} onChange={(e) => setFinanceStartDate(parseDateFromString(e.target.value))} />
+                  <Input type="text" placeholder="To: dd/mm/yyyy" className="w-[180px]" value={financeEndDate ? format(financeEndDate, "dd/MM/yyyy") : ''} onChange={(e) => setFinanceEndDate(parseDateFromString(e.target.value))} />
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>

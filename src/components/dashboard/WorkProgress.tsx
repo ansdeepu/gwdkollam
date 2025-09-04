@@ -1,13 +1,11 @@
-
 // src/components/dashboard/WorkProgress.tsx
 "use client";
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { CalendarCheck, Hourglass, TrendingUp, CalendarIcon as CalendarIconLucide } from "lucide-react";
-import { format, isWithinInterval, startOfMonth, endOfMonth, isValid } from 'date-fns';
+import { CalendarCheck, Hourglass, TrendingUp } from "lucide-react";
+import { format, isWithinInterval, startOfMonth, endOfMonth, isValid, parse } from 'date-fns';
 import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus, UserProfile } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
@@ -125,6 +123,16 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     onOpenDialog(dialogData, `${type} '${purpose}' Works`, columns, 'month');
   };
 
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateString = e.target.value;
+    // Expects "yyyy-MM" format
+    const parsedDate = parse(dateString, 'yyyy-MM', new Date());
+    if (isValid(parsedDate)) {
+      setWorkReportMonth(parsedDate);
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
@@ -134,7 +142,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
             <CardDescription>Summary of completed and ongoing work.</CardDescription>
           </div>
           <div className="shrink-0">
-             <Input type="text" placeholder="Month (e.g. yyyy-mm)" className="w-full sm:w-[200px]" value={format(workReportMonth, 'yyyy-MM')} onChange={(e) => setWorkReportMonth(new Date(e.target.value))} />
+             <Input type="month" className="w-full sm:w-[200px]" value={format(workReportMonth, 'yyyy-MM')} onChange={handleMonthChange} />
           </div>
         </div>
       </CardHeader>
