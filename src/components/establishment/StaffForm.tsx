@@ -228,12 +228,11 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                     <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                         mode="single"
-                        selected={field.value}
+                        selected={field.value ? new Date(field.value) : undefined}
                         onSelect={field.onChange}
                         disabled={(date) =>
                         date > new Date() || date < new Date("1900-01-01")
                         }
-                        initialFocus
                     />
                     </PopoverContent>
                 </Popover>
@@ -372,7 +371,6 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                 <FormMessage />
               </FormItem>
             )}
-          />
         
           <FormField
             control={form.control}

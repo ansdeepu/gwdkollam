@@ -475,7 +475,7 @@ export default function ReportsPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, 'PPP') : <span>From Date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus /></PopoverContent>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} /></PopoverContent>
                 </Popover>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -483,7 +483,7 @@ export default function ReportsPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, 'PPP') : <span>To Date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus /></PopoverContent>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} /></PopoverContent>
                 </Popover>
             </div>
              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
