@@ -1,8 +1,9 @@
+
 // src/components/establishment/StaffForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -64,7 +65,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
       name: initialData?.name || "",
       designation: initialData?.designation || undefined,
       pen: initialData?.pen || "",
-      dateOfBirth: initialData?.dateOfBirth ? new Date(initialData.dateOfBirth) : undefined,
+      dateOfBirth: initialData?.dateOfBirth ? String(initialData.dateOfBirth) : "",
       phoneNo: initialData?.phoneNo || "",
       roles: initialData?.roles || "",
       photoUrl: isValidWebUrl(initialData?.photoUrl) ? initialData.photoUrl : "",
@@ -88,7 +89,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
         name: initialData.name || "",
         designation: initialData.designation || undefined,
         pen: initialData.pen || "",
-        dateOfBirth: initialData.dateOfBirth ? new Date(initialData.dateOfBirth) : undefined,
+        dateOfBirth: initialData.dateOfBirth ? String(initialData.dateOfBirth) : "",
         phoneNo: initialData.phoneNo || "",
         roles: initialData.roles || "",
         photoUrl: isValidWebUrl(initialData.photoUrl) ? initialData.photoUrl : "",
@@ -99,7 +100,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
         name: "",
         designation: undefined,
         pen: "",
-        dateOfBirth: undefined,
+        dateOfBirth: "",
         phoneNo: "",
         roles: "",
         photoUrl: "",
@@ -132,7 +133,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
   const canExpandImage = imagePreview && !imageLoadError && !isPlaceholderUrl(imagePreview);
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmitInternal)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormField
@@ -368,6 +369,6 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
           </Button>
         </div>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
