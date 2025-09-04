@@ -523,7 +523,7 @@ export default function ProgressReportPage() {
         return exportRow;
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: detailDialogColumns.map(c => c.label) });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Details");
     const safeTitle = detailDialogTitle.replace(/[^\\w]/g, '-').substring(0, 30);
