@@ -14,6 +14,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  numberOfMonths = 2,
   ...props
 }: CalendarProps) {
   return (
@@ -31,8 +32,8 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        nav_button_previous: "absolute left-1 hidden",
-        nav_button_next: "absolute right-1 hidden",
+        nav_button_previous: "absolute left-1",
+        nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
         head_cell:
@@ -57,9 +58,7 @@ function Calendar({
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
       }}
-      captionLayout="dropdown-buttons"
-      fromYear={2010}
-      toYear={2050}
+      numberOfMonths={numberOfMonths}
       {...props}
     />
   )
@@ -67,3 +66,4 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
+
