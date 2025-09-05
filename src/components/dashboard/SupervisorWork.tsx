@@ -26,7 +26,7 @@ export default function SupervisorWork({ allFileEntries, allUsers, staffMembers,
         .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
         .map(u => {
             const staffInfo = staffMembers.find(s => s.id === u.staffId);
-            return { uid: u.uid, name: staffInfo?.name || u.name || u.email };
+            return { uid: u.uid, name: staffInfo?.name || u.name || u.email || "" };
         })
         .sort((a,b) => a.name.localeCompare(b.name));
   }, [allUsers, staffMembers]);
