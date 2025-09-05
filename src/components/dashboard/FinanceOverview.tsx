@@ -7,12 +7,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Button } from "@/components/ui/button";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, RefreshCw, XCircle, Landmark, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Loader2, RefreshCw, XCircle, Landmark, TrendingUp, TrendingDown, Wallet, CalendarIcon } from "lucide-react";
 import { format, startOfDay, endOfDay, isWithinInterval, isValid, parseISO, parse } from 'date-fns';
 import { cn } from "@/lib/utils";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, ApplicationType } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
 
@@ -206,8 +209,50 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Input type="date" placeholder="From: yyyy-mm-dd" className="w-[180px]" value={dates.start ? format(dates.start, "yyyy-MM-dd") : ''} onChange={(e) => onSetDates({ ...dates, start: parseDateFromString(e.target.value) })} />
-                  <Input type="date" placeholder="To: yyyy-mm-dd" className="w-[180px]" value={dates.end ? format(dates.end, "yyyy-MM-dd") : ''} onChange={(e) => onSetDates({ ...dates, end: parseDateFromString(e.target.value) })} />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn("w-[180px] justify-start text-left font-normal", !dates.start && "text-muted-foreground")}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dates.start ? format(dates.start, "dd/MM/yyyy") : <span>From date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={dates.start}
+                        onSelect={(date) => onSetDates({ ...dates, start: date })}
+                        initialFocus
+                        numberOfMonths={1}
+                        modifiers={{sunday: { dayOfWeek: [0]}}}
+                        modifiersClassNames={{sunday: 'text-red-500'}}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn("w-[180px] justify-start text-left font-normal", !dates.end && "text-muted-foreground")}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dates.end ? format(dates.end, "dd/MM/yyyy") : <span>To date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={dates.end}
+                        onSelect={(date) => onSetDates({ ...dates, end: date })}
+                        initialFocus
+                        numberOfMonths={1}
+                        modifiers={{sunday: { dayOfWeek: [0]}}}
+                        modifiersClassNames={{sunday: 'text-red-500'}}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>
@@ -216,10 +261,25 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Account</TableHead>
-                                <TableHead className="text-right">Credit (₹)</TableHead>
-                                <TableHead className="text-right">Withdrawal (₹)</TableHead>
-                                <TableHead className="text-right">Balance (₹)</TableHead>
+                               <TableHead>Account</TableHead>
+                                <TableHead className="text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                        <TrendingUp className="h-4 w-4 text-green-600" />
+                                        <span>Credit (₹)</span>
+                                    </div>
+                                </TableHead>
+                                <TableHead className="text-right">
+                                     <div className="flex items-center justify-end gap-1">
+                                        <TrendingDown className="h-4 w-4 text-red-600" />
+                                        <span>Withdrawal (₹)</span>
+                                    </div>
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                        <Wallet className="h-4 w-4 text-primary" />
+                                        <span>Balance (₹)</span>
+                                    </div>
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
