@@ -213,17 +213,17 @@ export default function DashboardPage() {
         </div>
       </div>
       
+      <WorkStatusByService 
+        allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        currentUserRole={currentUser?.role}
+      />
+
       <FinanceOverview 
         allFileEntries={allFileEntries}
         onOpenDialog={handleOpenDialog}
         dates={financeDates}
         onSetDates={setFinanceDates}
-      />
-
-      <WorkStatusByService 
-        allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
-        onOpenDialog={handleOpenDialog}
-        currentUserRole={currentUser?.role}
       />
       
       <ArsStatusOverview 
