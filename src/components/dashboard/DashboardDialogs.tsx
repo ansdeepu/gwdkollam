@@ -24,7 +24,7 @@ interface DialogState {
   title: string;
   data: any[];
   columns: DetailDialogColumn[];
-  type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus';
+  type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance';
 }
 
 interface DashboardDialogsProps {

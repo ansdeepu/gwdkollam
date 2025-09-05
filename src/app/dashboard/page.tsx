@@ -55,7 +55,7 @@ export default function DashboardPage() {
     title: "",
     data: [] as any[],
     columns: [] as { key: string; label: string; isNumeric?: boolean; }[],
-    type: 'detail' as 'detail' | 'rig' | 'age' | 'month' | 'fileStatus'
+    type: 'detail' as 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance'
   });
   const [financeDates, setFinanceDates] = useState<{ start?: Date, end?: Date }>({});
   const [arsDates, setArsDates] = useState<{ start?: Date, end?: Date }>({});
@@ -138,7 +138,7 @@ export default function DashboardPage() {
     data: any[],
     title: string,
     columns: { key: string; label: string; isNumeric?: boolean; }[],
-    type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus'
+    type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance'
   ) => {
     setDialogState({ isOpen: true, data, title, columns, type });
   }, []);
