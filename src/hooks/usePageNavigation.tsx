@@ -1,3 +1,4 @@
+
 "use client";
 import { createContext, useState, useContext, ReactNode } from "react";
 
@@ -20,7 +21,7 @@ export function PageNavigationProvider({ children }: { children: ReactNode }) {
 
 export function usePageNavigation() {
   const context = useContext(PageNavigationContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("usePageNavigation must be used within a PageNavigationProvider");
   }
   return context;

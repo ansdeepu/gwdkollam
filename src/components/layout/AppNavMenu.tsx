@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; 
 import { Badge } from '@/components/ui/badge'; 
-import { usePageNavigation } from '@/hooks/usePageNavigation.tsx';
+import { usePageNavigation } from '@/hooks/usePageNavigation';
 import { useEffect, useState } from 'react';
 
 export interface NavItem {
