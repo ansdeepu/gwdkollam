@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle, Landmark } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings2, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle, Landmark, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; 
@@ -21,6 +21,7 @@ export interface NavItem {
   label: string;
   icon: React.ElementType;
   roles?: UserRole[]; // Roles that can see this item.
+  isTemp?: boolean; // To identify demo items
 }
 
 export const allNavItems: NavItem[] = [
@@ -36,6 +37,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
   { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
   { href: '/dashboard/help', label: 'Help & About', icon: HelpCircle },
+  { href: '/dashboard/calendar-demo', label: 'Calendar Demo', icon: Calendar, isTemp: true },
 ];
 
 export default function AppNavMenu() {
