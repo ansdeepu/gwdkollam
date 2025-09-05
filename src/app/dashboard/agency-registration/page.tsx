@@ -154,18 +154,18 @@ const RigAccordionItem = ({
   form: UseFormReturn<any>;
 }) => {
   const rigTypeValue = field.typeOfRig;
-  const registrationDate = field.registrationDate;
+  const registrationDate = field.registrationDate ? toDateOrNull(field.registrationDate) : null;
 
   const latestRenewal = useMemo(() => {
     if (!field.renewals || field.renewals.length === 0) return null;
     return [...field.renewals].sort((a, b) => {
-        const dateA = a.renewalDate ? new Date(a.renewalDate).getTime() : 0;
-        const dateB = b.renewalDate ? new Date(b.renewalDate).getTime() : 0;
+        const dateA = a.renewalDate ? toDateOrNull(a.renewalDate)?.getTime() ?? 0 : 0;
+        const dateB = b.renewalDate ? toDateOrNull(b.renewalDate)?.getTime() ?? 0 : 0;
         return dateB - dateA;
     })[0];
   }, [field.renewals]);
 
-  const lastEffectiveDate = latestRenewal?.renewalDate ? new Date(latestRenewal.renewalDate) : (registrationDate ? new Date(registrationDate) : null);
+  const lastEffectiveDate = latestRenewal?.renewalDate ? toDateOrNull(latestRenewal.renewalDate) : registrationDate;
 
   const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
     ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
@@ -272,12 +272,14 @@ const RigAccordionItem = ({
                         <TableBody>
                         {field.renewals.map((renewal, renewalIndex) => {
                             const renewalNum = renewalIndex + 1;
+                            const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
+                            const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
                             return (
                                 <TableRow key={renewal.id}>
                                 <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
-                                <TableCell>{renewal.renewalDate && isValid(new Date(renewal.renewalDate)) ? format(new Date(renewal.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
-                                <TableCell>{renewal.paymentDate && isValid(new Date(renewal.paymentDate)) ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
                                 <TableCell className="text-center">
                                     <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
@@ -405,7 +407,6 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
-                 // Safely process all date-like fields before resetting the form
                  const processedApp = processDataForForm(app);
                  const formattedApp = {
                     ...processedApp,
@@ -415,6 +416,11 @@ export default function AgencyRegistrationPage() {
                         ...rig,
                         registrationDate: rig.registrationDate ? format(new Date(rig.registrationDate), 'dd/MM/yyyy') : '',
                         paymentDate: rig.paymentDate ? format(new Date(rig.paymentDate), 'dd/MM/yyyy') : '',
+                        renewals: (rig.renewals || []).map((renewal: any) => ({
+                           ...renewal,
+                           renewalDate: renewal.renewalDate ? format(new Date(renewal.renewalDate), 'dd/MM/yyyy') : '',
+                           paymentDate: renewal.paymentDate ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : '',
+                        }))
                     }))
                  };
                  form.reset(formattedApp);
@@ -463,11 +469,12 @@ export default function AgencyRegistrationPage() {
 
         addPart('Rig Reg. No.', rig.rigRegistrationNo);
         addPart('Type of Rig', rig.typeOfRig);
-        if (rig.registrationDate) {
-            addPart('Last Reg/Renewal Date', format(new Date(rig.registrationDate), 'dd/MM/yyyy'));
+        const regDate = toDateOrNull(rig.registrationDate);
+        if (regDate) {
+            addPart('Last Reg/Renewal Date', format(regDate, 'dd/MM/yyyy'));
         }
 
-        const lastEffectiveDate = rig.registrationDate ? new Date(rig.registrationDate) : null;
+        const lastEffectiveDate = regDate;
         const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
             ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
             : null;
@@ -476,8 +483,9 @@ export default function AgencyRegistrationPage() {
         }
         
         addPart('Reg. Fee', rig.registrationFee);
-        if (rig.paymentDate) {
-            addPart('Payment Date', format(new Date(rig.paymentDate), 'dd/MM/yyyy'));
+        const paymentDate = toDateOrNull(rig.paymentDate);
+        if (paymentDate) {
+            addPart('Payment Date', format(paymentDate, 'dd/MM/yyyy'));
         }
         addPart('Challan No.', rig.challanNo);
 
@@ -558,7 +566,7 @@ export default function AgencyRegistrationPage() {
   
   const handleRenewRig = (rigIndex: number) => {
       setEditingRenewal(null);
-      setRenewalData({ rigIndex, data: { renewalDate: new Date() } });
+      setRenewalData({ rigIndex, data: { renewalDate: format(new Date(), 'dd/MM/yyyy') } });
       setIsRenewalDialogOpen(true);
   };
   
@@ -583,20 +591,27 @@ export default function AgencyRegistrationPage() {
         const updatedRenewals = rigToUpdate.renewals?.map(r => r.id === renewal.id ? renewal : r) || [];
         updateRig(rigIndex, { ...rigToUpdate, renewals: updatedRenewals });
         toast({ title: "Renewal Updated", description: "Renewal details have been updated." });
-      } else if (renewalData) { // Handle adding a new renewal
+      } else if (renewalData?.data.renewalDate) { // Handle adding a new renewal
         const { rigIndex, data } = renewalData;
         const rigToUpdate = rigFields[rigIndex];
+        const renewalDateObj = toDateOrNull(data.renewalDate);
+
+        if (!renewalDateObj) {
+            toast({ title: "Invalid Date", description: "Please enter a valid renewal date.", variant: "destructive" });
+            return;
+        }
+
         const newRenewal: RigRenewalFormData = {
             id: uuidv4(),
-            renewalDate: data.renewalDate!,
-            renewalFee: data.renewalFee!,
+            renewalDate: data.renewalDate,
+            renewalFee: data.renewalFee,
             paymentDate: data.paymentDate,
             challanNo: data.challanNo,
-            validTill: addYears(data.renewalDate!, 1),
+            validTill: addYears(renewalDateObj, 1),
         };
         updateRig(rigIndex, {
             ...rigToUpdate,
-            registrationDate: newRenewal.renewalDate, // Update the main registration date
+            registrationDate: newRenewal.renewalDate,
             status: 'Active',
             renewals: [...(rigToUpdate.renewals || []), newRenewal],
         });
@@ -636,9 +651,7 @@ export default function AgencyRegistrationPage() {
     const { rigIndex, reason, date } = cancellationData;
     const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
     
-    // Convert dd/mm/yyyy string back to a Date object for storing
-    const [day, month, year] = date.split('/');
-    const dateObject = new Date(`${year}-${month}-${day}`);
+    const dateObject = toDateOrNull(date);
     
     updateRig(rigIndex, {
         ...rigToUpdate,
@@ -785,12 +798,12 @@ export default function AgencyRegistrationPage() {
                     <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Renewal Date</Label>
-                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate) ? format(new Date(editingRenewal?.renewal.renewalDate || renewalData!.data.renewalDate!), 'dd/MM/yyyy') : ''} onChange={(e) => {
-                            const date = new Date(e.target.value);
+                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || ''} onChange={(e) => {
+                            const value = e.target.value;
                              if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: date }}));
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
                             } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: date } }));
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: value } }));
                             }
                         }}/>
                     </div>
@@ -810,12 +823,12 @@ export default function AgencyRegistrationPage() {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Payment Date</Label>
-                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate) ? format(new Date(editingRenewal?.renewal.paymentDate || renewalData!.data.paymentDate!), 'dd/MM/yyyy') : ''} onChange={(e) => {
-                            const date = new Date(e.target.value);
+                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || ''} onChange={(e) => {
+                            const value = e.target.value;
                             if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: date }}));
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
                             } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: date } }));
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: value } }));
                             }
                         }} />
 
