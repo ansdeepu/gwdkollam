@@ -106,7 +106,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
 
     const parseDateFromString = (dateString: string): Date | undefined => {
         if (!dateString) return undefined;
-        const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
+        const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
         return isValid(parsedDate) ? parsedDate : undefined;
     };
     
@@ -209,44 +209,20 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn("w-[240px] justify-start text-left font-normal", !dates.start && "text-muted-foreground")}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dates.start ? format(dates.start, "PPP") : <span>Pick a start date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={dates.start}
-                        onSelect={(date) => onSetDates({ ...dates, start: date })}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn("w-[240px] justify-start text-left font-normal", !dates.end && "text-muted-foreground")}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dates.end ? format(dates.end, "PPP") : <span>Pick an end date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={dates.end}
-                        onSelect={(date) => onSetDates({ ...dates, end: date })}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Input 
+                      type="text" 
+                      placeholder="From: dd/mm/yyyy" 
+                      className="w-[180px]" 
+                      value={dates.start ? format(dates.start, 'dd/MM/yyyy') : ''} 
+                      onChange={(e) => onSetDates({ ...dates, start: parseDateFromString(e.target.value) })}
+                  />
+                  <Input 
+                      type="text" 
+                      placeholder="To: dd/mm/yyyy" 
+                      className="w-[180px]" 
+                      value={dates.end ? format(dates.end, 'dd/MM/yyyy') : ''} 
+                      onChange={(e) => onSetDates({ ...dates, end: parseDateFromString(e.target.value) })}
+                  />
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>
@@ -256,21 +232,9 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                         <TableHeader>
                             <TableRow>
                                <TableHead>Account</TableHead>
-                                <TableHead className="text-right">
-                                    <div className='flex items-center justify-end gap-1.5'>
-                                        <TrendingUp className="h-4 w-4 text-green-600" /> Credit (₹)
-                                    </div>
-                                </TableHead>
-                                <TableHead className="text-right">
-                                    <div className='flex items-center justify-end gap-1.5'>
-                                        <TrendingDown className="h-4 w-4 text-red-600" /> Withdrawal (₹)
-                                    </div>
-                                </TableHead>
-                                <TableHead className="text-right">
-                                     <div className='flex items-center justify-end gap-1.5'>
-                                        <Wallet className="h-4 w-4" /> Balance (₹)
-                                    </div>
-                                </TableHead>
+                                <TableHead className="text-right">Credit (₹)</TableHead>
+                                <TableHead className="text-right">Withdrawal (₹)</TableHead>
+                                <TableHead className="text-right">Balance (₹)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
