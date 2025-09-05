@@ -29,9 +29,15 @@ const ITEMS_PER_PAGE = 50;
 
 const formatDateSafe = (dateInput: any): string => {
   if (!dateInput) return 'N/A';
+  // Handle pre-formatted strings
+  if (typeof dateInput === 'string') {
+      const parsed = parse(dateInput, 'dd/MM/yyyy', new Date());
+      if (isValid(parsed)) return dateInput;
+  }
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
   return date instanceof Date && !isNaN(date.getTime()) ? format(date, 'dd/MM/yyyy') : 'N/A';
 };
+
 
 // Helper component for the view dialog
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
@@ -40,6 +46,8 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
   }
   let displayValue = String(value);
   if (value instanceof Date) {
+    displayValue = formatDateSafe(value);
+  } else if (label.toLowerCase().includes('date')) {
     displayValue = formatDateSafe(value);
   } else if (typeof value === 'number') {
     displayValue = value.toLocaleString('en-IN');
@@ -87,8 +95,11 @@ export default function ArsPage() {
       const sDate = startDate ? startOfDay(startDate) : null;
       const eDate = endDate ? endOfDay(endDate) : null;
       sites = sites.filter(site => {
-        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
-        if (!completionDate || !isValid(completionDate)) return false;
+        const completionDateString = site.dateOfCompletion;
+        if (!completionDateString) return false;
+        const completionDate = parse(completionDateString, 'dd/MM/yyyy', new Date());
+        if (!isValid(completionDate)) return false;
+
         if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
         if (sDate) return completionDate >= sDate;
         if (eDate) return completionDate <= eDate;
@@ -249,7 +260,15 @@ export default function ArsPage() {
 
         for (const rowData of jsonData) {
           try {
-            const parseDate = (dateValue: any) => { if (!dateValue) return undefined; if (dateValue instanceof Date) return dateValue; let d = parse(String(dateValue), 'dd/MM/yyyy', new Date()); return isValid(d) ? d : undefined; };
+            const parseDate = (dateValue: any): string | undefined => {
+                if (!dateValue) return undefined;
+                if (dateValue instanceof Date && isValid(dateValue)) {
+                  return format(dateValue, 'dd/MM/yyyy');
+                }
+                const d = parse(String(dateValue), 'dd/MM/yyyy', new Date());
+                return isValid(d) ? format(d, 'dd/MM/yyyy') : undefined;
+            };
+
             const expenditureValue = String((rowData as any)['Expenditure (₹)'] || '');
             const cleanedExpenditure = expenditureValue.replace(/[^0-9.]/g, '');
 
@@ -330,8 +349,8 @@ export default function ArsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
               <div className="font-medium text-sm pr-4">Total Sites: {arsEntries.length}</div>
-              <Input type="text" placeholder="From Date" className="w-[150px]" value={startDate ? format(startDate, "dd/MM/yyyy") : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
-              <Input type="text" placeholder="To Date" className="w-[150px]" value={endDate ? format(endDate, "dd/MM/yyyy") : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
+              <Input type="text" placeholder="From Date" className="w-[150px]" value={startDate ? format(startDate, "dd/MM/yyyy") : ''} onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'dd/MM/yyyy', new Date()) : undefined)} />
+              <Input type="text" placeholder="To Date" className="w-[150px]" value={endDate ? format(endDate, "dd/MM/yyyy") : ''} onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'dd/MM/yyyy', new Date()) : undefined)} />
               <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
             </div>
         </CardContent>
