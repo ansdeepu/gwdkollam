@@ -74,6 +74,8 @@ const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
   surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
   surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
+  arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined,
+  arsTenderedAmount: undefined, arsAwardedAmount: undefined,
   arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false,
   pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
 });
@@ -367,7 +369,7 @@ export default function DataEntryFormComponent({
                     <div className="border-t pt-6 space-y-4">
                         <Accordion type="multiple" defaultValue={remittanceFields.map((_, i) => `remittance-${i}`)} className="w-full space-y-2">
                             {remittanceFields.map((item, index) => {
-                            const amountRemitted = watchedRemittanceDetails[index]?.amountRemitted;
+                            const amountRemitted = watchedRemittanceDetails?.[index]?.amountRemitted;
                             const isDateAndAccountRequired = amountRemitted && Number(amountRemitted) > 0;
                             return (
                                 <AccordionItem value={`remittance-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
