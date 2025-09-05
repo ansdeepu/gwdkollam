@@ -136,11 +136,11 @@ export default function ArsEntryPage() {
     const handleFormSubmit = async (data: ArsEntryFormData) => {
         setIsSubmitting(true);
         
-        // Convert date strings back to Date objects for Firestore
-        const payload = {
+        // Payload stays consistent with schema (strings, not Date)
+        const payload: ArsEntryFormData = {
             ...data,
-            arsSanctionedDate: data.arsSanctionedDate ? parse(data.arsSanctionedDate, 'dd/MM/yyyy', new Date()) : undefined,
-            dateOfCompletion: data.dateOfCompletion ? parse(data.dateOfCompletion, 'dd/MM/yyyy', new Date()) : undefined,
+            arsSanctionedDate: data.arsSanctionedDate || undefined,
+            dateOfCompletion: data.dateOfCompletion || undefined,
         };
 
         try {

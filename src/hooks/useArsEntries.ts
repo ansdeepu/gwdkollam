@@ -1,3 +1,4 @@
+
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -7,6 +8,7 @@ import { app } from '@/lib/firebase';
 import type { ArsEntryFormData } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
+import { parse, isValid } from 'date-fns';
 
 const db = getFirestore(app);
 const ARS_COLLECTION = 'arsEntries';
@@ -89,8 +91,15 @@ export function useArsEntries() {
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
     if (!user) throw new Error("User must be logged in to add an entry.");
-    const payload = {
+    
+    const entryForFirestore = {
         ...entryData,
+        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'dd/MM/yyyy', new Date()) : null,
+        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'dd/MM/yyyy', new Date()) : null,
+    };
+    
+    const payload = {
+        ...entryForFirestore,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -100,8 +109,15 @@ export function useArsEntries() {
   const updateArsEntry = useCallback(async (id: string, entryData: Partial<ArsEntryFormData>) => {
     if (!user) throw new Error("User must be logged in to update an entry.");
     const docRef = doc(db, ARS_COLLECTION, id);
-    const payload = {
+
+    const entryForFirestore = {
         ...entryData,
+        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'dd/MM/yyyy', new Date()) : null,
+        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'dd/MM/yyyy', new Date()) : null,
+    };
+
+    const payload = {
+        ...entryForFirestore,
         updatedAt: serverTimestamp(),
     };
     await updateDoc(docRef, payload);
