@@ -1,4 +1,5 @@
-// src/components/dashboard/FinanceOverview.tsx
+
+      // src/components/dashboard/FinanceOverview.tsx
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -236,7 +237,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                             </TableRow>
                             <TableRow>
                                 <TableCell className="font-medium">Revenue Head</TableCell>
-                                <TableCell colSpan={3} className="text-right font-mono"><Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('RevenueHead', 'credit')} disabled={!transformedFinanceMetrics.revenueHeadCredit}>{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN')}</Button></TableCell>
+                                <TableCell className="text-right font-mono" colSpan={3}><Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('RevenueHead', 'credit')} disabled={!transformedFinanceMetrics.revenueHeadCredit}>{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN')}</Button></TableCell>
                             </TableRow>
                         </TableBody>
                         <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance + transformedFinanceMetrics.revenueHeadBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
@@ -251,3 +252,5 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
         </Card>
     );
 }
+
+    
