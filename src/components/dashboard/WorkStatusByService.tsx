@@ -23,12 +23,19 @@ interface WorkStatusByServiceProps {
   currentUserRole?: UserRole;
 }
 
+interface WorkStatusRow {
+  statusCategory: string;
+  total: { count: number; data: any[] };
+  [service: string]: any; // Allows dynamic service keys
+}
+
+
 export default function WorkStatusByService({ allFileEntries, onOpenDialog, currentUserRole }: WorkStatusByServiceProps) {
     const workStatusByServiceData = useMemo(() => {
         const totalApplicationsRow = "Total No. of Works/Files";
         const reorderedRowLabels = [...dashboardWorkStatusOrder, totalApplicationsRow];
         
-        const initialWorkStatusData = reorderedRowLabels.map(statusCategory => {
+        const initialWorkStatusData: WorkStatusRow[] = reorderedRowLabels.map(statusCategory => {
             const serviceCounts: { [service: string]: { count: number, data: any[] } } = {};
             dashboardServiceOrder.forEach(service => {
                 serviceCounts[service] = { count: 0, data: [] };
