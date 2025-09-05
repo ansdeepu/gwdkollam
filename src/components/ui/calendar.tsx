@@ -2,9 +2,8 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
-
+import { enUS } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
@@ -13,51 +12,85 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 function Calendar({
   className,
   classNames,
-  showOutsideDays = true,
+  showOutsideDays = false,
   ...props
 }: CalendarProps) {
+  const [month, setMonth] = React.useState<Date>(new Date())
+
+  const years = Array.from({ length: 41 }, (_, i) => 2010 + i) // 2010 → 2050
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ]
+
   return (
     <DayPicker
+      month={month}
+      onMonthChange={setMonth}
+      locale={{ ...enUS, options: { weekStartsOn: 0 } }} // Sunday as first day
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+        months: "flex flex-col space-y-4",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
-        nav_button: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-        ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
+        caption: "flex justify-center items-center px-2",
+        caption_label: "hidden", // we use custom caption below
+        nav: "hidden", // hide default arrows
+        table: "w-full border-collapse",
         head_row: "grid grid-cols-7",
         head_cell:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] flex items-center justify-center",
-        row: "grid grid-cols-7 w-full mt-2",
-        cell: "flex items-center justify-center h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent/10 first:[&:has([aria-selected])]:rounded-l-full last:[&:has([aria-selected])]:rounded-r-full focus-within:relative focus-within:z-20",
+          "w-10 h-10 text-center text-sm font-semibold text-muted-foreground",
+        row: "grid grid-cols-7",
+        cell: "w-10 h-10 text-center text-sm relative",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-full"
+          "h-10 w-10 p-0 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
         ),
-        day_range_end: "day-range-end",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary focus:text-primary-foreground rounded-full",
-        day_today: "bg-accent/20 text-accent-foreground",
-        day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+        day_today: "bg-accent/20 text-accent-foreground rounded-full",
+        day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
-          "aria-selected:bg-accent/10 aria-selected:text-accent-foreground",
         day_hidden: "invisible",
-        day_sunday: "text-destructive font-bold",
+        day_sunday: "text-red-600 font-semibold", // Sundays red
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+        Caption: () => (
+          <div className="flex items-center justify-center space-x-2 rdp">
+            {/* Month Picker */}
+            <select
+              className="rounded-md border px-2 py-1 text-sm bg-background"
+              value={month.getMonth()}
+              onChange={(e) => {
+                const newMonth = new Date(month)
+                newMonth.setMonth(Number(e.target.value))
+                setMonth(newMonth)
+              }}
+            >
+              {months.map((m, idx) => (
+                <option key={m} value={idx}>
+                  {m}
+                </option>
+              ))}
+            </select>
+
+            {/* Year Picker */}
+            <select
+              className="rounded-md border px-2 py-1 text-sm bg-background"
+              value={month.getFullYear()}
+              onChange={(e) => {
+                const newMonth = new Date(month)
+                newMonth.setFullYear(Number(e.target.value))
+                setMonth(newMonth)
+              }}
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+        ),
       }}
       {...props}
     />
@@ -66,4 +99,3 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-
