@@ -16,7 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { format, isValid, parseISO } from "date-fns";
+import { format, isValid, parseISO, parse } from "date-fns";
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
@@ -25,9 +25,18 @@ import { usePageHeader } from "@/hooks/usePageHeader";
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
+  // Handle Firestore Timestamp objects
+  if (value && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
+    return isValid(date) ? date : null;
+  }
   if (typeof value === 'string') {
-    const parsed = parseISO(value);
-    if (isValid(parsed)) return parsed;
+    let parsedDate = parseISO(value);
+    if (isValid(parsedDate)) return parsedDate;
+    
+    // Also handle 'dd/MM/yyyy' format
+    parsedDate = parse(value, 'dd/MM/yyyy', new Date());
+    if (isValid(parsedDate)) return parsedDate;
   }
   return null;
 };
@@ -40,7 +49,6 @@ const processDataForForm = (data: any): any => {
             const value = data[key];
              if (key.toLowerCase().includes('date')) {
                 const date = toDateOrNull(value);
-                // For text inputs, we format to dd/MM/yyyy. For other types, we keep as Date object.
                 processed[key] = date ? format(date, 'dd/MM/yyyy') : '';
             } else {
                 processed[key] = value;
@@ -128,14 +136,19 @@ export default function ArsEntryPage() {
     const handleFormSubmit = async (data: ArsEntryFormData) => {
         setIsSubmitting(true);
         
+        // Convert date strings back to Date objects for Firestore
+        const payload = {
+            ...data,
+            arsSanctionedDate: data.arsSanctionedDate ? parse(data.arsSanctionedDate, 'dd/MM/yyyy', new Date()) : undefined,
+            dateOfCompletion: data.dateOfCompletion ? parse(data.dateOfCompletion, 'dd/MM/yyyy', new Date()) : undefined,
+        };
+
         try {
             if (isEditing && entryIdToEdit) {
-                // Update existing document
-                await updateArsEntry(entryIdToEdit, data);
+                await updateArsEntry(entryIdToEdit, payload);
                 toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
             } else {
-                // Create new document
-                await addArsEntry(data);
+                await addArsEntry(payload);
                 toast({ title: "ARS Site Added", description: `Site "${data.nameOfSite}" has been created.` });
             }
             router.push('/dashboard/ars');
@@ -185,11 +198,11 @@ export default function ArsEntryPage() {
                           <FormField name="estimateAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 500000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAsTsDetails" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Accorded Details</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="tsAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                           <FormField name="arsSanctionedDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Sanctioned Date</FormLabel><FormControl><Input placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                           <FormField name="arsSanctionedDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Sanctioned Date</FormLabel><FormControl><Input placeholder="dd/mm/yyyy" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem> )} />
                           <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="workStatus" control={form.control} render={({ field }) => (<FormItem><FormLabel>Present Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{arsWorkStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
-                           <FormField name="dateOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                           <FormField name="dateOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input placeholder="dd/mm/yyyy" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem> )} />
                           <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>)} />
                            <FormField

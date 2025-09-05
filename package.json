@@ -1,3 +1,4 @@
+
 {
   "name": "nextn",
   "version": "0.1.0",
@@ -10,8 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@genkit-ai/firebase": "^1.0.1",
     "@genkit-ai/googleai": "^1.0.3",
     "@hookform/resolvers": "^3.9.0",
+    "@opentelemetry/exporter-jaeger": "^1.25.1",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-avatar": "^1.1.0",
