@@ -258,14 +258,15 @@ export default function ProgressReportPage() {
     let totalRevenueHeadCredit = 0;
     const revenueHeadCreditData: any[] = [];
 
-    const uniqueCompletedSites = new Map<string, SiteDetailFormData>();
+    const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName?: string; applicationType?: ApplicationType }>();
+
     fileEntries.forEach(entry => {
         (entry.siteDetails || []).forEach(site => {
             const completionDate = safeParseDate(site.dateOfCompletion);
             if (completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
                 const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
                 if (!uniqueCompletedSites.has(siteKey)) {
-                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType });
+                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName, applicationType: entry.applicationType });
                 }
             }
         });
