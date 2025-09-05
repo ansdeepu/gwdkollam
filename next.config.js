@@ -1,3 +1,4 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -54,6 +55,13 @@ const nextConfig = {
       'utf-8-validate': 'commonjs utf-8-validate',
       'bufferutil': 'commonjs bufferutil',
     });
+    
+    // Fix for handlebars dependency issue with Genkit
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'handlebars': require.resolve('handlebars/dist/handlebars.js'),
+    };
+
     return config;
   },
 };
