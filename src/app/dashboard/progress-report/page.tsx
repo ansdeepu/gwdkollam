@@ -31,6 +31,12 @@ import { Input } from '@/components/ui/input';
 
 
 // Define the structure for the progress report data
+interface SiteDetailWithFileContext extends SiteDetailFormData {
+  fileNo: string;
+  applicantName: string;
+  applicationType: ApplicationType;
+}
+
 interface ProgressStats {
   previousBalance: number;
   currentApplications: number;
@@ -38,19 +44,12 @@ interface ProgressStats {
   totalApplications: number;
   completed: number;
   balance: number;
-  // Add data arrays to hold the actual entries
-  previousBalanceData: SiteDetailFormData[];
-  currentApplicationsData: SiteDetailFormData[];
-  toBeRefundedData: SiteDetailFormData[];
-  totalApplicationsData: SiteDetailFormData[];
-  completedData: SiteDetailFormData[];
-  balanceData: SiteDetailFormData[];
-}
-
-interface SiteDetailWithFileContext extends SiteDetailFormData {
-  fileNo: string;
-  applicantName: string;
-  applicationType?: ApplicationType;
+  previousBalanceData: SiteDetailWithFileContext[];
+  currentApplicationsData: SiteDetailWithFileContext[];
+  toBeRefundedData: SiteDetailWithFileContext[];
+  totalApplicationsData: SiteDetailWithFileContext[];
+  completedData: SiteDetailWithFileContext[];
+  balanceData: SiteDetailWithFileContext[];
 }
 
 type DiameterProgress = Record<string, ProgressStats>;
@@ -62,8 +61,8 @@ interface FinancialSummary {
   totalRemittance: number;
   totalCompleted: number;
   totalPayment: number;
-  applicationData: SiteDetailFormData[]; 
-  completedData: SiteDetailFormData[];
+  applicationData: SiteDetailWithFileContext[];
+  completedData: SiteDetailWithFileContext[];
 }
 type FinancialSummaryReport = Record<string, FinancialSummary>;
 
@@ -96,7 +95,7 @@ const WellTypeProgressTable = ({
   title: string; 
   data: ApplicationTypeProgress, 
   diameters: string[],
-  onCountClick: (data: SiteDetailFormData[], title: string) => void;
+  onCountClick: (data: SiteDetailWithFileContext[], title: string) => void;
 }) => {
     const metrics: Array<{ key: keyof ProgressStats, label: string }> = [
         { key: 'previousBalance', label: 'Previous Balance' },
@@ -152,7 +151,7 @@ const WellTypeProgressTable = ({
                           <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
                           {metrics.map(metric => {
                             const count = data[appType]?.[diameter]?.[metric.key] as number ?? 0;
-                            const metricData = data[appType]?.[diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[] ?? [];
+                            const metricData = data[appType]?.[diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailWithFileContext[] ?? [];
                             return (
                               <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", (metric.key === 'balance' || metric.key === 'totalApplications') && "font-bold")}>
                                   <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
@@ -169,7 +168,7 @@ const WellTypeProgressTable = ({
                       <TableCell className="border p-2 text-left font-bold">Total</TableCell>
                       {metrics.map(metric => (
                          <TableCell key={`total-${metric.key}`} className={cn("border p-2 text-center font-bold")}>
-                             <Button variant="link" className="p-0 h-auto font-bold" disabled={(diameterTotals[metric.key] as number) === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[], `Total for ${diameter} - ${metric.label}`)}>
+                             <Button variant="link" className="p-0 h-auto font-bold" disabled={(diameterTotals[metric.key] as number) === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailWithFileContext[], `Total for ${diameter} - ${metric.label}`)}>
                                   {diameterTotals[metric.key] as number}
                              </Button>
                          </TableCell>
@@ -210,7 +209,7 @@ export default function ProgressReportPage() {
 
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [detailDialogTitle, setDetailDialogTitle] = useState("");
-  const [detailDialogData, setDetailDialogData] = useState<Array<SiteDetailFormData | DataEntryFormData | Record<string, any>>>([]);
+  const [detailDialogData, setDetailDialogData] = useState<Array<SiteDetailWithFileContext | DataEntryFormData | Record<string, any>>>([]);
   const [detailDialogColumns, setDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
 
   const handleGenerateReport = useCallback(() => {
@@ -341,7 +340,7 @@ export default function ProgressReportPage() {
             uniquePurposesInFile.forEach(purpose => {
                 const summary = targetFinancialSummary[purpose];
                 if(summary) {
-                    const sitesForThisPurpose = relevantSites.filter(s => s.purpose === purpose).map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }));
+                    const sitesForThisPurpose = relevantSites.map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }) as SiteDetailWithFileContext);
                     summary.applicationData.push(...sitesForThisPurpose);
                     const totalRemittanceForFile = Number(entry.remittanceDetails?.[0]?.amountRemitted) || 0;
                     summary.totalRemittance += totalRemittanceForFile;
@@ -452,7 +451,7 @@ export default function ProgressReportPage() {
     setEndDate(endOfMonth(today));
   };
 
-  const handleCountClick = (data: Array<SiteDetailFormData | DataEntryFormData | Record<string, any>>, title: string) => {
+  const handleCountClick = (data: Array<SiteDetailWithFileContext | DataEntryFormData | Record<string, any>>, title: string) => {
     if (!data || data.length === 0) return;
     setDetailDialogTitle(title);
 
@@ -468,7 +467,7 @@ export default function ProgressReportPage() {
     } else if (title.toLowerCase().includes("remittance details")) {
         const groupedByFile: Record<string, { fileNo: string; applicantName: string; sites: {nameOfSite?: string, purpose?: string}[], totalRemittance: number; firstRemittanceDate: string | null }> = {};
         
-        (data as SiteDetailFormData[]).forEach(site => {
+        (data as SiteDetailWithFileContext[]).forEach(site => {
             const fileNo = site.fileNo || 'N/A';
             if (!groupedByFile[fileNo]) {
                  const parentFile = fileEntries.find(f => f.fileNo === fileNo);
@@ -495,7 +494,7 @@ export default function ProgressReportPage() {
         }));
     } else if (title.toLowerCase().includes('payment for completed')) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'totalExpenditure', label: 'Payment (₹)', isNumeric: true } ];
-        dialogData = (data as SiteDetailFormData[])
+        dialogData = (data as SiteDetailWithFileContext[])
             .filter(site => site.totalExpenditure && site.totalExpenditure > 0)
             .map((site, index) => ({
                 slNo: index + 1, ...site,
@@ -503,7 +502,7 @@ export default function ProgressReportPage() {
             }));
     } else { // Generic fallback for other cases like "Total Application", "Balance", etc.
          columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'nameOfSite', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' }, { key: 'workStatus', label: 'Work Status' }, ];
-         dialogData = (data as SiteDetailFormData[]).map((site, index) => ({
+         dialogData = (data as SiteDetailWithFileContext[]).map((site, index) => ({
             slNo: index + 1,
             fileNo: site.fileNo,
             applicantName: site.applicantName,
@@ -797,4 +796,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
