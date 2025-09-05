@@ -164,8 +164,8 @@ const WellTypeProgressTable = ({
                       <TableCell className="border p-2 text-left font-bold">Total</TableCell>
                       {metrics.map(metric => (
                          <TableCell key={`total-${metric.key}`} className={cn("border p-2 text-center font-bold")}>
-                             <Button variant="link" className="p-0 h-auto font-bold" disabled={diameterTotals[metric.key] === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[], `Total for ${diameter} - ${metric.label}`)}>
-                                  {diameterTotals[metric.key]}
+                             <Button variant="link" className="p-0 h-auto font-bold" disabled={(diameterTotals[metric.key] as number) === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailFormData[], `Total for ${diameter} - ${metric.label}`)}>
+                                  {diameterTotals[metric.key] as number}
                              </Button>
                          </TableCell>
                       ))}
@@ -289,7 +289,7 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && (!completionDate || isAfter(completionDate, sDate));
         
-        const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
+        const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus as SiteWorkStatus);
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplicationInPeriod) { 
