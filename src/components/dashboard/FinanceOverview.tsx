@@ -217,9 +217,9 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Account</TableHead>
-                                <TableHead className="text-right flex items-center justify-end gap-1.5"><TrendingUp className="h-4 w-4 text-green-600"/>Credit (₹)</TableHead>
-                                <TableHead className="text-right flex items-center justify-end gap-1.5"><TrendingDown className="h-4 w-4 text-red-600"/>Withdrawal (₹)</TableHead>
-                                <TableHead className="text-right flex items-center justify-end gap-1.5"><Wallet className="h-4 w-4 text-blue-600"/>Balance (₹)</TableHead>
+                                <TableHead className="text-right">Credit (₹)</TableHead>
+                                <TableHead className="text-right">Withdrawal (₹)</TableHead>
+                                <TableHead className="text-right">Balance (₹)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -256,5 +256,3 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
         </Card>
     );
 }
-
-    
