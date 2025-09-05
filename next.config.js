@@ -49,7 +49,6 @@ const nextConfig = {
       },
     ],
   },
-  // Cache-busting property to force a rebuild.
   webpack: (config, { isServer }) => {
     config.externals.push({
       'utf-8-validate': 'commonjs utf-8-validate',

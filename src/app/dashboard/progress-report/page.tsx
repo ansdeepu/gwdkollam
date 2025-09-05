@@ -47,6 +47,11 @@ interface ProgressStats {
   balanceData: SiteDetailFormData[];
 }
 
+interface SiteDetailWithFileContext extends SiteDetailFormData {
+  fileNo: string;
+  applicantName: string;
+  applicationType?: ApplicationType;
+}
 
 type DiameterProgress = Record<string, ProgressStats>;
 type ApplicationTypeProgress = Record<ApplicationType, DiameterProgress>;
@@ -258,7 +263,7 @@ export default function ProgressReportPage() {
     let totalRevenueHeadCredit = 0;
     const revenueHeadCreditData: any[] = [];
 
-    const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName?: string; applicationType?: ApplicationType }>();
+    const uniqueCompletedSites = new Map<string, SiteDetailWithFileContext>();
 
     fileEntries.forEach(entry => {
         (entry.siteDetails || []).forEach(site => {
@@ -266,7 +271,7 @@ export default function ProgressReportPage() {
             if (completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
                 const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
                 if (!uniqueCompletedSites.has(siteKey)) {
-                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName, applicationType: entry.applicationType });
+                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName!, applicationType: entry.applicationType! });
                 }
             }
         });
@@ -280,7 +285,7 @@ export default function ProgressReportPage() {
       (entry.siteDetails || []).forEach(site => {
         if (!site) return;
         
-        const siteWithFileContext: SiteDetailFormData = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType };
+        const siteWithFileContext: SiteDetailWithFileContext = { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName!, applicationType: entry.applicationType! };
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus;
@@ -792,3 +797,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
