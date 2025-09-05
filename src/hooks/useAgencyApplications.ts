@@ -138,4 +138,4 @@ export function useAgencyApplications() {
 }
 
 // Re-exporting types for convenience in other files
-export type { AgencyApplication as AgencyApplication, RigRegistration as RigRegistration, OwnerInfo };
+export type { OwnerInfo };
