@@ -134,6 +134,29 @@ export default function CalendarDemoPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Custom Styled Days</CardTitle>
+          <CardDescription>
+            This calendar demonstrates how we can apply custom styles to specific days, like highlighting all Sundays in red.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center pt-6">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="rounded-md border"
+            modifiers={{
+              sunday: { dayOfWeek: 0 },
+            }}
+            modifiersClassNames={{
+              sunday: "day-sunday",
+            }}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

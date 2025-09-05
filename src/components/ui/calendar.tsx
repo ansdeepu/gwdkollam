@@ -52,6 +52,8 @@ function Calendar({
         day_range_middle:
           "aria-selected:bg-accent/10 aria-selected:text-accent-foreground",
         day_hidden: "invisible",
+        // Add a new style for Sundays
+        day_sunday: "text-destructive font-bold",
         ...classNames,
       }}
       components={{
