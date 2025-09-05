@@ -42,8 +42,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https'
-        ,
+        protocol: 'https',
         hostname: 'i.postimg.cc',
         port: '',
         pathname: '/**',
@@ -51,5 +50,5 @@ const nextConfig = {
     ],
   },
 };
-// Cache invalidation comment: 1757009020475
+// Cache invalidation comment: 1757010257962
 module.exports = nextConfig;
