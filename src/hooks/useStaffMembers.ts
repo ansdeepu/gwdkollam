@@ -27,10 +27,10 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const STAFF_MEMBERS_COLLECTION = 'staffMembers';
 
-const designationSortOrder: Record<Designation, number> = designationOptions.reduce((acc, curr, index) => {
+const designationSortOrder: Record<string, number> = designationOptions.reduce((acc, curr, index) => {
   acc[curr] = index;
   return acc;
-}, {} as Record<Designation, number>);
+}, {} as Record<string, number>);
 
 
 const safeParseDate = (value: any): Date | null => {
@@ -128,8 +128,10 @@ export function useStaffMembers(): StaffMembersState {
         const statusA = statusOrder[a.status] ?? 99;
         const statusB = statusOrder[b.status] ?? 99;
         if (statusA !== statusB) return statusA - statusB;
-        const orderA = designationSortOrder[a.designation] ?? designationOptions.length;
-        const orderB = designationSortOrder[b.designation] ?? designationOptions.length;
+        
+        const orderA = a.designation ? designationSortOrder[a.designation] ?? designationOptions.length : designationOptions.length;
+        const orderB = b.designation ? designationSortOrder[b.designation] ?? designationOptions.length : designationOptions.length;
+        
         if (orderA !== orderB) return orderA - orderB;
         return a.name.localeCompare(b.name);
       });
