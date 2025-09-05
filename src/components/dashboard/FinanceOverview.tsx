@@ -244,7 +244,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                                 <TableCell></TableCell>
                             </TableRow>
                         </TableBody>
-                        <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance + transformedFinanceMetrics.revenueHeadBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
+                        <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
                     </Table>
                 ) : (<div className="h-40 flex items-center justify-center"><p className="text-muted-foreground">Calculating financial data...</p></div>)}
             </CardContent>
