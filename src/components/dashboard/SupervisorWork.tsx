@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users } from "lucide-react";
-import type { DataEntryFormData, SitePurpose, UserProfile, StaffMember } from '@/lib/schemas';
+import type { DataEntryFormData, SitePurpose, StaffMember } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
+import type { UserProfile } from '@/hooks/useAuth';
 
 interface SupervisorWorkProps {
   allFileEntries: DataEntryFormData[];
