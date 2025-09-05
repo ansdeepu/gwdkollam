@@ -603,10 +603,10 @@ export default function AgencyRegistrationPage() {
 
         const newRenewal: RigRenewalFormData = {
             id: uuidv4(),
-            renewalDate: data.renewalDate,
+            renewalDate: data.renewalDate ?? "",
             renewalFee: data.renewalFee,
-            paymentDate: data.paymentDate,
-            challanNo: data.challanNo,
+            paymentDate: data.paymentDate ?? "",
+            challanNo: data.challanNo ?? "",
             validTill: addYears(renewalDateObj, 1),
         };
         updateRig(rigIndex, {
