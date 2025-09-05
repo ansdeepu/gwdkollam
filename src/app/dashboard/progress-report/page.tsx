@@ -192,8 +192,8 @@ export default function ProgressReportPage() {
   }, [setHeader]);
 
   const { reportEntries: fileEntries, isReportLoading: entriesLoading } = useAllFileEntriesForReports();
-  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
-  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isFiltering, setIsFiltering] = useState(true);
   const { toast } = useToast();
 
@@ -211,6 +211,12 @@ export default function ProgressReportPage() {
   const [detailDialogTitle, setDetailDialogTitle] = useState("");
   const [detailDialogData, setDetailDialogData] = useState<Array<SiteDetailWithFileContext | DataEntryFormData | Record<string, any>>>([]);
   const [detailDialogColumns, setDetailDialogColumns] = useState<DetailDialogColumn[]>([]);
+
+  useEffect(() => {
+    // Set initial dates on client to avoid hydration mismatch
+    setStartDate(startOfMonth(new Date()));
+    setEndDate(endOfMonth(new Date()));
+  }, []);
 
   const handleGenerateReport = useCallback(() => {
     if (!startDate || !endDate) {
@@ -800,3 +806,5 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
+    
