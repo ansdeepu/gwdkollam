@@ -44,7 +44,7 @@ export default function FileStatusOverview({ nonArsEntries, onOpenDialog }: File
                 .filter((d): d is Date => d !== null && isValid(d))
                 .sort((a, b) => b.getTime() - a.getTime())[0];
 
-            const basisDate = latestRemittanceDate || (entry.createdAt ? new Date(entry.createdAt) : null);
+            const basisDate = latestRemittanceDate || ((entry as any).createdAt ? new Date((entry as any).createdAt) : null);
 
             if (basisDate && isValid(basisDate)) {
                 const ageInMs = now.getTime() - basisDate.getTime();
