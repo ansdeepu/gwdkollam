@@ -10,10 +10,13 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useToast } from '@/hooks/use-toast';
 import { format, parse, isValid, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { FileDown, RotateCcw, Filter, Table as TableIcon } from 'lucide-react';
+import { FileDown, RotateCcw, Filter, Table as TableIcon, CalendarIcon } from 'lucide-react';
 import type { DataEntryFormData } from '@/lib/schemas';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -34,8 +37,8 @@ type ReportRow = Record<string, string | number | undefined | null>;
 
 export default function CustomReportBuilder() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { fileEntries } = useFileEntries();
   const { toast } = useToast();
 
@@ -58,8 +61,8 @@ export default function CustomReportBuilder() {
 
   const handleClear = () => {
     setSelectedFields([]);
-    setStartDate('');
-    setEndDate('');
+    setStartDate(undefined);
+    setEndDate(undefined);
     setReportData(null);
     setReportHeaders([]);
     toast({ title: 'Cleared', description: 'All selections and filters have been reset.' });
@@ -71,8 +74,8 @@ export default function CustomReportBuilder() {
       return;
     }
 
-    const fromDate = startDate ? startOfDay(parse(startDate, 'yyyy-MM-dd', new Date())) : null;
-    const toDate = endDate ? endOfDay(parse(endDate, 'yyyy-MM-dd', new Date())) : null;
+    const fromDate = startDate ? startOfDay(startDate) : null;
+    const toDate = endDate ? endOfDay(endDate) : null;
 
     let filteredEntries = fileEntries;
 
@@ -106,8 +109,9 @@ export default function CustomReportBuilder() {
     } else {
         setReportData(dataForReport);
         setReportHeaders(headers);
+        toast({ title: "Report Generated", description: `Showing ${dataForReport.length} records.` });
     }
-  }, [selectedFields, fileEntries, startDate, endDate]);
+  }, [selectedFields, fileEntries, startDate, endDate, toast]);
 
   const handleExportExcel = () => {
     if (!reportData || reportData.length === 0) {
@@ -135,11 +139,57 @@ export default function CustomReportBuilder() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
         <div className="space-y-2">
             <Label htmlFor="from-date">From Date</Label>
-            <Input id="from-date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="from-date"
+                  variant={"outline"}
+                  className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, "dd-MM-yyyy") : <span>dd-mm-yyyy</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                />
+                <div className="p-2 border-t flex justify-between">
+                  <Button size="sm" variant="ghost" onClick={() => setStartDate(undefined)}>Clear</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setStartDate(new Date())}>Today</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
         </div>
         <div className="space-y-2">
             <Label htmlFor="to-date">To Date</Label>
-            <Input id="to-date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="to-date"
+                  variant={"outline"}
+                  className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "dd-MM-yyyy") : <span>dd-mm-yyyy</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                />
+                 <div className="p-2 border-t flex justify-between">
+                  <Button size="sm" variant="ghost" onClick={() => setEndDate(undefined)}>Clear</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEndDate(new Date())}>Today</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
         </div>
          <p className="text-xs text-muted-foreground pb-2">
             If no date range is selected, all data will be included in the report.
