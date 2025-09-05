@@ -527,7 +527,7 @@ const dateOrString = z.union([
 export const StaffMemberFormDataSchema = z.object({
   photoUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal("")),
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  designation: z.enum(designationOptions, { required_error: "Designation is required." }),
+  designation: z.enum(designationOptions).optional(),
   pen: z.string().min(1, { message: "PEN is required." }),
   dateOfBirth: z.string().optional(),
   phoneNo: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }).optional().or(z.literal("")),

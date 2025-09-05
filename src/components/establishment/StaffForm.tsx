@@ -70,7 +70,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
       dateOfBirth: formattedDob,
       phoneNo: initialData?.phoneNo || "",
       roles: initialData?.roles || "",
-      photoUrl: isValidWebUrl(initialData?.photoUrl) ? initialData?.photoUrl : "",
+      photoUrl: isValidWebUrl(initialData?.photoUrl) ? initialData?.photoUrl ?? "" : "",
       status: initialData?.status || 'Active', 
       remarks: initialData?.remarks || "",
     };
@@ -87,16 +87,15 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
   }, [initialData, form.reset]);
 
   const watchedPhotoUrl = form.watch("photoUrl");
+  
   useEffect(() => {
-    if (isValidWebUrl(watchedPhotoUrl) && !isPlaceholderUrl(watchedPhotoUrl)) {
-      setImagePreview(watchedPhotoUrl);
-      setImageLoadError(false);
-    } else if (watchedPhotoUrl === "" || isPlaceholderUrl(watchedPhotoUrl)) {
-      setImagePreview(null);
+    const url = watchedPhotoUrl ?? null;
+    if (isValidWebUrl(url) && !isPlaceholderUrl(url)) {
+      setImagePreview(url);
       setImageLoadError(false);
     } else {
       setImagePreview(null); 
-      if (watchedPhotoUrl !== "") setImageLoadError(true);
+      setImageLoadError(watchedPhotoUrl !== "");
     }
   }, [watchedPhotoUrl]);
 
@@ -308,6 +307,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                 <FormMessage />
               </FormItem>
             )}
+          />
         
           <FormField
             control={form.control}
