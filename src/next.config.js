@@ -1,3 +1,4 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -54,10 +55,15 @@ const nextConfig = {
       'utf-8-validate': 'commonjs utf-8-validate',
       'bufferutil': 'commonjs bufferutil',
     });
-
+    
     // Fix for handlebars dependency issue with Genkit
-    if (!isServer) {
-        config.resolve.alias.handlebars = require.resolve('handlebars/dist/handlebars.js');
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'handlebars': require.resolve('handlebars/dist/handlebars.js'),
+    };
+    
+    if (isServer) {
+        config.externals.push('@opentelemetry/instrumentation');
     }
 
     return config;
