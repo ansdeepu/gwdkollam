@@ -460,8 +460,12 @@ export default function ProgressReportPage() {
 
     if (title.startsWith("Revenue Head")) {
         columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant' }, { key: 'date', label: 'Date' }, { key: 'source', label: 'Source' }, { key: 'amount', label: 'Amount (₹)', isNumeric: true }, ];
-        dialogData = data.map((item, index) => ({
-            slNo: index + 1, ...item,
+        dialogData = (data as Array<{ fileNo: string; applicantName: string; date: string; amount: number; source: string }>).map((item, index) => ({
+            slNo: index + 1,
+            fileNo: item.fileNo,
+            applicantName: item.applicantName,
+            date: item.date,
+            source: item.source,
             amount: (Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         }));
     } else if (title.toLowerCase().includes("remittance details")) {
