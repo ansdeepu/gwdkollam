@@ -14,14 +14,17 @@ import type { DateRange } from "react-day-picker";
 
 export default function CalendarDemoPage() {
   const { setHeader } = usePageHeader();
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 7),
-  });
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     setHeader("Calendar Demo", "Showcasing different calendar styles.");
+    // Set initial dates on the client to avoid hydration mismatch
+    setDate(new Date());
+    setDateRange({
+      from: new Date(),
+      to: addDays(new Date(), 7),
+    });
   }, [setHeader]);
 
   return (
