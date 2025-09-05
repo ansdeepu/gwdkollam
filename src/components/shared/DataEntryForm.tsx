@@ -406,13 +406,13 @@ export default function DataEntryFormComponent({
                     <div className="border-t pt-6 space-y-4">
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
-                            const isAssignedToCurrentUser = user?.uid && watchedSiteDetails[index]?.supervisorUid === user.uid;
+                            const isAssignedToCurrentUser = !!user?.uid && watchedSiteDetails?.[index]?.supervisorUid === user.uid;
                             const isSitePendingForSupervisor = isSupervisor && !!initialData.siteDetails?.[index]?.isPending;
 
                             const siteIsEditable = isEditor || (isSupervisor && isAssignedToCurrentUser && !isSitePendingForSupervisor);
                             
-                            const purpose = watchedSiteDetails[index]?.purpose;
-                            const workStatus = watchedSiteDetails[index]?.workStatus;
+                            const purpose = watchedSiteDetails?.[index]?.purpose;
+                            const workStatus = watchedSiteDetails?.[index]?.workStatus;
                             const isFinalStatus = workStatus && FINAL_WORK_STATUSES.includes(workStatus as SiteWorkStatus);
                             
                             const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose as string);
@@ -509,8 +509,8 @@ export default function DataEntryFormComponent({
                                                 isFinalStatus ? "text-red-600" : "text-green-600"
                                             )}>
                                                 Site #{index + 1}
-                                                {watchedSiteDetails[index]?.nameOfSite ? `: ${watchedSiteDetails[index].nameOfSite}` : ''}
-                                                {watchedSiteDetails[index]?.purpose ? ` (${watchedSiteDetails[index].purpose})` : ''}
+                                                {watchedSiteDetails?.[index]?.nameOfSite ? `: ${watchedSiteDetails[index].nameOfSite}` : ''}
+                                                {watchedSiteDetails?.[index]?.purpose ? ` (${watchedSiteDetails[index].purpose})` : ''}
                                             </span>
                                             {isEditor && siteFields.length > 1 && 
                                                 <div role="button" aria-label={`Remove Site #${index + 1}`} className="p-2 rounded-full hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); removeSite(index); }}>
@@ -675,7 +675,7 @@ export default function DataEntryFormComponent({
                                     (Number(payment.kbcwb) || 0) > 0 ||
                                     (Number(payment.refundToParty) || 0) > 0
                                 );
-                                const paymentTotal = calculatePaymentEntryTotalGlobal(watchedPaymentDetails[index]);
+                                const paymentTotal = calculatePaymentEntryTotalGlobal(watchedPaymentDetails?.[index]);
                                 return (
                                 <AccordionItem value={`payment-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
                                     <AccordionTrigger className="p-4 hover:no-underline">
