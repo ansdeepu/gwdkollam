@@ -54,12 +54,14 @@ const nextConfig = {
       'utf-8-validate': 'commonjs utf-8-validate',
       'bufferutil': 'commonjs bufferutil',
     });
+
+    // Fix for handlebars dependency issue with Genkit
+    if (!isServer) {
+        config.resolve.alias.handlebars = require.resolve('handlebars/dist/handlebars.js');
+    }
+
     return config;
   },
-  // Cache invalidation property
-  env: {
-    CACHE_BUSTER: '1756994017644',
-  }
 };
 
 module.exports = nextConfig;
