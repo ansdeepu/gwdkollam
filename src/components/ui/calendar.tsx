@@ -33,7 +33,7 @@ function Calendar({
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
-        head_row: "flex",
+        head_row: "flex w-full",
         head_cell:
           "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] flex items-center justify-center",
         row: "flex w-full mt-2",
@@ -52,7 +52,6 @@ function Calendar({
         day_range_middle:
           "aria-selected:bg-accent/10 aria-selected:text-accent-foreground",
         day_hidden: "invisible",
-        // Add a new style for Sundays
         day_sunday: "text-destructive font-bold",
         ...classNames,
       }}
