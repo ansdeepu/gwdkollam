@@ -1,4 +1,3 @@
-
 // src/components/establishment/TransferredStaffTable.tsx
 "use client";
 
@@ -99,7 +98,7 @@ export default function TransferredStaffTable({
                 <TableCell className="px-2 py-2 text-center">
                   <button
                     type="button"
-                    onClick={() => canExpandAvatar && onImageClick(staff.photoUrl)}
+                    onClick={() => canExpandAvatar && onImageClick(staff.photoUrl ?? null)}
                     disabled={!canExpandAvatar}
                     className={cn(
                       "relative rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 mx-auto",
