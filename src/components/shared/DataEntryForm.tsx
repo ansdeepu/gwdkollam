@@ -730,15 +730,15 @@ export default function DataEntryFormComponent({
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="totalRemittanceCalculated" className="text-muted-foreground">Total Remittance (₹)</Label>
-                                <Input id="totalRemittanceCalculated" name="totalRemittanceCalculated" value={form.watch('remittanceDetails', []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} readOnly className="bg-muted/50"/>
+                                <Input id="totalRemittanceCalculated" name="totalRemittanceCalculated" value={(form.watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} readOnly className="bg-muted/50"/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="totalPaymentCalculated" className="text-muted-foreground">Total Payment (₹)</Label>
-                                <Input id="totalPaymentCalculated" name="totalPaymentCalculated" value={form.watch('paymentDetails', []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} readOnly className="bg-muted/50"/>
+                                <Input id="totalPaymentCalculated" name="totalPaymentCalculated" value={(form.watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} readOnly className="bg-muted/50"/>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="balanceCalculated" className="text-muted-foreground">Balance (₹)</Label>
-                                <Input id="balanceCalculated" name="balanceCalculated" value={(form.watch('remittanceDetails', []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - form.watch('paymentDetails', []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} readOnly className="bg-muted/50"/>
+                                <Input id="balanceCalculated" name="balanceCalculated" value={((form.watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - (form.watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} readOnly className="bg-muted/50"/>
                             </div>
                         </div>
                         <Separator />
