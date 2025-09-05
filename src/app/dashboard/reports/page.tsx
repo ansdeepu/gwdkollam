@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
+import { format, parseISO, startOfDay, endOfDay, isValid, parse } from "date-fns";
 import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
 import ReportTable from "@/components/reports/ReportTable";
 import { 
@@ -146,8 +146,8 @@ export default function ReportsPage() {
     if ((startDate || endDate) && dateFilterType && dateFilterType !== 'all') {
       currentEntries = currentEntries.filter(entry => {
         let dateFoundInRange = false;
-        const from = startDate ? startOfDay(new Date(startDate)) : null;
-        const to = endDate ? endOfDay(new Date(endDate)) : null;
+        const from = startDate ? startOfDay(parse(startDate, "yyyy-MM-dd", new Date())) : null;
+        const to = endDate ? endOfDay(parse(endDate, "yyyy-MM-dd", new Date())) : null;
 
         const checkDate = (targetDateValue: Date | string | null | undefined): boolean => {
           if (!targetDateValue) return false;
@@ -468,8 +468,8 @@ export default function ReportsPage() {
                     <SelectItem value="payment">Date of Payment</SelectItem>
                     </SelectContent>
                 </Select>
-                <Input placeholder="From Date (dd/mm/yyyy)" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                <Input placeholder="To Date (dd/mm/yyyy)" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>

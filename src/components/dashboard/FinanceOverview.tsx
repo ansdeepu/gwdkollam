@@ -103,7 +103,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
 
     const parseDateFromString = (dateString: string): Date | undefined => {
         if (!dateString) return undefined;
-        const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+        const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
         return isValid(parsedDate) ? parsedDate : undefined;
     };
     
@@ -206,8 +206,8 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Input type="text" placeholder="From: dd/mm/yyyy" className="w-[180px]" value={dates.start ? format(dates.start, "dd/MM/yyyy") : ''} onChange={(e) => onSetDates({ ...dates, start: parseDateFromString(e.target.value) })} />
-                  <Input type="text" placeholder="To: dd/mm/yyyy" className="w-[180px]" value={dates.end ? format(dates.end, "dd/MM/yyyy") : ''} onChange={(e) => onSetDates({ ...dates, end: parseDateFromString(e.target.value) })} />
+                  <Input type="date" placeholder="From: yyyy-mm-dd" className="w-[180px]" value={dates.start ? format(dates.start, "yyyy-MM-dd") : ''} onChange={(e) => onSetDates({ ...dates, start: parseDateFromString(e.target.value) })} />
+                  <Input type="date" placeholder="To: yyyy-mm-dd" className="w-[180px]" value={dates.end ? format(dates.end, "yyyy-MM-dd") : ''} onChange={(e) => onSetDates({ ...dates, end: parseDateFromString(e.target.value) })} />
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>
