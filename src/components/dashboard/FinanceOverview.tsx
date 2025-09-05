@@ -226,8 +226,6 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                         onSelect={(date) => onSetDates({ ...dates, start: date })}
                         initialFocus
                         numberOfMonths={1}
-                        modifiers={{sunday: { dayOfWeek: [0]}}}
-                        modifiersClassNames={{sunday: 'text-red-500'}}
                       />
                     </PopoverContent>
                   </Popover>
@@ -248,8 +246,6 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                         onSelect={(date) => onSetDates({ ...dates, end: date })}
                         initialFocus
                         numberOfMonths={1}
-                        modifiers={{sunday: { dayOfWeek: [0]}}}
-                        modifiersClassNames={{sunday: 'text-red-500'}}
                       />
                     </PopoverContent>
                   </Popover>
@@ -263,22 +259,13 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                             <TableRow>
                                <TableHead>Account</TableHead>
                                 <TableHead className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <TrendingUp className="h-4 w-4 text-green-600" />
-                                        <span>Credit (₹)</span>
-                                    </div>
+                                    Credit (₹)
                                 </TableHead>
                                 <TableHead className="text-right">
-                                     <div className="flex items-center justify-end gap-1">
-                                        <TrendingDown className="h-4 w-4 text-red-600" />
-                                        <span>Withdrawal (₹)</span>
-                                    </div>
+                                    Withdrawal (₹)
                                 </TableHead>
                                 <TableHead className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <Wallet className="h-4 w-4 text-primary" />
-                                        <span>Balance (₹)</span>
-                                    </div>
+                                    Balance (₹)
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
