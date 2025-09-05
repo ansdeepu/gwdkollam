@@ -12,7 +12,7 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
-import { parseISO, isValid } from 'date-fns';
+import { parse, parseISO, isValid } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 
 export default function FileManagerPage() {
@@ -50,8 +50,9 @@ export default function FileManagerPage() {
         if (!dateA) return 1; // Put entries with no date at the end
         if (!dateB) return -1; // Keep entries with a date at the front
 
-        const parsedA = dateA instanceof Date ? dateA : parseISO(String(dateA));
-        const parsedB = dateB instanceof Date ? dateB : parseISO(String(dateB));
+        // Safely parse the date string (which could be in 'dd/MM/yyyy' or other formats)
+        const parsedA = parse(String(dateA), 'dd/MM/yyyy', new Date());
+        const parsedB = parse(String(dateB), 'dd/MM/yyyy', new Date());
 
         if (!isValid(parsedA)) return 1;
         if (!isValid(parsedB)) return -1;
