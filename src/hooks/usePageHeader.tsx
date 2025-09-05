@@ -1,3 +1,4 @@
+
 // src/hooks/usePageHeader.tsx
 "use client";
 
@@ -29,7 +30,7 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
 
 export function usePageHeader() {
   const context = useContext(PageHeaderContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("usePageHeader must be used within a PageHeaderProvider");
   }
   return context;

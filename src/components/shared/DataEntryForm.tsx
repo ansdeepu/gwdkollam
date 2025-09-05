@@ -67,7 +67,7 @@ const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
   outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
   waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
-  noOfBeneficiary: "", dateOfCompletion: null, typeOfRig: undefined,
+  noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined,
   contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined,
   workStatus: undefined, workRemarks: "",
   surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "",
