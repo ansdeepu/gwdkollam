@@ -29,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 interface StaffFormProps {
   onSubmit: (data: StaffMemberFormData) => Promise<void>;
@@ -58,57 +59,32 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
   const [imageLoadError, setImageLoadError] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
-  const form = useForm<StaffMemberFormData>({
-    resolver: zodResolver(StaffMemberFormDataSchema),
-    defaultValues: {
+  const getInitialFormValues = React.useCallback((): StaffMemberFormData => {
+    const dob = initialData?.dateOfBirth;
+    const formattedDob = dob ? format(new Date(dob), 'yyyy-MM-dd') : "";
+
+    return {
       name: initialData?.name || "",
       designation: initialData?.designation || undefined,
       pen: initialData?.pen || "",
-      dateOfBirth: initialData?.dateOfBirth ? String(initialData.dateOfBirth) : "",
+      dateOfBirth: formattedDob,
       phoneNo: initialData?.phoneNo || "",
       roles: initialData?.roles || "",
-      photoUrl: isValidWebUrl(initialData?.photoUrl) ? initialData.photoUrl : "",
+      photoUrl: isValidWebUrl(initialData?.photoUrl) ? initialData?.photoUrl : "",
       status: initialData?.status || 'Active', 
       remarks: initialData?.remarks || "",
-    },
-  });
-
-  useEffect(() => {
-    const initialPhotoUrl = initialData?.photoUrl;
-    if (isValidWebUrl(initialPhotoUrl) && !isPlaceholderUrl(initialPhotoUrl)) {
-      setImagePreview(initialPhotoUrl);
-      setImageLoadError(false);
-    } else {
-      setImagePreview(null);
-      setImageLoadError(false); 
-    }
-
-    const defaultFormValues: StaffMemberFormData = initialData
-    ? {
-        name: initialData.name || "",
-        designation: initialData.designation || undefined,
-        pen: initialData.pen || "",
-        dateOfBirth: initialData.dateOfBirth ? String(initialData.dateOfBirth) : "",
-        phoneNo: initialData.phoneNo || "",
-        roles: initialData.roles || "",
-        photoUrl: isValidWebUrl(initialData.photoUrl) ? initialData.photoUrl : "",
-        status: initialData.status || 'Active',
-        remarks: initialData.remarks || "",
-      }
-    : {
-        name: "",
-        designation: undefined,
-        pen: "",
-        dateOfBirth: "",
-        phoneNo: "",
-        roles: "",
-        photoUrl: "",
-        status: 'Active',
-        remarks: "",
-      };
-    form.reset(defaultFormValues);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    };
   }, [initialData]);
+
+  const form = useForm<StaffMemberFormData>({
+    resolver: zodResolver(StaffMemberFormDataSchema),
+    defaultValues: getInitialFormValues(),
+  });
+  
+  useEffect(() => {
+    form.reset(getInitialFormValues());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, form.reset]);
 
   const watchedPhotoUrl = form.watch("photoUrl");
   useEffect(() => {
@@ -125,7 +101,11 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
   }, [watchedPhotoUrl]);
 
   const handleFormSubmitInternal = (data: StaffMemberFormData) => {
-    const dataToSubmit = {...data, remarks: data.remarks || "" }; 
+    const dataToSubmit: any = {
+        ...data,
+        remarks: data.remarks || "",
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+    };
     onSubmit(dataToSubmit);
   };
 
@@ -204,7 +184,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
                 <FormControl>
-                  <Input placeholder="dd/mm/yyyy" {...field} />
+                   <Input type="date" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -302,19 +282,6 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                                     placeholder="https://example.com/photo.jpg" 
                                     {...field} 
                                     value={field.value || ""}
-                                    onChange={(e) => {
-                                        const newUrl = e.target.value;
-                                        field.onChange(newUrl);
-                                        setImageLoadError(false); 
-                                        if (isValidWebUrl(newUrl) && !isPlaceholderUrl(newUrl)) {
-                                            setImagePreview(newUrl);
-                                        } else if (newUrl === "" || isPlaceholderUrl(newUrl)) {
-                                          setImagePreview(null);
-                                        } else {
-                                            setImagePreview(null); 
-                                            if (newUrl !== "") setImageLoadError(true);
-                                        }
-                                    }}
                                 />
                             </FormControl>
                             <FormDescription>

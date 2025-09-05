@@ -516,12 +516,20 @@ export type Notice = z.infer<typeof NoticeSchema>;
 export const staffStatusOptions = ["Active", "Transferred", "Retired"] as const;
 export type StaffStatusType = typeof staffStatusOptions[number];
 
+const dateOrString = z.union([
+  z.date(),
+  z.string().refine(val => !val || !isNaN(Date.parse(val)), {
+    message: "Invalid date format"
+  })
+]);
+
+
 export const StaffMemberFormDataSchema = z.object({
   photoUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal("")),
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   designation: z.enum(designationOptions, { required_error: "Designation is required." }),
   pen: z.string().min(1, { message: "PEN is required." }),
-  dateOfBirth: optionalDate,
+  dateOfBirth: z.string().optional(),
   phoneNo: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }).optional().or(z.literal("")),
   roles: z.string().optional(),
   status: z.enum(staffStatusOptions).default('Active'),
@@ -529,12 +537,14 @@ export const StaffMemberFormDataSchema = z.object({
 });
 export type StaffMemberFormData = z.infer<typeof StaffMemberFormDataSchema>;
 
+
 export const StaffMemberSchema = StaffMemberFormDataSchema.extend({
   id: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
   status: z.enum(staffStatusOptions).default('Active'), 
   remarks: z.string().optional().default(""),
+  dateOfBirth: dateOrString.nullable().optional(),
 });
 export type StaffMember = z.infer<typeof StaffMemberSchema>;
 
