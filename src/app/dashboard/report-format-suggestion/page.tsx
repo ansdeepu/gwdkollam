@@ -3,18 +3,20 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { usePageHeader } from '@/hooks/usePageHeader';
-import CustomReportBuilder from '@/components/ai/ReportFormatSuggester';
+import CustomReportBuilder from '@/components/reports/CustomReportBuilder';
 
 export default function ReportFormatSuggestionPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
-    setHeader('AI-Assisted Report Builder', 'Describe the report you need, and let the AI suggest the columns.');
+    setHeader('Report Builders', 'Generate custom reports by selecting filters and data fields.');
   }, [setHeader]);
 
   return (
     <div className="space-y-6">
       <Card>
-        <CustomReportBuilder />
+        <CardContent className="pt-6">
+          <CustomReportBuilder />
+        </CardContent>
       </Card>
     </div>
   );
