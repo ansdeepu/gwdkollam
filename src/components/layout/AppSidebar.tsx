@@ -95,7 +95,7 @@ export default function AppSidebar() {
       <SidebarFooter className="p-2 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton variant="ghost" className="w-full h-auto p-2" tooltip={{children: user?.name || "User Profile", side: "right", align: "center"}}>
+            <SidebarMenuButton className="w-full h-auto p-2" tooltip={{children: user?.name || "User Profile", side: "right", align: "center"}}>
                 <div className="flex w-full items-center gap-2">
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={photoUrl || undefined} alt={user?.name || 'User'} />
