@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -666,7 +667,7 @@ export default function DataEntryFormComponent({
                     <div className="border-t pt-6 space-y-4">
                         <Accordion type="multiple" className="w-full space-y-2">
                             {paymentFields.map((item, index) => {
-                                const payment = watchedPaymentDetails[index];
+                                const payment = watchedPaymentDetails?.[index];
                                 const hasAnyAmount = payment && (
                                     (Number(payment.revenueHead) || 0) > 0 ||
                                     (Number(payment.contractorsPayment) || 0) > 0 ||
