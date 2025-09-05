@@ -213,10 +213,10 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     <PopoverTrigger asChild>
                       <Button
                         variant={"outline"}
-                        className={cn("w-[180px] justify-start text-left font-normal", !dates.start && "text-muted-foreground")}
+                        className={cn("w-[240px] justify-start text-left font-normal", !dates.start && "text-muted-foreground")}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dates.start ? format(dates.start, "dd/MM/yyyy") : <span>From date</span>}
+                        {dates.start ? format(dates.start, "PPP") : <span>Pick a start date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -225,7 +225,6 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                         selected={dates.start}
                         onSelect={(date) => onSetDates({ ...dates, start: date })}
                         initialFocus
-                        numberOfMonths={1}
                       />
                     </PopoverContent>
                   </Popover>
@@ -233,10 +232,10 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     <PopoverTrigger asChild>
                       <Button
                         variant={"outline"}
-                        className={cn("w-[180px] justify-start text-left font-normal", !dates.end && "text-muted-foreground")}
+                        className={cn("w-[240px] justify-start text-left font-normal", !dates.end && "text-muted-foreground")}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dates.end ? format(dates.end, "dd/MM/yyyy") : <span>To date</span>}
+                        {dates.end ? format(dates.end, "PPP") : <span>Pick an end date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -245,7 +244,6 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                         selected={dates.end}
                         onSelect={(date) => onSetDates({ ...dates, end: date })}
                         initialFocus
-                        numberOfMonths={1}
                       />
                     </PopoverContent>
                   </Popover>
@@ -259,13 +257,19 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                             <TableRow>
                                <TableHead>Account</TableHead>
                                 <TableHead className="text-right">
-                                    Credit (₹)
+                                    <div className='flex items-center justify-end gap-1.5'>
+                                        <TrendingUp className="h-4 w-4 text-green-600" /> Credit (₹)
+                                    </div>
                                 </TableHead>
                                 <TableHead className="text-right">
-                                    Withdrawal (₹)
+                                    <div className='flex items-center justify-end gap-1.5'>
+                                        <TrendingDown className="h-4 w-4 text-red-600" /> Withdrawal (₹)
+                                    </div>
                                 </TableHead>
                                 <TableHead className="text-right">
-                                    Balance (₹)
+                                     <div className='flex items-center justify-end gap-1.5'>
+                                        <Wallet className="h-4 w-4" /> Balance (₹)
+                                    </div>
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
