@@ -10,8 +10,10 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useToast } from '@/hooks/use-toast';
 import { format, parse, isValid, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { FileDown, RotateCcw, Filter } from 'lucide-react';
+import { FileDown, RotateCcw, Filter, Table as TableIcon } from 'lucide-react';
 import type { DataEntryFormData } from '@/lib/schemas';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -28,12 +30,17 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
+type ReportRow = Record<string, string | number | undefined | null>;
+
 export default function CustomReportBuilder() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const { fileEntries } = useFileEntries();
   const { toast } = useToast();
+
+  const [reportData, setReportData] = useState<ReportRow[] | null>(null);
+  const [reportHeaders, setReportHeaders] = useState<string[]>([]);
 
   const handleCheckboxChange = (fieldId: string) => {
     setSelectedFields(prev =>
@@ -53,12 +60,14 @@ export default function CustomReportBuilder() {
     setSelectedFields([]);
     setStartDate('');
     setEndDate('');
+    setReportData(null);
+    setReportHeaders([]);
     toast({ title: 'Cleared', description: 'All selections and filters have been reset.' });
   };
   
-  const handleExportExcel = useCallback(() => {
+  const handleGenerateReport = useCallback(() => {
     if (selectedFields.length === 0) {
-      toast({ title: "No Fields Selected", description: "Please select at least one field to export.", variant: "destructive" });
+      toast({ title: "No Fields Selected", description: "Please select at least one field to include in the report.", variant: "destructive" });
       return;
     }
 
@@ -81,8 +90,8 @@ export default function CustomReportBuilder() {
     const selectedFieldObjects = reportableFields.filter(f => selectedFields.includes(f.id));
     const headers = selectedFieldObjects.map(f => f.label);
     
-    const dataForExport = filteredEntries.map(entry => {
-      const row: Record<string, any> = {};
+    const dataForReport = filteredEntries.map(entry => {
+      const row: ReportRow = {};
       selectedFieldObjects.forEach(field => {
         const value = field.accessor(entry);
         row[field.label] = value === null || value === undefined ? 'N/A' : value;
@@ -90,19 +99,29 @@ export default function CustomReportBuilder() {
       return row;
     });
 
-    if (dataForExport.length === 0) {
+    if (dataForReport.length === 0) {
         toast({ title: "No Data Found", description: "No records match the selected date range.", variant: "default" });
+        setReportData([]);
+        setReportHeaders([]);
+    } else {
+        setReportData(dataForReport);
+        setReportHeaders(headers);
+    }
+  }, [selectedFields, fileEntries, startDate, endDate]);
+
+  const handleExportExcel = () => {
+    if (!reportData || reportData.length === 0) {
+        toast({ title: "No Report Generated", description: "Please generate a report before exporting.", variant: "destructive" });
         return;
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(dataForExport, { header: headers });
+    const worksheet = XLSX.utils.json_to_sheet(reportData, { header: reportHeaders });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "CustomReport");
     const fileName = `Custom_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
     XLSX.writeFile(workbook, fileName);
-    toast({ title: "Export Successful", description: `Downloaded ${dataForExport.length} records in ${fileName}` });
-  }, [selectedFields, fileEntries, toast, startDate, endDate]);
-
+    toast({ title: "Export Successful", description: `Downloaded ${reportData.length} records in ${fileName}` });
+  };
 
   return (
     <div className="space-y-8">
@@ -134,7 +153,7 @@ export default function CustomReportBuilder() {
             {selectedFields.length === reportableFields.length ? 'Deselect All' : 'Select All'}
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg max-h-60 overflow-y-auto">
           {reportableFields.map(field => (
             <div
               key={field.id}
@@ -157,7 +176,7 @@ export default function CustomReportBuilder() {
       </div>
       
       <div className="flex justify-start items-center gap-4 pt-6 border-t">
-        <Button onClick={handleExportExcel} disabled={selectedFields.length === 0}>
+        <Button onClick={handleGenerateReport} disabled={selectedFields.length === 0}>
           <FileDown className="mr-2 h-4 w-4" />
           Generate Report ({selectedFields.length})
         </Button>
@@ -166,6 +185,43 @@ export default function CustomReportBuilder() {
             Clear Filters & Selection
         </Button>
       </div>
+
+      {reportData && (
+        <div className="pt-8 border-t">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2"><TableIcon className="h-5 w-5 text-primary"/>Generated Custom Report</h3>
+              <p className="text-sm text-muted-foreground">
+                Showing {reportData.length} entries based on your selected fields.
+                Date Range: {startDate && endDate ? `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}` : 'All-time data'}.
+              </p>
+            </div>
+            <Button onClick={handleExportExcel} disabled={reportData.length === 0}>
+              <FileDown className="mr-2 h-4 w-4" /> Export Excel
+            </Button>
+          </div>
+          <div className="border rounded-lg max-h-[600px] overflow-auto">
+            <Table>
+                <TableHeader className="sticky top-0 bg-secondary">
+                    <TableRow>
+                        {reportHeaders.map(header => <TableHead key={header}>{header}</TableHead>)}
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {reportData.map((row, rowIndex) => (
+                        <TableRow key={rowIndex}>
+                            {reportHeaders.map(header => (
+                                <TableCell key={`${rowIndex}-${header}`} className="whitespace-nowrap">
+                                    {row[header]}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
