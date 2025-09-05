@@ -23,7 +23,7 @@ export default function FileManagerPage() {
     const description = user?.role === 'supervisor'
       ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
       : 'List of all non-ARS files in the system, sorted by most recent remittance.';
-    setHeader('Deposit Works Files', description);
+    setHeader('Deposit Works', description);
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");

@@ -20,6 +20,7 @@ import WorkProgress from '@/components/dashboard/WorkProgress';
 import UserActivity from '@/components/dashboard/UserActivity';
 import SupervisorWork from '@/components/dashboard/SupervisorWork';
 import DashboardDialogs from '@/components/dashboard/DashboardDialogs';
+import FinanceOverview from '@/components/dashboard/FinanceOverview';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -212,6 +213,13 @@ export default function DashboardPage() {
         </div>
       </div>
       
+      <FinanceOverview 
+        allFileEntries={allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        dates={financeDates}
+        onSetDates={setFinanceDates}
+      />
+
       <WorkStatusByService 
         allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
         onOpenDialog={handleOpenDialog}
