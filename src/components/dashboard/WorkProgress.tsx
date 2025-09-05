@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { CalendarCheck, Hourglass, TrendingUp } from "lucide-react";
 import { format, isWithinInterval, startOfMonth, endOfMonth, isValid, parse } from 'date-fns';
-import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus, UserProfile } from '@/lib/schemas';
+import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
+import type { UserProfile } from '@/hooks/useAuth';
 
 interface WorkProgressProps {
   allFileEntries: DataEntryFormData[];

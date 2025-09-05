@@ -49,6 +49,17 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    config.externals.push({
+      'utf-8-validate': 'commonjs utf-8-validate',
+      'bufferutil': 'commonjs bufferutil',
+    });
+    return config;
+  },
+  // Cache invalidation property
+  env: {
+    CACHE_BUSTER: '1756994017643',
+  }
 };
-// Cache invalidation comment: 1756993921022
+
 module.exports = nextConfig;
