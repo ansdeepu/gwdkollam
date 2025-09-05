@@ -195,7 +195,7 @@ export default function DataEntryFormComponent({
 
   useEffect(() => {
     if (userRole === 'editor') {
-      watchedSiteDetails.forEach((site, index) => {
+      (watchedSiteDetails ?? []).forEach((site, index) => {
         if (site.supervisorUid) {
           const supervisorIsActive = supervisorList.some(s => s.uid === site.supervisorUid);
           if (!supervisorIsActive) {

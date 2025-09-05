@@ -58,7 +58,7 @@ const nextConfig = {
   },
   // Cache invalidation property
   env: {
-    CACHE_BUSTER: '1756994017643',
+    CACHE_BUSTER: '1756994017644',
   }
 };
 
