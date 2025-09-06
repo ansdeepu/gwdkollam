@@ -176,7 +176,7 @@ export default function ArsEntryPage() {
             <Card className="shadow-lg">
                 <CardContent className="pt-6">
                    <div className="flex justify-end mb-4">
-                      <Button variant="destructive" size="sm" onClick={() => router.back()}>
+                      <Button variant="destructive" size="sm" onClick={() => router.push('/dashboard/ars')}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
                           Back
                       </Button>
