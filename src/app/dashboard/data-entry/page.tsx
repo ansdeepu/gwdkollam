@@ -11,7 +11,7 @@ import { useMemo, useEffect, useState } from "react";
 import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus, PendingUpdate, Constituency } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
-import { isValid } from 'date-fns';
+import { isValid, parse, format, parseISO } from 'date-fns';
 import { Button } from "@/components/ui/button";
 
 const safeParseDate = (dateValue: any): Date | null => {
@@ -21,8 +21,12 @@ const safeParseDate = (dateValue: any): Date | null => {
   if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number') {
     return new Date(dateValue.seconds * 1000);
   }
-  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
-    const parsed = new Date(dateValue);
+  if (typeof dateValue === 'string') {
+    // Try ISO format first
+    let parsed = parseISO(dateValue);
+    if (isValid(parsed)) return parsed;
+    // Then try dd/MM/yyyy
+    parsed = parse(dateValue, 'dd/MM/yyyy', new Date());
     if (isValid(parsed)) return parsed;
   }
   return null;
@@ -86,6 +90,35 @@ export default function DataEntryPage() {
   const [pageTitle, setPageTitle] = useState("Data Entry");
   const [pageDescription, setPageDescription] = useState("Loading...");
 
+  const processDataForForm = (data: any): any => {
+    if (!data) return data;
+
+    const formatObjectDates = (obj: any) => {
+        const newObj = { ...obj };
+        for (const key in newObj) {
+            if (key.toLowerCase().includes('date') && newObj[key]) {
+                const date = safeParseDate(newObj[key]);
+                newObj[key] = date ? format(date, 'yyyy-MM-dd') : undefined;
+            }
+        }
+        return newObj;
+    };
+    
+    let processedData = { ...data };
+    
+    if (processedData.remittanceDetails) {
+        processedData.remittanceDetails = processedData.remittanceDetails.map(formatObjectDates);
+    }
+    if (processedData.siteDetails) {
+        processedData.siteDetails = processedData.siteDetails.map(formatObjectDates);
+    }
+    if (processedData.paymentDetails) {
+        processedData.paymentDetails = processedData.paymentDetails.map(formatObjectDates);
+    }
+
+    return processedData;
+  };
+
   useEffect(() => {
     let isMounted = true;
     const loadAllData = async () => {
@@ -115,27 +148,11 @@ export default function DataEntryPage() {
                   toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
                   dataForForm = originalEntry;
               } else {
-                  // This is the new, more robust merging logic.
-                  // 1. Create a deep copy of the original entry to modify.
                   let mergedData = JSON.parse(JSON.stringify(originalEntry));
-
-                  // 2. Prepare the supervisor's updates by parsing dates correctly first.
-                  const processedSupervisorUpdates = pendingUpdate.updatedSiteDetails.map(updatedSite => {
-                      return {
-                          ...updatedSite,
-                          dateOfCompletion: safeParseDate(updatedSite.dateOfCompletion),
-                      };
-                  });
+                  const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
                   
-                  // 3. Create a map for easy lookup of the processed updates.
-                  const updatedSitesMap = new Map(
-                    processedSupervisorUpdates.map(site => [site.nameOfSite, site])
-                  );
-                  
-                  // 4. Intelligently merge the processed updates into the original site data.
                   mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
                       if (updatedSitesMap.has(originalSite.nameOfSite)) {
-                          // Merge only the fields from the update into the original site data.
                           const updatedSiteData = updatedSitesMap.get(originalSite.nameOfSite)!;
                           return { ...originalSite, ...updatedSiteData };
                       }
@@ -151,7 +168,7 @@ export default function DataEntryPage() {
           }
           
           setPageData({
-            initialData: dataForForm,
+            initialData: processDataForForm(dataForForm),
             allUsers: allUsersResult,
           });
         }
@@ -259,19 +276,17 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 bg-background/80 p-6 backdrop-blur-md border-b">
-        <div className="flex justify-between items-start">
-          <div>
-              <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
-              <p className="text-muted-foreground">{pageDescription}</p>
-          </div>
-          <Button variant="destructive" size="sm" onClick={() => router.back()}>
+      <Card className="shadow-lg">
+        <CardHeader className="flex flex-row items-start justify-between">
+            <div>
+                <CardTitle className="text-2xl tracking-tight">{pageTitle}</CardTitle>
+                <CardDescription>{pageDescription}</CardDescription>
+            </div>
+             <Button variant="outline" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
           </Button>
-        </div>
-      </div>
-      <Card className="shadow-lg">
+        </CardHeader>
         <CardContent className="pt-6">
           {pageData ? (
              <DataEntryFormComponent

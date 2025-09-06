@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -208,13 +207,12 @@ const optionalDate = z.preprocess((val) => {
   return val;
 }, z.date({ invalid_type_error: "Invalid date, use dd/mm/yyyy format." }).optional().nullable());
 
-// Updated to represent what the form holds: a string 'dd/MM/yyyy'
-const optionalDateString = z.preprocess(
+// Use 'yyyy-MM-dd' for native date pickers
+const nativeDateSchema = z.preprocess(
   (val) => (val === "" ? undefined : val), // Treat empty string as undefined
-  z.string().optional().refine(
-    (val) => !val || isValid(parse(val, 'dd/MM/yyyy', new Date())),
-    { message: "Invalid date, must be dd/mm/yyyy" }
-  )
+  z.string()
+    .optional()
+    .refine((val) => !val || !isNaN(Date.parse(val)), { message: "Invalid date" }) // Basic validation for date string
 );
 
 
@@ -263,7 +261,7 @@ export const SiteDetailSchema = z.object({
   waterTankCapacity: z.string().optional().nullable(),
   noOfTapConnections: optionalNumber("Tap Connections must be a valid number."),
   noOfBeneficiary: z.string().optional().nullable(),
-  dateOfCompletion: optionalDateString,
+  dateOfCompletion: nativeDateSchema,
   typeOfRig: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteTypeOfRigOptions).optional()),
   contractorName: z.string().optional(),
   supervisorUid: z.string().optional().nullable(),
@@ -293,7 +291,7 @@ export const SiteDetailSchema = z.object({
   arsPanchayath: z.string().optional().nullable(),
   arsBlock: z.string().optional().nullable(),
   arsAsTsDetails: z.string().optional().nullable(),
-  arsSanctionedDate: optionalDateString,
+  arsSanctionedDate: nativeDateSchema,
   arsTenderedAmount: optionalNumber("Tendered Amount must be a valid number."),
   arsAwardedAmount: optionalNumber("Awarded Amount must be a valid number."),
   arsNumberOfStructures: optionalNumber("Number of Structures must be a valid number."),
@@ -323,7 +321,7 @@ export type SiteDetailFormData = z.infer<typeof SiteDetailSchema>;
 
 export const RemittanceDetailSchema = z.object({
   amountRemitted: optionalNumber("Amount Remitted must be a valid number."),
-  dateOfRemittance: optionalDateString,
+  dateOfRemittance: nativeDateSchema,
   remittedAccount: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(remittedAccountOptions).optional()),
 }).superRefine((data, ctx) => {
     if (data.amountRemitted && data.amountRemitted > 0) {
@@ -346,7 +344,7 @@ export const RemittanceDetailSchema = z.object({
 export type RemittanceDetailFormData = z.infer<typeof RemittanceDetailSchema>;
 
 export const PaymentDetailSchema = z.object({
-  dateOfPayment: optionalDateString,
+  dateOfPayment: nativeDateSchema,
   paymentAccount: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(paymentAccountOptions).optional()),
   revenueHead: optionalNumber("Revenue Head must be a valid number."),
   contractorsPayment: optionalNumber("Contractor's Payment must be a valid number."),
@@ -622,9 +620,9 @@ export type RigType = typeof rigTypeOptions[number];
 
 export const RigRenewalSchema = z.object({
     id: z.string(),
-    renewalDate: optionalDateString.refine(val => val !== undefined, { message: "Renewal date is required." }),
+    renewalDate: nativeDateSchema.refine(val => val !== undefined, { message: "Renewal date is required." }),
     renewalFee: optionalNumber("Renewal fee is required."),
-    paymentDate: optionalDateString,
+    paymentDate: nativeDateSchema,
     challanNo: z.string().optional(),
     validTill: optionalDate,
 });
@@ -634,9 +632,9 @@ export const RigRegistrationSchema = z.object({
     id: z.string(),
     rigRegistrationNo: z.string().optional(),
     typeOfRig: z.enum(rigTypeOptions).optional(),
-    registrationDate: optionalDateString,
+    registrationDate: nativeDateSchema,
     registrationFee: optionalNumber(),
-    paymentDate: optionalDateString,
+    paymentDate: nativeDateSchema,
     challanNo: z.string().optional(),
     rigVehicle: VehicleDetailsSchema,
     compressorVehicle: VehicleDetailsSchema,
@@ -658,9 +656,9 @@ export const AgencyApplicationSchema = z.object({
   owner: OwnerInfoSchema,
   partners: z.array(OwnerInfoSchema).optional(),
   agencyRegistrationNo: z.string().optional(),
-  agencyRegistrationDate: optionalDateString,
+  agencyRegistrationDate: nativeDateSchema,
   agencyRegistrationFee: optionalNumber(),
-  agencyPaymentDate: optionalDateString,
+  agencyPaymentDate: nativeDateSchema,
   agencyChallanNo: z.string().optional(),
   rigs: z.array(RigRegistrationSchema),
   status: z.enum(['Active', 'Pending Verification']),
@@ -707,11 +705,11 @@ export const ArsEntrySchema = z.object({
   estimateAmount: optionalNumber(),
   arsAsTsDetails: z.string().optional(),
   tsAmount: optionalNumber(),
-  arsSanctionedDate: optionalDateString,
+  arsSanctionedDate: nativeDateSchema,
   arsTenderedAmount: optionalNumber(),
   arsAwardedAmount: optionalNumber(),
   workStatus: z.enum(arsWorkStatusOptions, { required_error: "Present status is required." }),
-  dateOfCompletion: optionalDateString,
+  dateOfCompletion: nativeDateSchema,
   totalExpenditure: optionalNumber(),
   noOfBeneficiary: z.string().optional(),
   workRemarks: z.string().optional(),
