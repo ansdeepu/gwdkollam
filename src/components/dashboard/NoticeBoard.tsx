@@ -96,6 +96,8 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
   }, [staffMembers, allFileEntries]);
 
   const shouldAnimateUpdates = noticeData.workAlerts.length > 5;
+  const shouldAnimateBirthdays = noticeData.upcomingBirthdays.length > 2;
+
 
   return (
     <Card className="shadow-lg flex flex-col h-full">
@@ -141,32 +143,50 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
           </ScrollArea>
         </div>
         
-        <div className="border rounded-lg p-3 bg-background flex flex-col h-[200px]">
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col h-[200px] overflow-hidden", shouldAnimateBirthdays && "marquee-v-container")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
-          <ScrollArea className="flex-1 pr-2">
-            {noticeData.upcomingBirthdays.length > 0 ? (
-              <div className="space-y-2">
-                {noticeData.upcomingBirthdays.map((staff, index) => (
-                  <div key={index} className="w-full p-2 rounded-md bg-indigo-500/10 flex items-center gap-3 text-left">
-                    <Avatar className="h-10 w-10 border-2 border-indigo-200">
-                      <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
-                      <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-bold text-sm text-indigo-800">{staff.name}</p>
-                      <p className="text-xs text-indigo-700">{staff.designation}</p>
-                    </div>
-                    <div className="text-right">
-                       <p className="font-bold text-lg text-indigo-800">{format(staff.dateOfBirth, 'dd')}</p>
-                       <p className="text-xs text-indigo-700 -mt-1">{format(staff.dateOfBirth, 'MMM')}</p>
-                    </div>
-                  </div>
-                ))}
+           <div className={cn("flex-1", !shouldAnimateBirthdays && "overflow-y-auto no-scrollbar")}>
+              <div className={cn("space-y-2", shouldAnimateBirthdays && "marquee-v-content")}>
+                {noticeData.upcomingBirthdays.length > 0 ? (
+                  <>
+                    {noticeData.upcomingBirthdays.map((staff, index) => (
+                      <div key={index} className="w-full p-2 rounded-md bg-indigo-500/10 flex items-center gap-3 text-left">
+                        <Avatar className="h-10 w-10 border-2 border-indigo-200">
+                          <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                          <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="font-bold text-sm text-indigo-800">{staff.name}</p>
+                          <p className="text-xs text-indigo-700">{staff.designation}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-indigo-800">{format(staff.dateOfBirth, 'dd')}</p>
+                          <p className="text-xs text-indigo-700 -mt-1">{format(staff.dateOfBirth, 'MMM')}</p>
+                        </div>
+                      </div>
+                    ))}
+                     {shouldAnimateBirthdays && noticeData.upcomingBirthdays.map((staff, index) => (
+                      <div key={`clone-${index}`} className="w-full p-2 rounded-md bg-indigo-500/10 flex items-center gap-3 text-left" aria-hidden="true">
+                        <Avatar className="h-10 w-10 border-2 border-indigo-200">
+                          <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                          <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="font-bold text-sm text-indigo-800">{staff.name}</p>
+                          <p className="text-xs text-indigo-700">{staff.designation}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-indigo-800">{format(staff.dateOfBirth, 'dd')}</p>
+                          <p className="text-xs text-indigo-700 -mt-1">{format(staff.dateOfBirth, 'MMM')}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No other birthdays this month.</p>
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No other birthdays this month.</p>
-            )}
-          </ScrollArea>
+            </div>
         </div>
 
         <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0">
