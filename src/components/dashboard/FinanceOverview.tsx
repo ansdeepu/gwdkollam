@@ -13,8 +13,6 @@ import { cn } from "@/lib/utils";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, ApplicationType } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
@@ -203,44 +201,8 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn("w-[240px] justify-start text-left font-normal", !dates.start && "text-muted-foreground")}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dates.start ? format(dates.start, "PPP") : <span>From Date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={dates.start}
-                            onSelect={(date) => onSetDates({ ...dates, start: date })}
-                            initialFocus
-                        />
-                    </PopoverContent>
-                  </Popover>
-                  <Popover>
-                      <PopoverTrigger asChild>
-                          <Button
-                              variant={"outline"}
-                              className={cn("w-[240px] justify-start text-left font-normal", !dates.end && "text-muted-foreground")}
-                          >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {dates.end ? format(dates.end, "PPP") : <span>To Date</span>}
-                          </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                              mode="single"
-                              selected={dates.end}
-                              onSelect={(date) => onSetDates({ ...dates, end: date })}
-                              initialFocus
-                          />
-                      </PopoverContent>
-                  </Popover>
+                  <Input type="date" className="w-[240px]" value={dates.start ? format(dates.start, 'yyyy-MM-dd') : ''} onChange={(e) => onSetDates({...dates, start: e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined})}/>
+                  <Input type="date" className="w-[240px]" value={dates.end ? format(dates.end, 'yyyy-MM-dd') : ''} onChange={(e) => onSetDates({...dates, end: e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined})}/>
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>

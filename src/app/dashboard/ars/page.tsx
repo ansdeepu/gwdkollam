@@ -18,12 +18,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import Link from 'next/link';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import type { ArsEntryFormData } from "@/lib/schemas";
-import { Calendar } from "@/components/ui/calendar";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -75,8 +73,8 @@ export default function ArsPage() {
   const canEdit = user?.role === 'editor';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const [isUploading, setIsUploading] = useState(false);
   
@@ -93,8 +91,9 @@ export default function ArsPage() {
     let sites = [...arsEntries];
 
     if (startDate || endDate) {
-      const sDate = startDate ? startOfDay(startDate) : null;
-      const eDate = endDate ? endOfDay(endDate) : null;
+      const sDate = startDate ? startOfDay(parse(startDate, 'yyyy-MM-dd', new Date())) : null;
+      const eDate = endDate ? endOfDay(parse(endDate, 'yyyy-MM-dd', new Date())) : null;
+
       sites = sites.filter(site => {
         const completionDateString = site.dateOfCompletion;
         if (!completionDateString) return false;
@@ -350,37 +349,21 @@ export default function ArsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
               <div className="font-medium text-sm pr-4">Total Sites: {arsEntries.length}</div>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            id="from-date"
-                            variant={"outline"}
-                            className={cn("w-[240px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate ? format(startDate, "dd-MM-yyyy") : <span>From Date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
-                    </PopoverContent>
-                </Popover>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            id="to-date"
-                            variant={"outline"}
-                            className={cn("w-[240px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {endDate ? format(endDate, "dd-MM-yyyy") : <span>To Date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
-                    </PopoverContent>
-                </Popover>
-              <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
+                <Input
+                    type="date"
+                    placeholder="From Date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-[240px]"
+                />
+                <Input
+                    type="date"
+                    placeholder="To Date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-[240px]"
+                />
+              <Button onClick={() => {setStartDate(""); setEndDate("");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
               <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date</p>
             </div>
         </CardContent>

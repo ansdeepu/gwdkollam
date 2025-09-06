@@ -11,12 +11,10 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useToast } from '@/hooks/use-toast';
 import { format, parse, isValid, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { FileDown, RotateCcw, Filter, Table as TableIcon, CalendarIcon } from 'lucide-react';
+import { FileDown, RotateCcw, Filter, Table as TableIcon } from 'lucide-react';
 import type { DataEntryFormData } from '@/lib/schemas';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 
 const safeParseDate = (dateValue: any): Date | null => {
@@ -140,57 +138,21 @@ export default function CustomReportBuilder() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
         <div className="space-y-2">
             <Label htmlFor="from-date">From Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="from-date"
-                  variant={"outline"}
-                  className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "dd-MM-yyyy") : <span>dd-mm-yyyy</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  initialFocus
-                />
-                <div className="p-2 border-t flex justify-between">
-                  <Button size="sm" variant="ghost" onClick={() => setStartDate(undefined)}>Clear</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setStartDate(new Date())}>Today</Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="from-date"
+              type="date"
+              value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+              onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
+            />
         </div>
         <div className="space-y-2">
             <Label htmlFor="to-date">To Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="to-date"
-                  variant={"outline"}
-                  className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "dd-MM-yyyy") : <span>dd-mm-yyyy</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  initialFocus
-                />
-                 <div className="p-2 border-t flex justify-between">
-                  <Button size="sm" variant="ghost" onClick={() => setEndDate(undefined)}>Clear</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setEndDate(new Date())}>Today</Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="to-date"
+              type="date"
+              value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+              onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
+            />
         </div>
          <p className="text-xs text-muted-foreground pb-2">
             If no date range is selected, all data will be included in the report.
