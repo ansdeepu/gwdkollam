@@ -96,10 +96,10 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
     };
   }, [staffMembers, allFileEntries]);
 
-  const shouldAnimateUpdates = noticeData.workAlerts.length > 5;
+  const shouldAnimateUpdates = noticeData.workAlerts.length > 3;
   const shouldAnimateBirthdays = noticeData.upcomingBirthdays.length > 2;
 
-  const updatesToDisplay = noticeData.workAlerts.slice(0, 5);
+  const updatesToDisplay = noticeData.workAlerts.slice(0, 3);
 
   return (
     <Card className="shadow-lg flex flex-col h-full">
@@ -222,4 +222,3 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
     </Card>
   );
 }
-
