@@ -76,6 +76,23 @@ const processDataForForm = (data: any): any => {
     return data;
 };
 
+const RegistrationTableHeader = () => (
+    <Card>
+        <Table>
+            <TableHeader className="bg-secondary">
+                <TableRow>
+                    <TableHead>File No.</TableHead>
+                    <TableHead>Agency Name</TableHead>
+                    <TableHead>Owner</TableHead>
+                    <TableHead>Active Rigs</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+            </TableHeader>
+        </Table>
+    </Card>
+);
+
 
 const AgencyTable = ({ 
   applications, 
@@ -88,41 +105,35 @@ const AgencyTable = ({
   onDelete: (id: string) => void,
   searchTerm: string
 }) => (
-    <Table>
-        <TableHeader>
-            <TableRow>
-                <TableHead>File No.</TableHead>
-                <TableHead>Agency Name</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Active Rigs</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            {applications.length > 0 ? (
-                applications.map((app) => (
-                    <TableRow key={app.id}>
-                        <TableCell>{app.fileNo || 'N/A'}</TableCell>
-                        <TableCell className="font-medium">{app.agencyName}</TableCell>
-                        <TableCell>{app.owner.name}</TableCell>
-                        <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
-                        <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
-                        <TableCell className="text-center">
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
-                        </TableCell>
-                    </TableRow>
-                ))
-            ) : (
-                <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                        No registrations found {searchTerm ? "matching your search" : ""}.
-                    </TableCell>
-                </TableRow>
-            )}
-        </TableBody>
-    </Table>
+    <Card>
+        <div className="max-h-[calc(100vh-28rem)] overflow-auto">
+            <Table>
+                <TableBody>
+                    {applications.length > 0 ? (
+                        applications.map((app) => (
+                            <TableRow key={app.id}>
+                                <TableCell>{app.fileNo || 'N/A'}</TableCell>
+                                <TableCell className="font-medium">{app.agencyName}</TableCell>
+                                <TableCell>{app.owner.name}</TableCell>
+                                <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
+                                <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
+                                <TableCell className="text-center">
+                                    <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={6} className="h-24 text-center">
+                                No registrations found {searchTerm ? "matching your search" : ""}.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </div>
+    </Card>
 );
 
 const getOrdinalSuffix = (n: number) => {
@@ -346,7 +357,7 @@ const RigAccordionItem = ({
 export default function AgencyRegistrationPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
-    setHeader('Rig Registrations', 'Manage agency and rig registrations.');
+    setHeader('Rig Registration', 'Manage agency and rig registrations.');
   }, [setHeader]);
 
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
@@ -930,32 +941,30 @@ export default function AgencyRegistrationPage() {
           </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardContent className="pt-6">
-           <Tabs defaultValue="completed">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
-                    <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
-                </TabsList>
-                <TabsContent value="completed" className="mt-4">
-                    <AgencyTable 
-                        applications={completedApplications} 
-                        onEdit={(id) => setSelectedApplicationId(id)}
-                        onDelete={(id) => deleteApplication(id)}
-                        searchTerm={searchTerm}
-                    />
-                </TabsContent>
-                <TabsContent value="pending" className="mt-4">
-                    <AgencyTable 
-                        applications={pendingApplications} 
-                        onEdit={(id) => setSelectedApplicationId(id)}
-                        onDelete={(id) => deleteApplication(id)}
-                        searchTerm={searchTerm}
-                    />
-                </TabsContent>
-           </Tabs>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="completed">
+        <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
+            <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="completed" className="mt-4 space-y-2">
+            <RegistrationTableHeader />
+            <AgencyTable 
+                applications={completedApplications} 
+                onEdit={(id) => setSelectedApplicationId(id)}
+                onDelete={(id) => deleteApplication(id)}
+                searchTerm={searchTerm}
+            />
+        </TabsContent>
+        <TabsContent value="pending" className="mt-4 space-y-2">
+            <RegistrationTableHeader />
+            <AgencyTable 
+                applications={pendingApplications} 
+                onEdit={(id) => setSelectedApplicationId(id)}
+                onDelete={(id) => deleteApplication(id)}
+                searchTerm={searchTerm}
+            />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
