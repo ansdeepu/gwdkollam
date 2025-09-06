@@ -329,18 +329,3 @@
     display: block !important;
   }
 }
-
-/* Calendar dropdown styles */
-.rdp select {
-  font-size: 0.875rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid hsl(var(--border));
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-/* Ensure Sundays stay red even if selected */
-.rdp-day_sunday {
-  color: red !important;
-}
