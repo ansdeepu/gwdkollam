@@ -1,4 +1,3 @@
-
 // src/hooks/useAgencyApplications.ts
 "use client";
 
@@ -35,6 +34,9 @@ export type AgencyApplication = Omit<AgencyApplicationFormData, 'rigs'> & {
   updatedAt?: Date;
 };
 
+let cachedApplications: AgencyApplication[] = [];
+let isApplicationsCacheInitialized = false;
+
 // Helper to safely convert Firestore Timestamps and serialized date objects to a serializable format (ISO string)
 const processDataForClient = (data: any): any => {
     if (!data) return data;
@@ -60,12 +62,14 @@ const processDataForClient = (data: any): any => {
 
 export function useAgencyApplications() {
   const { user } = useAuth();
-  const [applications, setApplications] = useState<AgencyApplication[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [applications, setApplications] = useState<AgencyApplication[]>(cachedApplications);
+  const [isLoading, setIsLoading] = useState(!isApplicationsCacheInitialized);
 
   useEffect(() => {
     if (!user) {
       setApplications([]);
+      cachedApplications = [];
+      isApplicationsCacheInitialized = false;
       setIsLoading(false);
       return;
     }
@@ -83,8 +87,10 @@ export function useAgencyApplications() {
           ...serializableData
         } as AgencyApplication;
       });
+      cachedApplications = appsData;
       setApplications(appsData);
       setIsLoading(false);
+      isApplicationsCacheInitialized = true;
     }, (error) => {
       console.error("Error fetching agency applications:", error);
       toast({

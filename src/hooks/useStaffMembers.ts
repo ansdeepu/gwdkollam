@@ -1,4 +1,3 @@
-
 // src/hooks/useStaffMembers.ts
 "use client";
 
@@ -14,7 +13,8 @@ import {
   updateDoc,
   Timestamp,
   serverTimestamp,
-  getDocs, // Changed from onSnapshot
+  onSnapshot, // Switched to onSnapshot for real-time updates
+  query,
   getDoc,
   type DocumentData,
 } from "firebase/firestore";
@@ -87,13 +87,16 @@ const sanitizeStaffMemberForFirestore = (data: any): any => {
   return sanitized;
 };
 
+// Global cache for staff members
+let cachedStaffMembers: StaffMember[] = [];
+let isStaffCacheInitialized = false;
 
 interface StaffMembersState {
   staffMembers: StaffMember[];
   isLoading: boolean;
   addStaffMember: (staffData: StaffMemberFormData) => Promise<string | undefined>; 
   updateStaffMember: (id: string, staffData: Partial<StaffMemberFormData>) => Promise<void>; 
-  deleteStaffMember: (id: string) => Promise<void>;
+  deleteStaffMember: (id: string, staffName: string) => Promise<void>;
   getStaffMemberById: (id: string) => Promise<StaffMember | undefined>;
   updateStaffStatus: (id: string, newStatus: StaffStatusType) => Promise<void>; 
 }
@@ -101,60 +104,65 @@ interface StaffMembersState {
 
 export function useStaffMembers(): StaffMembersState {
   const { user, isLoading: authIsLoading } = useAuth();
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>(cachedStaffMembers);
+  const [isLoading, setIsLoading] = useState(!isStaffCacheInitialized);
+  
   const fetchData = useCallback(async () => {
-    if (authIsLoading) {
-      setIsLoading(true);
-      return;
-    }
     if (!user || !user.isApproved) {
-      setIsLoading(false);
       setStaffMembers([]);
+      cachedStaffMembers = [];
+      isStaffCacheInitialized = false;
+      setIsLoading(false);
       return;
     }
+    
+    const q = query(collection(db, STAFF_MEMBERS_COLLECTION));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const membersFromFirestore: StaffMember[] = [];
+        querySnapshot.forEach((docSnap) => {
+            membersFromFirestore.push(convertStaffMemberTimestamps({ id: docSnap.id, ...docSnap.data() }));
+        });
+        membersFromFirestore.sort((a, b) => {
+            const statusOrder: Record<StaffStatusType, number> = { 'Active': 1, 'Transferred': 2, 'Retired': 3 };
+            const statusA = statusOrder[a.status] ?? 99;
+            const statusB = statusOrder[b.status] ?? 99;
+            if (statusA !== statusB) return statusA - statusB;
+            
+            const orderA = a.designation ? designationSortOrder[a.designation] ?? designationOptions.length : designationOptions.length;
+            const orderB = b.designation ? designationSortOrder[b.designation] ?? designationOptions.length : designationOptions.length;
+            
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name);
+        });
 
-    setIsLoading(true);
-    try {
-      const q = collection(db, STAFF_MEMBERS_COLLECTION);
-      const querySnapshot = await getDocs(q);
-      const membersFromFirestore: StaffMember[] = [];
-      querySnapshot.forEach((docSnap) => {
-        membersFromFirestore.push(convertStaffMemberTimestamps({ id: docSnap.id, ...docSnap.data() }));
-      });
-      membersFromFirestore.sort((a, b) => {
-        const statusOrder: Record<StaffStatusType, number> = { 'Active': 1, 'Transferred': 2, 'Retired': 3 };
-        const statusA = statusOrder[a.status] ?? 99;
-        const statusB = statusOrder[b.status] ?? 99;
-        if (statusA !== statusB) return statusA - statusB;
-        
-        const orderA = a.designation ? designationSortOrder[a.designation] ?? designationOptions.length : designationOptions.length;
-        const orderB = b.designation ? designationSortOrder[b.designation] ?? designationOptions.length : designationOptions.length;
-        
-        if (orderA !== orderB) return orderA - orderB;
-        return a.name.localeCompare(b.name);
-      });
-      setStaffMembers(membersFromFirestore);
-    } catch(error) {
-      console.error("[useStaffMembers] Error fetching staff members:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, authIsLoading]);
+        cachedStaffMembers = membersFromFirestore;
+        setStaffMembers(membersFromFirestore);
+        setIsLoading(false);
+        isStaffCacheInitialized = true;
+    }, (error) => {
+        console.error("[useStaffMembers] Error fetching staff members:", error);
+        setIsLoading(false);
+    });
+
+    return unsubscribe;
+  }, [user]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!authIsLoading) {
+      const unsubscribePromise = fetchData();
+      return () => {
+          unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+      };
+    }
+  }, [authIsLoading, fetchData]);
 
 
   const addStaffMember = useCallback(async (staffData: StaffMemberFormData): Promise<string | undefined> => {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
     const payload = { ...sanitizeStaffMemberForFirestore(staffData), createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
     const docRef = await addDoc(collection(db, STAFF_MEMBERS_COLLECTION), payload);
-    await fetchData();
     return docRef.id;
-  }, [user, fetchData]);
+  }, [user]);
 
   const updateStaffMember = useCallback(async (id: string, staffData: Partial<StaffMemberFormData>) => {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
@@ -168,8 +176,7 @@ export function useStaffMembers(): StaffMembersState {
     const payload = { ...sanitizeStaffMemberForFirestore(staffData), updatedAt: serverTimestamp() };
     delete payload.createdAt;
     await updateDoc(staffDocRef, payload);
-    await fetchData();
-  }, [user, staffMembers, fetchData]);
+  }, [user, staffMembers]);
 
   const deleteStaffMember = useCallback(async (id: string) => {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
@@ -179,8 +186,7 @@ export function useStaffMembers(): StaffMembersState {
       try { await deleteObject(storageRef(storage, staffMemberToDelete.photoUrl)); } catch (e) { console.warn("Failed to delete photo:", e); }
     }
     await deleteDoc(staffDocRef);
-    await fetchData();
-  }, [user, staffMembers, fetchData]);
+  }, [user, staffMembers]);
 
   const getStaffMemberById = useCallback(async (id: string): Promise<StaffMember | undefined> => {
      if (!user || !user.isApproved) throw new Error("User not approved to fetch details.");
@@ -192,8 +198,7 @@ export function useStaffMembers(): StaffMembersState {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
     const staffDocRef = doc(db, STAFF_MEMBERS_COLLECTION, id);
     await updateDoc(staffDocRef, { status: newStatus, updatedAt: serverTimestamp() });
-    await fetchData();
-  }, [user, fetchData]);
+  }, [user]);
 
   return { staffMembers, isLoading, addStaffMember, updateStaffMember, deleteStaffMember, getStaffMemberById, updateStaffStatus };
 }
