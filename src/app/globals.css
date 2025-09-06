@@ -129,7 +129,7 @@
     overflow: hidden;
   }
   .marquee-v-content {
-    animation: marquee-vertical-animation 15s linear infinite;
+    animation: marquee-vertical-animation 10s linear infinite;
   }
   .marquee-v-content:hover {
     animation-play-state: paused;
@@ -329,5 +329,3 @@
     display: block !important;
   }
 }
-
-    
