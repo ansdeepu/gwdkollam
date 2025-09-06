@@ -1,18 +1,18 @@
+
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FilePlus2, Edit, ShieldAlert, Loader2, ArrowLeft } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { ShieldAlert, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useMemo, useEffect, useState } from "react";
-import type { DataEntryFormData, StaffMember, UserRole, SiteWorkStatus, PendingUpdate, Constituency } from "@/lib/schemas";
+import type { DataEntryFormData, StaffMember, UserRole } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid, parse, format, parseISO } from 'date-fns';
-import { Button } from "@/components/ui/button";
 import { usePageHeader } from "@/hooks/usePageHeader";
 
 const safeParseDate = (dateValue: any): Date | null => {
@@ -76,7 +76,6 @@ interface PageData {
 
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const fileNoToEdit = searchParams.get("fileNo");
   const approveUpdateId = searchParams.get("approveUpdateId");
   
@@ -89,8 +88,6 @@ export default function DataEntryPage() {
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const [pageTitle, setPageTitle] = useState("Data Entry");
-  const [pageDescription, setPageDescription] = useState("Loading...");
 
   const processDataForForm = (data: any): any => {
     const transform = (obj: any): any => {
@@ -107,7 +104,6 @@ export default function DataEntryPage() {
                     const value = obj[key];
                     if (key.toLowerCase().includes('date')) {
                         const date = safeParseDate(value);
-                        // Format valid dates, otherwise set to empty string
                         newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
                     } else {
                         newObj[key] = transform(value);
@@ -225,8 +221,6 @@ export default function DataEntryPage() {
       description = "You do not have permission to create new file entries. This action is restricted to Editors.";
     }
 
-    setPageTitle(title);
-    setPageDescription(description);
     setHeader(title, description); // Update the main header
   }, [fileNoToEdit, user, approveUpdateId, setHeader]);
 
@@ -269,9 +263,9 @@ export default function DataEntryPage() {
      return (
       <div className="space-y-6 p-6 text-center">
         <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{pageTitle}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Access Denied</h1>
         <p className="text-muted-foreground">
-          {pageDescription}
+          You do not have permission to create new file entries. This action is restricted to Editors.
         </p>
       </div>
     );
@@ -280,18 +274,6 @@ export default function DataEntryPage() {
   return (
     <div className="space-y-6">
       <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <CardTitle className="text-2xl tracking-tight">{pageTitle}</CardTitle>
-                <CardDescription>{pageDescription}</CardDescription>
-              </div>
-              <Button variant="destructive" size="sm" onClick={() => router.back()}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-              </Button>
-          </div>
-        </CardHeader>
         <CardContent className="pt-6">
           {pageData ? (
              <DataEntryFormComponent
