@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Megaphone, Cake, Bell, Gift, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StaffMember, DataEntryFormData, SiteWorkStatus, Designation } from '@/lib/schemas';
-import { isValid } from 'date-fns';
+import { isValid, format } from 'date-fns';
 
 const hashCode = (str: string): number => {
     let hash = 0;
@@ -46,10 +46,11 @@ interface NoticeBoardProps {
 }
 
 export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoardProps) {
-  const [selectedBirthday, setSelectedBirthday] = useState<(typeof noticeData.birthdayWishes)[0] | null>(null);
+  const [selectedBirthday, setSelectedBirthday] = useState<(typeof noticeData.todaysBirthdays)[0] | null>(null);
   
   const noticeData = useMemo(() => {
-    const birthdayWishes: { name: string, designation?: Designation, photoUrl?: string | null }[] = [];
+    const todaysBirthdays: { name: string, designation?: Designation, photoUrl?: string | null }[] = [];
+    const upcomingBirthdaysInMonth: { name: string; designation?: Designation; photoUrl?: string | null; dateOfBirth: Date }[] = [];
     const workAlertsMap = new Map<string, { title: string; details: string; }>();
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
@@ -60,10 +61,20 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
     for (const staff of staffMembers) {
       if (!staff.dateOfBirth) continue;
       const dob = new Date(staff.dateOfBirth);
-      if (isValid(dob) && dob.getMonth() === todayMonth && dob.getDate() === todayDate) {
-        birthdayWishes.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl });
+      if (isValid(dob)) {
+        const dobMonth = dob.getMonth();
+        const dobDate = dob.getDate();
+        if (dobMonth === todayMonth) {
+            if (dobDate === todayDate) {
+                todaysBirthdays.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl });
+            } else {
+                upcomingBirthdaysInMonth.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl, dateOfBirth: dob });
+            }
+        }
       }
     }
+
+    upcomingBirthdaysInMonth.sort((a, b) => a.dateOfBirth.getDate() - b.dateOfBirth.getDate());
 
     for (const entry of allFileEntries) {
       entry.siteDetails?.forEach(site => {
@@ -78,7 +89,8 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
     }
 
     return {
-      birthdayWishes,
+      todaysBirthdays,
+      upcomingBirthdays: upcomingBirthdaysInMonth,
       workAlerts: Array.from(workAlertsMap.values()),
     };
   }, [staffMembers, allFileEntries]);
@@ -91,13 +103,14 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
         <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" />Notice Board</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0 flex-1">
+        
         <div className="border rounded-lg p-3 bg-background flex flex-col h-[200px]">
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.birthdayWishes.length})</h3>
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.todaysBirthdays.length})</h3>
           <ScrollArea className="flex-1 pr-2">
-            {noticeData.birthdayWishes.length > 0 ? (
+            {noticeData.todaysBirthdays.length > 0 ? (
               <div className="space-y-3">
                 <Dialog open={!!selectedBirthday} onOpenChange={() => setSelectedBirthday(null)}>
-                  {noticeData.birthdayWishes.map((staff, index) => (
+                  {noticeData.todaysBirthdays.map((staff, index) => (
                     <button key={index} onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
                       <Avatar className="h-10 w-10 border-2 border-pink-200">
                         <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
@@ -127,27 +140,60 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
             )}
           </ScrollArea>
         </div>
-        <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0">
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" />Important Updates ({noticeData.workAlerts.length})</h3>
-          <div className={cn("no-scrollbar flex-1 relative h-full", shouldAnimateUpdates && "marquee-v-container")}>
-            {noticeData.workAlerts.length > 0 ? (
-              <div className={cn("space-y-2 overflow-y-auto h-full", shouldAnimateUpdates && "marquee-v-content")}>
-                {noticeData.workAlerts.map((alert, index) => (
-                  <div key={index} className="p-2 rounded-md bg-amber-500/10">
-                    <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
-                    <p className="text-xs text-amber-600">{alert.details}</p>
-                  </div>
-                ))}
-                {shouldAnimateUpdates && noticeData.workAlerts.map((alert, index) => (
-                  <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10" aria-hidden="true">
-                    <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
-                    <p className="text-xs text-amber-600">{alert.details}</p>
+        
+        <div className="border rounded-lg p-3 bg-background flex flex-col h-[200px]">
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
+          <ScrollArea className="flex-1 pr-2">
+            {noticeData.upcomingBirthdays.length > 0 ? (
+              <div className="space-y-2">
+                {noticeData.upcomingBirthdays.map((staff, index) => (
+                  <div key={index} className="w-full p-2 rounded-md bg-indigo-500/10 flex items-center gap-3 text-left">
+                    <Avatar className="h-10 w-10 border-2 border-indigo-200">
+                      <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                      <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-indigo-800">{staff.name}</p>
+                      <p className="text-xs text-indigo-700">{staff.designation}</p>
+                    </div>
+                    <div className="text-right">
+                       <p className="font-bold text-lg text-indigo-800">{format(staff.dateOfBirth, 'dd')}</p>
+                       <p className="text-xs text-indigo-700 -mt-1">{format(staff.dateOfBirth, 'MMM')}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No important updates.</p>
+              <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No other birthdays this month.</p>
             )}
+          </ScrollArea>
+        </div>
+
+        <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0">
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" />Important Updates ({noticeData.workAlerts.length})</h3>
+          <div className={cn("no-scrollbar flex-1 relative h-full", shouldAnimateUpdates && "marquee-v-container")}>
+            <div className={cn("space-y-2 overflow-y-auto", shouldAnimateUpdates && "marquee-v-content", !shouldAnimateUpdates && "h-full")}>
+              {noticeData.workAlerts.length > 0 ? (
+                <>
+                  {noticeData.workAlerts.map((alert, index) => (
+                    <div key={index} className="p-2 rounded-md bg-amber-500/10">
+                      <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
+                      <p className="text-xs text-amber-600">{alert.details}</p>
+                    </div>
+                  ))}
+                  {shouldAnimateUpdates && noticeData.workAlerts.map((alert, index) => (
+                    <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10" aria-hidden="true">
+                      <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
+                      <p className="text-xs text-amber-600">{alert.details}</p>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-sm text-muted-foreground italic">No important updates.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
