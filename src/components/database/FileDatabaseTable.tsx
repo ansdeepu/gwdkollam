@@ -111,18 +111,9 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     return entries.filter(entry => {
         const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
         
-        // Flatten all searchable text fields into one string for easy searching
         const searchableContent = [
-            entry.fileNo,
-            entry.applicantName,
-            entry.phoneNo,
-            appTypeDisplay,
-            entry.fileStatus,
-            entry.remarks,
-            entry.estimateAmount,
-            entry.totalRemittance,
-            entry.totalPaymentAllEntries,
-            entry.overallBalance,
+            entry.fileNo, entry.applicantName, entry.phoneNo, appTypeDisplay, entry.fileStatus, entry.remarks,
+            entry.estimateAmount, entry.totalRemittance, entry.totalPaymentAllEntries, entry.overallBalance,
             ...(entry.siteDetails || []).flatMap(site => [
                 site.nameOfSite, site.purpose, site.workStatus, site.contractorName,
                 site.supervisorName, site.tenderNo, site.drillingRemarks,
@@ -140,18 +131,12 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                 site.surveyRecommendedSlottedPipe, site.surveyRecommendedMsCasingPipe,
                 site.arsNumberOfStructures, site.arsStorageCapacity, site.arsNumberOfFillings
             ]),
-            ...(entry.remittanceDetails || []).flatMap(rd => [
-                rd.amountRemitted, rd.remittedAccount
-            ]),
-            ...(entry.paymentDetails || []).flatMap(pd => [
-                pd.paymentAccount, pd.revenueHead, pd.contractorsPayment,
-                pd.gst, pd.incomeTax, pd.kbcwb, pd.refundToParty,
-                pd.totalPaymentPerEntry, pd.paymentRemarks
-            ]),
+            ...(entry.remittanceDetails || []).flatMap(rd => [ rd.amountRemitted, rd.remittedAccount ]),
+            ...(entry.paymentDetails || []).flatMap(pd => [ pd.paymentAccount, pd.revenueHead, pd.contractorsPayment, pd.gst, pd.incomeTax, pd.kbcwb, pd.refundToParty, pd.totalPaymentPerEntry, pd.paymentRemarks ]),
         ]
-        .filter(val => val !== null && val !== undefined) // Filter out null/undefined values
+        .filter(val => val !== null && val !== undefined)
         .map(val => String(val).toLowerCase())
-        .join(' || '); // Join with a separator
+        .join(' || '); 
 
         return searchableContent.includes(lowerSearchTerm);
     });
@@ -230,25 +215,27 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
   if (!displayedEntries || displayedEntries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-center border rounded-lg shadow-sm bg-card">
-        <Image
-            src="https://placehold.co/128x128/F0F2F5/3F51B5.png?text=No+Files"
-            width={100}
-            height={100}
-            alt="No files in room"
-            className="mb-4 opacity-70 rounded-lg"
-            data-ai-hint="empty room illustration"
-        />
-        <h3 className="text-xl font-semibold text-foreground">No Files Found</h3>
-        <p className="text-muted-foreground">
-          {searchTerm
-            ? "No files match your search."
-            : user?.role === 'supervisor' 
-            ? "You have no active files assigned to you."
-            : "There are no file entries recorded yet. Start by adding new file data."
-          }
-        </p>
-      </div>
+      <Card className="shadow-lg">
+        <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+          <Image
+              src="https://placehold.co/128x128/F0F2F5/3F51B5.png?text=No+Files"
+              width={100}
+              height={100}
+              alt="No files in room"
+              className="mb-4 opacity-70 rounded-lg"
+              data-ai-hint="empty room illustration"
+          />
+          <h3 className="text-xl font-semibold text-foreground">No Files Found</h3>
+          <p className="text-muted-foreground">
+            {searchTerm
+              ? "No files match your search."
+              : user?.role === 'supervisor' 
+              ? "You have no active files assigned to you."
+              : "There are no file entries recorded yet. Start by adding new file data."
+            }
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -257,8 +244,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
   return (
     <TooltipProvider>
-      <Card className="shadow-lg">
-        <CardContent className="p-0">
+      <div className="space-y-4">
+        <Card className="shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
@@ -272,97 +259,113 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                 <TableHead className="text-center w-[180px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {paginatedEntries.map((entry, index) => {
-                const isFilePendingForSupervisor = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.isPending);
-                const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
-                
-                return (
-                <TableRow key={entry.fileNo}>
-                  <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                  <TableCell className="font-medium">{entry.fileNo}</TableCell>
-                  <TableCell>{entry.applicantName}</TableCell>
-                  <TableCell>
-                    {entry.siteDetails && entry.siteDetails.length > 0
-                      ? entry.siteDetails.map((site, idx) => (
-                          <span key={idx} className={cn("font-semibold", FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) ? 'text-red-600' : 'text-green-600')}>
-                            {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
-                          </span>
-                        ))
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {entry.siteDetails && entry.siteDetails.length > 0
-                      ? entry.siteDetails.map(site => site.purpose).filter(Boolean).join(', ') || "N/A"
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {entry.remittanceDetails?.[0]?.dateOfRemittance 
-                      ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") 
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell className={cn("font-semibold", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
-                    {entry.fileStatus}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-1">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => handleViewClick(entry)}>
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">View Details</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>View Details</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      {canEdit && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(entry)} disabled={isEditDisabled}>
-                              {isFilePendingForSupervisor ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit3 className="h-4 w-4" />}
-                              <span className="sr-only">Edit Entry</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{isFilePendingForSupervisor ? "Pending Approval" : "Edit Entry"}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {canDelete && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(entry)} disabled={isDeleting && deleteItem?.fileNo === entry.fileNo}>
-                              {isDeleting && deleteItem?.fileNo === entry.fileNo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                              <span className="sr-only">Delete Entry</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Delete Entry</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )})}
-            </TableBody>
           </Table>
-        </CardContent>
-        <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-              Showing <strong>{displayedEntries.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{displayedEntries.length}</strong> files.
-          </p>
-          {totalPages > 1 && (
-            <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-            />
-          )}
-        </CardFooter>
-      </Card>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-0">
+            <Table>
+              <colgroup>
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col />
+                  <col />
+                  <col />
+                  <col />
+                  <col />
+                  <col style={{ width: '180px' }} />
+              </colgroup>
+              <TableBody>
+                {paginatedEntries.map((entry, index) => {
+                  const isFilePendingForSupervisor = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.isPending);
+                  const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
+                  
+                  return (
+                  <TableRow key={entry.fileNo}>
+                    <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                    <TableCell className="font-medium">{entry.fileNo}</TableCell>
+                    <TableCell>{entry.applicantName}</TableCell>
+                    <TableCell>
+                      {entry.siteDetails && entry.siteDetails.length > 0
+                        ? entry.siteDetails.map((site, idx) => (
+                            <span key={idx} className={cn("font-semibold", FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) ? 'text-red-600' : 'text-green-600')}>
+                              {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
+                            </span>
+                          ))
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {entry.siteDetails && entry.siteDetails.length > 0
+                        ? entry.siteDetails.map(site => site.purpose).filter(Boolean).join(', ') || "N/A"
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {entry.remittanceDetails?.[0]?.dateOfRemittance 
+                        ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") 
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell className={cn("font-semibold", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
+                      {entry.fileStatus}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => handleViewClick(entry)}>
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">View Details</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>View Details</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        {canEdit && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => handleEditClick(entry)} disabled={isEditDisabled}>
+                                {isFilePendingForSupervisor ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit3 className="h-4 w-4" />}
+                                <span className="sr-only">Edit Entry</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{isFilePendingForSupervisor ? "Pending Approval" : "Edit Entry"}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {canDelete && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(entry)} disabled={isDeleting && deleteItem?.fileNo === entry.fileNo}>
+                                {isDeleting && deleteItem?.fileNo === entry.fileNo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                <span className="sr-only">Delete Entry</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Delete Entry</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )})}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+                Showing <strong>{displayedEntries.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{displayedEntries.length}</strong> files.
+            </p>
+            {totalPages > 1 && (
+              <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+              />
+            )}
+          </CardFooter>
+        </Card>
+      </div>
 
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-4xl p-0 flex flex-col h-[90vh]">
@@ -541,7 +544,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation dialog */}
       {canDelete && (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogContent>

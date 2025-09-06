@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData } from '@/lib/schemas';
-import { usePendingUpdates } from '@/hooks/usePendingUpdates'; // Import the hook
+import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parse, parseISO, isValid } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 
@@ -32,33 +32,33 @@ export default function FileManagerPage() {
   
   const canCreate = user?.role === 'editor';
 
-  // Filter out ARS-only files and sort them
   const depositWorkEntries = useMemo(() => {
-    let entries = user?.role === 'supervisor' ? fileEntries : fileEntries
+    let entries = (user?.role === 'supervisor' ? fileEntries : fileEntries
       .map(entry => {
         const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
         return { ...entry, siteDetails: nonArsSites };
       })
-      .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+      .filter(entry => entry.siteDetails && entry.siteDetails.length > 0)
+    ).slice(); 
 
-    // Sort entries by the first remittance date, descending
-    return entries.sort((a, b) => {
-        const dateA = a.remittanceDetails?.[0]?.dateOfRemittance;
-        const dateB = b.remittanceDetails?.[0]?.dateOfRemittance;
+    entries.sort((a, b) => {
+      const dateAString = a.remittanceDetails?.[0]?.dateOfRemittance;
+      const dateBString = b.remittanceDetails?.[0]?.dateOfRemittance;
 
-        if (!dateA && !dateB) return 0;
-        if (!dateA) return 1; // Put entries with no date at the end
-        if (!dateB) return -1; // Keep entries with a date at the front
+      const dateA = dateAString ? parseISO(dateAString) : null;
+      const dateB = dateBString ? parseISO(dateBString) : null;
+      
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1; 
+      if (!dateB) return -1;
+      
+      if (!isValid(dateA)) return 1;
+      if (!isValid(dateB)) return -1;
 
-        // Safely parse the date string (which could be in 'dd/MM/yyyy' or other formats)
-        const parsedA = parse(String(dateA), 'dd/MM/yyyy', new Date());
-        const parsedB = parse(String(dateB), 'dd/MM/yyyy', new Date());
-
-        if (!isValid(parsedA)) return 1;
-        if (!isValid(parsedB)) return -1;
-
-        return parsedB.getTime() - parsedA.getTime();
+      return dateB.getTime() - dateA.getTime();
     });
+
+    return entries;
   }, [fileEntries, user?.role]);
 
   return (
@@ -84,14 +84,11 @@ export default function FileManagerPage() {
           </div>
         </CardContent>
       </Card>
-      <Card className="shadow-lg">
-        <CardContent className="pt-6">
-          <FileDatabaseTable 
-            searchTerm={searchTerm} 
-            fileEntries={depositWorkEntries} 
-          />
-        </CardContent>
-      </Card>
+      
+      <FileDatabaseTable 
+        searchTerm={searchTerm} 
+        fileEntries={depositWorkEntries} 
+      />
     </div>
   );
 }
