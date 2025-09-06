@@ -67,7 +67,7 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
         if (dobMonth === todayMonth) {
             if (dobDate === todayDate) {
                 todaysBirthdays.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl });
-            } else {
+            } else if (dobDate > todayDate) {
                 upcomingBirthdaysInMonth.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl, dateOfBirth: dob });
             }
         }
