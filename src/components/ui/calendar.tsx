@@ -4,6 +4,7 @@
 import * as React from "react"
 import { DayPicker } from "react-day-picker"
 import { enUS } from "date-fns/locale"
+import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
@@ -30,6 +31,9 @@ function Calendar({
       locale={{ ...enUS, options: { weekStartsOn: 0 } }} // Sunday as first day
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
+      formatters={{
+        formatWeekdayName: (day) => format(day, 'eee'),
+      }}
       classNames={{
         months: "flex flex-col space-y-4",
         month: "space-y-4",
