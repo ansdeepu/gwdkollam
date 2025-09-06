@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ArsStatusOverview.tsx
 "use client";
 
@@ -8,49 +7,46 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Waves, XCircle, CalendarIcon } from "lucide-react";
-import { format, startOfDay, endOfDay, isValid, isWithinInterval, parse } from 'date-fns';
-import type { DataEntryFormData, SiteWorkStatus } from '@/lib/schemas';
-import { siteWorkStatusOptions } from '@/lib/schemas';
+import { format, startOfDay, endOfDay, isValid, isWithinInterval, parse, parseISO } from 'date-fns';
+import { useArsEntries, type ArsEntry } from '@/hooks/useArsEntries';
+import { arsWorkStatusOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 
 interface ArsStatusOverviewProps {
-  allFileEntries: DataEntryFormData[];
   onOpenDialog: (data: any[], title: string, columns: any[], type: 'detail') => void;
   dates: { start?: Date, end?: Date };
   onSetDates: (dates: { start?: Date, end?: Date }) => void;
 }
 
-export default function ArsStatusOverview({ allFileEntries, onOpenDialog, dates, onSetDates }: ArsStatusOverviewProps) {
+export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: ArsStatusOverviewProps) {
+  const { arsEntries, isLoading } = useArsEntries();
+
   const arsDashboardData = useMemo(() => {
     const sDate = dates.start ? startOfDay(dates.start) : null;
     const eDate = dates.end ? endOfDay(dates.end) : null;
   
-    let arsSites = allFileEntries.flatMap(entry =>
-        (entry.siteDetails ?? [])
-          .filter(site => site.isArsImport === true)
-          .map((site, index) => ({
-            ...site, id: `${entry.fileNo}-${site.nameOfSite}-${site.purpose}-${index}`,
-            fileNo: entry.fileNo, applicantName: entry.applicantName, constituency: entry.constituency
-          }))
-      );
+    let filteredSites = arsEntries;
   
     if (sDate || eDate) {
-        arsSites = arsSites.filter(site => {
-        const completionDate = site.dateOfCompletion ? new Date(site.dateOfCompletion) : null;
-        if (!completionDate || !isValid(completionDate)) return false;
-        if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
-        if (sDate) return completionDate >= sDate;
-        if (eDate) return completionDate <= eDate;
-        return false;
+        filteredSites = filteredSites.filter(site => {
+            if (!site.dateOfCompletion) return false;
+            // The date might be an ISO string from Firestore processing
+            const completionDate = site.dateOfCompletion ? parseISO(site.dateOfCompletion as unknown as string) : null;
+            if (!completionDate || !isValid(completionDate)) return false;
+
+            if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
+            if (sDate) return completionDate >= sDate;
+            if (eDate) return completionDate <= eDate;
+            return false;
       });
     }
 
-    const arsStatusCounts = new Map<string, { count: number, data: any[], expenditure: number }>();
-    siteWorkStatusOptions.forEach(status => arsStatusCounts.set(status, { count: 0, data: [], expenditure: 0 }));
+    const arsStatusCounts = new Map<string, { count: number, data: ArsEntry[], expenditure: number }>();
+    arsWorkStatusOptions.forEach(status => arsStatusCounts.set(status, { count: 0, data: [], expenditure: 0 }));
   
     let totalExpenditure = 0;
   
-    arsSites.forEach(site => {
+    filteredSites.forEach(site => {
       if (site.workStatus && arsStatusCounts.has(site.workStatus)) {
         const current = arsStatusCounts.get(site.workStatus)!;
         current.count++;
@@ -67,21 +63,21 @@ export default function ArsStatusOverview({ allFileEntries, onOpenDialog, dates,
       .sort((a,b) => a.status.localeCompare(b.status));
   
     return {
-      totalArsSites: arsSites.length,
+      totalArsSites: filteredSites.length,
       totalArsExpenditure: totalExpenditure,
       arsStatusCountsData,
-      allArsSites: arsSites,
+      allArsSites: filteredSites,
     };
-  }, [allFileEntries, dates]);
+  }, [arsEntries, dates]);
 
-  const handleWorkStatusCellClick = (data: any[], title: string) => {
+  const handleWorkStatusCellClick = (data: ArsEntry[], title: string) => {
     const dialogData = data.map((site, index) => ({
-      slNo: index + 1, fileNo: site.fileNo, siteName: site.nameOfSite, purpose: site.purpose,
+      slNo: index + 1, fileNo: site.fileNo, siteName: site.nameOfSite, purpose: site.arsTypeOfScheme,
       workStatus: site.workStatus, supervisorName: site.supervisorName || 'N/A'
     }));
     const columns = [
       { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' },
-      { key: 'siteName', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' },
+      { key: 'siteName', label: 'Site Name' }, { key: 'purpose', label: 'Type of Scheme' },
       { key: 'workStatus', label: 'Work Status' }, { key: 'supervisorName', label: 'Supervisor' }
     ];
     onOpenDialog(dialogData, title, columns, 'detail');
