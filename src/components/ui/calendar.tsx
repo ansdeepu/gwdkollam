@@ -17,7 +17,8 @@ function Calendar({
 }: CalendarProps) {
   const [month, setMonth] = React.useState<Date>(new Date())
 
-  const years = Array.from({ length: 41 }, (_, i) => 2010 + i) // 2010 → 2050
+  // Year range 2010 → 2050
+  const years = Array.from({ length: 41 }, (_, i) => 2010 + i)
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
@@ -27,38 +28,38 @@ function Calendar({
     <DayPicker
       month={month}
       onMonthChange={setMonth}
-      locale={{ ...enUS, options: { weekStartsOn: 0 } }} // Sunday as first day
+      locale={{ ...enUS, options: { weekStartsOn: 0 } }} // Sunday first
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       formatters={{
-        formatWeekdayName: (day) => format(day, 'eee'),
+        formatWeekdayName: (day) => format(day, "eee"),
       }}
       classNames={{
         months: "flex flex-col space-y-4",
         month: "space-y-4",
-        caption: "flex justify-center items-center px-2",
-        caption_label: "hidden", // we use custom caption below
-        nav: "hidden", // hide default arrows
-        table: "w-full border-collapse",
-        head_row: "grid grid-cols-7",
+        caption: "flex justify-center items-center gap-2",
+        caption_label: "hidden", // using custom dropdowns
+        nav: "hidden", // hide arrows
+        table: "w-full border-collapse table-fixed", // fix width
+        head_row: "table-row",
         head_cell:
-          "flex items-center justify-center text-xs font-semibold text-muted-foreground",
-        row: "grid grid-cols-7",
-        cell: "flex items-center justify-center text-xs relative",
+          "table-cell text-center text-xs font-semibold text-muted-foreground p-1",
+        row: "table-row",
+        cell: "table-cell text-center align-middle p-1",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "p-0 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
+          "p-0 w-8 h-8 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
         ),
         day_today: "bg-accent/20 text-accent-foreground rounded-full",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_hidden: "invisible",
-        day_sunday: "text-red-600 font-semibold", // Sundays red
+        day_sunday: "text-red-600 font-semibold", // Sundays in red
         ...classNames,
       }}
       components={{
         Caption: () => (
-          <div className="flex items-center justify-center space-x-2 rdp">
+          <div className="flex items-center justify-center gap-2">
             {/* Month Picker */}
             <select
               className="rounded-md border px-2 py-1 text-sm bg-background"
