@@ -204,15 +204,22 @@ export default function DashboardPage() {
         <NoticeBoard staffMembers={dashboardData.staffMembers} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <FileStatusOverview nonArsEntries={dashboardData.nonArsEntries} onOpenDialog={handleOpenDialog} />
-        <FinanceOverview allFileEntries={allFileEntries} onOpenDialog={handleOpenDialog} dates={financeDates} onSetDates={setFinanceDates} />
-      </div>
+      <FileStatusOverview 
+          nonArsEntries={dashboardData.nonArsEntries}
+          onOpenDialog={handleOpenDialog}
+      />
       
       <WorkStatusByService 
         allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
+      />
+      
+      <FinanceOverview 
+        allFileEntries={allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        dates={financeDates}
+        onSetDates={setFinanceDates}
       />
       
       <ArsStatusOverview 
