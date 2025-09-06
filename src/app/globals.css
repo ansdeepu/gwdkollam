@@ -344,3 +344,8 @@
 .rdp-day_sunday {
   color: red !important;
 }
+
+/* Disable react-day-picker default styles completely */
+.rdp {
+  all: unset;
+}
