@@ -18,22 +18,7 @@ export default function CalendarDemoPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Inline Calendar</CardTitle>
-          <CardDescription>
-            This is a standard inline calendar, always visible on the page.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center pt-6">
-            <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-            />
-        </CardContent>
-      </Card>
+      
     </div>
   );
 }
