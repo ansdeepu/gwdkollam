@@ -7,7 +7,7 @@ import { useArsEntries, type ArsEntry } from "@/hooks/useArsEntries";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle } from "lucide-react";
+import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle, CalendarIcon } from "lucide-react";
 import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import type { ArsEntryFormData } from "@/lib/schemas";
+import { Calendar } from "@/components/ui/calendar";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -349,9 +350,38 @@ export default function ArsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
               <div className="font-medium text-sm pr-4">Total Sites: {arsEntries.length}</div>
-              <Input type="text" placeholder="From Date" className="w-[150px]" value={startDate ? format(startDate, "dd/MM/yyyy") : ''} onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'dd/MM/yyyy', new Date()) : undefined)} />
-              <Input type="text" placeholder="To Date" className="w-[150px]" value={endDate ? format(endDate, "dd/MM/yyyy") : ''} onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'dd/MM/yyyy', new Date()) : undefined)} />
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            id="from-date"
+                            variant={"outline"}
+                            className={cn("w-[240px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {startDate ? format(startDate, "dd-MM-yyyy") : <span>From Date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
+                    </PopoverContent>
+                </Popover>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            id="to-date"
+                            variant={"outline"}
+                            className={cn("w-[240px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {endDate ? format(endDate, "dd-MM-yyyy") : <span>To Date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
+                    </PopoverContent>
+                </Popover>
               <Button onClick={() => {setStartDate(undefined); setEndDate(undefined);}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
+              <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date</p>
             </div>
         </CardContent>
        </Card>

@@ -103,12 +103,6 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
     const handleClearFinanceDates = () => {
         onSetDates({ start: undefined, end: undefined });
     };
-
-    const parseDateFromString = (dateString: string): Date | undefined => {
-        if (!dateString) return undefined;
-        const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
-        return isValid(parsedDate) ? parsedDate : undefined;
-    };
     
     const handleAmountClick = (account: 'SBI' | 'STSB' | 'RevenueHead', type: 'credit' | 'debit') => {
         let title = '';
@@ -209,20 +203,44 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-                  <Input 
-                      type="text" 
-                      placeholder="From: dd/mm/yyyy" 
-                      className="w-[180px]" 
-                      value={dates.start ? format(dates.start, 'dd/MM/yyyy') : ''} 
-                      onChange={(e) => onSetDates({ ...dates, start: parseDateFromString(e.target.value) })}
-                  />
-                  <Input 
-                      type="text" 
-                      placeholder="To: dd/mm/yyyy" 
-                      className="w-[180px]" 
-                      value={dates.end ? format(dates.end, 'dd/MM/yyyy') : ''} 
-                      onChange={(e) => onSetDates({ ...dates, end: parseDateFromString(e.target.value) })}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn("w-[240px] justify-start text-left font-normal", !dates.start && "text-muted-foreground")}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dates.start ? format(dates.start, "PPP") : <span>From Date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={dates.start}
+                            onSelect={(date) => onSetDates({ ...dates, start: date })}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                      <PopoverTrigger asChild>
+                          <Button
+                              variant={"outline"}
+                              className={cn("w-[240px] justify-start text-left font-normal", !dates.end && "text-muted-foreground")}
+                          >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {dates.end ? format(dates.end, "PPP") : <span>To Date</span>}
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                              mode="single"
+                              selected={dates.end}
+                              onSelect={(date) => onSetDates({ ...dates, end: date })}
+                              initialFocus
+                          />
+                      </PopoverContent>
+                  </Popover>
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>

@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ArsStatusOverview.tsx
 "use client";
 
@@ -7,11 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Waves, XCircle } from "lucide-react";
+import { Waves, XCircle, CalendarIcon } from "lucide-react";
 import { format, startOfDay, endOfDay, isValid, isWithinInterval, parse } from 'date-fns';
 import type { DataEntryFormData, SiteWorkStatus } from '@/lib/schemas';
 import { siteWorkStatusOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
+import { Calendar } from '../ui/calendar';
 
 interface ArsStatusOverviewProps {
   allFileEntries: DataEntryFormData[];
@@ -87,12 +89,6 @@ export default function ArsStatusOverview({ allFileEntries, onOpenDialog, dates,
     onOpenDialog(dialogData, title, columns, 'detail');
   };
 
-  const parseDateFromString = (dateString: string): Date | undefined => {
-    if (!dateString) return undefined;
-    const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
-    return isValid(parsedDate) ? parsedDate : undefined;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -103,20 +99,50 @@ export default function ArsStatusOverview({ allFileEntries, onOpenDialog, dates,
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
-          <Input 
-              type="text" 
-              placeholder="From: dd/mm/yyyy" 
-              className="w-[180px]" 
-              value={dates.start ? format(dates.start, 'dd/MM/yyyy') : ''} 
-              onChange={(e) => onSetDates({ ...dates, start: parseDateFromString(e.target.value) })}
-          />
-          <Input 
-              type="text" 
-              placeholder="To: dd/mm/yyyy" 
-              className="w-[180px]" 
-              value={dates.end ? format(dates.end, 'dd/MM/yyyy') : ''} 
-              onChange={(e) => onSetDates({ ...dates, end: parseDateFromString(e.target.value) })}
-          />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !dates.start && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dates.start ? format(dates.start, "PPP") : <span>From Date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dates.start}
+                  onSelect={(date) => onSetDates({ ...dates, start: date })}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+             <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !dates.end && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dates.end ? format(dates.end, "PPP") : <span>To Date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dates.end}
+                  onSelect={(date) => onSetDates({ ...dates, end: date })}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           <Button onClick={() => onSetDates({ start: undefined, end: undefined })} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4" />Clear Dates</Button>
           <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date</p>
         </div>
