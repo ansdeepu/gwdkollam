@@ -93,30 +93,32 @@ export default function DataEntryPage() {
   const processDataForForm = (data: any): any => {
     if (!data) return data;
 
-    const formatObjectDates = (obj: any) => {
-        const newObj = { ...obj };
-        for (const key in newObj) {
-            if (key.toLowerCase().includes('date') && newObj[key]) {
-                const date = safeParseDate(newObj[key]);
-                newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
-            }
+    const transform = (value: any): any => {
+        if (value === null || value === undefined) {
+            return value;
         }
-        return newObj;
+        if (Array.isArray(value)) {
+            return value.map(transform);
+        }
+        if (typeof value === 'object') {
+            const newObj: { [key: string]: any } = {};
+            for (const key in value) {
+                if (Object.prototype.hasOwnProperty.call(value, key)) {
+                    if (key.toLowerCase().includes('date')) {
+                        const date = safeParseDate(value[key]);
+                        // Ensure it's a 'yyyy-MM-dd' string or an empty string for the input
+                        newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
+                    } else {
+                        newObj[key] = transform(value[key]);
+                    }
+                }
+            }
+            return newObj;
+        }
+        return value;
     };
     
-    let processedData = { ...data };
-    
-    if (processedData.remittanceDetails) {
-        processedData.remittanceDetails = processedData.remittanceDetails.map(formatObjectDates);
-    }
-    if (processedData.siteDetails) {
-        processedData.siteDetails = processedData.siteDetails.map(formatObjectDates);
-    }
-    if (processedData.paymentDetails) {
-        processedData.paymentDetails = processedData.paymentDetails.map(formatObjectDates);
-    }
-
-    return processedData;
+    return transform(data);
   };
 
   useEffect(() => {
