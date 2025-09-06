@@ -662,7 +662,7 @@ export const AgencyApplicationSchema = z.object({
   agencyPaymentDate: nativeDateSchema,
   agencyChallanNo: z.string().optional(),
   rigs: z.array(RigRegistrationSchema),
-  status: z.enum(['Active', 'Pending Verification']),
+  status: z.enum(['Active', 'Pending Verification', 'Deleted']),
   history: z.array(z.string()).optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;

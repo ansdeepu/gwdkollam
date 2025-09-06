@@ -1,3 +1,4 @@
+
 // src/hooks/useAgencyApplications.ts
 "use client";
 
@@ -9,7 +10,6 @@ import {
   doc,
   addDoc,
   updateDoc,
-  deleteDoc,
   serverTimestamp,
   Timestamp,
   type DocumentData,
@@ -131,16 +131,21 @@ export function useAgencyApplications() {
         toast({ title: "Permission Denied", description: "You don't have permission to delete applications.", variant: "destructive" });
         return;
     }
-    try {
-        await deleteDoc(doc(db, APPLICATIONS_COLLECTION, id));
-        toast({ title: "Application Deleted", description: "The agency registration has been removed." });
-    } catch (error: any) {
-        toast({ title: "Deletion Failed", description: error.message, variant: "destructive" });
+    const docRef = doc(db, APPLICATIONS_COLLECTION, id);
+    await updateDoc(docRef, { status: 'Deleted', updatedAt: serverTimestamp() });
+  }, [user]);
+
+  const restoreApplication = useCallback(async (id: string, originalStatus: 'Active' | 'Pending Verification') => {
+    if (!user || user.role !== 'editor') {
+        toast({ title: "Permission Denied", description: "You don't have permission to restore applications.", variant: "destructive" });
+        return;
     }
-  }, [user, toast]);
+    const docRef = doc(db, APPLICATIONS_COLLECTION, id);
+    await updateDoc(docRef, { status: originalStatus, updatedAt: serverTimestamp() });
+  }, [user]);
   
   // This export is needed to match the type imports in other files
-  return { applications, isLoading, addApplication, updateApplication, deleteApplication };
+  return { applications, isLoading, addApplication, updateApplication, deleteApplication, restoreApplication };
 }
 
 // Re-exporting types for convenience in other files
