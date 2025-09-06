@@ -199,36 +199,20 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <FileStatusOverview 
-            nonArsEntries={dashboardData.nonArsEntries}
-            onOpenDialog={handleOpenDialog}
-          />
-        </div>
-         <div className="lg:col-span-1 space-y-6">
-          <ImportantUpdates
-            allFileEntries={dashboardData.allFileEntries}
-          />
-        </div>
-        <div className="lg:col-span-2 space-y-6">
-          <NoticeBoard 
-            staffMembers={dashboardData.staffMembers}
-          />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ImportantUpdates allFileEntries={dashboardData.allFileEntries} />
+        <NoticeBoard staffMembers={dashboardData.staffMembers} />
       </div>
-      
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <FileStatusOverview nonArsEntries={dashboardData.nonArsEntries} onOpenDialog={handleOpenDialog} />
+        <FinanceOverview allFileEntries={allFileEntries} onOpenDialog={handleOpenDialog} dates={financeDates} onSetDates={setFinanceDates} />
+      </div>
+
       <WorkStatusByService 
         allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
-      />
-
-      <FinanceOverview 
-        allFileEntries={allFileEntries}
-        onOpenDialog={handleOpenDialog}
-        dates={financeDates}
-        onSetDates={setFinanceDates}
       />
       
       <ArsStatusOverview 
@@ -252,15 +236,15 @@ export default function DashboardPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <UserActivity 
-            allUsers={allUsers}
-            staffMembers={staffMembers}
-          />
           <SupervisorWork 
             allFileEntries={allFileEntries}
             allUsers={allUsers}
             staffMembers={staffMembers}
             onOpenDialog={handleOpenDialog}
+          />
+          <UserActivity 
+            allUsers={allUsers}
+            staffMembers={staffMembers}
           />
       </div>
 

@@ -208,7 +208,7 @@ export default function DashboardPage() {
         <FileStatusOverview nonArsEntries={dashboardData.nonArsEntries} onOpenDialog={handleOpenDialog} />
         <FinanceOverview allFileEntries={allFileEntries} onOpenDialog={handleOpenDialog} dates={financeDates} onSetDates={setFinanceDates} />
       </div>
-
+      
       <WorkStatusByService 
         allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
         onOpenDialog={handleOpenDialog}
