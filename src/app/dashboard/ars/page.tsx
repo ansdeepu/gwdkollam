@@ -368,41 +368,71 @@ export default function ArsPage() {
             </div>
         </CardContent>
        </Card>
-       <Card className="shadow-lg">
-        <CardContent className="pt-6">
-          <Table>
-            <TableHeader><TableRow>
-                <TableHead>Sl. No.</TableHead><TableHead>File No</TableHead><TableHead>Name of Site</TableHead>
-                <TableHead>Type of Scheme</TableHead><TableHead>Panchayath</TableHead>
-                <TableHead>Status</TableHead><TableHead>Completion Date</TableHead>
-                <TableHead className="text-center w-[120px]">Actions</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {paginatedSites.length > 0 ? ( paginatedSites.map((site, index) => (
-                  <TableRow key={site.id}>
-                    <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                    <TableCell>{site.fileNo}</TableCell>
-                    <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
-                    <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell><TableCell className="whitespace-normal break-words">{site.arsPanchayath || 'N/A'}</TableCell>
-                    <TableCell>{site.workStatus ?? 'N/A'}</TableCell><TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
-                    <TableCell className="text-center">
-                        <div className="flex items-center justify-center space-x-1">
-                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
-                            {canEdit && (
-                                <>
-                                <Tooltip><TooltipTrigger asChild><Link href={`/dashboard/ars/entry?id=${site.id}`} passHref><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></Link></TooltipTrigger><TooltipContent><p>Edit Site</p></TooltipContent></Tooltip>
-                                <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Site</p></TooltipContent></Tooltip>
-                                </>
+      
+        <Card className="shadow-lg">
+            <CardContent className="p-0">
+                <Table>
+                    <TableHeader className="bg-secondary">
+                        <TableRow>
+                            <TableHead>Sl. No.</TableHead>
+                            <TableHead>File No</TableHead>
+                            <TableHead>Name of Site</TableHead>
+                            <TableHead>Type of Scheme</TableHead>
+                            <TableHead>Panchayath</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Completion Date</TableHead>
+                            <TableHead className="text-center w-[120px]">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                </Table>
+            </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+            <CardContent className="p-0">
+                <div className="max-h-[calc(100vh-24rem)] overflow-auto">
+                    <Table>
+                        <TableBody>
+                            {paginatedSites.length > 0 ? (
+                                paginatedSites.map((site, index) => (
+                                    <TableRow key={site.id}>
+                                        <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                                        <TableCell className="w-[150px]">{site.fileNo}</TableCell>
+                                        <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
+                                        <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
+                                        <TableCell className="whitespace-normal break-words">{site.arsPanchayath || 'N/A'}</TableCell>
+                                        <TableCell>{site.workStatus ?? 'N/A'}</TableCell>
+                                        <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
+                                        <TableCell className="text-center w-[120px]">
+                                            <div className="flex items-center justify-center space-x-1">
+                                                <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
+                                                {canEdit && (
+                                                    <>
+                                                    <Tooltip><TooltipTrigger asChild><Link href={`/dashboard/ars/entry?id=${site.id}`} passHref><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></Link></TooltipTrigger><TooltipContent><p>Edit Site</p></TooltipContent></Tooltip>
+                                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Site</p></TooltipContent></Tooltip>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={8} className="h-24 text-center">
+                                        No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.
+                                    </TableCell>
+                                </TableRow>
                             )}
-                        </div>
-                    </TableCell>
-                  </TableRow>
-                )) ) : ( <TableRow><TableCell colSpan={8} className="h-24 text-center">No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.</TableCell></TableRow> )}
-            </TableBody>
-          </Table>
-        </CardContent>
-         {totalPages > 1 && ( <div className="p-4 border-t flex items-center justify-center"><PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} /></div> )}
-      </Card>
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+            {totalPages > 1 && (
+                <div className="p-4 border-t flex items-center justify-center">
+                    <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                </div>
+            )}
+        </Card>
       </TooltipProvider>
       
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>

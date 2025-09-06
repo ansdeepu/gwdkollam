@@ -94,8 +94,8 @@ export function useArsEntries() {
     
     const entryForFirestore = {
         ...entryData,
-        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'dd/MM/yyyy', new Date()) : null,
-        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'dd/MM/yyyy', new Date()) : null,
+        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'yyyy-MM-dd', new Date()) : null,
+        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'yyyy-MM-dd', new Date()) : null,
     };
     
     const payload = {
@@ -112,8 +112,8 @@ export function useArsEntries() {
 
     const entryForFirestore = {
         ...entryData,
-        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'dd/MM/yyyy', new Date()) : null,
-        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'dd/MM/yyyy', new Date()) : null,
+        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'yyyy-MM-dd', new Date()) : null,
+        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'yyyy-MM-dd', new Date()) : null,
     };
 
     const payload = {

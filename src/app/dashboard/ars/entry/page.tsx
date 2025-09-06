@@ -41,6 +41,7 @@ const toDateOrNull = (value: any): Date | null => {
   return null;
 };
 
+// This function now recursively processes the data and formats dates to 'yyyy-MM-dd' for native date pickers
 const processDataForForm = (data: any): any => {
     if (!data) return data;
     const processed: { [key: string]: any } = {};
@@ -49,7 +50,7 @@ const processDataForForm = (data: any): any => {
             const value = data[key];
              if (key.toLowerCase().includes('date')) {
                 const date = toDateOrNull(value);
-                processed[key] = date ? format(date, 'dd/MM/yyyy') : '';
+                processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
             } else {
                 processed[key] = value;
             }
@@ -136,7 +137,6 @@ export default function ArsEntryPage() {
     const handleFormSubmit = async (data: ArsEntryFormData) => {
         setIsSubmitting(true);
         
-        // Payload stays consistent with schema (strings, not Date)
         const payload: ArsEntryFormData = {
             ...data,
             arsSanctionedDate: data.arsSanctionedDate || undefined,
@@ -173,14 +173,14 @@ export default function ArsEntryPage() {
     
     return (
         <div className="space-y-6">
-            <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => router.back()}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                </Button>
-            </div>
             <Card className="shadow-lg">
                 <CardContent className="pt-6">
+                   <div className="flex justify-end mb-4">
+                      <Button variant="destructive" size="sm" onClick={() => router.back()}>
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Back
+                      </Button>
+                    </div>
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 p-1">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -198,11 +198,11 @@ export default function ArsEntryPage() {
                           <FormField name="estimateAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 500000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAsTsDetails" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Accorded Details</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="tsAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
-                           <FormField name="arsSanctionedDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Sanctioned Date</FormLabel><FormControl><Input placeholder="dd/mm/yyyy" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem> )} />
+                           <FormField name="arsSanctionedDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Sanctioned Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem> )} />
                           <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="workStatus" control={form.control} render={({ field }) => (<FormItem><FormLabel>Present Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{arsWorkStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
-                           <FormField name="dateOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input placeholder="dd/mm/yyyy" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem> )} />
+                           <FormField name="dateOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem> )} />
                           <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>)} />
                            <FormField
