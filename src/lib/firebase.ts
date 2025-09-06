@@ -1,3 +1,4 @@
+
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -8,12 +9,12 @@ import { getStorage, type FirebaseStorage } from 'firebase/storage';
 // These environment variables need to be set in your .env file.
 // You can find these values in your Firebase project settings.
 const firebaseConfig = {
-  apiKey: "AIzaSyAdBken5JDPnPsI5jZs38UwGRmQym9jsGY",
-  authDomain: "gwd-kollam-dashboard.firebaseapp.com",
-  projectId: "gwd-kollam-dashboard",
-  storageBucket: "gwd-kollam-dashboard.appspot.com",
-  messagingSenderId: "873479268293",
-  appId: "1:873479268293:web:8656fe9e8e62226e024dac"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
