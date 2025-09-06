@@ -12,8 +12,27 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates';
-import { parse, parseISO, isValid } from 'date-fns';
+import { parseISO, isValid } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
+
+// Helper function to safely parse dates, whether they are strings or Date objects
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date && isValid(dateValue)) {
+    return dateValue;
+  }
+  if (typeof dateValue === 'string') {
+    const parsed = parseISO(dateValue);
+    if (isValid(parsed)) return parsed;
+  }
+  // Fallback for other potential date-like objects from Firestore
+  if (typeof dateValue === 'object' && dateValue.toDate) {
+    const parsed = dateValue.toDate();
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
+
 
 export default function FileManagerPage() {
   const { setHeader } = usePageHeader();
@@ -42,19 +61,16 @@ export default function FileManagerPage() {
     ).slice(); 
 
     entries.sort((a, b) => {
-      const dateAString = a.remittanceDetails?.[0]?.dateOfRemittance;
-      const dateBString = b.remittanceDetails?.[0]?.dateOfRemittance;
+      const dateAValue = a.remittanceDetails?.[0]?.dateOfRemittance;
+      const dateBValue = b.remittanceDetails?.[0]?.dateOfRemittance;
 
-      const dateA = dateAString ? parseISO(dateAString) : null;
-      const dateB = dateBString ? parseISO(dateBString) : null;
+      const dateA = safeParseDate(dateAValue);
+      const dateB = safeParseDate(dateBValue);
       
       if (!dateA && !dateB) return 0;
       if (!dateA) return 1; 
       if (!dateB) return -1;
       
-      if (!isValid(dateA)) return 1;
-      if (!isValid(dateB)) return -1;
-
       return dateB.getTime() - dateA.getTime();
     });
 
