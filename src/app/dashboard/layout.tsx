@@ -1,4 +1,3 @@
-
 // src/app/dashboard/layout.tsx
 "use client";
 
@@ -16,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation';
 import { PageHeaderProvider, usePageHeader } from '@/hooks/usePageHeader';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
@@ -45,7 +45,7 @@ function HeaderContent() {
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
       </div>
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+      <div className={cn("flex items-center gap-2 text-sm font-medium text-primary")}>
         <Clock className="h-4 w-4" />
         {currentTime ? (
           <span>{format(currentTime, 'dd/MM/yyyy, hh:mm:ss a')}</span>

@@ -1,10 +1,10 @@
-
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldAlert, Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ShieldAlert, Loader2, ArrowLeft } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
@@ -15,23 +15,58 @@ import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid, parse, format, parseISO } from 'date-fns';
 import { usePageHeader } from "@/hooks/usePageHeader";
 
-const safeParseDate = (dateValue: any): Date | null => {
-  if (!dateValue) return null;
-  if (dateValue instanceof Date) return dateValue;
-  // Handle Firestore Timestamps which are objects with seconds/nanoseconds
-  if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number') {
-    return new Date(dateValue.seconds * 1000);
+const toDateOrNull = (value: any): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date && isValid(value)) return value;
+  // Handle Firestore Timestamp objects
+  if (value && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
+    return isValid(date) ? date : null;
   }
-  if (typeof dateValue === 'string') {
-    // Try ISO format first
-    let parsed = parseISO(dateValue);
-    if (isValid(parsed)) return parsed;
-    // Then try dd/MM/yyyy
-    parsed = parse(dateValue, 'dd/MM/yyyy', new Date());
-    if (isValid(parsed)) return parsed;
+  if (typeof value === 'string') {
+    // Try ISO format first, as it's a common machine-readable format
+    let parsedDate = parseISO(value);
+    if (isValid(parsedDate)) return parsedDate;
+
+    // Then handle 'dd/MM/yyyy' for manual entries
+    parsedDate = parse(value, 'dd/MM/yyyy', new Date());
+    if (isValid(parsedDate)) return parsedDate;
   }
   return null;
 };
+
+// This function now recursively processes the data and formats dates to 'yyyy-MM-dd' or ""
+const processDataForForm = (data: any): any => {
+  const transform = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map(transform);
+    }
+
+    if (typeof obj === 'object') {
+      const newObj: { [key: string]: any } = {};
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = obj[key];
+          // Check for keys that are likely to be dates
+          if (key.toLowerCase().includes('date')) {
+            const date = toDateOrNull(value);
+            // Format to the string 'yyyy-MM-dd' or an empty string
+            newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
+          } else {
+            // Recursively transform nested objects
+            newObj[key] = transform(value);
+          }
+        }
+      }
+      return newObj;
+    }
+    return obj;
+  };
+  return transform(data);
+};
+
 
 // Helper function to create default form values, ensuring consistency.
 const getFormDefaults = (): DataEntryFormData => ({
@@ -76,6 +111,7 @@ interface PageData {
 
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const fileNoToEdit = searchParams.get("fileNo");
   const approveUpdateId = searchParams.get("approveUpdateId");
   
@@ -88,34 +124,6 @@ export default function DataEntryPage() {
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
-
-  const processDataForForm = (data: any): any => {
-    const transform = (obj: any): any => {
-        if (obj === null || obj === undefined) return obj;
-
-        if (Array.isArray(obj)) {
-            return obj.map(transform);
-        }
-
-        if (typeof obj === 'object') {
-            const newObj: { [key: string]: any } = {};
-            for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    const value = obj[key];
-                    if (key.toLowerCase().includes('date')) {
-                        const date = safeParseDate(value);
-                        newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
-                    } else {
-                        newObj[key] = transform(value);
-                    }
-                }
-            }
-            return newObj;
-        }
-        return obj;
-    };
-    return transform(data);
-  };
 
   useEffect(() => {
     let isMounted = true;
@@ -274,7 +282,13 @@ export default function DataEntryPage() {
   return (
     <div className="space-y-6">
       <Card className="shadow-lg">
-        <CardContent className="pt-6">
+        <CardContent className="p-6">
+          <div className="flex justify-end mb-6">
+              <Button variant="outline" size="sm" onClick={() => router.back()}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+              </Button>
+          </div>
           {pageData ? (
              <DataEntryFormComponent
                 key={approveUpdateId || fileNoToEdit || 'new-entry'} 
