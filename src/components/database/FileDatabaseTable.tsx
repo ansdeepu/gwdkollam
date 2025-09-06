@@ -1,3 +1,4 @@
+
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -94,7 +95,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [viewItem, setViewItem] = useState<DataEntryFormData | null>(null);
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -174,7 +174,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const handleDeleteClick = (item: DataEntryFormData) => {
     if (!canDelete) return; 
     setDeleteItem(item);
-    setIsDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -200,7 +199,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
         setIsDeleting(false);
       }
     }
-    setIsDeleteDialogOpen(false);
     setDeleteItem(null);
   };
 
@@ -245,22 +243,24 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   return (
     <TooltipProvider>
       <div className="space-y-4">
+        <Card>
+          <TableHeader className="bg-secondary">
+              <TableRow>
+                <TableHead className="w-[80px]">Sl. No.</TableHead>
+                <TableHead className="w-[150px]">File No.</TableHead>
+                <TableHead>Institution / Applicant Name</TableHead>
+                <TableHead>Site Name(s)</TableHead>
+                <TableHead>Purpose(s)</TableHead>
+                <TableHead>Date of Remittance</TableHead> 
+                <TableHead>File Status</TableHead>
+                <TableHead className="text-center w-[180px]">Actions</TableHead>
+              </TableRow>
+          </TableHeader>
+        </Card>
         <Card className="shadow-lg">
           <CardContent className="p-0">
-            <div className="max-h-[calc(100vh-16rem)] overflow-auto">
+            <div className="max-h-[calc(100vh-24rem)] overflow-auto">
               <Table>
-                <TableHeader className="sticky top-0 bg-secondary z-10">
-                  <TableRow>
-                    <TableHead className="w-[80px]">Sl. No.</TableHead>
-                    <TableHead className="w-[150px]">File No.</TableHead>
-                    <TableHead>Institution / Applicant Name</TableHead>
-                    <TableHead>Site Name(s)</TableHead>
-                    <TableHead>Purpose(s)</TableHead>
-                    <TableHead>Date of Remittance</TableHead> 
-                    <TableHead>File Status</TableHead>
-                    <TableHead className="text-center w-[180px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
                 <TableBody>
                   {paginatedEntries.map((entry, index) => {
                     const isFilePendingForSupervisor = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.isPending);
@@ -268,8 +268,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     
                     return (
                     <TableRow key={entry.fileNo}>
-                      <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                      <TableCell className="font-medium">{entry.fileNo}</TableCell>
+                      <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                      <TableCell className="font-medium w-[150px]">{entry.fileNo}</TableCell>
                       <TableCell>{entry.applicantName}</TableCell>
                       <TableCell>
                         {entry.siteDetails && entry.siteDetails.length > 0
@@ -293,7 +293,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                       <TableCell className={cn("font-semibold", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
                         {entry.fileStatus}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right w-[180px]">
                         <div className="flex items-center justify-end space-x-1">
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -535,7 +535,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
       </Dialog>
 
       {canDelete && (
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
             <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
