@@ -88,10 +88,14 @@ export function useAuth() {
         if (isAdminByEmail) {
             isApproved = true; // Main admin is always approved
             let staffInfo: { designation?: Designation } = {};
-            if (userDocSnap.exists() && userDocSnap.data().staffId) {
-                const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
-                const staffDocSnap = await getDoc(staffDocRef);
-                if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
+            try {
+              if (userDocSnap.exists() && userDocSnap.data().staffId) {
+                  const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
+                  const staffDocSnap = await getDoc(staffDocRef);
+                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
+              }
+            } catch (staffError) {
+                console.error("Error fetching admin's staff info, proceeding without it:", staffError);
             }
             const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
             userProfile = {
@@ -112,10 +116,14 @@ export function useAuth() {
             isApproved = userData.isApproved === true;
             
             let staffInfo: { designation?: Designation } = {};
-            if (userData.staffId) {
-                const staffDocRef = doc(db, "staffMembers", userData.staffId);
-                const staffDocSnap = await getDoc(staffDocRef);
-                if (staffDocSnap.exists()) staffInfo = staffDocSnap.data();
+            try {
+              if (userData.staffId) {
+                  const staffDocRef = doc(db, "staffMembers", userData.staffId);
+                  const staffDocSnap = await getDoc(staffDocRef);
+                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
+              }
+            } catch(staffError) {
+              console.error(`Error fetching staff info for user ${firebaseUser.uid}, proceeding without it:`, staffError);
             }
 
             userProfile = {
@@ -132,8 +140,6 @@ export function useAuth() {
         if (userProfile && userProfile.isApproved) {
             setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
         } else {
-            // This is the key logic: if a user exists but is not approved, sign them out and show a toast.
-            // If the profile doesn't exist at all, they also get signed out.
             if (auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
                 await signOut(auth);
             }
@@ -173,7 +179,6 @@ export function useAuth() {
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The onAuthStateChanged listener will handle the rest of the logic (profile fetching, approval check, etc.)
       return { success: true };
     } catch (error: any) {
       console.error(`[Auth] Login failed for ${email}:`, error);
@@ -225,17 +230,14 @@ export function useAuth() {
       return { success: false, error: { message: "You do not have permission to create users." } };
     }
   
-    // Create a temporary, secondary Firebase app instance to avoid session conflicts.
     const tempAppName = `temp-app-create-user-${Date.now()}`;
     const tempApp = initializeApp(app.options, tempAppName);
     const tempAuth = getAuth(tempApp);
   
     try {
-      // Create the new user in the temporary auth instance.
       const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
       const newFirebaseUser = userCredential.user;
   
-      // Create the user's profile in Firestore with default 'viewer' role and unapproved status.
       const userProfileData = {
         email: newFirebaseUser.email,
         name: name,
@@ -247,7 +249,6 @@ export function useAuth() {
       };
       await setDoc(doc(db, "users", newFirebaseUser.uid), userProfileData);
   
-      // Clean up: Sign out from the temporary instance and delete the app.
       await signOut(tempAuth);
       await deleteApp(tempApp);
   
@@ -258,7 +259,6 @@ export function useAuth() {
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = `The email address ${email} is already in use.`;
       }
-      // Clean up the temp app on failure as well.
       await deleteApp(tempApp).catch(e => console.error("Failed to delete temp app on error", e));
       return { success: false, error: { message: errorMessage, code: error.code } };
     }
@@ -329,7 +329,6 @@ export function useAuth() {
     const oldRole = userDocSnap.data().role;
     const userName = userDocSnap.data().name;
 
-    // --- Start: Un-assignment Logic ---
     if (oldRole === 'supervisor' && newRole !== 'supervisor') {
         const fileEntriesRef = collection(db, 'fileEntries');
         const q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', targetUserUid));
@@ -343,7 +342,6 @@ export function useAuth() {
             const updatedSiteDetails = fileData.siteDetails?.map((site: any) => {
                 if (site.supervisorUid === targetUserUid && ongoingStatuses.includes(site.workStatus)) {
                     wasModified = true;
-                    // Create notification for this specific un-assignment
                     const pendingUpdateData = {
                         fileNo: fileData.fileNo,
                         updatedSiteDetails: [{ nameOfSite: site.nameOfSite, purpose: site.purpose }],
@@ -378,7 +376,6 @@ export function useAuth() {
             });
         }
     }
-    // --- End: Un-assignment Logic ---
 
     try {
         const dataToUpdate: any = { role: newRole };
