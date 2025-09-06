@@ -16,7 +16,7 @@ import {
   updatePassword as firebaseUpdatePassword,
 } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, Timestamp, query, where } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, Timestamp, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { type UserRole, type Designation } from '@/lib/schemas';
 import { useToast } from "@/hooks/use-toast"; 
@@ -315,16 +315,76 @@ export function useAuth() {
     }
   }, [authState.user]);
 
-  const updateUserRole = useCallback(async (targetUserUid: string, role: UserRole, staffId?: string): Promise<void> => {
+  const updateUserRole = useCallback(async (targetUserUid: string, newRole: UserRole, staffId?: string): Promise<void> => {
     if (!authState.user || authState.user.role !== 'editor') {
         throw new Error("User does not have permission to update role.");
     }
+
+    const userDocRef = doc(db, "users", targetUserUid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (!userDocSnap.exists()) {
+        throw new Error("User profile not found.");
+    }
+
+    const oldRole = userDocSnap.data().role;
+    const userName = userDocSnap.data().name;
+
+    // --- Start: Un-assignment Logic ---
+    if (oldRole === 'supervisor' && newRole !== 'supervisor') {
+        const fileEntriesRef = collection(db, 'fileEntries');
+        const q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', targetUserUid));
+        const fileSnapshot = await getDocs(q);
+        const batch = writeBatch(db);
+        const ongoingStatuses = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+
+        fileSnapshot.forEach(fileDoc => {
+            const fileData = fileDoc.data();
+            let wasModified = false;
+            const updatedSiteDetails = fileData.siteDetails?.map((site: any) => {
+                if (site.supervisorUid === targetUserUid && ongoingStatuses.includes(site.workStatus)) {
+                    wasModified = true;
+                    // Create notification for this specific un-assignment
+                    const pendingUpdateData = {
+                        fileNo: fileData.fileNo,
+                        updatedSiteDetails: [{ nameOfSite: site.nameOfSite, purpose: site.purpose }],
+                        submittedByUid: authState.user!.uid,
+                        submittedByName: `${authState.user!.name} (System)`,
+                        status: 'supervisor-unassigned',
+                        notes: `Supervisor ${userName} removed from site while role was changed.`,
+                        submittedAt: serverTimestamp(),
+                    };
+                    const newPendingUpdateRef = doc(collection(db, "pendingUpdates"));
+                    batch.set(newPendingUpdateRef, pendingUpdateData);
+                    return { ...site, supervisorUid: null, supervisorName: null };
+                }
+                return site;
+            });
+
+            if (wasModified) {
+                const updatedAssignedUids = (fileData.assignedSupervisorUids || []).filter((uid: string) => uid !== targetUserUid);
+                batch.update(fileDoc.ref, { 
+                    siteDetails: updatedSiteDetails,
+                    assignedSupervisorUids: updatedAssignedUids
+                });
+            }
+        });
+
+        await batch.commit();
+        if (!fileSnapshot.empty) {
+            toast({
+                title: "Supervisor Un-assigned",
+                description: `${userName} was removed from their ongoing projects. Check 'Pending Updates' to re-assign.`,
+                duration: 7000
+            });
+        }
+    }
+    // --- End: Un-assignment Logic ---
+
     try {
-        const userDocRef = doc(db, "users", targetUserUid);
-        const dataToUpdate: any = { role };
+        const dataToUpdate: any = { role: newRole };
         if (staffId) {
             dataToUpdate.staffId = staffId;
-        } else if (role === 'viewer') { // If changing to viewer, unlink staffId
+        } else if (newRole === 'viewer') { 
             dataToUpdate.staffId = null;
         }
         await updateDoc(userDocRef, dataToUpdate);
@@ -332,7 +392,7 @@ export function useAuth() {
         console.error(`[Auth] Error updating role for target UID ${targetUserUid}. Firestore error:`, error);
         throw error;
     }
-  }, [authState.user]);
+  }, [authState.user, toast]);
 
   const deleteUserDocument = useCallback(async (targetUserUid: string): Promise<void> => {
     if (!authState.user || authState.user.role !== 'editor') {

@@ -1,3 +1,4 @@
+
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -65,7 +66,7 @@ export function usePendingUpdates(): PendingUpdatesState {
   
   const getPendingUpdatesForFile = useCallback(async (fileNo: string | null, submittedByUid?: string): Promise<PendingUpdate[]> => {
     try {
-        let conditions = [where('status', '==', 'pending')];
+        let conditions = [where('status', 'in', ['pending', 'supervisor-unassigned'])];
         if (fileNo) {
             conditions.push(where('fileNo', '==', fileNo));
         }
@@ -100,6 +101,7 @@ export function usePendingUpdates(): PendingUpdatesState {
     const existingUpdates = await getPendingUpdatesForFile(fileNo, currentUser.uid);
 
     for (const update of existingUpdates) {
+        if (update.status !== 'pending') continue; // Only check against pending updates
         for (const site of update.updatedSiteDetails) {
             if (siteNamesBeingUpdated.has(site.nameOfSite)) {
                 throw new Error(`An update for site "${site.nameOfSite}" is already pending approval. Please wait for the admin to review it.`);

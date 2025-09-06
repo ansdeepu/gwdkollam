@@ -1,3 +1,4 @@
+
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
@@ -5,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, UserX, AlertTriangle, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from '../ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function PendingUpdatesTable() {
   const { rejectUpdate, getPendingUpdatesForFile } = usePendingUpdates();
@@ -33,6 +41,7 @@ export default function PendingUpdatesTable() {
     const fetchUpdates = async () => {
       setIsLoading(true);
       const updates = await getPendingUpdatesForFile(null);
+      updates.sort((a,b) => b.submittedAt.getTime() - a.submittedAt.getTime());
       setPendingUpdates(updates);
       setIsLoading(false);
     };
@@ -75,7 +84,7 @@ export default function PendingUpdatesTable() {
   }
 
   return (
-    <>
+    <TooltipProvider>
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -83,37 +92,62 @@ export default function PendingUpdatesTable() {
               <TableHead>File No.</TableHead>
               <TableHead>Submitted By</TableHead>
               <TableHead>Date Submitted</TableHead>
-              <TableHead className="text-center">Sites Updated</TableHead>
+              <TableHead className="text-center">Details</TableHead>
               <TableHead className="text-center w-[200px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {pendingUpdates.length > 0 ? (
-              pendingUpdates.map((update) => (
+              pendingUpdates.map((update) => {
+                const isUnassigned = update.status === 'supervisor-unassigned';
+                return (
                 <TableRow key={update.id}>
                   <TableCell className="font-medium">{update.fileNo}</TableCell>
                   <TableCell>{update.submittedByName}</TableCell>
                   <TableCell>
                     {formatDistanceToNow(update.submittedAt, { addSuffix: true })}
                   </TableCell>
-                  <TableCell className="text-center">{update.updatedSiteDetails.length}</TableCell>
+                  <TableCell className="text-center">
+                    {isUnassigned ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Badge variant="destructive" className="bg-amber-500/20 text-amber-700 border-amber-500/50">
+                            <UserX className="mr-2 h-4 w-4" /> Supervisor Unassigned
+                          </Badge>
+                        </TooltipTrigger>
+                         <TooltipContent><p>{update.notes || "Supervisor role was changed."}</p></TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      `${update.updatedSiteDetails.length} site(s) updated`
+                    )}
+                  </TableCell>
                   <TableCell className="text-center space-x-2">
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/dashboard/data-entry?fileNo=${update.fileNo}&approveUpdateId=${update.id}`}>
-                        <CheckCircle className="mr-2 h-4 w-4" /> Approve
-                      </Link>
-                    </Button>
-                    <Button 
-                        size="sm" 
-                        variant="destructive" 
-                        onClick={() => setUpdateToReject(update.id)}
-                        disabled={isRejecting}
-                    >
-                      <XCircle className="mr-2 h-4 w-4" /> Reject
-                    </Button>
+                    {isUnassigned ? (
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/dashboard/data-entry?fileNo=${update.fileNo}`}>
+                          <UserPlus className="mr-2 h-4 w-4" /> Re-assign
+                        </Link>
+                      </Button>
+                    ) : (
+                      <>
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/dashboard/data-entry?fileNo=${update.fileNo}&approveUpdateId=${update.id}`}>
+                            <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                          </Link>
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => setUpdateToReject(update.id)}
+                            disabled={isRejecting}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" /> Reject
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
-              ))
+              )})
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
@@ -141,6 +175,6 @@ export default function PendingUpdatesTable() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </TooltipProvider>
   );
 }

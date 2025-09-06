@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -418,7 +419,8 @@ export const PendingUpdateFormDataSchema = z.object({
   submittedByUid: z.string(),
   submittedByName: z.string(),
   submittedAt: z.any(), // serverTimestamp()
-  status: z.enum(['pending', 'approved', 'rejected']),
+  status: z.enum(['pending', 'approved', 'rejected', 'supervisor-unassigned']),
+  notes: z.string().optional(),
 });
 export type PendingUpdateFormData = z.infer<typeof PendingUpdateFormDataSchema>;
 
