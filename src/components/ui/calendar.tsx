@@ -43,12 +43,12 @@ function Calendar({
         table: "w-full border-collapse",
         head_row: "grid grid-cols-7",
         head_cell:
-          "w-10 h-10 flex items-center justify-center text-sm font-semibold text-muted-foreground",
+          "w-9 h-9 flex items-center justify-center text-xs font-semibold text-muted-foreground",
         row: "grid grid-cols-7",
-        cell: "w-10 h-10 flex items-center justify-center text-center text-sm relative",
+        cell: "w-9 h-9 flex items-center justify-center text-center text-xs relative",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
+          "h-9 w-9 p-0 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
         ),
         day_today: "bg-accent/20 text-accent-foreground rounded-full",
         day_outside: "text-muted-foreground opacity-50",
