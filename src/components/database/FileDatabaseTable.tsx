@@ -247,7 +247,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
       <div className="space-y-4">
         <Card className="shadow-lg">
           <CardContent className="p-0">
-            <div className="max-h-[calc(100vh-22rem)] overflow-auto">
+            <div className="max-h-[calc(100vh-18rem)] overflow-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-secondary z-10">
                   <TableRow>
