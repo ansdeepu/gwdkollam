@@ -1,3 +1,4 @@
+
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
@@ -98,6 +99,7 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
   const shouldAnimateUpdates = noticeData.workAlerts.length > 5;
   const shouldAnimateBirthdays = noticeData.upcomingBirthdays.length > 2;
 
+  const updatesToDisplay = noticeData.workAlerts.slice(0, 5);
 
   return (
     <Card className="shadow-lg flex flex-col h-full">
@@ -189,19 +191,19 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
             </div>
         </div>
 
-        <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0">
+        <div className={cn("border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0", shouldAnimateUpdates && "marquee-v-container")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" />Important Updates ({noticeData.workAlerts.length})</h3>
           <div className={cn("no-scrollbar flex-1 relative h-full", shouldAnimateUpdates && "marquee-v-container")}>
-            <div className={cn("space-y-2 overflow-y-auto", shouldAnimateUpdates && "marquee-v-content", !shouldAnimateUpdates && "h-full")}>
-              {noticeData.workAlerts.length > 0 ? (
+            <div className={cn("space-y-2", shouldAnimateUpdates && "marquee-v-content", !shouldAnimateUpdates && "overflow-y-auto h-full")}>
+              {updatesToDisplay.length > 0 ? (
                 <>
-                  {noticeData.workAlerts.map((alert, index) => (
+                  {updatesToDisplay.map((alert, index) => (
                     <div key={index} className="p-2 rounded-md bg-amber-500/10">
                       <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
                       <p className="text-xs text-amber-600">{alert.details}</p>
                     </div>
                   ))}
-                  {shouldAnimateUpdates && noticeData.workAlerts.map((alert, index) => (
+                  {shouldAnimateUpdates && updatesToDisplay.map((alert, index) => (
                     <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10" aria-hidden="true">
                       <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
                       <p className="text-xs text-amber-600">{alert.details}</p>
@@ -220,3 +222,4 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
     </Card>
   );
 }
+
