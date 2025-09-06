@@ -129,17 +129,17 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
         </div>
         <div className="border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0">
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" />Important Updates ({noticeData.workAlerts.length})</h3>
-          <div className={cn("no-scrollbar flex-1 relative", shouldAnimateUpdates && "marquee-v-container")}>
+          <div className={cn("no-scrollbar flex-1 relative h-full", shouldAnimateUpdates && "marquee-v-container")}>
             {noticeData.workAlerts.length > 0 ? (
-              <div className={cn("absolute inset-0", shouldAnimateUpdates && "marquee-v-content")}>
+              <div className={cn("space-y-2 overflow-y-auto h-full", shouldAnimateUpdates && "marquee-v-content")}>
                 {noticeData.workAlerts.map((alert, index) => (
-                  <div key={index} className="p-2 rounded-md bg-amber-500/10 mb-2">
+                  <div key={index} className="p-2 rounded-md bg-amber-500/10">
                     <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
                     <p className="text-xs text-amber-600">{alert.details}</p>
                   </div>
                 ))}
                 {shouldAnimateUpdates && noticeData.workAlerts.map((alert, index) => (
-                  <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10 mb-2" aria-hidden="true">
+                  <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10" aria-hidden="true">
                     <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
                     <p className="text-xs text-amber-600">{alert.details}</p>
                   </div>
