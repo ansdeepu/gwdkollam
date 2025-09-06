@@ -106,7 +106,7 @@ const AgencyTable = ({
   searchTerm: string
 }) => (
     <Card>
-        <div className="max-h-[calc(100vh-28rem)] overflow-auto">
+        <div className="max-h-[calc(100vh-32rem)] overflow-auto">
             <Table>
                 <TableBody>
                     {applications.length > 0 ? (
@@ -375,6 +375,8 @@ export default function AgencyRegistrationPage() {
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: string }>({ rigIndex: -1, reason: '', date: '' });
+  
+  const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const isEditor = user?.role === 'editor';
 
@@ -594,6 +596,18 @@ export default function AgencyRegistrationPage() {
     const handleDeleteRenewal = (rigIndex: number, renewalId: string) => {
         setDeletingRenewal({ rigIndex, renewalId });
     };
+    
+    const handleDeleteApplication = (id: string) => {
+      setDeletingApplicationId(id);
+    };
+
+    const confirmDeleteApplication = async () => {
+      if (!deletingApplicationId) return;
+      setIsSubmitting(true);
+      await deleteApplication(deletingApplicationId);
+      setIsSubmitting(false);
+      setDeletingApplicationId(null);
+    };
 
   const handleConfirmRenewal = () => {
       if (editingRenewal) { // Handle editing an existing renewal
@@ -769,7 +783,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 3: Rig Registrations */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger>3. Rig Registrations ({rigFields.length} Total)</AccordionTrigger>
+                            <AccordionTrigger>3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
                               <Accordion type="multiple" className="w-full space-y-2">
                                 {rigFields.map((field, index) => (
@@ -939,32 +953,48 @@ export default function AgencyRegistrationPage() {
                   <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
               </Button>
           </div>
+          <Tabs defaultValue="completed" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
+                <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="completed" className="mt-4 space-y-2">
+                <RegistrationTableHeader />
+                <AgencyTable 
+                    applications={completedApplications} 
+                    onEdit={(id) => setSelectedApplicationId(id)}
+                    onDelete={handleDeleteApplication}
+                    searchTerm={searchTerm}
+                />
+            </TabsContent>
+            <TabsContent value="pending" className="mt-4 space-y-2">
+                <RegistrationTableHeader />
+                <AgencyTable 
+                    applications={pendingApplications} 
+                    onEdit={(id) => setSelectedApplicationId(id)}
+                    onDelete={handleDeleteApplication}
+                    searchTerm={searchTerm}
+                />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
-      <Tabs defaultValue="completed">
-        <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="completed" className="mt-4 space-y-2">
-            <RegistrationTableHeader />
-            <AgencyTable 
-                applications={completedApplications} 
-                onEdit={(id) => setSelectedApplicationId(id)}
-                onDelete={(id) => deleteApplication(id)}
-                searchTerm={searchTerm}
-            />
-        </TabsContent>
-        <TabsContent value="pending" className="mt-4 space-y-2">
-            <RegistrationTableHeader />
-            <AgencyTable 
-                applications={pendingApplications} 
-                onEdit={(id) => setSelectedApplicationId(id)}
-                onDelete={(id) => deleteApplication(id)}
-                searchTerm={searchTerm}
-            />
-        </TabsContent>
-      </Tabs>
+      <AlertDialog open={!!deletingApplicationId} onOpenChange={() => setDeletingApplicationId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete the registration for <strong>{applications.find(a => a.id === deletingApplicationId)?.agencyName}</strong>. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteApplication} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
