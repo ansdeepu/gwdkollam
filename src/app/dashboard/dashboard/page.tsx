@@ -13,6 +13,7 @@ import type { SiteDetailFormData, SiteWorkStatus, SitePurpose, AgencyApplication
 import { format, addYears } from 'date-fns';
 import FileStatusOverview from '@/components/dashboard/FileStatusOverview';
 import NoticeBoard from '@/components/dashboard/NoticeBoard';
+import ImportantUpdates from '@/components/dashboard/ImportantUpdates';
 import WorkStatusByService from '@/components/dashboard/WorkStatusByService';
 import ArsStatusOverview from '@/components/dashboard/ArsStatusOverview';
 import RigRegistrationOverview from '@/components/dashboard/RigRegistrationOverview';
@@ -20,6 +21,7 @@ import WorkProgress from '@/components/dashboard/WorkProgress';
 import UserActivity from '@/components/dashboard/UserActivity';
 import SupervisorWork from '@/components/dashboard/SupervisorWork';
 import DashboardDialogs from '@/components/dashboard/DashboardDialogs';
+import FinanceOverview from '@/components/dashboard/FinanceOverview';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -54,7 +56,7 @@ export default function DashboardPage() {
     title: "",
     data: [] as any[],
     columns: [] as { key: string; label: string; isNumeric?: boolean; }[],
-    type: 'detail' as 'detail' | 'rig' | 'age' | 'month' | 'fileStatus'
+    type: 'detail' as 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance'
   });
   const [financeDates, setFinanceDates] = useState<{ start?: Date, end?: Date }>({});
   const [arsDates, setArsDates] = useState<{ start?: Date, end?: Date }>({});
@@ -137,7 +139,7 @@ export default function DashboardPage() {
     data: any[],
     title: string,
     columns: { key: string; label: string; isNumeric?: boolean; }[],
-    type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus'
+    type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance'
   ) => {
     setDialogState({ isOpen: true, data, title, columns, type });
   }, []);
@@ -198,16 +200,20 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           <FileStatusOverview 
             nonArsEntries={dashboardData.nonArsEntries}
             onOpenDialog={handleOpenDialog}
           />
         </div>
+         <div className="lg:col-span-1 space-y-6">
+          <ImportantUpdates
+            allFileEntries={dashboardData.allFileEntries}
+          />
+        </div>
         <div className="lg:col-span-2 space-y-6">
           <NoticeBoard 
             staffMembers={dashboardData.staffMembers}
-            allFileEntries={dashboardData.allFileEntries}
           />
         </div>
       </div>
@@ -216,6 +222,13 @@ export default function DashboardPage() {
         allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
+      />
+
+      <FinanceOverview 
+        allFileEntries={allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        dates={financeDates}
+        onSetDates={setFinanceDates}
       />
       
       <ArsStatusOverview 

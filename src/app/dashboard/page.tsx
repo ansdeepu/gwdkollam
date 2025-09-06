@@ -13,6 +13,7 @@ import type { SiteDetailFormData, SiteWorkStatus, SitePurpose, AgencyApplication
 import { format, addYears } from 'date-fns';
 import FileStatusOverview from '@/components/dashboard/FileStatusOverview';
 import NoticeBoard from '@/components/dashboard/NoticeBoard';
+import ImportantUpdates from '@/components/dashboard/ImportantUpdates';
 import WorkStatusByService from '@/components/dashboard/WorkStatusByService';
 import ArsStatusOverview from '@/components/dashboard/ArsStatusOverview';
 import RigRegistrationOverview from '@/components/dashboard/RigRegistrationOverview';
@@ -199,16 +200,20 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           <FileStatusOverview 
             nonArsEntries={dashboardData.nonArsEntries}
             onOpenDialog={handleOpenDialog}
           />
         </div>
+         <div className="lg:col-span-1 space-y-6">
+          <ImportantUpdates
+            allFileEntries={dashboardData.allFileEntries}
+          />
+        </div>
         <div className="lg:col-span-2 space-y-6">
           <NoticeBoard 
             staffMembers={dashboardData.staffMembers}
-            allFileEntries={dashboardData.allFileEntries}
           />
         </div>
       </div>
