@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid, parse, format, parseISO } from 'date-fns';
 import { Button } from "@/components/ui/button";
+import { usePageHeader } from "@/hooks/usePageHeader";
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -84,6 +85,7 @@ export default function DataEntryPage() {
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
   const { getPendingUpdateById } = usePendingUpdates();
   const { toast } = useToast();
+  const { setHeader } = usePageHeader();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
@@ -92,30 +94,30 @@ export default function DataEntryPage() {
 
   const processDataForForm = (data: any): any => {
     if (!data) return data;
-
-    const transform = (value: any): any => {
-        if (value === null || value === undefined) {
-            return value;
-        }
-        if (Array.isArray(value)) {
-            return value.map(transform);
-        }
-        if (typeof value === 'object') {
-            const newObj: { [key: string]: any } = {};
-            for (const key in value) {
-                if (Object.prototype.hasOwnProperty.call(value, key)) {
-                    if (key.toLowerCase().includes('date')) {
-                        const date = safeParseDate(value[key]);
-                        // Ensure it's a 'yyyy-MM-dd' string or an empty string for the input
-                        newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
-                    } else {
-                        newObj[key] = transform(value[key]);
-                    }
-                }
+  
+    const transform = (obj: any): any => {
+      if (!obj) return obj;
+  
+      if (Array.isArray(obj)) {
+        return obj.map(transform);
+      }
+  
+      if (typeof obj === 'object') {
+        const newObj: { [key: string]: any } = {};
+        for (const key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const value = obj[key];
+            if (key.toLowerCase().includes('date')) {
+              const date = safeParseDate(value);
+              newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
+            } else {
+              newObj[key] = transform(value);
             }
-            return newObj;
+          }
         }
-        return value;
+        return newObj;
+      }
+      return obj;
     };
     
     return transform(data);
@@ -227,7 +229,8 @@ export default function DataEntryPage() {
 
     setPageTitle(title);
     setPageDescription(description);
-  }, [fileNoToEdit, user, approveUpdateId]);
+    setHeader(title, description); // Update the main header
+  }, [fileNoToEdit, user, approveUpdateId, setHeader]);
 
 
   const supervisorList = useMemo(() => {
@@ -284,7 +287,7 @@ export default function DataEntryPage() {
                 <CardTitle className="text-2xl tracking-tight">{pageTitle}</CardTitle>
                 <CardDescription>{pageDescription}</CardDescription>
             </div>
-             <Button variant="outline" size="sm" onClick={() => router.back()}>
+             <Button variant="destructive" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
           </Button>
