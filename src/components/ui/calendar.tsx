@@ -44,18 +44,18 @@ function Calendar({
         table: "w-full border-collapse table-fixed", // fix width
         head_row: "table-row",
         head_cell:
-          "!table-cell !text-center !text-xs !font-semibold !text-muted-foreground !p-1",
+          "table-cell text-center text-xs font-semibold text-muted-foreground p-1",
         row: "table-row",
-        cell: "!table-cell !text-center !align-middle !p-1",
+        cell: "table-cell text-center align-middle p-1",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "!p-0 !w-8 !h-8 !font-normal !rounded-full !aria-selected:bg-primary !aria-selected:text-primary-foreground"
+          "p-0 w-8 h-8 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
         ),
-        day_today: "!bg-accent/20 !text-accent-foreground !rounded-full",
-        day_outside: "!text-muted-foreground !opacity-50",
-        day_disabled: "!text-muted-foreground !opacity-50",
-        day_hidden: "!invisible",
-        day_sunday: "!text-red-600 !font-semibold", // Sundays in red
+        day_today: "bg-accent/20 text-accent-foreground rounded-full",
+        day_outside: "text-muted-foreground opacity-50",
+        day_disabled: "text-muted-foreground opacity-50",
+        day_hidden: "invisible",
+        day_sunday: "text-red-600 font-semibold", // Sundays in red
         ...classNames,
       }}
       components={{

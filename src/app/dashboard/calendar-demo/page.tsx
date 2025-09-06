@@ -1,3 +1,4 @@
+
 // src/app/dashboard/calendar-demo/page.tsx
 "use client";
 
@@ -49,7 +50,6 @@ export default function CalendarDemoPage() {
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="rounded-md border"
           />
         </CardContent>
       </Card>
@@ -152,7 +152,6 @@ export default function CalendarDemoPage() {
                 modifiers={{
                     saturdays: { dayOfWeek: [6] }, // Saturday
                 }}
-                className="rounded-md border"
             />
         </CardContent>
       </Card>
@@ -169,7 +168,6 @@ export default function CalendarDemoPage() {
             selected={date}
             onSelect={setDate}
             numberOfMonths={3}
-            className="rounded-md border"
           />
         </CardContent>
       </Card>
