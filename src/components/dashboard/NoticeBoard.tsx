@@ -1,4 +1,3 @@
-
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
@@ -7,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Megaphone, Cake, Bell, Gift, PartyPopper } from "lucide-react";
+import { Megaphone, Cake, Gift, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { StaffMember, DataEntryFormData, SiteWorkStatus, Designation } from '@/lib/schemas';
+import type { StaffMember, Designation } from '@/lib/schemas';
 import { isValid, format } from 'date-fns';
 
 const hashCode = (str: string): number => {
@@ -43,17 +42,14 @@ const getInitials = (name?: string) => {
 
 interface NoticeBoardProps {
   staffMembers: StaffMember[];
-  allFileEntries: DataEntryFormData[];
 }
 
-export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoardProps) {
+export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
   const [selectedBirthday, setSelectedBirthday] = useState<(typeof noticeData.todaysBirthdays)[0] | null>(null);
   
   const noticeData = useMemo(() => {
     const todaysBirthdays: { name: string, designation?: Designation, photoUrl?: string | null }[] = [];
     const upcomingBirthdaysInMonth: { name: string; designation?: Designation; photoUrl?: string | null; dateOfBirth: Date }[] = [];
-    const workAlertsMap = new Map<string, { title: string; details: string; }>();
-    const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
     const today = new Date();
     const todayMonth = today.getMonth();
@@ -77,29 +73,13 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
 
     upcomingBirthdaysInMonth.sort((a, b) => a.dateOfBirth.getDate() - b.dateOfBirth.getDate());
 
-    for (const entry of allFileEntries) {
-      entry.siteDetails?.forEach(site => {
-        if (site.workStatus && siteWorkStatusAlerts.includes(site.workStatus as SiteWorkStatus)) {
-          const details = `Site: ${site.nameOfSite || 'Unnamed Site'}, App: ${entry.applicantName}, File: ${entry.fileNo}`;
-          const key = `${entry.fileNo}-${site.nameOfSite}-${site.workStatus}`;
-          if (!workAlertsMap.has(key)) {
-            workAlertsMap.set(key, { title: site.workStatus, details });
-          }
-        }
-      });
-    }
-
     return {
       todaysBirthdays,
       upcomingBirthdays: upcomingBirthdaysInMonth,
-      workAlerts: Array.from(workAlertsMap.values()),
     };
-  }, [staffMembers, allFileEntries]);
+  }, [staffMembers]);
 
-  const shouldAnimateUpdates = noticeData.workAlerts.length > 3;
   const shouldAnimateBirthdays = noticeData.upcomingBirthdays.length > 2;
-
-  const updatesToDisplay = noticeData.workAlerts.slice(0, 3);
 
   return (
     <Card className="shadow-lg flex flex-col h-full">
@@ -189,34 +169,6 @@ export default function NoticeBoard({ staffMembers, allFileEntries }: NoticeBoar
                 )}
               </div>
             </div>
-        </div>
-
-        <div className={cn("border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0", shouldAnimateUpdates && "marquee-v-container")}>
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4 text-amber-500" />Important Updates ({noticeData.workAlerts.length})</h3>
-          <div className={cn("no-scrollbar flex-1 relative h-full", shouldAnimateUpdates && "marquee-v-container")}>
-            <div className={cn("space-y-2", shouldAnimateUpdates && "marquee-v-content", !shouldAnimateUpdates && "overflow-y-auto h-full")}>
-              {updatesToDisplay.length > 0 ? (
-                <>
-                  {updatesToDisplay.map((alert, index) => (
-                    <div key={index} className="p-2 rounded-md bg-amber-500/10">
-                      <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
-                      <p className="text-xs text-amber-600">{alert.details}</p>
-                    </div>
-                  ))}
-                  {shouldAnimateUpdates && updatesToDisplay.map((alert, index) => (
-                    <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10" aria-hidden="true">
-                      <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
-                      <p className="text-xs text-amber-600">{alert.details}</p>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <p className="text-sm text-muted-foreground italic">No important updates.</p>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>
