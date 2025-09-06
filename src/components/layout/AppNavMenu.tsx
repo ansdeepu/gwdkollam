@@ -37,7 +37,6 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
   { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
   { href: '/dashboard/help', label: 'Help & About', icon: HelpCircle },
-  { href: '/dashboard/calendar-demo', label: 'Calendar Demo', icon: Calendar, isTemp: true },
 ];
 
 export default function AppNavMenu() {
