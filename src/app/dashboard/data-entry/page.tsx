@@ -93,33 +93,31 @@ export default function DataEntryPage() {
   const [pageDescription, setPageDescription] = useState("Loading...");
 
   const processDataForForm = (data: any): any => {
-    if (!data) return data;
-  
     const transform = (obj: any): any => {
-      if (!obj) return obj;
-  
-      if (Array.isArray(obj)) {
-        return obj.map(transform);
-      }
-  
-      if (typeof obj === 'object') {
-        const newObj: { [key: string]: any } = {};
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const value = obj[key];
-            if (key.toLowerCase().includes('date')) {
-              const date = safeParseDate(value);
-              newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
-            } else {
-              newObj[key] = transform(value);
-            }
-          }
+        if (obj === null || obj === undefined) return obj;
+
+        if (Array.isArray(obj)) {
+            return obj.map(transform);
         }
-        return newObj;
-      }
-      return obj;
+
+        if (typeof obj === 'object') {
+            const newObj: { [key: string]: any } = {};
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    const value = obj[key];
+                    if (key.toLowerCase().includes('date')) {
+                        const date = safeParseDate(value);
+                        // Format valid dates, otherwise set to empty string
+                        newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
+                    } else {
+                        newObj[key] = transform(value);
+                    }
+                }
+            }
+            return newObj;
+        }
+        return obj;
     };
-    
     return transform(data);
   };
 
@@ -282,15 +280,17 @@ export default function DataEntryPage() {
   return (
     <div className="space-y-6">
       <Card className="shadow-lg">
-        <CardHeader className="flex flex-row items-start justify-between">
-            <div>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+              <div className="flex-1">
                 <CardTitle className="text-2xl tracking-tight">{pageTitle}</CardTitle>
                 <CardDescription>{pageDescription}</CardDescription>
-            </div>
-             <Button variant="destructive" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-          </Button>
+              </div>
+              <Button variant="destructive" size="sm" onClick={() => router.back()}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+              </Button>
+          </div>
         </CardHeader>
         <CardContent className="pt-6">
           {pageData ? (
