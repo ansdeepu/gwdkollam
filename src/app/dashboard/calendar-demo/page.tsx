@@ -156,6 +156,23 @@ export default function CalendarDemoPage() {
             />
         </CardContent>
       </Card>
+      
+       {/* Card 5: Multi-Month View */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle>Multi-Month View</CardTitle>
+          <CardDescription>An inline calendar showing multiple months.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            numberOfMonths={3}
+            className="rounded-md border"
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
