@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -45,10 +44,10 @@ function Calendar({
         head_cell:
           "flex items-center justify-center text-xs font-semibold text-muted-foreground",
         row: "grid grid-cols-7",
-        cell: "flex items-center justify-center text-center text-xs relative",
+        cell: "flex items-center justify-center text-xs relative",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
+          "p-0 font-normal rounded-full aria-selected:bg-primary aria-selected:text-primary-foreground"
         ),
         day_today: "bg-accent/20 text-accent-foreground rounded-full",
         day_outside: "text-muted-foreground opacity-50",
