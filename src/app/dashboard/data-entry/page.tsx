@@ -98,7 +98,7 @@ export default function DataEntryPage() {
         for (const key in newObj) {
             if (key.toLowerCase().includes('date') && newObj[key]) {
                 const date = safeParseDate(newObj[key]);
-                newObj[key] = date ? format(date, 'yyyy-MM-dd') : undefined;
+                newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
             }
         }
         return newObj;
