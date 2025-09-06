@@ -140,9 +140,6 @@ export function useAuth() {
         if (userProfile && userProfile.isApproved) {
             setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
         } else {
-            if (auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
-                await signOut(auth);
-            }
             setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
             
             if (userProfile && !userProfile.isApproved) {
