@@ -639,110 +639,115 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-lg no-print">
+      <Card className="shadow-lg">
           <CardHeader>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
-              <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
-              <Input type="date" placeholder="To Date" className="w-full sm:w-auto" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
+                <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
+                <Input type="date" placeholder="To Date" className="w-full sm:w-auto" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
 
-              <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>
-                  {isFiltering ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Play className="mr-2 h-4 w-4" />}
-                  Generate Report
-              </Button>
-              <Button onClick={handleResetFilters} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Clear
-              </Button>
-              <Button onClick={handleExportExcel} disabled={!reportData || isFiltering} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-                  <FileDown className="mr-2 h-4 w-4" />
-                  Export Excel
-              </Button>
-          </div>
+                <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>
+                    {isFiltering ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Play className="mr-2 h-4 w-4" />}
+                    Generate Report
+                </Button>
+                <Button onClick={handleResetFilters} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Clear
+                </Button>
+                <Button onClick={handleExportExcel} disabled={!reportData || isFiltering} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Export Excel
+                </Button>
+            </div>
           </CardHeader>
       </Card>
-      
-      {isFiltering ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="ml-2 text-muted-foreground">Generating reports...</p>
-        </div>
-      ) : reportData ? (
-        <div className="space-y-8">
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle>Progress Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="relative overflow-x-auto">
-                    <Table className="min-w-full border-collapse">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="border p-2 align-middle text-center font-semibold">Service Type</TableHead>
-                            <TableHead className="border p-2 text-center font-semibold">Previous Balance</TableHead>
-                            <TableHead className="border p-2 text-center font-semibold">Current Application</TableHead>
-                            <TableHead className="border p-2 text-center font-semibold">To be refunded</TableHead>
-                            <TableHead className="border p-2 text-center font-bold">Total Application</TableHead>
-                            <TableHead className="border p-2 text-center font-semibold">Completed</TableHead>
-                            <TableHead className="border p-2 text-center font-bold">Balance</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {allServicePurposesForSummary.map(purpose => {
-                           const stats = reportData.progressSummaryData[purpose];
-                           return (
-                            <TableRow key={purpose}>
-                                <TableCell className="border p-2 font-medium">{purpose}</TableCell>
-                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.previousBalance === 0} onClick={() => handleCountClick(stats.previousBalanceData, `${purpose} - Previous Balance`)}>{stats?.previousBalance || 0}</Button></TableCell>
-                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.currentApplications === 0} onClick={() => handleCountClick(stats.currentApplicationsData, `${purpose} - Current Applications`)}>{stats?.currentApplications || 0}</Button></TableCell>
-                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.toBeRefunded === 0} onClick={() => handleCountClick(stats.toBeRefundedData, `${purpose} - To be Refunded`)}>{stats?.toBeRefunded || 0}</Button></TableCell>
-                                <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.totalApplications === 0} onClick={() => handleCountClick(stats.totalApplicationsData, `Site Details for ${purpose} Applications`)}>{stats?.totalApplications || 0}</Button></TableCell>
-                                <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.completed === 0} onClick={() => handleCountClick(stats.completedData, `${purpose} - Completed`)}>{stats?.completed || 0}</Button></TableCell>
-                                <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.balance === 0} onClick={() => handleCountClick(stats.balanceData, `${purpose} - Balance`)}>{stats?.balance || 0}</Button></TableCell>
+
+      <div className="space-y-8">
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Progress Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {isFiltering ? (
+                    <div className="flex items-center justify-center py-10">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="ml-2 text-muted-foreground">Generating reports...</p>
+                    </div>
+                ) : reportData ? (
+                    <div className="relative overflow-x-auto">
+                        <Table className="min-w-full border-collapse">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="border p-2 align-middle text-center font-semibold">Service Type</TableHead>
+                                <TableHead className="border p-2 text-center font-semibold">Previous Balance</TableHead>
+                                <TableHead className="border p-2 text-center font-semibold">Current Application</TableHead>
+                                <TableHead className="border p-2 text-center font-semibold">To be refunded</TableHead>
+                                <TableHead className="border p-2 text-center font-bold">Total Application</TableHead>
+                                <TableHead className="border p-2 text-center font-semibold">Completed</TableHead>
+                                <TableHead className="border p-2 text-center font-bold">Balance</TableHead>
                             </TableRow>
-                        )})}
-                    </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-            </Card>
+                        </TableHeader>
+                        <TableBody>
+                            {allServicePurposesForSummary.map(purpose => {
+                               const stats = reportData.progressSummaryData[purpose];
+                               return (
+                                <TableRow key={purpose}>
+                                    <TableCell className="border p-2 font-medium">{purpose}</TableCell>
+                                    <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.previousBalance === 0} onClick={() => handleCountClick(stats.previousBalanceData, `${purpose} - Previous Balance`)}>{stats?.previousBalance || 0}</Button></TableCell>
+                                    <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.currentApplications === 0} onClick={() => handleCountClick(stats.currentApplicationsData, `${purpose} - Current Applications`)}>{stats?.currentApplications || 0}</Button></TableCell>
+                                    <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.toBeRefunded === 0} onClick={() => handleCountClick(stats.toBeRefundedData, `${purpose} - To be Refunded`)}>{stats?.toBeRefunded || 0}</Button></TableCell>
+                                    <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.totalApplications === 0} onClick={() => handleCountClick(stats.totalApplicationsData, `Site Details for ${purpose} Applications`)}>{stats?.totalApplications || 0}</Button></TableCell>
+                                    <TableCell className="border p-2 text-center"><Button variant="link" className="p-0 h-auto" disabled={stats?.completed === 0} onClick={() => handleCountClick(stats.completedData, `${purpose} - Completed`)}>{stats?.completed || 0}</Button></TableCell>
+                                    <TableCell className="border p-2 text-center font-bold"><Button variant="link" className="p-0 h-auto font-bold" disabled={stats?.balance === 0} onClick={() => handleCountClick(stats.balanceData, `${purpose} - Balance`)}>{stats?.balance || 0}</Button></TableCell>
+                                </TableRow>
+                            )})}
+                        </TableBody>
+                        </Table>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center py-10 border-2 border-dashed rounded-lg">
+                        <p className="text-muted-foreground">Select a date range and click "Generate Report" to view progress.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+      
+        {reportData && (
+            <div className="space-y-8">
+                <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
+                <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
+                
+                 <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Landmark className="h-5 w-5 text-primary" />
+                      Revenue Head Summary
+                    </CardTitle>
+                    <CardDescription>
+                      Total amount credited to the Revenue Head within the selected period.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <button
+                      className="flex w-full flex-col items-center justify-center rounded-lg bg-secondary/30 p-6 text-center transition-colors hover:bg-secondary/50 disabled:cursor-not-allowed disabled:opacity-70"
+                      onClick={() => handleCountClick(reportData.revenueHeadCreditData, `Revenue Head Credit Details`)}
+                      disabled={reportData.totalRevenueHeadCredit === 0}
+                    >
+                      <span className="text-sm font-medium text-muted-foreground">Total Credited Amount</span>
+                      <span className="text-3xl font-bold text-primary">
+                        ₹{reportData.totalRevenueHeadCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </button>
+                  </CardContent>
+                </Card>
 
-            <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
-            <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
-            
-             <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Landmark className="h-5 w-5 text-primary" />
-                  Revenue Head Summary
-                </CardTitle>
-                <CardDescription>
-                  Total amount credited to the Revenue Head within the selected period.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <button
-                  className="flex w-full flex-col items-center justify-center rounded-lg bg-secondary/30 p-6 text-center transition-colors hover:bg-secondary/50 disabled:cursor-not-allowed disabled:opacity-70"
-                  onClick={() => handleCountClick(reportData.revenueHeadCreditData, `Revenue Head Credit Details`)}
-                  disabled={reportData.totalRevenueHeadCredit === 0}
-                >
-                  <span className="text-sm font-medium text-muted-foreground">Total Credited Amount</span>
-                  <span className="text-3xl font-bold text-primary">
-                    ₹{reportData.totalRevenueHeadCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </button>
-              </CardContent>
-            </Card>
+                <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['110 mm (4.5”)']} onCountClick={handleCountClick} />
+                <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
+                <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
+                <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['200 mm (8”)']} onCountClick={handleCountClick} />
+            </div>
+        )}
+      </div>
 
-            <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['110 mm (4.5”)']} onCountClick={handleCountClick} />
-            <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
-            <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
-            <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['200 mm (8”)']} onCountClick={handleCountClick} />
-        </div>
-      ) : (
-        <div className="flex items-center justify-center py-10 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">Select a date range and click "Generate Report" to view progress.</p>
-        </div>
-      )}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-4xl flex flex-col h-[90vh]">
           <DialogHeader className="p-6 pb-4 border-b">
@@ -790,3 +795,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
