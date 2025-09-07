@@ -762,13 +762,10 @@ export default function AgencyRegistrationPage() {
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Card>
-                    <CardHeader>
-                        <div className="flex justify-between items-center">
-                            <CardTitle>{isViewing ? 'View Rig Registration' : (selectedApplicationId === 'new' ? 'New Rig Registration' : 'Edit Rig Registration')}</CardTitle>
-                            <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
-                                <ArrowLeft className="mr-2 h-4 w-4"/> Back
-                            </Button>
-                        </div>
+                    <CardHeader className="flex flex-row justify-end items-center">
+                        <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                        </Button>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-8">
                         {/* Section 1: Application Details */}
