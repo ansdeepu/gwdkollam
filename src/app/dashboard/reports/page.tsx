@@ -209,6 +209,25 @@ export default function ReportsPage() {
       });
     }
 
+    // Sort entries by the first remittance date in descending order
+    currentEntries.sort((a, b) => {
+        const dateA = a.remittanceDetails?.[0]?.dateOfRemittance;
+        const dateB = b.remittanceDetails?.[0]?.dateOfRemittance;
+
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        
+        try {
+            const parsedDateA = new Date(dateA);
+            const parsedDateB = new Date(dateB);
+            if (!isValid(parsedDateA)) return 1;
+            if (!isValid(parsedDateB)) return -1;
+            return parsedDateB.getTime() - parsedDateA.getTime();
+        } catch {
+            return 0; // Fallback if date parsing fails
+        }
+    });
+
     // --- End Filtering `currentEntries` ---
 
     // --- Start Flattening logic ---
@@ -537,40 +556,40 @@ export default function ReportsPage() {
         {(currentDate && currentTime) && (<p className="text-xs text-muted-foreground">Report generated on: {currentDate} at {currentTime}</p>)}
       </div>
       
-      <Card className="card-for-print shadow-lg">
-        <CardContent className="p-0">
-          <div className="relative max-h-[70vh] overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[6%]">Sl. No.</TableHead>
-                  <TableHead className="w-[12%]">File No</TableHead>
-                  <TableHead className="w-[20%]">Applicant Name</TableHead>
-                  <TableHead className="w-[20%]">Site Name</TableHead>
-                  <TableHead className="w-[10%]">Date of Remittance</TableHead>
-                  <TableHead className="w-[12%]">File Status</TableHead>
-                  <TableHead className="w-[12%]">Site Work Status</TableHead>
-                  <TableHead className="text-center w-[8%]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <ReportTable
-                data={paginatedReportRows}
-                onViewDetailsClick={handleOpenViewDialog}
-                currentPage={currentPage}
-                itemsPerPage={ITEMS_PER_PAGE}
-              />
-            </Table>
-          </div>
-        </CardContent>
-        <CardFooter className="p-4 border-t flex items-center justify-center">
-            {totalPages > 1 && (
-                <PaginationControls 
-                    currentPage={currentPage} 
-                    totalPages={totalPages} 
-                    onPageChange={setCurrentPage} 
+       <Card className="card-for-print shadow-lg">
+          <CardContent className="p-0">
+            <div className="relative max-h-[70vh] overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[6%]">Sl. No.</TableHead>
+                    <TableHead className="w-[12%]">File No</TableHead>
+                    <TableHead className="w-[20%]">Applicant Name</TableHead>
+                    <TableHead className="w-[20%]">Site Name</TableHead>
+                    <TableHead className="w-[10%]">Date of Remittance</TableHead>
+                    <TableHead className="w-[12%]">File Status</TableHead>
+                    <TableHead className="w-[12%]">Site Work Status</TableHead>
+                    <TableHead className="text-center w-[8%]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <ReportTable
+                  data={paginatedReportRows}
+                  onViewDetailsClick={handleOpenViewDialog}
+                  currentPage={currentPage}
+                  itemsPerPage={ITEMS_PER_PAGE}
                 />
-            )}
-        </CardFooter>
+              </Table>
+            </div>
+          </CardContent>
+          <CardFooter className="p-4 border-t flex items-center justify-center">
+              {totalPages > 1 && (
+                  <PaginationControls 
+                      currentPage={currentPage} 
+                      totalPages={totalPages} 
+                      onPageChange={setCurrentPage} 
+                  />
+              )}
+          </CardFooter>
       </Card>
 
       {/* View Details Dialog */}
@@ -737,3 +756,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
