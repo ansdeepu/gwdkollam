@@ -128,13 +128,6 @@ export default function CustomReportBuilder() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h3 className="text-lg font-semibold flex items-center gap-2"><Filter className="h-5 w-5 text-primary"/>Select Report Filters & Fields</h3>
-        <p className="text-sm text-muted-foreground">
-          Optionally, choose a date range (based on first remittance date) and the columns you want to include in your custom report.
-        </p>
-      </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
         <div className="space-y-2">
             <Label htmlFor="from-date">From Date</Label>
