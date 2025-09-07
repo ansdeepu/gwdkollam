@@ -1,3 +1,4 @@
+
 // src/components/establishment/TransferredStaffTable.tsx
 "use client";
 
@@ -80,6 +81,7 @@ export default function TransferredStaffTable({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">Sl. No.</TableHead>
               <TableHead className="w-[80px] px-2 py-2 text-center">Photo</TableHead>
               <TableHead className="px-2 py-2 text-center">Name</TableHead>
               <TableHead className="px-2 py-2 text-center">Designation</TableHead>
@@ -91,10 +93,11 @@ export default function TransferredStaffTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedStaff.length > 0 ? paginatedStaff.map((staff) => {
+            {paginatedStaff.length > 0 ? paginatedStaff.map((staff, index) => {
               const canExpandAvatar = staff.photoUrl && !isPlaceholderUrl(staff.photoUrl) && onImageClick;
               return (
               <TableRow key={staff.id}>
+                <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                 <TableCell className="px-2 py-2 text-center">
                   <button
                     type="button"
@@ -170,7 +173,7 @@ export default function TransferredStaffTable({
               </TableRow>
             )}) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center px-2 py-2"> 
+                <TableCell colSpan={9} className="h-24 text-center px-2 py-2"> 
                   {searchActive ? "No staff members found matching your search." : "No transferred staff members found."}
                 </TableCell>
               </TableRow>

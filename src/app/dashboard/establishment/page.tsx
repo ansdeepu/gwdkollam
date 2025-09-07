@@ -277,11 +277,6 @@ export default function EstablishmentPage() {
   const transferredStaffCount = transferredStaffList.length;
   const retiredStaffCount = retiredStaffList.length;
 
-  const totalActiveStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Active').length, [staffMembers]);
-  const totalTransferredStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Transferred').length, [staffMembers]);
-  const totalRetiredStaffOverall = useMemo(() => staffMembers.filter(s => s.status === 'Retired').length, [staffMembers]);
-  const totalStaffMembersOverall = staffMembers.length;
-
   if (authLoading || staffLoadingHook) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
@@ -305,96 +300,78 @@ export default function EstablishmentPage() {
   
   return (
     <div className="space-y-6">
-      <div className="my-4 flex flex-col sm:flex-row items-center gap-4">
-        <div className="relative flex-grow w-full sm:w-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by name, PEN, designation, roles, phone, DOB (dd/MM/yyyy), remarks..."
-            className="w-full rounded-lg bg-background pl-10 md:w-full lg:w-full shadow-sm text-base h-12 border-2 border-primary/20 focus-visible:ring-primary focus-visible:ring-offset-2"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          {canManage && (
-            <Button onClick={handleAddNewStaff} className="w-full sm:w-auto">
-              <UserPlus className="mr-2 h-5 w-5" /> Add New Staff
-            </Button>
-          )}
-          <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto">
-            <FileDown className="mr-2 h-4 w-4" /> Export Excel
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="activeStaff" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:w-[600px] mb-4">
-          <TabsTrigger value="activeStaff">Active ({activeStaffCount})</TabsTrigger>
-          <TabsTrigger value="transferredStaff">Transferred ({transferredStaffCount})</TabsTrigger>
-          <TabsTrigger value="retiredStaff">Retired ({retiredStaffCount})</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="activeStaff" className="mt-0">
-          <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle>Active Staff Members</CardTitle>
-                <CardDescription>List of currently active staff members. {debouncedSearchTerm && `(Filtered by search: "${debouncedSearchTerm}")`}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <StaffTable
-                staffData={activeStaffList}
-                onEdit={canManage ? handleEditStaff : undefined}
-                onDelete={canManage ? deleteStaffMember : undefined}
-                onSetStatus={canManage ? handleSetStaffStatus : undefined}
-                isViewer={!canManage}
-                onImageClick={handleOpenImageModal}
-                isLoading={isFiltering}
-                searchActive={!!debouncedSearchTerm}
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="relative flex-grow w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search by name, PEN, designation, roles, phone, DOB (dd/MM/yyyy), remarks..."
+                className="w-full rounded-lg bg-background pl-10 md:w-full lg:w-full shadow-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="transferredStaff" className="mt-0">
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle>Transferred Staff Members</CardTitle>
-                    <CardDescription>List of staff members marked as transferred. {debouncedSearchTerm && `(Filtered by search: "${debouncedSearchTerm}")`}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <TransferredStaffTable
-                        staffData={transferredStaffList}
-                        onSetStatus={canManage ? handleSetStaffStatus : undefined}
-                        isViewer={!canManage}
-                        onImageClick={handleOpenImageModal}
-                        isLoading={isFiltering}
-                        searchActive={!!debouncedSearchTerm}
-                    />
-                </CardContent>
-            </Card>
-        </TabsContent>
-
-        <TabsContent value="retiredStaff" className="mt-0">
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle>Retired Staff Members</CardTitle>
-                    <CardDescription>List of staff members marked as retired. {debouncedSearchTerm && `(Filtered by search: "${debouncedSearchTerm}")`}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <RetiredStaffTable
-                        staffData={retiredStaffList}
-                        onSetStatus={canManage ? handleSetStaffStatus : undefined}
-                        isViewer={!canManage}
-                        onImageClick={handleOpenImageModal}
-                        isLoading={isFiltering}
-                        searchActive={!!debouncedSearchTerm}
-                    />
-                </CardContent>
-            </Card>
-        </TabsContent>
-      </Tabs>
-
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              {canManage && (
+                <Button onClick={handleAddNewStaff} className="w-full sm:w-auto">
+                  <UserPlus className="mr-2 h-5 w-5" /> Add New Staff
+                </Button>
+              )}
+              <Button variant="outline" onClick={handleExportExcel} className="w-full sm:w-auto">
+                <FileDown className="mr-2 h-4 w-4" /> Export Excel
+              </Button>
+            </div>
+          </div>
+          <Tabs defaultValue="activeStaff" className="w-full pt-4 border-t">
+            <TabsList className="grid w-full grid-cols-3 sm:w-[600px]">
+              <TabsTrigger value="activeStaff">Active ({activeStaffCount})</TabsTrigger>
+              <TabsTrigger value="transferredStaff">Transferred ({transferredStaffCount})</TabsTrigger>
+              <TabsTrigger value="retiredStaff">Retired ({retiredStaffCount})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="activeStaff" className="mt-4">
+              <div className="max-h-[70vh] overflow-auto">
+                <StaffTable
+                  staffData={activeStaffList}
+                  onEdit={canManage ? handleEditStaff : undefined}
+                  onDelete={canManage ? deleteStaffMember : undefined}
+                  onSetStatus={canManage ? handleSetStaffStatus : undefined}
+                  isViewer={!canManage}
+                  onImageClick={handleOpenImageModal}
+                  isLoading={isFiltering}
+                  searchActive={!!debouncedSearchTerm}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="transferredStaff" className="mt-4">
+              <div className="max-h-[70vh] overflow-auto">
+                <TransferredStaffTable
+                    staffData={transferredStaffList}
+                    onSetStatus={canManage ? handleSetStaffStatus : undefined}
+                    isViewer={!canManage}
+                    onImageClick={handleOpenImageModal}
+                    isLoading={isFiltering}
+                    searchActive={!!debouncedSearchTerm}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="retiredStaff" className="mt-4">
+              <div className="max-h-[70vh] overflow-auto">
+                <RetiredStaffTable
+                    staffData={retiredStaffList}
+                    onSetStatus={canManage ? handleSetStaffStatus : undefined}
+                    isViewer={!canManage}
+                    onImageClick={handleOpenImageModal}
+                    isLoading={isFiltering}
+                    searchActive={!!debouncedSearchTerm}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+      
       <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
           if (!isOpen) {
               setIsFormOpen(false);
