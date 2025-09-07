@@ -40,6 +40,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 import { usePageHeader } from "@/hooks/usePageHeader";
+import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
 export interface FlattenedReportRow {
@@ -520,9 +521,28 @@ export default function ReportsPage() {
         {(currentDate && currentTime) && (<p className="text-xs text-muted-foreground">Report generated on: {currentDate} at {currentTime}</p>)}
       </div>
       
-      <div className="card-for-print"> 
-        <ReportTable data={filteredReportRows} onViewDetailsClick={handleOpenViewDialog} />
-      </div>
+      <Card>
+        <Table>
+            <TableHeader className="bg-secondary">
+              <TableRow>
+                <TableHead className="px-2 w-[6%]">Sl. No.</TableHead>
+                <TableHead className="px-2 w-[12%]">File No</TableHead>
+                <TableHead className="px-2 w-[20%]">Applicant Name</TableHead>
+                <TableHead className="px-2 w-[20%]">Site Name</TableHead>
+                <TableHead className="px-2 w-[10%]">Date of Remittance</TableHead>
+                <TableHead className="px-2 w-[12%]">File Status</TableHead>
+                <TableHead className="px-2 w-[12%]">Site Work Status</TableHead>
+                <TableHead className="text-center px-2 w-[8%]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+        </Table>
+      </Card>
+      
+      <Card className="card-for-print">
+        <CardContent className="max-h-[calc(100vh-28rem)] overflow-auto p-0">
+          <ReportTable data={filteredReportRows} onViewDetailsClick={handleOpenViewDialog} />
+        </CardContent>
+      </Card>
 
       {/* View Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
@@ -578,12 +598,12 @@ export default function ReportsPage() {
                             <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Survey Details</h6>
                             {renderDetail("Recommended Diameter (mm)", site.surveyRecommendedDiameter)}
                             {renderDetail("TD (m)", site.surveyRecommendedTD)}
-                            {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyRecommendedOB)}
-                            {site.purpose === 'BWC' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
-                            {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
-                            {site.purpose === 'TWC' && renderDetail("Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
-                            {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
-                            {site.purpose === 'FPW' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                            {purpose === 'BWC' && renderDetail("OB (m)", site.surveyRecommendedOB)}
+                            {purpose === 'BWC' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
+                            {purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyRecommendedPlainPipe)}
+                            {purpose === 'TWC' && renderDetail("Slotted Pipe (m)", site.surveyRecommendedSlottedPipe)}
+                            {purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.surveyRecommendedMsCasingPipe)}
+                            {purpose === 'FPW' && renderDetail("Casing Pipe (m)", site.surveyRecommendedCasingPipe)}
                             {renderDetail("Latitude", site.latitude)}
                             {renderDetail("Longitude", site.longitude)}
                             {renderDetail("Location", site.surveyLocation)}
@@ -591,15 +611,15 @@ export default function ReportsPage() {
 
                             <h6 className="text-sm font-semibold text-primary mt-2 pt-2 border-t">Drilling Details (Actuals)</h6>
                             {renderDetail("Diameter (mm)", site.diameter)}
-                            {site.purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
+                            {purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
                             {renderDetail("TD (m)", site.totalDepth)}
-                            {site.purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
+                            {purpose === 'BWC' && renderDetail("OB (m)", site.surveyOB)}
                             {renderDetail("Casing Pipe (m)", site.casingPipeUsed)}
-                            {site.purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
-                            {site.purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
-                            {site.purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
+                            {purpose === 'BWC' && renderDetail("Inner Casing Pipe (m)", site.innerCasingPipe)}
+                            {purpose === 'BWC' && renderDetail("Outer Casing Pipe (m)", site.outerCasingPipe)}
+                            {purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
                             {renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
-                            {site.purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
+                            {purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
                             {renderDetail("Discharge (LPH)", site.yieldDischarge)}
                             {renderDetail("Zone Details (m)", site.zoneDetails)}
                             {renderDetail("Water Level (m)", site.waterLevel)}
