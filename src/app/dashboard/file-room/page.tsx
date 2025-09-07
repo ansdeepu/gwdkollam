@@ -92,11 +92,16 @@ export default function FileManagerPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            {canCreate && (
-              <Button onClick={() => router.push('/dashboard/data-entry')} className="w-full sm:w-auto shrink-0">
-                <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
-              </Button>
-            )}
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
+              </div>
+              {canCreate && (
+                <Button onClick={() => router.push('/dashboard/data-entry')} className="w-full sm:w-auto shrink-0">
+                  <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
