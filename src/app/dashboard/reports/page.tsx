@@ -468,13 +468,8 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <Card className="shadow-lg no-print">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5 text-primary" />Report Filters</CardTitle>
-          <CardDescription>Refine your report by applying various filters below.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                 <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
                     <SelectContent>
@@ -524,6 +519,9 @@ export default function ReportsPage() {
                     </SelectContent>
                 </Select>
             </div>
+             <div className="pt-2">
+                <Input placeholder="Global text search for any keyword..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+             </div>
              <CardFooter className="flex justify-end gap-2 p-0 pt-4">
                 <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
                 <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
