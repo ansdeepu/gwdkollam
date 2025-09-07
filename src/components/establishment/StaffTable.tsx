@@ -98,7 +98,7 @@ export default function StaffTable({
         )}
         {!isLoading && (
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-secondary">
               <TableRow>
                 <TableHead className="w-[50px]">Sl. No.</TableHead>
                 <TableHead className="w-[80px] px-2 py-2 text-center">Photo</TableHead>
