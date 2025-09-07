@@ -15,7 +15,8 @@ import {
   type DocumentData,
   writeBatch,
   query,
-  getDocs
+  getDocs,
+  deleteDoc
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import type { AgencyApplication as AgencyApplicationFormData, RigRegistration as RigRegistrationFormData, OwnerInfo } from '@/lib/schemas';
@@ -132,20 +133,11 @@ export function useAgencyApplications() {
         return;
     }
     const docRef = doc(db, APPLICATIONS_COLLECTION, id);
-    await updateDoc(docRef, { status: 'Deleted', updatedAt: serverTimestamp() });
-  }, [user]);
-
-  const restoreApplication = useCallback(async (id: string, originalStatus: 'Active' | 'Pending Verification') => {
-    if (!user || user.role !== 'editor') {
-        toast({ title: "Permission Denied", description: "You don't have permission to restore applications.", variant: "destructive" });
-        return;
-    }
-    const docRef = doc(db, APPLICATIONS_COLLECTION, id);
-    await updateDoc(docRef, { status: originalStatus, updatedAt: serverTimestamp() });
+    await deleteDoc(docRef);
   }, [user]);
   
   // This export is needed to match the type imports in other files
-  return { applications, isLoading, addApplication, updateApplication, deleteApplication, restoreApplication };
+  return { applications, isLoading, addApplication, updateApplication, deleteApplication };
 }
 
 // Re-exporting types for convenience in other files

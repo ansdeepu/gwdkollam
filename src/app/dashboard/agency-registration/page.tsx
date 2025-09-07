@@ -360,7 +360,7 @@ export default function AgencyRegistrationPage() {
     setHeader('Rig Registration', 'Manage agency and rig registrations.');
   }, [setHeader]);
 
-  const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication, restoreApplication } = useAgencyApplications();
+  const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
@@ -560,10 +560,9 @@ export default function AgencyRegistrationPage() {
 
   const filteredApplications = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
-    const visibleApplications = applications.filter(app => app.status !== 'Deleted');
-    if (!lowercasedFilter) return visibleApplications;
+    if (!lowercasedFilter) return applications;
 
-    return visibleApplications.filter(app => 
+    return applications.filter(app => 
         (app.agencyName.toLowerCase().includes(lowercasedFilter)) ||
         (app.owner.name.toLowerCase().includes(lowercasedFilter)) ||
         (app.fileNo?.toLowerCase().includes(lowercasedFilter)) ||
@@ -605,42 +604,16 @@ export default function AgencyRegistrationPage() {
 
     const confirmDeleteApplication = async () => {
       if (!deletingApplicationId) return;
-      
-      const appToDelete = applications.find(a => a.id === deletingApplicationId);
-      if (!appToDelete) return;
-
-      const originalStatus = appToDelete.status;
       setIsSubmitting(true);
-      await deleteApplication(deletingApplicationId);
-      setIsSubmitting(false);
-      setDeletingApplicationId(null);
-      
-      toast({
-          title: "Registration Removed",
-          description: `${appToDelete.agencyName} has been moved to the bin.`,
-          action: (
-              <Button variant="secondary" size="sm" onClick={() => handleUndoDelete(deletingApplicationId, originalStatus)}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Undo
-              </Button>
-          ),
-      });
-    };
-
-    const handleUndoDelete = async (id: string, originalStatus: 'Active' | 'Pending Verification') => {
-        try {
-            await restoreApplication(id, originalStatus);
-            toast({
-                title: "Restored!",
-                description: `The registration has been successfully restored.`,
-            });
-        } catch (error) {
-            toast({
-                title: "Error Restoring",
-                description: `Could not restore the registration.`,
-                variant: 'destructive'
-            });
-        }
+      try {
+        await deleteApplication(deletingApplicationId);
+        toast({ title: "Registration Removed", description: `The registration has been permanently deleted.` });
+      } catch (error: any) {
+        toast({ title: "Error", description: error.message, variant: 'destructive' });
+      } finally {
+        setIsSubmitting(false);
+        setDeletingApplicationId(null);
+      }
     };
 
   const handleConfirmRenewal = () => {
@@ -1018,7 +991,7 @@ export default function AgencyRegistrationPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will move the registration for <strong>{applications.find(a => a.id === deletingApplicationId)?.agencyName}</strong> to the bin. You can restore it later.
+              This action will permanently delete the registration for <strong>{applications.find(a => a.id === deletingApplicationId)?.agencyName}</strong>. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
