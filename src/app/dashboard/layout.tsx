@@ -97,18 +97,20 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
 
 
   useEffect(() => {
-    if (!user) {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      return; 
+    if (user) {
+      const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+      const handleUserActivity = () => resetIdleTimer();
+      
+      activityEvents.forEach(event => window.addEventListener(event, handleUserActivity, { passive: true }));
+      resetIdleTimer(); // Initial setup
+      
+      return () => {
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+        activityEvents.forEach(event => window.removeEventListener(event, handleUserActivity));
+      };
+    } else {
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     }
-    const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
-    const handleUserActivity = () => resetIdleTimer();
-    resetIdleTimer(); 
-    activityEvents.forEach(event => window.addEventListener(event, handleUserActivity, { passive: true }));
-    return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      activityEvents.forEach(event => window.removeEventListener(event, handleUserActivity));
-    };
   }, [user, resetIdleTimer]);
 
   useEffect(() => {
