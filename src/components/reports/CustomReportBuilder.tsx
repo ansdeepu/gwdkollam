@@ -159,7 +159,7 @@ export default function CustomReportBuilder() {
             {selectedFields.length === reportableFields.length ? 'Deselect All' : 'Select All'}
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg max-h-60 overflow-y-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg">
           {reportableFields.map(field => (
             <div
               key={field.id}
