@@ -246,7 +246,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
         <CardContent className="p-0">
           <div className="max-h-[70vh] overflow-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                   <TableHead className="w-[80px]">Sl. No.</TableHead>
                   <TableHead className="w-[150px]">File No.</TableHead>
