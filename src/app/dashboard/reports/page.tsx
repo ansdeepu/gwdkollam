@@ -85,7 +85,7 @@ function renderDetail(label: string, value: any) {
   );
 }
 
-// Robust date parsing helper
+// Robust date parsing helper from working file-room page
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
   if (dateValue instanceof Date && isValid(dateValue)) {
@@ -95,14 +95,12 @@ const safeParseDate = (dateValue: any): Date | null => {
     const parsed = parseISO(dateValue);
     if (isValid(parsed)) return parsed;
   }
-  // Fallback for other potential date-like objects from Firestore
   if (typeof dateValue === 'object' && dateValue.toDate) {
     const parsed = dateValue.toDate();
     if (isValid(parsed)) return parsed;
   }
   return null;
 };
-
 
 
 export default function ReportsPage() {
@@ -228,7 +226,7 @@ export default function ReportsPage() {
       });
     }
 
-    // Sort entries by the first remittance date in descending order
+    // Sort entries by the first remittance date in descending order (newest first)
     currentEntries.sort((a, b) => {
       const dateAValue = a.remittanceDetails?.[0]?.dateOfRemittance;
       const dateBValue = b.remittanceDetails?.[0]?.dateOfRemittance;
