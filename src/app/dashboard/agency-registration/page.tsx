@@ -224,8 +224,8 @@ const RigAccordionItem = ({
       <AccordionContent className="p-6 pt-0">
         <div className="border-t pt-6 space-y-4">
           
-          <div className="p-4 border rounded-md space-y-4">
-            <p className="font-medium text-base">Registration Details</p>
+          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+            <p className="font-medium text-base text-primary">Registration Details</p>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <FormField name={`rigs.${index}.rigRegistrationNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.typeOfRig`} control={form.control} render={({ field }) => (
@@ -272,9 +272,9 @@ const RigAccordionItem = ({
           )}
 
           {field.renewals && field.renewals.length > 0 && (
-            <div className="space-y-2 p-4 border rounded-md">
-                <h4 className="font-medium text-base">Renewal History</h4>
-                <div className="border rounded-lg p-2">
+            <div className="space-y-2 p-4 border rounded-lg bg-secondary/20">
+                <h4 className="font-medium text-base text-primary">Renewal History</h4>
+                <div className="border rounded-lg p-2 bg-background/50">
                     <Table>
                         <TableHeader>
                         <TableRow>
@@ -311,8 +311,8 @@ const RigAccordionItem = ({
             </div>
           )}
 
-          <div className="p-4 border rounded-md space-y-4">
-            <p className="font-medium text-base">Rig Vehicle Details</p>
+          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+            <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
             <div className="grid md:grid-cols-4 gap-4">
                <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
                <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -321,8 +321,8 @@ const RigAccordionItem = ({
             </div>
           </div>
           
-          <div className="p-4 border rounded-md space-y-4">
-            <p className="font-medium text-base">Compressor Vehicle Details</p>
+          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+            <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
             <div className="grid md:grid-cols-4 gap-4">
                <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
                <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -331,8 +331,8 @@ const RigAccordionItem = ({
             </div>
           </div>
           
-          <div className="p-4 border rounded-md space-y-4">
-            <p className="font-medium text-base">Supporting Vehicle Details</p>
+          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+            <p className="font-medium text-base text-primary">Supporting Vehicle Details</p>
             <div className="grid md:grid-cols-4 gap-4">
                <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
                <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -342,15 +342,15 @@ const RigAccordionItem = ({
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-4 border rounded-md space-y-4">
-              <p className="font-medium text-base">Compressor Details</p>
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+              <p className="font-medium text-base text-primary">Compressor Details</p>
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
               </div>
             </div>
-            <div className="p-4 border rounded-md space-y-4">
-              <p className="font-medium text-base">Generator Details</p>
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+              <p className="font-medium text-base text-primary">Generator Details</p>
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl></FormItem>} />
@@ -478,7 +478,7 @@ export default function AgencyRegistrationPage() {
             if (details.type) detailParts.push(`Type: ${details.type}`);
             if (details.engineNo) detailParts.push(`Engine No: ${details.engineNo}`);
              if (detailParts.length > 0) {
-                logParts.push(`${detailsName}: ${detailParts.join(', ')}`);
+                logParts.push(`${detailsName}: ${detailsParts.join(', ')}`);
             }
         }
 
