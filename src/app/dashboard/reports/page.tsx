@@ -477,7 +477,7 @@ export default function ReportsPage() {
                     {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                 <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
+                <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
                     <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
                     <SelectContent>
                     <SelectItem value="all">-- Clear Date Type --</SelectItem>
@@ -490,25 +490,18 @@ export default function ReportsPage() {
                     <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1"/>
                     <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1"/>
                 </div>
-                 <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
-                    <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Site Work Categories</SelectItem>
-                        {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
-                    </SelectContent>
-                </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All File Statuses</SelectItem>
-                        {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
-                    </SelectContent>
-                </Select>
                 <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Site Service Types</SelectItem>
                         {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                 <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All File Statuses</SelectItem>
+                        {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
                     </SelectContent>
                 </Select>
                 <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
@@ -520,9 +513,16 @@ export default function ReportsPage() {
                 </Select>
             </div>
              <div className="pt-2 flex items-center gap-4">
-                <div className="relative flex-grow">
+                <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
+                    <SelectTrigger className="w-full sm:w-auto flex-grow-[2]"><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Site Work Categories</SelectItem>
+                        {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                <div className="relative flex-grow-[3]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input placeholder="Global text search for any keyword..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                    <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
                 </div>
                 <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
                 <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
