@@ -15,17 +15,16 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 
-const ITEMS_PER_PAGE = 25;
-
 interface ReportTableProps {
   data: FlattenedReportRow[];
   onViewDetailsClick: (fileNo: string) => void;
+  currentPage: number;
+  itemsPerPage: number;
 }
 
 type SortKey = keyof FlattenedReportRow;
 
-export default function ReportTable({ data, onViewDetailsClick }: ReportTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
+export default function ReportTable({ data, onViewDetailsClick, currentPage, itemsPerPage }: ReportTableProps) {
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>({ key: 'fileNo', direction: 'asc' });
 
   const sortedData = useMemo(() => {
@@ -44,22 +43,15 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
     return sortableData;
   }, [data, sortConfig]);
 
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return sortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [sortedData, currentPage]);
-
-  const totalPages = Math.ceil(sortedData.length / ITEMS_PER_PAGE);
-
   return (
     <TooltipProvider>
       <div className="space-y-4">
         <Table>
             <TableBody>
-              {paginatedData.length > 0 ? (
-                paginatedData.map((row, index) => (
+              {sortedData.length > 0 ? (
+                sortedData.map((row, index) => (
                   <TableRow key={`${row.fileNo}-${row.siteName}-${index}`}>
-                    <TableCell className="px-2 py-2 text-center w-[6%]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                    <TableCell className="px-2 py-2 text-center w-[6%]">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
                     <TableCell className="font-medium whitespace-normal break-words px-2 py-2 w-[12%]">{row.fileNo}</TableCell>
                     <TableCell className="whitespace-normal break-words px-2 py-2 w-[20%]">{row.applicantName}</TableCell>
                     <TableCell className="whitespace-normal break-words px-2 py-2 w-[20%]">{row.siteName}</TableCell>
@@ -87,11 +79,6 @@ export default function ReportTable({ data, onViewDetailsClick }: ReportTablePro
               )}
             </TableBody>
           </Table>
-        {totalPages > 1 && (
-          <div className="flex justify-center pt-2">
-            <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-          </div>
-        )}
       </div>
     </TooltipProvider>
   );

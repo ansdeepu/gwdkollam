@@ -2,7 +2,7 @@
 // src/app/dashboard/reports/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format, parseISO, startOfDay, endOfDay, isValid, parse } from "date-fns";
 import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
 import ReportTable from "@/components/reports/ReportTable";
+import PaginationControls from "@/components/shared/PaginationControls";
 import { 
   Dialog, 
   DialogContent, 
@@ -54,6 +55,8 @@ export interface FlattenedReportRow {
   siteWorkStatus: string; 
   siteTotalExpenditure: string; 
 }
+
+const ITEMS_PER_PAGE = 50;
 
 // Helper function for rendering details in the dialog
 function renderDetail(label: string, value: any) {
@@ -103,6 +106,7 @@ export default function ReportsPage() {
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all"); 
   const [workCategoryFilter, setWorkCategoryFilter] = useState("all");
   const [dateFilterType, setDateFilterType] = useState<"remittance" | "completion" | "payment" | "all">("all");
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [applicationTypeFilter, setApplicationTypeFilter] = useState("all");
   const [typeOfRigFilter, setTypeOfRigFilter] = useState("all");
@@ -313,6 +317,17 @@ export default function ReportsPage() {
     dateFilterType, startDate, endDate, entriesLoading, fileEntries, applyFilters,
     applicationTypeFilter, typeOfRigFilter, searchParams, authIsLoading, user
   ]);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredReportRows]);
+  
+  const paginatedReportRows = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredReportRows.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredReportRows, currentPage]);
+  
+  const totalPages = Math.ceil(filteredReportRows.length / ITEMS_PER_PAGE);
 
 
   const handleResetFilters = () => {
@@ -539,9 +554,23 @@ export default function ReportsPage() {
       </Card>
       
       <Card className="card-for-print">
-        <CardContent className="max-h-[calc(100vh-28rem)] overflow-auto p-0">
-          <ReportTable data={filteredReportRows} onViewDetailsClick={handleOpenViewDialog} />
+        <CardContent className="max-h-[calc(100vh-32rem)] overflow-auto p-0">
+          <ReportTable
+              data={paginatedReportRows}
+              onViewDetailsClick={handleOpenViewDialog}
+              currentPage={currentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+          />
         </CardContent>
+        <CardFooter className="p-4 border-t flex items-center justify-center">
+            {totalPages > 1 && (
+                <PaginationControls 
+                    currentPage={currentPage} 
+                    totalPages={totalPages} 
+                    onPageChange={setCurrentPage} 
+                />
+            )}
+        </CardFooter>
       </Card>
 
       {/* View Details Dialog */}
