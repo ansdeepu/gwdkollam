@@ -214,18 +214,15 @@ export default function ReportsPage() {
         const dateA = a.remittanceDetails?.[0]?.dateOfRemittance;
         const dateB = b.remittanceDetails?.[0]?.dateOfRemittance;
 
-        if (!dateA) return 1;
-        if (!dateB) return -1;
-        
-        try {
-            const parsedDateA = new Date(dateA);
-            const parsedDateB = new Date(dateB);
-            if (!isValid(parsedDateA)) return 1;
-            if (!isValid(parsedDateB)) return -1;
+        const parsedDateA = dateA ? new Date(dateA) : null;
+        const parsedDateB = dateB ? new Date(dateB) : null;
+
+        if (parsedDateA && isValid(parsedDateA) && parsedDateB && isValid(parsedDateB)) {
             return parsedDateB.getTime() - parsedDateA.getTime();
-        } catch {
-            return 0; // Fallback if date parsing fails
         }
+        if (parsedDateA && isValid(parsedDateA)) return -1; // A has a date, B does not, A comes first
+        if (parsedDateB && isValid(parsedDateB)) return 1;  // B has a date, A does not, B comes first
+        return 0; // Neither has a date
     });
 
     // --- End Filtering `currentEntries` ---
@@ -558,7 +555,7 @@ export default function ReportsPage() {
       
        <Card className="card-for-print shadow-lg">
           <CardContent className="p-0">
-            <div className="relative max-h-[70vh] overflow-auto">
+            <div className="relative overflow-auto max-h-[70vh]">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -756,4 +753,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
