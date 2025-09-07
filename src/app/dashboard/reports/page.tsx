@@ -538,13 +538,29 @@ export default function ReportsPage() {
       </div>
       
       <Card className="card-for-print shadow-lg">
-        <CardContent className="max-h-[calc(100vh-26rem)] overflow-auto p-0">
-          <ReportTable
-              data={paginatedReportRows}
-              onViewDetailsClick={handleOpenViewDialog}
-              currentPage={currentPage}
-              itemsPerPage={ITEMS_PER_PAGE}
-          />
+        <CardContent className="p-0">
+          <div className="relative max-h-[calc(100vh-26rem)] overflow-auto">
+            <Table>
+              <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[6%]">Sl. No.</TableHead>
+                    <TableHead className="w-[12%]">File No</TableHead>
+                    <TableHead className="w-[20%]">Applicant Name</TableHead>
+                    <TableHead className="w-[20%]">Site Name</TableHead>
+                    <TableHead className="w-[10%]">Date of Remittance</TableHead>
+                    <TableHead className="w-[12%]">File Status</TableHead>
+                    <TableHead className="w-[12%]">Site Work Status</TableHead>
+                    <TableHead className="text-center w-[8%]">Actions</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <ReportTable
+                  data={paginatedReportRows}
+                  onViewDetailsClick={handleOpenViewDialog}
+                  currentPage={currentPage}
+                  itemsPerPage={ITEMS_PER_PAGE}
+              />
+            </Table>
+          </div>
         </CardContent>
         <CardFooter className="p-4 border-t flex items-center justify-center">
             {totalPages > 1 && (
