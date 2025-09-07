@@ -484,7 +484,7 @@ export default function AgencyRegistrationPage() {
             if (details.type) detailParts.push(`Type: ${details.type}`);
             if (details.engineNo) detailParts.push(`Engine No: ${details.engineNo}`);
              if (detailParts.length > 0) {
-                logParts.push(`${detailsName}: ${detailsParts.join(', ')}`);
+                logParts.push(`${detailsName}: ${detailParts.join(', ')}`);
             }
         }
 
