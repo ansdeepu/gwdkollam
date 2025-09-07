@@ -14,6 +14,7 @@ import type { SiteWorkStatus, DataEntryFormData } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parseISO, isValid } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
+import { usePageNavigation } from '@/hooks/usePageNavigation';
 
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
@@ -48,6 +49,7 @@ export default function FileManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { fileEntries } = useFileEntries(); 
   const router = useRouter();
+  const { setIsNavigating } = usePageNavigation();
   
   const canCreate = user?.role === 'editor';
 
@@ -77,6 +79,11 @@ export default function FileManagerPage() {
     return entries;
   }, [fileEntries, user?.role]);
 
+  const handleAddNewClick = () => {
+    setIsNavigating(true);
+    router.push('/dashboard/data-entry');
+  };
+
   return (
     <div className="space-y-6">
        <Card>
@@ -97,7 +104,7 @@ export default function FileManagerPage() {
                 Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
               </div>
               {canCreate && (
-                <Button onClick={() => router.push('/dashboard/data-entry')} className="w-full sm:w-auto shrink-0">
+                <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
                   <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
                 </Button>
               )}
