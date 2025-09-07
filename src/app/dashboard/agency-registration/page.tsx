@@ -733,7 +733,13 @@ export default function AgencyRegistrationPage() {
   // FORM VIEW
   if (selectedApplicationId) {
       return (
-        <FormProvider {...form}>
+        <div>
+          <div className="mb-4">
+              <Button type="button" variant="destructive" onClick={handleCancelEdit} disabled={isSubmitting}>
+                  <ArrowLeft className="mr-2 h-4 w-4"/> Back to List
+              </Button>
+          </div>
+          <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Card>
                     <CardContent className="pt-6 space-y-8">
@@ -813,12 +819,9 @@ export default function AgencyRegistrationPage() {
                         </Accordion>
 
                     </CardContent>
-                    <CardFooter className="flex justify-between gap-2">
-                        <Button type="button" variant="destructive" onClick={handleCancelEdit} disabled={isSubmitting}><ArrowLeft className="mr-2 h-4 w-4"/> Back to List</Button>
-                        <div className="flex gap-2">
-                          <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
-                          <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
-                        </div>
+                    <CardFooter className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
+                        <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
                     </CardFooter>
                 </Card>
             </form>
@@ -937,6 +940,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
         </FormProvider>
+      </div>
       );
   }
 
