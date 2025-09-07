@@ -453,6 +453,10 @@ export default function ProgressReportPage() {
     setStartDate(startOfMonth(today));
     setEndDate(endOfMonth(today));
   };
+  
+  const handleExportExcel = () => {
+    toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
+  };
 
   const handleCountClick = (data: Array<SiteDetailWithFileContext | DataEntryFormData | Record<string, any>>, title: string) => {
     if (!data || data.length === 0) return;
@@ -524,11 +528,6 @@ export default function ProgressReportPage() {
     setIsDetailDialogOpen(true);
 };
 
-
-  const handleExportExcel = () => {
-    toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
-  };
-  
   const FinancialSummaryTable = ({ title, summaryData }: { title: string; summaryData: FinancialSummaryReport }) => {
     if (!reportData) return null;
 
@@ -640,7 +639,7 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-lg no-print">
+      <Card className="shadow-lg no-print sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
         <CardHeader>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
               <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
