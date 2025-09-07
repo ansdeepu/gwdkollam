@@ -90,16 +90,15 @@ const safeParseDate = (dateValue: any): Date | null => {
   if (dateValue instanceof Date && isValid(dateValue)) {
     return dateValue;
   }
-  // Handle Firestore Timestamp objects
-  if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number' && typeof dateValue.nanoseconds === 'number') {
-    return new Date(dateValue.seconds * 1000);
-  }
   if (typeof dateValue === 'string') {
-    // Try parsing ISO format
-    let parsed = parseISO(dateValue);
+    let parsed = parseISO(dateValue); // Handles ISO strings from new data
     if (isValid(parsed)) return parsed;
-    // Try parsing 'yyyy-MM-dd' format from date inputs
-    parsed = parse(dateValue, 'yyyy-MM-dd', new Date());
+    parsed = parse(dateValue, 'yyyy-MM-dd', new Date()); // Handles date picker format
+    if (isValid(parsed)) return parsed;
+  }
+  // Fallback for other potential date-like objects from Firestore
+  if (typeof dateValue === 'object' && dateValue.toDate) {
+    const parsed = dateValue.toDate();
     if (isValid(parsed)) return parsed;
   }
   return null;
@@ -573,7 +572,7 @@ export default function ReportsPage() {
        <Card className="card-for-print shadow-lg">
          <div className="relative max-h-[70vh] overflow-auto">
             <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-secondary">
                     <TableRow>
                         <TableHead className="w-[6%]">Sl. No.</TableHead>
                         <TableHead className="w-[12%]">File No</TableHead>
