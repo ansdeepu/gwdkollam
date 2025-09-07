@@ -475,7 +475,14 @@ export default function ReportsPage() {
         <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                  <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                  <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
+                <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">All Application Types</SelectItem>
+                    {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                 <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
                     <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
                     <SelectContent>
                     <SelectItem value="all">-- Clear Date Type --</SelectItem>
@@ -484,11 +491,11 @@ export default function ReportsPage() {
                     <SelectItem value="payment">Date of Payment</SelectItem>
                     </SelectContent>
                 </Select>
-                <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            </div>
-             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <div className="flex gap-2">
+                    <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1"/>
+                    <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1"/>
+                </div>
+                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All File Statuses</SelectItem>
@@ -507,13 +514,6 @@ export default function ReportsPage() {
                     <SelectContent>
                         <SelectItem value="all">All Site Service Types</SelectItem>
                         {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
-                    </SelectContent>
-                </Select>
-                <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
-                    <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="all">All Application Types</SelectItem>
-                    {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
                     </SelectContent>
                 </Select>
                 <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
