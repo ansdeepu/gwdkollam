@@ -85,6 +85,31 @@ function renderDetail(label: string, value: any) {
   );
 }
 
+// Robust date parsing helper
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date && isValid(dateValue)) return dateValue;
+  if (typeof dateValue === 'string') {
+    // Try ISO format first, as it's a common machine-readable format
+    let parsed = parseISO(dateValue);
+    if (isValid(parsed)) return parsed;
+
+    // Then handle 'dd/MM/yyyy' for manual entries
+    parsed = parse(dateValue, 'dd/MM/yyyy', new Date());
+    if (isValid(parsed)) return parsed;
+
+     // Then handle 'yyyy-MM-dd' for form values
+    parsed = parse(dateValue, 'yyyy-MM-dd', new Date());
+    if (isValid(parsed)) return parsed;
+  }
+  // Handle Firestore Timestamps
+  if (typeof dateValue === 'object' && dateValue.seconds) {
+    const d = new Date(dateValue.seconds * 1000);
+    if (isValid(d)) return d;
+  }
+  return null;
+};
+
 
 export default function ReportsPage() {
   const { setHeader } = usePageHeader();
@@ -211,19 +236,15 @@ export default function ReportsPage() {
 
     // Sort entries by the first remittance date in descending order
     currentEntries.sort((a, b) => {
-        const dateA = a.remittanceDetails?.[0]?.dateOfRemittance;
-        const dateB = b.remittanceDetails?.[0]?.dateOfRemittance;
+        const dateA = safeParseDate(a.remittanceDetails?.[0]?.dateOfRemittance);
+        const dateB = safeParseDate(b.remittanceDetails?.[0]?.dateOfRemittance);
 
-        const parsedDateA = dateA ? new Date(dateA) : null;
-        const parsedDateB = dateB ? new Date(dateB) : null;
-
-        if (parsedDateA && isValid(parsedDateA) && parsedDateB && isValid(parsedDateB)) {
-            return parsedDateB.getTime() - parsedDateA.getTime();
-        }
-        if (parsedDateA && isValid(parsedDateA)) return -1; // A has a date, B does not, A comes first
-        if (parsedDateB && isValid(parsedDateB)) return 1;  // B has a date, A does not, B comes first
-        return 0; // Neither has a date
+        if (dateA && dateB) return dateB.getTime() - dateA.getTime();
+        if (dateA) return -1;
+        if (dateB) return 1;
+        return 0;
     });
+
 
     // --- End Filtering `currentEntries` ---
 
@@ -234,9 +255,8 @@ export default function ReportsPage() {
 
     currentEntries.forEach(entry => {
       const fileFirstRemittanceDateStr = entry.remittanceDetails?.[0]?.dateOfRemittance;
-      const fileFirstRemittanceDate = fileFirstRemittanceDateStr && isValid(new Date(fileFirstRemittanceDateStr))
-        ? format(new Date(fileFirstRemittanceDateStr), "dd/MM/yyyy")
-        : "-";
+      const parsedRemittanceDate = safeParseDate(fileFirstRemittanceDateStr);
+      const fileFirstRemittanceDate = parsedRemittanceDate ? format(parsedRemittanceDate, "dd/MM/yyyy") : "-";
 
       // If a site-level filter is active, we must expand to show matching sites.
       if (isSiteLevelFilterActive) {
@@ -485,29 +505,27 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <Card className="shadow-lg no-print">
         <CardContent className="p-4 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                 <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all">All Application Types</SelectItem>
-                    {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
+                        <SelectItem value="all">All Application Types</SelectItem>
+                        {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
                     </SelectContent>
                 </Select>
                  <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
                     <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all">-- Clear Date Type --</SelectItem>
-                    <SelectItem value="remittance">Date of Remittance</SelectItem>
-                    <SelectItem value="completion">Date of Completion</SelectItem>
-                    <SelectItem value="payment">Date of Payment</SelectItem>
+                        <SelectItem value="all">-- Clear Date Type --</SelectItem>
+                        <SelectItem value="remittance">Date of Remittance</SelectItem>
+                        <SelectItem value="completion">Date of Completion</SelectItem>
+                        <SelectItem value="payment">Date of Payment</SelectItem>
                     </SelectContent>
                 </Select>
-                <div className="flex gap-2 lg:col-span-2">
-                    <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1"/>
-                    <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1"/>
-                </div>
+                <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
                     <SelectContent>
@@ -525,8 +543,8 @@ export default function ReportsPage() {
                 <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Type of Rig" /></SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all">All Site Rig Types</SelectItem>
-                    {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
+                        <SelectItem value="all">All Site Rig Types</SelectItem>
+                        {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
                     </SelectContent>
                 </Select>
                  <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
