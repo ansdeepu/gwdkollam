@@ -639,7 +639,7 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-lg">
+      <Card className="shadow-lg sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
           <CardHeader>
             <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
                 <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
@@ -662,17 +662,18 @@ export default function ProgressReportPage() {
       </Card>
 
       <div className="space-y-8">
-        <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle>Progress Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-                {isFiltering ? (
-                    <div className="flex items-center justify-center py-10">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="ml-2 text-muted-foreground">Generating reports...</p>
-                    </div>
-                ) : reportData ? (
+        {isFiltering ? (
+            <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-2 text-muted-foreground">Generating reports...</p>
+            </div>
+        ) : reportData ? (
+          <>
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle>Progress Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
                     <div className="relative overflow-x-auto">
                         <Table className="min-w-full border-collapse">
                         <TableHeader>
@@ -703,15 +704,8 @@ export default function ProgressReportPage() {
                         </TableBody>
                         </Table>
                     </div>
-                ) : (
-                    <div className="flex items-center justify-center py-10 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">Select a date range and click "Generate Report" to view progress.</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-      
-        {reportData && (
+                </CardContent>
+            </Card>
             <div className="space-y-8">
                 <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
                 <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
@@ -744,6 +738,11 @@ export default function ProgressReportPage() {
                 <WellTypeProgressTable title="BWC" data={reportData.bwcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
                 <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['150 mm (6”)']} onCountClick={handleCountClick} />
                 <WellTypeProgressTable title="TWC" data={reportData.twcData} diameters={['200 mm (8”)']} onCountClick={handleCountClick} />
+            </div>
+          </>
+        ) : (
+            <div className="flex items-center justify-center py-10 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">Select a date range and click "Generate Report" to view progress.</p>
             </div>
         )}
       </div>
@@ -795,4 +794,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
