@@ -469,15 +469,15 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <Card className="shadow-lg no-print">
         <CardContent className="p-4 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
+             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                 <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
                     <SelectContent>
                     <SelectItem value="all">All Application Types</SelectItem>
                     {applicationTypeOptions.map((type) => (<SelectItem key={type} value={type}>{applicationTypeDisplayMap[type as ApplicationType] || type.replace(/_/g, " ")}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
+                 <Select value={dateFilterType} onValueChange={(value) => setDateFilterType(value as any)}>
                     <SelectTrigger><SelectValue placeholder="Select Date Type for Range" /></SelectTrigger>
                     <SelectContent>
                     <SelectItem value="all">-- Clear Date Type --</SelectItem>
@@ -486,36 +486,36 @@ export default function ReportsPage() {
                     <SelectItem value="payment">Date of Payment</SelectItem>
                     </SelectContent>
                 </Select>
-                <div className="flex gap-2">
+                <div className="flex gap-2 lg:col-span-2">
                     <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1"/>
                     <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1"/>
                 </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                 <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Site Service Types</SelectItem>
                         {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All File Statuses</SelectItem>
                         {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
+                 <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Type of Rig" /></SelectTrigger>
                     <SelectContent>
                     <SelectItem value="all">All Site Rig Types</SelectItem>
                     {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
                     </SelectContent>
                 </Select>
-            </div>
+             </div>
              <div className="pt-2 flex items-center gap-4">
-                <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
+                 <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
                     <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Site Work Categories</SelectItem>
@@ -537,25 +537,8 @@ export default function ReportsPage() {
         {(currentDate && currentTime) && (<p className="text-xs text-muted-foreground">Report generated on: {currentDate} at {currentTime}</p>)}
       </div>
       
-      <Card>
-        <Table>
-            <TableHeader className="bg-secondary">
-              <TableRow>
-                <TableHead className="px-2 w-[6%]">Sl. No.</TableHead>
-                <TableHead className="px-2 w-[12%]">File No</TableHead>
-                <TableHead className="px-2 w-[20%]">Applicant Name</TableHead>
-                <TableHead className="px-2 w-[20%]">Site Name</TableHead>
-                <TableHead className="px-2 w-[10%]">Date of Remittance</TableHead>
-                <TableHead className="px-2 w-[12%]">File Status</TableHead>
-                <TableHead className="px-2 w-[12%]">Site Work Status</TableHead>
-                <TableHead className="text-center px-2 w-[8%]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-        </Table>
-      </Card>
-      
-      <Card className="card-for-print">
-        <CardContent className="max-h-[calc(100vh-32rem)] overflow-auto p-0">
+      <Card className="card-for-print shadow-lg">
+        <CardContent className="max-h-[calc(100vh-26rem)] overflow-auto p-0">
           <ReportTable
               data={paginatedReportRows}
               onViewDetailsClick={handleOpenViewDialog}
