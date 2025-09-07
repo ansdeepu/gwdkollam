@@ -371,27 +371,20 @@ export default function ArsPage() {
       
         <Card className="shadow-lg">
             <CardContent className="p-0">
-                <Table>
-                    <TableHeader className="bg-secondary">
-                        <TableRow>
-                            <TableHead>Sl. No.</TableHead>
-                            <TableHead>File No</TableHead>
-                            <TableHead>Name of Site</TableHead>
-                            <TableHead>Type of Scheme</TableHead>
-                            <TableHead>Panchayath</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Completion Date</TableHead>
-                            <TableHead className="text-center w-[120px]">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                </Table>
-            </CardContent>
-        </Card>
-
-        <Card className="shadow-lg">
-            <CardContent className="p-0">
-                <div className="max-h-[calc(100vh-24rem)] overflow-auto">
+                <div className="max-h-[70vh] overflow-auto">
                     <Table>
+                        <TableHeader className="bg-secondary sticky top-0">
+                            <TableRow>
+                                <TableHead>Sl. No.</TableHead>
+                                <TableHead>File No</TableHead>
+                                <TableHead>Name of Site</TableHead>
+                                <TableHead>Type of Scheme</TableHead>
+                                <TableHead>Panchayath</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Completion Date</TableHead>
+                                <TableHead className="text-center w-[120px]">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
                         <TableBody>
                             {paginatedSites.length > 0 ? (
                                 paginatedSites.map((site, index) => (

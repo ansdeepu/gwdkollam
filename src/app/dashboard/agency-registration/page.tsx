@@ -77,25 +77,7 @@ const processDataForForm = (data: any): any => {
     return data;
 };
 
-const RegistrationTableHeader = () => (
-    <Card>
-        <Table>
-            <TableHeader className="bg-secondary">
-                <TableRow>
-                    <TableHead>File No.</TableHead>
-                    <TableHead>Agency Name</TableHead>
-                    <TableHead>Owner</TableHead>
-                    <TableHead>Active Rigs</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-            </TableHeader>
-        </Table>
-    </Card>
-);
-
-
-const AgencyTable = ({ 
+const RegistrationTable = ({ 
   applications, 
   onView,
   onEdit, 
@@ -108,9 +90,20 @@ const AgencyTable = ({
   onDelete: (id: string) => void,
   searchTerm: string
 }) => (
-    <Card>
-        <div className="max-h-[calc(100vh-32rem)] overflow-auto">
+    <Card className="shadow-lg">
+        <CardContent className="p-0">
+          <div className="max-h-[70vh] overflow-auto">
             <Table>
+                <TableHeader className="bg-secondary sticky top-0">
+                    <TableRow>
+                        <TableHead>File No.</TableHead>
+                        <TableHead>Agency Name</TableHead>
+                        <TableHead>Owner</TableHead>
+                        <TableHead>Active Rigs</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
                 <TableBody>
                     {applications.length > 0 ? (
                         applications.map((app) => (
@@ -137,6 +130,7 @@ const AgencyTable = ({
                 </TableBody>
             </Table>
         </div>
+      </CardContent>
     </Card>
 );
 
@@ -998,8 +992,7 @@ export default function AgencyRegistrationPage() {
                 <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="completed" className="mt-4 space-y-2">
-                <RegistrationTableHeader />
-                <AgencyTable 
+                <RegistrationTable 
                     applications={completedApplications}
                     onView={handleView}
                     onEdit={handleEdit}
@@ -1008,8 +1001,7 @@ export default function AgencyRegistrationPage() {
                 />
             </TabsContent>
             <TabsContent value="pending" className="mt-4 space-y-2">
-                <RegistrationTableHeader />
-                <AgencyTable 
+                <RegistrationTable 
                     applications={pendingApplications}
                     onView={handleView}
                     onEdit={handleEdit}
