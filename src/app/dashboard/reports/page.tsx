@@ -490,6 +490,8 @@ export default function ReportsPage() {
                     <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1"/>
                     <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1"/>
                 </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
                     <SelectContent>
@@ -497,7 +499,7 @@ export default function ReportsPage() {
                         {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                 <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All File Statuses</SelectItem>
@@ -514,13 +516,13 @@ export default function ReportsPage() {
             </div>
              <div className="pt-2 flex items-center gap-4">
                 <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
-                    <SelectTrigger className="w-full sm:w-auto flex-grow-[2]"><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
+                    <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Site Work Categories</SelectItem>
                         {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                <div className="relative flex-grow-[3]">
+                <div className="relative flex-grow">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
                 </div>
