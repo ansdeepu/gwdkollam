@@ -734,15 +734,15 @@ export default function AgencyRegistrationPage() {
   if (selectedApplicationId) {
       return (
         <div>
-          <div className="mb-4">
-              <Button type="button" variant="destructive" onClick={handleCancelEdit} disabled={isSubmitting}>
-                  <ArrowLeft className="mr-2 h-4 w-4"/> Back to List
-              </Button>
-          </div>
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Card>
                     <CardContent className="pt-6 space-y-8">
+                       <div className="flex justify-start mb-4">
+                          <Button type="button" variant="destructive" onClick={handleCancelEdit} disabled={isSubmitting}>
+                              <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                          </Button>
+                        </div>
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                             <AccordionItem value="item-1">
