@@ -85,18 +85,21 @@ function renderDetail(label: string, value: any) {
   );
 }
 
-// Robust date parsing helper from working file-room page
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
   if (dateValue instanceof Date && isValid(dateValue)) {
     return dateValue;
   }
-  if (typeof dateValue === 'string') {
-    const parsed = parseISO(dateValue);
-    if (isValid(parsed)) return parsed;
+  // Handle Firestore Timestamp objects
+  if (typeof dateValue === 'object' && dateValue !== null && typeof dateValue.seconds === 'number' && typeof dateValue.nanoseconds === 'number') {
+    return new Date(dateValue.seconds * 1000);
   }
-  if (typeof dateValue === 'object' && dateValue.toDate) {
-    const parsed = dateValue.toDate();
+  if (typeof dateValue === 'string') {
+    // Try parsing ISO format
+    let parsed = parseISO(dateValue);
+    if (isValid(parsed)) return parsed;
+    // Try parsing 'yyyy-MM-dd' format from date inputs
+    parsed = parse(dateValue, 'yyyy-MM-dd', new Date());
     if (isValid(parsed)) return parsed;
   }
   return null;
@@ -568,27 +571,27 @@ export default function ReportsPage() {
       </div>
       
        <Card className="card-for-print shadow-lg">
-          <div className="relative max-h-[70vh] overflow-auto">
-              <Table>
+         <div className="relative max-h-[70vh] overflow-auto">
+            <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[6%]">Sl. No.</TableHead>
-                    <TableHead className="w-[12%]">File No</TableHead>
-                    <TableHead className="w-[20%]">Applicant Name</TableHead>
-                    <TableHead className="w-[20%]">Site Name</TableHead>
-                    <TableHead className="w-[10%]">Date of Remittance</TableHead>
-                    <TableHead className="w-[12%]">File Status</TableHead>
-                    <TableHead className="w-[12%]">Site Work Status</TableHead>
-                    <TableHead className="text-center w-[8%]">Actions</TableHead>
-                  </TableRow>
+                    <TableRow>
+                        <TableHead className="w-[6%]">Sl. No.</TableHead>
+                        <TableHead className="w-[12%]">File No</TableHead>
+                        <TableHead className="w-[20%]">Applicant Name</TableHead>
+                        <TableHead className="w-[20%]">Site Name</TableHead>
+                        <TableHead className="w-[10%]">Date of Remittance</TableHead>
+                        <TableHead className="w-[12%]">File Status</TableHead>
+                        <TableHead className="w-[12%]">Site Work Status</TableHead>
+                        <TableHead className="text-center w-[8%]">Actions</TableHead>
+                    </TableRow>
                 </TableHeader>
                 <ReportTable
-                  data={paginatedReportRows}
-                  onViewDetailsClick={handleOpenViewDialog}
-                  currentPage={currentPage}
-                  itemsPerPage={ITEMS_PER_PAGE}
+                    data={paginatedReportRows}
+                    onViewDetailsClick={handleOpenViewDialog}
+                    currentPage={currentPage}
+                    itemsPerPage={ITEMS_PER_PAGE}
                 />
-              </Table>
+            </Table>
           </div>
           <CardFooter className="p-4 border-t flex items-center justify-center">
               {totalPages > 1 && (
