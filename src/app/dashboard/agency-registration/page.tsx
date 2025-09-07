@@ -368,10 +368,6 @@ const RigAccordionItem = ({
 
 export default function AgencyRegistrationPage() {
   const { setHeader } = usePageHeader();
-  useEffect(() => {
-    setHeader('Rig Registration', 'Manage agency and rig registrations.');
-  }, [setHeader]);
-
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -391,6 +387,15 @@ export default function AgencyRegistrationPage() {
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const isEditor = user?.role === 'editor';
+
+  useEffect(() => {
+    if (selectedApplicationId) {
+      const title = selectedApplicationId === 'new' ? 'New Rig Registration' : 'Edit Rig Registration';
+      setHeader(title, 'Manage all details related to an agency and its rigs.');
+    } else {
+      setHeader('Rig Registration', 'Manage agency and rig registrations.');
+    }
+  }, [selectedApplicationId, setHeader]);
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
   const createDefaultRig = (): RigRegistration => ({
