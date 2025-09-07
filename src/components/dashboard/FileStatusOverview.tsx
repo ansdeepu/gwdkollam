@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ClipboardList } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { type DataEntryFormData, fileStatusOptions } from '@/lib/schemas';
-import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
-import { useAuth } from '@/hooks/useAuth';
 
 const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; onClick: () => void }) => (
   <button
@@ -22,26 +20,10 @@ const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; 
 
 interface FileStatusOverviewProps {
   onOpenDialog: (data: any[], title: string, columns: any[], type: 'fileStatus' | 'age') => void;
+  nonArsEntries: DataEntryFormData[];
 }
 
-export default function FileStatusOverview({ onOpenDialog }: FileStatusOverviewProps) {
-    const { reportEntries: allFileEntries } = useAllFileEntriesForReports();
-    const { user } = useAuth();
-
-    const nonArsEntries = useMemo(() => {
-        return allFileEntries
-            .map(entry => ({
-                ...entry,
-                siteDetails: entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport)
-            }))
-            .filter(entry => {
-                if (user?.role === 'supervisor') {
-                    return entry.siteDetails?.some(site => site.supervisorUid === user.uid);
-                }
-                return entry.siteDetails && entry.siteDetails.length > 0;
-            });
-    }, [allFileEntries, user]);
-
+export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: FileStatusOverviewProps) {
 
     const fileStatusData = useMemo(() => {
         const fileStatusCounts = new Map<string, number>();
@@ -143,12 +125,12 @@ export default function FileStatusOverview({ onOpenDialog }: FileStatusOverviewP
         <div className="mt-6 pt-6 border-t border-border/60">
           <div className="flex items-center justify-between mb-3"><h4 className="text-sm font-medium text-primary">Files by Age</h4><p className="text-xs text-muted-foreground">Based on last remittance or creation date</p></div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            <AgeStatCard title="&lt; 1 Year" count={fileStatusData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
+            <AgeStatCard title="< 1 Year" count={fileStatusData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
             <AgeStatCard title="1-2 Years" count={fileStatusData.filesByAgeCounts.between1And2} onClick={() => handleAgeCardClick('between1And2', 'Files Aged 1-2 Years')} />
             <AgeStatCard title="2-3 Years" count={fileStatusData.filesByAgeCounts.between2And3} onClick={() => handleAgeCardClick('between2And3', 'Files Aged 2-3 Years')} />
             <AgeStatCard title="3-4 Years" count={fileStatusData.filesByAgeCounts.between3And4} onClick={() => handleAgeCardClick('between3And4', 'Files Aged 3-4 Years')} />
             <AgeStatCard title="4-5 Years" count={fileStatusData.filesByAgeCounts.between4And5} onClick={() => handleAgeCardClick('between4And5', 'Files Aged 4-5 Years')} />
-            <AgeStatCard title="&gt; 5 Years" count={fileStatusData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
+            <AgeStatCard title="> 5 Years" count={fileStatusData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
           </div>
         </div>
       </CardHeader>
