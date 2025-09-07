@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ClipboardList } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { type DataEntryFormData, fileStatusOptions } from '@/lib/schemas';
+import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
+import { useAuth } from '@/hooks/useAuth';
 
 const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; onClick: () => void }) => (
   <button
@@ -19,11 +21,28 @@ const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; 
 );
 
 interface FileStatusOverviewProps {
-  nonArsEntries: DataEntryFormData[];
   onOpenDialog: (data: any[], title: string, columns: any[], type: 'fileStatus' | 'age') => void;
 }
 
-export default function FileStatusOverview({ nonArsEntries, onOpenDialog }: FileStatusOverviewProps) {
+export default function FileStatusOverview({ onOpenDialog }: FileStatusOverviewProps) {
+    const { reportEntries: allFileEntries } = useAllFileEntriesForReports();
+    const { user } = useAuth();
+
+    const nonArsEntries = useMemo(() => {
+        return allFileEntries
+            .map(entry => ({
+                ...entry,
+                siteDetails: entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport)
+            }))
+            .filter(entry => {
+                if (user?.role === 'supervisor') {
+                    return entry.siteDetails?.some(site => site.supervisorUid === user.uid);
+                }
+                return entry.siteDetails && entry.siteDetails.length > 0;
+            });
+    }, [allFileEntries, user]);
+
+
     const fileStatusData = useMemo(() => {
         const fileStatusCounts = new Map<string, number>();
         fileStatusOptions.forEach(status => fileStatusCounts.set(status, 0));
