@@ -490,18 +490,18 @@ export default function ReportsPage() {
                     <Input type="date" placeholder="From Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1"/>
                     <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1"/>
                 </div>
-                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All File Statuses</SelectItem>
-                        {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
-                    </SelectContent>
-                </Select>
-                <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
+                 <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Site Work Categories</SelectItem>
                         {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
+                    </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All File Statuses</SelectItem>
+                        {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
                     </SelectContent>
                 </Select>
                 <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
