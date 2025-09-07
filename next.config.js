@@ -62,7 +62,7 @@ const nextConfig = {
       'handlebars': require.resolve('handlebars/dist/handlebars.js'),
     };
     
-    if (isServer) {
+    if (!isServer) {
         config.externals.push('@opentelemetry/instrumentation');
     }
 
