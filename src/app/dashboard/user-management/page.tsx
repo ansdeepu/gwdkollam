@@ -1,4 +1,3 @@
-
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -165,7 +164,6 @@ export default function UserManagementPage() {
             updateUserApproval={updateUserApproval}
             updateUserRole={updateUserRole}
             deleteUserDocument={deleteUserDocument}
-            batchDeleteUserDocuments={batchDeleteUserDocuments}
             staffMembers={staffMembers}
           />
         </CardContent>

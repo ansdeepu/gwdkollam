@@ -1,4 +1,3 @@
-
 // src/components/admin/UserManagementTable.tsx
 "use client";
 
@@ -36,7 +35,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -63,7 +61,6 @@ interface UserManagementTableProps {
   updateUserApproval: (uid: string, isApproved: boolean) => Promise<void>;
   updateUserRole: (uid: string, newRole: UserRole, staffId?: string) => Promise<void>;
   deleteUserDocument: (uid: string) => Promise<void>;
-  batchDeleteUserDocuments: (uids: string[]) => Promise<{ successCount: number, failureCount: number, errors: string[] }>;
   staffMembers: StaffMember[];
 }
 
@@ -75,20 +72,26 @@ export default function UserManagementTable({
   updateUserApproval,
   updateUserRole,
   deleteUserDocument,
-  batchDeleteUserDocuments,
   staffMembers,
 }: UserManagementTableProps) {
   const { toast } = useToast();
   const [updatingUsers, setUpdatingUsers] = useState<Record<string, { approval?: boolean, role?: boolean }>>({});
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
-  
-  const [selectedUserUids, setSelectedUserUids] = useState<string[]>([]);
-  const [isBatchDeleting, setIsBatchDeleting] = useState(false);
-  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
 
   const sortedUsers = useMemo(() => {
+    const roleOrder: Record<UserRole, number> = { 'editor': 1, 'viewer': 2, 'supervisor': 3 };
     return [...users].sort((a, b) => {
+      // Main admin always on top
+      if (a.email === ADMIN_EMAIL_FOR_TABLE) return -1;
+      if (b.email === ADMIN_EMAIL_FOR_TABLE) return 1;
+
+      // Then sort by role
+      const roleA = roleOrder[a.role] || 4;
+      const roleB = roleOrder[b.role] || 4;
+      if (roleA !== roleB) return roleA - roleB;
+      
+      // Finally, sort by creation date
       const timeA = a.createdAt?.getTime() ?? 0;
       const timeB = b.createdAt?.getTime() ?? 0;
       return timeB - timeA;
@@ -162,56 +165,12 @@ export default function UserManagementTable({
     try {
       await deleteUserDocument(userToDelete.uid);
       toast({ title: "User Removed", description: `Profile for ${userToDelete.name || userToDelete.email} has been removed.` });
-      setSelectedUserUids(prev => prev.filter(uid => uid !== userToDelete.uid)); // Remove from selection
       onDataChange();
     } catch (error: any) {
       toast({ title: "Removal Failed", description: error.message || "Could not remove user profile.", variant: "destructive" });
     } finally {
       setIsDeletingUser(false);
       setUserToDelete(null);
-    }
-  };
-
-  const eligibleForSelectionUsers = useMemo(() => {
-    return sortedUsers.filter(user => user.email !== ADMIN_EMAIL_FOR_TABLE && user.uid !== currentUser?.uid);
-  }, [sortedUsers, currentUser]);
-
-  const handleSelectAllChange = (checked: boolean | "indeterminate") => {
-    if (checked === true) {
-      setSelectedUserUids(eligibleForSelectionUsers.map(user => user.uid));
-    } else {
-      setSelectedUserUids([]);
-    }
-  };
-
-  const handleUserSelectionChange = (uid: string, checked: boolean) => {
-    setSelectedUserUids(prev =>
-      checked ? [...prev, uid] : prev.filter(selectedUid => selectedUid !== uid)
-    );
-  };
-  
-  const confirmBatchDelete = async () => {
-    if (selectedUserUids.length === 0) return;
-    setIsBatchDeleting(true);
-    try {
-      const result = await batchDeleteUserDocuments(selectedUserUids);
-      let description = `${result.successCount} user(s) removed.`;
-      if (result.failureCount > 0) {
-        description += ` ${result.failureCount} failed. Errors: ${result.errors.slice(0,2).join(', ')}${result.errors.length > 2 ? '...' : ''}`;
-      }
-      toast({
-        title: "Batch Removal Complete",
-        description: description,
-        variant: result.failureCount > 0 ? "default" : "default",
-        duration: result.failureCount > 0 ? 10000 : 5000,
-      });
-      onDataChange();
-    } catch (error: any) {
-      toast({ title: "Batch Removal Error", description: error.message || "Could not remove selected users.", variant: "destructive" });
-    } finally {
-      setIsBatchDeleting(false);
-      setShowBatchDeleteConfirm(false);
-      setSelectedUserUids([]);
     }
   };
 
@@ -233,46 +192,14 @@ export default function UserManagementTable({
       </div>
     );
   }
-  
-  const allEligibleSelected = eligibleForSelectionUsers.length > 0 && selectedUserUids.length === eligibleForSelectionUsers.length;
-  const isIndeterminate = selectedUserUids.length > 0 && selectedUserUids.length < eligibleForSelectionUsers.length;
 
   return (
     <TooltipProvider delayDuration={300}>
-      {selectedUserUids.length > 0 && (
-        <div className="mb-4 flex items-center justify-start space-x-3 p-3 bg-secondary/50 rounded-md border border-border">
-          <Button
-            variant="destructive"
-            onClick={() => setShowBatchDeleteConfirm(true)}
-            disabled={isBatchDeleting}
-            size="sm"
-          >
-            {isBatchDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-            Remove Selected ({selectedUserUids.length})
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            {selectedUserUids.length} user(s) selected for batch action.
-          </p>
-        </div>
-      )}
       <div className="relative w-full overflow-x-auto rounded-md border">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead className="w-[50px] px-3 py-2.5">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Checkbox
-                      checked={allEligibleSelected ? true : (isIndeterminate ? "indeterminate" : false)}
-                      onCheckedChange={handleSelectAllChange}
-                      aria-label="Select all eligible users"
-                      disabled={eligibleForSelectionUsers.length === 0}
-                      className="data-[state=checked]:bg-primary data-[state=indeterminate]:bg-primary/50"
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent><p>Select all non-admin/non-self users</p></TooltipContent>
-                </Tooltip>
-              </TableHead>
+              <TableHead className="w-[60px] px-3 py-2.5">Sl. No.</TableHead>
               <TableHead className="w-[70px] px-3 py-2.5 text-center">Photo</TableHead>
               <TableHead className="px-3 py-2.5">Name</TableHead>
               <TableHead className="px-3 py-2.5">Email</TableHead>
@@ -283,25 +210,16 @@ export default function UserManagementTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedUsers.map((userRow) => {
+            {sortedUsers.map((userRow, index) => {
               const isCurrentUserTheUserInRow = currentUser?.uid === userRow.uid;
               const isUserInRowAdmin = userRow.email === ADMIN_EMAIL_FOR_TABLE;
               const disableActions = updatingUsers[userRow.uid]?.approval || updatingUsers[userRow.uid]?.role || isCurrentUserTheUserInRow || isUserInRowAdmin;
-              const isCheckboxDisabled = isUserInRowAdmin || isCurrentUserTheUserInRow;
               const staffInfo = staffMembers.find(s => s.id === userRow.staffId);
               const photoUrl = staffInfo?.photoUrl;
 
               return (
-              <TableRow key={userRow.uid} data-state={selectedUserUids.includes(userRow.uid) ? "selected" : ""} className="hover:bg-muted/30 transition-colors">
-                <TableCell className="px-3 py-2">
-                  <Checkbox
-                    checked={selectedUserUids.includes(userRow.uid)}
-                    onCheckedChange={(checked) => handleUserSelectionChange(userRow.uid, !!checked)}
-                    aria-label={`Select user ${userRow.name}`}
-                    disabled={isCheckboxDisabled}
-                     className="data-[state=checked]:bg-primary"
-                  />
-                </TableCell>
+              <TableRow key={userRow.uid} className={cn(isUserInRowAdmin && "bg-primary/10 hover:bg-primary/20")}>
+                <TableCell className="px-3 py-2 font-medium text-center">{index + 1}</TableCell>
                 <TableCell className="px-3 py-2">
                   <Avatar className="h-9 w-9 mx-auto">
                       <AvatarImage src={photoUrl || undefined} alt={userRow.name || 'User'} data-ai-hint="person user" />
@@ -375,7 +293,7 @@ export default function UserManagementTable({
                               size="icon"
                               className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-8 w-8"
                               onClick={() => handleDeleteUserClick(userRow)}
-                              disabled={updatingUsers[userRow.uid]?.approval || updatingUsers[userRow.uid]?.role || isDeletingUser || selectedUserUids.includes(userRow.uid)}
+                              disabled={disableActions || isDeletingUser}
                               aria-label={`Remove user profile ${userRow.name}`}
                               >
                               {isDeletingUser && userToDelete?.uid === userRow.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
@@ -418,30 +336,6 @@ export default function UserManagementTable({
                 disabled={isDeletingUser}
               >
                 {isDeletingUser ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Remove Profile"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-
-      {showBatchDeleteConfirm && (
-        <AlertDialog open={showBatchDeleteConfirm} onOpenChange={setShowBatchDeleteConfirm}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Batch Removal</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to remove the {selectedUserUids.length} selected user profile(s)? 
-                This action is permanent and cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowBatchDeleteConfirm(false)} disabled={isBatchDeleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={confirmBatchDelete}
-                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                disabled={isBatchDeleting}
-              >
-                {isBatchDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : `Remove ${selectedUserUids.length} User(s)`}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
