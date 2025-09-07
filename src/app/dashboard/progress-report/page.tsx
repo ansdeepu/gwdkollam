@@ -135,7 +135,7 @@ const WellTypeProgressTable = ({
               <CardTitle>{title} - {diameter}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="relative max-h-[60vh] overflow-auto">
+              <div className="relative overflow-x-auto">
                 <Table className="min-w-full border-collapse">
                 <TableHeader>
                     <TableRow>
@@ -526,7 +526,7 @@ export default function ProgressReportPage() {
     setDetailDialogColumns(columns);
     setDetailDialogData(dialogData);
     setIsDetailDialogOpen(true);
-};
+  };
 
   const FinancialSummaryTable = ({ title, summaryData }: { title: string; summaryData: FinancialSummaryReport }) => {
     if (!reportData) return null;
@@ -555,7 +555,7 @@ export default function ProgressReportPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative max-h-[60vh] overflow-auto">
+          <div className="relative overflow-x-auto">
             <Table className="min-w-full border-collapse">
               <TableHeader>
                 <TableRow>
@@ -673,7 +673,7 @@ export default function ProgressReportPage() {
                     <CardTitle>Progress Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="relative max-h-[60vh] overflow-auto">
+                  <div className="relative overflow-x-auto">
                     <Table className="min-w-full border-collapse">
                     <TableHeader>
                         <TableRow>
@@ -790,3 +790,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
