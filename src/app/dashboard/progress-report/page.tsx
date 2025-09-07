@@ -639,7 +639,7 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-lg sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+      <Card className="shadow-lg">
           <CardHeader>
             <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
                 <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
