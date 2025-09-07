@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, parseISO, startOfDay, endOfDay, isValid, parse } from "date-fns";
-import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye } from "lucide-react";
+import { FileText, Filter, RotateCcw, Loader2, FileDown, Eye, Search } from "lucide-react";
 import ReportTable from "@/components/reports/ReportTable";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { 
@@ -519,13 +519,14 @@ export default function ReportsPage() {
                     </SelectContent>
                 </Select>
             </div>
-             <div className="pt-2">
-                <Input placeholder="Global text search for any keyword..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-             </div>
-             <CardFooter className="flex justify-end gap-2 p-0 pt-4">
+             <div className="pt-2 flex items-center gap-4">
+                <div className="relative flex-grow">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="Global text search for any keyword..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                </div>
                 <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
                 <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
-            </CardFooter>
+             </div>
         </CardContent>
       </Card>
 
