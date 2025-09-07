@@ -2,6 +2,7 @@
 // src/components/reports/CustomReportBuilder.tsx
 "use client";
 import React, { useState, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,58 +129,76 @@ export default function CustomReportBuilder() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-        <div className="space-y-2">
-            <Label htmlFor="from-date">From Date</Label>
-            <Input
-              id="from-date"
-              type="date"
-              value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
-              onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
-            />
-        </div>
-        <div className="space-y-2">
-            <Label htmlFor="to-date">To Date</Label>
-            <Input
-              id="to-date"
-              type="date"
-              value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
-              onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
-            />
-        </div>
-         <p className="text-xs text-muted-foreground pb-2">
-            If no date range is selected, all data will be included in the report.
-        </p>
-      </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Select Report Filters</CardTitle>
+                 <CardDescription>
+                    Optionally, choose a date range based on the first remittance date.
+                 </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <div className="space-y-2">
+                        <Label htmlFor="from-date">From Date</Label>
+                        <Input
+                        id="from-date"
+                        type="date"
+                        value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="to-date">To Date</Label>
+                        <Input
+                        id="to-date"
+                        type="date"
+                        value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
+                        />
+                    </div>
+                    <p className="text-xs text-muted-foreground pb-2">
+                        If no date range is selected, all data will be included in the report.
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
 
-      <div className="pt-8 border-t">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Available Fields</h3>
-          <Button variant="link" onClick={handleSelectAll} className="p-0 h-auto">
-            {selectedFields.length === reportableFields.length ? 'Deselect All' : 'Select All'}
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg">
-          {reportableFields.map(field => (
-            <div
-              key={field.id}
-              className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary/50"
-            >
-              <Checkbox
-                id={field.id}
-                checked={selectedFields.includes(field.id)}
-                onCheckedChange={() => handleCheckboxChange(field.id)}
-              />
-              <label
-                htmlFor={field.id}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-              >
-                {field.label}
-              </label>
+
+      <Card>
+        <CardHeader>
+            <div className="flex justify-between items-center">
+            <CardTitle>Select Report Fields</CardTitle>
+            <Button variant="link" onClick={handleSelectAll} className="p-0 h-auto">
+                {selectedFields.length === reportableFields.length ? 'Deselect All' : 'Select All'}
+            </Button>
             </div>
-          ))}
-        </div>
-      </div>
+            <CardDescription>
+                Choose the columns you want to include in your custom report.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg">
+            {reportableFields.map(field => (
+                <div
+                key={field.id}
+                className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary/50"
+                >
+                <Checkbox
+                    id={field.id}
+                    checked={selectedFields.includes(field.id)}
+                    onCheckedChange={() => handleCheckboxChange(field.id)}
+                />
+                <label
+                    htmlFor={field.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                >
+                    {field.label}
+                </label>
+                </div>
+            ))}
+            </div>
+        </CardContent>
+      </Card>
       
       <div className="flex justify-start items-center gap-4 pt-6 border-t">
         <Button onClick={handleGenerateReport} disabled={selectedFields.length === 0}>
