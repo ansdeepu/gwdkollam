@@ -539,7 +539,7 @@ export default function ReportsPage() {
       
       <Card className="card-for-print shadow-lg">
         <CardContent className="p-0">
-          <div className="relative max-h-[calc(100vh-26rem)] overflow-auto">
+          <div className="relative">
             <Table>
               <TableHeader>
                   <TableRow>
