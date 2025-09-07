@@ -639,6 +639,28 @@ export default function ProgressReportPage() {
 
   return (
     <div className="space-y-6">
+      <Card className="shadow-lg no-print">
+          <CardHeader>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
+              <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
+              <Input type="date" placeholder="To Date" className="w-full sm:w-auto" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
+
+              <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>
+                  {isFiltering ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Play className="mr-2 h-4 w-4" />}
+                  Generate Report
+              </Button>
+              <Button onClick={handleResetFilters} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Clear
+              </Button>
+              <Button onClick={handleExportExcel} disabled={!reportData || isFiltering} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export Excel
+              </Button>
+          </div>
+          </CardHeader>
+      </Card>
+      
       {isFiltering ? (
         <div className="flex items-center justify-center py-10">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -682,28 +704,6 @@ export default function ProgressReportPage() {
                     </Table>
                   </div>
                 </CardContent>
-            </Card>
-
-            <Card className="shadow-lg no-print sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
-                <CardHeader>
-                <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
-                    <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
-                    <Input type="date" placeholder="To Date" className="w-full sm:w-auto" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
-
-                    <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>
-                        {isFiltering ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Play className="mr-2 h-4 w-4" />}
-                        Generate Report
-                    </Button>
-                    <Button onClick={handleResetFilters} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Clear
-                    </Button>
-                    <Button onClick={handleExportExcel} disabled={!reportData || isFiltering} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Export Excel
-                    </Button>
-                </div>
-                </CardHeader>
             </Card>
 
             <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
