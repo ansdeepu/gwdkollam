@@ -23,7 +23,7 @@ import {
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Input } from '@/components/ui/input';
@@ -134,47 +134,49 @@ const WellTypeProgressTable = ({
             <CardHeader>
               <CardTitle>{title} - {diameter}</CardTitle>
             </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table className="min-w-full border-collapse">
-              <TableHeader>
-                  <TableRow>
-                  <TableHead className="border p-2 align-middle text-left min-w-[200px] font-semibold">Type of Application</TableHead>
-                  {metrics.map(metric => (
-                      <TableHead key={metric.key} className="border p-2 text-center font-semibold min-w-[100px] whitespace-normal break-words">{metric.label}</TableHead>
-                  ))}
-                  </TableRow>
-              </TableHeader>
-              <TableBody>
-                  {applicationTypeOptions.map(appType => (
-                      <TableRow key={appType}>
-                          <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
-                          {metrics.map(metric => {
-                            const count = data[appType]?.[diameter]?.[metric.key] as number ?? 0;
-                            const metricData = data[appType]?.[diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailWithFileContext[] ?? [];
-                            return (
-                              <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", (metric.key === 'balance' || metric.key === 'totalApplications') && "font-bold")}>
-                                  <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
-                                    {count}
-                                  </Button>
-                              </TableCell>
-                            )
-                          })}
-                      </TableRow>
-                  ))}
-              </TableBody>
-              <TableFooter>
-                  <TableRow className="bg-muted/50">
-                      <TableCell className="border p-2 text-left font-bold">Total</TableCell>
-                      {metrics.map(metric => (
-                         <TableCell key={`total-${metric.key}`} className={cn("border p-2 text-center font-bold")}>
-                             <Button variant="link" className="p-0 h-auto font-bold" disabled={(diameterTotals[metric.key] as number) === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailWithFileContext[], `Total for ${diameter} - ${metric.label}`)}>
-                                  {diameterTotals[metric.key] as number}
-                             </Button>
-                         </TableCell>
-                      ))}
-                  </TableRow>
-              </TableFooter>
-              </Table>
+            <CardContent>
+              <div className="relative max-h-[60vh] overflow-auto">
+                <Table className="min-w-full border-collapse">
+                <TableHeader>
+                    <TableRow>
+                    <TableHead className="border p-2 align-middle text-left min-w-[200px] font-semibold">Type of Application</TableHead>
+                    {metrics.map(metric => (
+                        <TableHead key={metric.key} className="border p-2 text-center font-semibold min-w-[100px] whitespace-normal break-words">{metric.label}</TableHead>
+                    ))}
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {applicationTypeOptions.map(appType => (
+                        <TableRow key={appType}>
+                            <TableCell className="border p-2 text-left font-medium">{applicationTypeDisplayMap[appType]}</TableCell>
+                            {metrics.map(metric => {
+                              const count = data[appType]?.[diameter]?.[metric.key] as number ?? 0;
+                              const metricData = data[appType]?.[diameter]?.[`${metric.key}Data` as keyof ProgressStats] as SiteDetailWithFileContext[] ?? [];
+                              return (
+                                <TableCell key={`${appType}-${metric.key}`} className={cn("border p-2 text-center", (metric.key === 'balance' || metric.key === 'totalApplications') && "font-bold")}>
+                                    <Button variant="link" className="p-0 h-auto font-semibold" disabled={count === 0} onClick={() => onCountClick(metricData, `${applicationTypeDisplayMap[appType]} - ${metric.label}`)}>
+                                      {count}
+                                    </Button>
+                                </TableCell>
+                              )
+                            })}
+                        </TableRow>
+                    ))}
+                </TableBody>
+                <TableFooter>
+                    <TableRow className="bg-muted/50">
+                        <TableCell className="border p-2 text-left font-bold">Total</TableCell>
+                        {metrics.map(metric => (
+                           <TableCell key={`total-${metric.key}`} className={cn("border p-2 text-center font-bold")}>
+                               <Button variant="link" className="p-0 h-auto font-bold" disabled={(diameterTotals[metric.key] as number) === 0} onClick={() => onCountClick(diameterTotals[`${metric.key}Data` as keyof ProgressStats] as SiteDetailWithFileContext[], `Total for ${diameter} - ${metric.label}`)}>
+                                    {diameterTotals[metric.key] as number}
+                               </Button>
+                           </TableCell>
+                        ))}
+                    </TableRow>
+                </TableFooter>
+                </Table>
+              </div>
             </CardContent>
           </Card>
           )
@@ -446,10 +448,6 @@ export default function ProgressReportPage() {
     }
   }, [entriesLoading, startDate, endDate, handleGenerateReport]); 
 
-  const handleExportExcel = () => {
-    toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
-  };
-
   const handleResetFilters = () => {
     const today = new Date();
     setStartDate(startOfMonth(today));
@@ -527,24 +525,8 @@ export default function ProgressReportPage() {
 };
 
 
-  const handleExportDialogData = () => {
-    if (detailDialogData.length === 0) return;
-
-    const dataToExport = detailDialogData.map(row => {
-        const exportRow: Record<string, string> = {};
-        detailDialogColumns.forEach(col => {
-            const value = (row as any)[col.key];
-            exportRow[col.label] = String(value ?? 'N/A');
-        });
-        return exportRow;
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: detailDialogColumns.map(c => c.label) });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Details");
-    const safeTitle = detailDialogTitle.replace(/[^\\w]/g, '-').substring(0, 30);
-    XLSX.writeFile(workbook, `Report_Details_${safeTitle}.xlsx`);
-    toast({ title: "Exported!", description: "The detailed list has been exported to Excel." });
+  const handleExportExcel = () => {
+    toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
   };
   
   const FinancialSummaryTable = ({ title, summaryData }: { title: string; summaryData: FinancialSummaryReport }) => {
@@ -573,74 +555,76 @@ export default function ProgressReportPage() {
             A summary of financial and application counts for each purpose within the selected period.
           </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table className="min-w-full border-collapse">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="border p-2 align-middle text-center font-semibold">Type of Purpose</TableHead>
-                <TableHead className="border p-2 text-center font-semibold">Total Application Received</TableHead>
-                <TableHead className="border p-2 text-center font-semibold">Total Remittance (₹)</TableHead>
-                <TableHead className="border p-2 text-center font-semibold">No. of Application Completed</TableHead>
-                <TableHead className="border p-2 text-center font-semibold">Total Payment (₹)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {purposesToShow.map(purpose => {
-                const data = summaryData[purpose];
-                if (!data) return null;
-                return (
-                  <TableRow key={purpose}>
-                    <TableCell className="border p-2 font-medium">{purpose}</TableCell>
-                    <TableCell className="border p-2 text-center">
-                      <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Site Details for ${purpose} Applications`)}>
-                        {data.totalApplications}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="border p-2 text-right">
-                       <Button variant="link" className="p-0 h-auto text-right" disabled={data.totalRemittance === 0} onClick={() => handleCountClick(data.applicationData, `Remittance Details for ${purpose}`)}>
-                        {data.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="border p-2 text-center">
-                      <Button variant="link" className="p-0 h-auto" disabled={data.totalCompleted === 0} onClick={() => handleCountClick(data.completedData, `Application Completed - ${purpose}`)}>
-                        {data.totalCompleted}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="border p-2 text-right">
-                      <Button variant="link" className="p-0 h-auto text-right" disabled={data.totalPayment === 0} onClick={() => handleCountClick(data.completedData, `Payment for Completed - ${purpose}`)}>
-                          {data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-             <TableFooter>
-                <TableRow className="bg-muted/50 font-bold">
-                    <TableCell className="border p-2">Total</TableCell>
-                    <TableCell className="border p-2 text-center">
-                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalApplications === 0} onClick={() => handleCountClick(total.applicationData, `Site Details for All ${title}`)}>
-                            {total.totalApplications}
-                        </Button>
-                    </TableCell>
-                    <TableCell className="border p-2 text-right">
-                        <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalRemittance === 0} onClick={() => handleCountClick(total.applicationData, `Remittance Details for All ${title}`)}>
-                            {total.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </Button>
-                    </TableCell>
-                    <TableCell className="border p-2 text-center">
-                        <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalCompleted === 0} onClick={() => handleCountClick(total.completedData, `Total Completed Applications for ${title}`)}>
-                            {total.totalCompleted}
-                        </Button>
-                    </TableCell>
-                    <TableCell className="border p-2 text-right">
-                        <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalPayment === 0} onClick={() => handleCountClick(total.completedData, `Total Payment for ${title}`)}>
-                           {total.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </Button>
-                    </TableCell>
+        <CardContent>
+          <div className="relative max-h-[60vh] overflow-auto">
+            <Table className="min-w-full border-collapse">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="border p-2 align-middle text-center font-semibold">Type of Purpose</TableHead>
+                  <TableHead className="border p-2 text-center font-semibold">Total Application Received</TableHead>
+                  <TableHead className="border p-2 text-center font-semibold">Total Remittance (₹)</TableHead>
+                  <TableHead className="border p-2 text-center font-semibold">No. of Application Completed</TableHead>
+                  <TableHead className="border p-2 text-center font-semibold">Total Payment (₹)</TableHead>
                 </TableRow>
-            </TableFooter>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {purposesToShow.map(purpose => {
+                  const data = summaryData[purpose];
+                  if (!data) return null;
+                  return (
+                    <TableRow key={purpose}>
+                      <TableCell className="border p-2 font-medium">{purpose}</TableCell>
+                      <TableCell className="border p-2 text-center">
+                        <Button variant="link" className="p-0 h-auto" disabled={data.totalApplications === 0} onClick={() => handleCountClick(data.applicationData, `Site Details for ${purpose} Applications`)}>
+                          {data.totalApplications}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="border p-2 text-right">
+                         <Button variant="link" className="p-0 h-auto text-right" disabled={data.totalRemittance === 0} onClick={() => handleCountClick(data.applicationData, `Remittance Details for ${purpose}`)}>
+                          {data.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="border p-2 text-center">
+                        <Button variant="link" className="p-0 h-auto" disabled={data.totalCompleted === 0} onClick={() => handleCountClick(data.completedData, `Application Completed - ${purpose}`)}>
+                          {data.totalCompleted}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="border p-2 text-right">
+                        <Button variant="link" className="p-0 h-auto text-right" disabled={data.totalPayment === 0} onClick={() => handleCountClick(data.completedData, `Payment for Completed - ${purpose}`)}>
+                            {data.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+               <TableFooter>
+                  <TableRow className="bg-muted/50 font-bold">
+                      <TableCell className="border p-2">Total</TableCell>
+                      <TableCell className="border p-2 text-center">
+                          <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalApplications === 0} onClick={() => handleCountClick(total.applicationData, `Site Details for All ${title}`)}>
+                              {total.totalApplications}
+                          </Button>
+                      </TableCell>
+                      <TableCell className="border p-2 text-right">
+                          <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalRemittance === 0} onClick={() => handleCountClick(total.applicationData, `Remittance Details for All ${title}`)}>
+                              {total.totalRemittance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </Button>
+                      </TableCell>
+                      <TableCell className="border p-2 text-center">
+                          <Button variant="link" className="p-0 h-auto font-bold" disabled={total.totalCompleted === 0} onClick={() => handleCountClick(total.completedData, `Total Completed Applications for ${title}`)}>
+                              {total.totalCompleted}
+                          </Button>
+                      </TableCell>
+                      <TableCell className="border p-2 text-right">
+                          <Button variant="link" className="p-0 h-auto font-bold text-right" disabled={total.totalPayment === 0} onClick={() => handleCountClick(total.completedData, `Total Payment for ${title}`)}>
+                             {total.totalPayment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </Button>
+                      </TableCell>
+                  </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     );
@@ -689,7 +673,8 @@ export default function ProgressReportPage() {
                 <CardHeader>
                     <CardTitle>Progress Summary</CardTitle>
                 </CardHeader>
-                <CardContent className="overflow-x-auto pt-6">
+                <CardContent>
+                  <div className="relative max-h-[60vh] overflow-auto">
                     <Table className="min-w-full border-collapse">
                     <TableHeader>
                         <TableRow>
@@ -718,6 +703,7 @@ export default function ProgressReportPage() {
                         )})}
                     </TableBody>
                     </Table>
+                  </div>
                 </CardContent>
             </Card>
 
@@ -793,7 +779,7 @@ export default function ProgressReportPage() {
             </ScrollArea>
           </div>
           <DialogFooter className="p-6 pt-4 border-t">
-            <Button variant="outline" onClick={handleExportDialogData} disabled={detailDialogData.length === 0}>
+            <Button variant="outline" disabled={detailDialogData.length === 0}>
               <FileDown className="mr-2 h-4 w-4" /> Export to Excel
             </Button>
             <DialogClose asChild>
