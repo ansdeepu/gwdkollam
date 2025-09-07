@@ -31,6 +31,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
+import { usePageNavigation } from "@/hooks/usePageNavigation";
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
@@ -369,6 +370,7 @@ export default function AgencyRegistrationPage() {
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { setIsNavigating } = usePageNavigation();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -548,6 +550,7 @@ export default function AgencyRegistrationPage() {
   };
 
   const handleAddNew = () => {
+    setIsNavigating(true);
     setIsViewing(false);
     setSelectedApplicationId('new');
   }
