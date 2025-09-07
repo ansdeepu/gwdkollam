@@ -88,50 +88,46 @@ const RegistrationTable = ({
   onView: (id: string) => void,
   onEdit: (id: string) => void, 
   onDelete: (id: string) => void,
-  searchTerm: string
+  searchTerm: string 
 }) => (
-    <Card className="shadow-lg">
-        <CardContent className="p-0">
-          <div className="max-h-[70vh] overflow-auto">
-            <Table>
-                <TableHeader className="bg-secondary sticky top-0">
-                    <TableRow>
-                        <TableHead>File No.</TableHead>
-                        <TableHead>Agency Name</TableHead>
-                        <TableHead>Owner</TableHead>
-                        <TableHead>Active Rigs</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-center">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {applications.length > 0 ? (
-                        applications.map((app) => (
-                            <TableRow key={app.id}>
-                                <TableCell>{app.fileNo || 'N/A'}</TableCell>
-                                <TableCell className="font-medium">{app.agencyName}</TableCell>
-                                <TableCell>{app.owner.name}</TableCell>
-                                <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
-                                <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
-                                <TableCell className="text-center">
-                                    <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={6} className="h-24 text-center">
-                                No registrations found {searchTerm ? "matching your search" : ""}.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-            </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="max-h-[70vh] overflow-auto">
+      <Table>
+          <TableHeader className="bg-secondary sticky top-0">
+              <TableRow>
+                  <TableHead>File No.</TableHead>
+                  <TableHead>Agency Name</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Active Rigs</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+          </TableHeader>
+          <TableBody>
+              {applications.length > 0 ? (
+                  applications.map((app) => (
+                      <TableRow key={app.id}>
+                          <TableCell>{app.fileNo || 'N/A'}</TableCell>
+                          <TableCell className="font-medium">{app.agencyName}</TableCell>
+                          <TableCell>{app.owner.name}</TableCell>
+                          <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
+                          <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
+                          <TableCell className="text-center">
+                              <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
+                          </TableCell>
+                      </TableRow>
+                  ))
+              ) : (
+                  <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                          No registrations found {searchTerm ? "matching your search" : ""}.
+                      </TableCell>
+                  </TableRow>
+              )}
+          </TableBody>
+      </Table>
+    </div>
 );
 
 const getOrdinalSuffix = (n: number) => {
@@ -969,8 +965,8 @@ export default function AgencyRegistrationPage() {
   // LIST VIEW
   return (
     <div className="space-y-6">
-       <Card>
-        <CardContent className="p-4">
+      <Card className="shadow-lg">
+        <CardContent className="p-4 space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="relative flex-grow w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -986,12 +982,12 @@ export default function AgencyRegistrationPage() {
                   <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
               </Button>
           </div>
-          <Tabs defaultValue="completed" className="mt-4">
+          <Tabs defaultValue="completed" className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
                 <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
             </TabsList>
-            <TabsContent value="completed" className="mt-4 space-y-2">
+            <TabsContent value="completed" className="mt-4">
                 <RegistrationTable 
                     applications={completedApplications}
                     onView={handleView}
@@ -1000,7 +996,7 @@ export default function AgencyRegistrationPage() {
                     searchTerm={searchTerm}
                 />
             </TabsContent>
-            <TabsContent value="pending" className="mt-4 space-y-2">
+            <TabsContent value="pending" className="mt-4">
                 <RegistrationTable 
                     applications={pendingApplications}
                     onView={handleView}
