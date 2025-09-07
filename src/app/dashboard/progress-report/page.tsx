@@ -455,7 +455,83 @@ export default function ProgressReportPage() {
   };
   
   const handleExportExcel = () => {
-    toast({ title: "Export Not Implemented", description: "Excel export for this complex report format is not yet available." });
+    if (!reportData) {
+      toast({ title: "No Report Generated", description: "Please generate a report first.", variant: "destructive" });
+      return;
+    }
+    
+    const wb = XLSX.utils.book_new();
+    const addWorksheet = (data: any[], sheetName: string) => {
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    };
+  
+    // 1. Progress Summary
+    const progressSummaryExport = Object.entries(reportData.progressSummaryData).map(([purpose, stats]) => ({
+      'Service Type': purpose,
+      'Previous Balance': stats.previousBalance,
+      'Current Application': stats.currentApplications,
+      'To be Refunded': stats.toBeRefunded,
+      'Total Application': stats.totalApplications,
+      'Completed': stats.completed,
+      'Balance': stats.balance,
+    }));
+    addWorksheet(progressSummaryExport, 'Progress Summary');
+  
+    // 2. Financial Summary - Private
+    const privateFinancialExport = Object.entries(reportData.privateFinancialSummaryData).filter(([,summary]) => summary.totalApplications > 0 || summary.totalCompleted > 0).map(([purpose, summary]) => ({
+      'Purpose': purpose,
+      'Applications Received': summary.totalApplications,
+      'Total Remittance (₹)': summary.totalRemittance,
+      'Applications Completed': summary.totalCompleted,
+      'Total Payment (₹)': summary.totalPayment,
+    }));
+    addWorksheet(privateFinancialExport, 'Financial Summary (Private)');
+  
+    // 3. Financial Summary - Government
+    const govFinancialExport = Object.entries(reportData.governmentFinancialSummaryData).filter(([,summary]) => summary.totalApplications > 0 || summary.totalCompleted > 0).map(([purpose, summary]) => ({
+      'Purpose': purpose,
+      'Applications Received': summary.totalApplications,
+      'Total Remittance (₹)': summary.totalRemittance,
+      'Applications Completed': summary.totalCompleted,
+      'Total Payment (₹)': summary.totalPayment,
+    }));
+    addWorksheet(govFinancialExport, 'Financial Summary (Govt)');
+    
+    // 4 & 5. Well Type Progress (BWC & TWC)
+    const wellMetrics = ['Previous Balance', 'Current Application', 'To be Refunded', 'Total Application', 'Completed', 'Balance'];
+    
+    [...BWC_DIAMETERS, ...TWC_DIAMETERS].forEach(diameter => {
+      const isBwc = BWC_DIAMETERS.includes(diameter);
+      const dataToProcess = isBwc ? reportData.bwcData : reportData.twcData;
+      const wellDataExport: any[] = [];
+      let hasData = false;
+
+      applicationTypeOptions.forEach(appType => {
+        const stats = dataToProcess[appType]?.[diameter];
+        if (stats) {
+          const row: Record<string, any> = {'Type of Application': applicationTypeDisplayMap[appType]};
+          let rowHasData = false;
+          wellMetrics.forEach(metric => {
+            const key = metric.toLowerCase().replace(/ /g, '').replace('tobe', 'toBe');
+            const value = stats[key as keyof ProgressStats] as number;
+            row[metric] = value;
+            if (value > 0) rowHasData = true;
+          });
+          if(rowHasData) {
+            wellDataExport.push(row);
+            hasData = true;
+          }
+        }
+      });
+      if(hasData) {
+        addWorksheet(wellDataExport, `${isBwc ? 'BWC' : 'TWC'} - ${diameter.replace(/ /g, '_')}`);
+      }
+    });
+  
+    const fileName = `GWD_Progress_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    toast({ title: "Export Successful", description: `Report downloaded as ${fileName}` });
   };
 
   const handleCountClick = (data: Array<SiteDetailWithFileContext | DataEntryFormData | Record<string, any>>, title: string) => {
@@ -639,7 +715,7 @@ export default function ProgressReportPage() {
 
   return (
     <div className="flex h-full flex-col space-y-6">
-      <Card className="shadow-lg sticky top-0 z-10 bg-background">
+      <Card className="shadow-lg bg-background no-print">
           <CardHeader>
             <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
                 <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
