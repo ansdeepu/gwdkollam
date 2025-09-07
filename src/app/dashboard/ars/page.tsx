@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import type { ArsEntryFormData } from "@/lib/schemas";
+import { usePageNavigation } from "@/hooks/usePageNavigation";
+import { useRouter } from "next/navigation";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -72,6 +74,8 @@ export default function ArsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const canEdit = user?.role === 'editor';
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { setIsNavigating } = usePageNavigation();
 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -86,6 +90,11 @@ export default function ArsPage() {
   
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
+  
+  const handleAddNewClick = () => {
+    setIsNavigating(true);
+    router.push('/dashboard/ars/entry');
+  };
 
   const filteredSites = useMemo(() => {
     let sites = [...arsEntries];
@@ -334,7 +343,7 @@ export default function ArsPage() {
                     <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 order-1 sm:order-2">
-                  <Link href="/dashboard/ars/entry" passHref><Button size="sm"> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button></Link>
+                  <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>
                   <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
                   {canEdit && ( <> 
                       <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
