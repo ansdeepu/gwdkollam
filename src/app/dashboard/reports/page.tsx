@@ -90,16 +90,16 @@ const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
   if (dateValue instanceof Date && isValid(dateValue)) return dateValue;
   if (typeof dateValue === 'string') {
-    // Try ISO format first, as it's a common machine-readable format
-    let parsed = parseISO(dateValue);
+    // Try yyyy-MM-dd format from native date pickers
+    let parsed = parse(dateValue, 'yyyy-MM-dd', new Date());
     if (isValid(parsed)) return parsed;
 
-    // Then handle 'dd/MM/yyyy' for manual entries
+    // Then try dd/MM/yyyy for manual entries
     parsed = parse(dateValue, 'dd/MM/yyyy', new Date());
     if (isValid(parsed)) return parsed;
-
-     // Then handle 'yyyy-MM-dd' for form values
-    parsed = parse(dateValue, 'yyyy-MM-dd', new Date());
+    
+    // Then try ISO format
+    parsed = parseISO(dateValue);
     if (isValid(parsed)) return parsed;
   }
   // Handle Firestore Timestamps
@@ -181,7 +181,7 @@ export default function ReportsPage() {
 
         const checkDate = (targetDateValue: Date | string | null | undefined): boolean => {
           if (!targetDateValue) return false;
-          const targetDate = targetDateValue instanceof Date ? targetDateValue : parseISO(targetDateValue as any);
+          const targetDate = safeParseDate(targetDateValue);
           if (!targetDate || !isValid(targetDate)) return false;
           let isAfterFrom = true;
           if (from) isAfterFrom = targetDate >= from;
@@ -236,13 +236,13 @@ export default function ReportsPage() {
 
     // Sort entries by the first remittance date in descending order
     currentEntries.sort((a, b) => {
-        const dateA = safeParseDate(a.remittanceDetails?.[0]?.dateOfRemittance);
-        const dateB = safeParseDate(b.remittanceDetails?.[0]?.dateOfRemittance);
+      const dateA = safeParseDate(a.remittanceDetails?.[0]?.dateOfRemittance);
+      const dateB = safeParseDate(b.remittanceDetails?.[0]?.dateOfRemittance);
 
-        if (dateA && dateB) return dateB.getTime() - dateA.getTime();
-        if (dateA) return -1;
-        if (dateB) return 1;
-        return 0;
+      if (dateA && dateB) return dateB.getTime() - dateA.getTime();
+      if (dateA) return -1;
+      if (dateB) return 1;
+      return 0;
     });
 
 
@@ -572,8 +572,7 @@ export default function ReportsPage() {
       </div>
       
        <Card className="card-for-print shadow-lg">
-          <CardContent className="p-0">
-            <div className="relative overflow-auto max-h-[70vh]">
+          <div className="relative overflow-auto max-h-[70vh]">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -594,8 +593,7 @@ export default function ReportsPage() {
                   itemsPerPage={ITEMS_PER_PAGE}
                 />
               </Table>
-            </div>
-          </CardContent>
+          </div>
           <CardFooter className="p-4 border-t flex items-center justify-center">
               {totalPages > 1 && (
                   <PaginationControls 
