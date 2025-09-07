@@ -469,7 +469,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <Card className="shadow-lg no-print">
         <CardContent className="p-4 space-y-4">
-             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                  <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
                     <SelectContent>
@@ -491,37 +491,37 @@ export default function ReportsPage() {
                     <Input type="date" placeholder="To Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1"/>
                 </div>
             </div>
-             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                 <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Service Type" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Site Service Types</SelectItem>
                         {sitePurposeOptions.map((purpose) => (<SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                 <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by File Status" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All File Statuses</SelectItem>
                         {fileStatusOptions.map((status) => (<SelectItem key={status} value={status}>{status}</SelectItem>))}
                     </SelectContent>
                 </Select>
-                 <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
+                <Select value={typeOfRigFilter} onValueChange={setTypeOfRigFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Site Type of Rig" /></SelectTrigger>
                     <SelectContent>
                     <SelectItem value="all">All Site Rig Types</SelectItem>
                     {siteTypeOfRigOptions.map((rig) => (<SelectItem key={rig} value={rig}>{rig}</SelectItem>))}
                     </SelectContent>
                 </Select>
-             </div>
-             <div className="pt-2 flex items-center gap-4">
-                 <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
-                    <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
+                <Select value={workCategoryFilter} onValueChange={setWorkCategoryFilter}>
+                    <SelectTrigger><SelectValue placeholder="Filter by Site Work Category" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Site Work Categories</SelectItem>
                         {siteWorkStatusOptions.map((category) => (<SelectItem key={category} value={category}>{category}</SelectItem>))}
                     </SelectContent>
                 </Select>
+            </div>
+             <div className="pt-2 flex items-center gap-4">
                 <div className="relative flex-grow">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
@@ -540,26 +540,28 @@ export default function ReportsPage() {
       <Card className="card-for-print shadow-lg">
         <CardContent className="p-0">
           <div className="relative">
-            <Table>
-              <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[6%]">Sl. No.</TableHead>
-                    <TableHead className="w-[12%]">File No</TableHead>
-                    <TableHead className="w-[20%]">Applicant Name</TableHead>
-                    <TableHead className="w-[20%]">Site Name</TableHead>
-                    <TableHead className="w-[10%]">Date of Remittance</TableHead>
-                    <TableHead className="w-[12%]">File Status</TableHead>
-                    <TableHead className="w-[12%]">Site Work Status</TableHead>
-                    <TableHead className="text-center w-[8%]">Actions</TableHead>
-                  </TableRow>
-              </TableHeader>
-              <ReportTable
-                  data={paginatedReportRows}
-                  onViewDetailsClick={handleOpenViewDialog}
-                  currentPage={currentPage}
-                  itemsPerPage={ITEMS_PER_PAGE}
-              />
-            </Table>
+            <div className="overflow-auto">
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[6%]">Sl. No.</TableHead>
+                        <TableHead className="w-[12%]">File No</TableHead>
+                        <TableHead className="w-[20%]">Applicant Name</TableHead>
+                        <TableHead className="w-[20%]">Site Name</TableHead>
+                        <TableHead className="w-[10%]">Date of Remittance</TableHead>
+                        <TableHead className="w-[12%]">File Status</TableHead>
+                        <TableHead className="w-[12%]">Site Work Status</TableHead>
+                        <TableHead className="text-center w-[8%]">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <ReportTable
+                    data={paginatedReportRows}
+                    onViewDetailsClick={handleOpenViewDialog}
+                    currentPage={currentPage}
+                    itemsPerPage={ITEMS_PER_PAGE}
+                />
+                </Table>
+            </div>
           </div>
         </CardContent>
         <CardFooter className="p-4 border-t flex items-center justify-center">
