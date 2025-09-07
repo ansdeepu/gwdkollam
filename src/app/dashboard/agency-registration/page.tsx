@@ -762,12 +762,12 @@ export default function AgencyRegistrationPage() {
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Card>
-                    <CardHeader className="flex flex-row justify-end items-center">
-                        <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
-                        </Button>
-                    </CardHeader>
                     <CardContent className="pt-6 space-y-8">
+                        <div className="flex justify-end mb-4">
+                            <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
+                                <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                            </Button>
+                        </div>
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                             <AccordionItem value="item-1">
