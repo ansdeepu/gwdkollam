@@ -42,16 +42,16 @@ const toDateOrNull = (value: any): Date | null => {
   }
   if (typeof value === 'string') {
     // First, try to parse dd/MM/yyyy format, which is common in our app's manual entry
-    let parsed = parse(value, 'dd/MM/yyyy', new Date());
+    let parsed = parseISO(value);
     if (isValid(parsed)) return parsed;
     // Then, try to parse ISO format, which is how dates are often stored/transmitted
-    parsed = parseISO(value);
+    parsed = parse(value, 'dd/MM/yyyy', new Date());
     if (isValid(parsed)) return parsed;
   }
   return null;
 };
 
-// Recursively processes an object to convert all date-like values to Date objects.
+// Recursively processes an object to convert all date-like values to 'yyyy-MM-dd' strings for native date inputs.
 const processDataForForm = (data: any): any => {
     if (!data) return data;
     if (Array.isArray(data)) {
@@ -64,7 +64,8 @@ const processDataForForm = (data: any): any => {
                 const value = data[key];
                  // Check for keys that typically represent dates
                  if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
-                    processed[key] = toDateOrNull(value);
+                    const date = toDateOrNull(value);
+                    processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
                 } else {
                     // Recursively process nested objects/arrays
                     processed[key] = processDataForForm(value);
@@ -234,7 +235,7 @@ const RigAccordionItem = ({
                     <FormMessage />
                 </FormItem>
             )} />
-            <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
+            <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
             <FormItem>
               <FormLabel>Validity Upto</FormLabel>
               <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
@@ -242,7 +243,7 @@ const RigAccordionItem = ({
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
-            <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
+            <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
             <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={finalIsReadOnly} /></FormControl><FormMessage /></FormItem>} />
           </div>
           <Separator />
@@ -421,22 +422,7 @@ export default function AgencyRegistrationPage() {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
                  const processedApp = processDataForForm(app);
-                 const formattedApp = {
-                    ...processedApp,
-                    agencyRegistrationDate: processedApp.agencyRegistrationDate ? format(new Date(processedApp.agencyRegistrationDate), 'dd/MM/yyyy') : '',
-                    agencyPaymentDate: processedApp.agencyPaymentDate ? format(new Date(processedApp.agencyPaymentDate), 'dd/MM/yyyy') : '',
-                    rigs: (processedApp.rigs || []).map((rig: any) => ({
-                        ...rig,
-                        registrationDate: rig.registrationDate ? format(new Date(rig.registrationDate), 'dd/MM/yyyy') : '',
-                        paymentDate: rig.paymentDate ? format(new Date(rig.paymentDate), 'dd/MM/yyyy') : '',
-                        renewals: (rig.renewals || []).map((renewal: any) => ({
-                           ...renewal,
-                           renewalDate: renewal.renewalDate ? format(new Date(renewal.renewalDate), 'dd/MM/yyyy') : '',
-                           paymentDate: renewal.paymentDate ? format(new Date(renewal.paymentDate), 'dd/MM/yyyy') : '',
-                        }))
-                    }))
-                 };
-                 form.reset(formattedApp);
+                 form.reset(processedApp);
             } else {
                 setSelectedApplicationId(null);
                 form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
@@ -580,7 +566,7 @@ export default function AgencyRegistrationPage() {
   
   const handleRenewRig = (rigIndex: number) => {
       setEditingRenewal(null);
-      setRenewalData({ rigIndex, data: { renewalDate: format(new Date(), 'dd/MM/yyyy') } });
+      setRenewalData({ rigIndex, data: { renewalDate: format(new Date(), 'yyyy-MM-dd') } });
       setIsRenewalDialogOpen(true);
   };
   
@@ -668,7 +654,7 @@ export default function AgencyRegistrationPage() {
   const handleCancelRig = (rigIndex: number) => {
       const rig = form.getValues(`rigs.${rigIndex}`);
       const cancellationDate = rig.cancellationDate;
-      const formattedDate = cancellationDate && isValid(new Date(cancellationDate)) ? format(new Date(cancellationDate), 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy');
+      const formattedDate = cancellationDate && isValid(new Date(cancellationDate)) ? format(new Date(cancellationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
 
       setCancellationData({ 
           rigIndex, 
@@ -779,9 +765,9 @@ export default function AgencyRegistrationPage() {
                             <AccordionTrigger>2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="text" placeholder="dd/mm/yyyy" {...field} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                             </AccordionContent>
                           </AccordionItem>
@@ -830,7 +816,7 @@ export default function AgencyRegistrationPage() {
                     <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Renewal Date</Label>
-                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || ''} onChange={(e) => {
+                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || ''} onChange={(e) => {
                             const value = e.target.value;
                              if (editingRenewal) {
                                 setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
@@ -855,7 +841,7 @@ export default function AgencyRegistrationPage() {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Payment Date</Label>
-                        <Input type="text" placeholder="dd/mm/yyyy" className="col-span-3" value={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || ''} onChange={(e) => {
+                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || ''} onChange={(e) => {
                             const value = e.target.value;
                             if (editingRenewal) {
                                 setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
@@ -908,8 +894,7 @@ export default function AgencyRegistrationPage() {
                             <Label htmlFor="cancellationDate" className="text-right">Date</Label>
                             <Input
                                 id="cancellationDate"
-                                type="text"
-                                placeholder="dd/mm/yyyy"
+                                type="date"
                                 value={cancellationData.date}
                                 onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))}
                                 className="col-span-3"
