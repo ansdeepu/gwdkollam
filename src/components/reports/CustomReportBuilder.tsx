@@ -132,70 +132,66 @@ export default function CustomReportBuilder() {
     <div className="space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>Build Your Custom Report</CardTitle>
-          <CardDescription>
-              Choose your date range and select the fields you want to include in the report.
-          </CardDescription>
+          <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-base font-semibold text-primary">Select Report Fields</h3>
+                <p className="text-sm text-muted-foreground">Choose the columns for your custom report.</p>
+              </div>
+              <Button variant="link" onClick={handleSelectAll} className="p-0 h-auto">
+                  {selectedFields.length === reportableFields.length ? 'Deselect All' : 'Select All'}
+              </Button>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-base font-semibold text-primary mb-2">1. Filter by Date (Optional)</h3>
-              <p className="text-sm text-muted-foreground mb-4">Select a date range based on the first remittance date.</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                  <div className="space-y-2">
-                      <Label htmlFor="from-date">From Date</Label>
-                      <Input
-                      id="from-date"
-                      type="date"
-                      value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
-                      onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
-                      />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="to-date">To Date</Label>
-                      <Input
-                      id="to-date"
-                      type="date"
-                      value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
-                      onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
-                      />
-                  </div>
-              </div>
+        <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg bg-secondary/20">
+            {reportableFields.map(field => (
+                <div
+                key={field.id}
+                className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary/50"
+                >
+                <Checkbox
+                    id={field.id}
+                    checked={selectedFields.includes(field.id)}
+                    onCheckedChange={() => handleCheckboxChange(field.id)}
+                />
+                <label
+                    htmlFor={field.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                >
+                    {field.label}
+                </label>
+                </div>
+            ))}
             </div>
-            
-            <Separator />
+        </CardContent>
+      </Card>
 
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 className="text-base font-semibold text-primary">2. Select Report Fields</h3>
-                    <p className="text-sm text-muted-foreground">Choose the columns for your custom report.</p>
-                  </div>
-                  <Button variant="link" onClick={handleSelectAll} className="p-0 h-auto">
-                      {selectedFields.length === reportableFields.length ? 'Deselect All' : 'Select All'}
-                  </Button>
+      <Card>
+        <CardHeader>
+          <h3 className="text-base font-semibold text-primary mb-2">Filter by Date (Optional)</h3>
+          <p className="text-sm text-muted-foreground">Select a date range based on the first remittance date.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              <div className="space-y-2">
+                  <Label htmlFor="from-date">From Date</Label>
+                  <Input
+                  id="from-date"
+                  type="date"
+                  value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
+                  />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 border rounded-lg bg-secondary/20">
-                {reportableFields.map(field => (
-                    <div
-                    key={field.id}
-                    className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary/50"
-                    >
-                    <Checkbox
-                        id={field.id}
-                        checked={selectedFields.includes(field.id)}
-                        onCheckedChange={() => handleCheckboxChange(field.id)}
-                    />
-                    <label
-                        htmlFor={field.id}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                    >
-                        {field.label}
-                    </label>
-                    </div>
-                ))}
+              <div className="space-y-2">
+                  <Label htmlFor="to-date">To Date</Label>
+                  <Input
+                  id="to-date"
+                  type="date"
+                  value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
+                  />
               </div>
-            </div>
+          </div>
         </CardContent>
       </Card>
       
