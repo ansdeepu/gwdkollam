@@ -438,6 +438,8 @@ export default function AgencyRegistrationPage() {
                 status: 'Pending Verification',
                 history: []
             });
+            // Stop the spinner once the new form is ready
+            setIsNavigating(false);
         } else {
             const app = applications.find(a => a.id === selectedApplicationId);
             if (app) {
@@ -451,7 +453,7 @@ export default function AgencyRegistrationPage() {
     } else {
         form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
     }
-  }, [selectedApplicationId, applications, form]);
+  }, [selectedApplicationId, applications, form, setIsNavigating]);
   
     const generateHistoryEntry = (rig: RigRegistration): string | null => {
         const logParts: string[] = [];
