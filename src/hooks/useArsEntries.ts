@@ -63,7 +63,7 @@ export function useArsEntries() {
     const arsEntriesRef = collection(db, ARS_COLLECTION);
     if (user.role === 'supervisor') {
       q = query(arsEntriesRef, where('supervisorUid', '==', user.uid));
-    } else {
+    } else { // Editors and Viewers can see all
       q = query(arsEntriesRef);
     }
     
