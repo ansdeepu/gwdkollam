@@ -11,6 +11,7 @@ import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import type { UserProfile } from '@/hooks/useAuth';
+import { useFileEntries } from '@/hooks/useFileEntries';
 
 interface WorkProgressProps {
   allFileEntries: DataEntryFormData[];
@@ -26,7 +27,7 @@ interface WorkSummary {
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
-  if (dateValue instanceof Date) return value;
+  if (dateValue instanceof Date) return dateValue;
   if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
     return new Date((dateValue as any).seconds * 1000);
   }
@@ -39,13 +40,14 @@ const safeParseDate = (dateValue: any): Date | null => {
 
 export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser }: WorkProgressProps) {
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
+  const { fileEntries: filteredFileEntries } = useFileEntries();
 
   const currentMonthStats = useMemo(() => {
     const startOfMonthDate = startOfMonth(workReportMonth);
     const endOfMonthDate = endOfMonth(workReportMonth);
     const isSupervisor = currentUser?.role === 'supervisor';
 
-    const entriesToProcess = allFileEntries;
+    const entriesToProcess = isSupervisor ? allFileEntries : filteredFileEntries;
 
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     
@@ -91,7 +93,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
         completedSummary: createSummary(Array.from(uniqueCompletedSites.values())),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [allFileEntries, workReportMonth, currentUser]);
+  }, [allFileEntries, filteredFileEntries, workReportMonth, currentUser]);
 
   const handleMonthStatClick = (type: 'ongoing' | 'completed') => {
     const summary = type === 'ongoing' ? currentMonthStats.ongoingSummary : currentMonthStats.completedSummary;
@@ -158,9 +160,9 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
           <div className="flex justify-between items-center">
             <h3 className="text-base font-semibold flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-600"/>Completed in {format(workReportMonth, 'MMMM')}</h3>
             {currentMonthStats.completedSummary.totalCount > 0 && (
-              <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('completed')}>
-                View All ({currentMonthStats.completedSummary.totalCount})
-              </Button>
+                <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('completed')}>
+                    View All ({currentMonthStats.completedSummary.totalCount})
+                </Button>
             )}
           </div>
           <div className="space-y-2">
@@ -200,3 +202,4 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     </Card>
   );
 }
+
