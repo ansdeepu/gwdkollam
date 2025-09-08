@@ -6,13 +6,11 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarCheck, Hourglass, TrendingUp } from "lucide-react";
-import { format, isWithinInterval, startOfMonth, endOfMonth, isValid, parse } from 'date-fns';
+import { format, isWithinInterval, startOfMonth, endOfMonth, isValid, parse, parseISO } from 'date-fns';
 import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import type { UserProfile } from '@/hooks/useAuth';
-import { useFileEntries } from '@/hooks/useFileEntries';
-import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
 
 interface WorkProgressProps {
   allFileEntries: DataEntryFormData[];
@@ -32,23 +30,21 @@ const safeParseDate = (dateValue: any): Date | null => {
   if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
     return new Date((dateValue as any).seconds * 1000);
   }
-  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
-    const parsed = new Date(dateValue);
-    if (!isNaN(parsed.getTime())) return parsed;
+  if (typeof dateValue === 'string') {
+    const parsed = parseISO(dateValue); // Prefer ISO parsing
+    if (isValid(parsed)) return parsed;
   }
   return null;
 };
 
-export default function WorkProgress({ allFileEntries: propAllFileEntries, onOpenDialog, currentUser }: WorkProgressProps) {
+
+export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser }: WorkProgressProps) {
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
-  const { fileEntries: supervisorFileEntries } = useFileEntries();
-  const { reportEntries: allFileEntries, isReportLoading } = useAllFileEntriesForReports();
 
   const currentMonthStats = useMemo(() => {
     const startOfMonthDate = startOfMonth(workReportMonth);
     const endOfMonthDate = endOfMonth(workReportMonth);
     const isSupervisor = currentUser?.role === 'supervisor';
-    const entriesToProcess = isSupervisor ? allFileEntries : propAllFileEntries;
     
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     
@@ -59,12 +55,16 @@ export default function WorkProgress({ allFileEntries: propAllFileEntries, onOpe
     const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName: string; }>();
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
 
-    for (const entry of entriesToProcess) {
+    // Always use allFileEntries as the source of truth.
+    for (const entry of allFileEntries) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
         // For supervisors, only count sites assigned to them.
-        if (isSupervisor && site.supervisorUid !== currentUser.uid) continue;
+        if (isSupervisor && site.supervisorUid !== currentUser.uid) {
+            continue;
+        }
 
+        // Check for completed works in the current month
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = safeParseDate(site.dateOfCompletion);
           if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonthDate, end: endOfMonthDate })) {
@@ -75,6 +75,7 @@ export default function WorkProgress({ allFileEntries: propAllFileEntries, onOpe
           }
         }
         
+        // Check for ongoing works
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
           ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
@@ -95,7 +96,7 @@ export default function WorkProgress({ allFileEntries: propAllFileEntries, onOpe
         completedSummary: createSummary(Array.from(uniqueCompletedSites.values())),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [propAllFileEntries, allFileEntries, workReportMonth, currentUser]);
+  }, [allFileEntries, workReportMonth, currentUser]);
 
   const handleMonthStatClick = (type: 'ongoing' | 'completed') => {
     const summary = type === 'ongoing' ? currentMonthStats.ongoingSummary : currentMonthStats.completedSummary;
