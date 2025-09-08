@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ImportantUpdates.tsx
 "use client";
 
@@ -13,6 +14,7 @@ interface ImportantUpdatesProps {
 
 export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesProps) {
   const workAlerts = useMemo(() => {
+    if (!allFileEntries) return []; // Guard against undefined input
     const workAlertsMap = new Map<string, { title: string; details: string; }>();
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 

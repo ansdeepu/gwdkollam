@@ -55,8 +55,13 @@ function Calendar({
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_hidden: "invisible",
-        day_sunday: "text-red-600 font-semibold", // Sundays in red
         ...classNames,
+      }}
+      modifiers={{
+        sunday: (date) => date.getDay() === 0,
+      }}
+      modifiersClassNames={{
+        sunday: "text-red-600 font-semibold",
       }}
       components={{
         Caption: () => (
