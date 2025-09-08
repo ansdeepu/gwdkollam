@@ -19,8 +19,7 @@ import { initializeApp, deleteApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, Timestamp, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { type UserRole, type Designation } from '@/lib/schemas';
-import { useToast } from "@/hooks/use-toast"; 
-import { useStaffMembers } from './useStaffMembers';
+import { useToast } from "@/hooks/use-toast";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -34,8 +33,8 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  designation?: Designation;
-  photoUrl?: string | null;
+  designation?: Designation; // This will be added by components
+  photoUrl?: string | null; // This will be added by components
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -66,13 +65,11 @@ export function useAuth() {
   });
   const router = useRouter();
   const { toast } = useToast();
-  const { staffMembers, isLoading: staffLoading } = useStaffMembers(); // Use the hook
 
   useEffect(() => {
     let isMounted = true; 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!isMounted) return;
-      if (staffLoading) return; // Wait for staff members to be loaded
 
       if (!firebaseUser) {
         setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
@@ -88,8 +85,6 @@ export function useAuth() {
 
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            const staffInfo = staffMembers.find(s => s.id === userData.staffId);
-
             isApproved = userData.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() || userData.isApproved === true;
 
             userProfile = {
@@ -99,8 +94,7 @@ export function useAuth() {
                 role: userData.role || 'viewer',
                 isApproved: isApproved,
                 staffId: userData.staffId || undefined,
-                designation: staffInfo?.designation,
-                photoUrl: staffInfo?.photoUrl || userData.photoUrl || null, // Prioritize staff photo
+                // photoUrl and designation are now removed from here. They will be looked up in components.
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
@@ -141,7 +135,7 @@ export function useAuth() {
     });
 
     return () => { isMounted = false; unsubscribe(); };
-  }, [toast, staffMembers, staffLoading]); // Depend on staff members loading
+  }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
     try {
