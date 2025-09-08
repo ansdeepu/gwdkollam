@@ -12,6 +12,7 @@ import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import type { UserProfile } from '@/hooks/useAuth';
 import { useFileEntries } from '@/hooks/useFileEntries';
+import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports'; // Import the new hook
 
 interface WorkProgressProps {
   allFileEntries: DataEntryFormData[];
@@ -38,17 +39,17 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser }: WorkProgressProps) {
+export default function WorkProgress({ allFileEntries: propAllFileEntries, onOpenDialog, currentUser }: WorkProgressProps) {
   const [workReportMonth, setWorkReportMonth] = useState<Date>(new Date());
-  const { fileEntries: filteredFileEntries } = useFileEntries();
+  const { fileEntries: supervisorFileEntries } = useFileEntries();
+  const { reportEntries: allFileEntries, isReportLoading } = useAllFileEntriesForReports();
 
   const currentMonthStats = useMemo(() => {
     const startOfMonthDate = startOfMonth(workReportMonth);
     const endOfMonthDate = endOfMonth(workReportMonth);
     const isSupervisor = currentUser?.role === 'supervisor';
-
-    const entriesToProcess = isSupervisor ? allFileEntries : filteredFileEntries;
-
+    const entriesToProcess = isSupervisor ? allFileEntries : propAllFileEntries;
+    
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     
     const completedWorkStatuses: SiteWorkStatus[] = isSupervisor 
@@ -61,6 +62,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     for (const entry of entriesToProcess) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
+        // For supervisors, only count sites assigned to them.
         if (isSupervisor && site.supervisorUid !== currentUser.uid) continue;
 
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
@@ -93,7 +95,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
         completedSummary: createSummary(Array.from(uniqueCompletedSites.values())),
         ongoingSummary: createSummary(ongoingSites),
     };
-  }, [allFileEntries, filteredFileEntries, workReportMonth, currentUser]);
+  }, [propAllFileEntries, allFileEntries, workReportMonth, currentUser]);
 
   const handleMonthStatClick = (type: 'ongoing' | 'completed') => {
     const summary = type === 'ongoing' ? currentMonthStats.ongoingSummary : currentMonthStats.completedSummary;
@@ -202,4 +204,3 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     </Card>
   );
 }
-
