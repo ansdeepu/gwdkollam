@@ -50,14 +50,6 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config) => {
-    // Fix for handlebars dependency issue with Genkit
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'handlebars': require.resolve('handlebars/dist/handlebars.js'),
-    };
-    return config;
-  }
 };
 
 module.exports = nextConfig;
