@@ -151,7 +151,11 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
         <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
           <div className="flex justify-between items-center">
             <h3 className="text-base font-semibold flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-600"/>Completed in {format(workReportMonth, 'MMMM')}</h3>
-            <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('completed')} disabled={currentMonthStats.completedSummary.totalCount === 0}>View All ({currentMonthStats.completedSummary.totalCount})</Button>
+            {currentMonthStats.completedSummary.totalCount > 0 && (
+              <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('completed')}>
+                View All ({currentMonthStats.completedSummary.totalCount})
+              </Button>
+            )}
           </div>
           <div className="space-y-2">
             {currentMonthStats.completedSummary.totalCount > 0 ? (
@@ -168,7 +172,11 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
         <div className="space-y-3 p-4 border rounded-lg bg-secondary/20">
           <div className="flex justify-between items-center">
             <h3 className="text-base font-semibold flex items-center gap-2"><Hourglass className="h-5 w-5 text-orange-600"/>Total Ongoing Works</h3>
-            <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('ongoing')} disabled={currentMonthStats.ongoingSummary.totalCount === 0}>View All ({currentMonthStats.ongoingSummary.totalCount})</Button>
+            {currentMonthStats.ongoingSummary.totalCount > 0 && (
+              <Button variant="link" className="text-sm p-0 h-auto" onClick={() => handleMonthStatClick('ongoing')}>
+                View All ({currentMonthStats.ongoingSummary.totalCount})
+              </Button>
+            )}
           </div>
           <div className="space-y-2">
             {currentMonthStats.ongoingSummary.totalCount > 0 ? (
