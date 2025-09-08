@@ -223,7 +223,6 @@ export default function DashboardPage() {
       />
       
       <ArsStatusOverview 
-        allFileEntries={allFileEntries}
         onOpenDialog={handleOpenDialog}
         dates={arsDates}
         onSetDates={setArsDates}
