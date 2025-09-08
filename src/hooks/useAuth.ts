@@ -1,3 +1,4 @@
+
 // src/hooks/useAuth.ts
 "use client";
 
@@ -131,7 +132,7 @@ export function useAuth() {
                 uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
                 role: userData.role || 'viewer', isApproved: isApproved,
                 staffId: userData.staffId || undefined, designation: staffInfo.designation,
-                photoUrl: userData.photoUrl || staffInfo.photoUrl,
+                photoUrl: staffInfo.photoUrl || userData.photoUrl || null,
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
