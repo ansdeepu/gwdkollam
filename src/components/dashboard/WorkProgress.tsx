@@ -26,7 +26,7 @@ interface WorkSummary {
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
-  if (dateValue instanceof Date) return dateValue;
+  if (dateValue instanceof Date) return value;
   if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
     return new Date((dateValue as any).seconds * 1000);
   }
@@ -45,9 +45,10 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     const endOfMonthDate = endOfMonth(workReportMonth);
     const isSupervisor = currentUser?.role === 'supervisor';
 
+    const entriesToProcess = allFileEntries;
+
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     
-    // Define "completed" statuses based on user role
     const completedWorkStatuses: SiteWorkStatus[] = isSupervisor 
         ? ["Work Failed", "Work Completed"] 
         : ["Work Failed", "Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
@@ -55,13 +56,11 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName: string; }>();
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
 
-    for (const entry of allFileEntries) {
+    for (const entry of entriesToProcess) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
-        // For supervisors, only count sites they are assigned to.
         if (isSupervisor && site.supervisorUid !== currentUser.uid) continue;
 
-        // Check for completed work within the month
         if (site.workStatus && completedWorkStatuses.includes(site.workStatus as SiteWorkStatus) && site.dateOfCompletion) {
           const completionDate = safeParseDate(site.dateOfCompletion);
           if (completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: startOfMonthDate, end: endOfMonthDate })) {
@@ -72,7 +71,6 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
           }
         }
         
-        // Check for ongoing work (applies to all time, not just the selected month)
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
           ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
@@ -202,4 +200,3 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     </Card>
   );
 }
-
