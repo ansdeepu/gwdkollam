@@ -64,7 +64,7 @@ function Calendar({
         sunday: "text-red-600 font-semibold",
       }}
       components={{
-        Caption: () => (
+        CaptionLabel: () => (
           <div className="flex items-center justify-center gap-2">
             {/* Month Picker */}
             <select
