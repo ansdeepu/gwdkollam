@@ -76,8 +76,6 @@ export function useAgencyApplications() {
     }
 
     setIsLoading(true);
-    // Editors and Viewers see all applications. Supervisors see a filtered list (or empty list if no rig is assigned to them).
-    // The filtering for supervisors will happen on the client side for simplicity unless performance dictates otherwise.
     const q = collection(db, APPLICATIONS_COLLECTION);
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -93,7 +91,6 @@ export function useAgencyApplications() {
 
       if (user.role === 'supervisor') {
         // Supervisors only see agencies where they are assigned to at least one rig.
-        // This is a simplification; a more complex app might query this directly.
         appsData = appsData.filter(app => 
             app.rigs.some(rig => (rig as any).supervisorUid === user.uid)
         );
