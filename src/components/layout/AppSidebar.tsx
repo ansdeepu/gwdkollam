@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/dropdown-menu'; // Import DropdownMenu components
 import { LogOut, User, ChevronsUpDown } from 'lucide-react'; // Import icons
 import { useRouter } from 'next/navigation';
-import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
@@ -66,19 +65,9 @@ const getInitials = (name?: string) => {
 
 export default function AppSidebar() {
   const { user, logout } = useAuth();
-  const { staffMembers } = useStaffMembers();
   const router = useRouter();
 
-  // Find the full staff member record based on the user's staffId
-  const staffInfo = useMemo(() => {
-    if (user?.staffId) {
-      return staffMembers.find(s => s.id === user.staffId);
-    }
-    return null;
-  }, [user, staffMembers]);
-
-  // Use the photo from the linked staff record, falling back to the user's own photoUrl if it exists.
-  const photoUrl = staffInfo?.photoUrl || user?.photoUrl || undefined;
+  const photoUrl = user?.photoUrl || undefined;
   
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 

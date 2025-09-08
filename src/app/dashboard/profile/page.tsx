@@ -3,7 +3,6 @@
 "use client";
 
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
-import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
@@ -33,21 +32,11 @@ export default function ProfilePage() {
   }, [setHeader]);
 
   const { user, isLoading: authLoading } = useAuth();
-  const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
-  // Find the full staff member record based on the user's staffId
-  const staffInfo = useMemo(() => {
-    if (user?.staffId) {
-      return staffMembers.find(s => s.id === user.staffId);
-    }
-    return null;
-  }, [user, staffMembers]);
-
-  // Prioritize staff photo, but fall back to the user's own photoUrl if it exists.
-  const photoUrl = staffInfo?.photoUrl || user?.photoUrl || undefined;
-  const designation = staffInfo?.designation || user?.designation || 'N/A';
+  const photoUrl = user?.photoUrl || undefined;
+  const designation = user?.designation || 'N/A';
   
-  if (authLoading || staffLoading) {
+  if (authLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

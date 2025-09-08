@@ -33,8 +33,8 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  designation?: Designation; // This will be added by components
-  photoUrl?: string | null; // This will be added by components
+  designation?: Designation;
+  photoUrl?: string | null;
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -94,10 +94,21 @@ export function useAuth() {
                 role: userData.role || 'viewer',
                 isApproved: isApproved,
                 staffId: userData.staffId || undefined,
-                // photoUrl and designation are now removed from here. They will be looked up in components.
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
+            
+            // If the user has a staffId, fetch the corresponding staff record to get photo and designation.
+            if (userProfile.staffId) {
+                const staffDocRef = doc(db, 'staffMembers', userProfile.staffId);
+                const staffDocSnap = await getDoc(staffDocRef);
+                if (staffDocSnap.exists()) {
+                    const staffData = staffDocSnap.data();
+                    userProfile.photoUrl = staffData.photoUrl || null;
+                    userProfile.designation = staffData.designation || undefined;
+                }
+            }
+
         } else if (firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
             // Handle case for initial admin user creation
             userProfile = {
