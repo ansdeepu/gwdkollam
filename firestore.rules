@@ -3,72 +3,67 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper Functions
+  
+    // Helper function to check if the user is authenticated and approved
     function isApproved() {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+      return request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true;
     }
-
+    
+    // Helper function to check if the user is an editor
     function isEditor() {
       return isApproved() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor';
     }
 
-    function isViewer() {
-      return isApproved() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'viewer';
-    }
-    
+    // Helper function to check if the user is a supervisor
     function isSupervisor() {
       return isApproved() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'supervisor';
     }
 
-    // Default deny all
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // Users Collection
+    // Rules for the 'users' collection
     match /users/{userId} {
-      allow read: if isApproved(); // Any approved user can read other user profiles (needed for names, etc.)
-      allow create: if request.auth != null; // Allow user creation
-      allow update, delete: if isEditor(); // Only editors can modify or delete user profiles
+      allow read: if isApproved();
+      allow create: if request.auth != null; // Allows new user registration
+      allow update, delete: if isEditor();
     }
-
-    // Data Collections
+    
+    // Rules for 'fileEntries'
     match /fileEntries/{fileId} {
-      // Editors and Viewers can read any file.
-      // Supervisors can only read files where they are explicitly assigned.
-      allow read: if isEditor() || isViewer() || (isSupervisor() && request.auth.uid in resource.data.assignedSupervisorUids);
-      allow write: if isEditor(); // Only editors can create, update, delete
+      allow read: if isApproved() && (isEditor() || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'viewer' || 
+                   (isSupervisor() && request.auth.uid in resource.data.assignedSupervisorUids));
+      allow write: if isEditor();
+    }
+    
+    // Rules for 'arsEntries'
+    match /arsEntries/{arsId} {
+      allow read: if isApproved() && (isEditor() || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'viewer' ||
+                   (isSupervisor() && request.auth.uid == resource.data.supervisorUid));
+      allow write: if isEditor();
     }
 
-    match /arsEntries/{entryId} {
-       // Editors and Viewers can read any ARS entry.
-       // Supervisors can only read ARS entries assigned to them.
-       allow read: if isEditor() || isViewer() || (isSupervisor() && request.auth.uid == resource.data.supervisorUid);
+    // Rules for 'agencyApplications' (Rig Registrations)
+    match /agencyApplications/{appId} {
+       allow read: if isApproved();
        allow write: if isEditor();
     }
     
-    match /agencyApplications/{appId} {
-        // Editors and Viewers can read any agency application.
-        // Supervisors can only read applications where they are assigned to at least one rig.
-        allow read: if isEditor() || isViewer() || (isSupervisor() && request.auth.uid in resource.data.assignedSupervisorUids);
-        allow write: if isEditor();
+    // Rules for 'pendingUpdates'
+    match /pendingUpdates/{updateId} {
+      allow read: if isEditor();
+      allow create: if isSupervisor();
+      allow update: if isEditor(); // Editors can approve/reject
+      allow delete: if isEditor();
     }
-    
-    // All other collections are readable by any approved user, but only writable by editors.
-    // This covers gwdRates, staffMembers, and notices.
-    match /{collectionId}/{docId} {
+
+    // Rules for other collections
+    match /staffMembers/{staffId} {
       allow read: if isApproved();
       allow write: if isEditor();
     }
 
-    // Pending updates have special logic
-    match /pendingUpdates/{updateId} {
-      allow read: if isEditor(); // Only editors can see all pending updates
-      allow create: if isSupervisor(); // Supervisors can create them
-      allow update: if isEditor(); // Editors can approve/reject
-      allow delete: if isEditor(); // Editors can delete
+    match /gwdRates/{rateId} {
+      allow read: if isApproved();
+      allow write: if isEditor();
     }
   }
 }

@@ -109,11 +109,19 @@ export function useFileEntries() {
       isCacheInitialized = true;
     }, (error) => {
       console.error("Error fetching file entries:", error);
-      toast({
-        title: "Error Loading Data",
-        description: "Could not fetch file entries.",
-        variant: "destructive",
-      });
+      if (error.code === 'permission-denied') {
+        toast({
+            title: "Permission Denied",
+            description: "Your user role does not have permission to view this data. This may be due to a recent role change.",
+            variant: "destructive",
+        });
+      } else {
+        toast({
+            title: "Error Loading Data",
+            description: "Could not fetch file entries.",
+            variant: "destructive",
+        });
+      }
       setIsLoading(false);
     });
 
