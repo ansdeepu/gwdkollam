@@ -1,3 +1,4 @@
+
 // src/components/dashboard/UserActivity.tsx
 "use client";
 
@@ -59,7 +60,7 @@ export default function UserActivity({ allUsers, staffMembers }: UserActivityPro
               return (
                 <li key={usr.uid} className="flex items-center gap-4 p-2 rounded-lg hover:bg-secondary/50">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={photoUrl || undefined} alt={usr.name || 'user'} data-ai-hint="person user" />
+                    <AvatarImage src={photoUrl || usr.photoUrl || undefined} alt={usr.name || 'user'} data-ai-hint="person user" />
                     <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(usr.name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">

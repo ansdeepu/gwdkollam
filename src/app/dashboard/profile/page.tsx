@@ -3,7 +3,6 @@
 "use client";
 
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
-import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";

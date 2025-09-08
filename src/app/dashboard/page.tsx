@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -203,24 +202,28 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ImportantUpdates allFileEntries={dashboardFileEntries} />
-        <NoticeBoard staffMembers={dashboardData.staffMembers} />
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+            <ImportantUpdates allFileEntries={dashboardData.allFileEntries} />
+        </div>
+        <div className="lg:col-span-1">
+            <NoticeBoard staffMembers={dashboardData.staffMembers} />
+        </div>
       </div>
-
+      
       <FileStatusOverview 
-          nonArsEntries={dashboardData.nonArsEntries}
-          onOpenDialog={handleOpenDialog}
+        nonArsEntries={dashboardData.nonArsEntries}
+        onOpenDialog={handleOpenDialog}
       />
       
       <WorkStatusByService 
-        allFileEntries={dashboardFileEntries}
+        allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
       />
       
       <FinanceOverview 
-        allFileEntries={dashboardFileEntries}
+        allFileEntries={allFileEntries}
         onOpenDialog={handleOpenDialog}
         dates={financeDates}
         onSetDates={setFinanceDates}
@@ -240,33 +243,32 @@ export default function DashboardPage() {
       )}
       
       <WorkProgress
-        allFileEntries={dashboardFileEntries}
+        allFileEntries={allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUser={currentUser}
       />
 
-      {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
+       {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SupervisorWork 
-            allFileEntries={allFileEntries}
-            allUsers={allUsers}
-            staffMembers={staffMembers}
-            onOpenDialog={handleOpenDialog}
-          />
-          <UserActivity 
-            allUsers={allUsers}
-            staffMembers={staffMembers}
-          />
+            <SupervisorWork 
+                allFileEntries={allFileEntries}
+                allUsers={allUsers}
+                staffMembers={staffMembers}
+                onOpenDialog={handleOpenDialog}
+            />
+            <UserActivity 
+                allUsers={allUsers}
+                staffMembers={staffMembers}
+            />
         </div>
-      )}
+       )}
 
       <DashboardDialogs 
         dialogState={dialogState}
         setDialogState={setDialogState}
-        allFileEntries={dashboardFileEntries}
+        allFileEntries={allFileEntries}
         financeDates={financeDates}
       />
     </div>
   );
 }
-
