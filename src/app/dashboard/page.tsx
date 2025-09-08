@@ -23,6 +23,8 @@ import SupervisorWork from '@/components/dashboard/SupervisorWork';
 import DashboardDialogs from '@/components/dashboard/DashboardDialogs';
 import FinanceOverview from '@/components/dashboard/FinanceOverview';
 
+export const dynamic = 'force-dynamic';
+
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
   if (dateValue instanceof Date) return dateValue;

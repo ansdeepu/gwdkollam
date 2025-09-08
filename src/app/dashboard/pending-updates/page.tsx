@@ -1,4 +1,3 @@
-
 // src/app/dashboard/pending-updates/page.tsx
 "use client";
 
@@ -8,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
+
+export const dynamic = 'force-dynamic';
 
 export default function PendingUpdatesPage() {
   const { setHeader } = usePageHeader();

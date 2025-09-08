@@ -22,6 +22,8 @@ import type { NewUserByAdminFormData } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { usePageHeader } from "@/hooks/usePageHeader";
 
+export const dynamic = 'force-dynamic';
+
 export default function UserManagementPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {

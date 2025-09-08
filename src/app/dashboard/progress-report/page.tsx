@@ -1,4 +1,3 @@
-
 // src/app/dashboard/progress-report/page.tsx
 "use client";
 
@@ -28,6 +27,7 @@ import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Input } from '@/components/ui/input';
 
+export const dynamic = 'force-dynamic';
 
 // Define the structure for the progress report data
 interface SiteDetailWithFileContext extends SiteDetailFormData {

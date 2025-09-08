@@ -1,4 +1,3 @@
-
 // src/app/dashboard/profile/page.tsx
 "use client";
 
@@ -11,6 +10,8 @@ import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
+
+export const dynamic = 'force-dynamic';
 
 const getInitials = (name?: string, email?: string | null) => {
     if (name) {

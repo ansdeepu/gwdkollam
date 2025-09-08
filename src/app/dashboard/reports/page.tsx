@@ -1,4 +1,3 @@
-
 // src/app/dashboard/reports/page.tsx
 "use client";
 
@@ -43,6 +42,7 @@ import * as XLSX from 'xlsx';
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+export const dynamic = 'force-dynamic';
 
 export interface FlattenedReportRow {
   fileNo: string; 

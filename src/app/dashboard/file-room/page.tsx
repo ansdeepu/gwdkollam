@@ -16,6 +16,8 @@ import { parseISO, isValid } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 
+export const dynamic = 'force-dynamic';
+
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;

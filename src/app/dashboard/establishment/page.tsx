@@ -1,4 +1,3 @@
-
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -27,6 +26,8 @@ import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
 import * as XLSX from "xlsx";
 import { usePageHeader } from "@/hooks/usePageHeader";
+
+export const dynamic = 'force-dynamic';
 
 const isPlaceholderUrl = (url?: string | null): boolean => {
   if (!url) return false;

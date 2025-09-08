@@ -15,6 +15,8 @@ import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid, parse, format, parseISO } from 'date-fns';
 import { usePageHeader } from "@/hooks/usePageHeader";
 
+export const dynamic = 'force-dynamic';
+
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;

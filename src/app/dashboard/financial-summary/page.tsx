@@ -13,6 +13,8 @@ import type { DataEntryFormData, SitePurpose, SiteWorkStatus, ApplicationType } 
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 
+export const dynamic = 'force-dynamic';
+
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
 
 interface FinancialSummary {

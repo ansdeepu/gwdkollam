@@ -6,6 +6,8 @@ import { HelpCircle, LifeBuoy, Building, Server } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
 
+export const dynamic = 'force-dynamic';
+
 export default function HelpPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {

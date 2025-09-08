@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -21,6 +20,8 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
 import { usePageHeader } from "@/hooks/usePageHeader";
+
+export const dynamic = 'force-dynamic';
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;

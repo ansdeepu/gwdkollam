@@ -1,4 +1,3 @@
-
 // src/app/dashboard/file-database/page.tsx
 "use client";
 
@@ -7,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
+
+export const dynamic = 'force-dynamic';
 
 export default function FileDatabasePage() {
   const { setHeader } = usePageHeader();

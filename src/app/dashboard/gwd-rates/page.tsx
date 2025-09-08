@@ -1,4 +1,3 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -70,6 +69,8 @@ import { app } from "@/lib/firebase";
 import { GwdRateItemFormDataSchema, type GwdRateItem, type GwdRateItemFormData } from "@/lib/schemas";
 import { z } from 'zod';
 import { usePageHeader } from "@/hooks/usePageHeader";
+
+export const dynamic = 'force-dynamic';
 
 const db = getFirestore(app);
 const RATES_COLLECTION = 'gwdRates';

@@ -1,4 +1,3 @@
-
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -32,6 +31,8 @@ import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
+
+export const dynamic = 'force-dynamic';
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;

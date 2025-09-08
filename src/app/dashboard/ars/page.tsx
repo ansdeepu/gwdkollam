@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -25,6 +24,7 @@ import type { ArsEntryFormData } from "@/lib/schemas";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import { useRouter } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 50;
 
