@@ -56,29 +56,33 @@ const toDateOrNull = (value: any): Date | null => {
 
 // Recursively processes an object to convert all date-like values to 'yyyy-MM-dd' strings for native date inputs.
 const processDataForForm = (data: any): any => {
-    if (!data) return data;
+    if (data === null || data === undefined) return data;
+
     if (Array.isArray(data)) {
         return data.map(item => processDataForForm(item));
     }
-    if (typeof data === 'object' && data !== null) {
-        const processed: { [key: string]: any } = {};
+
+    if (typeof data === 'object') {
+        const newObj: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
-                 // Check for keys that typically represent dates
-                 if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
+                 // Check for keys that typically represent dates, or if the value is a date-like object
+                if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till') || (value instanceof Date) || (value && typeof value.seconds === 'number')) {
                     const date = toDateOrNull(value);
-                    processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
+                    newObj[key] = date ? format(date, 'yyyy-MM-dd') : '';
                 } else {
                     // Recursively process nested objects/arrays
-                    processed[key] = processDataForForm(value);
+                    newObj[key] = processDataForForm(value);
                 }
             }
         }
-        return processed;
+        return newObj;
     }
+
     return data;
 };
+
 
 const RegistrationTable = ({ 
   applications, 

@@ -23,6 +23,7 @@ import { app } from '@/lib/firebase';
 import type { AgencyApplication as AgencyApplicationFormData, RigRegistration as RigRegistrationFormData, OwnerInfo } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
+import { format, isValid, parse, parseISO } from 'date-fns';
 
 const db = getFirestore(app);
 const APPLICATIONS_COLLECTION = 'agencyApplications';
@@ -39,16 +40,42 @@ export type AgencyApplication = Omit<AgencyApplicationFormData, 'rigs'> & {
 let cachedApplications: AgencyApplication[] = [];
 let isApplicationsCacheInitialized = false;
 
-// Helper to safely convert Firestore Timestamps and serialized date objects to a serializable format (ISO string)
+// Helper to safely convert Firestore Timestamps and various date string formats to JS Date objects.
+const toDateOrNull = (value: any): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date && isValid(value)) return value;
+  // Handle Firestore Timestamp objects
+  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
+    if (isValid(date)) return date;
+  }
+  if (typeof value === 'string') {
+    // First, try to parse dd/MM/yyyy format, which is common in our app's manual entry
+    let parsed = parseISO(value);
+    if (isValid(parsed)) return parsed;
+    // Then, try to parse ISO format, which is how dates are often stored/transmitted
+    parsed = parse(value, 'dd/MM/yyyy', new Date());
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
+
+
+// Recursively processes an object to convert all date-like values.
 const processDataForClient = (data: any): any => {
-    if (!data) return data;
+    if (data === null || data === undefined) return data;
+
     if (Array.isArray(data)) {
         return data.map(item => processDataForClient(item));
     }
-    if (data instanceof Timestamp) {
-        return data.toDate().toISOString();
+    
+    // Check for a date-like signature (e.g., Firestore Timestamp)
+    if (typeof data === 'object' && (typeof data.seconds === 'number' || typeof data.nanoseconds === 'number')) {
+        const date = toDateOrNull(data);
+        return date ? date.toISOString() : null; // Serialize to ISO string for consistency
     }
-    if (typeof data === 'object' && data !== null) {
+
+    if (typeof data === 'object') {
         const processed: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {

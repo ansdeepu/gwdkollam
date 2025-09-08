@@ -3,7 +3,7 @@
 
 import type { StaffMember, StaffMemberFormData, Designation, StaffStatusType } from "@/lib/schemas"; 
 import { designationOptions, staffStatusOptions } from "@/lib/schemas";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getFirestore,
   collection,
@@ -199,6 +199,8 @@ export function useStaffMembers(): StaffMembersState {
     const staffDocRef = doc(db, STAFF_MEMBERS_COLLECTION, id);
     await updateDoc(staffDocRef, { status: newStatus, updatedAt: serverTimestamp() });
   }, [user]);
+  
+  const memoizedStaffMembers = useMemo(() => staffMembers, [staffMembers]);
 
-  return { staffMembers, isLoading, addStaffMember, updateStaffMember, deleteStaffMember, getStaffMemberById, updateStaffStatus };
+  return { staffMembers: memoizedStaffMembers, isLoading, addStaffMember, updateStaffMember, deleteStaffMember, getStaffMemberById, updateStaffStatus };
 }
