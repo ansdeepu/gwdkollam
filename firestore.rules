@@ -3,64 +3,68 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if a user is authenticated and their profile exists.
-    function isSignedIn() {
-      return request.auth != null;
+    
+    // Helper function to check for a specific role
+    function hasRole(role) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
     }
-
-    // Helper function to get the requesting user's profile data.
-    function getRequestingUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    // Helper function to check if the user is an approved editor.
+    
+    // Helper function to check if the user is an approved editor
     function isEditor() {
-      return isSignedIn() && getRequestingUserData().role == 'editor' && getRequestingUserData().isApproved == true;
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true && hasRole('editor');
+    }
+    
+    // Helper function to check if the user is an approved supervisor
+    function isSupervisor() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true && hasRole('supervisor');
+    }
+    
+    // Helper function to check if the user is an approved viewer
+    function isViewer() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true && hasRole('viewer');
     }
 
-    // Helper function to check if the user is an approved user (any role).
-    function isApprovedUser() {
-      return isSignedIn() && getRequestingUserData().isApproved == true;
-    }
-
-    // Rules for the 'users' collection
+    // --- Users Collection ---
     match /users/{userId} {
-      // Any approved user can see the list of users.
-      allow read: if isApprovedUser();
+      // Any authenticated user can view user profiles (needed for names, etc.)
+      allow read: if request.auth != null;
       
-      // Only editors can create or delete users.
-      allow create, delete: if isEditor();
-
-      // An editor can update any user. A user can update their own profile,
-      // but they cannot change their own role or approval status.
-      allow update: if isEditor() || (
-        request.auth.uid == userId &&
-        !(request.resource.data.role is string && request.resource.data.role != resource.data.role) &&
-        !(request.resource.data.isApproved is bool && request.resource.data.isApproved != resource.data.isApproved)
-      );
-    }
-
-    // Rules for data collections that require editor privileges for writing.
-    match /{collection}/{docId} where collection in ['staffMembers', 'gwdRates', 'fileEntries', 'arsEntries', 'agencyApplications', 'notices'] {
-      // Any authenticated and approved user can read from these collections.
-      allow read: if isApprovedUser();
-      
-      // Only editors can write (create, update, delete) to these collections.
+      // Only editors can create, update, or delete user profiles
       allow write: if isEditor();
     }
     
-    // Rules for the 'pendingUpdates' collection, which has special logic.
+    // --- Pending Updates ---
     match /pendingUpdates/{updateId} {
-        // Only editors can read all pending updates.
-        // (Supervisors interact with this through a specific backend check, not direct reads).
-        allow read: if isEditor();
-        
-        // Any approved user (specifically supervisors) can create a pending update.
-        allow create: if isApprovedUser();
-        
-        // Only editors can update (approve/reject) or delete pending updates.
-        allow update, delete: if isEditor();
+      // Supervisors can create new pending updates for review
+      allow create: if isSupervisor();
+      
+      // Editors can read, approve, or reject updates
+      allow read, update: if isEditor();
+      
+      // No one can delete pending updates directly
+      allow delete: if false;
+    }
+
+    // --- Data Collections ---
+    // This rule applies to fileEntries, arsEntries, agencyApplications, gwdRates, and staffMembers
+    match /{collection}/{docId} {
+      
+      // CREATE: Only Editors can create new documents in these collections
+      allow create: if isEditor();
+
+      // READ: 
+      // Editors and Viewers can read any document.
+      // Supervisors can only read documents where they are assigned.
+      allow read: if isEditor() || isViewer() || 
+                    (isSupervisor() && (
+                      (collection == 'fileEntries' && resource.data.assignedSupervisorUids.hasAny([request.auth.uid])) ||
+                      (collection == 'arsEntries' && resource.data.supervisorUid == request.auth.uid) ||
+                      (collection == 'agencyApplications' && resource.data.rigs.hasAny(request.auth.uid)) ||
+                      (collection != 'fileEntries' && collection != 'arsEntries' && collection != 'agencyApplications') // allow read for other collections
+                    ));
+      
+      // UPDATE, DELETE: Only Editors can update or delete documents in these collections
+      allow update, delete: if isEditor();
     }
   }
 }
