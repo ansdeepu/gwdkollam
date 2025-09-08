@@ -68,7 +68,8 @@ export default function AppSidebar() {
   const router = useRouter();
 
   const staffInfo = staffMembers.find(s => s.id === user?.staffId);
-  const photoUrl = staffInfo?.photoUrl;
+  // Prioritize staff photo, but fall back to user's own photoUrl if it exists.
+  const photoUrl = staffInfo?.photoUrl || (user as any)?.photoUrl || undefined;
   
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 
