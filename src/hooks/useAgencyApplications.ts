@@ -16,7 +16,8 @@ import {
   writeBatch,
   query,
   getDocs,
-  deleteDoc
+  deleteDoc,
+  where
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import type { AgencyApplication as AgencyApplicationFormData, RigRegistration as RigRegistrationFormData, OwnerInfo } from '@/lib/schemas';
@@ -76,12 +77,22 @@ export function useAgencyApplications() {
     }
 
     setIsLoading(true);
-    const q = collection(db, APPLICATIONS_COLLECTION);
+    
+    let q;
+    const applicationsRef = collection(db, APPLICATIONS_COLLECTION);
+
+    if (user.role === 'supervisor') {
+        // Supervisors should only see agencies where they are assigned to at least one rig.
+        // This requires querying based on a field within an array of objects, which Firestore supports.
+        q = query(applicationsRef, where('rigs.supervisorUid', 'array-contains', user.uid));
+    } else {
+        // Editors and Viewers can see all applications.
+        q = query(applicationsRef);
+    }
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let appsData = snapshot.docs.map(doc => {
         const data = doc.data();
-        // Process data to make it serializable and safe for the client
         const serializableData = processDataForClient(data);
         return {
           id: doc.id,
@@ -90,10 +101,11 @@ export function useAgencyApplications() {
       });
 
       if (user.role === 'supervisor') {
-        // Supervisors only see agencies where they are assigned to at least one rig.
-        appsData = appsData.filter(app => 
-            app.rigs.some(rig => (rig as any).supervisorUid === user.uid)
-        );
+        // Further filter on the client side to only show rigs assigned to the supervisor within each app
+        appsData = appsData.map(app => ({
+            ...app,
+            rigs: app.rigs.filter(rig => (rig as any).supervisorUid === user.uid)
+        })).filter(app => app.rigs.length > 0);
       }
 
       cachedApplications = appsData;
@@ -115,9 +127,12 @@ export function useAgencyApplications() {
 
   const addApplication = useCallback(async (applicationData: Omit<AgencyApplication, 'id'>) => {
     if (!user) throw new Error("User must be logged in to add an application.");
+    
+    const assignedSupervisorUids = [...new Set(applicationData.rigs?.map(s => s.supervisorUid).filter((uid): uid is string => !!uid))];
 
     const payload = {
         ...applicationData,
+        assignedSupervisorUids: assignedSupervisorUids,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -128,8 +143,11 @@ export function useAgencyApplications() {
     if (!user) throw new Error("User must be logged in to update an application.");
     
     const docRef = doc(db, APPLICATIONS_COLLECTION, id);
+    const assignedSupervisorUids = [...new Set(applicationData.rigs?.map(s => s.supervisorUid).filter((uid): uid is string => !!uid))];
+    
     const payload = {
         ...applicationData,
+        assignedSupervisorUids: assignedSupervisorUids,
         updatedAt: serverTimestamp(),
     };
     await updateDoc(docRef, payload);
