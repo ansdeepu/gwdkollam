@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -200,30 +201,25 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <FileStatusOverview 
-            nonArsEntries={dashboardData.nonArsEntries}
-            onOpenDialog={handleOpenDialog}
-          />
+        <div className="lg:col-span-2">
+            <ImportantUpdates allFileEntries={dashboardData.allFileEntries} />
         </div>
         <div className="lg:col-span-1">
-          <ImportantUpdates
-            allFileEntries={dashboardData.allFileEntries}
-          />
-        </div>
-        <div className="lg:col-span-1">
-          <NoticeBoard 
-            staffMembers={dashboardData.staffMembers}
-          />
+            <NoticeBoard staffMembers={dashboardData.staffMembers} />
         </div>
       </div>
+      
+      <FileStatusOverview 
+        nonArsEntries={dashboardData.nonArsEntries}
+        onOpenDialog={handleOpenDialog}
+      />
       
       <WorkStatusByService 
         allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
       />
-
+      
       <FinanceOverview 
         allFileEntries={allFileEntries}
         onOpenDialog={handleOpenDialog}
@@ -232,7 +228,6 @@ export default function DashboardPage() {
       />
       
       <ArsStatusOverview 
-        allFileEntries={allFileEntries}
         onOpenDialog={handleOpenDialog}
         dates={arsDates}
         onSetDates={setArsDates}
@@ -252,15 +247,15 @@ export default function DashboardPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <UserActivity 
-            allUsers={allUsers}
-            staffMembers={staffMembers}
-          />
           <SupervisorWork 
             allFileEntries={allFileEntries}
             allUsers={allUsers}
             staffMembers={staffMembers}
             onOpenDialog={handleOpenDialog}
+          />
+          <UserActivity 
+            allUsers={allUsers}
+            staffMembers={staffMembers}
           />
       </div>
 
