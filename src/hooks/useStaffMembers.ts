@@ -107,13 +107,13 @@ export function useStaffMembers(): StaffMembersState {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(cachedStaffMembers);
   const [isLoading, setIsLoading] = useState(!isStaffCacheInitialized);
   
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(() => {
     if (!user || !user.isApproved) {
       setStaffMembers([]);
       cachedStaffMembers = [];
       isStaffCacheInitialized = false;
       setIsLoading(false);
-      return;
+      return () => {}; // Return an empty function for cleanup
     }
     
     const q = query(collection(db, STAFF_MEMBERS_COLLECTION));
@@ -149,9 +149,11 @@ export function useStaffMembers(): StaffMembersState {
 
   useEffect(() => {
     if (!authIsLoading) {
-      const unsubscribePromise = fetchData();
+      const unsubscribe = fetchData();
       return () => {
-          unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+        if (unsubscribe) {
+          unsubscribe();
+        }
       };
     }
   }, [authIsLoading, fetchData]);
