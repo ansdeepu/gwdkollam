@@ -48,20 +48,19 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     
     const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Awaiting Dept. Rig"];
     
-    const completedWorkStatuses: SiteWorkStatus[] = isSupervisor 
-        ? ["Work Failed", "Work Completed"] 
-        : ["Work Failed", "Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
+    const completedWorkStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
     
     const uniqueCompletedSites = new Map<string, SiteDetailFormData & { fileNo: string; applicantName: string; }>();
     const ongoingSites: Array<SiteDetailFormData & { fileNo: string; applicantName: string; }> = [];
 
-    // Always use allFileEntries as the source of truth.
-    for (const entry of allFileEntries) {
+    const entriesToProcess = allFileEntries;
+
+    for (const entry of entriesToProcess) {
       if (!entry.siteDetails) continue;
       for (const site of entry.siteDetails) {
-        // For supervisors, only count sites assigned to them.
+        
         if (isSupervisor && site.supervisorUid !== currentUser.uid) {
-            continue;
+            continue; // Supervisor: Skip sites not assigned to them
         }
 
         // Check for completed works in the current month
@@ -75,7 +74,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
           }
         }
         
-        // Check for ongoing works
+        // Check for ongoing works (not dependent on the date filter)
         if (site.workStatus && ongoingWorkStatuses.includes(site.workStatus as SiteWorkStatus)) {
           ongoingSites.push({ ...site, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A' });
         }
