@@ -21,7 +21,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { DataEntryFormData, SiteDetailFormData, SitePurpose } from '@/lib/schemas';
+import type { DataEntryFormData, SiteDetailFormData, SiteWorkStatus, SitePurpose } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { usePendingUpdates } from './usePendingUpdates';
@@ -90,6 +90,19 @@ export function useFileEntries() {
         } as DataEntryFormData;
       });
       
+      if (user.role === 'supervisor') {
+        const supervisorVisibleWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+
+        entriesData = entriesData.map(entry => {
+            const visibleSites = (entry.siteDetails || []).filter(site => 
+                site.supervisorUid === user.uid && 
+                site.workStatus &&
+                supervisorVisibleWorkStatuses.includes(site.workStatus as SiteWorkStatus)
+            );
+            return { ...entry, siteDetails: visibleSites };
+        }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+      }
+
       cachedFileEntries = entriesData;
       setFileEntries(entriesData);
       setIsLoading(false);

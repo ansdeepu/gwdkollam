@@ -3,9 +3,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { ArsEntryFormData } from '@/lib/schemas';
+import type { ArsEntryFormData, ArsEntry as ArsSchemaEntry } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
 import { parse, isValid } from 'date-fns';
@@ -58,10 +58,17 @@ export function useArsEntries() {
     }
 
     setIsLoading(true);
-    const q = collection(db, ARS_COLLECTION);
+    
+    let q;
+    const arsEntriesRef = collection(db, ARS_COLLECTION);
+    if (user.role === 'supervisor') {
+      q = query(arsEntriesRef, where('supervisorUid', '==', user.uid));
+    } else {
+      q = query(arsEntriesRef);
+    }
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const entriesData = snapshot.docs.map(doc => {
+      let entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
         const serializableData = processDataForClient(data);
         return {
@@ -69,6 +76,14 @@ export function useArsEntries() {
           ...serializableData
         } as ArsEntry;
       });
+
+      if (user.role === 'supervisor') {
+        const supervisorVisibleWorkStatuses: ArsSchemaEntry['workStatus'][] = ["Work Order Issued", "Work Initiated", "Work in Progress"];
+        entriesData = entriesData.filter(entry => 
+            entry.workStatus && supervisorVisibleWorkStatuses.includes(entry.workStatus)
+        );
+      }
+
       setArsEntries(entriesData);
       setIsLoading(false);
     }, (error) => {
