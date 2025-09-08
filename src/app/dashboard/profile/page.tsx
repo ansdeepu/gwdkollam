@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
   const staffInfo = staffMembers.find(s => s.id === user?.staffId);
+  const photoUrl = staffInfo?.photoUrl || user?.photoUrl || undefined;
   
   if (authLoading || staffLoading) {
     return (
@@ -59,7 +60,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader className="items-center text-center">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={staffInfo?.photoUrl || undefined} alt={user.name || 'User'} data-ai-hint="person user" />
+                <AvatarImage src={photoUrl} alt={user.name || 'User'} data-ai-hint="person user" />
                 <AvatarFallback className="text-3xl">{getInitials(user.name, user.email)}</AvatarFallback>
               </Avatar>
               <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
