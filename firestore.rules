@@ -4,69 +4,78 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to get the user's role and approval status from the 'users' collection
-    function getUserData(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data;
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Helper function to check if a user is an editor
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
     function isEditor() {
-      return request.auth != null && getUserData(request.auth.uid).role == 'editor';
-    }
-    
-    // Helper function to check if a user is a viewer
-    function isViewer() {
-      return request.auth != null && getUserData(request.auth.uid).role == 'viewer';
+      return isAuthenticated() && getUserRole() == 'editor';
     }
 
-    // Helper function to check if a user is a supervisor
     function isSupervisor() {
-      return request.auth != null && getUserData(request.auth.uid).role == 'supervisor';
-    }
-    
-    // Helper function to check if a user is an approved user (any role)
-    function isApprovedUser() {
-        return request.auth != null && getUserData(request.auth.uid).isApproved == true;
+      return isAuthenticated() && getUserRole() == 'supervisor';
     }
 
-    // Rules for the 'users' collection
+    function isViewer() {
+      return isAuthenticated() && getUserRole() == 'viewer';
+    }
+
+    // Users Collection Rules
     match /users/{userId} {
-      // Any authenticated user can read their own profile.
-      // Editors and Viewers can read any user profile.
-      allow read: if request.auth != null && (request.auth.uid == userId || isEditor() || isViewer());
-      
-      // An admin (editor) can create any user profile
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() && (request.auth.uid == userId || isEditor() || isViewer());
       allow create: if isEditor();
-
-      // A user can update their own profile (e.g., name).
-      // An editor can update any user's role or approval status.
-      allow update: if request.auth != null && (
-        (request.auth.uid == userId && request.resource.data.keys().hasAll(['name'])) ||
-        (isEditor() && request.resource.data.keys().hasAny(['role', 'isApproved', 'staffId']))
-      );
-      
-      // Only an editor can delete a user, but not themselves or the main admin.
-      allow delete: if isEditor() && request.auth.uid != userId && resource.data.email != 'gwdklm@gmail.com';
+      allow update: if (isEditor() || request.auth.uid == userId);
+      allow delete: if isEditor() && request.auth.uid != userId; // Prevent self-delete
     }
 
-    // Generic rules for data collections that only editors can manage, but all approved users can read.
-    match /{collection}/{docId} where collection in ['gwdRates', 'staffMembers', 'pendingUpdates'] {
-      allow read: if isApprovedUser();
-      allow write: if isEditor();
+    // Generic Rules for most data collections
+    function canReadCollection() {
+      return isEditor() || isViewer();
     }
     
-    // Rules for data collections that have supervisor-level access
-    match /{collection}/{docId} where collection in ['fileEntries', 'arsEntries'] {
-       allow read: if isApprovedUser() && (isEditor() || isViewer() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid])));
-       allow write: if isEditor();
-       allow create, update: if isEditor();
-       allow delete: if isEditor();
+    function canWriteCollection() {
+      return isEditor();
     }
     
-    // Rules for Agency Registration
+    // --- Data Collections ---
+
+    // fileEntries requires special read logic for supervisors
+    match /fileEntries/{docId} {
+      allow get, list: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
+      allow create, update, delete: if canWriteCollection();
+    }
+
+    // arsEntries requires special read logic for supervisors
+    match /arsEntries/{docId} {
+        allow get, list: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
+        allow create, update, delete: if canWriteCollection();
+    }
+    
+    // agencyApplications, gwdRates, and staffMembers are read-only for supervisors
     match /agencyApplications/{docId} {
-        allow read: if isApprovedUser(); // All approved users can see rig registrations
-        allow write: if isEditor(); // Only editors can create/edit/delete
+        allow read: if canReadCollection() || isSupervisor();
+        allow write: if canWriteCollection();
+    }
+
+    match /gwdRates/{docId} {
+        allow read: if canReadCollection() || isSupervisor();
+        allow write: if canWriteCollection();
+    }
+    
+    match /staffMembers/{docId} {
+        allow read: if canReadCollection() || isSupervisor();
+        allow write: if canWriteCollection();
+    }
+
+    // pendingUpdates are only accessible by editors
+    match /pendingUpdates/{docId} {
+        allow read, write: if isEditor();
     }
   }
 }
