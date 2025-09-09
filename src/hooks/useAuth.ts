@@ -18,7 +18,7 @@ import {
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, Timestamp, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import { type UserRole, type Designation } from '@/lib/schemas';
+import { type UserRole } from '@/lib/schemas';
 import { useToast } from "@/hooks/use-toast"; 
 
 const auth = getAuth(app);
@@ -33,8 +33,6 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  photoUrl?: string | null; // This will now be added in the component that needs it
-  designation?: Designation; // This will now be added in the component that needs it
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -149,7 +147,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation' | 'photoUrl'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
@@ -230,23 +228,17 @@ export function useAuth() {
     try {
       const usersCollectionRef = collection(db, "users");
       const querySnapshot = await getDocs(usersCollectionRef);
-      const staffCollectionRef = collection(db, "staffMembers");
-      const staffSnapshot = await getDocs(staffCollectionRef);
-      const staffMap = new Map(staffSnapshot.docs.map(doc => [doc.id, doc.data()]));
 
       const usersList: UserProfile[] = [];
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        const staffInfo = data.staffId ? staffMap.get(data.staffId) : undefined;
         usersList.push({
           uid: docSnap.id,
           email: data.email || null,
-          name: staffInfo?.name || data.name || undefined, // Prioritize staff name
+          name: data.name || undefined,
           role: data.role || 'viewer',
           isApproved: data.isApproved === true,
           staffId: data.staffId || undefined,
-          designation: staffInfo?.designation,
-          photoUrl: staffInfo?.photoUrl,
           createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : undefined,
           lastActiveAt: data.lastActiveAt instanceof Timestamp ? data.lastActiveAt.toDate() : undefined,
         });
