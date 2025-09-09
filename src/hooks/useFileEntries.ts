@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -219,18 +220,24 @@ export function useFileEntries() {
       const data = convertTimestampsToDates(docSnap.data());
       
       const entry = { id: docSnap.id, ...data } as DataEntryFormData;
-      
-      if(user.role === 'supervisor') {
-          const pendingUpdates = await getPendingUpdatesForFile(fileNo, user.uid);
-          if(pendingUpdates.length > 0) {
-              const pendingSiteNames = new Set(pendingUpdates.flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite)));
-              if(entry.siteDetails) {
-                  entry.siteDetails = entry.siteDetails.map(site => ({
-                      ...site,
-                      isPending: pendingSiteNames.has(site.nameOfSite)
-                  }));
-              }
-          }
+
+      // Security check: If the user is a supervisor, ensure they are assigned to this file.
+      if (user.role === 'supervisor') {
+        if (!entry.assignedSupervisorUids?.includes(user.uid)) {
+            console.warn(`[fetchEntryForEditing] Supervisor ${user.uid} does not have permission for file ${fileNo}.`);
+            return null; // Do not return the entry if the supervisor is not assigned.
+        }
+
+        const pendingUpdates = await getPendingUpdatesForFile(fileNo, user.uid);
+        if(pendingUpdates.length > 0) {
+            const pendingSiteNames = new Set(pendingUpdates.flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite)));
+            if(entry.siteDetails) {
+                entry.siteDetails = entry.siteDetails.map(site => ({
+                    ...site,
+                    isPending: pendingSiteNames.has(site.nameOfSite)
+                }));
+            }
+        }
       }
 
       return entry;
