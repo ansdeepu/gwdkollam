@@ -61,7 +61,8 @@ const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
 });
 
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
-  nameOfSite: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
+  nameOfSite: "",
+  latitude: undefined, longitude: undefined, purpose: undefined,
   estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
   additionalAS: 'No',
   tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
@@ -435,7 +436,7 @@ export default function DataEntryFormComponent({
                                         <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Rig Accessibility</FormLabel>
-                                                <Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !siteIsEditable}>
+                                                <Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}>
                                                     <FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
@@ -446,13 +447,13 @@ export default function DataEntryFormComponent({
                                             </FormItem>
                                         )}/>
                                     )}
-                                    <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                    <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                     {!isPrivateApplication && (
                                       <>
-                                        <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
-                                        <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                        <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                        <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                       </>
                                     )}
                                     <FormField
@@ -530,7 +531,6 @@ export default function DataEntryFormComponent({
                                             <div className="grid md:grid-cols-3 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField control={form.control} name={`siteDetails.${index}.purpose`} render={({ field }) => (<FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/>
-                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.latitude`} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
