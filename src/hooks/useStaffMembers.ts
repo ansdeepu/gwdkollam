@@ -1,3 +1,4 @@
+
 // src/hooks/useStaffMembers.ts
 "use client";
 
@@ -77,7 +78,7 @@ const convertStaffMemberTimestamps = (data: DocumentData): StaffMember => {
 const sanitizeStaffMemberForFirestore = (data: any): any => {
   const sanitized: any = {};
   for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key) && !['isTransferred', 'id', 'createdAt', 'updatedAt', 'photoUrl'].includes(key)) {
+    if (Object.prototype.hasOwnProperty.call(data, key) && !['isTransferred', 'id', 'createdAt', 'updatedAt'].includes(key)) {
       const value = data[key];
       if (value instanceof Date) sanitized[key] = Timestamp.fromDate(value);
       else if (value === undefined) sanitized[key] = null;

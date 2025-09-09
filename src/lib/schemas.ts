@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -537,6 +538,7 @@ export const StaffMemberFormDataSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   designation: z.enum(designationOptions).optional(),
   pen: z.string().min(1, { message: "PEN is required." }),
+  photoUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal("")),
   dateOfBirth: z.string().optional(),
   phoneNo: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }).optional().or(z.literal("")),
   roles: z.string().optional(),

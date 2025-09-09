@@ -1,3 +1,4 @@
+
 // src/components/establishment/StaffForm.tsx
 "use client";
 
@@ -38,6 +39,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
       name: initialData?.name || "",
       designation: initialData?.designation || undefined,
       pen: initialData?.pen || "",
+      photoUrl: initialData?.photoUrl || "",
       dateOfBirth: formattedDob,
       phoneNo: initialData?.phoneNo || "",
       roles: initialData?.roles || "",
@@ -167,6 +169,23 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
             )}
           />
         </div>
+
+        <FormField
+            control={form.control}
+            name="photoUrl"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Photo URL</FormLabel>
+                <FormControl>
+                    <Input placeholder="https://example.com/photo.jpg" {...field} />
+                </FormControl>
+                 <FormDescription>
+                    Provide a public URL to the staff member's photo.
+                </FormDescription>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <FormField

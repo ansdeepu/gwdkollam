@@ -1,7 +1,9 @@
+
 // src/components/establishment/StaffTable.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit3, Trash2, ArrowRightLeft, UserMinus, Eye, Loader2, UserCircle } from "lucide-react";
@@ -20,6 +22,7 @@ interface StaffTableProps {
   onDelete?: (staffId: string, staffName: string) => void;
   onSetStatus?: (staffId: string, newStatus: StaffStatusType, staffName: string) => void;
   isViewer: boolean;
+  onImageClick: (imageUrl: string | null) => void;
   isLoading?: boolean; 
   searchActive?: boolean; 
 }
@@ -38,6 +41,7 @@ export default function StaffTable({
     onDelete, 
     onSetStatus, 
     isViewer, 
+    onImageClick,
     isLoading = false,
     searchActive = false
 }: StaffTableProps) {
@@ -81,6 +85,7 @@ export default function StaffTable({
             <TableHeader className="bg-secondary">
               <TableRow>
                 <TableHead className="w-[50px]">Sl. No.</TableHead>
+                <TableHead className="w-[60px]">Photo</TableHead>
                 <TableHead className="px-2 py-2 text-left">Name</TableHead>
                 <TableHead className="px-2 py-2 text-left">Designation</TableHead>
                 <TableHead className="px-2 py-2 text-left">PEN</TableHead>
@@ -94,6 +99,15 @@ export default function StaffTable({
               {paginatedStaff.length > 0 ? paginatedStaff.map((staff, index) => (
                   <TableRow key={staff.id}>
                     <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                    <TableCell>
+                      <button onClick={() => onImageClick(staff.photoUrl || null)} className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
+                        {staff.photoUrl ? (
+                          <Image src={staff.photoUrl} alt={staff.name} width={40} height={40} className="rounded-full object-cover" />
+                        ) : (
+                          <UserCircle className="w-10 h-10 text-muted-foreground" />
+                        )}
+                      </button>
+                    </TableCell>
                     <TableCell className={cn("font-medium whitespace-normal break-words max-w-[150px] px-2 py-2 text-left")}>{staff.name}</TableCell>
                     <TableCell className={cn("whitespace-normal break-words max-w-[180px] px-2 py-2 text-left")}>{staff.designation}</TableCell>
                     <TableCell className={cn("whitespace-normal break-words max-w-[100px] px-2 py-2 text-left")}>{staff.pen}</TableCell>
@@ -148,7 +162,7 @@ export default function StaffTable({
                 )
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center px-2 py-2">
+                  <TableCell colSpan={9} className="h-24 text-center px-2 py-2">
                     {searchActive ? "No staff members found matching your search." : "No active staff members found."}
                   </TableCell>
                 </TableRow>
