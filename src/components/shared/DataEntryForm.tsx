@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -632,7 +633,7 @@ export default function DataEntryFormComponent({
                                                         <Input
                                                           type="date"
                                                           {...field}
-                                                          onChange={(e) => field.onChange(e.target.value || undefined)} // Allow clearing the date
+                                                          onChange={(e) => field.onChange(e.target.value || undefined)}
                                                           value={field.value ?? ""}
                                                           readOnly={isReadOnly || !siteIsEditable}
                                                         />
@@ -785,3 +786,5 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    
