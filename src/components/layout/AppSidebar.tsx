@@ -1,4 +1,3 @@
-
 // src/components/layout/AppSidebar.tsx
 "use client";
 
@@ -13,7 +12,6 @@ import AppNavMenu from './AppNavMenu';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth'; // Import useAuth
-import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Import Avatar components
 import {
   DropdownMenu,
@@ -23,11 +21,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'; // Import DropdownMenu components
-import { LogOut, User } from 'lucide-react'; // Import icons
+import { LogOut, User, ChevronsUpDown } from 'lucide-react'; // Import icons
 import { useRouter } from 'next/navigation';
+import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
-
 
 const hashCode = (str: string): number => {
     let hash = 0;
@@ -66,27 +63,13 @@ const getInitials = (name?: string) => {
 };
 
 export default function AppSidebar() {
-  const { user: authUser, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { staffMembers } = useStaffMembers();
   const router = useRouter();
 
-  const user = useMemo(() => {
-    if (!authUser) return null;
-    if (!authUser.staffId) return authUser;
-    
-    const staffInfo = staffMembers.find(s => s.id === authUser.staffId);
-    if (staffInfo) {
-      return {
-        ...authUser,
-        name: staffInfo.name, // Take name from staff record
-        photoUrl: staffInfo.photoUrl,
-      };
-    }
-    return authUser;
-  }, [authUser, staffMembers]);
-
-
-  const photoUrl = user?.photoUrl;
+  const staffInfo = staffMembers.find(s => s.id === user?.staffId);
+  const photoUrl = staffInfo?.photoUrl;
+  
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 
   return (

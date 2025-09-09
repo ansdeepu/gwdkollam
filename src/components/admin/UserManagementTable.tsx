@@ -1,4 +1,3 @@
-
 // src/components/admin/UserManagementTable.tsx
 "use client";
 
@@ -79,10 +78,6 @@ const getInitials = (name?: string) => {
     .toUpperCase();
 };
 
-interface UserWithPhoto extends UserProfile {
-    photoUrl?: string | null;
-}
-
 interface UserManagementTableProps {
   currentUser: UserProfile | null;
   users: UserProfile[];
@@ -109,19 +104,9 @@ export default function UserManagementTable({
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
 
-  const usersWithPhotos = useMemo(() => {
-    return users.map(user => {
-      if (user.staffId) {
-        const staffInfo = staffMembers.find(s => s.id === user.staffId);
-        return { ...user, photoUrl: staffInfo?.photoUrl };
-      }
-      return user;
-    });
-  }, [users, staffMembers]);
-
   const sortedUsers = useMemo(() => {
     const roleOrder: Record<UserRole, number> = { 'editor': 1, 'viewer': 2, 'supervisor': 3 };
-    return [...usersWithPhotos].sort((a, b) => {
+    return [...users].sort((a, b) => {
       // Main admin always on top
       if (a.email === ADMIN_EMAIL_FOR_TABLE) return -1;
       if (b.email === ADMIN_EMAIL_FOR_TABLE) return 1;
@@ -136,7 +121,7 @@ export default function UserManagementTable({
       const timeB = b.createdAt?.getTime() ?? 0;
       return timeB - timeA;
     });
-  }, [usersWithPhotos]);
+  }, [users]);
 
 
   const handleApprovalChange = async (uid: string, currentIsApproved: boolean) => {
@@ -254,7 +239,8 @@ export default function UserManagementTable({
               const isCurrentUserTheUserInRow = currentUser?.uid === userRow.uid;
               const isUserInRowAdmin = userRow.email === ADMIN_EMAIL_FOR_TABLE;
               const disableActions = updatingUsers[userRow.uid]?.approval || updatingUsers[userRow.uid]?.role || isCurrentUserTheUserInRow || isUserInRowAdmin;
-              const photoUrl = userRow.photoUrl;
+              const staffInfo = staffMembers.find(s => s.id === userRow.staffId);
+              const photoUrl = staffInfo?.photoUrl;
               const avatarColorClass = getColorClass(userRow.name || userRow.email || 'user');
 
 

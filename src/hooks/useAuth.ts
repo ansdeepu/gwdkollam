@@ -18,7 +18,7 @@ import {
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, Timestamp, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import { type UserRole } from '@/lib/schemas';
+import { type UserRole, type Designation } from '@/lib/schemas';
 import { useToast } from "@/hooks/use-toast"; 
 
 const auth = getAuth(app);
@@ -33,6 +33,7 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
+  designation?: Designation; // Added designation
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -51,6 +52,7 @@ export const updateUserLastActive = async (uid: string): Promise<void> => {
     await updateDoc(userDocRef, { lastActiveAt: Timestamp.now() });
   } catch (error) {
     // Suppress console warnings for this non-critical, throttled operation.
+    // console.warn(`[Auth] Failed to update lastActiveAt for user ${uid}:`, error);
   }
 };
 
@@ -66,61 +68,109 @@ export function useAuth() {
   const { toast } = useToast();
 
   useEffect(() => {
+    let isMounted = true; 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isMounted) return;
+
       if (!firebaseUser) {
         setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
         return;
       }
-  
+
       try {
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
-  
+
         let userProfile: UserProfile | null = null;
+        let isApproved = false;
         const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-  
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          userProfile = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            name: userData.name || undefined,
-            role: isAdminByEmail ? 'editor' : (userData.role || 'viewer'),
-            isApproved: isAdminByEmail || userData.isApproved === true,
-            staffId: userData.staffId || undefined,
-            createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
-            lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
-          };
-        } else if (isAdminByEmail) {
-          const name = firebaseUser.email?.split('@')[0] || 'Admin';
-          userProfile = {
-            uid: firebaseUser.uid, email: firebaseUser.email, name, role: 'editor', isApproved: true,
-          };
-          await setDoc(userDocRef, {
-            email: userProfile.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
-          });
+
+        if (isAdminByEmail) {
+            isApproved = true; // Main admin is always approved
+            let staffInfo: { designation?: Designation } = {};
+            try {
+              if (userDocSnap.exists() && userDocSnap.data().staffId) {
+                  const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
+                  const staffDocSnap = await getDoc(staffDocRef);
+                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
+              }
+            } catch (staffError) {
+                console.error("Error fetching admin's staff info, proceeding without it:", staffError);
+            }
+            const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
+                role: 'editor', isApproved: true,
+                staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
+                designation: staffInfo.designation,
+                createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
+                lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
+            };
+            if (!userDocSnap.exists()) {
+                await setDoc(doc(db, "users", firebaseUser.uid), {
+                    email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
+                });
+            }
+        } else if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            isApproved = userData.isApproved === true;
+            
+            let staffInfo: { designation?: Designation } = {};
+            try {
+              if (userData.staffId) {
+                  const staffDocRef = doc(db, "staffMembers", userData.staffId);
+                  const staffDocSnap = await getDoc(staffDocRef);
+                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
+              }
+            } catch(staffError) {
+              console.error(`Error fetching staff info for user ${firebaseUser.uid}, proceeding without it:`, staffError);
+            }
+
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
+                role: userData.role || 'viewer', isApproved: isApproved,
+                staffId: userData.staffId || undefined, designation: staffInfo.designation,
+                createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
+                lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
+            };
         }
-  
+
+        if (!isMounted) return;
+
         if (userProfile && userProfile.isApproved) {
-          setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
+            setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
         } else {
-          setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
-          if (userProfile && !userProfile.isApproved) {
-            toast({
-              title: "Account Pending Approval",
-              description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
-              variant: "destructive",
-              duration: 8000
-            });
-          }
+            setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
+            
+            if (userProfile && !userProfile.isApproved) {
+                toast({
+                    title: "Account Pending Approval",
+                    description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
+                    variant: "destructive",
+                    duration: 8000
+                });
+            }
         }
       } catch (error: any) {
         console.error('[Auth] Error in onAuthStateChanged callback:', error);
-        setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+        if (isMounted) {
+            if (error.code === 'resource-exhausted') {
+                toast({
+                    title: "Database Quota Exceeded",
+                    description: "The application has exceeded its database usage limits for the day. Please try again later.",
+                    variant: "destructive",
+                    duration: 9000
+                });
+            }
+            if (auth.currentUser) {
+                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); }
+            }
+            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+        }
       }
     });
-  
-    return () => unsubscribe();
+
+    return () => { isMounted = false; unsubscribe(); };
   }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
@@ -147,7 +197,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
@@ -228,7 +278,6 @@ export function useAuth() {
     try {
       const usersCollectionRef = collection(db, "users");
       const querySnapshot = await getDocs(usersCollectionRef);
-
       const usersList: UserProfile[] = [];
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
