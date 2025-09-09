@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -167,8 +166,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   };
 
   const handleEditClick = (item: DataEntryFormData) => {
-    if (!canEdit) return; 
-    router.push(`/dashboard/data-entry?fileNo=${encodeURIComponent(item.fileNo || "unknown")}`);
+    if (!canEdit || !item.id) return; 
+    router.push(`/dashboard/data-entry?id=${item.id}`);
   };
 
   const handleDeleteClick = (item: DataEntryFormData) => {
@@ -264,7 +263,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
                   
                   return (
-                  <TableRow key={entry.fileNo}>
+                  <TableRow key={entry.id}>
                     <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                     <TableCell className="font-medium w-[150px]">{entry.fileNo}</TableCell>
                     <TableCell>{entry.applicantName}</TableCell>

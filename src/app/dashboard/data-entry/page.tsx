@@ -1,4 +1,3 @@
-
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -115,7 +114,7 @@ interface PageData {
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const fileNoToEdit = searchParams.get("fileNo");
+  const fileIdToEdit = searchParams.get("id");
   const approveUpdateId = searchParams.get("approveUpdateId");
   
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
@@ -127,6 +126,7 @@ export default function DataEntryPage() {
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [fileNoForHeader, setFileNoForHeader] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -134,7 +134,7 @@ export default function DataEntryPage() {
       if (!user) return; // Wait for user profile
       setDataLoading(true);
       
-      const entryPromise = fileNoToEdit ? fetchEntryForEditing(fileNoToEdit) : Promise.resolve(null);
+      const entryPromise = fileIdToEdit ? fetchEntryForEditing(fileIdToEdit) : Promise.resolve(null);
       const pendingUpdatePromise = approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null);
       
       try {
@@ -157,13 +157,17 @@ export default function DataEntryPage() {
               }
           }
 
-          if (!fileNoToEdit) { // Creating a new entry
+          if (!fileIdToEdit) { // Creating a new entry
               dataForForm = getFormDefaults();
+              setFileNoForHeader(null);
           } else if (permissionError) {
-              toast({ title: "Permission Denied", description: `You do not have permission to view File No. ${fileNoToEdit}.`, variant: "destructive" });
+              toast({ title: "Permission Denied", description: `You do not have permission to view this file.`, variant: "destructive" });
+              setFileNoForHeader(null);
           } else if (!originalEntry) {
-              toast({ title: "Error", description: `File No. ${fileNoToEdit} not found.`, variant: "destructive" });
+              toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
+              setFileNoForHeader(null);
           } else {
+            setFileNoForHeader(originalEntry.fileNo);
             // Logic for merging pending updates
             if (approveUpdateId && pendingUpdate && originalEntry) {
               if (pendingUpdate.status !== 'pending') {
@@ -212,12 +216,12 @@ export default function DataEntryPage() {
     }
     
     return () => { isMounted = false; };
-  }, [fileNoToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, fetchAllUsers, toast]);
+  }, [fileIdToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, fetchAllUsers, toast]);
 
   useEffect(() => {
     let title = "View File Data";
-    let description = `Viewing details for File No: ${fileNoToEdit}. You are in read-only mode.`;
-    const isCreatingNew = !fileNoToEdit;
+    let description = fileNoForHeader ? `Viewing details for File No: ${fileNoForHeader}. You are in read-only mode.` : `You are in read-only mode.`;
+    const isCreatingNew = !fileIdToEdit;
 
     if (user?.role === 'editor') {
       if (isCreatingNew) {
@@ -225,11 +229,11 @@ export default function DataEntryPage() {
         description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
       } else if (approveUpdateId) {
         title = "Approve Pending Updates";
-        description = `Reviewing and approving updates for File No: ${fileNoToEdit}. Click "Save Changes" to finalize.`;
+        description = `Reviewing and approving updates for File No: ${fileNoForHeader}. Click "Save Changes" to finalize.`;
       }
       else {
         title = "Edit File Data";
-        description = `Editing details for File No: ${fileNoToEdit}. Please make your changes and submit.`;
+        description = `Editing details for File No: ${fileNoForHeader}. Please make your changes and submit.`;
       }
     } else if (user?.role === 'supervisor') {
        if (isCreatingNew) {
@@ -237,7 +241,7 @@ export default function DataEntryPage() {
          description = "Supervisors cannot create new files.";
        } else {
          title = "Edit Assigned Site Details";
-         description = `Editing assigned sites for File No: ${fileNoToEdit}. Submit your changes for approval.`;
+         description = `Editing assigned sites for File No: ${fileNoForHeader}. Submit your changes for approval.`;
        }
     } else if (isCreatingNew) {
       title = "Access Denied";
@@ -245,7 +249,7 @@ export default function DataEntryPage() {
     }
 
     setHeader(title, description); // Update the main header
-  }, [fileNoToEdit, user, approveUpdateId, setHeader]);
+  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader]);
 
 
   const supervisorList = useMemo(() => {
@@ -280,7 +284,7 @@ export default function DataEntryPage() {
     );
   }
   
-  const isDeniedAccess = (user?.role === 'viewer' && !fileNoToEdit) || (user?.role === 'supervisor' && !fileNoToEdit);
+  const isDeniedAccess = (user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit);
 
   if (isDeniedAccess) {
      return (
@@ -304,10 +308,10 @@ export default function DataEntryPage() {
                   Back
               </Button>
           </div>
-          {pageData && pageData.initialData.fileNo !== "" ? (
+          {pageData && pageData.initialData ? (
              <DataEntryFormComponent
-                key={approveUpdateId || fileNoToEdit || 'new-entry'} 
-                fileNoToEdit={fileNoToEdit || undefined}
+                key={approveUpdateId || fileIdToEdit || 'new-entry'} 
+                fileNoToEdit={fileNoForHeader ?? undefined}
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}

@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -203,25 +202,22 @@ export function useFileEntries() {
   }, []);
 
   const fetchEntryForEditing = useCallback(async (
-    fileNo: string
+    docId: string
   ): Promise<DataEntryFormData | null> => {
-    // This function fetches the file data. The permission check is now handled in the page component.
-    const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
-    
     try {
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) {
-        console.warn(`[fetchEntryForEditing] No file found with fileNo: ${fileNo}`);
+      const docRef = doc(db, FILE_ENTRIES_COLLECTION, docId);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        console.warn(`[fetchEntryForEditing] No file found with ID: ${docId}`);
         return null;
       }
       
-      const docSnap = querySnapshot.docs[0];
-      const data = convertTimestampsToDates(docSnap.data());
-      const entry = { id: docSnap.id, ...data } as DataEntryFormData;
+      const entry = { id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) } as DataEntryFormData;
 
       // For supervisors, we still need to attach the pending status for the UI
       if (user && user.role === 'supervisor') {
-         const pendingUpdates = await getPendingUpdatesForFile(fileNo, user.uid);
+         const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo, user.uid);
          if (pendingUpdates.length > 0) {
             const pendingSiteNames = new Set(pendingUpdates.flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite)));
             if (entry.siteDetails) {
@@ -234,7 +230,7 @@ export function useFileEntries() {
       }
       return entry;
     } catch (error) {
-      console.error(`[fetchEntryForEditing] Error fetching fileNo ${fileNo}:`, error);
+      console.error(`[fetchEntryForEditing] Error fetching docId ${docId}:`, error);
       return null;
     }
   }, [user, getPendingUpdatesForFile]);
