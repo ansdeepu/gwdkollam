@@ -69,19 +69,16 @@ export function useFileEntries() {
       return;
     }
     
-    // Construct the query based on user role
     const fileEntriesRef = collection(db, FILE_ENTRIES_COLLECTION);
     let q;
     if (user.role === 'supervisor') {
-      // Supervisors see files where their UID is in the `assignedSupervisorUids` array
       q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', user.uid));
     } else {
-      // Editors and viewers see all files
       q = query(fileEntriesRef);
     }
     
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
-      let entriesData = snapshot.docs.map(doc => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
         const convertedData = convertTimestampsToDates(data);
         return {
@@ -90,31 +87,38 @@ export function useFileEntries() {
         } as DataEntryFormData;
       });
 
-      // For supervisors, further filter the sites within each file
       if (user.role === 'supervisor') {
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingSiteKeys = new Set(pendingUpdates.map(p => `${p.fileNo}-${p.updatedSiteDetails[0].nameOfSite}`));
-
-        entriesData = entriesData.map(entry => {
-          const supervisorVisibleSites = entry.siteDetails?.filter(site => {
-            const isAssigned = site.supervisorUid === user.uid;
-            if (!isAssigned) return false;
+        getPendingUpdatesForFile(null, user.uid).then(pendingUpdates => {
+            const pendingSiteKeys = new Set(pendingUpdates.map(p => `${p.fileNo}-${p.updatedSiteDetails[0].nameOfSite}`));
             
-            const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
-            if (isPending) {
-                // Mark the site as pending but still show it
-                site.isPending = true;
-            }
-            return true; // Show all assigned sites
-          });
-          return { ...entry, siteDetails: supervisorVisibleSites };
-        }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+            const filteredEntries = entriesData.map(entry => {
+                const supervisorVisibleSites = entry.siteDetails?.filter(site => {
+                    const isAssigned = site.supervisorUid === user.uid;
+                    if (!isAssigned) return false;
+                    
+                    const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
+                    site.isPending = isPending; // Set pending status regardless of work status
+                    
+                    return true; // Always show the site if assigned to the supervisor
+                });
+                return { ...entry, siteDetails: supervisorVisibleSites };
+            }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+
+            cachedFileEntries = filteredEntries;
+            setFileEntries(filteredEntries);
+            setIsLoading(false);
+            isCacheInitialized = true;
+        }).catch(error => {
+             console.error("Error fetching pending updates for supervisor view:", error);
+             toast({ title: "Error", description: "Could not sync pending updates.", variant: "destructive" });
+             setIsLoading(false);
+        });
+      } else {
+        cachedFileEntries = entriesData;
+        setFileEntries(entriesData);
+        setIsLoading(false);
+        isCacheInitialized = true;
       }
-      
-      cachedFileEntries = entriesData;
-      setFileEntries(entriesData);
-      setIsLoading(false);
-      isCacheInitialized = true;
     }, (error) => {
       console.error("Error fetching file entries:", error);
       toast({
@@ -135,7 +139,6 @@ export function useFileEntries() {
     if (payload.id) delete payload.id; // Don't save the document ID inside the document itself
 
     if (existingFileNo) {
-        // Find document with the matching fileNo and update it
         const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", existingFileNo));
         const querySnapshot = await getDocs(q);
 
@@ -144,11 +147,9 @@ export function useFileEntries() {
             const docRef = doc(db, FILE_ENTRIES_COLLECTION, docId);
             await updateDoc(docRef, { ...payload, updatedAt: serverTimestamp() });
         } else {
-             // If for some reason we thought it existed but it doesn't, create it.
             await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         }
     } else {
-        // This is a new file entry
         await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     }
   }, [user]);
