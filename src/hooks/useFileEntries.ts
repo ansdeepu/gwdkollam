@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -101,10 +100,11 @@ export function useFileEntries() {
             if (!isAssigned) return false;
             
             const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
-            if (isPending) return false; // Hide site if an update is pending
-
-            const eligibleStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress"];
-            return site.workStatus ? eligibleStatuses.includes(site.workStatus as SiteWorkStatus) : false;
+            if (isPending) {
+                // Mark the site as pending but still show it
+                site.isPending = true;
+            }
+            return true; // Show all assigned sites
           });
           return { ...entry, siteDetails: supervisorVisibleSites };
         }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);

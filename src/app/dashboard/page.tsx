@@ -81,8 +81,10 @@ export default function DashboardPage() {
 
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || isReportLoading || staffLoading || !currentUser) return null;
+
+    const relevantEntries = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
     
-    const nonArsEntries = (currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries)
+    const nonArsEntries = relevantEntries
         .map(entry => ({
             ...entry,
             siteDetails: entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport)
@@ -91,7 +93,7 @@ export default function DashboardPage() {
 
     return {
         nonArsEntries: nonArsEntries,
-        allFileEntries: allFileEntries,
+        allFileEntries: relevantEntries,
         staffMembers: staffMembers
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
@@ -188,7 +190,7 @@ export default function DashboardPage() {
     setDialogState({ isOpen: true, data: dialogData, title, columns, type: 'rig' });
   }, []);
 
-  const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || !dashboardData;
+  const isPageLoading = authLoading || usersLoading || filteredEntriesLoading || isReportLoading || agenciesLoading || !dashboardData;
   
   if (isPageLoading) {
     return (
@@ -212,13 +214,13 @@ export default function DashboardPage() {
       />
       
       <WorkStatusByService 
-        allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries}
+        allFileEntries={dashboardData.allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
       />
       
       <FinanceOverview 
-        allFileEntries={allFileEntries}
+        allFileEntries={dashboardData.allFileEntries}
         onOpenDialog={handleOpenDialog}
         dates={financeDates}
         onSetDates={setFinanceDates}
@@ -238,14 +240,14 @@ export default function DashboardPage() {
       )}
       
       <WorkProgress
-        allFileEntries={allFileEntries}
+        allFileEntries={dashboardData.allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUser={currentUser}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SupervisorWork 
-            allFileEntries={allFileEntries}
+            allFileEntries={dashboardData.allFileEntries}
             allUsers={allUsers}
             staffMembers={staffMembers}
             onOpenDialog={handleOpenDialog}
@@ -259,7 +261,7 @@ export default function DashboardPage() {
       <DashboardDialogs 
         dialogState={dialogState}
         setDialogState={setDialogState}
-        allFileEntries={allFileEntries}
+        allFileEntries={dashboardData.allFileEntries}
         financeDates={financeDates}
       />
     </div>
