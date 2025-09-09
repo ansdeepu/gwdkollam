@@ -1,3 +1,4 @@
+
 // src/components/admin/UserManagementTable.tsx
 "use client";
 
@@ -239,8 +240,7 @@ export default function UserManagementTable({
               const isCurrentUserTheUserInRow = currentUser?.uid === userRow.uid;
               const isUserInRowAdmin = userRow.email === ADMIN_EMAIL_FOR_TABLE;
               const disableActions = updatingUsers[userRow.uid]?.approval || updatingUsers[userRow.uid]?.role || isCurrentUserTheUserInRow || isUserInRowAdmin;
-              const staffInfo = staffMembers.find(s => s.id === userRow.staffId);
-              const photoUrl = staffInfo?.photoUrl;
+              const photoUrl = userRow.photoUrl;
               const avatarColorClass = getColorClass(userRow.name || userRow.email || 'user');
 
 

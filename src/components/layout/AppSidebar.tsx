@@ -1,3 +1,4 @@
+
 // src/components/layout/AppSidebar.tsx
 "use client";
 
@@ -64,11 +65,9 @@ const getInitials = (name?: string) => {
 
 export default function AppSidebar() {
   const { user, logout } = useAuth();
-  const { staffMembers } = useStaffMembers();
   const router = useRouter();
 
-  const staffInfo = staffMembers.find(s => s.id === user?.staffId);
-  const photoUrl = staffInfo?.photoUrl;
+  const photoUrl = user?.photoUrl;
   
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 

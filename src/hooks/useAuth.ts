@@ -34,6 +34,7 @@ export interface UserProfile {
   isApproved: boolean;
   staffId?: string;
   designation?: Designation; // Added designation
+  photoUrl?: string | null; // Added photoUrl
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -85,24 +86,36 @@ export function useAuth() {
         let isApproved = false;
         const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
+        const fetchStaffDetails = async (staffId?: string): Promise<{ designation?: Designation; photoUrl?: string | null }> => {
+            if (!staffId) return {};
+            try {
+                const staffDocRef = doc(db, "staffMembers", staffId);
+                const staffDocSnap = await getDoc(staffDocRef);
+                if (staffDocSnap.exists()) {
+                    const staffData = staffDocSnap.data();
+                    return {
+                        designation: staffData.designation as Designation,
+                        photoUrl: staffData.photoUrl || null,
+                    };
+                }
+            } catch (staffError) {
+                console.error(`Error fetching staff info for staffId ${staffId}:`, staffError);
+            }
+            return {};
+        };
+
+
         if (isAdminByEmail) {
             isApproved = true; // Main admin is always approved
-            let staffInfo: { designation?: Designation } = {};
-            try {
-              if (userDocSnap.exists() && userDocSnap.data().staffId) {
-                  const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
-                  const staffDocSnap = await getDoc(staffDocRef);
-                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
-              }
-            } catch (staffError) {
-                console.error("Error fetching admin's staff info, proceeding without it:", staffError);
-            }
+            const staffId = userDocSnap.exists() ? userDocSnap.data().staffId : undefined;
+            const staffDetails = await fetchStaffDetails(staffId);
             const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
             userProfile = {
                 uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
                 role: 'editor', isApproved: true,
-                staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
-                designation: staffInfo.designation,
+                staffId: staffId,
+                designation: staffDetails.designation,
+                photoUrl: staffDetails.photoUrl,
                 createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
                 lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
             };
@@ -115,21 +128,14 @@ export function useAuth() {
             const userData = userDocSnap.data();
             isApproved = userData.isApproved === true;
             
-            let staffInfo: { designation?: Designation } = {};
-            try {
-              if (userData.staffId) {
-                  const staffDocRef = doc(db, "staffMembers", userData.staffId);
-                  const staffDocSnap = await getDoc(staffDocRef);
-                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
-              }
-            } catch(staffError) {
-              console.error(`Error fetching staff info for user ${firebaseUser.uid}, proceeding without it:`, staffError);
-            }
+            const staffDetails = await fetchStaffDetails(userData.staffId);
 
             userProfile = {
                 uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
                 role: userData.role || 'viewer', isApproved: isApproved,
-                staffId: userData.staffId || undefined, designation: staffInfo.designation,
+                staffId: userData.staffId || undefined,
+                designation: staffDetails.designation,
+                photoUrl: staffDetails.photoUrl,
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
@@ -197,7 +203,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation' | 'photoUrl'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
@@ -278,9 +284,14 @@ export function useAuth() {
     try {
       const usersCollectionRef = collection(db, "users");
       const querySnapshot = await getDocs(usersCollectionRef);
+      const staffCollectionRef = collection(db, "staffMembers");
+      const staffSnapshot = await getDocs(staffCollectionRef);
+      const staffMap = new Map(staffSnapshot.docs.map(doc => [doc.id, doc.data()]));
+
       const usersList: UserProfile[] = [];
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
+        const staffInfo = data.staffId ? staffMap.get(data.staffId) : undefined;
         usersList.push({
           uid: docSnap.id,
           email: data.email || null,
@@ -288,6 +299,8 @@ export function useAuth() {
           role: data.role || 'viewer',
           isApproved: data.isApproved === true,
           staffId: data.staffId || undefined,
+          designation: staffInfo?.designation,
+          photoUrl: staffInfo?.photoUrl,
           createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : undefined,
           lastActiveAt: data.lastActiveAt instanceof Timestamp ? data.lastActiveAt.toDate() : undefined,
         });
