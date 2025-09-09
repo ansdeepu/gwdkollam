@@ -1,3 +1,4 @@
+
 // src/hooks/useAuth.ts
 "use client";
 
@@ -88,6 +89,7 @@ export function useAuth() {
             const userData = userDocSnap.data();
             let staffInfo: { designation?: Designation, photoUrl?: string | null } = {};
             
+            // If the user is linked to a staff member, fetch those details
             if (userData.staffId) {
                 try {
                     const staffDocRef = doc(db, "staffMembers", userData.staffId);
