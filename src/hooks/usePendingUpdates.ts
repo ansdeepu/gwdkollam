@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth, type UserProfile } from './useAuth';
-import type { PendingUpdate, DataEntryFormData, SiteDetailFormData } from '@/lib/schemas';
+import type { PendingUpdate, DataEntryFormData, SiteDetailFormData, ArsEntryFormData } from '@/lib/schemas';
 
 const db = getFirestore(app);
 const PENDING_UPDATES_COLLECTION = 'pendingUpdates';
@@ -39,6 +39,7 @@ const convertTimestampToDate = (data: DocumentData): PendingUpdate => {
 
 interface PendingUpdatesState {
   createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
+  createArsPendingUpdate: (arsId: string, updatedArsEntry: ArsEntryFormData, currentUser: UserProfile) => Promise<void>;
   rejectUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
   hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
@@ -122,6 +123,29 @@ export function usePendingUpdates(): PendingUpdatesState {
       submittedAt: serverTimestamp(),
     });
   }, [getPendingUpdatesForFile]);
+
+  const createArsPendingUpdate = useCallback(async (
+    arsId: string,
+    updatedArsEntry: ArsEntryFormData,
+    currentUser: UserProfile
+  ) => {
+    if (!currentUser.uid || !currentUser.name) {
+      throw new Error("Invalid user profile for submitting an update.");
+    }
+
+    const newUpdate = {
+      arsId: arsId,
+      fileNo: updatedArsEntry.fileNo, // For display purposes
+      updatedSiteDetails: [updatedArsEntry], // Store the ARS data in the same structure
+      submittedByUid: currentUser.uid,
+      submittedByName: currentUser.name,
+      status: 'pending',
+      isArsUpdate: true, // Flag to identify this as an ARS update
+      submittedAt: serverTimestamp(),
+    };
+
+    await addDoc(collection(db, PENDING_UPDATES_COLLECTION), newUpdate);
+  }, []);
   
   const getPendingUpdateById = useCallback(async (updateId: string): Promise<PendingUpdate | null> => {
     const docRef = doc(db, PENDING_UPDATES_COLLECTION, updateId);
@@ -146,6 +170,7 @@ export function usePendingUpdates(): PendingUpdatesState {
 
   return {
     createPendingUpdate,
+    createArsPendingUpdate,
     rejectUpdate,
     getPendingUpdateById,
     hasPendingUpdateForFile,

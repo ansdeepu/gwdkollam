@@ -74,6 +74,7 @@ export default function ArsPage() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const canEdit = user?.role === 'editor';
+  const isSupervisor = user?.role === 'supervisor';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { setIsNavigating } = usePageNavigation();
@@ -93,14 +94,23 @@ export default function ArsPage() {
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   
   const handleAddNewClick = () => {
+    if (isSupervisor) {
+        toast({ title: "Action Not Allowed", description: "Supervisors cannot create new ARS entries.", variant: "destructive" });
+        return;
+    }
     setIsNavigating(true);
     router.push('/dashboard/ars/entry');
+  };
+  
+  const handleEditClick = (siteId: string) => {
+    setIsNavigating(true);
+    router.push(`/dashboard/ars/entry?id=${siteId}`);
   };
 
   const filteredSites = useMemo(() => {
     let sites = [...arsEntries];
 
-    if (user?.role === 'supervisor') {
+    if (isSupervisor) {
       sites = sites.filter(site => 
         site.supervisorUid === user.uid && 
         (site.workStatus === "Work Order Issued" || site.workStatus === "Work in Progress")
@@ -158,7 +168,7 @@ export default function ArsPage() {
     });
 
     return sites;
-  }, [arsEntries, searchTerm, startDate, endDate, user]);
+  }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -429,7 +439,12 @@ export default function ArsPage() {
   };
   
   if (entriesLoading || authLoading) {
-    return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading ARS data...</p> </div> );
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Loading ARS data...</p>
+      </div>
+    );
   }
 
   if (user?.role === 'supervisor' && filteredSites.length === 0) {
@@ -455,7 +470,7 @@ export default function ArsPage() {
                     <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 order-1 sm:order-2">
-                  {canEdit && <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>}
+                  {(canEdit || isSupervisor) && <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>}
                   <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
                   {canEdit && ( <> 
                       <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
@@ -520,11 +535,25 @@ export default function ArsPage() {
                                         <TableCell className="text-center w-[120px]">
                                             <div className="flex items-center justify-center space-x-1">
                                                 <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
+                                                {(canEdit || (isSupervisor && site.supervisorUid === user.uid)) && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(site.id!)}>
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>Edit Site</p></TooltipContent>
+                                                    </Tooltip>
+                                                )}
                                                 {canEdit && (
-                                                    <>
-                                                    <Tooltip><TooltipTrigger asChild><Link href={`/dashboard/ars/entry?id=${site.id}`} passHref><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></Link></TooltipTrigger><TooltipContent><p>Edit Site</p></TooltipContent></Tooltip>
-                                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Site</p></TooltipContent></Tooltip>
-                                                    </>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>Delete Site</p></TooltipContent>
+                                                    </Tooltip>
                                                 )}
                                             </div>
                                         </TableCell>
