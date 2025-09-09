@@ -33,8 +33,8 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  designation?: Designation; // This will be populated on the page level now
-  photoUrl?: string | null; // This will be populated on the page level now
+  designation?: Designation;
+  photoUrl?: string | null;
   createdAt?: Date;
   lastActiveAt?: Date;
 }
