@@ -223,7 +223,8 @@ export function useFileEntries() {
 
       // Security check: If the user is a supervisor, ensure they are assigned to this file.
       if (user.role === 'supervisor') {
-        if (!entry.assignedSupervisorUids?.includes(user.uid)) {
+        const isAssigned = entry.assignedSupervisorUids?.includes(user.uid);
+        if (!isAssigned) {
             console.warn(`[fetchEntryForEditing] Supervisor ${user.uid} does not have permission for file ${fileNo}.`);
             return null; // Do not return the entry if the supervisor is not assigned.
         }
