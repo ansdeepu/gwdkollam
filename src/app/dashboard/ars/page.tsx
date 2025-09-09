@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle, CalendarIcon, ShieldAlert } from "lucide-react";
 import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -193,15 +193,22 @@ export default function ArsPage() {
     }
   };
 
-  const handleExportExcel = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     if (filteredSites.length === 0) {
       toast({ title: "No Data", description: "There is no data to export." });
       return;
     }
     const reportTitle = "Artificial Recharge Schemes (ARS) Report";
-    const sheetName = "ARSReport";
     const fileNamePrefix = "gwd_ars_report";
     
+    const headers = [
+      "Sl. No.", "File No", "Name of Site", "Constituency (LAC)", "Type of Scheme", 
+      "Panchayath", "Block", "Latitude", "Longitude", "Number of Structures", 
+      "Storage Capacity (m3)", "No. of Fillings", "AS/TS Accorded Details", 
+      "AS/TS Amount (₹)", "Sanctioned Date", "Tendered Amount (₹)", "Awarded Amount (₹)", 
+      "Present Status", "Completion Date", "No. of Beneficiaries", "Remarks"
+    ];
+
     const dataForExport = filteredSites.map((site, index) => ({
       "Sl. No.": index + 1,
       "File No": site.fileNo || 'N/A',
@@ -226,26 +233,96 @@ export default function ArsPage() {
       "Remarks": site.workRemarks || 'N/A',
     }));
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet([]);
-    const headerRows = [ ["Ground Water Department, Kollam"], [reportTitle], [`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`], [] ];
-    XLSX.utils.sheet_add_json(ws, dataForExport, { origin: 'A5', skipHeader: false });
-    XLSX.utils.sheet_add_aoa(ws, headerRows, { origin: 'A1' });
-    const numCols = Object.keys(dataForExport[0] || {}).length;
-    ws['!merges'] = [ { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } }, { s: { r: 2, c: 0 }, e: { r: 2, c: numCols - 1 } } ];
-    ws['!cols'] = Object.keys(dataForExport[0] || {}).map(key => ({ wch: Math.max(key.length, ...dataForExport.map(row => String(row[key as keyof typeof row] ?? '').length)) + 2 }));
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
-    XLSX.writeFile(wb, uniqueFileName);
-    toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("ARSReport");
+
+    worksheet.addRow(["Ground Water Department, Kollam"]).commit();
+    worksheet.addRow([reportTitle]).commit();
+    worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
+    worksheet.addRow([]).commit(); // Spacer
+
+    worksheet.mergeCells('A1:U1');
+    worksheet.mergeCells('A2:U2');
+    worksheet.mergeCells('A3:U3');
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.getCell('A2').alignment = { horizontal: 'center' };
+    worksheet.getCell('A3').alignment = { horizontal: 'center' };
+
+    worksheet.getRow(1).font = { bold: true, size: 16 };
+    worksheet.getRow(2).font = { bold: true, size: 14 };
+
+    const headerRow = worksheet.addRow(headers);
+    headerRow.font = { bold: true };
+    headerRow.eachCell(cell => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'F0F0F0' }
+      };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
+    
+    dataForExport.forEach(row => {
+        const values = headers.map(header => row[header as keyof typeof row]);
+        const newRow = worksheet.addRow(values);
+        newRow.eachCell(cell => {
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        });
+    });
+
+    worksheet.columns.forEach((column, i) => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, (cell) => {
+            let columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 10 ? 10 : maxLength + 2;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    toast({ title: "Excel Exported", description: `Report downloaded.` });
   }, [filteredSites, toast]);
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
     const templateData = [ { "File No": "Example/123", "Name of Site": "Sample ARS Site", "Constituency": "Kollam", "Type of Scheme": "Check Dam", "Panchayath": "Sample Panchayath", "Block": "Sample Block", "Latitude": 8.8932, "Longitude": 76.6141, "Number of Structures": 1, "Storage Capacity (m3)": 500, "No. of Fillings": 2, "Estimate Amount": 500000, "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD", "AS/TS Amount": 450000, "Sanctioned Date": "15/01/2023", "Tendered Amount": 445000, "Awarded Amount": 440000, "Present Status": "Work in Progress", "Completion Date": "", "Expenditure (₹)": 200000, "No. of Beneficiaries": "50 families", "Remarks": "Work ongoing", } ];
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "ARS_Template");
-    XLSX.writeFile(wb, "GWD_ARS_Upload_Template.xlsx");
+    const headers = Object.keys(templateData[0]);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("ARS_Template");
+
+    worksheet.addRow(headers).font = { bold: true };
+    worksheet.addRow(Object.values(templateData[0]));
+    
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, (cell) => {
+            let columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 15 ? 15 : maxLength + 2;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "GWD_ARS_Upload_Template.xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+
     toast({ title: "Template Downloaded", description: "The Excel template has been downloaded." });
   };
 
@@ -254,16 +331,33 @@ export default function ArsPage() {
     if (!file) return;
 
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: "binary", cellDates: true });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    
+    try {
+        const workbook = new ExcelJS.Workbook();
+        const buffer = await file.arrayBuffer();
+        await workbook.xlsx.load(buffer);
+        const worksheet = workbook.worksheets[0];
 
-        if (jsonData.length === 0) throw new Error("The selected Excel file is empty.");
+        if (!worksheet) throw new Error("No worksheets found in the Excel file.");
+
+        const jsonData: any[] = [];
+        const headerRow = worksheet.getRow(1);
+        if(!headerRow.values || headerRow.values.length === 1) throw new Error("The Excel file seems to be empty or has no header row.");
+        
+        const headers = (headerRow.values as string[]).slice(1);
+
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) {
+                const rowData: Record<string, any> = {};
+                row.eachCell((cell, colNumber) => {
+                    const header = headers[colNumber - 1];
+                    rowData[header] = cell.value;
+                });
+                jsonData.push(rowData);
+            }
+        });
+
+        if (jsonData.length === 0) throw new Error("The selected Excel file has no data rows.");
 
         let successCount = 0;
         let errorCount = 0;
@@ -325,8 +419,6 @@ export default function ArsPage() {
         setIsUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
-    };
-    reader.readAsBinaryString(file);
   };
   
   if (entriesLoading || authLoading) {

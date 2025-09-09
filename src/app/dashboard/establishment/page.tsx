@@ -1,3 +1,4 @@
+
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { usePageHeader } from "@/hooks/usePageHeader";
 
 export const dynamic = 'force-dynamic';
@@ -126,110 +127,79 @@ export default function EstablishmentPage() {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const reportTitle = "Establishment Staff Report";
-    const columnLabels = ["Sl. No.", "Name", "Designation", "PEN", "Phone No.", "Date of Birth", "Roles", "Status", "Remarks"];
+    const headers = ["Sl. No.", "Name", "Designation", "PEN", "Phone No.", "Date of Birth", "Roles", "Status", "Remarks"];
     
-    // Use the unfiltered staffMembers list for a complete export
-    const dataRows = staffMembers.map((staff, index) => [
-      index + 1,
-      staff.name,
-      staff.designation,
-      staff.pen,
-      staff.phoneNo || 'N/A',
-      formatDateForSearch(staff.dateOfBirth),
-      staff.roles || 'N/A',
-      staff.status,
-      staff.remarks || 'N/A',
-    ]);
-    const sheetName = "StaffList";
-    const fileNamePrefix = "gwd_establishment_report";
-
-    if (dataRows.length === 0) {
+    if (staffMembers.length === 0) {
       toast({ title: "No Data to Export", variant: "default" });
       return;
     }
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([]);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("StaffList");
+
+    worksheet.addRow(["Ground Water Department, Kollam"]).commit();
+    worksheet.addRow([reportTitle]).commit();
+    worksheet.addRow([]).commit();
+    worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
+    worksheet.addRow([]).commit();
+
+    worksheet.mergeCells('A1:I1');
+    worksheet.mergeCells('A2:I2');
+    worksheet.mergeCells('A4:I4');
+
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.getCell('A2').alignment = { horizontal: 'center' };
+    worksheet.getCell('A4').alignment = { horizontal: 'left' };
     
-    const headerRows = [
-      ["Ground Water Department, Kollam"],
-      [reportTitle],
-      [],
-      [`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`],
-      [],
-    ];
+    worksheet.getRow(1).font = { bold: true, size: 16 };
+    worksheet.getRow(2).font = { bold: true, size: 14 };
 
-    const numCols = columnLabels.length;
-    const footerColIndex = numCols > 1 ? numCols - 2 : 0;
-    const footerRowData = new Array(numCols).fill("");
-    footerRowData[footerColIndex] = "District Officer";
-    const footerRows = [[], footerRowData];
-    
-    const finalData = [...headerRows, columnLabels, ...dataRows, ...footerRows];
-    
-    XLSX.utils.sheet_add_aoa(ws, finalData, { cellStyles: false });
-    
-    const merges = [];
-    for (let i = 0; i < headerRows.length; i++) {
-        if (headerRows[i].length > 0 && headerRows[i][0]) {
-             merges.push({ s: { r: i, c: 0 }, e: { r: i, c: numCols - 1 } });
-        }
-    }
-    const footerRowIndex = finalData.length - 1;
-    if (numCols > 1) {
-        merges.push({ s: { r: footerRowIndex, c: footerColIndex }, e: { r: footerRowIndex, c: numCols - 1 } });
-    }
-    ws['!merges'] = merges;
+    const headerRow = worksheet.addRow(headers);
+    headerRow.font = { bold: true };
+    headerRow.eachCell(cell => {
+      cell.fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'F0F0F0'} };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
 
-    const colWidths = finalData[0].map((_, i) => ({
-      wch: Math.max(...finalData.map(row => (row[i] ? String(row[i]).length : 0))) + 2
-    }));
-    ws['!cols'] = colWidths;
+    staffMembers.forEach((staff, index) => {
+        const row = worksheet.addRow([
+            index + 1,
+            staff.name,
+            staff.designation,
+            staff.pen,
+            staff.phoneNo || 'N/A',
+            formatDateForSearch(staff.dateOfBirth),
+            staff.roles || 'N/A',
+            staff.status,
+            staff.remarks || 'N/A',
+        ]);
+        row.eachCell(cell => {
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        });
+    });
 
-    for (let R = 0; R < finalData.length; R++) {
-      ws['!rows'] = ws['!rows'] || [];
-      ws['!rows'][R] = { hpt: 20 };
-      for (let C = 0; C < numCols; C++) {
-        const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
-        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
-        
-        ws[cellRef].s = {
-          alignment: { horizontal: "center", vertical: "center", wrapText: true },
-          border: { 
-            top: { style: "thin" }, bottom: { style: "thin" }, 
-            left: { style: "thin" }, right: { style: "thin" } 
-          }
-        };
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, (cell) => {
+            let columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 15 ? 15 : maxLength + 2;
+    });
 
-        if (R < 2) {
-             ws[cellRef].s.font = { bold: true, sz: R === 0 ? 16 : 14 };
-        } else if (R < headerRows.length -1) {
-             ws[cellRef].s.font = { italic: true };
-             ws[cellRef].s.alignment!.horizontal = "left";
-        }
-        
-        const columnLabelsRowIndex = headerRows.length;
-        if (R === columnLabelsRowIndex) {
-            ws[cellRef].s.font = { bold: true };
-            ws[cellRef].s.fill = { fgColor: { rgb: "F0F0F0" } };
-        }
-        
-        if (R === footerRowIndex) {
-          ws[cellRef].s.border = {};
-          if (C >= footerColIndex) {
-             ws[cellRef].s.font = { bold: true };
-             ws[cellRef].s.alignment!.horizontal = "right";
-          }
-        }
-      }
-    }
-
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
-    XLSX.writeFile(wb, uniqueFileName);
-    toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `gwd_establishment_report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Excel Exported", description: `Report downloaded successfully.` });
   };
   
   // Debounce the search term to avoid excessive re-renders and filtering

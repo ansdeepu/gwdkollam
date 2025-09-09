@@ -1,3 +1,4 @@
+
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -62,7 +63,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { format } from "date-fns";
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, getDocs, query, writeBatch } from "firebase/firestore";
 import { app } from "@/lib/firebase";
@@ -280,102 +281,54 @@ export default function GwdRatesPage() {
     }
   };
   
-  const handleExportExcel = () => {
-    const reportTitle = "GWD Rates Report";
-    const columnLabels = ["Sl. No.", "Name of Item", "Rate (₹)"];
-    const dataRows = rateItems.map((item, index) => [
-      index + 1,
-      item.itemName,
-      item.rate,
-    ]);
-    const sheetName = "GWDRates";
-    const fileNamePrefix = "gwd_rates_report";
-
-    if (dataRows.length === 0) {
+  const handleExportExcel = async () => {
+    if (rateItems.length === 0) {
       toast({ title: "No Data to Export", variant: "default" });
       return;
     }
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([]);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("GWD_Rates");
+
+    worksheet.addRow(["Ground Water Department, Kollam"]).commit();
+    worksheet.addRow(["GWD Rates Report"]).commit();
+    worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
+    worksheet.addRow([]).commit();
+
+    worksheet.mergeCells('A1:C1');
+    worksheet.mergeCells('A2:C2');
+    worksheet.mergeCells('A3:C3');
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.getCell('A2').alignment = { horizontal: 'center' };
     
-    const headerRows = [
-      ["Ground Water Department, Kollam"],
-      [reportTitle],
-      [], // Blank row
-      [`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`],
-      [], // Blank row
+    worksheet.getRow(1).font = { bold: true, size: 16 };
+    worksheet.getRow(2).font = { bold: true, size: 14 };
+
+    const headerRow = worksheet.addRow(["Sl. No.", "Name of Item", "Rate (₹)"]);
+    headerRow.font = { bold: true };
+    headerRow.eachCell(cell => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F0F0F0' } };
+    });
+
+    rateItems.forEach((item, index) => {
+      worksheet.addRow([index + 1, item.itemName, item.rate]);
+    });
+
+    worksheet.columns = [
+      { header: 'Sl. No.', key: 'slNo', width: 10 },
+      { header: 'Name of Item', key: 'itemName', width: 50 },
+      { header: 'Rate (₹)', key: 'rate', width: 20, style: { numFmt: '"₹"#,##0.00' } },
     ];
-
-    const numCols = columnLabels.length;
-    const footerColIndex = numCols > 1 ? numCols - 2 : 0;
-    const footerRowData = new Array(numCols).fill("");
-    footerRowData[footerColIndex] = "District Officer";
-    const footerRows = [[], footerRowData];
     
-    const finalData = [...headerRows, columnLabels, ...dataRows, ...footerRows];
-    
-    XLSX.utils.sheet_add_aoa(ws, finalData, { cellStyles: false });
-    
-    const merges = [];
-    for (let i = 0; i < headerRows.length; i++) {
-        if (headerRows[i].length > 0 && headerRows[i][0]) {
-             merges.push({ s: { r: i, c: 0 }, e: { r: i, c: numCols - 1 } });
-        }
-    }
-    const footerRowIndex = finalData.length - 1;
-    if (numCols > 1) {
-        merges.push({ s: { r: footerRowIndex, c: footerColIndex }, e: { r: footerRowIndex, c: numCols - 1 } });
-    }
-    ws['!merges'] = merges;
-
-    const colWidths = finalData[0].map((_, i) => ({
-      wch: Math.max(...finalData.map(row => (row[i] ? String(row[i]).length : 0))) + 2
-    }));
-    ws['!cols'] = colWidths;
-
-    for (let R = 0; R < finalData.length; R++) {
-      ws['!rows'] = ws['!rows'] || [];
-      ws['!rows'][R] = { hpt: 20 };
-      for (let C = 0; C < numCols; C++) {
-        const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
-        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
-        
-        ws[cellRef].s = {
-          alignment: { horizontal: "center", vertical: "center", wrapText: true },
-          border: { 
-            top: { style: "thin" }, bottom: { style: "thin" }, 
-            left: { style: "thin" }, right: { style: "thin" } 
-          }
-        };
-
-        if (R < 2) {
-             ws[cellRef].s.font = { bold: true, sz: R === 0 ? 16 : 14 };
-        } else if (R < headerRows.length -1) {
-             ws[cellRef].s.font = { italic: true };
-             ws[cellRef].s.alignment!.horizontal = "left";
-        }
-        
-        const columnLabelsRowIndex = headerRows.length;
-        if (R === columnLabelsRowIndex) {
-            ws[cellRef].s.font = { bold: true };
-            ws[cellRef].s.fill = { fgColor: { rgb: "F0F0F0" } };
-        }
-        
-        if (R === footerRowIndex) {
-          ws[cellRef].s.border = {};
-          if (C >= footerColIndex) {
-             ws[cellRef].s.font = { bold: true };
-             ws[cellRef].s.alignment!.horizontal = "right";
-          }
-        }
-      }
-    }
-
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
-    XLSX.writeFile(wb, uniqueFileName);
-    toast({ title: "Excel Exported", description: `Report downloaded as ${uniqueFileName}.` });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `gwd_rates_report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Excel Exported", description: `Report downloaded.` });
   };
 
   if (authLoading || isLoading) {
