@@ -33,8 +33,8 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  photoUrl?: string | null;
-  designation?: Designation;
+  photoUrl?: string | null; // This will now be added in the component that needs it
+  designation?: Designation; // This will now be added in the component that needs it
   createdAt?: Date;
   lastActiveAt?: Date;
 }
