@@ -1,4 +1,3 @@
-
 // src/app/dashboard/layout.tsx
 "use client";
 
@@ -69,7 +68,7 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.replace('/login');
+      router.push('/login');
     }
   }, [isLoading, user, router]);
 
@@ -118,18 +117,23 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
       setIsNavigating(false);
   }, [pathname, setIsNavigating]);
 
-  // This is the critical change: Render a full-screen loader until authentication is fully resolved.
-  // This prevents any child components from rendering with a null `user` object.
-  if (isLoading || !user) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-muted-foreground">{isLoading ? "Authenticating..." : "Redirecting..."}</p>
       </div>
     );
   }
 
-  // Only render the full dashboard layout if we have a confirmed, authenticated user.
+  if (!user) {
+       return (
+        <div className="flex h-screen w-screen items-center justify-center bg-background">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-muted-foreground">Redirecting to login...</p>
+        </div>
+      );
+  }
+
   return (
     <SidebarProvider defaultOpen>
       {isNavigating && (

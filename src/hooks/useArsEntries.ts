@@ -3,12 +3,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs, where } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { ArsEntryFormData, ArsEntry as ArsSchemaEntry } from '@/lib/schemas';
+import type { ArsEntryFormData } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
-import { format, isValid, parse, parseISO } from 'date-fns';
+import { parse, isValid } from 'date-fns';
 
 const db = getFirestore(app);
 const ARS_COLLECTION = 'arsEntries';
@@ -44,39 +44,6 @@ const processDataForClient = (data: DocumentData): any => {
     return processed;
 };
 
-const toDateOrNull = (value: any): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date && isValid(value)) return value;
-  if (value && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-    return isValid(date) ? date : null;
-  }
-  if (typeof value === 'string') {
-    let parsedDate = parseISO(value);
-    if (isValid(parsedDate)) return parsedDate;
-    parsedDate = parse(value, 'dd/MM/yyyy', new Date());
-    if (isValid(parsedDate)) return parsedDate;
-  }
-  return null;
-};
-
-const processDataForForm = (data: any): any => {
-    if (!data) return data;
-    const processed: { [key: string]: any } = {};
-    for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-            const value = data[key];
-             if (key.toLowerCase().includes('date')) {
-                const date = toDateOrNull(value);
-                processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
-            } else {
-                processed[key] = value;
-            }
-        }
-    }
-    return processed;
-};
-
 
 export function useArsEntries() {
   const { user } = useAuth();
@@ -91,17 +58,10 @@ export function useArsEntries() {
     }
 
     setIsLoading(true);
-    
-    let q;
-    const arsEntriesRef = collection(db, ARS_COLLECTION);
-    if (user.role === 'supervisor') {
-      q = query(arsEntriesRef, where('supervisorUid', '==', user.uid));
-    } else { // Editors and Viewers can see all
-      q = query(arsEntriesRef);
-    }
+    const q = collection(db, ARS_COLLECTION);
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      let entriesData = snapshot.docs.map(doc => {
+      const entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
         const serializableData = processDataForClient(data);
         return {
@@ -109,14 +69,6 @@ export function useArsEntries() {
           ...serializableData
         } as ArsEntry;
       });
-
-      if (user.role === 'supervisor') {
-        const supervisorVisibleWorkStatuses: ArsSchemaEntry['workStatus'][] = ["Work Order Issued", "Work Initiated", "Work in Progress"];
-        entriesData = entriesData.filter(entry => 
-            entry.workStatus && supervisorVisibleWorkStatuses.includes(entry.workStatus)
-        );
-      }
-
       setArsEntries(entriesData);
       setIsLoading(false);
     }, (error) => {
@@ -184,8 +136,7 @@ export function useArsEntries() {
         const docRef = doc(db, ARS_COLLECTION, id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            // Correctly process data for form consumption
-            return processDataForForm({ id: docSnap.id, ...docSnap.data() }) as ArsEntry;
+            return processDataForClient({ id: docSnap.id, ...docSnap.data() }) as ArsEntry;
         }
         return null;
     } catch (error) {

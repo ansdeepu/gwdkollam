@@ -189,7 +189,6 @@ export default function DashboardPage() {
   }, []);
 
   const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || !dashboardData;
-  const dashboardFileEntries = currentUser?.role === 'supervisor' ? filteredFileEntries : allFileEntries;
   
   if (isPageLoading) {
     return (
@@ -202,18 +201,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-            <ImportantUpdates allFileEntries={dashboardData.allFileEntries} />
-        </div>
-        <div className="lg:col-span-1">
-            <NoticeBoard staffMembers={dashboardData.staffMembers} />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ImportantUpdates allFileEntries={dashboardData.allFileEntries} />
+        <NoticeBoard staffMembers={dashboardData.staffMembers} />
       </div>
-      
+
       <FileStatusOverview 
-        nonArsEntries={dashboardData.nonArsEntries}
-        onOpenDialog={handleOpenDialog}
+          nonArsEntries={dashboardData.nonArsEntries}
+          onOpenDialog={handleOpenDialog}
       />
       
       <WorkStatusByService 
@@ -248,20 +243,18 @@ export default function DashboardPage() {
         currentUser={currentUser}
       />
 
-       {(currentUser?.role === 'editor' || currentUser?.role === 'viewer') && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SupervisorWork 
-                allFileEntries={allFileEntries}
-                allUsers={allUsers}
-                staffMembers={staffMembers}
-                onOpenDialog={handleOpenDialog}
-            />
-            <UserActivity 
-                allUsers={allUsers}
-                staffMembers={staffMembers}
-            />
-        </div>
-       )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SupervisorWork 
+            allFileEntries={allFileEntries}
+            allUsers={allUsers}
+            staffMembers={staffMembers}
+            onOpenDialog={handleOpenDialog}
+          />
+          <UserActivity 
+            allUsers={allUsers}
+            staffMembers={staffMembers}
+          />
+      </div>
 
       <DashboardDialogs 
         dialogState={dialogState}

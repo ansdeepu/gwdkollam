@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Activity } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, UserRole } from '@/lib/schemas';
-import { useAuth } from '@/hooks/useAuth';
 
 const dashboardWorkStatusOrder: SiteWorkStatus[] = ["Under Process", "Addl. AS Awaited", "To be Refunded", "Awaiting Dept. Rig", "To be Tendered", "TS Pending", "Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Failed", "Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
 const dashboardServiceOrder: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR"];
@@ -32,9 +31,6 @@ interface WorkStatusRow {
 
 
 export default function WorkStatusByService({ allFileEntries, onOpenDialog, currentUserRole }: WorkStatusByServiceProps) {
-    const { user } = useAuth();
-    const isSupervisor = currentUserRole === 'supervisor';
-    
     const workStatusByServiceData = useMemo(() => {
         const totalApplicationsRow = "Total No. of Works/Files";
         const reorderedRowLabels = [...dashboardWorkStatusOrder, totalApplicationsRow];
@@ -99,16 +95,10 @@ export default function WorkStatusByService({ allFileEntries, onOpenDialog, curr
     }, [allFileEntries, currentUserRole]);
 
   const handleWorkStatusCellClick = (data: any[], title: string) => {
-    let filteredData = data;
-    if (isSupervisor) {
-        filteredData = data.filter(site => site.supervisorUid === user?.uid);
-    }
-    
-    const dialogData = filteredData.map((site, index) => ({
+    const dialogData = data.map((site, index) => ({
       slNo: index + 1, fileNo: site.fileNo, siteName: site.nameOfSite, purpose: site.purpose,
       workStatus: site.workStatus, supervisorName: site.supervisorName || 'N/A'
     }));
-
     const columns = [
       { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' },
       { key: 'siteName', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' },

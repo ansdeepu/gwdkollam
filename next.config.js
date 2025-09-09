@@ -50,20 +50,6 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    config.externals.push({
-      'utf-8-validate': 'commonjs utf-8-validate',
-      'bufferutil': 'commonjs bufferutil',
-    });
-    
-    // Fix for handlebars dependency issue with Genkit
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'handlebars': require.resolve('handlebars/dist/handlebars.js'),
-    };
-    
-    return config;
-  },
 };
 
 module.exports = nextConfig;

@@ -3,7 +3,7 @@
 
 import type { StaffMember, StaffMemberFormData, Designation, StaffStatusType } from "@/lib/schemas"; 
 import { designationOptions, staffStatusOptions } from "@/lib/schemas";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   getFirestore,
   collection,
@@ -107,13 +107,13 @@ export function useStaffMembers(): StaffMembersState {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(cachedStaffMembers);
   const [isLoading, setIsLoading] = useState(!isStaffCacheInitialized);
   
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback(async () => {
     if (!user || !user.isApproved) {
       setStaffMembers([]);
       cachedStaffMembers = [];
       isStaffCacheInitialized = false;
       setIsLoading(false);
-      return () => {}; // Return an empty function for cleanup
+      return;
     }
     
     const q = query(collection(db, STAFF_MEMBERS_COLLECTION));
@@ -149,11 +149,9 @@ export function useStaffMembers(): StaffMembersState {
 
   useEffect(() => {
     if (!authIsLoading) {
-      const unsubscribe = fetchData();
+      const unsubscribePromise = fetchData();
       return () => {
-        if (unsubscribe) {
-          unsubscribe();
-        }
+          unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
       };
     }
   }, [authIsLoading, fetchData]);
@@ -201,8 +199,6 @@ export function useStaffMembers(): StaffMembersState {
     const staffDocRef = doc(db, STAFF_MEMBERS_COLLECTION, id);
     await updateDoc(staffDocRef, { status: newStatus, updatedAt: serverTimestamp() });
   }, [user]);
-  
-  const memoizedStaffMembers = useMemo(() => staffMembers, [staffMembers]);
 
-  return { staffMembers: memoizedStaffMembers, isLoading, addStaffMember, updateStaffMember, deleteStaffMember, getStaffMemberById, updateStaffStatus };
+  return { staffMembers, isLoading, addStaffMember, updateStaffMember, deleteStaffMember, getStaffMemberById, updateStaffStatus };
 }

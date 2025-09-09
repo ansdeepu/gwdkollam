@@ -1,4 +1,3 @@
-
 // src/components/layout/AppSidebar.tsx
 "use client";
 
@@ -24,8 +23,8 @@ import {
 } from '@/components/ui/dropdown-menu'; // Import DropdownMenu components
 import { LogOut, User, ChevronsUpDown } from 'lucide-react'; // Import icons
 import { useRouter } from 'next/navigation';
+import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
 
 const hashCode = (str: string): number => {
     let hash = 0;
@@ -65,9 +64,11 @@ const getInitials = (name?: string) => {
 
 export default function AppSidebar() {
   const { user, logout } = useAuth();
+  const { staffMembers } = useStaffMembers();
   const router = useRouter();
 
-  const photoUrl = user?.photoUrl || undefined;
+  const staffInfo = staffMembers.find(s => s.id === user?.staffId);
+  const photoUrl = staffInfo?.photoUrl;
   
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 

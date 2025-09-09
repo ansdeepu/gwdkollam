@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ClipboardList } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { type DataEntryFormData, fileStatusOptions } from '@/lib/schemas';
-import { useAuth } from '@/hooks/useAuth';
 
 const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; onClick: () => void }) => (
   <button
@@ -25,8 +24,6 @@ interface FileStatusOverviewProps {
 }
 
 export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: FileStatusOverviewProps) {
-    const { user } = useAuth();
-    const isSupervisor = user?.role === 'supervisor';
 
     const fileStatusData = useMemo(() => {
         const fileStatusCounts = new Map<string, number>();
@@ -72,6 +69,7 @@ export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: File
                 lessThan1: ageGroups.lessThan1.length,
                 between1And2: ageGroups.between1And2.length,
                 between2And3: ageGroups.between2And3.length,
+                between3And4: ageGroups.between3And4.length,
                 between4And5: ageGroups.between4And5.length,
                 above5: ageGroups.above5.length,
             },
@@ -81,11 +79,7 @@ export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: File
     }, [nonArsEntries]);
 
   const handleFileStatusCardClick = (status: string) => {
-    let dataForDialog = fileStatusData?.fileStatusCountsData.find(item => item.status === status)?.data ?? [];
-
-    if (isSupervisor) {
-        dataForDialog = dataForDialog.filter(entry => entry.siteDetails?.some(site => site.supervisorUid === user.uid));
-    }
+    const dataForDialog = fileStatusData?.fileStatusCountsData.find(item => item.status === status)?.data ?? [];
 
     const columns = [
       { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' },

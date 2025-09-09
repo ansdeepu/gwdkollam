@@ -16,14 +16,12 @@ import {
   writeBatch,
   query,
   getDocs,
-  deleteDoc,
-  where
+  deleteDoc
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import type { AgencyApplication as AgencyApplicationFormData, RigRegistration as RigRegistrationFormData, OwnerInfo } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
-import { format, isValid, parse, parseISO } from 'date-fns';
 
 const db = getFirestore(app);
 const APPLICATIONS_COLLECTION = 'agencyApplications';
@@ -40,42 +38,16 @@ export type AgencyApplication = Omit<AgencyApplicationFormData, 'rigs'> & {
 let cachedApplications: AgencyApplication[] = [];
 let isApplicationsCacheInitialized = false;
 
-// Helper to safely convert Firestore Timestamps and various date string formats to JS Date objects.
-const toDateOrNull = (value: any): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date && isValid(value)) return value;
-  // Handle Firestore Timestamp objects
-  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-    if (isValid(date)) return date;
-  }
-  if (typeof value === 'string') {
-    // First, try to parse dd/MM/yyyy format, which is common in our app's manual entry
-    let parsed = parseISO(value);
-    if (isValid(parsed)) return parsed;
-    // Then, try to parse ISO format, which is how dates are often stored/transmitted
-    parsed = parse(value, 'dd/MM/yyyy', new Date());
-    if (isValid(parsed)) return parsed;
-  }
-  return null;
-};
-
-
-// Recursively processes an object to convert all date-like values.
+// Helper to safely convert Firestore Timestamps and serialized date objects to a serializable format (ISO string)
 const processDataForClient = (data: any): any => {
-    if (data === null || data === undefined) return data;
-
+    if (!data) return data;
     if (Array.isArray(data)) {
         return data.map(item => processDataForClient(item));
     }
-    
-    // Check for a date-like signature (e.g., Firestore Timestamp)
-    if (typeof data === 'object' && (typeof data.seconds === 'number' || typeof data.nanoseconds === 'number')) {
-        const date = toDateOrNull(data);
-        return date ? date.toISOString() : null; // Serialize to ISO string for consistency
+    if (data instanceof Timestamp) {
+        return data.toDate().toISOString();
     }
-
-    if (typeof data === 'object') {
+    if (typeof data === 'object' && data !== null) {
         const processed: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -104,37 +76,18 @@ export function useAgencyApplications() {
     }
 
     setIsLoading(true);
-    
-    let q;
-    const applicationsRef = collection(db, APPLICATIONS_COLLECTION);
-
-    if (user.role === 'supervisor') {
-        // Supervisors should only see agencies where they are assigned to at least one rig.
-        // This requires querying based on a field within an array of objects, which Firestore supports.
-        q = query(applicationsRef, where('rigs.supervisorUid', 'array-contains', user.uid));
-    } else {
-        // Editors and Viewers can see all applications.
-        q = query(applicationsRef);
-    }
+    const q = collection(db, APPLICATIONS_COLLECTION);
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      let appsData = snapshot.docs.map(doc => {
+      const appsData = snapshot.docs.map(doc => {
         const data = doc.data();
+        // Process data to make it serializable and safe for the client
         const serializableData = processDataForClient(data);
         return {
           id: doc.id,
           ...serializableData
         } as AgencyApplication;
       });
-
-      if (user.role === 'supervisor') {
-        // Further filter on the client side to only show rigs assigned to the supervisor within each app
-        appsData = appsData.map(app => ({
-            ...app,
-            rigs: app.rigs.filter(rig => (rig as any).supervisorUid === user.uid)
-        })).filter(app => app.rigs.length > 0);
-      }
-
       cachedApplications = appsData;
       setApplications(appsData);
       setIsLoading(false);
@@ -154,12 +107,9 @@ export function useAgencyApplications() {
 
   const addApplication = useCallback(async (applicationData: Omit<AgencyApplication, 'id'>) => {
     if (!user) throw new Error("User must be logged in to add an application.");
-    
-    const assignedSupervisorUids = [...new Set(applicationData.rigs?.map(s => s.supervisorUid).filter((uid): uid is string => !!uid))];
 
     const payload = {
         ...applicationData,
-        assignedSupervisorUids: assignedSupervisorUids,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -170,11 +120,8 @@ export function useAgencyApplications() {
     if (!user) throw new Error("User must be logged in to update an application.");
     
     const docRef = doc(db, APPLICATIONS_COLLECTION, id);
-    const assignedSupervisorUids = [...new Set(applicationData.rigs?.map(s => s.supervisorUid).filter((uid): uid is string => !!uid))];
-    
     const payload = {
         ...applicationData,
-        assignedSupervisorUids: assignedSupervisorUids,
         updatedAt: serverTimestamp(),
     };
     await updateDoc(docRef, payload);
