@@ -1,4 +1,3 @@
-
 // src/hooks/useAuth.ts
 "use client";
 
