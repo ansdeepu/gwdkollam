@@ -32,8 +32,7 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  designation?: Designation;
-  photoUrl?: string; // Add photoUrl to the profile type
+  // Designation and photoUrl will be handled by the profile page component directly
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -87,23 +86,11 @@ export function useAuth() {
 
         if (isAdminByEmail) {
             isApproved = true; // Main admin is always approved
-            let staffInfo: { designation?: Designation, photoUrl?: string } = {};
-            try {
-              if (userDocSnap.exists() && userDocSnap.data().staffId) {
-                  const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
-                  const staffDocSnap = await getDoc(staffDocRef);
-                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation, photoUrl?: string };
-              }
-            } catch (staffError) {
-                console.error("Error fetching admin's staff info, proceeding without it:", staffError);
-            }
             const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
             userProfile = {
                 uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
                 role: 'editor', isApproved: true,
                 staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
-                designation: staffInfo.designation,
-                photoUrl: staffInfo.photoUrl,
                 createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
                 lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
             };
@@ -116,23 +103,10 @@ export function useAuth() {
             const userData = userDocSnap.data();
             isApproved = userData.isApproved === true;
             
-            let staffInfo: { designation?: Designation, photoUrl?: string } = {};
-            try {
-              if (userData.staffId) {
-                  const staffDocRef = doc(db, "staffMembers", userData.staffId);
-                  const staffDocSnap = await getDoc(staffDocRef);
-                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation, photoUrl?: string };
-              }
-            } catch(staffError) {
-              console.error(`Error fetching staff info for user ${firebaseUser.uid}, proceeding without it:`, staffError);
-            }
-
             userProfile = {
                 uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
                 role: userData.role || 'viewer', isApproved: isApproved,
                 staffId: userData.staffId || undefined, 
-                designation: staffInfo.designation,
-                photoUrl: staffInfo.photoUrl,
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
@@ -200,7 +174,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation' | 'photoUrl'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
