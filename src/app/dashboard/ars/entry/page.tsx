@@ -53,19 +53,25 @@ const toDateOrNull = (value: any): Date | null => {
 // This function now recursively processes the data and formats dates to 'yyyy-MM-dd' for native date pickers
 const processDataForForm = (data: any): any => {
     if (!data) return data;
-    const processed: { [key: string]: any } = {};
-    for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-            const value = data[key];
-             if (key.toLowerCase().includes('date')) {
-                const date = toDateOrNull(value);
-                processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
-            } else {
-                processed[key] = value;
+    if (Array.isArray(data)) {
+        return data.map(item => processDataForForm(item));
+    }
+    if (typeof data === 'object' && data !== null) {
+        const processed: { [key: string]: any } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                const value = data[key];
+                 if (key.toLowerCase().includes('date')) {
+                    const date = toDateOrNull(value);
+                    processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
+                } else {
+                    processed[key] = processDataForForm(value);
+                }
             }
         }
+        return processed;
     }
-    return processed;
+    return data;
 };
 
 export default function ArsEntryPage() {
