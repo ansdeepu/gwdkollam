@@ -84,7 +84,8 @@ export default function ArsEntryPage() {
     
     const entryIdToEdit = searchParams.get('id');
     
-    const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry, createArsPendingUpdate } = useArsEntries();
+    const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry } = useArsEntries();
+    const { createArsPendingUpdate } = usePendingUpdates();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
