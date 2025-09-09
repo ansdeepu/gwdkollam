@@ -207,6 +207,7 @@ export function useFileEntries() {
   ): Promise<DataEntryFormData | null> => {
     if (!user) return null;
 
+    // Fetch any file matching the fileNo, regardless of user role initially.
     let q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
     
     try {
@@ -221,12 +222,12 @@ export function useFileEntries() {
       
       const entry = { id: docSnap.id, ...data } as DataEntryFormData;
 
-      // Security check: If the user is a supervisor, ensure they are assigned to this file.
+      // Now, perform security check AFTER fetching the file.
       if (user.role === 'supervisor') {
         const isAssigned = Array.isArray(entry.assignedSupervisorUids) && entry.assignedSupervisorUids.includes(user.uid);
         if (!isAssigned) {
             console.warn(`[fetchEntryForEditing] Supervisor ${user.uid} does not have permission for file ${fileNo}.`);
-            return null; // Do not return the entry if the supervisor is not assigned.
+            return null; // Return null if supervisor is not assigned to this specific file.
         }
 
         const pendingUpdates = await getPendingUpdatesForFile(fileNo, user.uid);
@@ -241,7 +242,7 @@ export function useFileEntries() {
         }
       }
 
-      return entry;
+      return entry; // Return the entry for editors or assigned supervisors.
     } catch (error) {
       console.error(`[fetchEntryForEditing] Error fetching fileNo ${fileNo}:`, error);
       return null;
