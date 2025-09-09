@@ -1,12 +1,10 @@
-
 // src/components/establishment/RetiredStaffTable.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserCheck, ArrowRightLeft, Eye, Expand, FileArchive, Loader2 } from "lucide-react";
+import { UserCheck, ArrowRightLeft, Eye, FileArchive, Loader2, UserCircle } from "lucide-react";
 import type { StaffMember, StaffStatusType } from "@/lib/schemas";
 import { format, isValid } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,23 +16,11 @@ interface RetiredStaffTableProps {
   staffData: StaffMember[];
   onSetStatus?: (staffId: string, newStatus: StaffStatusType, staffName: string) => void;
   isViewer: boolean;
-  onImageClick?: (imageUrl: string | null) => void;
   isLoading?: boolean;
   searchActive?: boolean;
 }
 
 const ITEMS_PER_PAGE = 20;
-
-const getInitials = (name?: string) => {
-  if (!name || name.trim() === '') return 'U';
-  return name
-    .trim()
-    .split(/\s+/)
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-};
 
 const formatDateSafe = (dateInput: Date | string | null | undefined): string => {
   if (!dateInput) return "N/A";
@@ -42,16 +28,10 @@ const formatDateSafe = (dateInput: Date | string | null | undefined): string => 
   return isValid(date) ? format(date, "dd/MM/yyyy") : "N/A";
 };
 
-const isPlaceholderUrl = (url?: string | null): boolean => {
-  if (!url) return false;
-  return url.startsWith("https://placehold.co");
-};
-
 export default function RetiredStaffTable({ 
     staffData, 
     onSetStatus, 
     isViewer, 
-    onImageClick,
     isLoading = false,
     searchActive = false
 }: RetiredStaffTableProps) {
@@ -81,44 +61,19 @@ export default function RetiredStaffTable({
           <TableHeader className="bg-secondary">
             <TableRow>
               <TableHead className="w-[50px]">Sl. No.</TableHead>
-              <TableHead className="w-[80px] px-2 py-2 text-center">Photo</TableHead>
-              <TableHead className="px-2 py-2 text-center">Name</TableHead>
-              <TableHead className="px-2 py-2 text-center">Designation</TableHead>
-              <TableHead className="px-2 py-2 text-center">PEN</TableHead>
-              <TableHead className="px-2 py-2 text-center">Roles</TableHead>
-              <TableHead className="px-2 py-2 text-center">DOB</TableHead>
-              <TableHead className="px-2 py-2 min-w-[150px] text-center">Remarks</TableHead>
+              <TableHead className="px-2 py-2 text-left">Name</TableHead>
+              <TableHead className="px-2 py-2 text-left">Designation</TableHead>
+              <TableHead className="px-2 py-2 text-left">PEN</TableHead>
+              <TableHead className="px-2 py-2 text-left">Roles</TableHead>
+              <TableHead className="px-2 py-2 text-left">DOB</TableHead>
+              <TableHead className="px-2 py-2 min-w-[150px] text-left">Remarks</TableHead>
               <TableHead className="text-center w-[100px] px-2 py-2">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedStaff.length > 0 ? paginatedStaff.map((staff, index) => {
-              const canExpandAvatar = staff.photoUrl && !isPlaceholderUrl(staff.photoUrl) && onImageClick;
-              return (
+            {paginatedStaff.length > 0 ? paginatedStaff.map((staff, index) => (
               <TableRow key={staff.id}>
                  <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                 <TableCell className="px-2 py-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() => canExpandAvatar && onImageClick(staff.photoUrl ?? null)}
-                      disabled={!canExpandAvatar}
-                      className={cn(
-                        "relative rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 mx-auto",
-                        canExpandAvatar && "cursor-pointer"
-                      )}
-                      aria-label={canExpandAvatar ? "View larger image" : "Staff photo"}
-                    >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={staff.photoUrl ? staff.photoUrl : `https://placehold.co/96x96.png?text=${getInitials(staff.name)}`} alt={staff.name} data-ai-hint="person user"/>
-                        <AvatarFallback>{getInitials(staff.name)}</AvatarFallback>
-                      </Avatar>
-                       {canExpandAvatar && (
-                        <div className="absolute bottom-0 right-0 bg-black/60 p-0.5 rounded-full">
-                          <Expand className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  </TableCell>
                 <TableCell className={cn("font-medium whitespace-normal break-words max-w-[150px] px-2 py-2 text-left")}>{staff.name}</TableCell>
                 <TableCell className={cn("whitespace-normal break-words max-w-[180px] px-2 py-2 text-left")}>{staff.designation}</TableCell>
                 <TableCell className={cn("whitespace-normal break-words max-w-[100px] px-2 py-2 text-left")}>{staff.pen}</TableCell>
@@ -170,9 +125,9 @@ export default function RetiredStaffTable({
                     </div>
                 </TableCell>
               </TableRow>
-            )}) : (
+            )) : (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center px-2 py-2">
+                <TableCell colSpan={8} className="h-24 text-center px-2 py-2">
                   {searchActive ? "No staff members found matching your search." : "No retired staff members found."}
                 </TableCell>
               </TableRow>

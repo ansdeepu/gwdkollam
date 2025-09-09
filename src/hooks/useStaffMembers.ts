@@ -77,7 +77,7 @@ const convertStaffMemberTimestamps = (data: DocumentData): StaffMember => {
 const sanitizeStaffMemberForFirestore = (data: any): any => {
   const sanitized: any = {};
   for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key) && !['isTransferred', 'place', 'id', 'createdAt', 'updatedAt'].includes(key)) {
+    if (Object.prototype.hasOwnProperty.call(data, key) && !['isTransferred', 'id', 'createdAt', 'updatedAt', 'photoUrl'].includes(key)) {
       const value = data[key];
       if (value instanceof Date) sanitized[key] = Timestamp.fromDate(value);
       else if (value === undefined) sanitized[key] = null;
@@ -107,13 +107,13 @@ export function useStaffMembers(): StaffMembersState {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(cachedStaffMembers);
   const [isLoading, setIsLoading] = useState(!isStaffCacheInitialized);
   
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(() => {
     if (!user || !user.isApproved) {
       setStaffMembers([]);
       cachedStaffMembers = [];
       isStaffCacheInitialized = false;
       setIsLoading(false);
-      return;
+      return () => {};
     }
     
     const q = query(collection(db, STAFF_MEMBERS_COLLECTION));
@@ -148,12 +148,13 @@ export function useStaffMembers(): StaffMembersState {
   }, [user]);
 
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
     if (!authIsLoading) {
-      const unsubscribePromise = fetchData();
-      return () => {
-          unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
-      };
+      unsubscribe = fetchData();
     }
+    return () => {
+        if(unsubscribe) unsubscribe();
+    };
   }, [authIsLoading, fetchData]);
 
 
@@ -167,26 +168,16 @@ export function useStaffMembers(): StaffMembersState {
   const updateStaffMember = useCallback(async (id: string, staffData: Partial<StaffMemberFormData>) => {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
     const staffDocRef = doc(db, STAFF_MEMBERS_COLLECTION, id);
-    if (staffData.photoUrl === "") {
-        const existingMember = staffMembers.find(s => s.id === id);
-        if (existingMember?.photoUrl && existingMember.photoUrl.includes("firebasestorage.googleapis.com")) { 
-            try { await deleteObject(storageRef(storage, existingMember.photoUrl)); } catch (e) { console.warn("Failed to delete old photo:", e); }
-        }
-    }
     const payload = { ...sanitizeStaffMemberForFirestore(staffData), updatedAt: serverTimestamp() };
     delete payload.createdAt;
     await updateDoc(staffDocRef, payload);
-  }, [user, staffMembers]);
+  }, [user]);
 
   const deleteStaffMember = useCallback(async (id: string) => {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
     const staffDocRef = doc(db, STAFF_MEMBERS_COLLECTION, id);
-    const staffMemberToDelete = staffMembers.find(s => s.id === id);
-    if (staffMemberToDelete?.photoUrl && staffMemberToDelete.photoUrl.includes("firebasestorage.googleapis.com")) { 
-      try { await deleteObject(storageRef(storage, staffMemberToDelete.photoUrl)); } catch (e) { console.warn("Failed to delete photo:", e); }
-    }
     await deleteDoc(staffDocRef);
-  }, [user, staffMembers]);
+  }, [user]);
 
   const getStaffMemberById = useCallback(async (id: string): Promise<StaffMember | undefined> => {
      if (!user || !user.isApproved) throw new Error("User not approved to fetch details.");

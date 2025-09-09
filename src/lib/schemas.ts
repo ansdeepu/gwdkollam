@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -535,7 +534,6 @@ const dateOrString = z.union([
 
 
 export const StaffMemberFormDataSchema = z.object({
-  photoUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal("")),
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   designation: z.enum(designationOptions).optional(),
   pen: z.string().min(1, { message: "PEN is required." }),

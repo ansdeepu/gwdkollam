@@ -1,4 +1,3 @@
-
 // src/hooks/useAgencyApplications.ts
 "use client";
 
@@ -22,6 +21,8 @@ import { app } from '@/lib/firebase';
 import type { AgencyApplication as AgencyApplicationFormData, RigRegistration as RigRegistrationFormData, OwnerInfo } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
+import { format, parseISO, isValid, parse } from 'date-fns';
+
 
 const db = getFirestore(app);
 const APPLICATIONS_COLLECTION = 'agencyApplications';
@@ -38,26 +39,53 @@ export type AgencyApplication = Omit<AgencyApplicationFormData, 'rigs'> & {
 let cachedApplications: AgencyApplication[] = [];
 let isApplicationsCacheInitialized = false;
 
-// Helper to safely convert Firestore Timestamps and serialized date objects to a serializable format (ISO string)
-const processDataForClient = (data: any): any => {
-    if (!data) return data;
-    if (Array.isArray(data)) {
-        return data.map(item => processDataForClient(item));
+const toDateOrNull = (value: any): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date && isValid(value)) return value;
+  // Handle Firestore Timestamp objects
+  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
+    if (isValid(date)) return date;
+  }
+  if (typeof value === 'string') {
+    let parsed = parseISO(value);
+    if (isValid(parsed)) return parsed;
+    parsed = parse(value, 'dd/MM/yyyy', new Date());
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
+
+// This function now recursively processes the data and formats dates to 'yyyy-MM-dd' or ""
+const processDataForForm = (data: any): any => {
+  const transform = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map(transform);
     }
-    if (data instanceof Timestamp) {
-        return data.toDate().toISOString();
-    }
-    if (typeof data === 'object' && data !== null) {
-        const processed: { [key: string]: any } = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                // Recursively process each property of the object
-                processed[key] = processDataForClient(data[key]);
-            }
+
+    if (typeof obj === 'object') {
+      const newObj: { [key: string]: any } = {};
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = obj[key];
+          // Check for keys that are likely to be dates
+          if (key.toLowerCase().includes('date')) {
+            const date = toDateOrNull(value);
+            // Format to the string 'yyyy-MM-dd' or an empty string
+            newObj[key] = date && isValid(date) ? format(date, 'yyyy-MM-dd') : "";
+          } else {
+            // Recursively transform nested objects
+            newObj[key] = transform(value);
+          }
         }
-        return processed;
+      }
+      return newObj;
     }
-    return data;
+    return obj;
+  };
+  return transform(data);
 };
 
 
@@ -81,8 +109,7 @@ export function useAgencyApplications() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const appsData = snapshot.docs.map(doc => {
         const data = doc.data();
-        // Process data to make it serializable and safe for the client
-        const serializableData = processDataForClient(data);
+        const serializableData = processDataForForm(data);
         return {
           id: doc.id,
           ...serializableData

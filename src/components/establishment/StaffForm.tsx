@@ -16,19 +16,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { Loader2, Save, X, ImageUp, Unplug, Expand, Info } from "lucide-react";
-import { StaffMemberFormDataSchema, type StaffMemberFormData, designationOptions, staffStatusOptions, type StaffStatusType } from "@/lib/schemas";
+import { Loader2, Save, X } from "lucide-react";
+import { StaffMemberFormDataSchema, type StaffMemberFormData, designationOptions, staffStatusOptions } from "@/lib/schemas";
 import type { StaffMember } from "@/lib/schemas";
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import React from "react";
 import { format } from "date-fns";
 
 interface StaffFormProps {
@@ -38,27 +29,7 @@ interface StaffFormProps {
   onCancel: () => void;
 }
 
-const isValidWebUrl = (url?: string | null): boolean => {
-  if (!url) return false;
-  try {
-    const newUrl = new URL(url);
-    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:';
-  } catch (_) {
-    return false;
-  }
-};
-
-const isPlaceholderUrl = (url?: string | null): boolean => {
-  if (!url) return false;
-  return url.startsWith("https://placehold.co");
-};
-
-
 export default function StaffForm({ onSubmit, initialData, isSubmitting, onCancel }: StaffFormProps) {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageLoadError, setImageLoadError] = useState(false);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-
   const getInitialFormValues = React.useCallback((): StaffMemberFormData => {
     const dob = initialData?.dateOfBirth;
     const formattedDob = dob ? format(new Date(dob), 'yyyy-MM-dd') : "";
@@ -70,7 +41,6 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
       dateOfBirth: formattedDob,
       phoneNo: initialData?.phoneNo || "",
       roles: initialData?.roles || "",
-      photoUrl: isValidWebUrl(initialData?.photoUrl) ? initialData?.photoUrl ?? "" : "",
       status: initialData?.status || 'Active', 
       remarks: initialData?.remarks || "",
     };
@@ -81,23 +51,10 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
     defaultValues: getInitialFormValues(),
   });
   
-  useEffect(() => {
+  React.useEffect(() => {
     form.reset(getInitialFormValues());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, form.reset]);
-
-  const watchedPhotoUrl = form.watch("photoUrl");
-  
-  useEffect(() => {
-    const url = watchedPhotoUrl ?? null;
-    if (isValidWebUrl(url) && !isPlaceholderUrl(url)) {
-      setImagePreview(url);
-      setImageLoadError(false);
-    } else {
-      setImagePreview(null); 
-      setImageLoadError(watchedPhotoUrl !== "");
-    }
-  }, [watchedPhotoUrl]);
 
   const handleFormSubmitInternal = (data: StaffMemberFormData) => {
     const dataToSubmit: any = {
@@ -107,8 +64,6 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
     };
     onSubmit(dataToSubmit);
   };
-
-  const canExpandImage = imagePreview && !imageLoadError && !isPlaceholderUrl(imagePreview);
 
   return (
     <Form {...form}>
@@ -213,92 +168,12 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-           <FormField
-            control={form.control}
-            name="photoUrl"
-            render={({ field }) => (
-                <FormItem className="space-y-2 md:col-span-2">
-                    <FormLabel>Staff Photo URL</FormLabel>
-                    <div className="flex items-start gap-4">
-                        <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-                          <DialogTrigger asChild>
-                            <button
-                              type="button"
-                              className={cn(
-                                "relative h-24 w-24 rounded-md border flex items-center justify-center cursor-default",
-                                canExpandImage && "cursor-pointer hover:opacity-80 transition-opacity"
-                              )}
-                              onClick={() => canExpandImage && setIsImageModalOpen(true)}
-                              disabled={!canExpandImage}
-                              aria-label={canExpandImage ? "View larger image" : "Image preview"}
-                            >
-                              {imagePreview && !imageLoadError && (
-                                <Image
-                                    src={imagePreview}
-                                    alt="Staff photo preview"
-                                    width={96}
-                                    height={96}
-                                    className="rounded-md object-cover h-full w-full"
-                                    data-ai-hint="person face"
-                                    onError={() => {
-                                        setImagePreview(null);
-                                        setImageLoadError(true);
-                                    }}
-                                />
-                              )}
-                              {(!imagePreview || imageLoadError) && (
-                                  <div className="h-full w-full bg-muted flex items-center justify-center rounded-md">
-                                      {imageLoadError ? (
-                                          <Unplug className="h-10 w-10 text-destructive" />
-                                      ) : (
-                                          <ImageUp className="h-10 w-10 text-muted-foreground" />
-                                      )}
-                                  </div>
-                              )}
-                              {canExpandImage && (
-                                <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-sm">
-                                  <Expand className="h-3 w-3 text-white" />
-                                </div>
-                              )}
-                            </button>
-                          </DialogTrigger>
-                           {canExpandImage && imagePreview && (
-                            <DialogContent className="sm:max-w-[600px] p-2">
-                              <DialogHeader>
-                                <DialogTitle className="text-sm">{form.getValues("name") || "Staff Photo"}</DialogTitle>
-                              </DialogHeader>
-                              <div className="flex justify-center items-center max-h-[80vh] overflow-hidden">
-                                <img src={imagePreview} alt="Staff photo enlarged" className="max-w-full max-h-[75vh] object-contain rounded-md"/>
-                              </div>
-                            </DialogContent>
-                          )}
-                        </Dialog>
-
-                        <div className="flex-1">
-                            <FormControl>
-                                <Input 
-                                    placeholder="https://example.com/photo.jpg" 
-                                    {...field} 
-                                    value={field.value || ""}
-                                />
-                            </FormControl>
-                            <FormDescription>
-                                Enter a direct public URL. Uploading files is not supported.
-                            </FormDescription>
-                             {imageLoadError && <p className="text-xs text-destructive mt-1">Invalid or unloadable URL</p>}
-                        </div>
-                    </div>
-                    <FormMessage />
-                </FormItem>
-            )}
-          />
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <FormField
             control={form.control}
             name="roles"
             render={({ field }) => (
-              <FormItem className="md:col-span-1">
+              <FormItem>
                 <FormLabel>Roles/Responsibilities</FormLabel>
                 <FormControl>
                   <Textarea placeholder="e.g., Section Clerk, Field Supervisor" className="resize-y min-h-[120px]" {...field} />
@@ -313,7 +188,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
             control={form.control}
             name="remarks"
             render={({ field }) => (
-              <FormItem className="md:col-span-1">
+              <FormItem>
                 <FormLabel>Remarks</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Any additional remarks about the staff member." className="resize-y min-h-[120px]" {...field} />
