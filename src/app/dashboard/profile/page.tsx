@@ -8,6 +8,7 @@ import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,12 @@ export default function ProfilePage() {
         <div className="md:col-span-1">
           <Card>
             <CardHeader className="items-center text-center">
-               <UserCircle className="h-24 w-24 mb-4 text-primary/70" />
+               <Avatar className="h-24 w-24 mb-4">
+                <AvatarImage src={user.photoUrl || undefined} alt={user.name || 'User'} />
+                <AvatarFallback>
+                  <UserCircle className="h-24 w-24 text-primary/70" />
+                </AvatarFallback>
+              </Avatar>
               <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
             </CardHeader>
