@@ -1,4 +1,3 @@
-
 // src/components/dashboard/DashboardDialogs.tsx
 "use client";
 
@@ -9,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { DataEntryFormData } from '@/lib/schemas';
@@ -39,43 +38,76 @@ export default function DashboardDialogs({ dialogState, setDialogState, allFileE
   const { toast } = useToast();
   const { isOpen, title, data, columns } = dialogState;
   
-  const exportDialogDataToExcel = () => {
+  const exportDialogDataToExcel = async () => {
     const reportTitle = title;
     const columnLabels = columns.map(col => col.label);
-    const dataRows = data.map(row => columns.map(col => row[col.key] ?? ''));
-    const sheetName = title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
-    const fileNamePrefix = `gwd_report_${sheetName}`;
-
-    if (dataRows.length === 0) {
+    
+    if (data.length === 0) {
       toast({ title: "No Data to Export", variant: "default" });
       return;
     }
 
-    const wb = XLSX.utils.book_new();
-    const ws_data = [columnLabels, ...dataRows];
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    
-    // Add headers and footer
-    const headerRows = [["Ground Water Department, Kollam"], [reportTitle], [`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`], []];
-    XLSX.utils.sheet_add_aoa(ws, headerRows, { origin: "A1" });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30));
+
+    // Add Header Rows
+    worksheet.addRow(["Ground Water Department, Kollam"]).commit();
+    worksheet.addRow([reportTitle]).commit();
+    worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
+    worksheet.addRow([]).commit(); // Spacer
 
     const numCols = columnLabels.length;
-    const footerRowData = new Array(numCols).fill("");
-    footerRowData[numCols > 1 ? numCols - 2 : 0] = "District Officer";
-    XLSX.utils.sheet_add_aoa(ws, [[], footerRowData], { origin: -1 });
+    worksheet.mergeCells(1, 1, 1, numCols);
+    worksheet.mergeCells(2, 1, 2, numCols);
+    worksheet.mergeCells(3, 1, 3, numCols);
 
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } },
-      { s: { r: 2, c: 0 }, e: { r: 2, c: numCols - 1 } },
-      { s: { r: ws_data.length + 5, c: numCols > 1 ? numCols - 2 : 0 }, e: { r: ws_data.length + 5, c: numCols - 1 } }
-    ];
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.getCell('A2').alignment = { horizontal: 'center' };
+    
+    worksheet.getRow(1).font = { bold: true, size: 16 };
+    worksheet.getRow(2).font = { bold: true, size: 14 };
+    
+    // Add Table Header
+    const headerRow = worksheet.addRow(columnLabels);
+    headerRow.font = { bold: true };
+    headerRow.eachCell(cell => {
+      cell.fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'F0F0F0'} };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
 
-    ws['!cols'] = columnLabels.map((label, i) => ({ wch: Math.max(label.length, ...dataRows.map(row => String(row[i] ?? '').length)) + 2 }));
+    // Add Data Rows
+    data.forEach(rowData => {
+      const values = columns.map(col => rowData[col.key] ?? '');
+      const newRow = worksheet.addRow(values);
+      newRow.eachCell((cell, colNumber) => {
+          cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+          if (columns[colNumber - 1]?.isNumeric) {
+            cell.alignment = { horizontal: 'right' };
+          }
+      });
+    });
 
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    XLSX.writeFile(wb, `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`);
-
+    // Auto-fit columns
+     worksheet.columns.forEach((column, i) => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, (cell) => {
+            let columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 10 ? 10 : maxLength + 2;
+    });
+    
+    // Save the file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `gwd_report_${title.replace(/[^a-zA-Z0-9]/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
     toast({ title: "Excel Exported", description: `Report downloaded.` });
   };
 

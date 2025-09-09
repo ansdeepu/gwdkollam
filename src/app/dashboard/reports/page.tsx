@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -385,100 +385,80 @@ export default function ReportsPage() {
     toast({ title: "Filters Reset", description: "All report filters have been cleared." });
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const reportTitle = "Custom Report";
-    const columnLabels = [ "File No", "Applicant Name", "Date of Remittance", "Site Purpose", "File Status", "Site Name", "Site Work Status", "Site Total Expenditure (₹)" ];
-    const dataRows = filteredReportRows.map(row => [
-        row.fileNo, row.applicantName, row.fileFirstRemittanceDate, row.sitePurpose, row.fileStatus,
-        row.siteName, row.siteWorkStatus, row.siteTotalExpenditure
-    ]);
-    const sheetName = "Report";
     const fileNamePrefix = "gwd_report";
 
-    if (dataRows.length === 0) {
+    if (filteredReportRows.length === 0) {
       toast({ title: "No Data to Export", description: "There is no data to export.", variant: "default" });
       return;
     }
-
-    const wb = XLSX.utils.book_new();
     
-    const headerRows = [
-      ["Ground Water Department, Kollam"],
-      [reportTitle],
-      [`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`],
-      [] // Blank row
-    ];
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Report");
+
+    // Add Title and Generation Date
+    worksheet.addRow(["Ground Water Department, Kollam"]).commit();
+    worksheet.addRow([reportTitle]).commit();
+    worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
+    worksheet.addRow([]).commit(); // Spacer
+
+    const header = [ "File No", "Applicant Name", "Date of Remittance", "Site Purpose", "File Status", "Site Name", "Site Work Status", "Site Total Expenditure (₹)" ];
     
-    const numCols = columnLabels.length;
-    const footerColIndex = numCols > 1 ? numCols - 2 : 0; 
-    const footerRowData = new Array(numCols).fill("");
-    footerRowData[footerColIndex] = "District Officer";
+    worksheet.mergeCells('A1:H1');
+    worksheet.mergeCells('A2:H2');
+    worksheet.mergeCells('A3:H3');
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.getCell('A2').alignment = { horizontal: 'center' };
     
-    const footerRows = [
-      [], // Spacer row
-      footerRowData
-    ];
+    worksheet.getRow(1).font = { bold: true, size: 16 };
+    worksheet.getRow(2).font = { bold: true, size: 14 };
 
-    const finalData = [...headerRows, columnLabels, ...dataRows, ...footerRows];
-    const ws = XLSX.utils.aoa_to_sheet(finalData, { cellStyles: false });
-    
-    const merges = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } },
-      { s: { r: 2, c: 0 }, e: { r: 2, c: numCols - 1 } },
-    ];
-    const footerRowIndex = finalData.length - 1;
-    if (numCols > 1) {
-        merges.push({ s: { r: footerRowIndex, c: footerColIndex }, e: { r: footerRowIndex, c: numCols - 1 } });
-    }
-    ws['!merges'] = merges;
+    // Add Header Row
+    const headerRow = worksheet.addRow(header);
+    headerRow.font = { bold: true };
+    headerRow.eachCell(cell => {
+      cell.fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'F0F0F0'} };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
 
-    const colWidths = columnLabels.map((label, i) => ({
-      wch: Math.max(
-        label.length, 
-        ...finalData.map(row => (row[i] ? String(row[i]).length : 0))
-      ) + 2,
-    }));
-    ws['!cols'] = colWidths;
+    // Add Data Rows
+    filteredReportRows.forEach(row => {
+      const rowData = [
+        row.fileNo, row.applicantName, row.fileFirstRemittanceDate, row.sitePurpose, row.fileStatus,
+        row.siteName, row.siteWorkStatus, row.siteTotalExpenditure
+      ];
+      const newRow = worksheet.addRow(rowData);
+      newRow.eachCell(cell => {
+          cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      });
+    });
 
-    const numRows = finalData.length;
-    for (let R = 0; R < numRows; R++) {
-      ws['!rows'] = ws['!rows'] || [];
-      ws['!rows'][R] = { hpt: 20 }; 
-
-      for (let C = 0; C < numCols; C++) {
-        const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
-        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
-
-        ws[cellRef].s = {
-          alignment: { horizontal: "center", vertical: "center", wrapText: true },
-          border: { 
-            top: { style: "thin" }, bottom: { style: "thin" }, 
-            left: { style: "thin" }, right: { style: "thin" } 
-          }
-        };
-
-        if (R < 3) {
-          ws[cellRef].s.font = { bold: true, sz: R === 0 ? 16 : (R === 1 ? 14 : 12) };
-          if (R === 2) ws[cellRef].s.font.italic = true;
-        } else if (R === 3) { // Column headers row
-          ws[cellRef].s.font = { bold: true };
-          ws[cellRef].s.fill = { fgColor: { rgb: "F0F0F0" } };
-        } else if (R === footerRowIndex) {
-          ws[cellRef].s.border = {};
-          if (C === footerColIndex) {
-             ws[cellRef].s.font = { bold: true };
-             ws[cellRef].s.alignment.horizontal = "right";
-          }
+    // Auto-fit columns
+    worksheet.columns.forEach(column => {
+      let maxLength = 0;
+      column.eachCell!({ includeEmpty: true }, cell => {
+        let columnLength = cell.value ? cell.value.toString().length : 10;
+        if (columnLength > maxLength) {
+          maxLength = columnLength;
         }
-      }
-    }
-    
-    XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
-    const uniqueFileName = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
-    XLSX.writeFile(wb, uniqueFileName);
+      });
+      column.width = maxLength < 15 ? 15 : maxLength + 2;
+    });
 
-    toast({ title: "Excel Exported", description: `Your report has been downloaded as ${uniqueFileName}.` });
+    // Save the file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    toast({ title: "Excel Exported", description: `Your report has been downloaded.` });
   };
 
 
@@ -768,3 +748,5 @@ export default function ReportsPage() {
     </div>
   );
 }
+
+    

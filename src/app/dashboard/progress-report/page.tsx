@@ -1,3 +1,4 @@
+
 // src/app/dashboard/progress-report/page.tsx
 "use client";
 
@@ -19,7 +20,7 @@ import {
   type SiteDetailFormData,
   type SiteWorkStatus,
 } from '@/lib/schemas';
-import * as XLSX from 'xlsx';
+import ExcelJS from "exceljs";
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -454,19 +455,32 @@ export default function ProgressReportPage() {
     setEndDate(endOfMonth(today));
   };
   
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!reportData) {
       toast({ title: "No Report Generated", description: "Please generate a report first.", variant: "destructive" });
       return;
     }
     
-    const wb = XLSX.utils.book_new();
-    const addWorksheet = (data: any[], sheetName: string) => {
-      const ws = XLSX.utils.json_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    const workbook = new ExcelJS.Workbook();
+    
+    const addWorksheet = (data: any[], sheetName: string, headers: string[]) => {
+      const worksheet = workbook.addWorksheet(sheetName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30));
+      worksheet.addRow(headers).font = { bold: true };
+      worksheet.addRows(data.map(row => headers.map(header => row[header])));
+      worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, (cell) => {
+            let columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 15 ? 15 : maxLength + 2;
+      });
     };
-  
+
     // 1. Progress Summary
+    const progressSummaryHeaders = ['Service Type', 'Previous Balance', 'Current Application', 'To be Refunded', 'Total Application', 'Completed', 'Balance'];
     const progressSummaryExport = Object.entries(reportData.progressSummaryData).map(([purpose, stats]) => ({
       'Service Type': purpose,
       'Previous Balance': stats.previousBalance,
@@ -476,9 +490,10 @@ export default function ProgressReportPage() {
       'Completed': stats.completed,
       'Balance': stats.balance,
     }));
-    addWorksheet(progressSummaryExport, 'Progress Summary');
+    addWorksheet(progressSummaryExport, 'Progress Summary', progressSummaryHeaders);
   
     // 2. Financial Summary - Private
+    const financialHeaders = ['Purpose', 'Applications Received', 'Total Remittance (₹)', 'Applications Completed', 'Total Payment (₹)'];
     const privateFinancialExport = Object.entries(reportData.privateFinancialSummaryData).filter(([,summary]) => summary.totalApplications > 0 || summary.totalCompleted > 0).map(([purpose, summary]) => ({
       'Purpose': purpose,
       'Applications Received': summary.totalApplications,
@@ -486,7 +501,7 @@ export default function ProgressReportPage() {
       'Applications Completed': summary.totalCompleted,
       'Total Payment (₹)': summary.totalPayment,
     }));
-    addWorksheet(privateFinancialExport, 'Financial Summary (Private)');
+    addWorksheet(privateFinancialExport, 'Financial Summary (Private)', financialHeaders);
   
     // 3. Financial Summary - Government
     const govFinancialExport = Object.entries(reportData.governmentFinancialSummaryData).filter(([,summary]) => summary.totalApplications > 0 || summary.totalCompleted > 0).map(([purpose, summary]) => ({
@@ -496,10 +511,10 @@ export default function ProgressReportPage() {
       'Applications Completed': summary.totalCompleted,
       'Total Payment (₹)': summary.totalPayment,
     }));
-    addWorksheet(govFinancialExport, 'Financial Summary (Govt)');
+    addWorksheet(govFinancialExport, 'Financial Summary (Govt)', financialHeaders);
     
     // 4 & 5. Well Type Progress (BWC & TWC)
-    const wellMetrics = ['Previous Balance', 'Current Application', 'To be Refunded', 'Total Application', 'Completed', 'Balance'];
+    const wellMetricsHeaders = ['Type of Application', 'Previous Balance', 'Current Application', 'To be Refunded', 'Total Application', 'Completed', 'Balance'];
     
     [...BWC_DIAMETERS, ...TWC_DIAMETERS].forEach(diameter => {
       const isBwc = BWC_DIAMETERS.includes(diameter);
@@ -512,7 +527,7 @@ export default function ProgressReportPage() {
         if (stats) {
           const row: Record<string, any> = {'Type of Application': applicationTypeDisplayMap[appType]};
           let rowHasData = false;
-          wellMetrics.forEach(metric => {
+          wellMetricsHeaders.slice(1).forEach(metric => {
             const key = metric.toLowerCase().replace(/ /g, '').replace('tobe', 'toBe');
             const value = stats[key as keyof ProgressStats] as number;
             row[metric] = value;
@@ -525,13 +540,22 @@ export default function ProgressReportPage() {
         }
       });
       if(hasData) {
-        addWorksheet(wellDataExport, `${isBwc ? 'BWC' : 'TWC'} - ${diameter.replace(/ /g, '_')}`);
+        addWorksheet(wellDataExport, `${isBwc ? 'BWC' : 'TWC'} - ${diameter.replace(/[^a-zA-Z0-9]/g, '_')}`, wellMetricsHeaders);
       }
     });
   
-    const fileName = `GWD_Progress_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    toast({ title: "Export Successful", description: `Report downloaded as ${fileName}` });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `GWD_Progress_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    toast({ title: "Export Successful", description: `Report downloaded.` });
   };
 
   const handleCountClick = (data: Array<SiteDetailWithFileContext | DataEntryFormData | Record<string, any>>, title: string) => {
@@ -872,3 +896,6 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
+
+    
