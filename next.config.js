@@ -50,6 +50,9 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    allowedDevOrigins: ["6000-firebase-gwd-kollam-05-09-25-1757081301985.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev"],
+  },
 };
 
 module.exports = nextConfig;
