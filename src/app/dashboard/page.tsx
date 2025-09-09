@@ -220,47 +220,45 @@ export default function DashboardPage() {
         currentUserRole={currentUser?.role}
       />
       
-      {currentUser?.role !== 'supervisor' && (
-        <>
-            <FinanceOverview 
-                allFileEntries={dashboardData.allFileEntries}
-                onOpenDialog={handleOpenDialog}
-                dates={financeDates}
-                onSetDates={setFinanceDates}
-            />
-            
-            <ArsStatusOverview 
-                onOpenDialog={handleOpenDialog}
-                dates={arsDates}
-                onSetDates={setArsDates}
-            />
-            
-            {rigRegistrationData && (
-                <RigRegistrationOverview 
-                data={rigRegistrationData}
-                onCardClick={handleOpenRigDialog}
-                />
-            )}
-            
-            <WorkProgress
-                allFileEntries={dashboardData.allFileEntries}
-                onOpenDialog={handleOpenDialog}
-                currentUser={currentUser}
-            />
+      <FinanceOverview 
+        allFileEntries={dashboardData.allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        dates={financeDates}
+        onSetDates={setFinanceDates}
+      />
+      
+      <ArsStatusOverview 
+        onOpenDialog={handleOpenDialog}
+        dates={arsDates}
+        onSetDates={setArsDates}
+      />
+      
+      {rigRegistrationData && (
+        <RigRegistrationOverview 
+          data={rigRegistrationData}
+          onCardClick={handleOpenRigDialog}
+        />
+      )}
+      
+      <WorkProgress
+        allFileEntries={dashboardData.allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        currentUser={currentUser}
+      />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SupervisorWork 
-                    allFileEntries={dashboardData.allFileEntries}
-                    allUsers={allUsers}
-                    staffMembers={staffMembers}
-                    onOpenDialog={handleOpenDialog}
-                />
-                <UserActivity 
-                    allUsers={allUsers}
-                    staffMembers={staffMembers}
-                />
-            </div>
-        </>
+      {currentUser?.role !== 'supervisor' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SupervisorWork 
+            allFileEntries={dashboardData.allFileEntries}
+            allUsers={allUsers}
+            staffMembers={staffMembers}
+            onOpenDialog={handleOpenDialog}
+          />
+          <UserActivity 
+            allUsers={allUsers}
+            staffMembers={staffMembers}
+          />
+        </div>
       )}
 
 
