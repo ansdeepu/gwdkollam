@@ -1,3 +1,4 @@
+
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -137,46 +138,58 @@ export default function DataEntryPage() {
       const pendingUpdatePromise = approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null);
       
       try {
-        const [originalEntry, pendingUpdate] = await Promise.all([entryPromise, pendingUpdatePromise]);
+        let [originalEntry, pendingUpdate] = await Promise.all([entryPromise, pendingUpdatePromise]);
         
         let allUsersResult: UserProfile[] = [];
-        if (user.role === 'editor' || user.role === 'viewer') {
+        if (user.role === 'editor' || user.role === 'viewer' || user.role === 'supervisor') {
           allUsersResult = await fetchAllUsers();
         }
 
         if (isMounted) {
-          if (fileNoToEdit && !originalEntry) {
-            toast({ title: "Error", description: `File No. ${fileNoToEdit} not found or you do not have permission to view it.`, variant: "destructive" });
+          let dataForForm: DataEntryFormData | null = null;
+          let permissionError = false;
+
+          // If there is an entry, check permissions first
+          if (originalEntry) {
+              if (user.role === 'supervisor' && !(originalEntry.assignedSupervisorUids?.includes(user.uid))) {
+                  permissionError = true;
+                  originalEntry = null; // Nullify entry if supervisor is not assigned
+              }
           }
 
-          let dataForForm: DataEntryFormData;
-
-          if (approveUpdateId && pendingUpdate && originalEntry) {
-              if (pendingUpdate.status !== 'pending') {
-                  toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
-                  dataForForm = originalEntry;
-              } else {
-                  let mergedData = JSON.parse(JSON.stringify(originalEntry));
-                  const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
-                  
-                  mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
-                      if (updatedSitesMap.has(originalSite.nameOfSite)) {
-                          const updatedSiteData = updatedSitesMap.get(originalSite.nameOfSite)!;
-                          return { ...originalSite, ...updatedSiteData };
-                      }
-                      return originalSite;
-                  }) || [];
-
-                  dataForForm = mergedData; 
-
-                  toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
-              }
+          if (!fileNoToEdit) { // Creating a new entry
+              dataForForm = getFormDefaults();
+          } else if (permissionError) {
+              toast({ title: "Permission Denied", description: `You do not have permission to view File No. ${fileNoToEdit}.`, variant: "destructive" });
+          } else if (!originalEntry) {
+              toast({ title: "Error", description: `File No. ${fileNoToEdit} not found.`, variant: "destructive" });
           } else {
-            dataForForm = originalEntry || getFormDefaults();
+            // Logic for merging pending updates
+            if (approveUpdateId && pendingUpdate && originalEntry) {
+              if (pendingUpdate.status !== 'pending') {
+                toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
+                dataForForm = originalEntry;
+              } else {
+                let mergedData = JSON.parse(JSON.stringify(originalEntry));
+                const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
+                
+                mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
+                  if (updatedSitesMap.has(originalSite.nameOfSite)) {
+                    const updatedSiteData = updatedSitesMap.get(originalSite.nameOfSite)!;
+                    return { ...originalSite, ...updatedSiteData };
+                  }
+                  return originalSite;
+                }) || [];
+                dataForForm = mergedData; 
+                toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
+              }
+            } else {
+              dataForForm = originalEntry;
+            }
           }
           
           setPageData({
-            initialData: processDataForForm(dataForForm),
+            initialData: dataForForm ? processDataForForm(dataForForm) : getFormDefaults(),
             allUsers: allUsersResult,
           });
         }
@@ -291,7 +304,7 @@ export default function DataEntryPage() {
                   Back
               </Button>
           </div>
-          {pageData ? (
+          {pageData && pageData.initialData.fileNo !== "" ? (
              <DataEntryFormComponent
                 key={approveUpdateId || fileNoToEdit || 'new-entry'} 
                 fileNoToEdit={fileNoToEdit || undefined}
@@ -301,7 +314,7 @@ export default function DataEntryPage() {
              />
           ) : (
             <div className="flex h-64 items-center justify-center">
-              <p className="text-muted-foreground">Form data could not be loaded.</p>
+              <p className="text-muted-foreground">Form data could not be loaded or you do not have permission.</p>
             </div>
           )}
         </CardContent>

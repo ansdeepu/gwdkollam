@@ -205,10 +205,8 @@ export function useFileEntries() {
   const fetchEntryForEditing = useCallback(async (
     fileNo: string
   ): Promise<DataEntryFormData | null> => {
-    if (!user) return null;
-
-    // Fetch any file matching the fileNo, regardless of user role initially.
-    let q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
+    // This function fetches the file data. The permission check is now handled in the page component.
+    const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
     
     try {
       const querySnapshot = await getDocs(q);
@@ -219,30 +217,22 @@ export function useFileEntries() {
       
       const docSnap = querySnapshot.docs[0];
       const data = convertTimestampsToDates(docSnap.data());
-      
       const entry = { id: docSnap.id, ...data } as DataEntryFormData;
 
-      // Now, perform security check AFTER fetching the file.
-      if (user.role === 'supervisor') {
-        const isAssigned = Array.isArray(entry.assignedSupervisorUids) && entry.assignedSupervisorUids.includes(user.uid);
-        if (!isAssigned) {
-            console.warn(`[fetchEntryForEditing] Supervisor ${user.uid} does not have permission for file ${fileNo}.`);
-            return null; // Return null if supervisor is not assigned to this specific file.
-        }
-
-        const pendingUpdates = await getPendingUpdatesForFile(fileNo, user.uid);
-        if(pendingUpdates.length > 0) {
+      // For supervisors, we still need to attach the pending status for the UI
+      if (user && user.role === 'supervisor') {
+         const pendingUpdates = await getPendingUpdatesForFile(fileNo, user.uid);
+         if (pendingUpdates.length > 0) {
             const pendingSiteNames = new Set(pendingUpdates.flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite)));
-            if(entry.siteDetails) {
+            if (entry.siteDetails) {
                 entry.siteDetails = entry.siteDetails.map(site => ({
                     ...site,
                     isPending: pendingSiteNames.has(site.nameOfSite)
                 }));
             }
-        }
+         }
       }
-
-      return entry; // Return the entry for editors or assigned supervisors.
+      return entry;
     } catch (error) {
       console.error(`[fetchEntryForEditing] Error fetching fileNo ${fileNo}:`, error);
       return null;
