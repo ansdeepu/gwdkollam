@@ -53,45 +53,33 @@ export default function HelpPage() {
               <AccordionTrigger>What are the different user roles?</AccordionTrigger>
               <AccordionContent>
                 There are three main roles in this application, each with different permissions:
-                <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-                  <li><strong>Editor:</strong> Has full access to all features. Editors can create, edit, and delete all file entries (including ARS and Rig Registrations), manage staff and user accounts, approve pending updates, and set GWD rates.</li>
-                  <li><strong>Supervisor:</strong> Has a focused view. Supervisors can only see and edit the specific sites they are assigned to via the 'Deposit Works' page. They cannot create new files and their changes must be approved by an Editor.</li>
-                  <li><strong>Viewer:</strong> Has read-only access. Viewers can see most data, including all files, reports, and user lists, but cannot make any changes.</li>
+                <ul className="list-disc pl-6 mt-2 space-y-2 text-sm">
+                  <li><strong>Editor:</strong> Has full, unrestricted access to all features. Editors can create, edit, and delete all file entries (Deposit Works, ARS, Rig Registrations), manage staff and user accounts, approve pending updates from supervisors, and set GWD rates. This role is for administrators.</li>
+                  <li><strong>Supervisor:</strong> Has restricted, site-level editing rights. Supervisors can only see files where they are assigned to at least one site. They can edit their assigned sites (if the work status is ongoing), but their changes must be approved by an Editor. They cannot create new files or edit file-level details.</li>
+                  <li><strong>Viewer:</strong> Has read-only access across the entire application. Viewers can see all data, reports, and user lists but cannot make any changes. This role is for observation and monitoring purposes.</li>
                 </ul>
               </AccordionContent>
             </AccordionItem>
-             <AccordionItem value="item-8">
-              <AccordionTrigger>Why are table headers fixed on some pages?</AccordionTrigger>
+            <AccordionItem value="item-5">
+              <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
               <AccordionContent>
-                On pages with long tables like 'Establishment', 'GWD Rates', and 'User Management', a "freeze pane" effect is used on the table headers. This keeps the column titles visible at all times while you scroll through the data, making it easier to understand the information without losing context.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-2">
-              <AccordionTrigger>How do I reset my password?</AccordionTrigger>
-              <AccordionContent>
-                You can change your password from your Profile page. Click on your name in the sidebar at the bottom-left, select "Profile", and use the "Change Password" form. If you have forgotten your password entirely, please contact the administrator for a reset.
+                Supervisors can edit their assigned sites through the 'Deposit Works' or 'ARS' pages. After making changes, clicking "Save Changes" submits the update for review. It does not change the data directly. An Editor must approve the submission from the "Pending Updates" page. The site will be locked from further edits by the supervisor until the update is approved or rejected.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-              <AccordionTrigger>Why can't I edit a file or registration?</AccordionTrigger>
+              <AccordionTrigger>Why can't I edit a file or site?</AccordionTrigger>
               <AccordionContent>
-                Editing permissions are based on user roles. 'Editor' roles can create and edit all parts of any entry. 'Supervisor' roles can only edit specific fields on sites that are assigned to them and are still active. 'Viewer' roles have read-only access and cannot make any changes. If a Supervisor has submitted an update for a site, it will be locked until an Editor reviews it.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-4">
-              <AccordionTrigger>What does 'Pending Approval' mean on my user account?</AccordionTrigger>
-              <AccordionContent>
-                For security, all new user accounts must be manually approved by an administrator with an 'Editor' role. If your account is pending approval, you will not be able to log in. Please contact the administrator to have your account activated. The main admin user cannot be deleted or have their role or approval status changed.
-              </AccordionContent>
-            </AccordionItem>
-             <AccordionItem value="item-5">
-              <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
-              <AccordionContent>
-                Supervisors can edit their assigned sites through the 'Deposit Works' page. After making changes, clicking the "Save Changes" button will submit their updates to an administrator for review. The changes will not be applied to the main file until an admin approves them from the "Pending Updates" page. The site will be hidden from the supervisor's view once an update is submitted and will reappear only if the update is rejected.
+                Editing permissions are based on your role:
+                 <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
+                  <li><strong>Editors</strong> can edit anything.</li>
+                  <li><strong>Supervisors</strong> can only edit sites they are assigned to, and only if the site's work status is "Work Order Issued", "Work Initiated", or "Work in Progress". If an update has already been submitted, the site is locked until an Editor reviews it.</li>
+                   <li><strong>Viewers</strong> cannot edit anything.</li>
+                </ul>
+                 If you believe you should have editing rights, please contact an administrator.
               </AccordionContent>
             </AccordionItem>
              <AccordionItem value="item-6">
-              <AccordionTrigger>What is the difference between 'Deposit Works' and 'ARS' pages?</AccordionTrigger>
+              <AccordionTrigger>What is the difference between 'Deposit Works' and 'ARS'?</AccordionTrigger>
               <AccordionContent>
                 The two pages manage different types of work:
                  <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
@@ -103,7 +91,19 @@ export default function HelpPage() {
             <AccordionItem value="item-7">
               <AccordionTrigger>How can I export data to Excel?</AccordionTrigger>
               <AccordionContent>
-                On pages with an "Export Excel" button (like Establishment, GWD Rates, ARS, and Reports), clicking this button will generate and download an XLSX file containing the data currently displayed or filtered on that page. The pop-up dialogs on the Dashboard also have an export button to download the specific details you are viewing.
+                On pages with an "Export Excel" button (like Establishment, ARS, and Reports), clicking this button will generate and download an XLSX file containing the data currently displayed or filtered on that page. The pop-up dialogs on the Dashboard and other pages also have an export button to download the specific details you are viewing.
+              </AccordionContent>
+            </AccordionItem>
+              <AccordionItem value="item-4">
+              <AccordionTrigger>What does 'Pending Approval' mean on my user account?</AccordionTrigger>
+              <AccordionContent>
+                For security, all new user accounts must be manually approved by an Editor. If your account is pending approval, you will not be able to log in. Please contact the administrator to have your account activated.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <AccordionTrigger>How do I reset my password?</AccordionTrigger>
+              <AccordionContent>
+                You can change your password from your Profile page. Click on your name in the sidebar at the bottom-left, select "Profile", and use the "Change Password" form. If you have forgotten your password entirely, please contact the administrator for a reset.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
