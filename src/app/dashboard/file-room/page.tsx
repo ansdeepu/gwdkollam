@@ -56,15 +56,31 @@ export default function FileManagerPage() {
   const canCreate = user?.role === 'editor';
 
   const depositWorkEntries = useMemo(() => {
-    let entries = (user?.role === 'supervisor' ? fileEntries : fileEntries
-      .map(entry => {
-        const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
-        return { ...entry, siteDetails: nonArsSites };
-      })
-      .filter(entry => entry.siteDetails && entry.siteDetails.length > 0)
-    ).slice(); 
+    let entries: DataEntryFormData[];
 
-    entries.sort((a, b) => {
+    if (user?.role === 'supervisor') {
+      const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+      entries = fileEntries
+        .map(entry => {
+          const ongoingSites = entry.siteDetails?.filter(site => {
+            return site.supervisorUid === user.uid && site.workStatus && ongoingStatuses.includes(site.workStatus as SiteWorkStatus);
+          });
+          return { ...entry, siteDetails: ongoingSites };
+        })
+        .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+    } else {
+      entries = fileEntries
+        .map(entry => {
+          const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
+          return { ...entry, siteDetails: nonArsSites };
+        })
+        .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+    }
+
+    // Clone the array before sorting
+    const sortedEntries = [...entries];
+
+    sortedEntries.sort((a, b) => {
       const dateAValue = a.remittanceDetails?.[0]?.dateOfRemittance;
       const dateBValue = b.remittanceDetails?.[0]?.dateOfRemittance;
 
@@ -75,11 +91,12 @@ export default function FileManagerPage() {
       if (!dateA) return 1; 
       if (!dateB) return -1;
       
-      return dateB.getTime() - dateA.getTime();
+      return dateB.getTime() - a.getTime();
     });
 
-    return entries;
-  }, [fileEntries, user?.role]);
+    return sortedEntries;
+  }, [fileEntries, user?.role, user?.uid]);
+
 
   const handleAddNewClick = () => {
     setIsNavigating(true);

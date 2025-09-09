@@ -100,6 +100,13 @@ export default function ArsPage() {
   const filteredSites = useMemo(() => {
     let sites = [...arsEntries];
 
+    if (user?.role === 'supervisor') {
+      sites = sites.filter(site => 
+        site.supervisorUid === user.uid && 
+        (site.workStatus === "Work Order Issued" || site.workStatus === "Work in Progress")
+      );
+    }
+    
     if (startDate || endDate) {
       const sDate = startDate ? startOfDay(parse(startDate, 'yyyy-MM-dd', new Date())) : null;
       const eDate = endDate ? endOfDay(parse(endDate, 'yyyy-MM-dd', new Date())) : null;
@@ -151,7 +158,7 @@ export default function ArsPage() {
     });
 
     return sites;
-  }, [arsEntries, searchTerm, startDate, endDate]);
+  }, [arsEntries, searchTerm, startDate, endDate, user]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -425,13 +432,13 @@ export default function ArsPage() {
     return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading ARS data...</p> </div> );
   }
 
-  if (user?.role === 'supervisor') {
+  if (user?.role === 'supervisor' && filteredSites.length === 0) {
     return (
         <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
             <div className="space-y-6 p-6 text-center">
                 <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Access Denied</h1>
-                <p className="text-muted-foreground">You do not have permission to access this page.</p>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">No Active ARS Sites</h1>
+                <p className="text-muted-foreground">You do not have any ARS sites with an "Ongoing" or "Work Order Issued" status.</p>
             </div>
         </div>
     );
