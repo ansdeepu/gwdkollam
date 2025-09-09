@@ -269,20 +269,27 @@ export default function ArsEntryPage() {
                                 render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Supervisor</FormLabel>
-                                    <Select
-                                        disabled={isFieldReadOnly('supervisorUid')}
-                                        onValueChange={(value) => {
-                                            const selectedStaff = supervisorList.find(s => s.id === value);
-                                            form.setValue('supervisorUid', selectedStaff?.id || null);
-                                            form.setValue('supervisorName', selectedStaff?.name || null);
-                                        }}
-                                        value={field.value || ''}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
-                                        {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>)}
-                                    </SelectContent>
-                                    </Select>
+                                    {isFieldReadOnly('supervisorUid') ? (
+                                        <Input
+                                            readOnly
+                                            value={form.getValues('supervisorName') || "Not Assigned"}
+                                            className="bg-muted/50"
+                                        />
+                                    ) : (
+                                        <Select
+                                            onValueChange={(value) => {
+                                                const selectedStaff = supervisorList.find(s => s.id === value);
+                                                form.setValue('supervisorUid', selectedStaff?.id || null);
+                                                form.setValue('supervisorName', selectedStaff?.name || null);
+                                            }}
+                                            value={field.value || ''}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
+                                            {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>)}
+                                        </SelectContent>
+                                        </Select>
+                                    )}
                                 <FormMessage />
                                 </FormItem>
                             )}/>
@@ -299,3 +306,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
