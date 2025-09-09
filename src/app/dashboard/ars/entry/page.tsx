@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -79,8 +78,7 @@ export default function ArsEntryPage() {
     
     const entryIdToEdit = searchParams.get('id');
     
-    const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry } = useArsEntries();
-    const { createArsPendingUpdate } = usePendingUpdates();
+    const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry, createArsPendingUpdate } = useArsEntries();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
