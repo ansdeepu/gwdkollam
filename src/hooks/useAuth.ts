@@ -33,8 +33,6 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  designation?: Designation; // This will be populated from staffMembers
-  photoUrl?: string; // This will be populated from staffMembers
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -81,6 +79,7 @@ export function useAuth() {
         const userDocSnap = await getDoc(userDocRef);
 
         if (!userDocSnap.exists()) {
+          // This case handles the very first sign-in of the main admin account
           if (firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
              await setDoc(userDocRef, {
                 email: firebaseUser.email, name: firebaseUser.email?.split('@')[0], role: 'editor', isApproved: true, createdAt: Timestamp.now(),
@@ -88,6 +87,7 @@ export function useAuth() {
              const newUserDocSnap = await getDoc(userDocRef);
              processUserDocument(firebaseUser, newUserDocSnap.data());
           } else {
+            // A regular user somehow got a Firebase Auth account but has no profile document.
             throw new Error("User profile not found in database.");
           }
         } else {
@@ -130,7 +130,6 @@ export function useAuth() {
                 role: userData.role || 'viewer',
                 isApproved: true,
                 staffId: userData.staffId,
-                // photoUrl and designation are now handled in the profile page component
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             },
@@ -165,7 +164,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation' | 'photoUrl'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
@@ -176,6 +175,7 @@ export function useAuth() {
 
       await setDoc(doc(db, "users", firebaseUser.uid), userProfileData);
 
+      // Log out the newly created non-admin user immediately
       if (!isAdmin && auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
         await signOut(auth); 
       }
@@ -195,6 +195,7 @@ export function useAuth() {
       return { success: false, error: { message: "You do not have permission to create users." } };
     }
   
+    // Use a temporary, secondary Firebase app instance to create the user without logging out the admin
     const tempAppName = `temp-app-create-user-${Date.now()}`;
     const tempApp = initializeApp(app.options, tempAppName);
     const tempAuth = getAuth(tempApp);
@@ -212,8 +213,10 @@ export function useAuth() {
         createdAt: Timestamp.now(),
         lastActiveAt: Timestamp.now(),
       };
+      // Set the document in Firestore using the main db instance
       await setDoc(doc(db, "users", newFirebaseUser.uid), userProfileData);
   
+      // Clean up the temporary app
       await signOut(tempAuth);
       await deleteApp(tempApp);
   
@@ -224,6 +227,7 @@ export function useAuth() {
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = `The email address ${email} is already in use.`;
       }
+      // Ensure temp app is cleaned up even on failure
       await deleteApp(tempApp).catch(e => console.error("Failed to delete temp app on error", e));
       return { success: false, error: { message: errorMessage, code: error.code } };
     }
@@ -294,6 +298,7 @@ export function useAuth() {
     const oldRole = userDocSnap.data().role;
     const userName = userDocSnap.data().name;
 
+    // Handle supervisor role changes and un-assignment from ongoing projects
     if (oldRole === 'supervisor' && newRole !== 'supervisor') {
         const fileEntriesRef = collection(db, 'fileEntries');
         const q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', targetUserUid));
@@ -307,6 +312,7 @@ export function useAuth() {
             const updatedSiteDetails = fileData.siteDetails?.map((site: any) => {
                 if (site.supervisorUid === targetUserUid && ongoingStatuses.includes(site.workStatus)) {
                     wasModified = true;
+                    // Create a pending update to notify admins to re-assign the site
                     const pendingUpdateData = {
                         fileNo: fileData.fileNo,
                         updatedSiteDetails: [{ nameOfSite: site.nameOfSite, purpose: site.purpose }],
@@ -318,6 +324,7 @@ export function useAuth() {
                     };
                     const newPendingUpdateRef = doc(collection(db, "pendingUpdates"));
                     batch.set(newPendingUpdateRef, pendingUpdateData);
+                    // Clear the supervisor from the site
                     return { ...site, supervisorUid: null, supervisorName: null };
                 }
                 return site;
@@ -347,6 +354,7 @@ export function useAuth() {
         if (staffId) {
             dataToUpdate.staffId = staffId;
         } else if (newRole === 'viewer') { 
+            // When demoting to a viewer, remove staff association
             dataToUpdate.staffId = null;
         }
         await updateDoc(userDocRef, dataToUpdate);

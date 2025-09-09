@@ -10,7 +10,7 @@ import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-re
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +35,11 @@ export default function ProfilePage() {
   const { user, isLoading: authLoading } = useAuth();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
-  const staffInfo = staffMembers.find(s => s.id === user?.staffId);
+  // Find the staff member info based on the user's staffId
+  const staffInfo = useMemo(() => {
+    if (!user?.staffId || staffLoading) return undefined;
+    return staffMembers.find(s => s.id === user.staffId);
+  }, [user, staffMembers, staffLoading]);
   
   if (authLoading || staffLoading) {
     return (
