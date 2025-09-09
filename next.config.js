@@ -50,8 +50,23 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    allowedDevOrigins: ["6000-firebase-gwd-kollam-05-09-25-1757081301985.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev"],
+  webpack: (config, { isServer }) => {
+    config.externals.push({
+      'utf-8-validate': 'commonjs utf-8-validate',
+      'bufferutil': 'commonjs bufferutil',
+    });
+    
+    // Fix for handlebars dependency issue with Genkit
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'handlebars': require.resolve('handlebars/dist/handlebars.js'),
+    };
+    
+    if (isServer) {
+        config.externals.push('@opentelemetry/instrumentation');
+    }
+
+    return config;
   },
 };
 

@@ -110,6 +110,7 @@ export const siteWorkStatusOptions = [
   "Tendered",
   "Selection Notice Issued",
   "Work Order Issued",
+  "Work Initiated",
   "Work in Progress",
   "Work Failed",
   "Work Completed",
