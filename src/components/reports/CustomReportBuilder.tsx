@@ -11,7 +11,7 @@ import { reportableFields } from '@/lib/schemas';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { useToast } from '@/hooks/use-toast';
 import { format, parse, isValid, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { FileDown, RotateCcw, Filter, Table as TableIcon } from 'lucide-react';
 import type { DataEntryFormData } from '@/lib/schemas';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -114,18 +114,48 @@ export default function CustomReportBuilder() {
     }
   }, [selectedFields, fileEntries, startDate, endDate, toast]);
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!reportData || reportData.length === 0) {
         toast({ title: "No Report Generated", description: "Please generate a report before exporting.", variant: "destructive" });
         return;
     }
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('CustomReport');
 
-    const worksheet = XLSX.utils.json_to_sheet(reportData, { header: reportHeaders });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "CustomReport");
-    const fileName = `Custom_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-    toast({ title: "Export Successful", description: `Downloaded ${reportData.length} records in ${fileName}` });
+    worksheet.addRow(reportHeaders).font = { bold: true };
+    
+    reportData.forEach(row => {
+      const rowValues = reportHeaders.map(header => row[header]);
+      worksheet.addRow(rowValues);
+    });
+
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, (cell) => {
+            let columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 15 ? 15 : maxLength + 2;
+    });
+
+    try {
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Custom_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast({ title: "Export Successful", description: `Downloaded ${reportData.length} records.` });
+    } catch (error) {
+        console.error("Excel export error:", error);
+        toast({ title: "Export Failed", description: "Could not generate the Excel file.", variant: "destructive" });
+    }
   };
 
   return (
@@ -232,7 +262,7 @@ export default function CustomReportBuilder() {
                         <TableRow key={rowIndex}>
                             {reportHeaders.map(header => (
                                 <TableCell key={`${rowIndex}-${header}`} className="whitespace-nowrap">
-                                    {row[header]}
+                                    {String(row[header] ?? 'N/A')}
                                 </TableCell>
                             ))}
                         </TableRow>
