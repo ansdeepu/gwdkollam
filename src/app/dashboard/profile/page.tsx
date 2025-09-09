@@ -2,15 +2,28 @@
 "use client";
 
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
+import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const dynamic = 'force-dynamic';
+
+const getInitials = (name?: string, email?: string | null) => {
+    if (name) {
+      const initials = name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+      if (initials) return initials;
+    }
+    if (email) {
+      return email.substring(0, 2).toUpperCase();
+    }
+    return 'U';
+};
+
 
 export default function ProfilePage() {
   const { setHeader } = usePageHeader();
@@ -19,8 +32,11 @@ export default function ProfilePage() {
   }, [setHeader]);
 
   const { user, isLoading: authLoading } = useAuth();
+  const { staffMembers, isLoading: staffLoading } = useStaffMembers();
+
+  const staffInfo = staffMembers.find(s => s.id === user?.staffId);
   
-  if (authLoading) {
+  if (authLoading || staffLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -42,11 +58,9 @@ export default function ProfilePage() {
         <div className="md:col-span-1">
           <Card>
             <CardHeader className="items-center text-center">
-               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={user.photoUrl || undefined} alt={user.name || 'User'} />
-                <AvatarFallback>
-                  <UserCircle className="h-24 w-24 text-primary/70" />
-                </AvatarFallback>
+              <Avatar className="h-24 w-24 mb-4">
+                <AvatarImage src={staffInfo?.photoUrl || undefined} alt={user.name || 'User'} data-ai-hint="person user" />
+                <AvatarFallback className="text-3xl">{getInitials(user.name, user.email)}</AvatarFallback>
               </Avatar>
               <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
