@@ -3,9 +3,10 @@
 "use client";
 
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
+import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
+import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
@@ -32,12 +33,14 @@ export default function ProfilePage() {
   }, [setHeader]);
 
   const { user, isLoading: authLoading } = useAuth();
+  const { staffMembers, isLoading: staffLoading } = useStaffMembers();
+
+  const staffInfo = staffMembers.find(s => s.id === user?.staffId);
   
-  if (authLoading || (user && !user.isProfileComplete)) {
+  if (authLoading || staffLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-3 text-muted-foreground">Loading profile...</p>
       </div>
     );
   }
@@ -57,7 +60,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader className="items-center text-center">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={user.photoUrl || undefined} alt={user.name || 'User'} data-ai-hint="person user" />
+                <AvatarImage src={staffInfo?.photoUrl || undefined} alt={user.name || 'User'} data-ai-hint="person user" />
                 <AvatarFallback className="text-3xl">{getInitials(user.name, user.email)}</AvatarFallback>
               </Avatar>
               <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
@@ -69,11 +72,11 @@ export default function ProfilePage() {
                     <span className="font-medium">Role:</span>
                     <Badge variant={user.role === 'editor' ? 'default' : 'secondary'}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                 </div>
-                 {user.designation && (
+                 {staffInfo?.designation && (
                     <div className="flex items-center justify-center space-x-2">
                         <Briefcase className="h-5 w-5 text-primary" />
                         <span className="font-medium">Designation:</span>
-                        <span className="text-foreground">{user.designation}</span>
+                        <span className="text-foreground">{staffInfo.designation}</span>
                     </div>
                 )}
             </CardContent>

@@ -1,3 +1,4 @@
+
 // src/hooks/useAuth.ts
 "use client";
 
@@ -32,11 +33,10 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  designation?: Designation;
-  photoUrl?: string | null;
+  designation?: Designation; // This will be populated from staffMembers
+  photoUrl?: string; // This will be populated from staffMembers
   createdAt?: Date;
   lastActiveAt?: Date;
-  isProfileComplete: boolean; // Flag to indicate all data is loaded
 }
 
 interface AuthState {
@@ -81,7 +81,6 @@ export function useAuth() {
         const userDocSnap = await getDoc(userDocRef);
 
         if (!userDocSnap.exists()) {
-          // Handle case where user exists in Auth but not in Firestore (e.g., admin creation)
           if (firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
              await setDoc(userDocRef, {
                 email: firebaseUser.email, name: firebaseUser.email?.split('@')[0], role: 'editor', isApproved: true, createdAt: Timestamp.now(),
@@ -102,12 +101,12 @@ export function useAuth() {
       }
     });
 
-    const processUserDocument = async (fbUser: FirebaseUser, userData: DocumentData | undefined) => {
+    const processUserDocument = (fbUser: FirebaseUser, userData: DocumentData | undefined) => {
         if (!userData) {
             setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
             return;
         }
-
+        
         const isApproved = userData.isApproved === true || fbUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
         if (!isApproved) {
@@ -121,39 +120,20 @@ export function useAuth() {
             return;
         }
 
-        let baseProfile: UserProfile = {
-            uid: fbUser.uid,
-            email: fbUser.email,
-            name: userData.name,
-            role: userData.role || 'viewer',
-            isApproved: true,
-            staffId: userData.staffId,
-            createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
-            lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
-            isProfileComplete: false, // Start as incomplete
-        };
-
-        // Fetch staff details only if staffId exists
-        if (userData.staffId) {
-            try {
-                const staffDocRef = doc(db, "staffMembers", userData.staffId);
-                const staffDocSnap = await getDoc(staffDocRef);
-                if (staffDocSnap.exists()) {
-                    const staffData = staffDocSnap.data();
-                    baseProfile.designation = staffData.designation;
-                    baseProfile.photoUrl = staffData.photoUrl;
-                }
-            } catch (staffError) {
-                console.error("Error fetching staff details for user:", staffError);
-            }
-        }
-
-        // Mark profile as complete and set the final state
-        baseProfile.isProfileComplete = true;
         setAuthState({
             isAuthenticated: true,
             isLoading: false,
-            user: baseProfile,
+            user: {
+                uid: fbUser.uid,
+                email: fbUser.email,
+                name: userData.name,
+                role: userData.role || 'viewer',
+                isApproved: true,
+                staffId: userData.staffId,
+                // photoUrl and designation are now handled in the profile page component
+                createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
+                lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
+            },
             firebaseUser: fbUser,
         });
     };
@@ -185,7 +165,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation' | 'photoUrl' | 'isProfileComplete'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation' | 'photoUrl'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
@@ -278,7 +258,6 @@ export function useAuth() {
           staffId: data.staffId || undefined,
           createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : undefined,
           lastActiveAt: data.lastActiveAt instanceof Timestamp ? data.lastActiveAt.toDate() : undefined,
-          isProfileComplete: false, // This isn't needed for the user list view
         });
       });
       return usersList;
