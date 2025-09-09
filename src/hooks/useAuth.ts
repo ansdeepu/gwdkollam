@@ -33,8 +33,8 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  designation?: Designation; // Added designation
-  photoUrl?: string | null; // Added photoUrl
+  designation?: Designation; // This will be populated on the page level now
+  photoUrl?: string | null; // This will be populated on the page level now
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -53,7 +53,6 @@ export const updateUserLastActive = async (uid: string): Promise<void> => {
     await updateDoc(userDocRef, { lastActiveAt: Timestamp.now() });
   } catch (error) {
     // Suppress console warnings for this non-critical, throttled operation.
-    // console.warn(`[Auth] Failed to update lastActiveAt for user ${uid}:`, error);
   }
 };
 
@@ -85,29 +84,8 @@ export function useAuth() {
         let userProfile: UserProfile | null = null;
         const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-        const fetchStaffDetails = async (staffId?: string): Promise<{ designation?: Designation; photoUrl?: string | null }> => {
-            if (!staffId) return {};
-            try {
-                const staffDocRef = doc(db, "staffMembers", staffId);
-                const staffDocSnap = await getDoc(staffDocRef);
-                if (staffDocSnap.exists()) {
-                    const staffData = staffDocSnap.data();
-                    return {
-                        designation: staffData.designation as Designation,
-                        photoUrl: staffData.photoUrl || null,
-                    };
-                }
-            } catch (staffError) {
-                console.error(`Error fetching staff info for staffId ${staffId}:`, staffError);
-            }
-            return {};
-        };
-
-
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            const staffDetails = await fetchStaffDetails(userData.staffId);
-
             userProfile = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -115,13 +93,10 @@ export function useAuth() {
                 role: isAdminByEmail ? 'editor' : (userData.role || 'viewer'),
                 isApproved: isAdminByEmail || userData.isApproved === true,
                 staffId: userData.staffId || undefined,
-                designation: staffDetails.designation,
-                photoUrl: staffDetails.photoUrl,
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
         } else if (isAdminByEmail) {
-            // This is the first login for the main admin
             userProfile = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,

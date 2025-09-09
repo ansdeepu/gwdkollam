@@ -13,6 +13,7 @@ import AppNavMenu from './AppNavMenu';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Import Avatar components
 import {
   DropdownMenu,
@@ -25,6 +26,8 @@ import {
 import { LogOut, User, ChevronsUpDown } from 'lucide-react'; // Import icons
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
+
 
 const hashCode = (str: string): number => {
     let hash = 0;
@@ -63,8 +66,22 @@ const getInitials = (name?: string) => {
 };
 
 export default function AppSidebar() {
-  const { user, logout } = useAuth();
+  const { user: authUser, logout } = useAuth();
+  const { staffMembers } = useStaffMembers();
   const router = useRouter();
+
+  const user = useMemo(() => {
+    if (!authUser || !authUser.staffId) return authUser;
+    const staffInfo = staffMembers.find(s => s.id === authUser.staffId);
+    if (staffInfo) {
+      return {
+        ...authUser,
+        photoUrl: staffInfo.photoUrl,
+      };
+    }
+    return authUser;
+  }, [authUser, staffMembers]);
+
 
   const photoUrl = user?.photoUrl;
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');

@@ -3,13 +3,14 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,17 +32,35 @@ export default function ProfilePage() {
     setHeader('My Profile', 'View your account details and manage your password.');
   }, [setHeader]);
 
-  const { user, isLoading: authLoading } = useAuth();
+  const { user: authUser, isLoading: authLoading } = useAuth();
+  const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
-  if (authLoading) {
+  const userProfile = useMemo(() => {
+    if (!authUser || !authUser.staffId) return authUser;
+    
+    const staffInfo = staffMembers.find(s => s.id === authUser.staffId);
+    if (staffInfo) {
+      return {
+        ...authUser,
+        designation: staffInfo.designation,
+        photoUrl: staffInfo.photoUrl,
+      };
+    }
+    return authUser;
+  }, [authUser, staffMembers]);
+
+  const isLoading = authLoading || staffLoading;
+
+  if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-2 text-muted-foreground">Loading profile...</p>
       </div>
     );
   }
 
-  if (!user) {
+  if (!userProfile) {
     return (
        <div className="flex h-full w-full items-center justify-center">
         <p className="text-muted-foreground">User not found. Please log in again.</p>
@@ -56,23 +75,23 @@ export default function ProfilePage() {
           <Card>
             <CardHeader className="items-center text-center">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={user.photoUrl || undefined} alt={user.name || 'User'} data-ai-hint="person user" />
-                <AvatarFallback className="text-3xl">{getInitials(user.name, user.email)}</AvatarFallback>
+                <AvatarImage src={userProfile.photoUrl || undefined} alt={userProfile.name || 'User'} data-ai-hint="person user" />
+                <AvatarFallback className="text-3xl">{getInitials(userProfile.name, userProfile.email)}</AvatarFallback>
               </Avatar>
-              <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
-              <CardDescription>{user.email}</CardDescription>
+              <CardTitle className="text-2xl">{userProfile.name || 'User'}</CardTitle>
+              <CardDescription>{userProfile.email}</CardDescription>
             </CardHeader>
             <CardContent className="text-sm space-y-3 text-center">
                 <div className="flex items-center justify-center space-x-2">
                     <ShieldCheck className="h-5 w-5 text-primary" />
                     <span className="font-medium">Role:</span>
-                    <Badge variant={user.role === 'editor' ? 'default' : 'secondary'}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
+                    <Badge variant={userProfile.role === 'editor' ? 'default' : 'secondary'}>{userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1)}</Badge>
                 </div>
-                 {user.designation && (
+                 {userProfile.designation && (
                     <div className="flex items-center justify-center space-x-2">
                         <Briefcase className="h-5 w-5 text-primary" />
                         <span className="font-medium">Designation:</span>
-                        <span className="text-foreground">{user.designation}</span>
+                        <span className="text-foreground">{userProfile.designation}</span>
                     </div>
                 )}
             </CardContent>
