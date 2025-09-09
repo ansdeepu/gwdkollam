@@ -9,7 +9,6 @@ import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
-import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
