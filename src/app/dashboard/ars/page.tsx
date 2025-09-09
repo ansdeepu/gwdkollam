@@ -1,3 +1,4 @@
+
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -6,7 +7,7 @@ import { useArsEntries, type ArsEntry } from "@/hooks/useArsEntries";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle, CalendarIcon } from "lucide-react";
+import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle, CalendarIcon, ShieldAlert } from "lucide-react";
 import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
@@ -332,6 +333,18 @@ export default function ArsPage() {
     return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading ARS data...</p> </div> );
   }
 
+  if (user?.role === 'supervisor') {
+    return (
+        <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+            <div className="space-y-6 p-6 text-center">
+                <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Access Denied</h1>
+                <p className="text-muted-foreground">You do not have permission to access this page.</p>
+            </div>
+        </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <TooltipProvider>
@@ -343,7 +356,7 @@ export default function ArsPage() {
                     <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 order-1 sm:order-2">
-                  <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>
+                  {canEdit && <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>}
                   <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
                   {canEdit && ( <> 
                       <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 

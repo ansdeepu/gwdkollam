@@ -1,3 +1,4 @@
+
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -45,7 +46,7 @@ export default function UserManagementPage() {
   const canManage = user?.role === 'editor';
 
   const loadUsers = useCallback(async () => {
-    if (!user || !user.isApproved) {
+    if (!user || !user.isApproved || !['editor', 'viewer'].includes(user.role)) {
       setUsersLoading(false);
       return;
     }

@@ -21,7 +21,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { DataEntryFormData, SiteDetailFormData, SitePurpose } from '@/lib/schemas';
+import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { usePendingUpdates } from './usePendingUpdates';
@@ -80,7 +80,7 @@ export function useFileEntries() {
       q = query(fileEntriesRef);
     }
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
       let entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
         const convertedData = convertTimestampsToDates(data);
@@ -89,6 +89,26 @@ export function useFileEntries() {
           ...convertedData,
         } as DataEntryFormData;
       });
+
+      // For supervisors, further filter the sites within each file
+      if (user.role === 'supervisor') {
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingSiteKeys = new Set(pendingUpdates.map(p => `${p.fileNo}-${p.updatedSiteDetails[0].nameOfSite}`));
+
+        entriesData = entriesData.map(entry => {
+          const supervisorVisibleSites = entry.siteDetails?.filter(site => {
+            const isAssigned = site.supervisorUid === user.uid;
+            if (!isAssigned) return false;
+            
+            const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
+            if (isPending) return false; // Hide site if an update is pending
+
+            const eligibleStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress"];
+            return site.workStatus ? eligibleStatuses.includes(site.workStatus as SiteWorkStatus) : false;
+          });
+          return { ...entry, siteDetails: supervisorVisibleSites };
+        }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+      }
       
       cachedFileEntries = entriesData;
       setFileEntries(entriesData);
@@ -105,7 +125,7 @@ export function useFileEntries() {
     });
 
     return () => unsubscribe();
-  }, [user, toast]);
+  }, [user, toast, getPendingUpdatesForFile]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null) => {
     if (!user) throw new Error("User must be logged in to add an entry.");

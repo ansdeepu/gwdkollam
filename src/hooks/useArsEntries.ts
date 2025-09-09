@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import type { ArsEntryFormData } from '@/lib/schemas';
 import { useAuth } from './useAuth';
@@ -58,7 +58,13 @@ export function useArsEntries() {
     }
 
     setIsLoading(true);
-    const q = collection(db, ARS_COLLECTION);
+    let q;
+    const arsCollectionRef = collection(db, ARS_COLLECTION);
+    if (user.role === 'supervisor') {
+      q = query(arsCollectionRef, where('supervisorUid', '==', user.uid));
+    } else {
+      q = query(arsCollectionRef);
+    }
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const entriesData = snapshot.docs.map(doc => {
@@ -90,7 +96,7 @@ export function useArsEntries() {
   }, [fetchArsEntries]);
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
-    if (!user) throw new Error("User must be logged in to add an entry.");
+    if (!user || user.role !== 'editor') throw new Error("Permission denied.");
     
     const entryForFirestore = {
         ...entryData,
@@ -107,7 +113,7 @@ export function useArsEntries() {
   }, [user]);
 
   const updateArsEntry = useCallback(async (id: string, entryData: Partial<ArsEntryFormData>) => {
-    if (!user) throw new Error("User must be logged in to update an entry.");
+    if (!user || user.role !== 'editor') throw new Error("Permission denied.");
     const docRef = doc(db, ARS_COLLECTION, id);
 
     const entryForFirestore = {
