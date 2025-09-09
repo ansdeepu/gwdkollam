@@ -83,7 +83,6 @@ export function useAuth() {
         const userDocSnap = await getDoc(userDocRef);
 
         let userProfile: UserProfile | null = null;
-        let isApproved = false;
         const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
         const fetchStaffDetails = async (staffId?: string): Promise<{ designation?: Designation; photoUrl?: string | null }> => {
@@ -105,41 +104,36 @@ export function useAuth() {
         };
 
 
-        if (isAdminByEmail) {
-            isApproved = true; // Main admin is always approved
-            const staffId = userDocSnap.exists() ? userDocSnap.data().staffId : undefined;
-            const staffDetails = await fetchStaffDetails(staffId);
-            const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
-            userProfile = {
-                uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
-                role: 'editor', isApproved: true,
-                staffId: staffId,
-                designation: staffDetails.designation,
-                photoUrl: staffDetails.photoUrl,
-                createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
-                lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
-            };
-            if (!userDocSnap.exists()) {
-                await setDoc(doc(db, "users", firebaseUser.uid), {
-                    email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
-                });
-            }
-        } else if (userDocSnap.exists()) {
+        if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            isApproved = userData.isApproved === true;
-            
             const staffDetails = await fetchStaffDetails(userData.staffId);
 
             userProfile = {
-                uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
-                role: userData.role || 'viewer', isApproved: isApproved,
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                name: userData.name ? String(userData.name) : undefined,
+                role: isAdminByEmail ? 'editor' : (userData.role || 'viewer'),
+                isApproved: isAdminByEmail || userData.isApproved === true,
                 staffId: userData.staffId || undefined,
                 designation: staffDetails.designation,
                 photoUrl: staffDetails.photoUrl,
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
+        } else if (isAdminByEmail) {
+            // This is the first login for the main admin
+            userProfile = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                name: firebaseUser.email?.split('@')[0],
+                role: 'editor',
+                isApproved: true,
+            };
+            await setDoc(doc(db, "users", firebaseUser.uid), {
+                email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
+            });
         }
+
 
         if (!isMounted) return;
 

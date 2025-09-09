@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/dropdown-menu'; // Import DropdownMenu components
 import { LogOut, User, ChevronsUpDown } from 'lucide-react'; // Import icons
 import { useRouter } from 'next/navigation';
-import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { cn } from '@/lib/utils';
 
 const hashCode = (str: string): number => {
@@ -68,7 +67,6 @@ export default function AppSidebar() {
   const router = useRouter();
 
   const photoUrl = user?.photoUrl;
-  
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 
   return (
