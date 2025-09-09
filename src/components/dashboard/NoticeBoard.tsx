@@ -3,12 +3,42 @@
 
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Megaphone, Cake, Gift, PartyPopper, UserCircle } from "lucide-react";
+import { Megaphone, Cake, Gift, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StaffMember, Designation } from '@/lib/schemas';
 import { isValid, format } from 'date-fns';
+
+const hashCode = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; 
+    }
+    return hash;
+};
+
+const getColorClass = (nameOrEmail: string): string => {
+    const colors = [
+        "bg-red-200 text-red-800", "bg-orange-200 text-orange-800", "bg-amber-200 text-amber-800",
+        "bg-yellow-200 text-yellow-800", "bg-lime-200 text-lime-800", "bg-green-200 text-green-800",
+        "bg-emerald-200 text-emerald-800", "bg-teal-200 text-teal-800", "bg-cyan-200 text-cyan-800",
+        "bg-sky-200 text-sky-800", "bg-blue-200 text-blue-800", "bg-indigo-200 text-indigo-800",
+        "bg-violet-200 text-violet-800", "bg-purple-200 text-purple-800", "bg-fuchsia-200 text-fuchsia-800",
+        "bg-pink-200 text-pink-800", "bg-rose-200 text-rose-800"
+    ];
+    const hash = hashCode(nameOrEmail);
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+};
+
+const getInitials = (name?: string) => {
+  if (!name) return 'U';
+  return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+};
 
 interface NoticeBoardProps {
   staffMembers: StaffMember[];
@@ -18,8 +48,8 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
   const [selectedBirthday, setSelectedBirthday] = useState<(typeof noticeData.todaysBirthdays)[0] | null>(null);
   
   const noticeData = useMemo(() => {
-    const todaysBirthdays: { name: string, designation?: Designation }[] = [];
-    const upcomingBirthdaysInMonth: { name: string; designation?: Designation; dateOfBirth: Date }[] = [];
+    const todaysBirthdays: { name: string, designation?: Designation, photoUrl?: string | null }[] = [];
+    const upcomingBirthdaysInMonth: { name: string; designation?: Designation; photoUrl?: string | null; dateOfBirth: Date }[] = [];
 
     const today = new Date();
     const todayMonth = today.getMonth();
@@ -33,9 +63,9 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
         const dobDate = dob.getDate();
         if (dobMonth === todayMonth) {
             if (dobDate === todayDate) {
-                todaysBirthdays.push({ name: staff.name, designation: staff.designation });
+                todaysBirthdays.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl });
             } else if (dobDate > todayDate) {
-                upcomingBirthdaysInMonth.push({ name: staff.name, designation: staff.designation, dateOfBirth: dob });
+                upcomingBirthdaysInMonth.push({ name: staff.name, designation: staff.designation, photoUrl: staff.photoUrl, dateOfBirth: dob });
             }
         }
       }
@@ -66,7 +96,10 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                 <Dialog open={!!selectedBirthday} onOpenChange={() => setSelectedBirthday(null)}>
                   {noticeData.todaysBirthdays.map((staff, index) => (
                     <button key={index} onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
-                      <UserCircle className="h-10 w-10 text-pink-300" />
+                      <Avatar className="h-10 w-10 border-2 border-pink-200">
+                        <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                        <AvatarFallback className="bg-pink-100 text-pink-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                      </Avatar>
                       <div>
                         <p className="font-semibold text-pink-700 text-xs -mb-1 flex items-center gap-1.5"><Gift className="h-3 w-3" />Happy Birthday!</p>
                         <p className="font-bold text-sm text-pink-800">{staff.name}</p>
@@ -76,8 +109,11 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                   <DialogContent>
                     <div className="p-4 flex flex-col items-center text-center relative overflow-hidden">
                       <PartyPopper className="absolute top-2 left-4 h-6 w-6 text-yellow-400 -rotate-45" /><PartyPopper className="absolute top-8 right-6 h-5 w-5 text-blue-400 rotate-12" /><PartyPopper className="absolute bottom-6 left-8 h-5 w-5 text-red-400 rotate-6" /><PartyPopper className="absolute bottom-2 right-4 h-6 w-6 text-green-400 -rotate-12" /><PartyPopper className="absolute top-20 left-2 h-4 w-4 text-purple-400 rotate-45" /><PartyPopper className="absolute bottom-20 right-2 h-4 w-4 text-orange-400 -rotate-12" />
-                      <UserCircle className="h-32 w-32 mb-4 text-primary/50" />
-                      <h2 className="text-2xl font-bold text-primary">Happy Birthday, {selectedBirthday?.name}!</h2>
+                      <Avatar className="h-32 w-32 mb-4 border-2 p-1 border-primary/50 shadow-lg bg-gradient-to-br from-pink-300 via-purple-300 to-indigo-400">
+                        <AvatarImage src={selectedBirthday?.photoUrl || undefined} alt={selectedBirthday?.name} />
+                        <AvatarFallback className="text-4xl">{getInitials(selectedBirthday?.name)}</AvatarFallback>
+                      </Avatar>
+                      <h2 className="text-2xl font-bold text-primary">Happy Birthday!</h2>
                       <p className="mt-4 text-foreground">Wishing you a fantastic day filled with joy and celebration!</p>
                     </div>
                   </DialogContent>
@@ -97,7 +133,10 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                   <>
                     {noticeData.upcomingBirthdays.map((staff, index) => (
                       <div key={index} className="w-full p-2 rounded-md bg-indigo-500/10 flex items-center gap-3 text-left">
-                        <UserCircle className="h-10 w-10 text-indigo-300" />
+                        <Avatar className="h-10 w-10 border-2 border-indigo-200">
+                          <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                          <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                        </Avatar>
                         <div className="flex-1">
                           <p className="font-bold text-sm text-indigo-800">{staff.name}</p>
                           <p className="text-xs text-indigo-700">{staff.designation}</p>
@@ -110,7 +149,10 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                     ))}
                      {shouldAnimateBirthdays && noticeData.upcomingBirthdays.map((staff, index) => (
                       <div key={`clone-${index}`} className="w-full p-2 rounded-md bg-indigo-500/10 flex items-center gap-3 text-left" aria-hidden="true">
-                        <UserCircle className="h-10 w-10 text-indigo-300" />
+                        <Avatar className="h-10 w-10 border-2 border-indigo-200">
+                          <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                          <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                        </Avatar>
                         <div className="flex-1">
                           <p className="font-bold text-sm text-indigo-800">{staff.name}</p>
                           <p className="text-xs text-indigo-700">{staff.designation}</p>

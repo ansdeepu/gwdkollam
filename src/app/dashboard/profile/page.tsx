@@ -1,4 +1,3 @@
-
 // src/app/dashboard/profile/page.tsx
 "use client";
 
@@ -10,7 +9,7 @@ import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-re
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,11 +34,7 @@ export default function ProfilePage() {
   const { user, isLoading: authLoading } = useAuth();
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
-  // Find the staff member info based on the user's staffId
-  const staffInfo = useMemo(() => {
-    if (!user?.staffId || staffLoading) return undefined;
-    return staffMembers.find(s => s.id === user.staffId);
-  }, [user, staffMembers, staffLoading]);
+  const staffInfo = staffMembers.find(s => s.id === user?.staffId);
   
   if (authLoading || staffLoading) {
     return (
@@ -76,11 +71,11 @@ export default function ProfilePage() {
                     <span className="font-medium">Role:</span>
                     <Badge variant={user.role === 'editor' ? 'default' : 'secondary'}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                 </div>
-                 {staffInfo?.designation && (
+                 {user.designation && (
                     <div className="flex items-center justify-center space-x-2">
                         <Briefcase className="h-5 w-5 text-primary" />
                         <span className="font-medium">Designation:</span>
-                        <span className="text-foreground">{staffInfo.designation}</span>
+                        <span className="text-foreground">{user.designation}</span>
                     </div>
                 )}
             </CardContent>

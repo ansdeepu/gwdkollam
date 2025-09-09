@@ -1,4 +1,3 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -387,7 +386,7 @@ export default function GwdRatesPage() {
     );
   }
   
-  if (!user?.isApproved || user?.role === 'supervisor') {
+  if (!user?.isApproved) {
     return (
        <div className="space-y-6 p-6 text-center">
         <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />

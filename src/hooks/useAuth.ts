@@ -33,6 +33,7 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
+  designation?: Designation; // Added designation
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -51,6 +52,7 @@ export const updateUserLastActive = async (uid: string): Promise<void> => {
     await updateDoc(userDocRef, { lastActiveAt: Timestamp.now() });
   } catch (error) {
     // Suppress console warnings for this non-critical, throttled operation.
+    // console.warn(`[Auth] Failed to update lastActiveAt for user ${uid}:`, error);
   }
 };
 
@@ -66,78 +68,109 @@ export function useAuth() {
   const { toast } = useToast();
 
   useEffect(() => {
+    let isMounted = true; 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isMounted) return;
+
       if (!firebaseUser) {
         setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
         return;
       }
 
-      setAuthState(prevState => ({ ...prevState, isLoading: true }));
-
       try {
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
-        if (!userDocSnap.exists()) {
-          // This case handles the very first sign-in of the main admin account
-          if (firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-             await setDoc(userDocRef, {
-                email: firebaseUser.email, name: firebaseUser.email?.split('@')[0], role: 'editor', isApproved: true, createdAt: Timestamp.now(),
-            });
-             const newUserDocSnap = await getDoc(userDocRef);
-             processUserDocument(firebaseUser, newUserDocSnap.data());
-          } else {
-            // A regular user somehow got a Firebase Auth account but has no profile document.
-            throw new Error("User profile not found in database.");
-          }
-        } else {
-          processUserDocument(firebaseUser, userDocSnap.data());
+        let userProfile: UserProfile | null = null;
+        let isApproved = false;
+        const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+        if (isAdminByEmail) {
+            isApproved = true; // Main admin is always approved
+            let staffInfo: { designation?: Designation } = {};
+            try {
+              if (userDocSnap.exists() && userDocSnap.data().staffId) {
+                  const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
+                  const staffDocSnap = await getDoc(staffDocRef);
+                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
+              }
+            } catch (staffError) {
+                console.error("Error fetching admin's staff info, proceeding without it:", staffError);
+            }
+            const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
+                role: 'editor', isApproved: true,
+                staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
+                designation: staffInfo.designation,
+                createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
+                lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
+            };
+            if (!userDocSnap.exists()) {
+                await setDoc(doc(db, "users", firebaseUser.uid), {
+                    email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
+                });
+            }
+        } else if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            isApproved = userData.isApproved === true;
+            
+            let staffInfo: { designation?: Designation } = {};
+            try {
+              if (userData.staffId) {
+                  const staffDocRef = doc(db, "staffMembers", userData.staffId);
+                  const staffDocSnap = await getDoc(staffDocRef);
+                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
+              }
+            } catch(staffError) {
+              console.error(`Error fetching staff info for user ${firebaseUser.uid}, proceeding without it:`, staffError);
+            }
+
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
+                role: userData.role || 'viewer', isApproved: isApproved,
+                staffId: userData.staffId || undefined, designation: staffInfo.designation,
+                createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
+                lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
+            };
         }
 
+        if (!isMounted) return;
+
+        if (userProfile && userProfile.isApproved) {
+            setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
+        } else {
+            setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
+            
+            if (userProfile && !userProfile.isApproved) {
+                toast({
+                    title: "Account Pending Approval",
+                    description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
+                    variant: "destructive",
+                    duration: 8000
+                });
+            }
+        }
       } catch (error: any) {
-        console.error('[Auth] Error in onAuthStateChanged:', error);
-        if (auth.currentUser) await signOut(auth);
-        setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+        console.error('[Auth] Error in onAuthStateChanged callback:', error);
+        if (isMounted) {
+            if (error.code === 'resource-exhausted') {
+                toast({
+                    title: "Database Quota Exceeded",
+                    description: "The application has exceeded its database usage limits for the day. Please try again later.",
+                    variant: "destructive",
+                    duration: 9000
+                });
+            }
+            if (auth.currentUser) {
+                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); }
+            }
+            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
+        }
       }
     });
 
-    const processUserDocument = (fbUser: FirebaseUser, userData: DocumentData | undefined) => {
-        if (!userData) {
-            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
-            return;
-        }
-        
-        const isApproved = userData.isApproved === true || fbUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-
-        if (!isApproved) {
-            toast({
-                title: "Account Pending Approval",
-                description: "Your account is not yet approved. Please contact the administrator.",
-                variant: "destructive",
-                duration: 9000,
-            });
-            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
-            return;
-        }
-
-        setAuthState({
-            isAuthenticated: true,
-            isLoading: false,
-            user: {
-                uid: fbUser.uid,
-                email: fbUser.email,
-                name: userData.name,
-                role: userData.role || 'viewer',
-                isApproved: true,
-                staffId: userData.staffId,
-                createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
-                lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
-            },
-            firebaseUser: fbUser,
-        });
-    };
-
-    return () => unsubscribe();
+    return () => { isMounted = false; unsubscribe(); };
   }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
@@ -164,7 +197,7 @@ export function useAuth() {
       const roleToAssign: UserRole = isAdmin ? 'editor' : 'viewer';
       const isApprovedToAssign = isAdmin;
 
-      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
+      const userProfileData: Omit<UserProfile, 'uid' | 'createdAt' | 'lastActiveAt' | 'designation'> & { createdAt: Timestamp, lastActiveAt: Timestamp, email: string | null, name?: string } = {
         email: firebaseUser.email,
         name: name || firebaseUser.email?.split('@')[0],
         role: roleToAssign,
@@ -175,7 +208,6 @@ export function useAuth() {
 
       await setDoc(doc(db, "users", firebaseUser.uid), userProfileData);
 
-      // Log out the newly created non-admin user immediately
       if (!isAdmin && auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
         await signOut(auth); 
       }
@@ -195,7 +227,6 @@ export function useAuth() {
       return { success: false, error: { message: "You do not have permission to create users." } };
     }
   
-    // Use a temporary, secondary Firebase app instance to create the user without logging out the admin
     const tempAppName = `temp-app-create-user-${Date.now()}`;
     const tempApp = initializeApp(app.options, tempAppName);
     const tempAuth = getAuth(tempApp);
@@ -213,10 +244,8 @@ export function useAuth() {
         createdAt: Timestamp.now(),
         lastActiveAt: Timestamp.now(),
       };
-      // Set the document in Firestore using the main db instance
       await setDoc(doc(db, "users", newFirebaseUser.uid), userProfileData);
   
-      // Clean up the temporary app
       await signOut(tempAuth);
       await deleteApp(tempApp);
   
@@ -227,7 +256,6 @@ export function useAuth() {
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = `The email address ${email} is already in use.`;
       }
-      // Ensure temp app is cleaned up even on failure
       await deleteApp(tempApp).catch(e => console.error("Failed to delete temp app on error", e));
       return { success: false, error: { message: errorMessage, code: error.code } };
     }
@@ -298,7 +326,6 @@ export function useAuth() {
     const oldRole = userDocSnap.data().role;
     const userName = userDocSnap.data().name;
 
-    // Handle supervisor role changes and un-assignment from ongoing projects
     if (oldRole === 'supervisor' && newRole !== 'supervisor') {
         const fileEntriesRef = collection(db, 'fileEntries');
         const q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', targetUserUid));
@@ -312,7 +339,6 @@ export function useAuth() {
             const updatedSiteDetails = fileData.siteDetails?.map((site: any) => {
                 if (site.supervisorUid === targetUserUid && ongoingStatuses.includes(site.workStatus)) {
                     wasModified = true;
-                    // Create a pending update to notify admins to re-assign the site
                     const pendingUpdateData = {
                         fileNo: fileData.fileNo,
                         updatedSiteDetails: [{ nameOfSite: site.nameOfSite, purpose: site.purpose }],
@@ -324,7 +350,6 @@ export function useAuth() {
                     };
                     const newPendingUpdateRef = doc(collection(db, "pendingUpdates"));
                     batch.set(newPendingUpdateRef, pendingUpdateData);
-                    // Clear the supervisor from the site
                     return { ...site, supervisorUid: null, supervisorName: null };
                 }
                 return site;
@@ -354,7 +379,6 @@ export function useAuth() {
         if (staffId) {
             dataToUpdate.staffId = staffId;
         } else if (newRole === 'viewer') { 
-            // When demoting to a viewer, remove staff association
             dataToUpdate.staffId = null;
         }
         await updateDoc(userDocRef, dataToUpdate);

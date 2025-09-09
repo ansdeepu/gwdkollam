@@ -38,8 +38,45 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const ADMIN_EMAIL_FOR_TABLE = 'gwdklm@gmail.com';
+
+const hashCode = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; 
+    }
+    return hash;
+};
+
+const getColorClass = (nameOrEmail: string): string => {
+    const colors = [
+        "bg-red-200 text-red-800", "bg-orange-200 text-orange-800", "bg-amber-200 text-amber-800",
+        "bg-yellow-200 text-yellow-800", "bg-lime-200 text-lime-800", "bg-green-200 text-green-800",
+        "bg-emerald-200 text-emerald-800", "bg-teal-200 text-teal-800", "bg-cyan-200 text-cyan-800",
+        "bg-sky-200 text-sky-800", "bg-blue-200 text-blue-800", "bg-indigo-200 text-indigo-800",
+        "bg-violet-200 text-violet-800", "bg-purple-200 text-purple-800", "bg-fuchsia-200 text-fuchsia-800",
+        "bg-pink-200 text-pink-800", "bg-rose-200 text-rose-800"
+    ];
+    const hash = hashCode(nameOrEmail);
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+};
+
+
+const getInitials = (name?: string) => {
+  if (!name || name.trim() === '') return 'U';
+  return name
+    .trim()
+    .split(/\s+/)
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+};
 
 interface UserManagementTableProps {
   currentUser: UserProfile | null;
@@ -188,6 +225,7 @@ export default function UserManagementTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[60px] px-3 py-2.5">Sl. No.</TableHead>
+              <TableHead className="w-[70px] px-3 py-2.5 text-center">Photo</TableHead>
               <TableHead className="px-3 py-2.5">Name</TableHead>
               <TableHead className="px-3 py-2.5">Email</TableHead>
               <TableHead className="px-3 py-2.5">Registered</TableHead>
@@ -201,10 +239,20 @@ export default function UserManagementTable({
               const isCurrentUserTheUserInRow = currentUser?.uid === userRow.uid;
               const isUserInRowAdmin = userRow.email === ADMIN_EMAIL_FOR_TABLE;
               const disableActions = updatingUsers[userRow.uid]?.approval || updatingUsers[userRow.uid]?.role || isCurrentUserTheUserInRow || isUserInRowAdmin;
-              
+              const staffInfo = staffMembers.find(s => s.id === userRow.staffId);
+              const photoUrl = staffInfo?.photoUrl;
+              const avatarColorClass = getColorClass(userRow.name || userRow.email || 'user');
+
+
               return (
               <TableRow key={userRow.uid} className={cn(isUserInRowAdmin && "bg-primary/10 hover:bg-primary/20")}>
                 <TableCell className="px-3 py-2 font-medium text-center">{index + 1}</TableCell>
+                <TableCell className="px-3 py-2">
+                  <Avatar className="h-9 w-9 mx-auto">
+                      <AvatarImage src={photoUrl || undefined} alt={userRow.name || 'User'} data-ai-hint="person user" />
+                      <AvatarFallback className={cn("font-semibold", avatarColorClass)}>{getInitials(userRow.name)}</AvatarFallback>
+                  </Avatar>
+                </TableCell>
                 <TableCell className="font-medium px-3 py-2 whitespace-normal break-words">{userRow.name || "N/A"}</TableCell>
                 <TableCell className="px-3 py-2 text-muted-foreground whitespace-normal break-words">{userRow.email}</TableCell>
                 <TableCell className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">

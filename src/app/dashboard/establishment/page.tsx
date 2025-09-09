@@ -1,4 +1,3 @@
-
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -402,9 +401,12 @@ export default function EstablishmentPage() {
       </Dialog>
 
       <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-        <DialogContent className="sm:max-w-fit p-0 bg-transparent border-0 shadow-none">
-          <div className="flex justify-center items-center max-h-[90vh] overflow-hidden">
-            {imageForModal && <img src={imageForModal} alt="Staff photo enlarged" className="max-w-full max-h-[85vh] object-contain rounded-lg"/>}
+        <DialogContent className="sm:max-w-[600px] p-2">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Staff Photo</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center items-center max-h-[80vh] overflow-hidden">
+            {imageForModal && <img src={imageForModal} alt="Staff photo enlarged" className="max-w-full max-h-[75vh] object-contain rounded-md"/>}
           </div>
         </DialogContent>
       </Dialog>

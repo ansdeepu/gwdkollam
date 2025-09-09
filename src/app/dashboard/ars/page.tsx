@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -33,8 +32,8 @@ const formatDateSafe = (dateInput: any): string => {
   if (!dateInput) return 'N/A';
   // Handle pre-formatted strings
   if (typeof dateInput === 'string') {
-      const parsed = parse(dateInput, 'yyyy-MM-dd', new Date());
-      if (isValid(parsed)) return format(parsed, 'dd/MM/yyyy');
+      const parsed = parse(dateInput, 'dd/MM/yyyy', new Date());
+      if (isValid(parsed)) return dateInput;
   }
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
   return date instanceof Date && !isNaN(date.getTime()) ? format(date, 'dd/MM/yyyy') : 'N/A';
@@ -107,7 +106,7 @@ export default function ArsPage() {
       sites = sites.filter(site => {
         const completionDateString = site.dateOfCompletion;
         if (!completionDateString) return false;
-        const completionDate = parse(completionDateString, 'yyyy-MM-dd', new Date());
+        const completionDate = parse(completionDateString, 'dd/MM/yyyy', new Date());
         if (!isValid(completionDate)) return false;
 
         if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
@@ -273,10 +272,10 @@ export default function ArsPage() {
             const parseDate = (dateValue: any): string | undefined => {
                 if (!dateValue) return undefined;
                 if (dateValue instanceof Date && isValid(dateValue)) {
-                  return format(dateValue, 'yyyy-MM-dd');
+                  return format(dateValue, 'dd/MM/yyyy');
                 }
                 const d = parse(String(dateValue), 'dd/MM/yyyy', new Date());
-                return isValid(d) ? format(d, 'yyyy-MM-dd') : undefined;
+                return isValid(d) ? format(d, 'dd/MM/yyyy') : undefined;
             };
 
             const expenditureValue = String((rowData as any)['Expenditure (₹)'] || '');
@@ -344,9 +343,9 @@ export default function ArsPage() {
                     <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 order-1 sm:order-2">
+                  <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>
+                  <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
                   {canEdit && ( <> 
-                      <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>
-                      <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
                       <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
                       <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm"> 
                           {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}

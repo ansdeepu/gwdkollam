@@ -1,3 +1,4 @@
+
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -7,7 +8,7 @@ import { app } from '@/lib/firebase';
 import type { ArsEntryFormData } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
-import { format, parse, isValid, parseISO } from 'date-fns';
+import { parse, isValid } from 'date-fns';
 
 const db = getFirestore(app);
 const ARS_COLLECTION = 'arsEntries';
@@ -35,42 +36,6 @@ const processDataForClient = (data: DocumentData): any => {
             } else if (Array.isArray(value)) {
                 // Recursively process arrays of objects
                 processed[key] = value.map(item => (item && typeof item === 'object') ? processDataForClient(item) : item);
-            } else {
-                processed[key] = value;
-            }
-        }
-    }
-    return processed;
-};
-
-const toDateOrNull = (value: any): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date && isValid(value)) return value;
-  // Handle Firestore Timestamp objects
-  if (value && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-    return isValid(date) ? date : null;
-  }
-  if (typeof value === 'string') {
-    let parsedDate = parseISO(value);
-    if (isValid(parsedDate)) return parsedDate;
-    
-    // Also handle 'dd/MM/yyyy' format
-    parsedDate = parse(value, 'dd/MM/yyyy', new Date());
-    if (isValid(parsedDate)) return parsedDate;
-  }
-  return null;
-};
-
-const processDataForForm = (data: any): any => {
-    if (!data) return data;
-    const processed: { [key: string]: any } = {};
-    for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
-            const value = data[key];
-             if (key.toLowerCase().includes('date')) {
-                const date = toDateOrNull(value);
-                processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
             } else {
                 processed[key] = value;
             }
@@ -171,7 +136,7 @@ export function useArsEntries() {
         const docRef = doc(db, ARS_COLLECTION, id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            return processDataForForm({ id: docSnap.id, ...docSnap.data() }) as ArsEntry;
+            return processDataForClient({ id: docSnap.id, ...docSnap.data() }) as ArsEntry;
         }
         return null;
     } catch (error) {

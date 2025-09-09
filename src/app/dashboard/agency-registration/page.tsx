@@ -1,4 +1,3 @@
-
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -390,9 +389,7 @@ export default function AgencyRegistrationPage() {
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const isEditor = user?.role === 'editor';
-  const isSupervisor = user?.role === 'supervisor';
-  const isViewer = user?.role === 'viewer';
-  const isReadOnly = isViewing || isSupervisor || isViewer;
+  const isReadOnly = isViewing;
 
   useEffect(() => {
     if (selectedApplicationId) {
@@ -562,7 +559,6 @@ export default function AgencyRegistrationPage() {
   }
 
   const handleEdit = (id: string) => {
-    if(!isEditor) return;
     setIsViewing(false);
     setSelectedApplicationId(id);
   }
@@ -743,13 +739,13 @@ export default function AgencyRegistrationPage() {
     );
   }
   
-  if (isSupervisor) {
+  if (!user || user.role === 'supervisor') {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
          <div className="space-y-6 p-6 text-center">
             <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Access Denied</h1>
-            <p className="text-muted-foreground">This page is for read-only access. You do not have permission to perform this action.</p>
+            <p className="text-muted-foreground">You do not have permission to access this page.</p>
         </div>
       </div>
     );
@@ -988,11 +984,9 @@ export default function AgencyRegistrationPage() {
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />
               </div>
-              {isEditor && (
-                <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
-                    <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
-                </Button>
-              )}
+              <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
+                  <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
+              </Button>
           </div>
           <Tabs defaultValue="completed" className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
