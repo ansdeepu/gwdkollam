@@ -33,9 +33,8 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
-  // These are now optional as they will be merged in the component
-  designation?: Designation;
   photoUrl?: string | null;
+  designation?: Designation;
   createdAt?: Date;
   lastActiveAt?: Date;
 }
@@ -69,84 +68,61 @@ export function useAuth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    let isMounted = true; 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!isMounted) return;
-
       if (!firebaseUser) {
         setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
         return;
       }
-
+  
       try {
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
-
+  
         let userProfile: UserProfile | null = null;
         const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-
+  
         if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            userProfile = {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                name: userData.name ? String(userData.name) : undefined,
-                role: isAdminByEmail ? 'editor' : (userData.role || 'viewer'),
-                isApproved: isAdminByEmail || userData.isApproved === true,
-                staffId: userData.staffId || undefined,
-                createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
-                lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
-            };
+          const userData = userDocSnap.data();
+          userProfile = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: userData.name || undefined,
+            role: isAdminByEmail ? 'editor' : (userData.role || 'viewer'),
+            isApproved: isAdminByEmail || userData.isApproved === true,
+            staffId: userData.staffId || undefined,
+            createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
+            lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
+          };
         } else if (isAdminByEmail) {
-            userProfile = {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                name: firebaseUser.email?.split('@')[0],
-                role: 'editor',
-                isApproved: true,
-            };
-            await setDoc(doc(db, "users", firebaseUser.uid), {
-                email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
-            });
+          const name = firebaseUser.email?.split('@')[0] || 'Admin';
+          userProfile = {
+            uid: firebaseUser.uid, email: firebaseUser.email, name, role: 'editor', isApproved: true,
+          };
+          await setDoc(userDocRef, {
+            email: userProfile.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
+          });
         }
-
-
-        if (!isMounted) return;
-
+  
         if (userProfile && userProfile.isApproved) {
-            setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
+          setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
         } else {
-            setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
-            
-            if (userProfile && !userProfile.isApproved) {
-                toast({
-                    title: "Account Pending Approval",
-                    description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
-                    variant: "destructive",
-                    duration: 8000
-                });
-            }
+          setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
+          if (userProfile && !userProfile.isApproved) {
+            toast({
+              title: "Account Pending Approval",
+              description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
+              variant: "destructive",
+              duration: 8000
+            });
+          }
         }
       } catch (error: any) {
         console.error('[Auth] Error in onAuthStateChanged callback:', error);
-        if (isMounted) {
-            if (error.code === 'resource-exhausted') {
-                toast({
-                    title: "Database Quota Exceeded",
-                    description: "The application has exceeded its database usage limits for the day. Please try again later.",
-                    variant: "destructive",
-                    duration: 9000
-                });
-            }
-            if (auth.currentUser) {
-                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); }
-            }
-            setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
-        }
+        setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
       }
     });
-
-    return () => { isMounted = false; unsubscribe(); };
+  
+    return () => unsubscribe();
   }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
@@ -265,7 +241,7 @@ export function useAuth() {
         usersList.push({
           uid: docSnap.id,
           email: data.email || null,
-          name: data.name || undefined,
+          name: staffInfo?.name || data.name || undefined, // Prioritize staff name
           role: data.role || 'viewer',
           isApproved: data.isApproved === true,
           staffId: data.staffId || undefined,

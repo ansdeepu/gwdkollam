@@ -6,11 +6,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, UserCircle, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
+import { Loader2, KeyRound, ShieldCheck, Briefcase } from "lucide-react";
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect, useMemo } from "react";
+import type { StaffMember } from "@/lib/schemas";
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,7 @@ export default function ProfilePage() {
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
   const userProfile = useMemo(() => {
-    if (!authUser) return null;
+    if (!authUser || !staffMembers) return null;
     
     // If the user has a staffId, find the matching staff member.
     if (authUser.staffId) {
@@ -45,6 +46,7 @@ export default function ProfilePage() {
         // Return a combined object with details from both sources.
         return {
           ...authUser,
+          name: staffInfo.name, // Use name from staff record as source of truth
           designation: staffInfo.designation,
           photoUrl: staffInfo.photoUrl,
         };
@@ -56,19 +58,11 @@ export default function ProfilePage() {
 
   const isLoading = authLoading || staffLoading;
 
-  if (isLoading) {
+  if (isLoading || !userProfile) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="ml-2 text-muted-foreground">Loading profile...</p>
-      </div>
-    );
-  }
-
-  if (!userProfile) {
-    return (
-       <div className="flex h-full w-full items-center justify-center">
-        <p className="text-muted-foreground">User not found. Please log in again.</p>
       </div>
     );
   }

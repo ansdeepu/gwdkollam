@@ -78,6 +78,7 @@ export default function AppSidebar() {
     if (staffInfo) {
       return {
         ...authUser,
+        name: staffInfo.name, // Take name from staff record
         photoUrl: staffInfo.photoUrl,
       };
     }
