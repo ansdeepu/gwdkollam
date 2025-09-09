@@ -82,8 +82,18 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || isReportLoading || staffLoading || !currentUser) return null;
     
-    // For supervisors, use their filtered list of entries. For others, use all entries.
-    const relevantEntries = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
+    let relevantEntries = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
+    
+    // For supervisors, further filter to only include sites with specific ongoing statuses for relevant dashboard cards
+    if (currentUser.role === 'supervisor') {
+        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+        relevantEntries = relevantEntries.map(entry => {
+            const ongoingSites = entry.siteDetails?.filter(site => {
+                return site.supervisorUid === currentUser.uid && site.workStatus && ongoingStatuses.includes(site.workStatus as SiteWorkStatus);
+            });
+            return { ...entry, siteDetails: ongoingSites };
+        }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+    }
     
     const nonArsEntries = relevantEntries
         .map(entry => ({
@@ -94,7 +104,8 @@ export default function DashboardPage() {
 
     return {
         nonArsEntries: nonArsEntries,
-        allFileEntries: relevantEntries, // Use the role-appropriate list for all components
+        allFileEntriesForSupervisor: relevantEntries,
+        allFileEntries: allFileEntries, // Keep the full list for admin/viewer overviews
         staffMembers: staffMembers
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
@@ -191,7 +202,7 @@ export default function DashboardPage() {
     setDialogState({ isOpen: true, data: dialogData, title, columns, type: 'rig' });
   }, []);
 
-  const isPageLoading = authLoading || usersLoading || filteredEntriesLoading || isReportLoading || agenciesLoading || !dashboardData;
+  const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || !dashboardData;
   
   if (isPageLoading) {
     return (
@@ -205,7 +216,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ImportantUpdates allFileEntries={dashboardData.allFileEntries} />
+        <ImportantUpdates allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries} />
         <NoticeBoard staffMembers={dashboardData.staffMembers} />
       </div>
 
@@ -215,33 +226,37 @@ export default function DashboardPage() {
       />
       
       <WorkStatusByService 
-        allFileEntries={dashboardData.allFileEntries}
+        allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
       />
       
-      <FinanceOverview 
-        allFileEntries={dashboardData.allFileEntries}
-        onOpenDialog={handleOpenDialog}
-        dates={financeDates}
-        onSetDates={setFinanceDates}
-      />
-      
-      <ArsStatusOverview 
-        onOpenDialog={handleOpenDialog}
-        dates={arsDates}
-        onSetDates={setArsDates}
-      />
-      
-      {rigRegistrationData && (
-        <RigRegistrationOverview 
-          data={rigRegistrationData}
-          onCardClick={handleOpenRigDialog}
-        />
+      {currentUser?.role !== 'supervisor' && (
+        <>
+          <FinanceOverview 
+            allFileEntries={dashboardData.allFileEntries}
+            onOpenDialog={handleOpenDialog}
+            dates={financeDates}
+            onSetDates={setFinanceDates}
+          />
+          
+          <ArsStatusOverview 
+            onOpenDialog={handleOpenDialog}
+            dates={arsDates}
+            onSetDates={setArsDates}
+          />
+          
+          {rigRegistrationData && (
+            <RigRegistrationOverview 
+              data={rigRegistrationData}
+              onCardClick={handleOpenRigDialog}
+            />
+          )}
+        </>
       )}
       
       <WorkProgress
-        allFileEntries={dashboardData.allFileEntries}
+        allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUser={currentUser}
       />
@@ -260,7 +275,6 @@ export default function DashboardPage() {
           />
         </div>
       )}
-
 
       <DashboardDialogs 
         dialogState={dialogState}
