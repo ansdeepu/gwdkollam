@@ -80,11 +80,13 @@ export default function RetiredStaffTable({
               <TableRow key={staff.id}>
                  <TableCell>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                 <TableCell>
-                  <button onClick={() => onImageClick(staff.photoUrl || null)} className="focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
+                  <button onClick={() => onImageClick(staff.photoUrl || null)} className="focus:outline-none focus:ring-2 focus:ring-primary rounded-md">
                     {staff.photoUrl ? (
-                      <Image src={staff.photoUrl} alt={staff.name} width={40} height={40} className="rounded-full object-cover" />
+                      <Image src={staff.photoUrl} alt={staff.name} width={40} height={40} className="rounded-md object-cover" />
                     ) : (
-                      <UserCircle className="w-10 h-10 text-muted-foreground" />
+                      <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center">
+                        <UserCircle className="w-8 h-8 text-muted-foreground" />
+                      </div>
                     )}
                   </button>
                 </TableCell>
