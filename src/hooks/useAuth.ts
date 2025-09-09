@@ -33,6 +33,7 @@ export interface UserProfile {
   role: UserRole;
   isApproved: boolean;
   staffId?: string;
+  // These are now optional as they will be merged in the component
   designation?: Designation;
   photoUrl?: string | null;
   createdAt?: Date;

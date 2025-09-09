@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'; // Import DropdownMenu components
-import { LogOut, User, ChevronsUpDown } from 'lucide-react'; // Import icons
+import { LogOut, User } from 'lucide-react'; // Import icons
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
@@ -71,7 +71,9 @@ export default function AppSidebar() {
   const router = useRouter();
 
   const user = useMemo(() => {
-    if (!authUser || !authUser.staffId) return authUser;
+    if (!authUser) return null;
+    if (!authUser.staffId) return authUser;
+    
     const staffInfo = staffMembers.find(s => s.id === authUser.staffId);
     if (staffInfo) {
       return {

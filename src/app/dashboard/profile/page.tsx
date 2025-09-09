@@ -36,16 +36,21 @@ export default function ProfilePage() {
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
   const userProfile = useMemo(() => {
-    if (!authUser || !authUser.staffId) return authUser;
+    if (!authUser) return null;
     
-    const staffInfo = staffMembers.find(s => s.id === authUser.staffId);
-    if (staffInfo) {
-      return {
-        ...authUser,
-        designation: staffInfo.designation,
-        photoUrl: staffInfo.photoUrl,
-      };
+    // If the user has a staffId, find the matching staff member.
+    if (authUser.staffId) {
+      const staffInfo = staffMembers.find(s => s.id === authUser.staffId);
+      if (staffInfo) {
+        // Return a combined object with details from both sources.
+        return {
+          ...authUser,
+          designation: staffInfo.designation,
+          photoUrl: staffInfo.photoUrl,
+        };
+      }
     }
+    // If no staffId or no match, return the basic auth user profile.
     return authUser;
   }, [authUser, staffMembers]);
 
