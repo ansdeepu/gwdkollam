@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -97,9 +96,9 @@ export function useFileEntries() {
                     if (!isAssigned) return false;
                     
                     const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
-                    site.isPending = isPending; // Set pending status regardless of work status
+                    site.isPending = isPending;
                     
-                    return true; // Always show the site if assigned to the supervisor
+                    return true;
                 });
                 return { ...entry, siteDetails: supervisorVisibleSites };
             }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
