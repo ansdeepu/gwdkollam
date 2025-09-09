@@ -1,7 +1,7 @@
 // src/app/dashboard/profile/page.tsx
 "use client";
 
-import { useAuth, type UserProfile } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, ShieldCheck, KeyRound, Briefcase } from "lucide-react";
