@@ -84,13 +84,15 @@ const RegistrationTable = ({
   onView,
   onEdit, 
   onDelete, 
-  searchTerm 
+  searchTerm,
+  canEdit
 }: { 
   applications: AgencyApplication[],
   onView: (id: string) => void,
   onEdit: (id: string) => void, 
   onDelete: (id: string) => void,
-  searchTerm: string 
+  searchTerm: string,
+  canEdit: boolean
 }) => (
     <div className="max-h-[70vh] overflow-auto">
       <Table>
@@ -115,8 +117,12 @@ const RegistrationTable = ({
                           <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
                           <TableCell className="text-center">
                               <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
-                              <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
+                              {canEdit && (
+                                <>
+                                <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
+                                </>
+                              )}
                           </TableCell>
                       </TableRow>
                   ))
@@ -389,7 +395,8 @@ export default function AgencyRegistrationPage() {
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const isEditor = user?.role === 'editor';
-  const isReadOnly = isViewing;
+  const isReadOnly = isViewing || user?.role === 'supervisor' || user?.role === 'viewer';
+  const canEdit = isEditor;
 
   useEffect(() => {
     if (selectedApplicationId) {
@@ -739,7 +746,7 @@ export default function AgencyRegistrationPage() {
     );
   }
   
-  if (!user || user.role === 'supervisor') {
+  if (!user) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
          <div className="space-y-6 p-6 text-center">
@@ -984,9 +991,11 @@ export default function AgencyRegistrationPage() {
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />
               </div>
-              <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
-                  <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
-              </Button>
+              {canEdit && (
+                <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
+                    <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
+                </Button>
+              )}
           </div>
           <Tabs defaultValue="completed" className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
@@ -1000,6 +1009,7 @@ export default function AgencyRegistrationPage() {
                     onEdit={handleEdit}
                     onDelete={handleDeleteApplication}
                     searchTerm={searchTerm}
+                    canEdit={canEdit}
                 />
             </TabsContent>
             <TabsContent value="pending" className="mt-4">
@@ -1009,6 +1019,7 @@ export default function AgencyRegistrationPage() {
                     onEdit={handleEdit}
                     onDelete={handleDeleteApplication}
                     searchTerm={searchTerm}
+                    canEdit={canEdit}
                 />
             </TabsContent>
           </Tabs>
