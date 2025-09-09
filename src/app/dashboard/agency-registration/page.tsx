@@ -1,3 +1,4 @@
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -389,7 +390,9 @@ export default function AgencyRegistrationPage() {
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const isEditor = user?.role === 'editor';
-  const isReadOnly = isViewing;
+  const isSupervisor = user?.role === 'supervisor';
+  const isViewer = user?.role === 'viewer';
+  const isReadOnly = isViewing || isSupervisor || isViewer;
 
   useEffect(() => {
     if (selectedApplicationId) {
@@ -559,6 +562,7 @@ export default function AgencyRegistrationPage() {
   }
 
   const handleEdit = (id: string) => {
+    if(!isEditor) return;
     setIsViewing(false);
     setSelectedApplicationId(id);
   }
@@ -739,13 +743,13 @@ export default function AgencyRegistrationPage() {
     );
   }
   
-  if (!user || user.role === 'supervisor') {
+  if (isSupervisor) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
          <div className="space-y-6 p-6 text-center">
             <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Access Denied</h1>
-            <p className="text-muted-foreground">You do not have permission to access this page.</p>
+            <p className="text-muted-foreground">This page is for read-only access. You do not have permission to perform this action.</p>
         </div>
       </div>
     );
@@ -984,9 +988,11 @@ export default function AgencyRegistrationPage() {
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />
               </div>
-              <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
-                  <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
-              </Button>
+              {isEditor && (
+                <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
+                    <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
+                </Button>
+              )}
           </div>
           <Tabs defaultValue="completed" className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
