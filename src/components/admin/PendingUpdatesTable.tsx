@@ -1,33 +1,20 @@
+
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, UserX, UserPlus, ListChecks } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, UserX, UserPlus, ListChecks, Trash2 } from 'lucide-react';
 import { formatDistanceToNow, format, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { SiteDetailFormData, ArsEntryFormData } from '@/lib/schemas';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from '@/components/ui/label';
@@ -36,7 +23,6 @@ import { Textarea } from '@/components/ui/textarea';
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
-  // Handle Firestore Timestamp objects
   if (value && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
     const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
     return isValid(date) ? date : null;
@@ -59,34 +45,37 @@ const getFieldName = (key: string) => {
         .replace(/^./, str => str.toUpperCase());
 };
 
-
 export default function PendingUpdatesTable() {
-  const { rejectUpdate, getPendingUpdatesForFile } = usePendingUpdates();
-  const { fileEntries, isLoading: filesLoading } = useFileEntries(); // Fetch all files
+  const { rejectUpdate, getPendingUpdatesForFile, deleteUpdate } = usePendingUpdates();
+  const { fileEntries, isLoading: filesLoading } = useFileEntries();
   const { toast } = useToast();
   
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
   const [updateToReject, setUpdateToReject] = useState<string | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   
+  const [updateToDelete, setUpdateToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   const [changesToView, setChangesToView] = useState<{ title: string; changes: { field: string; oldValue: string; newValue: string }[] } | null>(null);
 
-  useEffect(() => {
-    const fetchUpdates = async () => {
+  const fetchUpdates = useCallback(async () => {
       setIsLoading(true);
       const updates = await getPendingUpdatesForFile(null);
-      updates.sort((a,b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+      updates.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
       setPendingUpdates(updates);
       setIsLoading(false);
-    };
-    fetchUpdates();
   }, [getPendingUpdatesForFile]);
+
+  useEffect(() => {
+    fetchUpdates();
+  }, [fetchUpdates]);
 
   const handleReject = async () => {
     if (!updateToReject) return;
-
     setIsRejecting(true);
     try {
       await rejectUpdate(updateToReject, rejectionReason);
@@ -94,20 +83,28 @@ export default function PendingUpdatesTable() {
         title: "Update Rejected",
         description: "The supervisor's changes have been rejected and they have been notified.",
       });
-      // Refetch the data after rejection
-      const updates = await getPendingUpdatesForFile(null);
-      updates.sort((a,b) => b.submittedAt.getTime() - a.submittedAt.getTime());
-      setPendingUpdates(updates);
+      fetchUpdates(); // Refetch data
     } catch (error: any) {
-      toast({
-        title: "Rejection Failed",
-        description: error.message || "Could not reject the update.",
-        variant: "destructive",
-      });
+      toast({ title: "Rejection Failed", description: error.message || "Could not reject the update.", variant: "destructive" });
     } finally {
       setIsRejecting(false);
       setUpdateToReject(null);
       setRejectionReason("");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!updateToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteUpdate(updateToDelete);
+      toast({ title: "Update Deleted", description: "The pending update has been permanently removed." });
+      fetchUpdates(); // Refetch data
+    } catch (error: any) {
+      toast({ title: "Deletion Failed", description: error.message || "Could not delete the update.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+      setUpdateToDelete(null);
     }
   };
 
@@ -121,18 +118,18 @@ export default function PendingUpdatesTable() {
     const allChanges: { field: string; oldValue: string; newValue: string }[] = [];
     let title = `Changes for File No: ${update.fileNo}`;
 
-    update.updatedSiteDetails.forEach((updatedSite, index) => {
+    update.updatedSiteDetails.forEach((updatedSite) => {
         const originalSite = originalFile.siteDetails?.find(s => s.nameOfSite === updatedSite.nameOfSite);
         
-        if (!originalSite) {
-            toast({ title: "Warning", description: `Original site "${updatedSite.nameOfSite}" not found for comparison.`, variant: "default" });
-            return;
-        }
-
         if (update.updatedSiteDetails.length > 1) {
             allChanges.push({ field: `--- Site: ${updatedSite.nameOfSite} ---`, oldValue: '', newValue: '' });
         } else {
             title = `Changes for site "${updatedSite.nameOfSite}"`;
+        }
+
+        if (!originalSite) {
+            allChanges.push({ field: "Site Status", oldValue: "Exists", newValue: "DELETED or NAME CHANGED" });
+            return;
         }
 
         Object.keys(updatedSite).forEach(key => {
@@ -159,15 +156,11 @@ export default function PendingUpdatesTable() {
     });
     
     if (allChanges.length > 0) {
-      setChangesToView({
-        title: title,
-        changes: allChanges,
-      });
+      setChangesToView({ title, changes: allChanges });
     } else {
       toast({ title: "No Changes Found", description: "No differences were found for this update.", variant: "default" });
     }
   };
-
 
   if (isLoading || filesLoading) {
     return (
@@ -187,12 +180,12 @@ export default function PendingUpdatesTable() {
               <TableHead>Sl. No.</TableHead>
               <TableHead>File No.</TableHead>
               <TableHead>Applicant Name</TableHead>
-              <TableHead>Site Name</TableHead>
-              <TableHead>Purpose</TableHead>
+              <TableHead>Site Name(s)</TableHead>
+              <TableHead>Purpose(s)</TableHead>
               <TableHead>Submitted By</TableHead>
-              <TableHead>Date Submitted</TableHead>
+              <TableHead>Submitted</TableHead>
               <TableHead className="text-center">Changes</TableHead>
-              <TableHead className="text-center w-[200px]">Actions</TableHead>
+              <TableHead className="text-center w-[240px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -203,6 +196,8 @@ export default function PendingUpdatesTable() {
                 const applicantName = parentFile?.applicantName || 'N/A';
                 const siteName = update.updatedSiteDetails.map(s => s.nameOfSite).join(', ');
                 const purpose = update.updatedSiteDetails.map(s => s.purpose).join(', ');
+                const isRejected = update.status === 'rejected';
+
                 return (
                 <TableRow key={update.id}>
                   <TableCell>{index + 1}</TableCell>
@@ -215,55 +210,25 @@ export default function PendingUpdatesTable() {
                     {formatDistanceToNow(update.submittedAt, { addSuffix: true })}
                   </TableCell>
                   <TableCell className="text-center">
-                    {isUnassigned ? (
-                      <Tooltip>
+                     <Tooltip>
                         <TooltipTrigger asChild>
-                           <Badge variant="destructive" className="bg-amber-500/20 text-amber-700 border-amber-500/50">
-                            <UserX className="mr-2 h-4 w-4" /> Supervisor Unassigned
-                          </Badge>
+                            <Badge variant={isUnassigned ? "destructive" : isRejected ? "outline" : "default"} className={isRejected ? "text-destructive border-destructive" : ""}>
+                              {isUnassigned ? <UserX className="mr-1 h-3 w-3"/> : isRejected && <XCircle className="mr-1 h-3 w-3"/>}
+                              {isUnassigned ? "Unassigned" : isRejected ? "Rejected" : update.status}
+                            </Badge>
                         </TooltipTrigger>
-                         <TooltipContent><p>{update.notes || "Supervisor role was changed."}</p></TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <Button variant="link" className="p-0 h-auto" onClick={() => handleViewChanges(update)}>
-                        <ListChecks className="mr-2 h-4 w-4"/>
-                        {update.updatedSiteDetails.length} site(s)
-                      </Button>
-                    )}
+                        {(isUnassigned || isRejected) && update.notes && <TooltipContent><p>{update.notes}</p></TooltipContent>}
+                     </Tooltip>
                   </TableCell>
-                  <TableCell className="text-center space-x-2">
-                    {isUnassigned ? (
-                      <Button asChild size="sm" variant="outline">
-                        <Link href={`/dashboard/data-entry?id=${fileEntries.find(f => f.fileNo === update.fileNo)?.id}`}>
-                          <UserPlus className="mr-2 h-4 w-4" /> Re-assign
-                        </Link>
-                      </Button>
-                    ) : (
-                      <>
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/dashboard/data-entry?id=${fileEntries.find(f => f.fileNo === update.fileNo)?.id}&approveUpdateId=${update.id}`}>
-                            <CheckCircle className="mr-2 h-4 w-4" /> Approve
-                          </Link>
-                        </Button>
-                        <Button 
-                            size="sm" 
-                            variant="destructive" 
-                            onClick={() => setUpdateToReject(update.id)}
-                            disabled={isRejecting}
-                        >
-                          <XCircle className="mr-2 h-4 w-4" /> Reject
-                        </Button>
-                      </>
-                    )}
+                  <TableCell className="text-center space-x-1">
+                    <Button variant="link" className="p-0 h-auto" onClick={() => handleViewChanges(update)}><ListChecks className="mr-2 h-4 w-4"/>View</Button>
+                    <Button asChild size="sm" variant="outline"><Link href={`/dashboard/data-entry?id=${fileEntries.find(f => f.fileNo === update.fileNo)?.id}&approveUpdateId=${update.id}`}><CheckCircle className="mr-2 h-4 w-4" /> Review</Link></Button>
+                    <Button size="sm" variant="destructive" onClick={() => setUpdateToDelete(update.id)} disabled={isDeleting}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
                   </TableCell>
                 </TableRow>
               )})
             ) : (
-              <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
-                  No pending updates to review.
-                </TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={9} className="h-24 text-center">No pending updates to review.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -271,60 +236,29 @@ export default function PendingUpdatesTable() {
       
       <AlertDialog open={!!updateToReject} onOpenChange={() => setUpdateToReject(null)}>
         <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure you want to reject this update?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This action will mark the update as rejected. The supervisor will be able to edit and resubmit their changes. Please provide a reason for the rejection below.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="py-2">
-                <Label htmlFor="rejection-reason" className="text-left">Reason for Rejection (Optional)</Label>
-                <Textarea
-                    id="rejection-reason"
-                    placeholder="e.g., Incorrect work status selected."
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    className="mt-2"
-                />
-            </div>
-            <AlertDialogFooter>
-                <AlertDialogCancel disabled={isRejecting}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleReject} disabled={isRejecting} className="bg-destructive hover:bg-destructive/90">
-                    {isRejecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Yes, Reject"}
-                </AlertDialogAction>
-            </AlertDialogFooter>
+            <AlertDialogHeader><AlertDialogTitle>Reject this update?</AlertDialogTitle><AlertDialogDescription>Please provide a reason for the rejection below.</AlertDialogDescription></AlertDialogHeader>
+            <div className="py-2"><Label htmlFor="rejection-reason" className="text-left">Reason (Optional)</Label><Textarea id="rejection-reason" placeholder="e.g., Incorrect work status." value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} className="mt-2" /></div>
+            <AlertDialogFooter><AlertDialogCancel disabled={isRejecting}>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleReject} disabled={isRejecting} className="bg-destructive hover:bg-destructive/90">{isRejecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Yes, Reject"}</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!updateToDelete} onOpenChange={() => setUpdateToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Permanently delete this update?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone and will remove the update record permanently.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">{isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Yes, Delete"}</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <Dialog open={!!changesToView} onOpenChange={() => setChangesToView(null)}>
         <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{changesToView?.title}</DialogTitle>
-            <DialogDescription>Review the changes submitted by the supervisor.</DialogDescription>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>{changesToView?.title}</DialogTitle><DialogDescription>Review the changes submitted by the supervisor.</DialogDescription></DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[30%]">Field</TableHead>
-                  <TableHead className="w-[35%]">Original Value</TableHead>
-                  <TableHead className="w-[35%]">New Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {changesToView?.changes.map((change, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium text-xs">{change.field}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground line-through">{change.oldValue}</TableCell>
-                    <TableCell className="text-xs font-semibold text-primary">{change.newValue}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+              <TableHeader><TableRow><TableHead className="w-[30%]">Field</TableHead><TableHead className="w-[35%]">Original Value</TableHead><TableHead className="w-[35%]">New Value</TableHead></TableRow></TableHeader>
+              <TableBody>{changesToView?.changes.map((change, index) => (<TableRow key={index}><TableCell className="font-medium text-xs">{change.field}</TableCell><TableCell className="text-xs text-muted-foreground line-through">{change.oldValue}</TableCell><TableCell className="text-xs font-semibold text-primary">{change.newValue}</TableCell></TableRow>))}</TableBody>
             </Table>
           </ScrollArea>
-          <DialogFooter>
-            <DialogClose asChild><Button>Close</Button></DialogClose>
-          </DialogFooter>
+          <DialogFooter><DialogClose asChild><Button>Close</Button></DialogClose></DialogFooter>
         </DialogContent>
       </Dialog>
     </TooltipProvider>

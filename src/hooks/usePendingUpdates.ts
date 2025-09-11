@@ -1,3 +1,4 @@
+
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -40,6 +41,7 @@ interface PendingUpdatesState {
   createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
   createArsPendingUpdate: (arsId: string, updatedArsEntry: ArsEntryFormData, currentUser: UserProfile) => Promise<void>;
   rejectUpdate: (updateId: string, reason?: string) => Promise<void>;
+  deleteUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
   hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
   getPendingUpdatesForFile: (fileNo: string | null, submittedByUid?: string) => Promise<PendingUpdate[]>;
@@ -99,7 +101,6 @@ export function usePendingUpdates(): PendingUpdatesState {
 
     const batch = writeBatch(db);
 
-    // 1. Find and delete ALL existing pending/rejected updates for this file from this user.
     const existingUpdatesQuery = query(
       collection(db, PENDING_UPDATES_COLLECTION),
       where('fileNo', '==', fileNo),
@@ -111,11 +112,10 @@ export function usePendingUpdates(): PendingUpdatesState {
       batch.delete(doc.ref);
     });
 
-    // 2. Create a single new update document containing ALL changed sites.
     const newUpdateRef = doc(collection(db, PENDING_UPDATES_COLLECTION));
     const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
       fileNo,
-      updatedSiteDetails: updatedSites, // Store all site changes in one document
+      updatedSiteDetails: updatedSites,
       submittedByUid: currentUser.uid,
       submittedByName: currentUser.name,
       status: 'pending',
@@ -125,7 +125,6 @@ export function usePendingUpdates(): PendingUpdatesState {
       submittedAt: serverTimestamp(),
     });
 
-    // 3. Commit all batched writes.
     await batch.commit();
 
   }, []);
@@ -175,10 +174,19 @@ export function usePendingUpdates(): PendingUpdatesState {
     });
   }, [user]);
 
+  const deleteUpdate = useCallback(async (updateId: string) => {
+    if (!user || user.role !== 'editor') {
+        throw new Error("You do not have permission to delete updates.");
+    }
+    const updateDocRef = doc(db, PENDING_UPDATES_COLLECTION, updateId);
+    await deleteDoc(updateDocRef);
+  }, [user]);
+
   return {
     createPendingUpdate,
     createArsPendingUpdate,
     rejectUpdate,
+    deleteUpdate,
     getPendingUpdateById,
     hasPendingUpdateForFile,
     getPendingUpdatesForFile,
