@@ -86,7 +86,7 @@ export default function DashboardPage() {
     
     // For supervisors, further filter to only include sites with specific ongoing statuses for relevant dashboard cards
     if (currentUser.role === 'supervisor') {
-        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
         relevantEntries = relevantEntries.map(entry => {
             const ongoingSites = entry.siteDetails?.filter(site => {
                 return site.supervisorUid === currentUser.uid && site.workStatus && ongoingStatuses.includes(site.workStatus as SiteWorkStatus);

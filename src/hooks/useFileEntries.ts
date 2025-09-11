@@ -70,7 +70,11 @@ export function useFileEntries() {
     
     const fileEntriesRef = collection(db, FILE_ENTRIES_COLLECTION);
     let q;
+    const supervisorOngoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
+
     if (user.role === 'supervisor') {
+      // For supervisors, we still fetch all files they are assigned to.
+      // The filtering by 'ongoing' status will happen in the components.
       q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', user.uid));
     } else {
       q = query(fileEntriesRef);
@@ -90,21 +94,18 @@ export function useFileEntries() {
         getPendingUpdatesForFile(null, user.uid).then(pendingUpdates => {
             const pendingSiteKeys = new Set(pendingUpdates.map(p => `${p.fileNo}-${p.updatedSiteDetails[0].nameOfSite}`));
             
-            const filteredEntries = entriesData.map(entry => {
-                const supervisorVisibleSites = entry.siteDetails?.filter(site => {
-                    const isAssigned = site.supervisorUid === user.uid;
-                    if (!isAssigned) return false;
-                    
-                    const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
-                    site.isPending = isPending;
-                    
-                    return true;
-                });
-                return { ...entry, siteDetails: supervisorVisibleSites };
-            }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+            const entriesWithPendingStatus = entriesData.map(entry => {
+                if (entry.siteDetails) {
+                    entry.siteDetails = entry.siteDetails.map(site => {
+                        const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
+                        return { ...site, isPending };
+                    });
+                }
+                return entry;
+            });
 
-            cachedFileEntries = filteredEntries;
-            setFileEntries(filteredEntries);
+            cachedFileEntries = entriesWithPendingStatus;
+            setFileEntries(entriesWithPendingStatus);
             setIsLoading(false);
             isCacheInitialized = true;
         }).catch(error => {

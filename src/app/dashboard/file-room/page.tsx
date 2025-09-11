@@ -59,7 +59,7 @@ export default function FileManagerPage() {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
-      const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress"];
+      const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
       entries = fileEntries
         .map(entry => {
           const ongoingSites = entry.siteDetails?.filter(site => {
