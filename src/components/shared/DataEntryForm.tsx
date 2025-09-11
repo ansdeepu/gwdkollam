@@ -54,6 +54,10 @@ import type { StaffMember } from "@/lib/schemas";
 import type { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { getFirestore, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { app } from "@/lib/firebase";
+
+const db = getFirestore(app);
 
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
   dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
@@ -364,6 +368,19 @@ export default function DataEntryFormComponent({
     }
   }
 
+  const isFieldReadOnly = (fieldName: keyof SiteDetailFormData): boolean => {
+    if (isReadOnly) return true;
+    if (isEditor) return false; // Editors can edit everything
+    if (isSupervisor) {
+      // Supervisors can only edit specific fields
+      const supervisorEditableFields: (keyof SiteDetailFormData)[] = [
+        'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'
+      ];
+      return !supervisorEditableFields.includes(fieldName);
+    }
+    return true;
+  };
+
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
@@ -661,23 +678,23 @@ export default function DataEntryFormComponent({
                                                         <Input
                                                           type="date"
                                                           {...field}
-                                                          onChange={(e) => field.onChange(e.target.value || undefined)}
+                                                          onChange={(e) => field.onChange(e.target.value === "" ? undefined : e.target.value)}
                                                           value={field.value ?? ""}
-                                                          readOnly={isReadOnly || !siteIsEditable}
+                                                          readOnly={isFieldReadOnly('dateOfCompletion')}
                                                         />
                                                       </FormControl>
                                                       <FormMessage/>
                                                     </FormItem>
                                                   )}
                                                 />
-                                                <FormField control={form.control} name={`siteDetails.${index}.totalExpenditure`} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                                <FormField control={form.control} name={`siteDetails.${index}.totalExpenditure`} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('totalExpenditure')} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField
                                                     control={form.control}
                                                     name={`siteDetails.${index}.workStatus`}
                                                     render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Work Status <span className="text-destructive">*</span></FormLabel>
-                                                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !siteIsEditable}>
+                                                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('workStatus')}>
                                                         <FormControl>
                                                             <SelectTrigger>
                                                             <SelectValue placeholder="Select Status" />
@@ -693,7 +710,7 @@ export default function DataEntryFormComponent({
                                                     </FormItem>
                                                     )}
                                                 />
-                                                <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !siteIsEditable} /></FormControl><FormMessage/></FormItem>)}/>
+                                                <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('workRemarks')} /></FormControl><FormMessage/></FormItem>)}/>
                                             </div>
                                         </div>
                                     </AccordionContent>
@@ -814,5 +831,3 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
-
-    
