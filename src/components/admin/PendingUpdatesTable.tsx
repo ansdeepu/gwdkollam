@@ -2,12 +2,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle, UserX, AlertTriangle, UserPlus, ListChecks } from 'lucide-react';
-import Link from 'next/link';
 import { formatDistanceToNow, format, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -117,43 +117,50 @@ export default function PendingUpdatesTable() {
         return;
     }
 
-    const updatedSite = update.updatedSiteDetails[0];
-    const originalSite = originalFile.siteDetails?.find(s => s.nameOfSite === updatedSite.nameOfSite);
-    
-    if (!originalSite) {
-        toast({ title: "Error", description: `Original site "${updatedSite.nameOfSite}" not found in file.`, variant: "destructive" });
-        return;
-    }
-    
-    const changes: { field: string; oldValue: string; newValue: string }[] = [];
+    const allChanges: { field: string; oldValue: string; newValue: string }[] = [];
+    let title = `Changes for File No: ${update.fileNo}`;
 
-    // Compare fields between original and updated site
-    Object.keys(updatedSite).forEach(key => {
-        const typedKey = key as keyof (SiteDetailFormData | ArsEntryFormData);
-        let originalValue = (originalSite as any)[typedKey];
-        let updatedValue = (updatedSite as any)[typedKey];
+    update.updatedSiteDetails.forEach((updatedSite, index) => {
+        const originalSite = originalFile.siteDetails?.find(s => s.nameOfSite === updatedSite.nameOfSite);
         
-        if (typedKey.toLowerCase().includes('date')) {
-            originalValue = formatDateValue(originalValue);
-            updatedValue = formatDateValue(updatedValue);
-        } else {
-            originalValue = originalValue ?? '';
-            updatedValue = updatedValue ?? '';
+        if (!originalSite) {
+            toast({ title: "Warning", description: `Original site "${updatedSite.nameOfSite}" not found for comparison.`, variant: "default" });
+            return;
         }
 
-        if (String(originalValue) !== String(updatedValue)) {
-            changes.push({
-                field: getFieldName(typedKey),
-                oldValue: String(originalValue) || '(empty)',
-                newValue: String(updatedValue) || '(empty)',
-            });
+        if (update.updatedSiteDetails.length > 1) {
+            allChanges.push({ field: `--- Site: ${updatedSite.nameOfSite} ---`, oldValue: '', newValue: '' });
+        } else {
+            title = `Changes for site "${updatedSite.nameOfSite}"`;
         }
+
+        Object.keys(updatedSite).forEach(key => {
+            const typedKey = key as keyof (SiteDetailFormData | ArsEntryFormData);
+            let originalValue = (originalSite as any)[typedKey];
+            let updatedValue = (updatedSite as any)[typedKey];
+            
+            if (typedKey.toLowerCase().includes('date')) {
+                originalValue = formatDateValue(originalValue);
+                updatedValue = formatDateValue(updatedValue);
+            } else {
+                originalValue = originalValue ?? '';
+                updatedValue = updatedValue ?? '';
+            }
+
+            if (String(originalValue) !== String(updatedValue)) {
+                allChanges.push({
+                    field: getFieldName(typedKey),
+                    oldValue: String(originalValue) || '(empty)',
+                    newValue: String(updatedValue) || '(empty)',
+                });
+            }
+        });
     });
     
-    if (changes.length > 0) {
+    if (allChanges.length > 0) {
       setChangesToView({
-        title: `Changes for "${updatedSite.nameOfSite}"`,
-        changes,
+        title: title,
+        changes: allChanges,
       });
     } else {
       toast({ title: "No Changes Found", description: "No differences were found for this update.", variant: "default" });

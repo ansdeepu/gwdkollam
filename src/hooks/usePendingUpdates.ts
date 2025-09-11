@@ -99,45 +99,33 @@ export function usePendingUpdates(): PendingUpdatesState {
 
     const batch = writeBatch(db);
 
-    // This process handles one site update at a time, as per the UI flow.
-    for (const siteToUpdate of updatedSites) {
-      const siteName = siteToUpdate.nameOfSite;
+    // 1. Find and delete ALL existing pending/rejected updates for this file from this user.
+    const existingUpdatesQuery = query(
+      collection(db, PENDING_UPDATES_COLLECTION),
+      where('fileNo', '==', fileNo),
+      where('submittedByUid', '==', currentUser.uid),
+      where('status', 'in', ['pending', 'rejected'])
+    );
+    const existingUpdatesSnapshot = await getDocs(existingUpdatesQuery);
+    existingUpdatesSnapshot.forEach(doc => {
+      batch.delete(doc.ref);
+    });
 
-      // 1. Find all existing updates (pending or rejected) for this specific site and user.
-      const existingUpdatesQuery = query(
-        collection(db, PENDING_UPDATES_COLLECTION),
-        where('fileNo', '==', fileNo),
-        where('submittedByUid', '==', currentUser.uid),
-      );
-      const existingUpdatesSnapshot = await getDocs(existingUpdatesQuery);
+    // 2. Create a single new update document containing ALL changed sites.
+    const newUpdateRef = doc(collection(db, PENDING_UPDATES_COLLECTION));
+    const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
+      fileNo,
+      updatedSiteDetails: updatedSites, // Store all site changes in one document
+      submittedByUid: currentUser.uid,
+      submittedByName: currentUser.name,
+      status: 'pending',
+    };
+    batch.set(newUpdateRef, {
+      ...newUpdate,
+      submittedAt: serverTimestamp(),
+    });
 
-      for (const docSnap of existingUpdatesSnapshot.docs) {
-        const updateData = docSnap.data() as PendingUpdate;
-        // Check if the existing update is for the exact same site we are now updating.
-        const isForSameSite = updateData.updatedSiteDetails.some(s => s.nameOfSite === siteName);
-
-        if (isForSameSite) {
-          // 2. If it's for the same site, delete it. This cleans up both old 'rejected' and prevents duplicate 'pending' states.
-          batch.delete(docSnap.ref);
-        }
-      }
-      
-      // 3. Create a new 'pending' update document for the current submission.
-      const newUpdateRef = doc(collection(db, PENDING_UPDATES_COLLECTION));
-      const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
-        fileNo,
-        updatedSiteDetails: [siteToUpdate], // Create one update per site change
-        submittedByUid: currentUser.uid,
-        submittedByName: currentUser.name,
-        status: 'pending',
-      };
-      batch.set(newUpdateRef, {
-        ...newUpdate,
-        submittedAt: serverTimestamp(),
-      });
-    }
-
-    // Commit all the batched writes (deletions and the new creation).
+    // 3. Commit all batched writes.
     await batch.commit();
 
   }, []);
