@@ -467,6 +467,9 @@ export default function ArsPage() {
     );
   }
 
+  const startEntryNum = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, filteredSites.length);
+
   return (
     <div className="space-y-6">
       <TooltipProvider>
@@ -594,7 +597,10 @@ export default function ArsPage() {
                     </Table>
                 </div>
                 {totalPages > 1 && (
-                    <div className="p-4 border-t flex items-center justify-center">
+                    <div className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p className="text-sm text-muted-foreground">
+                            Showing <strong>{filteredSites.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{filteredSites.length}</strong> sites.
+                        </p>
                         <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                     </div>
                 )}
