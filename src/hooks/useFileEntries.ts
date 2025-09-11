@@ -70,11 +70,8 @@ export function useFileEntries() {
     
     const fileEntriesRef = collection(db, FILE_ENTRIES_COLLECTION);
     let q;
-    const supervisorOngoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
 
     if (user.role === 'supervisor') {
-      // For supervisors, we still fetch all files they are assigned to.
-      // The filtering by 'ongoing' status will happen in the components.
       q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', user.uid));
     } else {
       q = query(fileEntriesRef);
@@ -90,35 +87,14 @@ export function useFileEntries() {
         } as DataEntryFormData;
       });
 
-      if (user.role === 'supervisor') {
-        getPendingUpdatesForFile(null, user.uid).then(pendingUpdates => {
-            const pendingSiteKeys = new Set(pendingUpdates.map(p => `${p.fileNo}-${p.updatedSiteDetails[0].nameOfSite}`));
-            
-            const entriesWithPendingStatus = entriesData.map(entry => {
-                if (entry.siteDetails) {
-                    entry.siteDetails = entry.siteDetails.map(site => {
-                        const isPending = pendingSiteKeys.has(`${entry.fileNo}-${site.nameOfSite}`);
-                        return { ...site, isPending };
-                    });
-                }
-                return entry;
-            });
-
-            cachedFileEntries = entriesWithPendingStatus;
-            setFileEntries(entriesWithPendingStatus);
-            setIsLoading(false);
-            isCacheInitialized = true;
-        }).catch(error => {
-             console.error("Error fetching pending updates for supervisor view:", error);
-             toast({ title: "Error", description: "Could not sync pending updates.", variant: "destructive" });
-             setIsLoading(false);
-        });
-      } else {
-        cachedFileEntries = entriesData;
-        setFileEntries(entriesData);
-        setIsLoading(false);
-        isCacheInitialized = true;
-      }
+      // Simplified logic: Just set the entries.
+      // The logic for checking pending status will be handled more efficiently
+      // in the specific component where it's needed (DataEntryForm).
+      cachedFileEntries = entriesData;
+      setFileEntries(entriesData);
+      setIsLoading(false);
+      isCacheInitialized = true;
+      
     }, (error) => {
       console.error("Error fetching file entries:", error);
       toast({
@@ -130,7 +106,7 @@ export function useFileEntries() {
     });
 
     return () => unsubscribe();
-  }, [user, toast, getPendingUpdatesForFile]);
+  }, [user, toast]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null) => {
     if (!user) throw new Error("User must be logged in to add an entry.");
