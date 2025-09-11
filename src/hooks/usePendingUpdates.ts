@@ -97,49 +97,50 @@ export function usePendingUpdates(): PendingUpdatesState {
       throw new Error("Invalid user profile for submitting an update.");
     }
 
-    const siteNamesBeingUpdated = new Set(updatedSites.map(s => s.nameOfSite));
-    const existingUpdates = await getPendingUpdatesForFile(fileNo, currentUser.uid);
-
     const batch = writeBatch(db);
 
-    for (const update of existingUpdates) {
-        // If an update for one of the currently edited sites exists and is 'rejected', delete it.
-        if (update.status === 'rejected') {
-            for (const site of update.updatedSiteDetails) {
-                if (siteNamesBeingUpdated.has(site.nameOfSite)) {
-                    const docToDeleteRef = doc(db, PENDING_UPDATES_COLLECTION, update.id);
-                    batch.delete(docToDeleteRef);
-                    // Stop checking this update if we've decided to delete it
-                    break; 
-                }
-            }
+    // This process handles one site update at a time, as per the UI flow.
+    for (const siteToUpdate of updatedSites) {
+      const siteName = siteToUpdate.nameOfSite;
+
+      // 1. Find all existing updates (pending or rejected) for this specific site and user.
+      const existingUpdatesQuery = query(
+        collection(db, PENDING_UPDATES_COLLECTION),
+        where('fileNo', '==', fileNo),
+        where('submittedByUid', '==', currentUser.uid),
+      );
+      const existingUpdatesSnapshot = await getDocs(existingUpdatesQuery);
+
+      for (const docSnap of existingUpdatesSnapshot.docs) {
+        const updateData = docSnap.data() as PendingUpdate;
+        // Check if the existing update is for the exact same site we are now updating.
+        const isForSameSite = updateData.updatedSiteDetails.some(s => s.nameOfSite === siteName);
+
+        if (isForSameSite) {
+          // 2. If it's for the same site, delete it. This cleans up both old 'rejected' and prevents duplicate 'pending' states.
+          batch.delete(docSnap.ref);
         }
-        // Prevent submission if a 'pending' update for the same site exists.
-        else if (update.status === 'pending') {
-            for (const site of update.updatedSiteDetails) {
-                if (siteNamesBeingUpdated.has(site.nameOfSite)) {
-                    throw new Error(`An update for site "${site.nameOfSite}" is already pending approval. Please wait for the admin to review it.`);
-                }
-            }
-        }
+      }
+      
+      // 3. Create a new 'pending' update document for the current submission.
+      const newUpdateRef = doc(collection(db, PENDING_UPDATES_COLLECTION));
+      const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
+        fileNo,
+        updatedSiteDetails: [siteToUpdate], // Create one update per site change
+        submittedByUid: currentUser.uid,
+        submittedByName: currentUser.name,
+        status: 'pending',
+      };
+      batch.set(newUpdateRef, {
+        ...newUpdate,
+        submittedAt: serverTimestamp(),
+      });
     }
 
-    const newUpdateRef = doc(collection(db, PENDING_UPDATES_COLLECTION));
-    const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
-      fileNo,
-      updatedSiteDetails: updatedSites,
-      submittedByUid: currentUser.uid,
-      submittedByName: currentUser.name,
-      status: 'pending',
-    };
-    batch.set(newUpdateRef, {
-      ...newUpdate,
-      submittedAt: serverTimestamp(),
-    });
-
+    // Commit all the batched writes (deletions and the new creation).
     await batch.commit();
 
-  }, [getPendingUpdatesForFile]);
+  }, []);
 
   const createArsPendingUpdate = useCallback(async (
     arsId: string,
