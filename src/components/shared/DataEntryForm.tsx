@@ -302,28 +302,19 @@ export default function DataEntryFormComponent({
               description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
           });
       } else if (userRole === 'supervisor' && fileNoToEdit) {
-          const sitesWithChanges = (data.siteDetails || []).filter(currentSite => {
+          const sitesWithChanges = (data.siteDetails || [])
+            .filter(currentSite => {
               if (currentSite.supervisorUid !== user.uid) return false;
-      
-              const originalSite = initialData.siteDetails?.find(
-                  s => s.nameOfSite === currentSite.nameOfSite
-              );
-      
+              const originalSite = initialData.siteDetails?.find(s => s.nameOfSite === currentSite.nameOfSite);
               if (!originalSite) return false;
-              
-              // Normalize data before comparison
               const normalize = (obj: any) => JSON.parse(JSON.stringify(obj, (key, value) => {
-                  if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
-                      return undefined;
-                  }
+                  if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) return undefined;
                   return value;
               }));
-      
               return JSON.stringify(normalize(currentSite)) !== JSON.stringify(normalize(originalSite));
-          });
+            });
 
-
-          if (!sitesWithChanges || sitesWithChanges.length === 0) {
+          if (sitesWithChanges.length === 0) {
               toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned site details." });
               setIsSubmitting(false);
               return;
