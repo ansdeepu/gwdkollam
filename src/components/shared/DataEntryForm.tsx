@@ -335,15 +335,14 @@ export default function DataEntryFormComponent({
               const originalSite = initialData.siteDetails?.find(s => s.nameOfSite === currentSite.nameOfSite);
               if (!originalSite) return false;
 
-              // Compare only the fields a supervisor can edit
               for (const key of supervisorEditableFields) {
                   const currentValue = currentSite[key] ?? "";
                   const originalValue = originalSite[key] ?? "";
                   if (String(currentValue) !== String(originalValue)) {
-                      return true; // Found a change
+                      return true;
                   }
               }
-              return false; // No changes found in editable fields
+              return false;
             });
 
           const fileStatusChanged = data.fileStatus !== initialData.fileStatus;
@@ -355,13 +354,11 @@ export default function DataEntryFormComponent({
               return;
           }
 
-          // We pass all site details the supervisor can see, plus the main file data.
-          // The backend logic in createPendingUpdate will handle creating the update record.
-          await createPendingUpdate(fileNoToEdit, data.siteDetails || [], user, {
-            fileStatus: data.fileStatus,
-            remarks: data.remarks
+          await createPendingUpdate(fileNoToEdit, sitesWithChanges, user, {
+            fileStatus: fileStatusChanged ? data.fileStatus : undefined,
+            remarks: remarksChanged ? data.remarks : undefined,
           });
-
+          
           toast({
               title: "Update Submitted",
               description: `Your changes for file '${fileNoToEdit}' have been submitted for admin approval.`,
@@ -697,6 +694,7 @@ export default function DataEntryFormComponent({
                                                           {...field}
                                                           value={field.value ?? ""}
                                                           readOnly={isFieldReadOnly('dateOfCompletion')}
+                                                          onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
                                                         />
                                                       </FormControl>
                                                       <FormMessage/>
