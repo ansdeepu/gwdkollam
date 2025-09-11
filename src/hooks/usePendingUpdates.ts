@@ -1,4 +1,3 @@
-
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -40,7 +39,7 @@ const convertTimestampToDate = (data: DocumentData): PendingUpdate => {
 interface PendingUpdatesState {
   createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
   createArsPendingUpdate: (arsId: string, updatedArsEntry: ArsEntryFormData, currentUser: UserProfile) => Promise<void>;
-  rejectUpdate: (updateId: string) => Promise<void>;
+  rejectUpdate: (updateId: string, reason?: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
   hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
   getPendingUpdatesForFile: (fileNo: string | null, submittedByUid?: string) => Promise<PendingUpdate[]>;
@@ -156,7 +155,7 @@ export function usePendingUpdates(): PendingUpdatesState {
     return null;
   }, []);
 
-  const rejectUpdate = useCallback(async (updateId: string) => {
+  const rejectUpdate = useCallback(async (updateId: string, reason?: string) => {
     if (!user || user.role !== 'editor') {
       throw new Error("You do not have permission to reject updates.");
     }
@@ -165,6 +164,7 @@ export function usePendingUpdates(): PendingUpdatesState {
       status: 'rejected',
       reviewedByUid: user.uid,
       reviewedAt: serverTimestamp(),
+      notes: reason || "Rejected by administrator without a specific reason.",
     });
   }, [user]);
 

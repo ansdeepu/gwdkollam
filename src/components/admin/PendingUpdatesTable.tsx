@@ -1,4 +1,3 @@
-
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
@@ -31,6 +30,8 @@ import {
 } from "@/components/ui/tooltip";
 import type { SiteDetailFormData, ArsEntryFormData } from '@/lib/schemas';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
@@ -68,6 +69,7 @@ export default function PendingUpdatesTable() {
   const [isLoading, setIsLoading] = useState(true);
   const [updateToReject, setUpdateToReject] = useState<string | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
   
   const [changesToView, setChangesToView] = useState<{ title: string; changes: { field: string; oldValue: string; newValue: string }[] } | null>(null);
 
@@ -87,7 +89,7 @@ export default function PendingUpdatesTable() {
 
     setIsRejecting(true);
     try {
-      await rejectUpdate(updateToReject);
+      await rejectUpdate(updateToReject, rejectionReason);
       toast({
         title: "Update Rejected",
         description: "The supervisor's changes have been rejected and they have been notified.",
@@ -104,6 +106,7 @@ export default function PendingUpdatesTable() {
     } finally {
       setIsRejecting(false);
       setUpdateToReject(null);
+      setRejectionReason("");
     }
   };
 
@@ -211,7 +214,7 @@ export default function PendingUpdatesTable() {
                   <TableCell className="text-center space-x-2">
                     {isUnassigned ? (
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/dashboard/data-entry?fileNo=${update.fileNo}`}>
+                        <Link href={`/dashboard/data-entry?id=${fileEntries.find(f => f.fileNo === update.fileNo)?.id}`}>
                           <UserPlus className="mr-2 h-4 w-4" /> Re-assign
                         </Link>
                       </Button>
@@ -251,9 +254,19 @@ export default function PendingUpdatesTable() {
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure you want to reject this update?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    This action will mark the update as rejected. The supervisor will be able to edit and resubmit their changes. This cannot be undone.
+                    This action will mark the update as rejected. The supervisor will be able to edit and resubmit their changes. Please provide a reason for the rejection below.
                 </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="py-2">
+                <Label htmlFor="rejection-reason" className="text-left">Reason for Rejection (Optional)</Label>
+                <Textarea
+                    id="rejection-reason"
+                    placeholder="e.g., Incorrect work status selected."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    className="mt-2"
+                />
+            </div>
             <AlertDialogFooter>
                 <AlertDialogCancel disabled={isRejecting}>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={handleReject} disabled={isRejecting} className="bg-destructive hover:bg-destructive/90">
