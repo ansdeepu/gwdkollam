@@ -22,8 +22,11 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import type { ArsEntryFormData } from "@/lib/schemas";
+import { arsTypeOfSchemeOptions } from "@/lib/schemas";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import { useRouter } from "next/navigation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 export const dynamic = 'force-dynamic';
 
@@ -81,6 +84,7 @@ export default function ArsPage() {
 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [schemeTypeFilter, setSchemeTypeFilter] = useState<string>('all');
 
   const [isUploading, setIsUploading] = useState(false);
   
@@ -117,6 +121,10 @@ export default function ArsPage() {
       );
     }
     
+    if (schemeTypeFilter !== 'all') {
+      sites = sites.filter(site => site.arsTypeOfScheme === schemeTypeFilter);
+    }
+
     if (startDate || endDate) {
       const sDate = startDate ? startOfDay(parse(startDate, 'yyyy-MM-dd', new Date())) : null;
       const eDate = endDate ? endOfDay(parse(endDate, 'yyyy-MM-dd', new Date())) : null;
@@ -168,11 +176,11 @@ export default function ArsPage() {
     });
 
     return sites;
-  }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor]);
+  }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, startDate, endDate]);
+  }, [searchTerm, startDate, endDate, schemeTypeFilter]);
 
   const paginatedSites = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -499,8 +507,19 @@ export default function ArsPage() {
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-[240px]"
                 />
-              <Button onClick={() => {setStartDate(""); setEndDate("");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
-              <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date</p>
+                 <Select value={schemeTypeFilter} onValueChange={setSchemeTypeFilter}>
+                    <SelectTrigger className="w-[240px]">
+                        <SelectValue placeholder="Filter by Type of Scheme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Scheme Types</SelectItem>
+                        {arsTypeOfSchemeOptions.map((scheme) => (
+                        <SelectItem key={scheme} value={scheme}>{scheme}</SelectItem>
+                        ))}
+                    </SelectContent>
+                 </Select>
+              <Button onClick={() => {setStartDate(""); setEndDate(""); setSchemeTypeFilter("all");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Filters</Button>
+              <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date and/or scheme type</p>
             </div>
         </CardContent>
        </Card>
@@ -567,7 +586,7 @@ export default function ArsPage() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={8} className="h-24 text-center">
-                                        No ARS sites found {searchTerm || startDate || endDate ? "matching your search criteria" : ""}.
+                                        No ARS sites found {searchTerm || startDate || endDate || schemeTypeFilter !== 'all' ? "matching your search criteria" : ""}.
                                     </TableCell>
                                 </TableRow>
                             )}
