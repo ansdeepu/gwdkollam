@@ -4,78 +4,93 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-
+    // Helper functions to check user roles from their custom claims.
+    // This assumes you set a 'role' custom claim on your Firebase Auth users.
     function isEditor() {
-      return isAuthenticated() && getUserRole() == 'editor';
+      return request.auth.token.role == 'editor';
     }
 
     function isSupervisor() {
-      return isAuthenticated() && getUserRole() == 'supervisor';
+      return request.auth.token.role == 'supervisor';
     }
 
     function isViewer() {
-      return isAuthenticated() && getUserRole() == 'viewer';
+      return request.auth.token.role == 'viewer';
     }
 
-    // Users Collection Rules
-    match /users/{userId} {
-      allow list: if isAuthenticated();
-      allow get: if isAuthenticated() && (request.auth.uid == userId || isEditor() || isViewer());
-      allow create: if isEditor();
-      allow update: if (isEditor() || request.auth.uid == userId);
-      allow delete: if isEditor() && request.auth.uid != userId; // Prevent self-delete
+    // Any authenticated user can read their own user document.
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    // Generic Rules for most data collections
+    // Read access is granted to any authenticated and approved user.
     function canReadCollection() {
-      return isEditor() || isViewer();
+      return request.auth != null && request.auth.token.isApproved == true;
     }
-    
+
+    // Write access is restricted to Editors only.
     function canWriteCollection() {
       return isEditor();
     }
-    
-    // --- Data Collections ---
 
-    // fileEntries requires special read logic for supervisors
-    match /fileEntries/{docId} {
-      allow get, list: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Allow read access for owners or any approved user (for user lists).
+      allow read: if canReadCollection();
+      // Allow users to create their own profile document.
+      allow create: if request.auth != null;
+      // Allow owners to update their own profile, and editors to update any.
+      allow update: if canWriteCollection() || isOwner(userId);
+      // Only editors can delete users.
+      allow delete: if canWriteCollection();
+    }
+
+    // Rules for the 'fileEntries' collection
+    match /fileEntries/{fileId} {
+      // Editors/Viewers can read all. Supervisors can only read files they are assigned to.
+      allow get, list: if (canReadCollection() && (isEditor() || isViewer())) || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
+      // Only editors can create, update, or delete file entries directly.
+      allow create, update, delete: if canWriteCollection();
+    }
+    
+    // Rules for the 'pendingUpdates' collection
+    match /pendingUpdates/{updateId} {
+      // Supervisors and Editors can create pending updates.
+      allow create: if isSupervisor() || isEditor();
+      // Only Editors can read, update (approve/reject), or delete pending updates.
+      allow read, update, delete: if isEditor();
+    }
+    
+    // Rules for the 'arsEntries' collection
+    match /arsEntries/{entryId} {
+      // Any approved user can read ARS entries.
+      allow read: if canReadCollection();
+      // Only editors can create, update, or delete ARS entries.
       allow create, update, delete: if canWriteCollection();
     }
 
-    // arsEntries requires special read logic for supervisors
-    match /arsEntries/{docId} {
-        allow get, list: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
+    // Rules for the 'agencyApplications' (Rig Registration) collection
+    match /agencyApplications/{appId} {
+      // Any approved user can read rig registrations.
+      allow read: if canReadCollection();
+      // Only editors can create, update, or delete rig registrations.
+      allow create, update, delete: if canWriteCollection();
+    }
+
+    // Rules for the 'staffMembers' collection
+    match /staffMembers/{staffId} {
+      // Any approved user can read staff member details.
+      allow read: if canReadCollection();
+      // Only editors can create, update, or delete staff members.
+      allow create, update, delete: if canWriteCollection();
+    }
+    
+    // Rules for the 'gwdRates' collection
+    match /gwdRates/{rateId} {
+        // Any approved user can read GWD rates.
+        allow read: if canReadCollection();
+        // Only editors can create, update, or delete rates.
         allow create, update, delete: if canWriteCollection();
-    }
-    
-    // agencyApplications, gwdRates, and staffMembers are read-only for supervisors
-    match /agencyApplications/{docId} {
-        allow read: if canReadCollection() || isSupervisor();
-        allow write: if canWriteCollection();
-    }
-
-    match /gwdRates/{docId} {
-        allow read: if canReadCollection() || isSupervisor();
-        allow write: if canWriteCollection();
-    }
-    
-    match /staffMembers/{docId} {
-        allow read: if canReadCollection() || isSupervisor();
-        allow write: if canWriteCollection();
-    }
-
-    // pendingUpdates are only accessible by editors
-    match /pendingUpdates/{docId} {
-        allow read, write: if isEditor();
     }
   }
 }
