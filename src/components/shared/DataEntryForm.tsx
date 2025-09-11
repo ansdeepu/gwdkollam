@@ -302,16 +302,24 @@ export default function DataEntryFormComponent({
               description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
           });
       } else if (userRole === 'supervisor' && fileNoToEdit) {
+          const supervisorEditableFields: (keyof SiteDetailFormData)[] = ['latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'];
+          
           const sitesWithChanges = (data.siteDetails || [])
             .filter(currentSite => {
               if (currentSite.supervisorUid !== user.uid) return false;
+              
               const originalSite = initialData.siteDetails?.find(s => s.nameOfSite === currentSite.nameOfSite);
               if (!originalSite) return false;
-              const normalize = (obj: any) => JSON.parse(JSON.stringify(obj, (key, value) => {
-                  if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) return undefined;
-                  return value;
-              }));
-              return JSON.stringify(normalize(currentSite)) !== JSON.stringify(normalize(originalSite));
+
+              // Compare only the fields a supervisor can edit
+              for (const key of supervisorEditableFields) {
+                  const currentValue = currentSite[key] ?? "";
+                  const originalValue = originalSite[key] ?? "";
+                  if (String(currentValue) !== String(originalValue)) {
+                      return true; // Found a change
+                  }
+              }
+              return false; // No changes found in editable fields
             });
 
           if (sitesWithChanges.length === 0) {
@@ -786,3 +794,5 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    
