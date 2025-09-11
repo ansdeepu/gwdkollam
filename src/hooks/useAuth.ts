@@ -140,12 +140,22 @@ export function useAuth() {
         if (userProfile && userProfile.isApproved) {
             setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
         } else {
+             if (auth.currentUser) {
+                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); }
+            }
             setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
             
             if (userProfile && !userProfile.isApproved) {
                 toast({
                     title: "Account Pending Approval",
                     description: "Your account is not yet approved by an administrator. Please contact 8547650853 for activation.",
+                    variant: "destructive",
+                    duration: 8000
+                });
+            } else if (!userProfile) {
+                toast({
+                    title: "User Profile Not Found",
+                    description: "Your user account exists but its profile data could not be found. Please contact an administrator.",
                     variant: "destructive",
                     duration: 8000
                 });
