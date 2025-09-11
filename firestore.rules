@@ -4,11 +4,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper functions to check user roles from custom claims
     function isEditor() {
       return request.auth.token.role == 'editor';
     }
-
+    
     function isSupervisor() {
       return request.auth.token.role == 'supervisor';
     }
@@ -17,48 +16,43 @@ service cloud.firestore {
       return request.auth.token.role == 'viewer';
     }
 
-    // --- Collections Rules ---
-
-    // USERS: Users can read their own profile. Editors can read/write any profile.
+    function canReadCollection() {
+      return isEditor() || isViewer();
+    }
+    
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isEditor();
+      allow read: if request.auth.uid == userId || canReadCollection();
       allow write: if isEditor();
     }
 
-    // PENDING UPDATES: Supervisors can create updates, but only Editors can manage them.
+    match /fileEntries/{docId} {
+      allow get, list: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
+      allow create, update, delete: if isEditor();
+    }
+
+    match /staffMembers/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isEditor();
+    }
+    
+    match /agencyApplications/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isEditor();
+    }
+
+    match /arsEntries/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isEditor();
+    }
+    
+    match /gwdRates/{docId} {
+        allow read: if request.auth != null;
+        allow write: if isEditor();
+    }
+
     match /pendingUpdates/{docId} {
       allow create: if isSupervisor() || isEditor();
       allow read, update, delete: if isEditor();
-    }
-
-    // FILE ENTRIES: Editors/Viewers can see all. Supervisors can only see files they are assigned to.
-    match /fileEntries/{docId} {
-      allow get, list: if isEditor() || isViewer() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
-      allow create, update, delete: if isEditor();
-    }
-
-    // AGENCY APPLICATIONS: All approved roles can read. Only editors can write.
-    match /agencyApplications/{docId} {
-      allow read: if isEditor() || isViewer() || isSupervisor();
-      allow create, update, delete: if isEditor();
-    }
-
-    // ARS ENTRIES: Editors/Viewers can see all. Supervisors can see their assigned entries.
-    match /arsEntries/{docId} {
-      allow read: if isEditor() || isViewer() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
-      allow create, update, delete: if isEditor();
-    }
-    
-    // STAFF MEMBERS: All approved roles can read. Only editors can write.
-    match /staffMembers/{docId} {
-      allow read: if isEditor() || isViewer() || isSupervisor();
-      allow create, update, delete: if isEditor();
-    }
-
-    // GWD RATES: All approved roles can read. Only editors can write.
-    match /gwdRates/{docId} {
-        allow read: if isEditor() || isViewer() || isSupervisor();
-        allow write: if isEditor();
     }
   }
 }
