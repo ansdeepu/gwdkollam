@@ -303,15 +303,20 @@ export default function DataEntryFormComponent({
           });
       } else if (userRole === 'supervisor' && fileNoToEdit) {
           const sitesWithChanges = data.siteDetails?.filter(currentSite => {
-              if (initialData.siteDetails?.find(s => s.supervisorUid === user.uid && s.nameOfSite === currentSite.nameOfSite)) {
-                const originalSite = initialData.siteDetails.find(s => s.nameOfSite === currentSite.nameOfSite);
-                if (!originalSite) return true; // New site, should be included (though supervisors can't add sites)
-                const stringifiedOriginal = JSON.stringify(originalSite, (key, value) => (value === null ? undefined : value));
-                const stringifiedCurrent = JSON.stringify(currentSite, (key, value) => (value === null ? undefined : value));
-                return stringifiedCurrent !== stringifiedOriginal;
-              }
-              return false;
+              if (currentSite.supervisorUid !== user.uid) return false;
+
+              const originalSite = initialData.siteDetails?.find(
+                  s => s.nameOfSite === currentSite.nameOfSite
+              );
+              
+              if (!originalSite) return false;
+              
+              const stringifiedOriginal = JSON.stringify(originalSite, (key, value) => (value === null ? undefined : value));
+              const stringifiedCurrent = JSON.stringify(currentSite, (key, value) => (value === null ? undefined : value));
+              
+              return stringifiedCurrent !== stringifiedOriginal;
           });
+
 
           if (!sitesWithChanges || sitesWithChanges.length === 0) {
               toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned site details." });
@@ -785,5 +790,3 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
-
-    
