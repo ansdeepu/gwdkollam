@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -10,7 +9,8 @@ service cloud.firestore {
     }
 
     function isApproved() {
-      // isApproved is a field in the user's document in the /users collection.
+      // isApproved is a custom claim or a field in the user's profile
+      // For this app, we check the user's document in the /users collection.
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true;
     }
 
@@ -42,16 +42,14 @@ service cloud.firestore {
     // Editors/Viewers can see all profiles.
     // An authenticated user can read their own profile.
     match /users/{userId} {
-      allow read: if canReadCollection() || request.auth.uid == userId;
+      allow read: if canReadCollection() || (isSignedIn() && request.auth.uid == userId);
       allow write: if isEditor();
     }
 
     // === Main File Entries (Deposit Works) ===
     // Read: Editors/Viewers can read all. Supervisors can only read files they are assigned to.
-    // The `list` operation for supervisors is intentionally broad here because Firestore rules
-    // cannot filter a collection list based on document content. The actual security is
-    // enforced by the queries within the application code (e.g., using a `where` clause),
-    // which Firestore will allow if the rule passes. The `get` rule secures direct document access.
+    // list is required for supervisors to query for their assigned files using `array-contains`.
+    // The query itself provides the security.
     match /fileEntries/{docId} {
       allow get: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
       allow list: if canReadCollection() || isSupervisor();
@@ -60,7 +58,8 @@ service cloud.firestore {
 
     // === ARS Entries ===
     // Read: Editors/Viewers can read all. Supervisors can only read entries they are assigned to.
-    // Similar to fileEntries, the `list` rule is broad, and security relies on secure client-side queries.
+    // list is required for supervisors to query for their assigned files using `==` on supervisorUid.
+    // The query itself provides the security.
     match /arsEntries/{docId} {
       allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
       allow list: if canReadCollection() || isSupervisor();
