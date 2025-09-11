@@ -76,6 +76,8 @@ export function useAuth() {
         setAuthState({ isAuthenticated: false, isLoading: false, user: null, firebaseUser: null });
         return;
       }
+      
+      setAuthState(prevState => ({ ...prevState, isLoading: true }));
 
       try {
         const userDocRef = doc(db, "users", firebaseUser.uid);
