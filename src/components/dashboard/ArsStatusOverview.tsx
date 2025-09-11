@@ -1,7 +1,7 @@
 // src/components/dashboard/ArsStatusOverview.tsx
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils";
 import { Waves, XCircle, CalendarIcon } from "lucide-react";
 import { format, startOfDay, endOfDay, isValid, isWithinInterval, parse, parseISO } from 'date-fns';
 import { useArsEntries, type ArsEntry } from '@/hooks/useArsEntries';
-import { arsWorkStatusOptions } from '@/lib/schemas';
+import { arsWorkStatusOptions, arsTypeOfSchemeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ArsStatusOverviewProps {
   onOpenDialog: (data: any[], title: string, columns: any[], type: 'detail') => void;
@@ -20,17 +21,23 @@ interface ArsStatusOverviewProps {
 
 export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: ArsStatusOverviewProps) {
   const { arsEntries, isLoading } = useArsEntries();
+  const [schemeTypeFilter, setSchemeTypeFilter] = useState<string>('all');
 
   const arsDashboardData = useMemo(() => {
     const sDate = dates.start ? startOfDay(dates.start) : null;
     const eDate = dates.end ? endOfDay(dates.end) : null;
   
     let filteredSites = arsEntries;
+
+    // Filter by Scheme Type first
+    if (schemeTypeFilter !== 'all') {
+      filteredSites = filteredSites.filter(site => site.arsTypeOfScheme === schemeTypeFilter);
+    }
   
+    // Then filter by date
     if (sDate || eDate) {
         filteredSites = filteredSites.filter(site => {
             if (!site.dateOfCompletion) return false;
-            // The date might be an ISO string from Firestore processing
             const completionDate = site.dateOfCompletion ? parseISO(site.dateOfCompletion as unknown as string) : null;
             if (!completionDate || !isValid(completionDate)) return false;
 
@@ -68,7 +75,7 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
       arsStatusCountsData,
       allArsSites: filteredSites,
     };
-  }, [arsEntries, dates]);
+  }, [arsEntries, dates, schemeTypeFilter]);
 
   const handleWorkStatusCellClick = (data: ArsEntry[], title: string) => {
     const dialogData = data.map((site, index) => ({
@@ -93,6 +100,17 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
+            <Select value={schemeTypeFilter} onValueChange={setSchemeTypeFilter}>
+              <SelectTrigger className="w-[240px]">
+                <SelectValue placeholder="Filter by Type of Scheme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Scheme Types</SelectItem>
+                {arsTypeOfSchemeOptions.map((scheme) => (
+                  <SelectItem key={scheme} value={scheme}>{scheme}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Input
                 type="date"
                 className="w-[240px]"
@@ -105,8 +123,8 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
                 value={dates.end ? format(dates.end, 'yyyy-MM-dd') : ''}
                 onChange={(e) => onSetDates({ ...dates, end: e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined })}
             />
-          <Button onClick={() => onSetDates({ start: undefined, end: undefined })} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4" />Clear Dates</Button>
-          <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date</p>
+          <Button onClick={() => { onSetDates({ start: undefined, end: undefined }); setSchemeTypeFilter('all'); }} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4" />Clear Filters</Button>
+          <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by scheme and/or completion date</p>
         </div>
       </CardHeader>
       <CardContent>
@@ -138,7 +156,7 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
                 </TableBody>
               </Table>
             ) : (
-              <div className="h-full flex items-center justify-center p-10 text-center border-dashed border-2 rounded-lg"><p className="text-muted-foreground">No ARS sites found {dates.start || dates.end ? "for the selected date range" : ""}.</p></div>
+              <div className="h-full flex items-center justify-center p-10 text-center border-dashed border-2 rounded-lg"><p className="text-muted-foreground">No ARS sites found {dates.start || dates.end || schemeTypeFilter !== 'all' ? "for the selected filters" : ""}.</p></div>
             )}
           </div>
         </div>
