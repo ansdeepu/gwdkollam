@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -39,10 +40,10 @@ service cloud.firestore {
     }
 
     // === User Profiles ===
-    // Editors can see all profiles.
+    // Editors/Viewers can see all profiles.
     // An authenticated user can read their own profile.
     match /users/{userId} {
-      allow read: if (isEditor() || request.auth.uid == userId);
+      allow read: if canReadCollection() || (isSignedIn() && request.auth.uid == userId);
       allow write: if isEditor();
     }
 
@@ -50,7 +51,8 @@ service cloud.firestore {
     // Read: Editors/Viewers can read all. Supervisors can only read files they are assigned to.
     // Write: Only Editors can write.
     match /fileEntries/{docId} {
-      allow get, list: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
+      allow list: if canReadCollection();
+      allow get: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
       allow create, update, delete: if canWriteCollection();
     }
 
@@ -58,7 +60,8 @@ service cloud.firestore {
     // Read: Editors/Viewers can read all. Supervisors can only read entries they are assigned to.
     // Write: Only Editors can write.
     match /arsEntries/{docId} {
-      allow get, list: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
+      allow list: if canReadCollection();
+      allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
       allow create, update, delete: if canWriteCollection();
     }
     
