@@ -214,7 +214,7 @@ const nativeDateSchema = z.preprocess(
   (val) => (val === "" ? undefined : val), // Treat empty string as undefined
   z.string()
     .optional()
-    .refine((val) => !val || !isNaN(Date.parse(val)), { message: "Invalid date" }) // Basic validation for date string
+    .refine((val) => !val || !isNaN(Date.parse(val)) || val === '', { message: "Invalid date" }) // Allow empty string
 );
 
 
@@ -263,7 +263,7 @@ export const SiteDetailSchema = z.object({
   waterTankCapacity: z.string().optional().nullable(),
   noOfTapConnections: optionalNumber("Tap Connections must be a valid number."),
   noOfBeneficiary: z.string().optional().nullable(),
-  dateOfCompletion: nativeDateSchema,
+  dateOfCompletion: nativeDateSchema.optional().nullable(),
   typeOfRig: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteTypeOfRigOptions).optional()),
   contractorName: z.string().optional(),
   supervisorUid: z.string().optional().nullable(),

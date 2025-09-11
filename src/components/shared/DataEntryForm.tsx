@@ -370,9 +370,8 @@ export default function DataEntryFormComponent({
 
   const isFieldReadOnly = (fieldName: keyof SiteDetailFormData): boolean => {
     if (isReadOnly) return true;
-    if (isEditor) return false; // Editors can edit everything
+    if (isEditor) return false;
     if (isSupervisor) {
-      // Supervisors can only edit specific fields
       const supervisorEditableFields: (keyof SiteDetailFormData)[] = [
         'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'
       ];
@@ -678,7 +677,6 @@ export default function DataEntryFormComponent({
                                                         <Input
                                                           type="date"
                                                           {...field}
-                                                          onChange={(e) => field.onChange(e.target.value === "" ? undefined : e.target.value)}
                                                           value={field.value ?? ""}
                                                           readOnly={isFieldReadOnly('dateOfCompletion')}
                                                         />
