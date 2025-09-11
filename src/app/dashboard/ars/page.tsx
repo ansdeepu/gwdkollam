@@ -491,24 +491,24 @@ export default function ArsPage() {
                   </> )}
                 </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
+            <div className="flex flex-wrap items-center gap-4 pt-4 border-t mt-4">
               <div className="font-medium text-sm pr-4">Total Sites: {arsEntries.length}</div>
                 <Input
                     type="date"
-                    placeholder="From Date"
+                    placeholder="dd-mm-yyyy"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-[240px]"
+                    className="w-auto"
                 />
                 <Input
                     type="date"
-                    placeholder="To Date"
+                    placeholder="dd-mm-yyyy"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-[240px]"
+                    className="w-auto"
                 />
                  <Select value={schemeTypeFilter} onValueChange={setSchemeTypeFilter}>
-                    <SelectTrigger className="w-[240px]">
+                    <SelectTrigger className="w-auto min-w-[200px]">
                         <SelectValue placeholder="Filter by Type of Scheme" />
                     </SelectTrigger>
                     <SelectContent>
@@ -526,7 +526,7 @@ export default function ArsPage() {
       
         <Card className="shadow-lg">
             <CardContent className="p-0">
-                 {totalPages > 1 && (
+                {totalPages > 1 && (
                     <div className="p-4 border-b flex items-center justify-center">
                         <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                     </div>
