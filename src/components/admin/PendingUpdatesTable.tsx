@@ -29,7 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { SiteDetailFormData, ArsEntryFormData } from '@/lib/schemas';
-import { ScrollArea } from '../ui/scroll-area';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
