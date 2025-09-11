@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 50;
 
 const formatDateSafe = (dateInput: any): string => {
   if (!dateInput) return 'N/A';
@@ -574,6 +574,11 @@ export default function ArsPage() {
                         </TableBody>
                     </Table>
                 </div>
+                {totalPages > 1 && (
+                    <div className="p-4 border-t flex items-center justify-center">
+                        <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
             </CardContent>
         </Card>
       </TooltipProvider>

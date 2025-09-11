@@ -51,7 +51,7 @@ import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
 
 function renderDetail(label: string, value: any) {

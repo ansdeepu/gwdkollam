@@ -341,35 +341,8 @@ const RigAccordionItem = ({
                <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-            </div>
-          </div>
-          
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Supporting Vehicle Details</p>
-            <div className="grid md:grid-cols-4 gap-4">
-               <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.supportingVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-              <p className="font-medium text-base text-primary">Compressor Details</p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-              </div>
-            </div>
-            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-              <p className="font-medium text-base text-primary">Generator Details</p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+               <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormMessage>
+                </FormItem>
               </div>
             </div>
           </div>
@@ -403,7 +376,7 @@ export default function AgencyRegistrationPage() {
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 50;
 
   const isEditor = user?.role === 'editor';
   const isReadOnly = isViewing || user?.role === 'supervisor' || user?.role === 'viewer';
@@ -1054,6 +1027,11 @@ export default function AgencyRegistrationPage() {
                     searchTerm={searchTerm}
                     canEdit={canEdit}
                 />
+                 {totalCompletedPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalCompletedPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
             </TabsContent>
             <TabsContent value="pending" className="mt-4">
                  {totalPendingPages > 1 && (
@@ -1069,6 +1047,11 @@ export default function AgencyRegistrationPage() {
                     searchTerm={searchTerm}
                     canEdit={canEdit}
                 />
+                 {totalPendingPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalPendingPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -1092,3 +1075,4 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
