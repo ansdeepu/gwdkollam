@@ -1,20 +1,43 @@
-
 // src/components/dashboard/ImportantUpdates.tsx
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell } from "lucide-react";
+import { Bell, MessageSquareWarning } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DataEntryFormData, SiteWorkStatus } from '@/lib/schemas';
+import { useAuth } from '@/hooks/useAuth';
+import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
 
 interface ImportantUpdatesProps {
   allFileEntries: DataEntryFormData[];
 }
 
+interface AlertItem {
+  key: string;
+  title: string;
+  details: string;
+  type: 'work' | 'rejection';
+}
+
 export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesProps) {
-  const workAlerts = useMemo(() => {
-    if (!allFileEntries) return []; // Guard against undefined input
+  const { user } = useAuth();
+  const { getPendingUpdatesForFile } = usePendingUpdates();
+  const [rejectedUpdates, setRejectedUpdates] = useState<PendingUpdate[]>([]);
+
+  useEffect(() => {
+    if (user?.role === 'supervisor' && user.uid) {
+      getPendingUpdatesForFile(null, user.uid).then(updates => {
+        const rejected = updates.filter(u => u.status === 'rejected');
+        setRejectedUpdates(rejected);
+      });
+    }
+  }, [user, getPendingUpdatesForFile]);
+
+  const alerts = useMemo(() => {
+    const newAlerts: AlertItem[] = [];
+
+    // 1. Work Status Alerts (existing logic)
     const workAlertsMap = new Map<string, { title: string; details: string; }>();
     const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
 
@@ -29,34 +52,60 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
         }
       });
     }
+    workAlertsMap.forEach((alert, key) => {
+        newAlerts.push({ key, ...alert, type: 'work' });
+    });
 
-    return Array.from(workAlertsMap.values());
-  }, [allFileEntries]);
+    // 2. Rejected Updates for Supervisor
+    if (user?.role === 'supervisor') {
+        rejectedUpdates.forEach(update => {
+            const siteName = update.updatedSiteDetails[0]?.nameOfSite || 'Unknown Site';
+            newAlerts.push({
+                key: update.id,
+                title: `Update Rejected for ${siteName}`,
+                details: `Reason: ${update.notes || 'No reason provided.'}`,
+                type: 'rejection'
+            });
+        });
+    }
 
-  const shouldAnimateUpdates = workAlerts.length > 3;
-  const updatesToDisplay = workAlerts.slice(0, 3);
+    return newAlerts;
+  }, [allFileEntries, rejectedUpdates, user]);
+
+  const shouldAnimateUpdates = alerts.length > 3;
+  const updatesToDisplay = alerts.slice(0, 3);
 
   return (
     <Card className="shadow-lg flex flex-col h-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-primary" />Important Updates ({workAlerts.length})</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-primary" />Important Updates ({alerts.length})
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0 flex-1">
         <div className={cn("border rounded-lg p-3 bg-background flex-1 flex flex-col min-h-0", shouldAnimateUpdates && "marquee-v-container")}>
             <div className={cn("no-scrollbar flex-1 relative h-full", shouldAnimateUpdates && "marquee-v-container")}>
             <div className={cn("space-y-2", shouldAnimateUpdates && "marquee-v-content", !shouldAnimateUpdates && "overflow-y-auto h-full")}>
-              {updatesToDisplay.length > 0 ? (
+              {alerts.length > 0 ? (
                 <>
-                  {updatesToDisplay.map((alert, index) => (
-                    <div key={index} className="p-2 rounded-md bg-amber-500/10">
-                      <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
-                      <p className="text-xs text-amber-600">{alert.details}</p>
+                  {alerts.map((alert) => (
+                    <div key={alert.key} className={cn("p-2 rounded-md", alert.type === 'rejection' ? 'bg-red-500/10' : 'bg-amber-500/10')}>
+                      <p className={cn("font-semibold text-sm flex items-center gap-1.5", alert.type === 'rejection' ? 'text-red-700' : 'text-amber-700')}>
+                         {alert.type === 'rejection' && <MessageSquareWarning className="h-4 w-4" />} {alert.title}
+                      </p>
+                      <p className={cn("text-xs", alert.type === 'rejection' ? 'text-red-600' : 'text-amber-600')}>
+                        {alert.details}
+                      </p>
                     </div>
                   ))}
-                  {shouldAnimateUpdates && updatesToDisplay.map((alert, index) => (
-                    <div key={`clone-${index}`} className="p-2 rounded-md bg-amber-500/10" aria-hidden="true">
-                      <p className="font-semibold text-sm text-amber-700">{alert.title}</p>
-                      <p className="text-xs text-amber-600">{alert.details}</p>
+                  {shouldAnimateUpdates && alerts.map((alert) => (
+                     <div key={`clone-${alert.key}`} className={cn("p-2 rounded-md", alert.type === 'rejection' ? 'bg-red-500/10' : 'bg-amber-500/10')} aria-hidden="true">
+                      <p className={cn("font-semibold text-sm flex items-center gap-1.5", alert.type === 'rejection' ? 'text-red-700' : 'text-amber-700')}>
+                         {alert.type === 'rejection' && <MessageSquareWarning className="h-4 w-4" />} {alert.title}
+                      </p>
+                      <p className={cn("text-xs", alert.type === 'rejection' ? 'text-red-600' : 'text-amber-600')}>
+                        {alert.details}
+                      </p>
                     </div>
                   ))}
                 </>

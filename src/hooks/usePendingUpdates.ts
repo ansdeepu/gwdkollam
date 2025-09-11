@@ -66,7 +66,7 @@ export function usePendingUpdates(): PendingUpdatesState {
   
   const getPendingUpdatesForFile = useCallback(async (fileNo: string | null, submittedByUid?: string): Promise<PendingUpdate[]> => {
     try {
-        let conditions = [where('status', 'in', ['pending', 'supervisor-unassigned'])];
+        let conditions = [where('status', 'in', ['pending', 'supervisor-unassigned', 'rejected'])];
         if (fileNo) {
             conditions.push(where('fileNo', '==', fileNo));
         }
@@ -100,15 +100,31 @@ export function usePendingUpdates(): PendingUpdatesState {
     const siteNamesBeingUpdated = new Set(updatedSites.map(s => s.nameOfSite));
     const existingUpdates = await getPendingUpdatesForFile(fileNo, currentUser.uid);
 
+    const batch = writeBatch(db);
+
     for (const update of existingUpdates) {
-        if (update.status !== 'pending') continue; // Only check against pending updates
-        for (const site of update.updatedSiteDetails) {
-            if (siteNamesBeingUpdated.has(site.nameOfSite)) {
-                throw new Error(`An update for site "${site.nameOfSite}" is already pending approval. Please wait for the admin to review it.`);
+        // If an update for one of the currently edited sites exists and is 'rejected', delete it.
+        if (update.status === 'rejected') {
+            for (const site of update.updatedSiteDetails) {
+                if (siteNamesBeingUpdated.has(site.nameOfSite)) {
+                    const docToDeleteRef = doc(db, PENDING_UPDATES_COLLECTION, update.id);
+                    batch.delete(docToDeleteRef);
+                    // Stop checking this update if we've decided to delete it
+                    break; 
+                }
+            }
+        }
+        // Prevent submission if a 'pending' update for the same site exists.
+        else if (update.status === 'pending') {
+            for (const site of update.updatedSiteDetails) {
+                if (siteNamesBeingUpdated.has(site.nameOfSite)) {
+                    throw new Error(`An update for site "${site.nameOfSite}" is already pending approval. Please wait for the admin to review it.`);
+                }
             }
         }
     }
 
+    const newUpdateRef = doc(collection(db, PENDING_UPDATES_COLLECTION));
     const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
       fileNo,
       updatedSiteDetails: updatedSites,
@@ -116,11 +132,13 @@ export function usePendingUpdates(): PendingUpdatesState {
       submittedByName: currentUser.name,
       status: 'pending',
     };
-
-    await addDoc(collection(db, PENDING_UPDATES_COLLECTION), {
+    batch.set(newUpdateRef, {
       ...newUpdate,
       submittedAt: serverTimestamp(),
     });
+
+    await batch.commit();
+
   }, [getPendingUpdatesForFile]);
 
   const createArsPendingUpdate = useCallback(async (
