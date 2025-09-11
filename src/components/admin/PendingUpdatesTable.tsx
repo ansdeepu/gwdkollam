@@ -184,7 +184,7 @@ export default function PendingUpdatesTable() {
               <TableHead>Purpose(s)</TableHead>
               <TableHead>Submitted By</TableHead>
               <TableHead>Submitted</TableHead>
-              <TableHead className="text-center">Changes</TableHead>
+              <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-center w-[240px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
