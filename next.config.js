@@ -10,6 +10,10 @@ const nextConfig = {
     // Set to false to ignore linting errors during build.
     ignoreDuringBuilds: false,
   },
+  experimental: {
+    // This is required to allow the development server to be accessed from the preview environment.
+    allowedDevOrigins: ["https://*.cloudworkstations.dev"],
+  },
   images: {
     remotePatterns: [
       {
