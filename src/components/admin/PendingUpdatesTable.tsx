@@ -7,7 +7,7 @@ import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, UserX, AlertTriangle, UserPlus, ListChanges } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, UserX, AlertTriangle, UserPlus, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow, format, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -203,7 +203,7 @@ export default function PendingUpdatesTable() {
                       </Tooltip>
                     ) : (
                       <Button variant="link" className="p-0 h-auto" onClick={() => handleViewChanges(update)}>
-                        <ListChanges className="mr-2 h-4 w-4"/>
+                        <ListChecks className="mr-2 h-4 w-4"/>
                         {update.updatedSiteDetails.length} site(s)
                       </Button>
                     )}
