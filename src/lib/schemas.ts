@@ -613,10 +613,12 @@ const GeneratorDetailsSchema = z.object({
 }).optional();
 
 export const rigTypeOptions = [
-    "DTH",
-    "DTH Cum Rotary",
-    "Filter Point",
-    "Others",
+    "Hand Bore",
+    "Filter Point Rig",
+    "Calyx Rig",
+    "Rotary Rig",
+    "DTH Rig",
+    "Rotary cum DTH Rig",
 ] as const;
 export type RigType = typeof rigTypeOptions[number];
 
@@ -638,6 +640,9 @@ export const RigRegistrationSchema = z.object({
     registrationFee: optionalNumber(),
     paymentDate: nativeDateSchema,
     challanNo: z.string().optional(),
+    additionalRegistrationFee: optionalNumber(),
+    additionalPaymentDate: nativeDateSchema,
+    additionalChallanNo: z.string().optional(),
     rigVehicle: VehicleDetailsSchema,
     compressorVehicle: VehicleDetailsSchema,
     supportingVehicle: VehicleDetailsSchema,
