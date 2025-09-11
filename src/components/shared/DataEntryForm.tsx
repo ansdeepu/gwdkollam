@@ -302,19 +302,24 @@ export default function DataEntryFormComponent({
               description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
           });
       } else if (userRole === 'supervisor' && fileNoToEdit) {
-          const sitesWithChanges = data.siteDetails?.filter(currentSite => {
+          const sitesWithChanges = (data.siteDetails || []).filter(currentSite => {
               if (currentSite.supervisorUid !== user.uid) return false;
-
+      
               const originalSite = initialData.siteDetails?.find(
                   s => s.nameOfSite === currentSite.nameOfSite
               );
-              
+      
               if (!originalSite) return false;
               
-              const stringifiedOriginal = JSON.stringify(originalSite, (key, value) => (value === null ? undefined : value));
-              const stringifiedCurrent = JSON.stringify(currentSite, (key, value) => (value === null ? undefined : value));
-              
-              return stringifiedCurrent !== stringifiedOriginal;
+              // Normalize data before comparison
+              const normalize = (obj: any) => JSON.parse(JSON.stringify(obj, (key, value) => {
+                  if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+                      return undefined;
+                  }
+                  return value;
+              }));
+      
+              return JSON.stringify(normalize(currentSite)) !== JSON.stringify(normalize(originalSite));
           });
 
 
