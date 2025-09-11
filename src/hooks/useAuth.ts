@@ -84,66 +84,55 @@ export function useAuth() {
         const userDocSnap = await getDoc(userDocRef);
 
         let userProfile: UserProfile | null = null;
-        let isApproved = false;
         const isAdminByEmail = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-        if (isAdminByEmail) {
-            isApproved = true; // Main admin is always approved
-            let staffInfo: { designation?: Designation } = {};
-            try {
-              if (userDocSnap.exists() && userDocSnap.data().staffId) {
-                  const staffDocRef = doc(db, "staffMembers", userDocSnap.data().staffId);
-                  const staffDocSnap = await getDoc(staffDocRef);
-                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
-              }
-            } catch (staffError) {
-                console.error("Error fetching admin's staff info, proceeding without it:", staffError);
-            }
-            const adminName = userDocSnap.exists() ? userDocSnap.data().name : firebaseUser.email?.split('@')[0];
-            userProfile = {
-                uid: firebaseUser.uid, email: firebaseUser.email, name: adminName ? String(adminName) : undefined,
-                role: 'editor', isApproved: true,
-                staffId: userDocSnap.exists() ? userDocSnap.data().staffId : undefined,
-                designation: staffInfo.designation,
-                createdAt: userDocSnap.exists() && userDocSnap.data().createdAt ? userDocSnap.data().createdAt.toDate() : new Date(),
-                lastActiveAt: userDocSnap.exists() && userDocSnap.data().lastActiveAt ? userDocSnap.data().lastActiveAt.toDate() : undefined,
-            };
-            if (!userDocSnap.exists()) {
-                await setDoc(doc(db, "users", firebaseUser.uid), {
-                    email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
-                });
-            }
-        } else if (userDocSnap.exists()) {
+        if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            isApproved = userData.isApproved === true;
-            
+            const isApproved = isAdminByEmail || userData.isApproved === true;
+
             let staffInfo: { designation?: Designation } = {};
-            try {
-              if (userData.staffId) {
-                  const staffDocRef = doc(db, "staffMembers", userData.staffId);
-                  const staffDocSnap = await getDoc(staffDocRef);
-                  if (staffDocSnap.exists()) staffInfo = staffDocSnap.data() as { designation?: Designation };
-              }
-            } catch(staffError) {
-              console.error(`Error fetching staff info for user ${firebaseUser.uid}, proceeding without it:`, staffError);
+            if (userData.staffId) {
+                try {
+                    const staffDocRef = doc(db, "staffMembers", userData.staffId);
+                    const staffDocSnap = await getDoc(staffDocRef);
+                    if (staffDocSnap.exists()) {
+                        staffInfo = staffDocSnap.data() as { designation?: Designation };
+                    }
+                } catch (staffError) {
+                    console.error(`Error fetching staff info for user ${firebaseUser.uid}:`, staffError);
+                }
             }
 
             userProfile = {
-                uid: firebaseUser.uid, email: firebaseUser.email, name: userData.name ? String(userData.name) : undefined,
-                role: userData.role || 'viewer', isApproved: isApproved,
-                staffId: userData.staffId || undefined, designation: staffInfo.designation,
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                name: userData.name ? String(userData.name) : undefined,
+                role: isAdminByEmail ? 'editor' : (userData.role || 'viewer'),
+                isApproved: isApproved,
+                staffId: userData.staffId || undefined,
+                designation: staffInfo.designation,
                 createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
                 lastActiveAt: userData.lastActiveAt instanceof Timestamp ? userData.lastActiveAt.toDate() : undefined,
             };
+        } else if (isAdminByEmail) {
+            // This logic creates the admin user document if it doesn't exist.
+            userProfile = {
+                uid: firebaseUser.uid, email: firebaseUser.email, name: firebaseUser.email?.split('@')[0],
+                role: 'editor', isApproved: true,
+                createdAt: new Date(),
+            };
+            await setDoc(doc(db, "users", firebaseUser.uid), {
+                email: firebaseUser.email, name: userProfile.name, role: 'editor', isApproved: true, createdAt: Timestamp.now(),
+            });
         }
-
+        
         if (!isMounted) return;
 
         if (userProfile && userProfile.isApproved) {
             setAuthState({ isAuthenticated: true, isLoading: false, user: userProfile, firebaseUser });
         } else {
              if (auth.currentUser) {
-                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out after onAuthStateChanged error:', signOutError); }
+                try { await signOut(auth); } catch (signOutError) { console.error('[Auth] Error signing out during auth state check:', signOutError); }
             }
             setAuthState({ isAuthenticated: false, isLoading: false, user: userProfile, firebaseUser: null });
             
@@ -157,7 +146,7 @@ export function useAuth() {
             } else if (!userProfile) {
                 toast({
                     title: "User Profile Not Found",
-                    description: "Your user account exists but its profile data could not be found. Please contact an administrator.",
+                    description: "Your account credentials are valid, but your user profile could not be found. Please contact an administrator.",
                     variant: "destructive",
                     duration: 8000
                 });
