@@ -176,7 +176,11 @@ export default function PendingUpdatesTable() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Sl. No.</TableHead>
               <TableHead>File No.</TableHead>
+              <TableHead>Applicant Name</TableHead>
+              <TableHead>Site Name</TableHead>
+              <TableHead>Purpose</TableHead>
               <TableHead>Submitted By</TableHead>
               <TableHead>Date Submitted</TableHead>
               <TableHead className="text-center">Changes</TableHead>
@@ -185,11 +189,19 @@ export default function PendingUpdatesTable() {
           </TableHeader>
           <TableBody>
             {pendingUpdates.length > 0 ? (
-              pendingUpdates.map((update) => {
+              pendingUpdates.map((update, index) => {
                 const isUnassigned = update.status === 'supervisor-unassigned';
+                const parentFile = fileEntries.find(f => f.fileNo === update.fileNo);
+                const applicantName = parentFile?.applicantName || 'N/A';
+                const siteName = update.updatedSiteDetails.map(s => s.nameOfSite).join(', ');
+                const purpose = update.updatedSiteDetails.map(s => s.purpose).join(', ');
                 return (
                 <TableRow key={update.id}>
+                  <TableCell>{index + 1}</TableCell>
                   <TableCell className="font-medium">{update.fileNo}</TableCell>
+                  <TableCell>{applicantName}</TableCell>
+                  <TableCell>{siteName}</TableCell>
+                  <TableCell>{purpose}</TableCell>
                   <TableCell>{update.submittedByName}</TableCell>
                   <TableCell>
                     {formatDistanceToNow(update.submittedAt, { addSuffix: true })}
@@ -240,7 +252,7 @@ export default function PendingUpdatesTable() {
               )})
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No pending updates to review.
                 </TableCell>
               </TableRow>
