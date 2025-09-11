@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -345,13 +346,22 @@ export default function DataEntryFormComponent({
               return false; // No changes found in editable fields
             });
 
-          if (sitesWithChanges.length === 0) {
-              toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned site details." });
+          const fileStatusChanged = data.fileStatus !== initialData.fileStatus;
+          const remarksChanged = data.remarks !== initialData.remarks;
+
+          if (sitesWithChanges.length === 0 && !fileStatusChanged && !remarksChanged) {
+              toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned sites or file status." });
               setIsSubmitting(false);
               return;
           }
 
-          await createPendingUpdate(fileNoToEdit, sitesWithChanges, user);
+          // We pass all site details the supervisor can see, plus the main file data.
+          // The backend logic in createPendingUpdate will handle creating the update record.
+          await createPendingUpdate(fileNoToEdit, data.siteDetails || [], user, {
+            fileStatus: data.fileStatus,
+            remarks: data.remarks
+          });
+
           toast({
               title: "Update Submitted",
               description: `Your changes for file '${fileNoToEdit}' have been submitted for admin approval.`,
@@ -378,6 +388,15 @@ export default function DataEntryFormComponent({
     }
     return true;
   };
+
+  const isMainFieldReadOnly = (fieldName: keyof DataEntryFormData): boolean => {
+    if (isReadOnly) return true;
+    if (isEditor) return false;
+    if (isSupervisor) {
+        return !['fileStatus', 'remarks'].includes(fieldName as string);
+    }
+    return true;
+};
 
   return (
     <FormProvider {...form}>
@@ -803,8 +822,8 @@ export default function DataEntryFormComponent({
                         </div>
                         <Separator />
                          <div className="grid md:grid-cols-3 gap-6">
-                            <FormField control={form.control} name="fileStatus" render={({ field }) => ( <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="remarks" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Final remarks" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="fileStatus" render={({ field }) => ( <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isMainFieldReadOnly('fileStatus')}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="remarks" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Final remarks" {...field} value={field.value ?? ""} readOnly={isMainFieldReadOnly('remarks')} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                     </div>
                 </AccordionContent>

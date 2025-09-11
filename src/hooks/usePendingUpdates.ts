@@ -38,7 +38,7 @@ const convertTimestampToDate = (data: DocumentData): PendingUpdate => {
 };
 
 interface PendingUpdatesState {
-  createPendingUpdate: (fileNo: string, updatedSites: SiteDetailFormData[], currentUser: UserProfile) => Promise<void>;
+  createPendingUpdate: (fileNo: string, siteDetails: SiteDetailFormData[], currentUser: UserProfile, fileLevelUpdates: Partial<Pick<DataEntryFormData, 'fileStatus' | 'remarks'>>) => Promise<void>;
   createArsPendingUpdate: (arsId: string, updatedArsEntry: ArsEntryFormData, currentUser: UserProfile) => Promise<void>;
   rejectUpdate: (updateId: string, reason?: string) => Promise<void>;
   deleteUpdate: (updateId: string) => Promise<void>;
@@ -92,8 +92,9 @@ export function usePendingUpdates(): PendingUpdatesState {
 
   const createPendingUpdate = useCallback(async (
     fileNo: string,
-    updatedSites: SiteDetailFormData[],
-    currentUser: UserProfile
+    siteDetails: SiteDetailFormData[],
+    currentUser: UserProfile,
+    fileLevelUpdates: Partial<Pick<DataEntryFormData, 'fileStatus' | 'remarks'>>
   ) => {
     if (!currentUser.uid || !currentUser.name) {
       throw new Error("Invalid user profile for submitting an update.");
@@ -104,8 +105,7 @@ export function usePendingUpdates(): PendingUpdatesState {
     const existingUpdatesQuery = query(
       collection(db, PENDING_UPDATES_COLLECTION),
       where('fileNo', '==', fileNo),
-      where('submittedByUid', '==', currentUser.uid),
-      where('status', 'in', ['pending', 'rejected'])
+      where('submittedByUid', '==', currentUser.uid)
     );
     const existingUpdatesSnapshot = await getDocs(existingUpdatesQuery);
     existingUpdatesSnapshot.forEach(doc => {
@@ -113,17 +113,16 @@ export function usePendingUpdates(): PendingUpdatesState {
     });
 
     const newUpdateRef = doc(collection(db, PENDING_UPDATES_COLLECTION));
-    const newUpdate: Omit<PendingUpdate, 'id' | 'submittedAt'> = {
+    const newUpdateData = {
       fileNo,
-      updatedSiteDetails: updatedSites,
+      updatedSiteDetails: siteDetails,
+      fileLevelUpdates: fileLevelUpdates,
       submittedByUid: currentUser.uid,
       submittedByName: currentUser.name,
       status: 'pending',
-    };
-    batch.set(newUpdateRef, {
-      ...newUpdate,
       submittedAt: serverTimestamp(),
-    });
+    };
+    batch.set(newUpdateRef, newUpdateData);
 
     await batch.commit();
 
