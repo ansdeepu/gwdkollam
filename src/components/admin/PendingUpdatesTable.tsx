@@ -7,7 +7,7 @@ import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, UserX, AlertTriangle, UserPlus, ListChecks } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, UserX, UserPlus, ListChecks } from 'lucide-react';
 import { formatDistanceToNow, format, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -96,6 +96,7 @@ export default function PendingUpdatesTable() {
       });
       // Refetch the data after rejection
       const updates = await getPendingUpdatesForFile(null);
+      updates.sort((a,b) => b.submittedAt.getTime() - a.submittedAt.getTime());
       setPendingUpdates(updates);
     } catch (error: any) {
       toast({
