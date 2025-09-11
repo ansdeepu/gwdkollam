@@ -1,3 +1,4 @@
+
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -50,7 +51,7 @@ import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
 
-const ITEMS_PER_PAGE = 50;
+const ITEMS_PER_PAGE = 10;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
 
 function renderDetail(label: string, value: any) {
@@ -243,6 +244,15 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     <TooltipProvider>
       <Card className="shadow-lg">
         <CardContent className="p-0">
+          {totalPages > 1 && (
+            <div className="p-4 border-b flex items-center justify-center">
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />
+            </div>
+           )}
           <div className="max-h-[70vh] overflow-auto">
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">

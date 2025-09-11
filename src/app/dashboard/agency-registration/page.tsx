@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
+import PaginationControls from "@/components/shared/PaginationControls";
 
 export const dynamic = 'force-dynamic';
 
@@ -401,6 +402,9 @@ export default function AgencyRegistrationPage() {
   
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const isEditor = user?.role === 'editor';
   const isReadOnly = isViewing || user?.role === 'supervisor' || user?.role === 'viewer';
   const canEdit = isEditor;
@@ -744,6 +748,29 @@ export default function AgencyRegistrationPage() {
     toast({ title: "Rig Activated", description: "The rig registration has been reactivated." });
   };
 
+  const paginatedCompletedApplications = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return completedApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [completedApplications, currentPage]);
+
+  const paginatedPendingApplications = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return pendingApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [pendingApplications, currentPage]);
+
+  const totalCompletedPages = Math.ceil(completedApplications.length / ITEMS_PER_PAGE);
+  const totalPendingPages = Math.ceil(pendingApplications.length / ITEMS_PER_PAGE);
+
+  const [activeTab, setActiveTab] = useState('completed');
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
+  const onTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   if (applicationsLoading || authLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
@@ -1008,14 +1035,19 @@ export default function AgencyRegistrationPage() {
                 </Button>
               )}
           </div>
-          <Tabs defaultValue="completed" className="pt-4 border-t">
+          <Tabs defaultValue="completed" onValueChange={onTabChange} className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
                 <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="completed" className="mt-4">
+                {totalCompletedPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalCompletedPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
                 <RegistrationTable 
-                    applications={completedApplications}
+                    applications={paginatedCompletedApplications}
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDeleteApplication}
@@ -1024,8 +1056,13 @@ export default function AgencyRegistrationPage() {
                 />
             </TabsContent>
             <TabsContent value="pending" className="mt-4">
+                 {totalPendingPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalPendingPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
                 <RegistrationTable 
-                    applications={pendingApplications}
+                    applications={paginatedPendingApplications}
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDeleteApplication}

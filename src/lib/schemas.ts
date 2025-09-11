@@ -691,9 +691,9 @@ export const arsWorkStatusOptions = [
 ] as const;
 
 export const arsTypeOfSchemeOptions = [
-  "Dugwell Recharge(RWH)",
-  "Borewell Recharge(RWH)",
-  "Recharge Pit(RWH)",
+  "Dugwell Recharge",
+  "Borewell Recharge",
+  "Recharge Pit",
   "Check Dam",
   "Sub-Surface Dyke",
   "Pond Renovation",
