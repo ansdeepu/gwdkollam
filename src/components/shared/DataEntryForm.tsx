@@ -4,7 +4,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray, type FieldErrors, FormProvider, useWatch } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
@@ -154,15 +154,20 @@ export default function DataEntryFormComponent({
 }: DataEntryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addFileEntry } = useFileEntries();
-  const { createPendingUpdate } = usePendingUpdates();
+  const { createPendingUpdate, getPendingUpdateById } = usePendingUpdates();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
   const isViewer = userRole === 'viewer';
+  
+  const approveUpdateId = searchParams.get("approveUpdateId");
+  const isApprovingUpdate = isEditor && !!approveUpdateId;
   const isReadOnly = isViewer || (isSupervisor && !fileNoToEdit);
+
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
@@ -287,7 +292,7 @@ export default function DataEntryFormComponent({
           const sumOfAllPayments = processedPaymentDetails.reduce((acc, pd) => acc + (pd.totalPaymentPerEntry || 0), 0);
           const totalRemittance = data.remittanceDetails?.reduce((acc, rd) => acc + (Number(rd.amountRemitted) || 0), 0) || 0;
           
-          const payload: DataEntryFormData = {
+          let payload: DataEntryFormData = {
             ...data,
             assignedSupervisorUids: supervisorUids,
             paymentDetails: processedPaymentDetails,
@@ -295,12 +300,27 @@ export default function DataEntryFormComponent({
             totalPaymentAllEntries: sumOfAllPayments,
             overallBalance: totalRemittance - sumOfAllPayments,
           };
+          
+          // If we are approving, we need to mark the pending update as 'approved'
+          if (isApprovingUpdate && approveUpdateId) {
+             const pendingUpdate = await getPendingUpdateById(approveUpdateId);
+             if (pendingUpdate) {
+                // Here, `payload` is the merged data from the form.
+                await addFileEntry(payload, fileNoToEdit); // Save the merged data
+                const updateRef = doc(db, 'pendingUpdates', approveUpdateId);
+                await updateDoc(updateRef, { status: 'approved', reviewedByUid: user.uid, reviewedAt: serverTimestamp() });
+                toast({ title: "Update Approved", description: `Changes for file '${fileNoToEdit}' have been successfully applied.` });
+             } else {
+                throw new Error("Could not find the pending update to approve.");
+             }
+          } else {
+              await addFileEntry(payload, fileNoToEdit);
+              toast({
+                  title: fileNoToEdit ? "File Data Updated" : "File Data Submitted",
+                  description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
+              });
+          }
 
-          await addFileEntry(payload, fileNoToEdit);
-          toast({
-              title: fileNoToEdit ? "File Data Updated" : "File Data Submitted",
-              description: `Data for file '${payload.fileNo || "N/A"}' has been successfully ${fileNoToEdit ? 'updated' : 'recorded'}.`,
-          });
       } else if (userRole === 'supervisor' && fileNoToEdit) {
           const supervisorEditableFields: (keyof SiteDetailFormData)[] = ['latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'];
           
@@ -785,7 +805,7 @@ export default function DataEntryFormComponent({
               ) : (
                   <Save className="mr-2 h-4 w-4" />
               )}
-              {isSubmitting ? "Saving..." : (fileNoToEdit ? "Save Changes" : "Create File")}
+              {isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve & Save" : "Save Changes") : "Create File")}
             </Button>
           )}
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
