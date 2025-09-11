@@ -33,6 +33,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
+import "client-only";
 
 export const dynamic = 'force-dynamic';
 
@@ -347,7 +348,7 @@ const RigAccordionItem = ({
         </div>
       </AccordionContent>
     </AccordionItem>
-  );
+  )
 };
 
 
