@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
+import { useFileEntries } from '@/hooks/useFileEntries'; // Import useFileEntries
 
 export const dynamic = 'force-dynamic';
 
@@ -16,12 +17,16 @@ export default function PendingUpdatesPage() {
     setHeader('Pending Supervisor Updates', 'Review and approve or reject site updates submitted by supervisors to finalize the changes.');
   }, [setHeader]);
 
-  const { user, isLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const { isLoading: filesLoading } = useFileEntries(); // Initialize the hook to ensure data is fetched
   
+  const isLoading = authLoading || filesLoading;
+
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-2 text-muted-foreground">Loading data...</p>
       </div>
     );
   }
