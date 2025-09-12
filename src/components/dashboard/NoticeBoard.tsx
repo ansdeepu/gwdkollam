@@ -1,3 +1,4 @@
+
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
@@ -79,7 +80,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
     };
   }, [staffMembers]);
 
-  const shouldAnimateBirthdays = noticeData.upcomingBirthdays.length > 2;
+  const shouldAnimateBirthdays = noticeData.upcomingBirthdays.length > 3;
 
   return (
     <Card className="shadow-lg flex flex-col h-full">
@@ -88,7 +89,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0 flex-1">
         
-        <div className="border rounded-lg p-3 bg-background flex flex-col h-[150px]">
+        <div className="border rounded-lg p-3 bg-background flex flex-col flex-1">
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.todaysBirthdays.length})</h3>
           <ScrollArea className="flex-1 pr-2">
             {noticeData.todaysBirthdays.length > 0 ? (
@@ -125,7 +126,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
           </ScrollArea>
         </div>
         
-        <div className={cn("border rounded-lg p-3 bg-background flex flex-col h-[150px] overflow-hidden", shouldAnimateBirthdays && "marquee-v-container")}>
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 overflow-hidden", shouldAnimateBirthdays && "marquee-v-container")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
            <div className={cn("flex-1", !shouldAnimateBirthdays && "overflow-y-auto no-scrollbar")}>
               <div className={cn("space-y-2", shouldAnimateBirthdays && "marquee-v-content")}>

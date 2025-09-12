@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ImportantUpdates.tsx
 "use client";
 
@@ -72,8 +73,7 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
     return newAlerts;
   }, [allFileEntries, rejectedUpdates, user]);
 
-  const shouldAnimateUpdates = alerts.length > 3;
-  const updatesToDisplay = alerts.slice(0, 3);
+  const shouldAnimateUpdates = alerts.length > 5;
 
   return (
     <Card className="shadow-lg flex flex-col h-full">
