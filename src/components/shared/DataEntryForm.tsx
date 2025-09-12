@@ -326,31 +326,28 @@ export default function DataEntryFormComponent({
           }
 
       } else if (userRole === 'supervisor' && fileNoToEdit) {
-          const supervisorEditableFields: (keyof SiteDetailFormData)[] = ['latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'];
-          
-          let hasSiteChanges = false;
           const sitesWithChanges = (data.siteDetails || [])
             .filter(currentSite => {
-              if (currentSite.supervisorUid !== user.uid) return false;
-              
-              const originalSite = initialData.siteDetails?.find(s => s.nameOfSite === currentSite.nameOfSite);
-              if (!originalSite) return false;
-
-              for (const key of supervisorEditableFields) {
-                  const currentValue = currentSite[key] ?? "";
-                  const originalValue = originalSite[key] ?? "";
-                  if (String(currentValue) !== String(originalValue)) {
-                      hasSiteChanges = true;
-                      return true;
-                  }
-              }
-              return false;
+                if (currentSite.supervisorUid !== user.uid) return false;
+                const originalSite = initialData.siteDetails?.find(s => s.nameOfSite === currentSite.nameOfSite);
+                if (!originalSite) return false;
+                // Check if any supervisor-editable field has changed
+                return Object.keys(currentSite).some(key => {
+                    const typedKey = key as keyof SiteDetailFormData;
+                    const supervisorEditableFields: (keyof SiteDetailFormData)[] = ['latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'];
+                    if (supervisorEditableFields.includes(typedKey)) {
+                        const currentValue = currentSite[typedKey] ?? "";
+                        const originalValue = originalSite[typedKey] ?? "";
+                        return String(currentValue) !== String(originalValue);
+                    }
+                    return false;
+                });
             });
-          
+
           const fileStatusChanged = data.fileStatus !== initialData.fileStatus;
           const remarksChanged = data.remarks !== initialData.remarks;
 
-          if (!hasSiteChanges && !fileStatusChanged && !remarksChanged) {
+          if (sitesWithChanges.length === 0 && !fileStatusChanged && !remarksChanged) {
               toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned sites or file status." });
               setIsSubmitting(false);
               return;
@@ -698,11 +695,10 @@ export default function DataEntryFormComponent({
                                                             type="date"
                                                             {...field}
                                                             value={field.value ?? ""}
-                                                            readOnly={!siteIsEditable}
-                                                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
+                                                            readOnly={userRole === 'editor' ? false : !siteIsEditable}
                                                           />
                                                         </FormControl>
-                                                        {siteIsEditable && (
+                                                        {(userRole === 'editor' || siteIsEditable) && (
                                                           <Button
                                                             type="button"
                                                             variant="ghost"
@@ -862,5 +858,3 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
-
-    
