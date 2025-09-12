@@ -689,27 +689,14 @@ export default function DataEntryFormComponent({
                                                   render={({ field }) => (
                                                     <FormItem>
                                                       <FormLabel>Date of Completion{isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel>
-                                                      <div className="flex items-center gap-2">
-                                                        <FormControl>
-                                                          <Input
-                                                            type="date"
-                                                            {...field}
-                                                            value={field.value ?? ""}
-                                                            readOnly={userRole === 'editor' ? false : !siteIsEditable}
-                                                          />
-                                                        </FormControl>
-                                                        {(userRole === 'editor' || siteIsEditable) && (
-                                                          <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => field.onChange(undefined)}
-                                                            aria-label="Clear date"
-                                                          >
-                                                            <X className="h-4 w-4" />
-                                                          </Button>
-                                                        )}
-                                                      </div>
+                                                      <FormControl>
+                                                        <Input
+                                                          type="date"
+                                                          {...field}
+                                                          value={field.value ?? ""}
+                                                          readOnly={userRole === 'editor' ? false : !siteIsEditable}
+                                                        />
+                                                      </FormControl>
                                                       <FormMessage/>
                                                     </FormItem>
                                                   )}
