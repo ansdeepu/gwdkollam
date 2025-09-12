@@ -7,7 +7,7 @@ import { useArsEntries, type ArsEntry } from "@/hooks/useArsEntries";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle, CalendarIcon, ShieldAlert } from "lucide-react";
+import { FileDown, Loader2, Search, PlusCircle, Download, Eye, Edit, Trash2, XCircle, CalendarIcon, ShieldAlert, Clock } from "lucide-react";
 import { format, isValid, parse, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import ExcelJS from "exceljs";
 import { useToast } from "@/hooks/use-toast";
@@ -550,42 +550,47 @@ export default function ArsPage() {
                         </TableHeader>
                         <TableBody>
                             {paginatedSites.length > 0 ? (
-                                paginatedSites.map((site, index) => (
-                                    <TableRow key={site.id}>
-                                        <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                                        <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                        <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
-                                        <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
-                                        <TableCell className="whitespace-normal break-words">{site.arsPanchayath || 'N/A'}</TableCell>
-                                        <TableCell>{site.workStatus ?? 'N/A'}</TableCell>
-                                        <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
-                                        <TableCell className="text-center w-[120px]">
-                                            <div className="flex items-center justify-center space-x-1">
-                                                <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
-                                                {(canEdit || (isSupervisor && site.supervisorUid === user.uid)) && (
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(site.id!)}>
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent><p>Edit Site</p></TooltipContent>
-                                                    </Tooltip>
-                                                )}
-                                                {canEdit && (
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}>
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent><p>Delete Site</p></TooltipContent>
-                                                    </Tooltip>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                paginatedSites.map((site, index) => {
+                                    const isSitePendingForSupervisor = isSupervisor && site.isPending;
+                                    const isEditDisabled = isSitePendingForSupervisor || (isSupervisor && site.supervisorUid !== user?.uid);
+                                    
+                                    return (
+                                        <TableRow key={site.id}>
+                                            <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                                            <TableCell className="w-[150px]">{site.fileNo}</TableCell>
+                                            <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
+                                            <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
+                                            <TableCell className="whitespace-normal break-words">{site.arsPanchayath || 'N/A'}</TableCell>
+                                            <TableCell>{site.workStatus ?? 'N/A'}</TableCell>
+                                            <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
+                                            <TableCell className="text-center w-[120px]">
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
+                                                    {(canEdit || (isSupervisor && site.supervisorUid === user.uid)) && (
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" onClick={() => handleEditClick(site.id!)} disabled={isEditDisabled}>
+                                                                    {isSitePendingForSupervisor ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit className="h-4 w-4" />}
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent><p>{isSitePendingForSupervisor ? 'Pending Approval' : 'Edit Site'}</p></TooltipContent>
+                                                        </Tooltip>
+                                                    )}
+                                                    {canEdit && (
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => setDeletingSite(site)}>
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent><p>Delete Site</p></TooltipContent>
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={8} className="h-24 text-center">

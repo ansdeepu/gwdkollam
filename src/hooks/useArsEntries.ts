@@ -9,6 +9,7 @@ import type { ArsEntryFormData } from '@/lib/schemas';
 import { useAuth, type UserProfile } from './useAuth';
 import { toast } from './use-toast';
 import { parse, isValid } from 'date-fns';
+import { usePendingUpdates } from './usePendingUpdates';
 
 const db = getFirestore(app);
 const ARS_COLLECTION = 'arsEntries';
@@ -48,10 +49,11 @@ const processDataForClient = (data: DocumentData): any => {
 
 export function useArsEntries() {
   const { user } = useAuth();
+  const { getPendingUpdatesForFile } = usePendingUpdates();
   const [arsEntries, setArsEntries] = useState<ArsEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchArsEntries = useCallback(() => {
+  const fetchArsEntries = useCallback(async () => {
     if (!user) {
       setArsEntries([]);
       setIsLoading(false);
@@ -67,8 +69,8 @@ export function useArsEntries() {
       q = query(arsCollectionRef);
     }
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const entriesData = snapshot.docs.map(doc => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      let entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
         const serializableData = processDataForClient(data);
         return {
@@ -76,6 +78,22 @@ export function useArsEntries() {
           ...serializableData
         } as ArsEntry;
       });
+
+      if (user.role === 'supervisor' && user.uid) {
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingArsIds = new Set(
+          pendingUpdates
+            .filter(u => u.isArsUpdate && u.status === 'pending')
+            .map(u => u.arsId)
+        );
+        if (pendingArsIds.size > 0) {
+            entriesData = entriesData.map(entry => ({
+                ...entry,
+                isPending: pendingArsIds.has(entry.id),
+            }));
+        }
+      }
+
       setArsEntries(entriesData);
       setIsLoading(false);
     }, (error) => {
@@ -89,11 +107,13 @@ export function useArsEntries() {
     });
 
     return unsubscribe;
-  }, [user]);
+  }, [user, getPendingUpdatesForFile]);
 
   useEffect(() => {
-    const unsubscribe = fetchArsEntries();
-    return () => unsubscribe && unsubscribe();
+    const unsubscribePromise = fetchArsEntries();
+    return () => {
+      unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+    };
   }, [fetchArsEntries]);
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
@@ -114,7 +134,7 @@ export function useArsEntries() {
   }, [user]);
 
   const updateArsEntry = useCallback(async (id: string, entryData: Partial<ArsEntryFormData>, approveUpdateId?: string, approvingUser?: UserProfile) => {
-    if (!user || user.role !== 'editor') throw new Error("Permission denied.");
+    if (!user) throw new Error("Permission denied.");
     const docRef = doc(db, ARS_COLLECTION, id);
 
     const entryForFirestore = {
@@ -128,14 +148,16 @@ export function useArsEntries() {
         updatedAt: serverTimestamp(),
     };
 
-    if (approveUpdateId && approvingUser) {
+    if (approveUpdateId && approvingUser && user.role === 'editor') {
         const batch = writeBatch(db);
         batch.update(docRef, payload);
         const updateRef = doc(db, PENDING_UPDATES_COLLECTION, approveUpdateId);
         batch.update(updateRef, { status: 'approved', reviewedByUid: approvingUser.uid, reviewedAt: serverTimestamp() });
         await batch.commit();
-    } else {
+    } else if (user.role === 'editor') {
         await updateDoc(docRef, payload);
+    } else {
+        throw new Error("Permission denied for direct update.");
     }
   }, [user]);
   

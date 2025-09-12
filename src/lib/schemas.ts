@@ -726,6 +726,7 @@ export const ArsEntrySchema = z.object({
   workRemarks: z.string().optional(),
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
+  isPending: z.boolean().optional(),
 }).superRefine((data, ctx) => {
     if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
         ctx.addIssue({
