@@ -1,3 +1,4 @@
+
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -98,14 +99,16 @@ export default function ArsEntryPage() {
     const isFormReadOnly = isViewer || (isSupervisor && !isEditing);
     
     const isFieldReadOnly = (fieldName: keyof ArsEntryFormData): boolean => {
-      if (isFormReadOnly) return true;
-      if (canEdit) return false; // Editors can edit everything
+      if (canEdit) return false; // Editors can ALWAYS edit everything.
+      if (isViewer) return true;
       if (isSupervisor) {
-        // Supervisors can only edit specific fields
+        if (!isEditing) return true;
+        // Supervisors can only edit specific fields when in edit mode
         return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
       }
-      return true;
+      return true; // Default to read-only
     };
+
 
      useEffect(() => {
         let title = isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry';
@@ -302,7 +305,7 @@ export default function ArsEntryPage() {
                         </div>
                         <div className="flex justify-end pt-8 space-x-3">
                            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/ars')} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
-                           {!isFormReadOnly && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
+                           {!(isViewer || (isSupervisor && !isEditing)) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
                         </div>
                       </form>
                     </Form>
@@ -311,3 +314,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
