@@ -39,7 +39,7 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
 
     // 1. Work Status Alerts (existing logic)
     const workAlertsMap = new Map<string, { title: string; details: string; }>();
-    const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process"];
+    const siteWorkStatusAlerts: SiteWorkStatus[] = ["To be Refunded", "To be Tendered", "Under Process", "TS Pending", "Addl. AS Awaited"];
 
     for (const entry of allFileEntries) {
       entry.siteDetails?.forEach(site => {

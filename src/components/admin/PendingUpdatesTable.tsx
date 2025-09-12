@@ -223,7 +223,15 @@ export default function PendingUpdatesTable() {
                   <TableCell className="text-center space-x-1">
                     <Button variant="link" className="p-0 h-auto" onClick={() => handleViewChanges(update)}><ListChecks className="mr-2 h-4 w-4"/>View</Button>
                     <Button asChild size="sm" variant="outline"><Link href={`/dashboard/data-entry?id=${fileEntries.find(f => f.fileNo === update.fileNo)?.id}&approveUpdateId=${update.id}`}><CheckCircle className="mr-2 h-4 w-4" /> Review</Link></Button>
-                    <Button size="sm" variant="destructive" onClick={() => setUpdateToDelete(update.id)} disabled={isDeleting}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
+                    <Button size="sm" variant="destructive" onClick={() => setUpdateToReject(update.id)} disabled={isRejecting || isRejected}><XCircle className="mr-2 h-4 w-4" /> Reject</Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setUpdateToDelete(update.id)} disabled={isDeleting}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Permanently Delete Update</p></TooltipContent>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               )})
