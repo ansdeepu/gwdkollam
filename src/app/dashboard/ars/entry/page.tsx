@@ -12,7 +12,7 @@ import { Loader2, Save, X, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm, useWatch, FormProvider } from "react-hook-form";
+import { useForm, useWatch, FormProvider, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,8 +75,8 @@ const processDataForForm = (data: any): any => {
     return data;
 };
 
-const CompletionDateField = () => {
-    const { control } = useForm<ArsEntryFormData>();
+const CompletionDateField = ({ isFieldReadOnly }: { isFieldReadOnly: (fieldName: keyof ArsEntryFormData) => boolean }) => {
+    const { control } = useFormContext<ArsEntryFormData>();
     const workStatus = useWatch({ control, name: 'workStatus' });
     const isRequired = workStatus === 'Work Completed' || workStatus === 'Work Failed';
 
@@ -92,7 +92,7 @@ const CompletionDateField = () => {
                             type="date"
                             {...field}
                             value={field.value ?? ""}
-                            readOnly={false} // This will be handled by the parent component's logic
+                            readOnly={isFieldReadOnly('dateOfCompletion')}
                         />
                     </FormControl>
                     <FormMessage />
@@ -319,7 +319,7 @@ export default function ArsEntryPage() {
                                     <FormMessage />
                                 </FormItem>
                             )}/>
-                            <CompletionDateField />
+                            <CompletionDateField isFieldReadOnly={isFieldReadOnly} />
                           <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('totalExpenditure')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('noOfBeneficiary')} /></FormControl><FormMessage /></FormItem>)} />
                            <FormField
