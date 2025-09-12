@@ -30,7 +30,6 @@ service cloud.firestore {
       return isRole('viewer');
     }
     
-    // Editors and Viewers can read entire collections.
     function canReadCollection() {
       return isEditor() || isViewer();
     }
@@ -48,56 +47,53 @@ service cloud.firestore {
     }
 
     // === Main File Entries (Deposit Works) ===
-    // list: Allows collection-wide queries. This is safe for supervisors because the application
-    // code *always* includes a "where('assignedSupervisorUids', 'array-contains', request.auth.uid)" clause in their queries.
-    // get: Allows reading a single document if the supervisor is assigned.
-    // write: Only Editors can write directly to file entries.
     match /fileEntries/{docId} {
-      allow list: if canReadCollection() || isSupervisor();
+      // Read access: Editors/Viewers can get any document. Supervisors can only get documents they are assigned to.
       allow get: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
+      
+      // List access: This is intentionally more permissive for supervisors because their ability to list documents 
+      // is already constrained by the client-side query which filters by their UID. Firestore security rules
+      // for list operations check the query, not the data, so this rule allows the secure query to pass.
+      allow list: if canReadCollection() || isSupervisor();
+      
+      // Write access: Only editors can create, update, or delete file entries directly.
+      // Supervisors must use the pendingUpdates collection.
       allow create, update, delete: if canWriteCollection();
     }
 
     // === ARS Entries ===
-    // list: Allows collection-wide queries for supervisors, secured by app-level queries.
-    // get: Allows reading a single document if the supervisor is assigned.
-    // write: Only Editors can write directly.
     match /arsEntries/{docId} {
-      allow list: if canReadCollection() || isSupervisor();
       allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
+      allow list: if canReadCollection() || isSupervisor(); // See comment for fileEntries list rule.
       allow create, update, delete: if canWriteCollection();
     }
     
     // === Pending Updates from Supervisors ===
-    // Create: Supervisors can create new pending updates for review.
-    // Read, Update, Delete: Only Editors can manage (read, approve, reject, delete) pending updates.
     match /pendingUpdates/{docId} {
-      allow create: if isSupervisor();
-      allow read, update, delete: if isEditor();
+      // Supervisors can create updates. They can also read and delete updates they have submitted.
+      allow create: if isSupervisor() || isEditor();
+      allow read, delete: if (isSupervisor() && request.auth.uid == resource.data.submittedByUid) || isEditor();
+      
+      // Only editors can approve/reject by updating the status.
+      allow update: if isEditor();
     }
 
     // === Staff Members (Establishment) ===
-    // Read: Any approved user can read the staff list.
-    // Write: Only Editors can manage staff members.
     match /staffMembers/{docId} {
       allow read: if isApproved();
       allow write: if isEditor();
     }
     
     // === Agency Registrations ===
-    // Read: Any approved user can read agency data.
-    // Write: Only Editors can manage agency data.
     match /agencyApplications/{docId} {
-        allow read: if isApproved();
-        allow write: if isEditor();
+      allow read: if isApproved();
+      allow write: if isEditor();
     }
     
     // === GWD Rates ===
-    // Read: Any approved user can read the rates.
-    // Write: Only Editors can manage rates.
     match /gwdRates/{docId} {
-        allow read: if isApproved();
-        allow write: if isEditor();
+      allow read: if isApproved();
+      allow write: if isEditor();
     }
   }
 }
