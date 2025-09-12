@@ -78,6 +78,11 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
       upcomingBirthdays: upcomingBirthdaysInMonth,
     };
   }, [staffMembers]);
+  
+  const enableTodayScrolling = noticeData.todaysBirthdays.length > 2;
+  const enableUpcomingScrolling = noticeData.upcomingBirthdays.length > 2;
+  const todayBirthdayList = enableTodayScrolling ? [...noticeData.todaysBirthdays, ...noticeData.todaysBirthdays] : noticeData.todaysBirthdays;
+  const upcomingBirthdayList = enableUpcomingScrolling ? [...noticeData.upcomingBirthdays, ...noticeData.upcomingBirthdays] : noticeData.upcomingBirthdays;
 
 
   return (
@@ -86,12 +91,12 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
         <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" />Notice Board</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0 flex-1 min-h-0">
-        <div className="border rounded-lg p-3 bg-background flex flex-col flex-1 basis-1/2 min-h-0 marquee-container-birthdays">
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 basis-1/2 min-h-0", enableTodayScrolling && "marquee-container-birthdays")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.todaysBirthdays.length})</h3>
-            {noticeData.todaysBirthdays.length > 0 ? (
-              <div className="marquee-content-birthdays space-y-3">
+            {todayBirthdayList.length > 0 ? (
+              <div className={cn("space-y-3", enableTodayScrolling && "marquee-content-birthdays")}>
                 <Dialog open={!!selectedBirthday} onOpenChange={() => setSelectedBirthday(null)}>
-                  {[...noticeData.todaysBirthdays, ...noticeData.todaysBirthdays].map((staff, index) => (
+                  {todayBirthdayList.map((staff, index) => (
                     <button key={index} onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
                       <Avatar className="h-10 w-10 border-2 border-pink-200">
                         <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
@@ -123,11 +128,11 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
             )}
         </div>
         
-        <div className="border rounded-lg p-3 bg-background flex flex-col flex-1 basis-1/2 min-h-0 marquee-container-birthdays">
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 basis-1/2 min-h-0", enableUpcomingScrolling && "marquee-container-birthdays")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
-           {noticeData.upcomingBirthdays.length > 0 ? (
-             <div className="marquee-content-birthdays space-y-2">
-                {[...noticeData.upcomingBirthdays, ...noticeData.upcomingBirthdays].map((staff, index) => (
+           {upcomingBirthdayList.length > 0 ? (
+             <div className={cn("space-y-2", enableUpcomingScrolling && "marquee-content-birthdays")}>
+                {upcomingBirthdayList.map((staff, index) => (
                   <div key={index} className="w-full p-2 rounded-md bg-indigo-500/10 flex items-center gap-3 text-left">
                     <Avatar className="h-10 w-10 border-2 border-indigo-200">
                       <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
