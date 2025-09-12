@@ -120,6 +120,7 @@ export function usePendingUpdates(): PendingUpdatesState {
       submittedByUid: currentUser.uid,
       submittedByName: currentUser.name,
       status: 'pending',
+      isArsUpdate: false,
       submittedAt: serverTimestamp(),
     };
     batch.set(newUpdateRef, newUpdateData);

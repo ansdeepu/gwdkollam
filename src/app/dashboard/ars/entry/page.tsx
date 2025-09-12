@@ -12,7 +12,7 @@ import { Loader2, Save, X, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm, useWatch, useFormContext } from "react-hook-form";
+import { useForm, useWatch, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,7 +76,7 @@ const processDataForForm = (data: any): any => {
 };
 
 const CompletionDateField = () => {
-    const { control } = useFormContext<ArsEntryFormData>();
+    const { control } = useForm<ArsEntryFormData>();
     const workStatus = useWatch({ control, name: 'workStatus' });
     const isRequired = workStatus === 'Work Completed' || workStatus === 'Work Failed';
 
@@ -112,9 +112,10 @@ export default function ArsEntryPage() {
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
     
     const entryIdToEdit = searchParams.get('id');
+    const approveUpdateId = searchParams.get("approveUpdateId");
     
     const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry } = useArsEntries();
-    const { createArsPendingUpdate } = usePendingUpdates();
+    const { createArsPendingUpdate, getPendingUpdateById } = usePendingUpdates();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
@@ -122,6 +123,7 @@ export default function ArsEntryPage() {
     const canEdit = user?.role === 'editor';
     const isSupervisor = user?.role === 'supervisor';
     const isViewer = user?.role === 'viewer';
+    const isApprovingUpdate = canEdit && !!approveUpdateId;
     
     // Determine the base read-only state for the entire form
     const isFormReadOnly = isViewer || (isSupervisor && !isEditing);
@@ -139,19 +141,25 @@ export default function ArsEntryPage() {
 
 
      useEffect(() => {
-        let title = isEditing ? 'Edit ARS Entry' : 'Add New ARS Entry';
-        let description = isEditing
-            ? 'Update the details for the ARS site below.' 
-            : 'Fill in the details to create a new ARS site entry.';
+        let title = 'Add New ARS Entry';
+        let description = 'Fill in the details to create a new ARS site entry.';
+        if (isEditing) {
+            title = 'Edit ARS Entry';
+            description = 'Update the details for the ARS site below.';
+        }
+        if (isApprovingUpdate) {
+            title = 'Approve ARS Update';
+            description = 'Review the changes below and click "Save Changes" to approve.';
+        }
         if (isViewer) {
             title = 'View ARS Entry';
             description = 'Viewing ARS site details in read-only mode.';
-        } else if (isSupervisor) {
+        } else if (isSupervisor && isEditing) {
             title = 'Edit Assigned ARS Site';
             description = 'Update your assigned site. Changes will be submitted for approval.';
         }
         setHeader(title, description);
-    }, [isEditing, isViewer, isSupervisor, setHeader]);
+    }, [isEditing, isViewer, isSupervisor, setHeader, isApprovingUpdate]);
 
     useEffect(() => {
         if (canEdit) {
@@ -189,19 +197,31 @@ export default function ArsEntryPage() {
 
     useEffect(() => {
         const loadArsEntry = async () => {
-            if (isEditing && entryIdToEdit) {
-                const entry = await getArsEntryById(entryIdToEdit);
-                if (entry) {
-                    const formData = processDataForForm(entry);
-                    form.reset(formData);
-                } else {
-                    toast({ title: "Error", description: `ARS Entry with ID "${entryIdToEdit}" not found.`, variant: "destructive" });
-                    router.push('/dashboard/ars');
-                }
+            if (!isEditing || !entryIdToEdit) return;
+            
+            const [originalEntry, pendingUpdate] = await Promise.all([
+                getArsEntryById(entryIdToEdit),
+                approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null)
+            ]);
+
+            if (!originalEntry) {
+                toast({ title: "Error", description: `ARS Entry with ID "${entryIdToEdit}" not found.`, variant: "destructive" });
+                router.push('/dashboard/ars');
+                return;
+            }
+
+            if (isApprovingUpdate && pendingUpdate) {
+                const mergedData = { ...originalEntry, ...pendingUpdate.updatedSiteDetails[0] };
+                form.reset(processDataForForm(mergedData));
+                 toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
+            } else {
+                form.reset(processDataForForm(originalEntry));
             }
         };
-        loadArsEntry();
-    }, [isEditing, entryIdToEdit, getArsEntryById, form, router, toast]);
+        if (isEditing) {
+          loadArsEntry();
+        }
+    }, [isEditing, entryIdToEdit, approveUpdateId, getArsEntryById, getPendingUpdateById, form, router, toast, isApprovingUpdate]);
 
     const handleFormSubmit = async (data: ArsEntryFormData) => {
         if (!user || isViewer) {
@@ -218,7 +238,10 @@ export default function ArsEntryPage() {
         };
 
         try {
-            if (canEdit && isEditing && entryIdToEdit) {
+            if (isApprovingUpdate && entryIdToEdit && approveUpdateId) {
+                await updateArsEntry(entryIdToEdit, payload, approveUpdateId, user);
+                toast({ title: "Update Approved", description: `Changes for site "${data.nameOfSite}" have been saved.` });
+            } else if (canEdit && isEditing && entryIdToEdit) {
                 await updateArsEntry(entryIdToEdit, payload);
                 toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
             } else if (canEdit && !isEditing) {
@@ -257,12 +280,12 @@ export default function ArsEntryPage() {
             <Card className="shadow-lg">
                 <CardContent className="pt-6">
                    <div className="flex justify-end mb-4">
-                      <Button variant="destructive" size="sm" onClick={() => router.push('/dashboard/ars')}>
+                      <Button variant="destructive" size="sm" onClick={() => router.push(isApprovingUpdate ? '/dashboard/pending-updates' : '/dashboard/ars')}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
                           Back
                       </Button>
                     </div>
-                    <Form {...form}>
+                    <FormProvider {...form}>
                       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 p-1">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} readOnly={isFieldReadOnly('fileNo')} /></FormControl><FormMessage /></FormItem>)} />
@@ -336,11 +359,9 @@ export default function ArsEntryPage() {
                            {!(isViewer || (isSupervisor && !isEditing)) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
                         </div>
                       </form>
-                    </Form>
+                    </FormProvider>
                 </CardContent>
             </Card>
         </div>
     );
 }
-
-    

@@ -6,12 +6,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import type { ArsEntryFormData } from '@/lib/schemas';
-import { useAuth } from './useAuth';
+import { useAuth, type UserProfile } from './useAuth';
 import { toast } from './use-toast';
 import { parse, isValid } from 'date-fns';
 
 const db = getFirestore(app);
 const ARS_COLLECTION = 'arsEntries';
+const PENDING_UPDATES_COLLECTION = 'pendingUpdates';
 
 // This is the shape of the data as it's stored and used in the app
 export type ArsEntry = ArsEntryFormData & {
@@ -112,7 +113,7 @@ export function useArsEntries() {
     await addDoc(collection(db, ARS_COLLECTION), payload);
   }, [user]);
 
-  const updateArsEntry = useCallback(async (id: string, entryData: Partial<ArsEntryFormData>) => {
+  const updateArsEntry = useCallback(async (id: string, entryData: Partial<ArsEntryFormData>, approveUpdateId?: string, approvingUser?: UserProfile) => {
     if (!user || user.role !== 'editor') throw new Error("Permission denied.");
     const docRef = doc(db, ARS_COLLECTION, id);
 
@@ -126,7 +127,16 @@ export function useArsEntries() {
         ...entryForFirestore,
         updatedAt: serverTimestamp(),
     };
-    await updateDoc(docRef, payload);
+
+    if (approveUpdateId && approvingUser) {
+        const batch = writeBatch(db);
+        batch.update(docRef, payload);
+        const updateRef = doc(db, PENDING_UPDATES_COLLECTION, approveUpdateId);
+        batch.update(updateRef, { status: 'approved', reviewedByUid: approvingUser.uid, reviewedAt: serverTimestamp() });
+        await batch.commit();
+    } else {
+        await updateDoc(docRef, payload);
+    }
   }, [user]);
   
   const deleteArsEntry = useCallback(async (id: string) => {

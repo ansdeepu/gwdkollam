@@ -6,16 +6,17 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
 import { useFileEntries } from '@/hooks/useFileEntries';
+import { useArsEntries, type ArsEntry } from '@/hooks/useArsEntries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, UserX, UserPlus, ListChecks, Trash2 } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, UserX, ListChecks, Trash2 } from 'lucide-react';
 import { formatDistanceToNow, format, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { SiteDetailFormData, ArsEntryFormData } from '@/lib/schemas';
+import type { SiteDetailFormData, ArsEntryFormData, DataEntryFormData } from '@/lib/schemas';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,6 +49,7 @@ const getFieldName = (key: string) => {
 export default function PendingUpdatesTable() {
   const { rejectUpdate, getPendingUpdatesForFile, deleteUpdate } = usePendingUpdates();
   const { fileEntries, isLoading: filesLoading } = useFileEntries();
+  const { arsEntries, isLoading: arsLoading } = useArsEntries();
   const { toast } = useToast();
   
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
@@ -109,8 +111,14 @@ export default function PendingUpdatesTable() {
   };
 
   const handleViewChanges = (update: PendingUpdate) => {
-    const originalFile = fileEntries.find(f => f.fileNo === update.fileNo);
-    if (!originalFile) {
+    let originalEntry: DataEntryFormData | ArsEntry | undefined;
+    if (update.isArsUpdate) {
+        originalEntry = arsEntries.find(f => f.id === update.arsId);
+    } else {
+        originalEntry = fileEntries.find(f => f.fileNo === update.fileNo);
+    }
+
+    if (!originalEntry) {
         toast({ title: "Error", description: `Original file with File No: ${update.fileNo} not found.`, variant: "destructive" });
         return;
     }
@@ -118,8 +126,10 @@ export default function PendingUpdatesTable() {
     const allChanges: { field: string; oldValue: string; newValue: string }[] = [];
     let title = `Changes for File No: ${update.fileNo}`;
 
+    const originalSites = update.isArsUpdate ? [originalEntry] : (originalEntry as DataEntryFormData).siteDetails || [];
+
     update.updatedSiteDetails.forEach((updatedSite) => {
-        const originalSite = originalFile.siteDetails?.find(s => s.nameOfSite === updatedSite.nameOfSite);
+        const originalSite = originalSites.find(s => s.nameOfSite === updatedSite.nameOfSite);
         
         if (update.updatedSiteDetails.length > 1) {
             allChanges.push({ field: `--- Site: ${updatedSite.nameOfSite} ---`, oldValue: '', newValue: '' });
@@ -162,7 +172,7 @@ export default function PendingUpdatesTable() {
     }
   };
 
-  if (isLoading || filesLoading) {
+  if (isLoading || filesLoading || arsLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -193,10 +203,20 @@ export default function PendingUpdatesTable() {
               pendingUpdates.map((update, index) => {
                 const isUnassigned = update.status === 'supervisor-unassigned';
                 const parentFile = fileEntries.find(f => f.fileNo === update.fileNo);
-                const applicantName = parentFile?.applicantName || 'N/A';
+                const applicantName = update.isArsUpdate ? 'N/A' : (parentFile?.applicantName || 'N/A');
                 const siteName = update.updatedSiteDetails.map(s => s.nameOfSite).join(', ');
-                const purpose = update.updatedSiteDetails.map(s => s.purpose).join(', ');
+                const purpose = update.isArsUpdate ? (update.updatedSiteDetails[0] as ArsEntryFormData).arsTypeOfScheme : update.updatedSiteDetails.map(s => s.purpose).join(', ');
                 const isRejected = update.status === 'rejected';
+
+                let reviewLink = '';
+                if(update.isArsUpdate && update.arsId) {
+                    reviewLink = `/dashboard/ars/entry?id=${update.arsId}&approveUpdateId=${update.id}`;
+                } else if (!update.isArsUpdate) {
+                    const parentFileId = parentFile?.id;
+                    if(parentFileId) {
+                       reviewLink = `/dashboard/data-entry?id=${parentFileId}&approveUpdateId=${update.id}`;
+                    }
+                }
 
                 return (
                 <TableRow key={update.id}>
@@ -222,7 +242,16 @@ export default function PendingUpdatesTable() {
                   </TableCell>
                   <TableCell className="text-center space-x-1">
                     <Button variant="link" className="p-0 h-auto" onClick={() => handleViewChanges(update)}><ListChecks className="mr-2 h-4 w-4"/>View</Button>
-                    <Button asChild size="sm" variant="outline"><Link href={`/dashboard/data-entry?id=${fileEntries.find(f => f.fileNo === update.fileNo)?.id}&approveUpdateId=${update.id}`}><CheckCircle className="mr-2 h-4 w-4" /> Review</Link></Button>
+                    {reviewLink ? (
+                      <Button asChild size="sm" variant="outline"><Link href={reviewLink}><CheckCircle className="mr-2 h-4 w-4" /> Review</Link></Button>
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button size="sm" variant="outline" disabled><CheckCircle className="mr-2 h-4 w-4" /> Review</Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Original file could not be found to start review.</p></TooltipContent>
+                      </Tooltip>
+                    )}
                     <Button size="sm" variant="destructive" onClick={() => setUpdateToReject(update.id)} disabled={isRejecting || isRejected}><XCircle className="mr-2 h-4 w-4" /> Reject</Button>
                     <Tooltip>
                       <TooltipTrigger asChild>

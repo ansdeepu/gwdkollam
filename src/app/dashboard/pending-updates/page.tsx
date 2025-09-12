@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
-import { useFileEntries } from '@/hooks/useFileEntries'; // Import useFileEntries
+import { useFileEntries } from '@/hooks/useFileEntries';
+import { useArsEntries } from "@/hooks/useArsEntries";
 
 export const dynamic = 'force-dynamic';
 
@@ -18,9 +19,10 @@ export default function PendingUpdatesPage() {
   }, [setHeader]);
 
   const { user, isLoading: authLoading } = useAuth();
-  const { isLoading: filesLoading } = useFileEntries(); // Initialize the hook to ensure data is fetched
+  const { isLoading: filesLoading } = useFileEntries();
+  const { isLoading: arsLoading } = useArsEntries();
   
-  const isLoading = authLoading || filesLoading;
+  const isLoading = authLoading || filesLoading || arsLoading;
 
   if (isLoading) {
     return (
