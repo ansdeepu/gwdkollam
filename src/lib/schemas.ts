@@ -412,10 +412,75 @@ export const DataEntrySchema = z.object({
 });
 export type DataEntryFormData = z.infer<typeof DataEntrySchema>;
 
+// ARS Schemas
+export const arsWorkStatusOptions = [
+  "Proposal Submitted",
+  "AS & TS Issued",
+  "Tendered",
+  "Selection Notice Issued",
+  "Work Order Issued",
+  "Work Initiated",
+  "Work in Progress",
+  "Work Completed",
+  "Bill Prepared",
+  "Payment Completed",
+  "Work Failed",
+] as const;
+
+export const arsTypeOfSchemeOptions = [
+  "Dugwell Recharge",
+  "Borewell Recharge",
+  "Recharge Pit",
+  "Check Dam",
+  "Sub-Surface Dyke",
+  "Pond Renovation",
+  "Percolation Ponds",
+] as const;
+
+export const ArsEntrySchema = z.object({
+  fileNo: z.string().min(1, 'File No. is required.'),
+  nameOfSite: z.string().min(1, 'Name of Site is required.'),
+  constituency: z.enum(constituencyOptions).optional(),
+  arsTypeOfScheme: z.enum(arsTypeOfSchemeOptions).optional(),
+  arsPanchayath: z.string().optional(),
+  arsBlock: z.string().optional(),
+  latitude: optionalNumber(),
+  longitude: optionalNumber(),
+  arsNumberOfStructures: optionalNumber(),
+  arsStorageCapacity: optionalNumber(),
+  arsNumberOfFillings: optionalNumber(),
+  estimateAmount: optionalNumber(),
+  arsAsTsDetails: z.string().optional(),
+  tsAmount: optionalNumber(),
+  arsSanctionedDate: nativeDateSchema,
+  arsTenderedAmount: optionalNumber(),
+  arsAwardedAmount: optionalNumber(),
+  workStatus: z.enum(arsWorkStatusOptions, { required_error: "Present status is required." }),
+  dateOfCompletion: nativeDateSchema,
+  totalExpenditure: optionalNumber(),
+  noOfBeneficiary: z.string().optional(),
+  workRemarks: z.string().optional(),
+  supervisorUid: z.string().optional().nullable(),
+  supervisorName: z.string().optional().nullable(),
+  isPending: z.boolean().optional(),
+}).superRefine((data, ctx) => {
+    if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Completion Date is required for this status.",
+            path: ["dateOfCompletion"],
+        });
+    }
+});
+export type ArsEntryFormData = z.infer<typeof ArsEntrySchema>;
+
+// This is the type that includes the ID from Firestore
+export type ArsEntry = ArsEntryFormData & { id: string };
+
 // Schema for Pending Updates
 export const PendingUpdateFormDataSchema = z.object({
   fileNo: z.string(),
-  updatedSiteDetails: z.array(SiteDetailSchema),
+  updatedSiteDetails: z.array(z.union([SiteDetailSchema, ArsEntrySchema])),
   fileLevelUpdates: z.object({
       fileStatus: z.enum(fileStatusOptions).optional(),
       remarks: z.string().optional(),
@@ -681,68 +746,3 @@ export const AgencyApplicationSchema = z.object({
   history: z.array(z.string()).optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
-
-// ARS Schemas
-export const arsWorkStatusOptions = [
-  "Proposal Submitted",
-  "AS & TS Issued",
-  "Tendered",
-  "Selection Notice Issued",
-  "Work Order Issued",
-  "Work Initiated",
-  "Work in Progress",
-  "Work Completed",
-  "Bill Prepared",
-  "Payment Completed",
-  "Work Failed",
-] as const;
-
-export const arsTypeOfSchemeOptions = [
-  "Dugwell Recharge",
-  "Borewell Recharge",
-  "Recharge Pit",
-  "Check Dam",
-  "Sub-Surface Dyke",
-  "Pond Renovation",
-  "Percolation Ponds",
-] as const;
-
-export const ArsEntrySchema = z.object({
-  fileNo: z.string().min(1, 'File No. is required.'),
-  nameOfSite: z.string().min(1, 'Name of Site is required.'),
-  constituency: z.enum(constituencyOptions).optional(),
-  arsTypeOfScheme: z.enum(arsTypeOfSchemeOptions).optional(),
-  arsPanchayath: z.string().optional(),
-  arsBlock: z.string().optional(),
-  latitude: optionalNumber(),
-  longitude: optionalNumber(),
-  arsNumberOfStructures: optionalNumber(),
-  arsStorageCapacity: optionalNumber(),
-  arsNumberOfFillings: optionalNumber(),
-  estimateAmount: optionalNumber(),
-  arsAsTsDetails: z.string().optional(),
-  tsAmount: optionalNumber(),
-  arsSanctionedDate: nativeDateSchema,
-  arsTenderedAmount: optionalNumber(),
-  arsAwardedAmount: optionalNumber(),
-  workStatus: z.enum(arsWorkStatusOptions, { required_error: "Present status is required." }),
-  dateOfCompletion: nativeDateSchema,
-  totalExpenditure: optionalNumber(),
-  noOfBeneficiary: z.string().optional(),
-  workRemarks: z.string().optional(),
-  supervisorUid: z.string().optional().nullable(),
-  supervisorName: z.string().optional().nullable(),
-  isPending: z.boolean().optional(),
-}).superRefine((data, ctx) => {
-    if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Completion Date is required for this status.",
-            path: ["dateOfCompletion"],
-        });
-    }
-});
-export type ArsEntryFormData = z.infer<typeof ArsEntrySchema>;
-
-// This is the type that includes the ID from Firestore
-export type ArsEntry = ArsEntryFormData & { id: string };
