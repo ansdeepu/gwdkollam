@@ -90,16 +90,23 @@ export function useFileEntries() {
       // After fetching entries, if the user is a supervisor, check for pending updates.
       if (user.role === 'supervisor' && user.uid) {
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingFileNos = new Set(pendingUpdates.map(u => u.fileNo));
+        // We only care about updates that are actually in 'pending' status.
+        const pendingFileNos = new Set(
+            pendingUpdates
+                .filter(u => u.status === 'pending')
+                .map(u => u.fileNo)
+        );
 
         if (pendingFileNos.size > 0) {
             entriesData = entriesData.map(entry => {
                 if (entry.fileNo && pendingFileNos.has(entry.fileNo)) {
-                    // This file has a pending update from this supervisor. Mark all sites as pending.
-                    const updatedSiteDetails = entry.siteDetails?.map(site => ({
-                        ...site,
-                        isPending: true
-                    }));
+                    // This file has a pending update from this supervisor. Mark all of the supervisor's sites in this file as pending.
+                    const updatedSiteDetails = entry.siteDetails?.map(site => {
+                        if (site.supervisorUid === user.uid) {
+                           return { ...site, isPending: true };
+                        }
+                        return site;
+                    });
                     return { ...entry, siteDetails: updatedSiteDetails };
                 }
                 return entry;
@@ -212,7 +219,7 @@ export function useFileEntries() {
       // For supervisors, we still need to attach the pending status for the UI
       if (user && user.role === 'supervisor') {
          const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo, user.uid);
-         if (pendingUpdates.length > 0) {
+         if (pendingUpdates.some(u => u.status === 'pending')) {
             const pendingSiteNames = new Set(pendingUpdates.flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite)));
             if (entry.siteDetails) {
                 entry.siteDetails = entry.siteDetails.map(site => ({
