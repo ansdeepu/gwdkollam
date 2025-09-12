@@ -81,12 +81,13 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
-        <ScrollArea className="h-64 pr-3">
-            <div className="space-y-2">
+         <div className="h-64 marquee-container-updates pr-3">
+            <div className="marquee-content-updates space-y-2">
               {alerts.length > 0 ? (
                 <>
-                  {alerts.map((alert) => (
-                    <div key={alert.key} className={cn("p-2 rounded-md", alert.type === 'rejection' ? 'bg-red-500/10' : 'bg-amber-500/10')}>
+                  {/* Duplicate content for seamless scrolling */}
+                  {[...alerts, ...alerts].map((alert, index) => (
+                    <div key={`${alert.key}-${index}`} className={cn("p-2 rounded-md", alert.type === 'rejection' ? 'bg-red-500/10' : 'bg-amber-500/10')}>
                       <p className={cn("font-semibold text-sm flex items-center gap-1.5", alert.type === 'rejection' ? 'text-red-700' : 'text-amber-700')}>
                          {alert.type === 'rejection' && <MessageSquareWarning className="h-4 w-4" />} {alert.title}
                       </p>
@@ -102,7 +103,7 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
                 </div>
               )}
             </div>
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );

@@ -124,17 +124,17 @@
     -moz-appearance: textfield;
   }
 
-  /* Marquee styles for Notice Board */
-  .marquee-v-container {
+  /* Marquee styles for Important Updates */
+  .marquee-container-updates {
     overflow: hidden;
   }
-  .marquee-v-content {
-    animation: marquee-vertical-animation 10s linear infinite;
+  .marquee-content-updates {
+    animation: marquee-vertical-animation-updates 30s linear infinite;
   }
-  .marquee-v-content:hover {
+  .marquee-container-updates:hover .marquee-content-updates {
     animation-play-state: paused;
   }
-  @keyframes marquee-vertical-animation {
+  @keyframes marquee-vertical-animation-updates {
     0%   { transform: translateY(0%); }
     100% { transform: translateY(-50%); } /* Assumes content is duplicated */
   }
@@ -329,5 +329,3 @@
     display: block !important;
   }
 }
-
-    
