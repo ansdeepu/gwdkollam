@@ -379,7 +379,10 @@ export default function DataEntryFormComponent({
     if (isSupervisor) {
       if (!fileNoToEdit) return true;
       const supervisorEditableFields: (keyof SiteDetailFormData)[] = [
-        'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'
+        'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure',
+        'diameter', 'pilotDrillingDepth', 'totalDepth', 'casingPipeUsed', 'outerCasingPipe', 'innerCasingPipe',
+        'yieldDischarge', 'zoneDetails', 'waterLevel', 'typeOfRig', 'surveyOB', 'surveyPlainPipe', 'surveySlottedPipe',
+        'pumpDetails', 'pumpingLineLength', 'deliveryLineLength', 'waterTankCapacity', 'noOfTapConnections', 'noOfBeneficiary'
       ];
       return !supervisorEditableFields.includes(fieldName);
     }
@@ -694,7 +697,7 @@ export default function DataEntryFormComponent({
                                                           type="date"
                                                           {...field}
                                                           value={field.value ?? ""}
-                                                          readOnly={userRole === 'editor' ? false : !siteIsEditable}
+                                                          readOnly={isFieldReadOnly('dateOfCompletion')}
                                                         />
                                                       </FormControl>
                                                       <FormMessage/>
