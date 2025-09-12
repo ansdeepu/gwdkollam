@@ -36,6 +36,7 @@ import {
   type RemittanceDetailFormData,
   type PaymentDetailFormData,
   SiteDetailSchema,
+  type SiteDetailFormData,
   applicationTypeOptions,
   applicationTypeDisplayMap,
   type ApplicationType,
@@ -334,7 +335,12 @@ export default function DataEntryFormComponent({
                 // Check if any supervisor-editable field has changed
                 return Object.keys(currentSite).some(key => {
                     const typedKey = key as keyof SiteDetailFormData;
-                    const supervisorEditableFields: (keyof SiteDetailFormData)[] = ['latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'];
+                    const supervisorEditableFields: (keyof SiteDetailFormData)[] = [
+                      'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure',
+                      'diameter', 'pilotDrillingDepth', 'totalDepth', 'casingPipeUsed', 'outerCasingPipe', 'innerCasingPipe',
+                      'yieldDischarge', 'zoneDetails', 'waterLevel', 'typeOfRig', 'surveyOB', 'surveyPlainPipe', 'surveySlottedPipe',
+                      'pumpDetails', 'pumpingLineLength', 'deliveryLineLength', 'waterTankCapacity', 'noOfTapConnections', 'noOfBeneficiary'
+                    ];
                     if (supervisorEditableFields.includes(typedKey)) {
                         const currentValue = currentSite[typedKey] ?? "";
                         const originalValue = originalSite[typedKey] ?? "";
