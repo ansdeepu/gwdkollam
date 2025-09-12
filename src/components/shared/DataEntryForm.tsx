@@ -692,15 +692,28 @@ export default function DataEntryFormComponent({
                                                   render={({ field }) => (
                                                     <FormItem>
                                                       <FormLabel>Date of Completion{isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel>
-                                                      <FormControl>
-                                                        <Input
-                                                          type="date"
-                                                          {...field}
-                                                          value={field.value ?? ""}
-                                                          readOnly={isFieldReadOnly('dateOfCompletion')}
-                                                          onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
-                                                        />
-                                                      </FormControl>
+                                                      <div className="flex items-center gap-2">
+                                                        <FormControl>
+                                                          <Input
+                                                            type="date"
+                                                            {...field}
+                                                            value={field.value ?? ""}
+                                                            readOnly={!siteIsEditable}
+                                                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
+                                                          />
+                                                        </FormControl>
+                                                        {siteIsEditable && (
+                                                          <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => field.onChange(undefined)}
+                                                            aria-label="Clear date"
+                                                          >
+                                                            <X className="h-4 w-4" />
+                                                          </Button>
+                                                        )}
+                                                      </div>
                                                       <FormMessage/>
                                                     </FormItem>
                                                   )}
@@ -849,3 +862,5 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    
