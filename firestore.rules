@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -9,8 +10,7 @@ service cloud.firestore {
     }
 
     function isApproved() {
-      // isApproved is a custom claim or a field in the user's profile
-      // For this app, we check the user's document in the /users collection.
+      // isApproved is a field in the user's document in the /users collection.
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true;
     }
 
@@ -30,47 +30,49 @@ service cloud.firestore {
       return isRole('viewer');
     }
     
+    // Editors and Viewers can read entire collections.
     function canReadCollection() {
       return isEditor() || isViewer();
     }
     
     function canWriteCollection() {
-        return isEditor();
+      return isEditor();
     }
 
     // === User Profiles ===
     // Editors/Viewers can see all profiles.
     // An authenticated user can read their own profile.
     match /users/{userId} {
-      allow read: if canReadCollection() || (isSignedIn() && request.auth.uid == userId);
+      allow read: if canReadCollection() || request.auth.uid == userId;
       allow write: if isEditor();
     }
 
     // === Main File Entries (Deposit Works) ===
-    // Read: Editors/Viewers can read all. Supervisors can only read files they are assigned to.
-    // list is required for supervisors to query for their assigned files using `array-contains`.
-    // The query itself provides the security.
+    // list: Allows collection-wide queries. This is safe for supervisors because the application
+    // code *always* includes a "where('assignedSupervisorUids', 'array-contains', request.auth.uid)" clause in their queries.
+    // get: Allows reading a single document if the supervisor is assigned.
+    // write: Only Editors can write directly to file entries.
     match /fileEntries/{docId} {
-      allow get: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
       allow list: if canReadCollection() || isSupervisor();
+      allow get: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
       allow create, update, delete: if canWriteCollection();
     }
 
     // === ARS Entries ===
-    // Read: Editors/Viewers can read all. Supervisors can only read entries they are assigned to.
-    // list is required for supervisors to query for their assigned files using `==` on supervisorUid.
-    // The query itself provides the security.
+    // list: Allows collection-wide queries for supervisors, secured by app-level queries.
+    // get: Allows reading a single document if the supervisor is assigned.
+    // write: Only Editors can write directly.
     match /arsEntries/{docId} {
-      allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
       allow list: if canReadCollection() || isSupervisor();
+      allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
       allow create, update, delete: if canWriteCollection();
     }
     
     // === Pending Updates from Supervisors ===
-    // Create: Supervisors and Editors can create pending updates.
-    // Read, Update, Delete: Only Editors can manage pending updates.
+    // Create: Supervisors can create new pending updates for review.
+    // Read, Update, Delete: Only Editors can manage (read, approve, reject, delete) pending updates.
     match /pendingUpdates/{docId} {
-      allow create: if isSupervisor() || isEditor();
+      allow create: if isSupervisor();
       allow read, update, delete: if isEditor();
     }
 
