@@ -2,7 +2,7 @@
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, LifeBuoy, Building, Server } from "lucide-react";
+import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
 
@@ -49,13 +49,26 @@ export default function HelpPage() {
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-8">
+              <AccordionTrigger>What do the 'Important Updates' and 'Notice Board' cards on the Dashboard show?</AccordionTrigger>
+              <AccordionContent className="space-y-4">
+                 <div>
+                    <h4 className="font-medium text-foreground mb-1 flex items-center gap-2"><ScrollText className="h-4 w-4" />Important Updates</h4>
+                    <p className="text-sm text-muted-foreground">This card is an automated "To-Do" list that highlights files needing attention. It scans for files with statuses like "To be Tendered," "TS Pending," etc. For Supervisors, it also shows any updates that an admin has rejected, so they can be corrected. The list auto-scrolls, and you can pause it by hovering over it.</p>
+                 </div>
+                 <div>
+                    <h4 className="font-medium text-foreground mb-1 flex items-center gap-2"><LayoutDashboard className="h-4 w-4" />Notice Board</h4>
+                    <p className="text-sm text-muted-foreground">This card shows birthday reminders for staff members. It displays today's birthdays and a scrolling list of upcoming birthdays for the rest of the month. You can click on a birthday notice to see a celebratory message.</p>
+                 </div>
+              </AccordionContent>
+            </AccordionItem>
             <AccordionItem value="item-1">
               <AccordionTrigger>What are the different user roles?</AccordionTrigger>
               <AccordionContent>
                 There are three main roles in this application, each with different permissions:
                 <ul className="list-disc pl-6 mt-2 space-y-2 text-sm">
                   <li><strong>Editor:</strong> Has full, unrestricted access to all features. Editors can create, edit, and delete all file entries (Deposit Works, ARS, Rig Registrations), manage staff and user accounts, approve pending updates from supervisors, and set GWD rates. This role is for administrators.</li>
-                  <li><strong>Supervisor:</strong> Has restricted, site-level editing rights. Supervisors can only see files where they are assigned to at least one site. They can edit their assigned sites (if the work status is ongoing), but their changes must be approved by an Editor. They cannot create new files or edit file-level details.</li>
+                  <li><strong>Supervisor:</strong> Has restricted, site-level editing rights. Supervisors can only see and edit their assigned sites from the 'Deposit Works' and 'ARS' pages. Their changes must be approved by an Editor. They cannot create new files, edit file-level details like applicant name, or manage other users.</li>
                   <li><strong>Viewer:</strong> Has read-only access across the entire application. Viewers can see all data, reports, and user lists but cannot make any changes. This role is for observation and monitoring purposes.</li>
                 </ul>
               </AccordionContent>
@@ -63,7 +76,7 @@ export default function HelpPage() {
             <AccordionItem value="item-5">
               <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
               <AccordionContent>
-                Supervisors can edit their assigned sites through the 'Deposit Works' or 'ARS' pages. After making changes, clicking "Save Changes" submits the update for review. It does not change the data directly. An Editor must approve the submission from the "Pending Updates" page. The site will be locked from further edits by the supervisor until the update is approved or rejected.
+                Supervisors can edit their assigned sites through the 'Deposit Works' or 'ARS' pages by clicking the "Edit" button on a file. After making changes to the site-specific fields and clicking "Save Changes", the update is submitted for review. It does not change the data directly. An Editor must then go to the "Pending Updates" page to approve or reject the submission. The site will be locked from further edits by the supervisor until the update is reviewed.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
@@ -81,17 +94,26 @@ export default function HelpPage() {
              <AccordionItem value="item-6">
               <AccordionTrigger>What is the difference between 'Deposit Works' and 'ARS'?</AccordionTrigger>
               <AccordionContent>
-                The two pages manage different types of work:
-                 <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
-                  <li><strong>Deposit Works:</strong> This is for all standard departmental work files (BWC, TWC, MWSS, etc.). All data entry and management for these projects happen here.</li>
-                  <li><strong>ARS:</strong> This page is exclusively for managing Artificial Recharge Scheme sites. It has a dedicated data entry form and bulk Excel import functionality tailored for ARS projects. ARS data is kept separate and will not appear in the main Deposit Works files.</li>
+                The application separates projects into two main categories for specialized management:
+                 <ul className="list-disc pl-6 mt-2 space-y-2 text-sm">
+                  <li><strong>Deposit Works:</strong> Found in the "File Room", this section is for all standard departmental projects like Borewell Construction (BWC), Tube Well Construction (TWC), Mini Water Supply Schemes (MWSS), etc. It uses a comprehensive data entry form that handles all aspects of these complex files.</li>
+                  <li><strong>ARS (Artificial Recharge Schemes):</strong> This is a dedicated module for managing ARS projects like check dams and recharge pits. It has its own simplified data entry form and a bulk Excel import/export feature specifically tailored for ARS data. ARS entries are managed separately and will not appear in the main Deposit Works list.</li>
                 </ul>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-9">
+              <AccordionTrigger>What are the 'Rig Registration' and 'GWD Rates' pages for?</AccordionTrigger>
+              <AccordionContent>
+                 <ul className="list-disc pl-6 mt-2 space-y-2 text-sm">
+                   <li><strong>Rig Registration:</strong> This module is for managing the registration and renewal of all drilling rigs operated by private agencies. It tracks agency details, owner information, and the status of each individual rig, including its registration validity and renewal history.</li>
+                   <li><strong>GWD Rates:</strong> This page serves as a master list for all standard departmental items and their approved rates (e.g., drilling rates per meter for different diameters). This data is planned to be used for automated estimate generation in the future.</li>
+                 </ul>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-7">
               <AccordionTrigger>How can I export data to Excel?</AccordionTrigger>
               <AccordionContent>
-                On pages with an "Export Excel" button (like Establishment, ARS, and Reports), clicking this button will generate and download an XLSX file containing the data currently displayed or filtered on that page. The pop-up dialogs on the Dashboard and other pages also have an export button to download the specific details you are viewing.
+                On pages like Establishment, ARS, GWD Rates, and Reports, you will find an "Export Excel" button. Clicking this button will generate and download an XLSX file containing the data currently visible on that page. If you have applied any filters (like a date range or search term), the exported file will only contain the filtered results. This allows you to create customized data exports.
               </AccordionContent>
             </AccordionItem>
               <AccordionItem value="item-4">
