@@ -416,11 +416,17 @@ export type DataEntryFormData = z.infer<typeof DataEntrySchema>;
 export const PendingUpdateFormDataSchema = z.object({
   fileNo: z.string(),
   updatedSiteDetails: z.array(SiteDetailSchema),
+  fileLevelUpdates: z.object({
+      fileStatus: z.enum(fileStatusOptions).optional(),
+      remarks: z.string().optional(),
+  }).optional(),
   submittedByUid: z.string(),
   submittedByName: z.string(),
   submittedAt: z.any(), // serverTimestamp()
   status: z.enum(['pending', 'approved', 'rejected', 'supervisor-unassigned']),
   notes: z.string().optional(),
+  isArsUpdate: z.boolean().optional(),
+  arsId: z.string().optional(),
 });
 export type PendingUpdateFormData = z.infer<typeof PendingUpdateFormDataSchema>;
 
