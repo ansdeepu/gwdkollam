@@ -57,7 +57,8 @@ const UpdateTable = ({
   setUpdateToReject,
   setUpdateToDelete,
   isRejecting,
-  isDeleting
+  isDeleting,
+  arsEntries,
 }: {
   title: string;
   icon: React.ElementType;
@@ -69,6 +70,7 @@ const UpdateTable = ({
   setUpdateToDelete: (id: string | null) => void;
   isRejecting: boolean;
   isDeleting: boolean;
+  arsEntries: ArsEntry[];
 }) => {
   return (
     <Card>
@@ -98,9 +100,9 @@ const UpdateTable = ({
               {updates.length > 0 ? (
                 updates.map((update, index) => {
                   const isUnassigned = update.status === 'supervisor-unassigned';
-                  const parentFile = fileEntries.find(f => f.fileNo === update.fileNo);
-                  const applicantName = update.isArsUpdate ? 'N/A' : (parentFile?.applicantName || 'N/A');
-                  const siteName = update.updatedSiteDetails.map(s => s.nameOfSite).join(', ');
+                  const parentFile = isArsTable ? arsEntries.find(a => a.id === update.arsId) : fileEntries.find(f => f.fileNo === update.fileNo);
+                  const applicantName = update.isArsUpdate ? 'N/A' : (parentFile as DataEntryFormData)?.applicantName || 'N/A';
+                  const siteName = update.updatedSiteDetails.map(s => (s as SiteDetailFormData).nameOfSite).join(', ');
                   
                   let purpose: string;
                   if (update.isArsUpdate) {
@@ -117,7 +119,7 @@ const UpdateTable = ({
                   if (update.isArsUpdate && update.arsId) {
                     reviewLink = `/dashboard/ars/entry?id=${update.arsId}&approveUpdateId=${update.id}`;
                   } else if (!update.isArsUpdate) {
-                    const parentFileId = parentFile?.id;
+                    const parentFileId = (parentFile as DataEntryFormData)?.id;
                     if (parentFileId) {
                       reviewLink = `/dashboard/data-entry?id=${parentFileId}&approveUpdateId=${update.id}`;
                     }
@@ -273,14 +275,24 @@ export default function PendingUpdatesTable() {
     const originalSites = update.isArsUpdate ? [originalEntry] : (originalEntry as DataEntryFormData).siteDetails || [];
 
     update.updatedSiteDetails.forEach((updatedSite) => {
-        const originalSite = originalSites.find(s => s.nameOfSite === updatedSite.nameOfSite);
-        
-        if (update.updatedSiteDetails.length > 1) {
-            allChanges.push({ field: `--- Site: ${updatedSite.nameOfSite} ---`, oldValue: '', newValue: '' });
+        let originalSite: SiteDetailFormData | ArsEntryFormData | undefined;
+        if (!update.isArsUpdate) {
+          originalSite = (originalSites as SiteDetailFormData[]).find(
+            s => s.nameOfSite === (updatedSite as SiteDetailFormData).nameOfSite
+          );
         } else {
-            title = `Changes for site "${updatedSite.nameOfSite}"`;
+          originalSite = originalSites[0] as ArsEntryFormData;
         }
 
+        if (!update.isArsUpdate) {
+          const siteName = (updatedSite as SiteDetailFormData).nameOfSite;
+          if (update.updatedSiteDetails.length > 1) {
+            allChanges.push({ field: `--- Site: ${siteName} ---`, oldValue: '', newValue: '' });
+          } else {
+            title = `Changes for site "${siteName}"`;
+          }
+        }
+        
         if (!originalSite) {
             allChanges.push({ field: "Site Status", oldValue: "Exists", newValue: "DELETED or NAME CHANGED" });
             return;
@@ -333,6 +345,7 @@ export default function PendingUpdatesTable() {
           icon={FolderOpen}
           updates={depositWorkUpdates}
           fileEntries={fileEntries}
+          arsEntries={arsEntries}
           handleViewChanges={handleViewChanges}
           setUpdateToReject={setUpdateToReject}
           setUpdateToDelete={setUpdateToDelete}
@@ -345,6 +358,7 @@ export default function PendingUpdatesTable() {
           updates={arsUpdates}
           isArsTable={true}
           fileEntries={fileEntries}
+          arsEntries={arsEntries}
           handleViewChanges={handleViewChanges}
           setUpdateToReject={setUpdateToReject}
           setUpdateToDelete={setUpdateToDelete}
