@@ -120,7 +120,7 @@ export default function DataEntryPage() {
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
-  const { getPendingUpdateById } = usePendingUpdates();
+  const { getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
   const { toast } = useToast();
   const { setHeader } = usePageHeader();
 
@@ -149,15 +149,21 @@ export default function DataEntryPage() {
           let dataForForm: DataEntryFormData | null = null;
           let permissionError = false;
 
-          // If there is an entry, check permissions first
           if (originalEntry) {
               if (user.role === 'supervisor' && !(originalEntry.assignedSupervisorUids?.includes(user.uid))) {
                   permissionError = true;
-                  originalEntry = null; // Nullify entry if supervisor is not assigned
+                  originalEntry = null; 
+              } else if (user.role === 'supervisor') {
+                  const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
+                  originalEntry.siteDetails?.forEach(site => {
+                      if (site.supervisorUid === user.uid) {
+                          site.isPending = hasActivePendingUpdate;
+                      }
+                  });
               }
           }
 
-          if (!fileIdToEdit) { // Creating a new entry
+          if (!fileIdToEdit) { 
               dataForForm = getFormDefaults();
               setFileNoForHeader(null);
           } else if (permissionError) {
@@ -168,7 +174,6 @@ export default function DataEntryPage() {
               setFileNoForHeader(null);
           } else {
             setFileNoForHeader(originalEntry.fileNo);
-            // Logic for merging pending updates
             if (approveUpdateId && pendingUpdate && originalEntry) {
               if (pendingUpdate.status !== 'pending') {
                 toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
@@ -211,12 +216,12 @@ export default function DataEntryPage() {
       }
     };
 
-    if (!authIsLoading && user) { // Ensure user object is available before loading
+    if (!authIsLoading && user) {
       loadAllData();
     }
     
     return () => { isMounted = false; };
-  }, [fileIdToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, fetchAllUsers, toast]);
+  }, [fileIdToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, hasPendingUpdateForFile, fetchAllUsers, toast]);
 
   useEffect(() => {
     let title = "View File Data";
