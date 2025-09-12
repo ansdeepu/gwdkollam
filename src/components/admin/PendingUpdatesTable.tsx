@@ -1,4 +1,3 @@
-
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
@@ -9,7 +8,7 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useArsEntries, type ArsEntry } from '@/hooks/useArsEntries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, UserX, ListChecks, Trash2 } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, UserX, ListChecks, Trash2, FolderOpen, Waves } from 'lucide-react';
 import { formatDistanceToNow, format, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -20,6 +19,7 @@ import type { SiteDetailFormData, ArsEntryFormData, DataEntryFormData } from '@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
@@ -45,6 +45,134 @@ const getFieldName = (key: string) => {
         .replace(/([A-Z])/g, ' $1')
         .replace(/^./, str => str.toUpperCase());
 };
+
+const UpdateTable = ({
+  title,
+  icon: Icon,
+  updates,
+  isArsTable = false,
+  fileEntries,
+  handleViewChanges,
+  setUpdateToReject,
+  setUpdateToDelete,
+  isRejecting,
+  isDeleting
+}: {
+  title: string;
+  icon: React.ElementType;
+  updates: PendingUpdate[];
+  isArsTable?: boolean;
+  fileEntries: DataEntryFormData[];
+  handleViewChanges: (update: PendingUpdate) => void;
+  setUpdateToReject: (id: string | null) => void;
+  setUpdateToDelete: (id: string | null) => void;
+  isRejecting: boolean;
+  isDeleting: boolean;
+}) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Icon className="h-5 w-5 text-primary" />
+          {title} ({updates.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sl. No.</TableHead>
+                <TableHead>File No.</TableHead>
+                {!isArsTable && <TableHead>Applicant Name</TableHead>}
+                <TableHead>Site Name(s)</TableHead>
+                {!isArsTable && <TableHead>Purpose(s)</TableHead>}
+                <TableHead>Submitted By</TableHead>
+                <TableHead>Submitted</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center w-[240px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {updates.length > 0 ? (
+                updates.map((update, index) => {
+                  const isUnassigned = update.status === 'supervisor-unassigned';
+                  const parentFile = fileEntries.find(f => f.fileNo === update.fileNo);
+                  const applicantName = update.isArsUpdate ? 'N/A' : (parentFile?.applicantName || 'N/A');
+                  const siteName = update.updatedSiteDetails.map(s => s.nameOfSite).join(', ');
+                  const purpose = update.isArsUpdate ? (update.updatedSiteDetails[0] as ArsEntryFormData).arsTypeOfScheme : update.updatedSiteDetails.map(s => s.purpose).join(', ');
+                  const isRejected = update.status === 'rejected';
+
+                  let reviewLink = '';
+                  if (update.isArsUpdate && update.arsId) {
+                    reviewLink = `/dashboard/ars/entry?id=${update.arsId}&approveUpdateId=${update.id}`;
+                  } else if (!update.isArsUpdate) {
+                    const parentFileId = parentFile?.id;
+                    if (parentFileId) {
+                      reviewLink = `/dashboard/data-entry?id=${parentFileId}&approveUpdateId=${update.id}`;
+                    }
+                  }
+
+                  return (
+                    <TableRow key={update.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell className="font-medium">{update.fileNo}</TableCell>
+                      {!isArsTable && <TableCell>{applicantName}</TableCell>}
+                      <TableCell>{siteName}</TableCell>
+                      {!isArsTable && <TableCell>{purpose}</TableCell>}
+                      <TableCell>{update.submittedByName}</TableCell>
+                      <TableCell>
+                        {formatDistanceToNow(update.submittedAt, { addSuffix: true })}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant={isUnassigned ? "destructive" : isRejected ? "outline" : "default"} className={isRejected ? "text-destructive border-destructive" : ""}>
+                              {isUnassigned ? <UserX className="mr-1 h-3 w-3" /> : isRejected && <XCircle className="mr-1 h-3 w-3" />}
+                              {isUnassigned ? "Unassigned" : isRejected ? "Rejected" : update.status}
+                            </Badge>
+                          </TooltipTrigger>
+                          {(isUnassigned || isRejected) && update.notes && <TooltipContent><p>{update.notes}</p></TooltipContent>}
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="text-center space-x-1">
+                        <Button variant="link" className="p-0 h-auto" onClick={() => handleViewChanges(update)}><ListChecks className="mr-2 h-4 w-4" />View</Button>
+                        {reviewLink ? (
+                          <Button asChild size="sm" variant="outline"><Link href={reviewLink}><CheckCircle className="mr-2 h-4 w-4" /> Review</Link></Button>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="sm" variant="outline" disabled><CheckCircle className="mr-2 h-4 w-4" /> Review</Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Original file could not be found to start review.</p></TooltipContent>
+                          </Tooltip>
+                        )}
+                        <Button size="sm" variant="destructive" onClick={() => setUpdateToReject(update.id)} disabled={isRejecting || isRejected}><XCircle className="mr-2 h-4 w-4" /> Reject</Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setUpdateToDelete(update.id)} disabled={isDeleting}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Permanently Delete Update</p></TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={isArsTable ? 7 : 9} className="h-24 text-center">No pending updates in this category.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 
 export default function PendingUpdatesTable() {
   const { rejectUpdate, getPendingUpdatesForFile, deleteUpdate } = usePendingUpdates();
@@ -75,6 +203,12 @@ export default function PendingUpdatesTable() {
   useEffect(() => {
     fetchUpdates();
   }, [fetchUpdates]);
+
+  const { depositWorkUpdates, arsUpdates } = useMemo(() => {
+    const depositWorkUpdates = pendingUpdates.filter(u => !u.isArsUpdate);
+    const arsUpdates = pendingUpdates.filter(u => u.isArsUpdate);
+    return { depositWorkUpdates, arsUpdates };
+  }, [pendingUpdates]);
 
   const handleReject = async () => {
     if (!updateToReject) return;
@@ -183,92 +317,30 @@ export default function PendingUpdatesTable() {
 
   return (
     <TooltipProvider>
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Sl. No.</TableHead>
-              <TableHead>File No.</TableHead>
-              <TableHead>Applicant Name</TableHead>
-              <TableHead>Site Name(s)</TableHead>
-              <TableHead>Purpose(s)</TableHead>
-              <TableHead>Submitted By</TableHead>
-              <TableHead>Submitted</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-center w-[240px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pendingUpdates.length > 0 ? (
-              pendingUpdates.map((update, index) => {
-                const isUnassigned = update.status === 'supervisor-unassigned';
-                const parentFile = fileEntries.find(f => f.fileNo === update.fileNo);
-                const applicantName = update.isArsUpdate ? 'N/A' : (parentFile?.applicantName || 'N/A');
-                const siteName = update.updatedSiteDetails.map(s => s.nameOfSite).join(', ');
-                const purpose = update.isArsUpdate ? (update.updatedSiteDetails[0] as ArsEntryFormData).arsTypeOfScheme : update.updatedSiteDetails.map(s => s.purpose).join(', ');
-                const isRejected = update.status === 'rejected';
-
-                let reviewLink = '';
-                if(update.isArsUpdate && update.arsId) {
-                    reviewLink = `/dashboard/ars/entry?id=${update.arsId}&approveUpdateId=${update.id}`;
-                } else if (!update.isArsUpdate) {
-                    const parentFileId = parentFile?.id;
-                    if(parentFileId) {
-                       reviewLink = `/dashboard/data-entry?id=${parentFileId}&approveUpdateId=${update.id}`;
-                    }
-                }
-
-                return (
-                <TableRow key={update.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell className="font-medium">{update.fileNo}</TableCell>
-                  <TableCell>{applicantName}</TableCell>
-                  <TableCell>{siteName}</TableCell>
-                  <TableCell>{purpose}</TableCell>
-                  <TableCell>{update.submittedByName}</TableCell>
-                  <TableCell>
-                    {formatDistanceToNow(update.submittedAt, { addSuffix: true })}
-                  </TableCell>
-                  <TableCell className="text-center">
-                     <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Badge variant={isUnassigned ? "destructive" : isRejected ? "outline" : "default"} className={isRejected ? "text-destructive border-destructive" : ""}>
-                              {isUnassigned ? <UserX className="mr-1 h-3 w-3"/> : isRejected && <XCircle className="mr-1 h-3 w-3"/>}
-                              {isUnassigned ? "Unassigned" : isRejected ? "Rejected" : update.status}
-                            </Badge>
-                        </TooltipTrigger>
-                        {(isUnassigned || isRejected) && update.notes && <TooltipContent><p>{update.notes}</p></TooltipContent>}
-                     </Tooltip>
-                  </TableCell>
-                  <TableCell className="text-center space-x-1">
-                    <Button variant="link" className="p-0 h-auto" onClick={() => handleViewChanges(update)}><ListChecks className="mr-2 h-4 w-4"/>View</Button>
-                    {reviewLink ? (
-                      <Button asChild size="sm" variant="outline"><Link href={reviewLink}><CheckCircle className="mr-2 h-4 w-4" /> Review</Link></Button>
-                    ) : (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button size="sm" variant="outline" disabled><CheckCircle className="mr-2 h-4 w-4" /> Review</Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Original file could not be found to start review.</p></TooltipContent>
-                      </Tooltip>
-                    )}
-                    <Button size="sm" variant="destructive" onClick={() => setUpdateToReject(update.id)} disabled={isRejecting || isRejected}><XCircle className="mr-2 h-4 w-4" /> Reject</Button>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setUpdateToDelete(update.id)} disabled={isDeleting}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Permanently Delete Update</p></TooltipContent>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              )})
-            ) : (
-              <TableRow><TableCell colSpan={9} className="h-24 text-center">No pending updates to review.</TableCell></TableRow>
-            )}
-          </TableBody>
-        </Table>
+      <div className="space-y-8">
+        <UpdateTable
+          title="Deposit Works Updates"
+          icon={FolderOpen}
+          updates={depositWorkUpdates}
+          fileEntries={fileEntries}
+          handleViewChanges={handleViewChanges}
+          setUpdateToReject={setUpdateToReject}
+          setUpdateToDelete={setUpdateToDelete}
+          isRejecting={isRejecting}
+          isDeleting={isDeleting}
+        />
+        <UpdateTable
+          title="ARS Updates"
+          icon={Waves}
+          updates={arsUpdates}
+          isArsTable={true}
+          fileEntries={fileEntries}
+          handleViewChanges={handleViewChanges}
+          setUpdateToReject={setUpdateToReject}
+          setUpdateToDelete={setUpdateToDelete}
+          isRejecting={isRejecting}
+          isDeleting={isDeleting}
+        />
       </div>
       
       <AlertDialog open={!!updateToReject} onOpenChange={() => setUpdateToReject(null)}>
