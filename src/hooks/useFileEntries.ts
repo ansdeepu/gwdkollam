@@ -91,24 +91,26 @@ export function useFileEntries() {
       // After fetching entries, if the user is a supervisor, check for pending updates.
       if (user.role === 'supervisor' && user.uid) {
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        
-        // Create a set of site names that are part of an active, 'pending' update
-        const pendingSiteNames = new Set<string>(
-            pendingUpdates
-                .filter(u => u.status === 'pending')
-                .flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite))
+        const pendingFileNumbers = new Set(
+          pendingUpdates
+            .filter(u => u.status === 'pending')
+            .map(u => u.fileNo)
         );
-
-        if (pendingSiteNames.size > 0) {
+        
+        if (pendingFileNumbers.size > 0) {
             entriesData = entriesData.map(entry => {
-                const updatedSiteDetails = entry.siteDetails?.map(site => {
-                    // A site is pending if its name is in the pending set AND it's assigned to the current user.
-                    if (site.supervisorUid === user.uid && site.nameOfSite && pendingSiteNames.has(site.nameOfSite)) {
-                       return { ...site, isPending: true };
-                    }
-                    return site;
-                });
-                return { ...entry, siteDetails: updatedSiteDetails };
+                const isFilePending = pendingFileNumbers.has(entry.fileNo);
+                if (isFilePending) {
+                     const updatedSiteDetails = entry.siteDetails?.map(site => {
+                        // Mark all sites within that pending file as pending for simplicity in UI
+                        if (site.supervisorUid === user.uid) {
+                            return { ...site, isPending: true };
+                        }
+                        return site;
+                    });
+                    return { ...entry, siteDetails: updatedSiteDetails };
+                }
+                return entry;
             });
         }
       }
@@ -213,19 +215,14 @@ export function useFileEntries() {
         return null;
       }
       
-      const entry = { id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) } as DataEntryFormData;
+      let entry = { id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) } as DataEntryFormData;
 
       // For supervisors, we still need to attach the pending status for the UI
       if (user && user.role === 'supervisor') {
          const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo, user.uid);
-         if (pendingUpdates.some(u => u.status === 'pending')) {
-            const pendingSiteNames = new Set(pendingUpdates.flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite)));
-            if (entry.siteDetails) {
-                entry.siteDetails = entry.siteDetails.map(site => ({
-                    ...site,
-                    isPending: pendingSiteNames.has(site.nameOfSite)
-                }));
-            }
+         const isFilePending = pendingUpdates.some(u => u.status === 'pending');
+         if (isFilePending) {
+             entry.siteDetails = entry.siteDetails?.map(site => ({...site, isPending: true}));
          }
       }
       return entry;
