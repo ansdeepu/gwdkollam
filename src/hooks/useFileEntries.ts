@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -90,26 +91,24 @@ export function useFileEntries() {
       // After fetching entries, if the user is a supervisor, check for pending updates.
       if (user.role === 'supervisor' && user.uid) {
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        // We only care about updates that are actually in 'pending' status.
-        const pendingFileNos = new Set(
+        
+        // Create a set of site names that are part of an active, 'pending' update
+        const pendingSiteNames = new Set<string>(
             pendingUpdates
                 .filter(u => u.status === 'pending')
-                .map(u => u.fileNo)
+                .flatMap(u => u.updatedSiteDetails.map(s => s.nameOfSite))
         );
 
-        if (pendingFileNos.size > 0) {
+        if (pendingSiteNames.size > 0) {
             entriesData = entriesData.map(entry => {
-                if (entry.fileNo && pendingFileNos.has(entry.fileNo)) {
-                    // This file has a pending update from this supervisor. Mark all of the supervisor's sites in this file as pending.
-                    const updatedSiteDetails = entry.siteDetails?.map(site => {
-                        if (site.supervisorUid === user.uid) {
-                           return { ...site, isPending: true };
-                        }
-                        return site;
-                    });
-                    return { ...entry, siteDetails: updatedSiteDetails };
-                }
-                return entry;
+                const updatedSiteDetails = entry.siteDetails?.map(site => {
+                    // A site is pending if its name is in the pending set AND it's assigned to the current user.
+                    if (site.supervisorUid === user.uid && site.nameOfSite && pendingSiteNames.has(site.nameOfSite)) {
+                       return { ...site, isPending: true };
+                    }
+                    return site;
+                });
+                return { ...entry, siteDetails: updatedSiteDetails };
             });
         }
       }
