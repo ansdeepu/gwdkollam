@@ -139,6 +139,22 @@
     100% { transform: translateY(-50%); } /* Assumes content is duplicated */
   }
 
+  /* Marquee styles for Birthdays */
+  .marquee-container-birthdays {
+    overflow: hidden;
+  }
+  .marquee-content-birthdays {
+    animation: marquee-vertical-animation-birthdays 30s linear infinite;
+  }
+  .marquee-container-birthdays:hover .marquee-content-birthdays {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-vertical-animation-birthdays {
+    0%   { transform: translateY(0%); }
+    100% { transform: translateY(-50%); }
+  }
+
+
   /* Utility to hide scrollbars */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
