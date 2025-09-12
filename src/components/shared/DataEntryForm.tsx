@@ -328,6 +328,7 @@ export default function DataEntryFormComponent({
       } else if (userRole === 'supervisor' && fileNoToEdit) {
           const supervisorEditableFields: (keyof SiteDetailFormData)[] = ['latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'];
           
+          let hasSiteChanges = false;
           const sitesWithChanges = (data.siteDetails || [])
             .filter(currentSite => {
               if (currentSite.supervisorUid !== user.uid) return false;
@@ -339,16 +340,17 @@ export default function DataEntryFormComponent({
                   const currentValue = currentSite[key] ?? "";
                   const originalValue = originalSite[key] ?? "";
                   if (String(currentValue) !== String(originalValue)) {
+                      hasSiteChanges = true;
                       return true;
                   }
               }
               return false;
             });
-
+          
           const fileStatusChanged = data.fileStatus !== initialData.fileStatus;
           const remarksChanged = data.remarks !== initialData.remarks;
 
-          if (sitesWithChanges.length === 0 && !fileStatusChanged && !remarksChanged) {
+          if (!hasSiteChanges && !fileStatusChanged && !remarksChanged) {
               toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned sites or file status." });
               setIsSubmitting(false);
               return;
@@ -375,10 +377,10 @@ export default function DataEntryFormComponent({
   }
 
   const isFieldReadOnly = (fieldName: keyof SiteDetailFormData): boolean => {
-    if (isEditor) return false; // Editor can edit everything
+    if (isEditor) return false;
     if (isViewer) return true;
     if (isSupervisor) {
-      if (!fileNoToEdit) return true; // Supervisor cannot create new entries
+      if (!fileNoToEdit) return true;
       const supervisorEditableFields: (keyof SiteDetailFormData)[] = [
         'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure'
       ];
@@ -388,10 +390,10 @@ export default function DataEntryFormComponent({
   };
   
   const isMainFieldReadOnly = (fieldName: keyof DataEntryFormData): boolean => {
-    if (isEditor) return false; // Editor can edit everything
+    if (isEditor) return false;
     if (isViewer) return true;
     if (isSupervisor) {
-      if (!fileNoToEdit) return true; // Supervisor cannot create new entries
+      if (!fileNoToEdit) return true;
       return !['fileStatus', 'remarks'].includes(fieldName as string);
     }
     return true; // Default to read-only
@@ -847,3 +849,5 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    
