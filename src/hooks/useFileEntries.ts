@@ -102,17 +102,13 @@ export function useFileEntries() {
         if (pendingFileNumbers.size > 0) {
             entriesData = entriesData.map(entry => {
                 const isFilePending = pendingFileNumbers.has(entry.fileNo);
-                if (isFilePending) {
-                     const updatedSiteDetails = entry.siteDetails?.map(site => {
-                        // Mark all sites within that pending file as pending for simplicity in UI
-                        if (site.supervisorUid === user.uid) {
-                            return { ...site, isPending: true };
-                        }
-                        return site;
-                    });
-                    return { ...entry, siteDetails: updatedSiteDetails };
-                }
-                return entry;
+                const updatedSiteDetails = entry.siteDetails?.map(site => {
+                    if (site.supervisorUid === user.uid) {
+                        return { ...site, isPending: isFilePending };
+                    }
+                    return site;
+                });
+                return { ...entry, siteDetails: updatedSiteDetails };
             });
         }
       }
@@ -220,11 +216,12 @@ export function useFileEntries() {
       let entry = { id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) } as DataEntryFormData;
 
       // For supervisors, we still need to attach the pending status for the UI
-      if (user && user.role === 'supervisor') {
+      if (user && user.role === 'supervisor' && user.uid) {
          const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo, user.uid);
          const isFilePending = pendingUpdates.some(u => u.status === 'pending');
          if (isFilePending) {
-             entry.siteDetails = entry.siteDetails?.map(site => ({...site, isPending: true}));
+             const updatedSiteDetails = entry.siteDetails?.map(site => ({...site, isPending: true}));
+             entry = { ...entry, siteDetails: updatedSiteDetails };
          }
       }
       return entry;
