@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit3, Trash2, Loader2, Clock } from "lucide-react";
-import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus } from "@/lib/schemas";
+import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus, PendingUpdate } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -48,6 +48,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
+import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
 
@@ -91,15 +92,32 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const { toast } = useToast();
   const { isLoading: entriesLoadingHook, deleteFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth(); 
+  const { getPendingUpdatesForFile } = usePendingUpdates();
 
   const [viewItem, setViewItem] = useState<DataEntryFormData | null>(null);
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pendingFileNos, setPendingFileNos] = useState<Set<string>>(new Set());
 
   const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
   const canDelete = user?.role === 'editor';
+
+  useEffect(() => {
+    async function checkPendingStatus() {
+      if (user?.role === 'supervisor' && user.uid) {
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingNos = new Set(
+          pendingUpdates
+            .filter(u => u.status === 'pending')
+            .map(u => u.fileNo)
+        );
+        setPendingFileNos(pendingNos);
+      }
+    }
+    checkPendingStatus();
+  }, [fileEntries, user, getPendingUpdatesForFile]);
 
   const filteredEntries = useMemo(() => {
     let entries = fileEntries;
@@ -269,7 +287,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
               </TableHeader>
               <TableBody>
                 {paginatedEntries.map((entry, index) => {
-                  const isFilePendingForSupervisor = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.isPending);
+                  const isFilePendingForSupervisor = user?.role === 'supervisor' && pendingFileNos.has(entry.fileNo);
                   const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
                   
                   return (
