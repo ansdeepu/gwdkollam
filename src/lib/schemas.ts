@@ -304,7 +304,7 @@ export const SiteDetailSchema = z.object({
 
 }).superRefine((data, ctx) => {
     const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-    if (data.workStatus && finalStatuses.includes(data.workStatus) && !data.dateOfCompletion) {
+    if (data.workStatus && finalStatuses.includes(data.workStatus as SiteWorkStatus) && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: `is required when status is '${data.workStatus}'.`,
@@ -688,6 +688,7 @@ export const arsWorkStatusOptions = [
   "Work Completed",
   "Bill Prepared",
   "Payment Completed",
+  "Work Failed",
 ] as const;
 
 export const arsTypeOfSchemeOptions = [
@@ -725,6 +726,14 @@ export const ArsEntrySchema = z.object({
   workRemarks: z.string().optional(),
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
+}).superRefine((data, ctx) => {
+    if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Completion Date is required for this status.",
+            path: ["dateOfCompletion"],
+        });
+    }
 });
 export type ArsEntryFormData = z.infer<typeof ArsEntrySchema>;
 

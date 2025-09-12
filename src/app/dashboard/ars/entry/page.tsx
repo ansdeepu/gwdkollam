@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Save, X, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useFormContext } from "@/components/ui/form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,6 +74,34 @@ const processDataForForm = (data: any): any => {
     }
     return data;
 };
+
+const CompletionDateField = () => {
+    const { control } = useFormContext<ArsEntryFormData>();
+    const workStatus = useWatch({ control, name: 'workStatus' });
+    const isRequired = workStatus === 'Work Completed' || workStatus === 'Work Failed';
+
+    return (
+        <FormField
+            name="dateOfCompletion"
+            control={control}
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Completion Date {isRequired && <span className="text-destructive">*</span>}</FormLabel>
+                    <FormControl>
+                        <Input
+                            type="date"
+                            {...field}
+                            value={field.value ?? ""}
+                            readOnly={false} // This will be handled by the parent component's logic
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+    );
+};
+
 
 export default function ArsEntryPage() {
     const { setHeader } = usePageHeader();
@@ -268,7 +296,7 @@ export default function ArsEntryPage() {
                                     <FormMessage />
                                 </FormItem>
                             )}/>
-                           <FormField name="dateOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('dateOfCompletion')} /></FormControl><FormMessage /></FormItem> )} />
+                            <CompletionDateField />
                           <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('totalExpenditure')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('noOfBeneficiary')} /></FormControl><FormMessage /></FormItem>)} />
                            <FormField
@@ -314,5 +342,3 @@ export default function ArsEntryPage() {
         </div>
     );
 }
-
-    
