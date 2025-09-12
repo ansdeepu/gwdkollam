@@ -75,14 +75,14 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
   }, [allFileEntries, rejectedUpdates, user]);
 
   return (
-    <Card className="shadow-lg flex flex-col h-full min-h-[33vh]">
+    <Card className="shadow-lg flex flex-col h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-primary" />Important Updates ({alerts.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
-        <ScrollArea className="flex-1 pr-3">
+        <ScrollArea className="flex-1 pr-3 h-64">
             <div className="space-y-2">
               {alerts.length > 0 ? (
                 <>
