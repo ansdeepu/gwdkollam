@@ -90,7 +90,9 @@ export function useFileEntries() {
 
       // After fetching entries, if the user is a supervisor, check for pending updates.
       if (user.role === 'supervisor' && user.uid) {
+        // Fetch only the pending updates for the current supervisor.
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        
         const pendingFileNumbers = new Set(
           pendingUpdates
             .filter(u => u.status === 'pending')
