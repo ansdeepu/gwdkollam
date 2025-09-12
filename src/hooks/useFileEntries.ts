@@ -77,8 +77,8 @@ export function useFileEntries() {
       q = query(fileEntriesRef);
     }
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const entriesData = snapshot.docs.map(doc => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      let entriesData = snapshot.docs.map(doc => {
         const data = doc.data();
         const convertedData = convertTimestampsToDates(data);
         return {
@@ -87,9 +87,26 @@ export function useFileEntries() {
         } as DataEntryFormData;
       });
 
-      // Simplified logic: Just set the entries.
-      // The logic for checking pending status will be handled more efficiently
-      // in the specific component where it's needed (DataEntryForm).
+      // After fetching entries, if the user is a supervisor, check for pending updates.
+      if (user.role === 'supervisor' && user.uid) {
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingFileNos = new Set(pendingUpdates.map(u => u.fileNo));
+
+        if (pendingFileNos.size > 0) {
+            entriesData = entriesData.map(entry => {
+                if (entry.fileNo && pendingFileNos.has(entry.fileNo)) {
+                    // This file has a pending update from this supervisor. Mark all sites as pending.
+                    const updatedSiteDetails = entry.siteDetails?.map(site => ({
+                        ...site,
+                        isPending: true
+                    }));
+                    return { ...entry, siteDetails: updatedSiteDetails };
+                }
+                return entry;
+            });
+        }
+      }
+
       cachedFileEntries = entriesData;
       setFileEntries(entriesData);
       setIsLoading(false);
@@ -106,7 +123,7 @@ export function useFileEntries() {
     });
 
     return () => unsubscribe();
-  }, [user, toast]);
+  }, [user, toast, getPendingUpdatesForFile]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null) => {
     if (!user) throw new Error("User must be logged in to add an entry.");
