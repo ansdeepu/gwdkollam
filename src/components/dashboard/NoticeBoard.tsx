@@ -1,4 +1,3 @@
-
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
@@ -82,7 +81,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
 
 
   return (
-    <Card className="shadow-lg flex flex-col h-full min-h-[33vh]">
+    <Card className="shadow-lg flex flex-col h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" />Notice Board</CardTitle>
       </CardHeader>
@@ -125,7 +124,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
           </ScrollArea>
         </div>
         
-        <div className="border rounded-lg p-3 bg-background flex flex-col flex-1 min-h-0">
+        <div className="border rounded-lg p-3 bg-background flex flex-col flex-grow-[2] basis-0 min-h-0">
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
            <ScrollArea className="flex-1 pr-2">
               <div className="space-y-2">
