@@ -1,3 +1,4 @@
+
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
@@ -100,7 +101,16 @@ const UpdateTable = ({
                   const parentFile = fileEntries.find(f => f.fileNo === update.fileNo);
                   const applicantName = update.isArsUpdate ? 'N/A' : (parentFile?.applicantName || 'N/A');
                   const siteName = update.updatedSiteDetails.map(s => s.nameOfSite).join(', ');
-                  const purpose = update.isArsUpdate ? (update.updatedSiteDetails[0] as ArsEntryFormData).arsTypeOfScheme : update.updatedSiteDetails.map(s => s.purpose).join(', ');
+                  
+                  let purpose: string;
+                  if (update.isArsUpdate) {
+                    const arsDetail = update.updatedSiteDetails[0] as ArsEntryFormData;
+                    purpose = arsDetail?.arsTypeOfScheme || 'N/A';
+                  } else {
+                    const siteDetails = update.updatedSiteDetails as SiteDetailFormData[];
+                    purpose = siteDetails.map(s => s.purpose || 'N/A').join(', ');
+                  }
+
                   const isRejected = update.status === 'rejected';
 
                   let reviewLink = '';
