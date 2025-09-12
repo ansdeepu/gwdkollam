@@ -81,7 +81,7 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
-         <div className="h-[32rem] marquee-container-updates pr-3">
+         <div className="h-[22rem] marquee-container-updates pr-3">
             <div className="marquee-content-updates space-y-2">
               {alerts.length > 0 ? (
                 <>
