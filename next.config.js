@@ -50,9 +50,6 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    appDir: false,
-  },
   allowedDevOrigins: [
       "*.google.com",
       "*.cloud.google.com",

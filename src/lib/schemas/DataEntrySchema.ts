@@ -333,7 +333,7 @@ export const DataEntrySchema = z.object({
   applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
   constituency: z.enum(constituencyOptions).optional(),
-  applicationType: z.enum(applicationTypeOptions, { required_error: 'Application Type is required.' }),
+  applicationType: z.enum(applicationTypeOptions).optional(),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   assignedSupervisorUids: z.array(z.string()).optional(),
 
@@ -358,6 +358,13 @@ export const DataEntrySchema = z.object({
             code: z.ZodIssueCode.custom,
             message: "File Status is required.",
             path: ["fileStatus"],
+        });
+    }
+    if (!data.applicationType) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Application Type is required.",
+            path: ["applicationType"],
         });
     }
 });
