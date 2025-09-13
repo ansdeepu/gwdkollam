@@ -68,7 +68,7 @@ export default function FinancialSummaryPage() {
         let sbiCredit = 0, stsbCredit = 0, revenueHeadCreditDirect = 0;
         let sbiDebit = 0, stsbDebit = 0;
 
-        allFileEntries.forEach(entry => {
+        allFileEntries.forEach((entry: DataEntryFormData) => {
           entry.remittanceDetails?.forEach(rd => {
             const remittedDate = rd.dateOfRemittance ? safeParseDate(rd.dateOfRemittance) : null;
             const isInPeriod = !isDateFilterActive || (remittedDate && isValid(remittedDate) && sDate && eDate && isWithinInterval(remittedDate, { start: sDate, end: eDate }));

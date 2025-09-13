@@ -1,13 +1,7 @@
 import type {Metadata} from 'next';
-import { Open_Sans, Roboto_Mono } from 'next/font/google';
+import { Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-
-const openSans = Open_Sans({
-  variable: '--font-open-sans',
-  subsets: ['latin'],
-  display: 'swap',
-});
 
 const robotoMono = Roboto_Mono({
   variable: '--font-roboto-mono',
@@ -30,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${openSans.variable} ${robotoMono.variable} font-sans antialiased`}>
+      <body className={`${robotoMono.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>
