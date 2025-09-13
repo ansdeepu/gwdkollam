@@ -598,7 +598,7 @@ export default function DataEntryFormComponent({
                                         )}
                                         <div className="border-t pt-6 space-y-6">
                                             <div className="grid md:grid-cols-3 gap-6">
-                                                <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                                <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField control={form.control} name={`siteDetails.${index}.purpose`} render={({ field }) => (<FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/>
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
