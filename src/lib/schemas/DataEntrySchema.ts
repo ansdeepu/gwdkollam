@@ -266,7 +266,7 @@ export const SiteDetailSchema = z.object({
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
-  workStatus: z.enum(siteWorkStatusOptions, { required_error: 'Work Status is required.' }),
+  workStatus: z.enum(siteWorkStatusOptions).optional(),
   workRemarks: z.string().optional().nullable().default(""),
 
   // Survey fields (Actuals)
@@ -300,6 +300,13 @@ export const SiteDetailSchema = z.object({
   isPending: z.boolean().optional(), // Internal state, not part of form
 
 }).superRefine((data, ctx) => {
+    if (!data.workStatus) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Work Status is required.",
+            path: ["workStatus"],
+        });
+    }
     const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
     if (data.workStatus && finalStatuses.includes(data.workStatus as SiteWorkStatus) && !data.dateOfCompletion) {
         ctx.addIssue({
