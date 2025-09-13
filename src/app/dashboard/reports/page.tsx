@@ -540,9 +540,9 @@ export default function ReportsPage() {
                     </SelectContent>
                 </Select>
             </div>
-             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t mt-4">
                 <Select value={constituencyFilter} onValueChange={setConstituencyFilter}>
-                  <SelectTrigger className="lg:col-span-1">
+                  <SelectTrigger className="w-full sm:w-[250px]">
                     <SelectValue placeholder="Filter by Constituency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -552,14 +552,14 @@ export default function ReportsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-             </div>
-             <div className="pt-2 flex items-center gap-4">
-                <div className="relative flex-grow">
+                <div className="relative flex-grow w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input placeholder="Global text search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
                 </div>
-                <Button variant="secondary" onClick={handleResetFilters}><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
-                <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0}><FileDown className="mr-2 h-4 w-4" />Export</Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button variant="secondary" onClick={handleResetFilters} className="w-full sm:w-auto"><RotateCcw className="mr-2 h-4 w-4" />Reset</Button>
+                    <Button onClick={handleExportExcel} disabled={filteredReportRows.length === 0} className="w-full sm:w-auto"><FileDown className="mr-2 h-4 w-4" />Export</Button>
+                </div>
              </div>
         </CardContent>
       </Card>
