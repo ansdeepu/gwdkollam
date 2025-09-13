@@ -34,6 +34,7 @@ import {
   type FileStatus,
   type SiteWorkStatus,
   type SitePurpose,
+  constituencyOptions,
 } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { useFileEntries } from "@/hooks/useFileEntries";
@@ -130,6 +131,7 @@ export default function ReportsPage() {
   
   const [applicationTypeFilter, setApplicationTypeFilter] = useState("all");
   const [typeOfRigFilter, setTypeOfRigFilter] = useState("all");
+  const [constituencyFilter, setConstituencyFilter] = useState("all");
 
   const [currentDate, setCurrentDate] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<string | null>(null);
@@ -199,6 +201,9 @@ export default function ReportsPage() {
     if (applicationTypeFilter !== "all") {
       currentEntries = currentEntries.filter(entry => entry.applicationType === applicationTypeFilter);
     }
+    if (constituencyFilter !== "all") {
+      currentEntries = currentEntries.filter(entry => entry.constituency === constituencyFilter || entry.siteDetails?.some(sd => sd.constituency === constituencyFilter));
+    }
     
     // Site-specific dropdowns need to filter the whole entry if any site matches
     if (workCategoryFilter !== "all") {
@@ -216,11 +221,11 @@ export default function ReportsPage() {
       currentEntries = currentEntries.filter(entry => {
         const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
         const mainFieldsToSearch = [
-          entry.fileNo, entry.applicantName, entry.phoneNo, appTypeDisplay, entry.fileStatus, entry.remarks
+          entry.fileNo, entry.applicantName, entry.phoneNo, appTypeDisplay, entry.fileStatus, entry.remarks, entry.constituency,
         ].filter(Boolean).map(val => String(val).toLowerCase());
         if (mainFieldsToSearch.some(field => field.includes(lowerSearchTerm))) return true;
         if (entry.siteDetails?.some(site => [
-            site.nameOfSite, site.accessibleRig, site.tenderNo, site.purpose, site.typeOfRig, site.contractorName, site.supervisorName, site.workStatus, site.workRemarks, site.zoneDetails, site.pumpDetails, site.waterTankCapacity,
+            site.nameOfSite, site.accessibleRig, site.tenderNo, site.purpose, site.typeOfRig, site.contractorName, site.supervisorName, site.workStatus, site.workRemarks, site.zoneDetails, site.pumpDetails, site.waterTankCapacity, site.constituency,
           ].filter(Boolean).map(val => String(val).toLowerCase()).some(field => field.includes(lowerSearchTerm))
         )) return true;
         if (entry.remittanceDetails?.some(rd => rd.remittedAccount?.toLowerCase().includes(lowerSearchTerm))) return true;
@@ -249,7 +254,7 @@ export default function ReportsPage() {
 
     // --- Start Flattening logic ---
     const flattenedRows: FlattenedReportRow[] = [];
-    const isFileLevelFilterActive = statusFilter !== "all" || (dateFilterType !== "all" && (!!startDate || !!endDate));
+    const isFileLevelFilterActive = statusFilter !== "all" || constituencyFilter !== "all" || (dateFilterType !== "all" && (!!startDate || !!endDate));
     const isSiteLevelFilterActive = workCategoryFilter !== "all" || serviceTypeFilter !== "all" || typeOfRigFilter !== "all" || applicationTypeFilter !== "all";
 
     currentEntries.forEach(entry => {
@@ -329,7 +334,7 @@ export default function ReportsPage() {
   }, [
     fileEntries, searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
     startDate, endDate, dateFilterType,
-    applicationTypeFilter, typeOfRigFilter, searchParams
+    applicationTypeFilter, typeOfRigFilter, constituencyFilter, searchParams
   ]);
 
   useEffect(() => {
@@ -350,7 +355,7 @@ export default function ReportsPage() {
   }, [
     searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
     dateFilterType, startDate, endDate, entriesLoading, fileEntries, applyFilters,
-    applicationTypeFilter, typeOfRigFilter, searchParams, authIsLoading, user
+    applicationTypeFilter, typeOfRigFilter, constituencyFilter, searchParams, authIsLoading, user
   ]);
   
   useEffect(() => {
@@ -375,6 +380,7 @@ export default function ReportsPage() {
     setDateFilterType("all");
     setApplicationTypeFilter("all");
     setTypeOfRigFilter("all");
+    setConstituencyFilter("all");
     
     const currentParams = new URLSearchParams(searchParams.toString());
     currentParams.delete("reportType");
@@ -534,6 +540,19 @@ export default function ReportsPage() {
                     </SelectContent>
                 </Select>
             </div>
+             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <Select value={constituencyFilter} onValueChange={setConstituencyFilter}>
+                  <SelectTrigger className="lg:col-span-1">
+                    <SelectValue placeholder="Filter by Constituency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Constituencies</SelectItem>
+                    {[...constituencyOptions].sort((a,b) => a.localeCompare(b)).map((constituency) => (
+                      <SelectItem key={constituency} value={constituency}>{constituency}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+             </div>
              <div className="pt-2 flex items-center gap-4">
                 <div className="relative flex-grow">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -748,5 +767,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
-    

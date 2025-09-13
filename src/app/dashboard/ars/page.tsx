@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import type { ArsEntryFormData } from "@/lib/schemas";
-import { arsTypeOfSchemeOptions } from "@/lib/schemas";
+import { arsTypeOfSchemeOptions, constituencyOptions } from "@/lib/schemas";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -85,6 +85,7 @@ export default function ArsPage() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [schemeTypeFilter, setSchemeTypeFilter] = useState<string>('all');
+  const [constituencyFilter, setConstituencyFilter] = useState<string>('all');
 
   const [isUploading, setIsUploading] = useState(false);
   
@@ -123,6 +124,10 @@ export default function ArsPage() {
     
     if (schemeTypeFilter !== 'all') {
       sites = sites.filter(site => site.arsTypeOfScheme === schemeTypeFilter);
+    }
+    
+    if (constituencyFilter !== 'all') {
+      sites = sites.filter(site => site.constituency === constituencyFilter);
     }
 
     if (startDate || endDate) {
@@ -176,11 +181,11 @@ export default function ArsPage() {
     });
 
     return sites;
-  }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter]);
+  }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter, constituencyFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, startDate, endDate, schemeTypeFilter]);
+  }, [searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter]);
 
   const paginatedSites = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -404,7 +409,7 @@ export default function ArsPage() {
             const newEntry: ArsEntryFormData = {
               fileNo: String((rowData as any)['File No'] || `Imported ${Date.now()}`),
               nameOfSite: String((rowData as any)['Name of Site'] || `Imported Site ${Date.now()}`),
-              constituency: (rowData as any)['Constituency (LAC)'] || undefined,
+              constituency: (rowData as any)['Constituency'] || undefined,
               arsTypeOfScheme: (rowData as any)['Type of Scheme'] || undefined,
               arsPanchayath: String((rowData as any)['Panchayath'] || ''),
               arsBlock: String((rowData as any)['Block'] || ''),
@@ -521,8 +526,19 @@ export default function ArsPage() {
                         ))}
                     </SelectContent>
                  </Select>
-              <Button onClick={() => {setStartDate(""); setEndDate(""); setSchemeTypeFilter("all");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Filters</Button>
-              <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date and/or scheme type</p>
+                 <Select value={constituencyFilter} onValueChange={setConstituencyFilter}>
+                    <SelectTrigger className="w-auto min-w-[200px]">
+                        <SelectValue placeholder="Filter by Constituency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Constituencies</SelectItem>
+                        {[...constituencyOptions].sort((a,b) => a.localeCompare(b)).map((constituency) => (
+                        <SelectItem key={constituency} value={constituency}>{constituency}</SelectItem>
+                        ))}
+                    </SelectContent>
+                 </Select>
+              <Button onClick={() => {setStartDate(""); setEndDate(""); setSchemeTypeFilter("all"); setConstituencyFilter("all");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Filters</Button>
+              <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date, scheme, and/or constituency</p>
             </div>
         </CardContent>
        </Card>
