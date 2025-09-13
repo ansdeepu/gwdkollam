@@ -584,11 +584,11 @@ export default function AgencyRegistrationPage() {
   }, [applications, searchTerm]);
 
   const completedApplications = useMemo(() => {
-    return filteredApplications.filter(app => app.status === 'Active');
+    return filteredApplications.filter((app: AgencyApplication) => app.status === 'Active');
   }, [filteredApplications]);
   
   const pendingApplications = useMemo(() => {
-    return filteredApplications.filter(app => app.status === 'Pending Verification');
+    return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
   const handleRenewRig = (rigIndex: number) => {
@@ -1074,3 +1074,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
