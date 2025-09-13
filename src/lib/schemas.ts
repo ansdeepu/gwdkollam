@@ -227,6 +227,7 @@ export const constituencyOptions = [
     "Kottarakkara",
     "Kundara",
     "Kunnathur",
+    "Karunagappally",
     "Pathanapuram",
     "Punalur"
 ] as const;
