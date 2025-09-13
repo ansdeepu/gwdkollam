@@ -399,8 +399,7 @@ export default function DataEntryFormComponent({
     if (isEditor) return false;
     if (isViewer) return true;
     if (isSupervisor) {
-      if (!fileNoToEdit) return true;
-      return !['fileStatus', 'remarks'].includes(fieldName as string);
+      return true; // Supervisors cannot edit any main file details
     }
     return true; // Default to read-only
   };
@@ -805,7 +804,7 @@ export default function DataEntryFormComponent({
         
             <AccordionItem value="final-status" className="border bg-card rounded-lg shadow-sm">
                 <AccordionTrigger className="p-4 hover:no-underline text-primary">
-                    <span className="text-xl font-semibold">Final Status & Summary</span>
+                    <span className="text-xl font-semibold">Final Status &amp; Summary</span>
                 </AccordionTrigger>
                 <AccordionContent className="p-6 pt-0">
                     <div className="space-y-6 border-t pt-6">
@@ -845,7 +844,7 @@ export default function DataEntryFormComponent({
               ) : (
                   <Save className="mr-2 h-4 w-4" />
               )}
-              {isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve & Save" : "Save Changes") : "Create File")}
+              {isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}
             </Button>
           )}
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
