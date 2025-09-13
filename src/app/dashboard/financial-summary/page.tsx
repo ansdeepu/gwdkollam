@@ -1,7 +1,7 @@
 // src/app/dashboard/financial-summary/page.tsx
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
@@ -123,7 +123,7 @@ export default function FinancialSummaryPage() {
 
     return (
         <Card>
-            <CardHeader>
+            <CardHeader className="sticky top-0 bg-background/95 z-10 backdrop-blur-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                     <div>
                       <CardTitle className="flex items-center gap-2"><Landmark className="h-5 w-5 text-primary" />Financial Summary</CardTitle>
