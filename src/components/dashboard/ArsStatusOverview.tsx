@@ -93,7 +93,7 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
 
   return (
      <Card className="flex flex-col h-full">
-      <CardHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+      <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
             <CardTitle className="flex items-center gap-2"><Waves className="h-5 w-5 text-primary" />ARS Status Overview</CardTitle>
