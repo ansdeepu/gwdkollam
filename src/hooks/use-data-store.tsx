@@ -1,3 +1,4 @@
+
 // src/hooks/use-data-store.tsx
 "use client";
 
@@ -15,7 +16,7 @@ import { designationOptions } from '@/lib/schemas';
 const db = getFirestore(app);
 
 // Helper to convert Firestore Timestamps to JS Dates recursively
-const processFirestoreDoc = <T>(doc: DocumentData): T => {
+const processFirestoreDoc = <T,>(doc: DocumentData): T => {
     const data = doc.data();
     const converted: { [key: string]: any } = { id: doc.id };
 
@@ -102,7 +103,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                 
                 if (collectionName === 'staffMembers') {
                     const designationSortOrder: Record<string, number> = designationOptions.reduce((acc, curr, index) => ({ ...acc, [curr]: index }), {});
-                    data.sort((a, b) => {
+                    data.sort((a: StaffMember, b: StaffMember) => {
                         const orderA = a.designation ? designationSortOrder[a.designation] ?? designationOptions.length : designationOptions.length;
                         const orderB = b.designation ? designationSortOrder[b.designation] ?? designationOptions.length : designationOptions.length;
                         if (orderA !== orderB) return orderA - orderB;
