@@ -50,6 +50,14 @@ const nextConfig = {
       },
     ],
   },
+  allowedDevOrigins: [
+      "*.google.com",
+      "*.cloud.google.com",
+      "*.firebase.google.com",
+      "*.cloud.goog",
+      "*.corp.google.com",
+  ],
+  output: 'standalone',
 };
 
 module.exports = nextConfig;
