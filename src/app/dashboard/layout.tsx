@@ -14,6 +14,7 @@ import { Clock, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation';
 import { PageHeaderProvider, usePageHeader } from '@/hooks/usePageHeader';
+import { DataStoreProvider } from '@/hooks/use-data-store'; // Import the new DataStoreProvider
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -161,7 +162,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <PageNavigationProvider>
       <PageHeaderProvider>
-        <InnerDashboardLayout>{children}</InnerDashboardLayout>
+        <DataStoreProvider>
+          <InnerDashboardLayout>{children}</InnerDashboardLayout>
+        </DataStoreProvider>
       </PageHeaderProvider>
     </PageNavigationProvider>
   );

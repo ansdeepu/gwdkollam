@@ -2,26 +2,21 @@
 // src/hooks/useAgencyApplications.ts
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import {
   getFirestore,
   collection,
-  onSnapshot,
   doc,
   addDoc,
   updateDoc,
   serverTimestamp,
-  Timestamp,
-  type DocumentData,
-  writeBatch,
-  query,
-  getDocs,
   deleteDoc
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import type { AgencyApplication as AgencyApplicationFormData, RigRegistration as RigRegistrationFormData, OwnerInfo } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
+import { useDataStore } from './use-data-store'; // Import the central store hook
 
 const db = getFirestore(app);
 const APPLICATIONS_COLLECTION = 'agencyApplications';
@@ -35,75 +30,9 @@ export type AgencyApplication = Omit<AgencyApplicationFormData, 'rigs'> & {
   updatedAt?: Date;
 };
 
-let cachedApplications: AgencyApplication[] = [];
-let isApplicationsCacheInitialized = false;
-
-// Helper to safely convert Firestore Timestamps and serialized date objects to a serializable format (ISO string)
-const processDataForClient = (data: any): any => {
-    if (!data) return data;
-    if (Array.isArray(data)) {
-        return data.map(item => processDataForClient(item));
-    }
-    if (data instanceof Timestamp) {
-        return data.toDate().toISOString();
-    }
-    if (typeof data === 'object' && data !== null) {
-        const processed: { [key: string]: any } = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                // Recursively process each property of the object
-                processed[key] = processDataForClient(data[key]);
-            }
-        }
-        return processed;
-    }
-    return data;
-};
-
-
 export function useAgencyApplications() {
   const { user } = useAuth();
-  const [applications, setApplications] = useState<AgencyApplication[]>(cachedApplications);
-  const [isLoading, setIsLoading] = useState(!isApplicationsCacheInitialized);
-
-  useEffect(() => {
-    if (!user) {
-      setApplications([]);
-      cachedApplications = [];
-      isApplicationsCacheInitialized = false;
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    const q = collection(db, APPLICATIONS_COLLECTION);
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const appsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        // Process data to make it serializable and safe for the client
-        const serializableData = processDataForClient(data);
-        return {
-          id: doc.id,
-          ...serializableData
-        } as AgencyApplication;
-      });
-      cachedApplications = appsData;
-      setApplications(appsData);
-      setIsLoading(false);
-      isApplicationsCacheInitialized = true;
-    }, (error) => {
-      console.error("Error fetching agency applications:", error);
-      toast({
-        title: "Error Loading Data",
-        description: "Could not fetch agency registrations.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
+  const { allAgencyApplications, isLoading: dataStoreLoading, refetchAgencyApplications } = useDataStore(); // Use the central store
 
   const addApplication = useCallback(async (applicationData: Omit<AgencyApplication, 'id'>) => {
     if (!user) throw new Error("User must be logged in to add an application.");
@@ -114,7 +43,8 @@ export function useAgencyApplications() {
         updatedAt: serverTimestamp(),
     };
     await addDoc(collection(db, APPLICATIONS_COLLECTION), payload);
-  }, [user]);
+    refetchAgencyApplications(); // Trigger refetch
+  }, [user, refetchAgencyApplications]);
 
   const updateApplication = useCallback(async (id: string, applicationData: Partial<AgencyApplication>) => {
     if (!user) throw new Error("User must be logged in to update an application.");
@@ -125,7 +55,8 @@ export function useAgencyApplications() {
         updatedAt: serverTimestamp(),
     };
     await updateDoc(docRef, payload);
-  }, [user]);
+    refetchAgencyApplications(); // Trigger refetch
+  }, [user, refetchAgencyApplications]);
   
   const deleteApplication = useCallback(async (id: string) => {
     if (!user || user.role !== 'editor') {
@@ -134,10 +65,16 @@ export function useAgencyApplications() {
     }
     const docRef = doc(db, APPLICATIONS_COLLECTION, id);
     await deleteDoc(docRef);
-  }, [user]);
+    refetchAgencyApplications(); // Trigger refetch
+  }, [user, refetchAgencyApplications]);
   
-  // This export is needed to match the type imports in other files
-  return { applications, isLoading, addApplication, updateApplication, deleteApplication };
+  return { 
+    applications: allAgencyApplications, 
+    isLoading: dataStoreLoading, 
+    addApplication, 
+    updateApplication, 
+    deleteApplication 
+  };
 }
 
 // Re-exporting types for convenience in other files

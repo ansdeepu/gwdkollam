@@ -8,7 +8,6 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
   doc,
   addDoc,
   updateDoc,
@@ -16,126 +15,73 @@ import {
   getDoc,
   writeBatch,
   serverTimestamp,
-  Timestamp,
-  type DocumentData,
   getDocs,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { DataEntryFormData, SiteDetailFormData, SitePurpose, SiteWorkStatus } from '@/lib/schemas';
+import type { DataEntryFormData } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { usePendingUpdates } from './usePendingUpdates';
+import { useDataStore } from './use-data-store'; // Import the new central store hook
 
 const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
-// Helper to convert Firestore Timestamps to JS Dates recursively
-const convertTimestampsToDates = (data: DocumentData): any => {
-  const converted: { [key: string]: any } = {};
-  for (const key in data) {
-    const value = data[key];
-    if (value instanceof Timestamp) {
-      converted[key] = value.toDate();
-    } else if (Array.isArray(value)) {
-      converted[key] = value.map(item =>
-        typeof item === 'object' && item !== null && !Array.isArray(item) ? convertTimestampsToDates(item) : item
-      );
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      converted[key] = convertTimestampsToDates(value);
-    } else {
-      converted[key] = value;
-    }
-  }
-  return converted;
-};
-
-// Global cache for file entries to reduce Firestore reads on re-renders
-let cachedFileEntries: DataEntryFormData[] = [];
-let isCacheInitialized = false;
-
 export function useFileEntries() {
   const { user } = useAuth();
+  const { allFileEntries, isLoading: dataStoreLoading, refetchFileEntries } = useDataStore(); // Use the central store
   const { getPendingUpdatesForFile } = usePendingUpdates();
-  const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>(cachedFileEntries);
-  const [isLoading, setIsLoading] = useState(!isCacheInitialized);
+  const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) {
-      setFileEntries([]);
-      cachedFileEntries = [];
-      isCacheInitialized = false;
-      setIsLoading(false);
-      return;
-    }
-    
-    const fileEntriesRef = collection(db, FILE_ENTRIES_COLLECTION);
-    let q;
+    const processEntries = async () => {
+      if (!user) {
+        setFileEntries([]);
+        setIsLoading(false);
+        return;
+      }
 
-    if (user.role === 'supervisor') {
-      q = query(fileEntriesRef, where('assignedSupervisorUids', 'array-contains', user.uid));
-    } else {
-      q = query(fileEntriesRef);
-    }
-    
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
-      let entriesData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const convertedData = convertTimestampsToDates(data);
-        return {
-          id: doc.id,
-          ...convertedData,
-        } as DataEntryFormData;
-      });
+      setIsLoading(true);
+      let entries = allFileEntries;
 
-      // After fetching entries, if the user is a supervisor, check for pending updates.
-      if (user.role === 'supervisor' && user.uid) {
-        // Fetch only the pending updates for the current supervisor.
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+      if (user.role === 'supervisor') {
+        entries = allFileEntries.filter(entry => entry.assignedSupervisorUids?.includes(user.uid));
         
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
-          pendingUpdates
-            .filter(u => u.status === 'pending')
-            .map(u => u.fileNo)
+          pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
         );
         
         if (pendingFileNumbers.size > 0) {
-            entriesData = entriesData.map(entry => {
-                const isFilePending = pendingFileNumbers.has(entry.fileNo);
-                const updatedSiteDetails = entry.siteDetails?.map(site => {
-                    if (site.supervisorUid === user.uid) {
-                        return { ...site, isPending: isFilePending };
-                    }
-                    return site;
-                });
-                return { ...entry, siteDetails: updatedSiteDetails };
+          entries = entries.map(entry => {
+            const isFilePending = pendingFileNumbers.has(entry.fileNo);
+            const updatedSiteDetails = entry.siteDetails?.map(site => {
+              if (site.supervisorUid === user.uid) {
+                return { ...site, isPending: isFilePending };
+              }
+              return site;
             });
+            return { ...entry, siteDetails: updatedSiteDetails };
+          });
         }
       }
-
-      cachedFileEntries = entriesData;
-      setFileEntries(entriesData);
-      setIsLoading(false);
-      isCacheInitialized = true;
       
-    }, (error) => {
-      console.error("Error fetching file entries:", error);
-      toast({
-        title: "Error Loading Data",
-        description: "Could not fetch file entries.",
-        variant: "destructive",
-      });
+      setFileEntries(entries);
       setIsLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
-  }, [user, toast, getPendingUpdatesForFile]);
+    if (!dataStoreLoading) {
+      processEntries();
+    }
+  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
 
   const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null) => {
     if (!user) throw new Error("User must be logged in to add an entry.");
 
     const payload = { ...entryData };
-    if (payload.id) delete payload.id; // Don't save the document ID inside the document itself
+    if (payload.id) delete payload.id; 
 
     if (existingFileNo) {
         const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", existingFileNo));
@@ -151,7 +97,8 @@ export function useFileEntries() {
     } else {
         await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     }
-  }, [user]);
+    refetchFileEntries(); // Trigger a refetch in the central store
+  }, [user, refetchFileEntries]);
 
   const deleteFileEntry = useCallback(async (fileNo: string): Promise<void> => {
     if (user?.role !== 'editor') {
@@ -165,6 +112,7 @@ export function useFileEntries() {
         if (!querySnapshot.empty) {
             const docId = querySnapshot.docs[0].id;
             await deleteDoc(doc(db, FILE_ENTRIES_COLLECTION, docId));
+            refetchFileEntries(); // Trigger a refetch
             toast({ title: "Entry Deleted", description: `File No. ${fileNo} has been removed.` });
         } else {
             toast({ title: "Deletion Failed", description: `File No. ${fileNo} not found.`, variant: "destructive" });
@@ -173,7 +121,7 @@ export function useFileEntries() {
         console.error(`Error deleting file ${fileNo}:`, error);
         toast({ title: "Error", description: error.message, variant: "destructive" });
     }
-  }, [user?.role, toast]);
+  }, [user?.role, toast, refetchFileEntries]);
 
   const batchDeleteFileEntries = useCallback(async (fileNos: string[]): Promise<{ successCount: number; failureCount: number }> => {
     if (user?.role !== 'editor') {
@@ -194,12 +142,13 @@ export function useFileEntries() {
     }
     
     await batch.commit();
+    refetchFileEntries(); // Trigger a refetch
     return { successCount, failureCount: fileNos.length - successCount };
-  }, [user, toast]);
+  }, [user, toast, refetchFileEntries]);
 
   const getFileEntry = useCallback((fileNo: string): DataEntryFormData | undefined => {
-    return cachedFileEntries.find(entry => entry.fileNo === fileNo);
-  }, []);
+    return allFileEntries.find(entry => entry.fileNo === fileNo);
+  }, [allFileEntries]);
 
   const fetchEntryForEditing = useCallback(async (
     docId: string
@@ -213,7 +162,7 @@ export function useFileEntries() {
         return null;
       }
       
-      let entry = { id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) } as DataEntryFormData;
+      let entry = { id: docSnap.id, ...(docSnap.data()) } as DataEntryFormData;
 
       // For supervisors, we still need to attach the pending status for the UI
       if (user && user.role === 'supervisor' && user.uid) {
