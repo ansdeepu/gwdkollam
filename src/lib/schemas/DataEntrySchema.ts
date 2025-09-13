@@ -266,7 +266,7 @@ export const SiteDetailSchema = z.object({
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
-  workStatus: z.enum(siteWorkStatusOptions).optional(),
+  workStatus: z.enum(siteWorkStatusOptions, { required_error: 'Work Status is required.' }),
   workRemarks: z.string().optional().nullable().default(""),
 
   // Survey fields (Actuals)
@@ -325,7 +325,7 @@ export const DataEntrySchema = z.object({
   applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
   constituency: z.enum(constituencyOptions).optional(),
-  applicationType: z.enum(applicationTypeOptions).optional(),
+  applicationType: z.enum(applicationTypeOptions, { required_error: 'Application Type is required.' }),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   assignedSupervisorUids: z.array(z.string()).optional(),
 
@@ -334,7 +334,7 @@ export const DataEntrySchema = z.object({
     .optional(),
   totalRemittance: z.coerce.number().optional(),
 
-  siteDetails: z.array(SiteDetailSchema).optional(),
+  siteDetails: z.array(SiteDetailSchema).min(1, "At least one site detail is required."),
 
   paymentDetails: z.array(PaymentDetailSchema)
     .max(10, "You can add a maximum of 10 payment entries.")
@@ -342,7 +342,7 @@ export const DataEntrySchema = z.object({
   totalPaymentAllEntries: z.coerce.number().optional(),
   overallBalance: z.coerce.number().optional(),
 
-  fileStatus: z.enum(fileStatusOptions).optional(),
+  fileStatus: z.enum(fileStatusOptions, { required_error: 'File Status is required.' }),
   remarks: z.string().optional(),
 });
 export type DataEntryFormData = z.infer<typeof DataEntrySchema>;

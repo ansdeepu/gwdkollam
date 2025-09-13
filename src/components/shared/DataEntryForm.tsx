@@ -399,7 +399,7 @@ export default function DataEntryFormComponent({
     if (isEditor) return false;
     if (isViewer) return true;
     if (isSupervisor) {
-      return true; // Supervisors cannot edit any main file details
+      return !['fileStatus', 'remarks'].includes(fieldName as string); // Supervisors can only edit these main file details
     }
     return true; // Default to read-only
   };
