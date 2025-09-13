@@ -18,6 +18,8 @@ import { usePageNavigation } from '@/hooks/usePageNavigation';
 
 export const dynamic = 'force-dynamic';
 
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -61,7 +63,10 @@ export default function FileManagerPage() {
     if (user?.role === 'supervisor') {
       entries = fileEntries
         .map(entry => {
-          const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
+          const assignedSites = entry.siteDetails?.filter(site => 
+            site.supervisorUid === user.uid && 
+            (!site.workStatus || !FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus))
+          );
           return { ...entry, siteDetails: assignedSites };
         })
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
