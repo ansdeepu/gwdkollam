@@ -398,7 +398,13 @@ export default function DataEntryFormComponent({
   const isMainFieldReadOnly = (fieldName: keyof DataEntryFormData): boolean => {
     if (isEditor) return false;
     if (isViewer) return true;
-    if (isSupervisor) return true; // Supervisors cannot edit any main file details
+    if (isSupervisor) {
+        // Supervisor can only edit 'fileStatus' and 'remarks'
+        if (fieldName === 'fileStatus' || fieldName === 'remarks') {
+            return false;
+        }
+        return true;
+    }
     return true; // Default to read-only
   };
 
@@ -418,7 +424,7 @@ export default function DataEntryFormComponent({
                     <div className="border-t pt-6 space-y-6">
                         <div className="grid md:grid-cols-3 gap-6">
                            <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                           <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem><FormLabel>Name &amp; Address of Institution / Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
+                           <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem><FormLabel>Name &amp; Address of Institution/Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                            <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                         </div>
                         <div className="grid md:grid-cols-2 gap-6">
