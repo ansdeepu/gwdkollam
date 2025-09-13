@@ -56,12 +56,6 @@ const nextConfig = {
       'bufferutil': 'commonjs bufferutil',
     });
     
-    // Fix for handlebars dependency issue with Genkit
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'handlebars': require.resolve('handlebars/dist/handlebars.js'),
-    };
-    
     if (isServer) {
         config.externals.push('@opentelemetry/instrumentation');
     }

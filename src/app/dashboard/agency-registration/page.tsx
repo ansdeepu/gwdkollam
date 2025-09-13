@@ -575,7 +575,7 @@ export default function AgencyRegistrationPage() {
     const lowercasedFilter = searchTerm.toLowerCase();
     if (!lowercasedFilter) return applications;
 
-    return applications.filter(app => 
+    return applications.filter((app: AgencyApplication) => 
         (app.agencyName.toLowerCase().includes(lowercasedFilter)) ||
         (app.owner.name.toLowerCase().includes(lowercasedFilter)) ||
         (app.fileNo?.toLowerCase().includes(lowercasedFilter)) ||
