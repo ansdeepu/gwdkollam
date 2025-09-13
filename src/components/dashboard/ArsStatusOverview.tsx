@@ -92,8 +92,8 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <CardHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm flex-shrink-0">
+     <Card className="flex flex-col h-full">
+      <CardHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
             <CardTitle className="flex items-center gap-2"><Waves className="h-5 w-5 text-primary" />ARS Status Overview</CardTitle>
@@ -128,44 +128,44 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
           <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by scheme and/or completion date</p>
         </div>
       </CardHeader>
-      <Card className="flex-grow">
-        <ScrollArea className="h-full">
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-1 flex flex-col gap-4">
-                  <div className="p-4 border rounded-lg bg-secondary/30 text-center">
-                    <p className="text-sm font-medium text-muted-foreground">Total ARS Sites</p>
-                    <button className="text-4xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed" disabled={(arsDashboardData?.totalArsSites ?? 0) === 0} onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites')}>
-                      {arsDashboardData?.totalArsSites ?? 0}
-                    </button>
-                  </div>
-                  <div className="p-4 border rounded-lg bg-secondary/30 text-center">
-                    <p className="text-sm font-medium text-muted-foreground">Total Expenditure</p>
-                    <p className="text-4xl font-bold text-primary">₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}</p>
-                  </div>
-                </div>
-                <div className="md:col-span-2">
-                  {arsDashboardData && arsDashboardData.arsStatusCountsData.length > 0 ? (
-                    <Table>
-                      <TableHeader><TableRow><TableHead>Status</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Expenditure (₹)</TableHead></TableRow></TableHeader>
-                      <TableBody>
-                        {arsDashboardData.arsStatusCountsData.map((item) => (
-                          <TableRow key={item.status}>
-                            <TableCell className="font-medium">{item.status}</TableCell>
-                            <TableCell className="text-right"><Button variant="link" className="p-0 h-auto" disabled={item.count === 0} onClick={() => handleWorkStatusCellClick(item.data, `ARS - ${item.status}`)}>{item.count}</Button></TableCell>
-                            <TableCell className="text-right font-mono">{item.expenditure.toLocaleString('en-IN')}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="h-full flex items-center justify-center p-10 text-center border-dashed border-2 rounded-lg"><p className="text-muted-foreground">No ARS sites found {dates.start || dates.end || schemeTypeFilter !== 'all' ? "for the selected filters" : ""}.</p></div>
-                  )}
+      <CardContent className="flex-1 overflow-hidden p-0">
+          <ScrollArea className="h-full">
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-1 flex flex-col gap-4">
+                    <div className="p-4 border rounded-lg bg-secondary/30 text-center">
+                        <p className="text-sm font-medium text-muted-foreground">Total ARS Sites</p>
+                        <button className="text-4xl font-bold text-primary disabled:opacity-50 disabled:cursor-not-allowed" disabled={(arsDashboardData?.totalArsSites ?? 0) === 0} onClick={() => handleWorkStatusCellClick(arsDashboardData?.allArsSites ?? [], 'All ARS Sites')}>
+                        {arsDashboardData?.totalArsSites ?? 0}
+                        </button>
+                    </div>
+                    <div className="p-4 border rounded-lg bg-secondary/30 text-center">
+                        <p className="text-sm font-medium text-muted-foreground">Total Expenditure</p>
+                        <p className="text-4xl font-bold text-primary">₹{(arsDashboardData?.totalArsExpenditure ?? 0).toLocaleString('en-IN')}</p>
+                    </div>
+                    </div>
+                    <div className="md:col-span-2">
+                    {arsDashboardData && arsDashboardData.arsStatusCountsData.length > 0 ? (
+                        <Table>
+                        <TableHeader><TableRow><TableHead>Status</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Expenditure (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {arsDashboardData.arsStatusCountsData.map((item) => (
+                            <TableRow key={item.status}>
+                                <TableCell className="font-medium">{item.status}</TableCell>
+                                <TableCell className="text-right"><Button variant="link" className="p-0 h-auto" disabled={item.count === 0} onClick={() => handleWorkStatusCellClick(item.data, `ARS - ${item.status}`)}>{item.count}</Button></TableCell>
+                                <TableCell className="text-right font-mono">{item.expenditure.toLocaleString('en-IN')}</TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                    ) : (
+                        <div className="h-full flex items-center justify-center p-10 text-center border-dashed border-2 rounded-lg"><p className="text-muted-foreground">No ARS sites found {dates.start || dates.end || schemeTypeFilter !== 'all' ? "for the selected filters" : ""}.</p></div>
+                    )}
+                    </div>
                 </div>
               </div>
-            </CardContent>
-        </ScrollArea>
-      </Card>
-    </div>
+          </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }
