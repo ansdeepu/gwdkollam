@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, ApplicationType } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,19 +138,21 @@ export default function FinancialSummaryPage() {
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>
-            <CardContent>
-                {transformedFinanceMetrics ? (
-                    <Table>
-                        <TableHeader><TableRow><TableHead>Account</TableHead><TableHead className="text-right">Total Credit (₹)</TableHead><TableHead className="text-right">Total Debit (₹)</TableHead><TableHead className="text-right">Balance (₹)</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            <TableRow><TableCell className="font-medium">SBI</TableCell><TableCell className="text-right font-mono text-green-600">{transformedFinanceMetrics.sbiCredit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono text-red-600">{transformedFinanceMetrics.sbiDebit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN')}</TableCell></TableRow>
-                            <TableRow><TableCell className="font-medium">STSB</TableCell><TableCell className="text-right font-mono text-green-600">{transformedFinanceMetrics.stsbCredit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono text-red-600">{transformedFinanceMetrics.stsbDebit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN')}</TableCell></TableRow>
-                            <TableRow><TableCell className="font-medium">Revenue Head</TableCell><TableCell className="text-right font-mono text-green-600">{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono text-red-600">0.00</TableCell><TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.revenueHeadBalance.toLocaleString('en-IN')}</TableCell></TableRow>
-                        </TableBody>
-                        <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance + transformedFinanceMetrics.revenueHeadBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
-                    </Table>
-                ) : (<div className="h-40 flex items-center justify-center"><p className="text-muted-foreground">Calculating financial data...</p></div>)}
-            </CardContent>
+             <ScrollArea className="h-[60vh]">
+                <CardContent>
+                    {transformedFinanceMetrics ? (
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Account</TableHead><TableHead className="text-right">Total Credit (₹)</TableHead><TableHead className="text-right">Total Debit (₹)</TableHead><TableHead className="text-right">Balance (₹)</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                <TableRow><TableCell className="font-medium">SBI</TableCell><TableCell className="text-right font-mono text-green-600">{transformedFinanceMetrics.sbiCredit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono text-red-600">{transformedFinanceMetrics.sbiDebit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN')}</TableCell></TableRow>
+                                <TableRow><TableCell className="font-medium">STSB</TableCell><TableCell className="text-right font-mono text-green-600">{transformedFinanceMetrics.stsbCredit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono text-red-600">{transformedFinanceMetrics.stsbDebit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN')}</TableCell></TableRow>
+                                <TableRow><TableCell className="font-medium">Revenue Head</TableCell><TableCell className="text-right font-mono text-green-600">{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN')}</TableCell><TableCell className="text-right font-mono text-red-600">0.00</TableCell><TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.revenueHeadBalance.toLocaleString('en-IN')}</TableCell></TableRow>
+                            </TableBody>
+                            <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance + transformedFinanceMetrics.revenueHeadBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
+                        </Table>
+                    ) : (<div className="h-40 flex items-center justify-center"><p className="text-muted-foreground">Calculating financial data...</p></div>)}
+                </CardContent>
+            </ScrollArea>
         </Card>
     );
 }

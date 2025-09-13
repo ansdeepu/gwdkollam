@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, ApplicationType } from '@/lib/schemas';
 import { sitePurposeOptions } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '../ui/scroll-area';
 
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
@@ -206,43 +207,45 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                   <Button onClick={handleClearFinanceDates} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Dates</Button>
                 </div>
             </CardHeader>
-            <CardContent>
-                {transformedFinanceMetrics ? (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                               <TableHead>Account</TableHead>
-                                <TableHead className="text-right">Credit (₹)</TableHead>
-                                <TableHead className="text-right">Withdrawal (₹)</TableHead>
-                                <TableHead className="text-right">Balance (₹)</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell className="font-medium">SBI</TableCell>
-                                <TableCell className="text-right font-mono"><Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('SBI', 'credit')} disabled={!transformedFinanceMetrics.sbiCredit}>{transformedFinanceMetrics.sbiCredit.toLocaleString('en-IN')}</Button></TableCell>
-                                <TableCell className="text-right font-mono"><Button variant="link" className="text-red-600 p-0 h-auto" onClick={() => handleAmountClick('SBI', 'debit')} disabled={!transformedFinanceMetrics.sbiDebit}>{transformedFinanceMetrics.sbiDebit.toLocaleString('en-IN')}</Button></TableCell>
-                                <TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN')}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="font-medium">STSB</TableCell>
-                                <TableCell className="text-right font-mono"><Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('STSB', 'credit')} disabled={!transformedFinanceMetrics.stsbCredit}>{transformedFinanceMetrics.stsbCredit.toLocaleString('en-IN')}</Button></TableCell>
-                                <TableCell className="text-right font-mono"><Button variant="link" className="text-red-600 p-0 h-auto" onClick={() => handleAmountClick('STSB', 'debit')} disabled={!transformedFinanceMetrics.stsbDebit}>{transformedFinanceMetrics.stsbDebit.toLocaleString('en-IN')}</Button></TableCell>
-                                <TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN')}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="font-medium">Revenue Head</TableCell>
-                                <TableCell className="text-right font-mono">
-                                    <Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('RevenueHead', 'credit')} disabled={!transformedFinanceMetrics.revenueHeadCredit}>{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN')}</Button>
-                                </TableCell>
-                                <TableCell></TableCell>
-                                <TableCell></TableCell>
-                            </TableRow>
-                        </TableBody>
-                        <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
-                    </Table>
-                ) : (<div className="h-40 flex items-center justify-center"><p className="text-muted-foreground">Calculating financial data...</p></div>)}
-            </CardContent>
+             <ScrollArea className="h-[250px]">
+                <CardContent>
+                    {transformedFinanceMetrics ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                <TableHead>Account</TableHead>
+                                    <TableHead className="text-right">Credit (₹)</TableHead>
+                                    <TableHead className="text-right">Withdrawal (₹)</TableHead>
+                                    <TableHead className="text-right">Balance (₹)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className="font-medium">SBI</TableCell>
+                                    <TableCell className="text-right font-mono"><Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('SBI', 'credit')} disabled={!transformedFinanceMetrics.sbiCredit}>{transformedFinanceMetrics.sbiCredit.toLocaleString('en-IN')}</Button></TableCell>
+                                    <TableCell className="text-right font-mono"><Button variant="link" className="text-red-600 p-0 h-auto" onClick={() => handleAmountClick('SBI', 'debit')} disabled={!transformedFinanceMetrics.sbiDebit}>{transformedFinanceMetrics.sbiDebit.toLocaleString('en-IN')}</Button></TableCell>
+                                    <TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.sbiBalance.toLocaleString('en-IN')}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">STSB</TableCell>
+                                    <TableCell className="text-right font-mono"><Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('STSB', 'credit')} disabled={!transformedFinanceMetrics.stsbCredit}>{transformedFinanceMetrics.stsbCredit.toLocaleString('en-IN')}</Button></TableCell>
+                                    <TableCell className="text-right font-mono"><Button variant="link" className="text-red-600 p-0 h-auto" onClick={() => handleAmountClick('STSB', 'debit')} disabled={!transformedFinanceMetrics.stsbDebit}>{transformedFinanceMetrics.stsbDebit.toLocaleString('en-IN')}</Button></TableCell>
+                                    <TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN')}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Revenue Head</TableCell>
+                                    <TableCell className="text-right font-mono">
+                                        <Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('RevenueHead', 'credit')} disabled={!transformedFinanceMetrics.revenueHeadCredit}>{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN')}</Button>
+                                    </TableCell>
+                                    <TableCell></TableCell>
+                                    <TableCell></TableCell>
+                                </TableRow>
+                            </TableBody>
+                            <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
+                        </Table>
+                    ) : (<div className="h-40 flex items-center justify-center"><p className="text-muted-foreground">Calculating financial data...</p></div>)}
+                </CardContent>
+            </ScrollArea>
             <CardFooter>
                  <p className="text-xs text-muted-foreground">
                     Note: Withdrawals for SBI/STSB are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.
