@@ -113,12 +113,12 @@ export const arsTypeOfSchemeOptions = [
   "Percolation Ponds",
 ] as const;
 
-import { SiteDetailSchema, fileStatusOptions } from './schemas/DataEntrySchema';
+import { SiteDetailSchema, fileStatusOptions, constituencyOptions } from './schemas/DataEntrySchema';
 
 export const ArsEntrySchema = z.object({
   fileNo: z.string().min(1, 'File No. is required.'),
   nameOfSite: z.string().min(1, 'Name of Site is required.'),
-  constituency: z.enum(z.lazy(() => constituencyOptions)).optional(),
+  constituency: z.enum(constituencyOptions).optional(),
   arsTypeOfScheme: z.enum(arsTypeOfSchemeOptions).optional(),
   arsPanchayath: z.string().optional(),
   arsBlock: z.string().optional(),
@@ -425,5 +425,3 @@ export const AgencyApplicationSchema = z.object({
   history: z.array(z.string()).optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
-
-import { constituencyOptions } from './schemas/DataEntrySchema';

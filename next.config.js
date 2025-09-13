@@ -56,10 +56,6 @@ const nextConfig = {
       'bufferutil': 'commonjs bufferutil',
     });
     
-    if (isServer) {
-        config.externals.push('@opentelemetry/instrumentation');
-    }
-
     return config;
   },
 };
