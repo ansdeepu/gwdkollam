@@ -1060,7 +1060,7 @@ export default function AgencyRegistrationPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will permanently delete the registration for <strong>{applications.find(a => a.id === deletingApplicationId)?.agencyName}</strong>. This action cannot be undone.
+              This action will permanently delete the registration for <strong>{applications.find((a: AgencyApplication) => a.id === deletingApplicationId)?.agencyName}</strong>. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
