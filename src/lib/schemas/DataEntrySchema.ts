@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -349,7 +350,15 @@ export const DataEntrySchema = z.object({
   totalPaymentAllEntries: z.coerce.number().optional(),
   overallBalance: z.coerce.number().optional(),
 
-  fileStatus: z.enum(fileStatusOptions, { required_error: 'File Status is required.' }),
+  fileStatus: z.enum(fileStatusOptions).optional(),
   remarks: z.string().optional(),
+}).superRefine((data, ctx) => {
+    if (!data.fileStatus) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "File Status is required.",
+            path: ["fileStatus"],
+        });
+    }
 });
 export type DataEntryFormData = z.infer<typeof DataEntrySchema>;
