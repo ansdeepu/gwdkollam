@@ -45,7 +45,7 @@ export default function FileManagerPage() {
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
-      ? 'List of all sites assigned to you, including ongoing and completed works.'
+      ? 'List of all ongoing sites assigned to you.'
       : 'List of all non-ARS files in the system, sorted by most recent remittance.';
     setHeader('Deposit Works', description);
   }, [setHeader, user]);
