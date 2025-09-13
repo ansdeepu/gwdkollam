@@ -350,19 +350,13 @@ export default function DataEntryFormComponent({
                 });
             });
 
-          const fileStatusChanged = data.fileStatus !== initialData.fileStatus;
-          const remarksChanged = data.remarks !== initialData.remarks;
-
-          if (sitesWithChanges.length === 0 && !fileStatusChanged && !remarksChanged) {
-              toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned sites or file status." });
+          if (sitesWithChanges.length === 0) {
+              toast({ title: "No Changes Detected", description: "You haven't made any changes to your assigned sites." });
               setIsSubmitting(false);
               return;
           }
 
-          await createPendingUpdate(fileNoToEdit, sitesWithChanges, user, {
-            fileStatus: fileStatusChanged ? data.fileStatus : undefined,
-            remarks: remarksChanged ? data.remarks : undefined,
-          });
+          await createPendingUpdate(fileNoToEdit, sitesWithChanges, user, {});
           
           toast({
               title: "Update Submitted",
@@ -398,13 +392,7 @@ export default function DataEntryFormComponent({
   const isMainFieldReadOnly = (fieldName: keyof DataEntryFormData): boolean => {
     if (isEditor) return false;
     if (isViewer) return true;
-    if (isSupervisor) {
-        // Supervisor can only edit 'fileStatus' and 'remarks'
-        if (fieldName === 'fileStatus' || fieldName === 'remarks') {
-            return false;
-        }
-        return true;
-    }
+    if (isSupervisor) return true; // Supervisors cannot edit any main file fields.
     return true; // Default to read-only
   };
 

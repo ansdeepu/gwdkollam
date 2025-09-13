@@ -43,7 +43,7 @@ export default function FileManagerPage() {
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
-      ? 'List of active sites assigned to you. Sites with pending updates cannot be edited until reviewed by an admin.'
+      ? 'List of all sites assigned to you, including ongoing and completed works.'
       : 'List of all non-ARS files in the system, sorted by most recent remittance.';
     setHeader('Deposit Works', description);
   }, [setHeader, user]);
@@ -59,13 +59,10 @@ export default function FileManagerPage() {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
-      const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
       entries = fileEntries
         .map(entry => {
-          const ongoingSites = entry.siteDetails?.filter(site => {
-            return site.supervisorUid === user.uid && site.workStatus && ongoingStatuses.includes(site.workStatus as SiteWorkStatus);
-          });
-          return { ...entry, siteDetails: ongoingSites };
+          const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
+          return { ...entry, siteDetails: assignedSites };
         })
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     } else {
