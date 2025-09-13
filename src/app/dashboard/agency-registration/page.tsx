@@ -432,7 +432,7 @@ export default function AgencyRegistrationPage() {
             // Stop the spinner once the new form is ready
             setIsNavigating(false);
         } else {
-            const app = applications.find(a => a.id === selectedApplicationId);
+            const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
                  const processedApp = processDataForForm(app);
                  form.reset(processedApp);
