@@ -468,13 +468,14 @@ export default function DataEntryFormComponent({
                     <div className="border-t pt-6 space-y-4">
                         <Accordion type="multiple" className="w-full space-y-2">
                             {siteFields.map((item, index) => {
-                            const isAssignedToCurrentUser = !!user?.uid && watchedSiteDetails?.[index]?.supervisorUid === user.uid;
+                            const site = watchedSiteDetails?.[index];
+                            const isAssignedToCurrentUser = !!user?.uid && site?.supervisorUid === user.uid;
                             const isSitePendingForSupervisor = isSupervisor && !!initialData.siteDetails?.[index]?.isPending;
-
+                            
                             const siteIsEditable = isEditor || (isSupervisor && isAssignedToCurrentUser && !isSitePendingForSupervisor);
                             
-                            const purpose = watchedSiteDetails?.[index]?.purpose;
-                            const workStatus = watchedSiteDetails?.[index]?.workStatus;
+                            const purpose = site?.purpose;
+                            const workStatus = site?.workStatus;
                             const isFinalStatus = workStatus && FINAL_WORK_STATUSES.includes(workStatus as SiteWorkStatus);
                             
                             const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose as string);
@@ -558,8 +559,9 @@ export default function DataEntryFormComponent({
                               </>
                             );
                             
-                            if (isSupervisor && !isAssignedToCurrentUser) {
-                                return null; // Don't render site details if supervisor is not assigned
+                            // Supervisor role specific filtering
+                            if (isSupervisor && (!isAssignedToCurrentUser || isFinalStatus)) {
+                                return null;
                             }
 
                             return (
@@ -571,8 +573,8 @@ export default function DataEntryFormComponent({
                                                 isFinalStatus ? "text-red-600" : "text-green-600"
                                             )}>
                                                 Site #{index + 1}
-                                                {watchedSiteDetails?.[index]?.nameOfSite ? `: ${watchedSiteDetails[index].nameOfSite}` : ''}
-                                                {watchedSiteDetails?.[index]?.purpose ? ` (${watchedSiteDetails[index].purpose})` : ''}
+                                                {site?.nameOfSite ? `: ${site.nameOfSite}` : ''}
+                                                {site?.purpose ? ` (${site.purpose})` : ''}
                                             </span>
                                             {isEditor && siteFields.length > 1 && 
                                                 <div role="button" aria-label={`Remove Site #${index + 1}`} className="p-2 rounded-full hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); removeSite(index); }}>
@@ -845,3 +847,5 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    
