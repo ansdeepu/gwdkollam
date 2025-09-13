@@ -398,9 +398,7 @@ export default function DataEntryFormComponent({
   const isMainFieldReadOnly = (fieldName: keyof DataEntryFormData): boolean => {
     if (isEditor) return false;
     if (isViewer) return true;
-    if (isSupervisor) {
-      return !['fileStatus', 'remarks'].includes(fieldName as string); // Supervisors can only edit these main file details
-    }
+    if (isSupervisor) return true; // Supervisors cannot edit any main file details
     return true; // Default to read-only
   };
 
