@@ -55,6 +55,11 @@ const toDateOrNull = (value: any): Date | null => {
   return null;
 };
 
+const toInputDate = (dateValue: any) => {
+    const date = toDateOrNull(dateValue);
+    return date && isValid(date) ? format(date, 'yyyy-MM-dd') : undefined;
+};
+
 const RegistrationTable = ({ 
   applications, 
   onView,
@@ -186,11 +191,6 @@ const RigAccordionItem = ({
             : [...currentSections, section];
         form.setValue(`rigs.${index}.enabledSections`, newSections, { shouldDirty: true });
     };
-
-  const toInputDate = (dateValue: any) => {
-    const date = toDateOrNull(dateValue);
-    return date && isValid(date) ? format(date, 'yyyy-MM-dd') : undefined;
-  };
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
@@ -474,11 +474,6 @@ export default function AgencyRegistrationPage() {
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
-
-  const toInputDate = (dateValue: any) => {
-    const date = toDateOrNull(dateValue);
-    return date && isValid(date) ? format(date, 'yyyy-MM-dd') : undefined;
-  };
 
   useEffect(() => {
     if (selectedApplicationId) {
@@ -995,7 +990,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
         </FormProvider>
-      </div>
+        </div>
       );
   }
 
