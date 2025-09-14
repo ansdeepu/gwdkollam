@@ -484,24 +484,30 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
-                 const appData = JSON.parse(JSON.stringify(app));
+                 const appData = JSON.parse(JSON.stringify(app)); // Deep copy
+                 
+                 const toInputDate = (dateValue: any) => {
+                     const date = toDateOrNull(dateValue);
+                     return date && isValid(date) ? format(date, 'yyyy-MM-dd') : undefined;
+                 }
+                 
                  const displayData = {
                     ...appData,
                     rigs: (appData.rigs || []).map((rig: any) => ({
                         ...rig,
-                        registrationDate: rig.registrationDate ? format(toDateOrNull(rig.registrationDate)!, 'yyyy-MM-dd') : '',
-                        paymentDate: rig.paymentDate ? format(toDateOrNull(rig.paymentDate)!, 'yyyy-MM-dd') : '',
-                        additionalPaymentDate: rig.additionalPaymentDate ? format(toDateOrNull(rig.additionalPaymentDate)!, 'yyyy-MM-dd') : '',
-                        cancellationDate: rig.cancellationDate ? format(toDateOrNull(rig.cancellationDate)!, 'yyyy-MM-dd') : '',
+                        registrationDate: toInputDate(rig.registrationDate),
+                        paymentDate: toInputDate(rig.paymentDate),
+                        additionalPaymentDate: toInputDate(rig.additionalPaymentDate),
+                        cancellationDate: toInputDate(rig.cancellationDate),
                         renewals: (rig.renewals || []).map((renewal: any) => ({
                             ...renewal,
-                            renewalDate: renewal.renewalDate ? format(toDateOrNull(renewal.renewalDate)!, 'yyyy-MM-dd') : '',
-                            paymentDate: renewal.paymentDate ? format(toDateOrNull(renewal.paymentDate)!, 'yyyy-MM-dd') : '',
+                            renewalDate: toInputDate(renewal.renewalDate),
+                            paymentDate: toInputDate(renewal.paymentDate),
                         }))
                     })),
-                    agencyRegistrationDate: appData.agencyRegistrationDate ? format(toDateOrNull(appData.agencyRegistrationDate)!, 'yyyy-MM-dd') : '',
-                    agencyPaymentDate: appData.agencyPaymentDate ? format(toDateOrNull(appData.agencyPaymentDate)!, 'yyyy-MM-dd') : '',
-                    agencyAdditionalPaymentDate: appData.agencyAdditionalPaymentDate ? format(toDateOrNull(appData.agencyAdditionalPaymentDate)!, 'yyyy-MM-dd') : '',
+                    agencyRegistrationDate: toInputDate(appData.agencyRegistrationDate),
+                    agencyPaymentDate: toInputDate(appData.agencyPaymentDate),
+                    agencyAdditionalPaymentDate: toInputDate(appData.agencyAdditionalPaymentDate),
                  };
                  form.reset(displayData);
             }
@@ -1079,5 +1085,3 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
-
-    
