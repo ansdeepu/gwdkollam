@@ -782,9 +782,24 @@ export default function AgencyRegistrationPage() {
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>1. Application Details</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
-                                     <div className="grid md:grid-cols-3 gap-4">
+                                    <div className="grid md:grid-cols-3 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="agencyName" render={({ field }) => <FormItem><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                        {canEdit && (
+                                            <FormField name="status" control={form.control} render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Status</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                                                            <SelectItem value="Active">Active</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                        )}
                                     </div>
                                     <Separator />
                                      <div className="space-y-2">
