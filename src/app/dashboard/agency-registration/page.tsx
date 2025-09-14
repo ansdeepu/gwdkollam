@@ -517,16 +517,45 @@ export default function AgencyRegistrationPage() {
 
   const onSubmit = async (data: AgencyApplication) => {
     setIsSubmitting(true);
-    try {
-      const payload: Omit<AgencyApplication, 'id'> = {
+    
+    // Safely convert all date strings back to Date objects for validation
+    const toDateObject = (value: any) => (value && isValid(new Date(value))) ? new Date(value) : null;
+    
+    const processedData = {
         ...data,
-      };
+        agencyRegistrationDate: toDateObject(data.agencyRegistrationDate),
+        agencyPaymentDate: toDateObject(data.agencyPaymentDate),
+        agencyAdditionalPaymentDate: toDateObject(data.agencyAdditionalPaymentDate),
+        rigs: data.rigs.map(rig => ({
+            ...rig,
+            registrationDate: toDateObject(rig.registrationDate),
+            paymentDate: toDateObject(rig.paymentDate),
+            additionalPaymentDate: toDateObject(rig.additionalPaymentDate),
+            cancellationDate: toDateObject(rig.cancellationDate),
+            renewals: rig.renewals?.map(renewal => ({
+                ...renewal,
+                renewalDate: toDateObject(renewal.renewalDate),
+                paymentDate: toDateObject(renewal.paymentDate),
+                validTill: renewal.renewalDate ? addYears(new Date(renewal.renewalDate), 1) : null
+            }))
+        }))
+    };
 
+    try {
+      const validationResult = AgencyApplicationSchema.safeParse(processedData);
+
+      if (!validationResult.success) {
+        console.error("Zod Validation Errors:", validationResult.error.flatten());
+        toast({ title: "Validation Error", description: "Please check the form for errors.", variant: "destructive" });
+        setIsSubmitting(false);
+        return;
+      }
+      
       if (selectedApplicationId && selectedApplicationId !== 'new') {
-        await updateApplication(selectedApplicationId, payload);
+        await updateApplication(selectedApplicationId, validationResult.data);
         toast({ title: "Application Updated", description: "The registration details have been updated." });
       } else {
-        await addApplication(payload);
+        await addApplication(validationResult.data);
         toast({ title: "Application Created", description: "The new agency registration has been saved." });
       }
       setSelectedApplicationId(null);
