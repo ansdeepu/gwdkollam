@@ -403,6 +403,7 @@ export const RigRegistrationSchema = z.object({
     history: z.array(z.string()).optional(),
     cancellationDate: optionalDate,
     cancellationReason: z.string().optional(),
+    enabledSections: z.array(z.enum(['rigVehicle', 'compressorVehicle', 'supportingVehicle', 'compressorDetails', 'generatorDetails'])).optional(),
 });
 export type RigRegistration = z.infer<typeof RigRegistrationSchema>;
 
@@ -425,3 +426,5 @@ export const AgencyApplicationSchema = z.object({
   history: z.array(z.string()).optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
+
+    

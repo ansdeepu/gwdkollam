@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye, Settings } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -53,30 +53,6 @@ const toDateOrNull = (value: any): Date | null => {
     if (isValid(parsed)) return parsed;
   }
   return null;
-};
-
-// This function processes data for form display, converting dates to 'yyyy-MM-dd' strings.
-const processDataForFormDisplay = (data: any): any => {
-    if (!data) return data;
-    if (Array.isArray(data)) {
-        return data.map(item => processDataForFormDisplay(item));
-    }
-    if (typeof data === 'object' && data !== null) {
-        const processed: { [key: string]: any } = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                const value = data[key];
-                 if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
-                    const date = toDateOrNull(value);
-                    processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
-                } else {
-                    processed[key] = processDataForFormDisplay(value);
-                }
-            }
-        }
-        return processed;
-    }
-    return data;
 };
 
 const RegistrationTable = ({ 
@@ -144,6 +120,15 @@ const getOrdinalSuffix = (n: number) => {
   return s[(v - 20) % 10] || s[v] || s[0];
 };
 
+type OptionalRigSection = 'rigVehicle' | 'compressorVehicle' | 'supportingVehicle' | 'compressorDetails' | 'generatorDetails';
+
+const optionalSectionLabels: Record<OptionalRigSection, string> = {
+    rigVehicle: 'Rig Vehicle Details',
+    compressorVehicle: 'Compressor Vehicle Details',
+    supportingVehicle: 'Supporting Vehicle Details',
+    compressorDetails: 'Compressor Details',
+    generatorDetails: 'Generator Details'
+};
 
 const RigAccordionItem = ({
   field,
@@ -170,6 +155,7 @@ const RigAccordionItem = ({
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = field.registrationDate ? toDateOrNull(field.registrationDate) : null;
+  const enabledSections = useWatch({ control: form.control, name: `rigs.${index}.enabledSections`, defaultValue: [] });
 
   const latestRenewal = useMemo(() => {
     if (!field.renewals || field.renewals.length === 0) return null;
@@ -192,6 +178,14 @@ const RigAccordionItem = ({
   const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
     ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
     : 'N/A';
+    
+    const toggleSection = (section: OptionalRigSection) => {
+        const currentSections: OptionalRigSection[] = form.getValues(`rigs.${index}.enabledSections`) || [];
+        const newSections = currentSections.includes(section)
+            ? currentSections.filter(s => s !== section)
+            : [...currentSections, section];
+        form.setValue(`rigs.${index}.enabledSections`, newSections, { shouldDirty: true });
+    };
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
@@ -200,6 +194,27 @@ const RigAccordionItem = ({
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
+             {!isReadOnly && (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button type="button" size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Details</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuLabel>Optional Sections</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {Object.keys(optionalSectionLabels).map(key => (
+                            <DropdownMenuCheckboxItem
+                                key={key}
+                                checked={enabledSections?.includes(key as OptionalRigSection)}
+                                onCheckedChange={() => toggleSection(key as OptionalRigSection)}
+                                onSelect={(e) => e.preventDefault()}
+                            >
+                                {optionalSectionLabels[key as OptionalRigSection]}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
             {!isReadOnly && field.status === 'Active' && (
                 <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
@@ -323,53 +338,63 @@ const RigAccordionItem = ({
             </div>
           )}
 
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
-            <div className="grid md:grid-cols-4 gap-4">
-               <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+           {enabledSections.includes('rigVehicle') && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
             </div>
-          </div>
+          )}
           
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
-            <div className="grid md:grid-cols-4 gap-4">
-               <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+          {enabledSections.includes('compressorVehicle') && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                </div>
             </div>
-          </div>
+          )}
           
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Supporting Vehicle Details</p>
-            <div className="grid md:grid-cols-4 gap-4">
-               <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.supportingVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+          {enabledSections.includes('supportingVehicle') && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Supporting Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
             </div>
-          </div>
+          )}
           
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Compressor Details</p>
-            <div className="grid md:grid-cols-2 gap-4">
-               <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+          {enabledSections.includes('compressorDetails') && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Compressor Details</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
             </div>
-          </div>
+          )}
           
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Generator Details</p>
-            <div className="grid md:grid-cols-4 gap-4">
-               <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+          {enabledSections.includes('generatorDetails') && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Generator Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
             </div>
-          </div>
+          )}
 
         </div>
       </AccordionContent>
@@ -426,6 +451,7 @@ export default function AgencyRegistrationPage() {
       history: [],
       cancellationDate: null,
       cancellationReason: undefined,
+      enabledSections: [],
   });
 
   const form = useForm<AgencyApplication>({
@@ -458,7 +484,25 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
-                 const displayData = processDataForFormDisplay(app);
+                 const appData = JSON.parse(JSON.stringify(app));
+                 const displayData = {
+                    ...appData,
+                    rigs: (appData.rigs || []).map((rig: any) => ({
+                        ...rig,
+                        registrationDate: rig.registrationDate ? format(toDateOrNull(rig.registrationDate)!, 'yyyy-MM-dd') : '',
+                        paymentDate: rig.paymentDate ? format(toDateOrNull(rig.paymentDate)!, 'yyyy-MM-dd') : '',
+                        additionalPaymentDate: rig.additionalPaymentDate ? format(toDateOrNull(rig.additionalPaymentDate)!, 'yyyy-MM-dd') : '',
+                        cancellationDate: rig.cancellationDate ? format(toDateOrNull(rig.cancellationDate)!, 'yyyy-MM-dd') : '',
+                        renewals: (rig.renewals || []).map((renewal: any) => ({
+                            ...renewal,
+                            renewalDate: renewal.renewalDate ? format(toDateOrNull(renewal.renewalDate)!, 'yyyy-MM-dd') : '',
+                            paymentDate: renewal.paymentDate ? format(toDateOrNull(renewal.paymentDate)!, 'yyyy-MM-dd') : '',
+                        }))
+                    })),
+                    agencyRegistrationDate: appData.agencyRegistrationDate ? format(toDateOrNull(appData.agencyRegistrationDate)!, 'yyyy-MM-dd') : '',
+                    agencyPaymentDate: appData.agencyPaymentDate ? format(toDateOrNull(appData.agencyPaymentDate)!, 'yyyy-MM-dd') : '',
+                    agencyAdditionalPaymentDate: appData.agencyAdditionalPaymentDate ? format(toDateOrNull(appData.agencyAdditionalPaymentDate)!, 'yyyy-MM-dd') : '',
+                 };
                  form.reset(displayData);
             }
         }
@@ -468,11 +512,15 @@ export default function AgencyRegistrationPage() {
   const onSubmit = async (data: AgencyApplication) => {
     setIsSubmitting(true);
     try {
+      const payload: Omit<AgencyApplication, 'id'> = {
+        ...data,
+      };
+
       if (selectedApplicationId && selectedApplicationId !== 'new') {
-        await updateApplication(selectedApplicationId, data);
+        await updateApplication(selectedApplicationId, payload);
         toast({ title: "Application Updated", description: "The registration details have been updated." });
       } else {
-        await addApplication(data);
+        await addApplication(payload);
         toast({ title: "Application Created", description: "The new agency registration has been saved." });
       }
       setSelectedApplicationId(null);
@@ -1031,3 +1079,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
