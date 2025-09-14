@@ -46,34 +46,31 @@ const toDateOrNull = (value: any): Date | null => {
     if (isValid(date)) return date;
   }
   if (typeof value === 'string') {
-    // First, try to parse dd/MM/yyyy format, which is common in our app's manual entry
-    let parsed = parseISO(value);
+    let parsed = parseISO(value); // Handles yyyy-MM-dd from inputs and ISO strings
     if (isValid(parsed)) return parsed;
-    // Then, try to parse ISO format, which is how dates are often stored/transmitted
-    parsed = parse(value, 'dd/MM/yyyy', new Date());
+
+    parsed = parse(value, 'dd/MM/yyyy', new Date()); // Handle manual entry format
     if (isValid(parsed)) return parsed;
   }
   return null;
 };
 
-// Recursively processes an object to convert all date-like values to 'yyyy-MM-dd' strings for native date inputs.
-const processDataForForm = (data: any): any => {
+// This function processes data for form display, converting dates to 'yyyy-MM-dd' strings.
+const processDataForFormDisplay = (data: any): any => {
     if (!data) return data;
     if (Array.isArray(data)) {
-        return data.map(item => processDataForForm(item));
+        return data.map(item => processDataForFormDisplay(item));
     }
     if (typeof data === 'object' && data !== null) {
         const processed: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
-                 // Check for keys that typically represent dates
                  if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
                     const date = toDateOrNull(value);
                     processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
                 } else {
-                    // Recursively process nested objects/arrays
-                    processed[key] = processDataForForm(value);
+                    processed[key] = processDataForFormDisplay(value);
                 }
             }
         }
@@ -447,7 +444,6 @@ export default function AgencyRegistrationPage() {
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
 
-  // Robust useEffect to handle loading and parsing data from Firestore
   useEffect(() => {
     if (selectedApplicationId) {
         if (selectedApplicationId === 'new') {
@@ -458,20 +454,14 @@ export default function AgencyRegistrationPage() {
                 status: 'Pending Verification',
                 history: []
             });
-            // Stop the spinner once the new form is ready
             setIsNavigating(false);
         } else {
             const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
-                 const processedApp = processDataForForm(app);
-                 form.reset(processedApp);
-            } else {
-                setSelectedApplicationId(null);
-                form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+                 const displayData = processDataForFormDisplay(app);
+                 form.reset(displayData);
             }
         }
-    } else {
-        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
     }
   }, [selectedApplicationId, applications, form, setIsNavigating]);
 
