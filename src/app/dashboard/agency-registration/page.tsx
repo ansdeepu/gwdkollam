@@ -518,8 +518,11 @@ export default function AgencyRegistrationPage() {
   const onSubmit = async (data: AgencyApplication) => {
     setIsSubmitting(true);
     
-    // Safely convert all date strings back to Date objects for validation
-    const toDateObject = (value: any) => (value && isValid(new Date(value))) ? new Date(value) : null;
+    const toDateObject = (value: any): Date | null => {
+        if (!value) return null;
+        const date = parseISO(String(value));
+        return isValid(date) ? date : null;
+    };
     
     const processedData = {
         ...data,
@@ -1114,3 +1117,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
