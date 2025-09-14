@@ -474,101 +474,24 @@ export default function AgencyRegistrationPage() {
         form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
     }
   }, [selectedApplicationId, applications, form, setIsNavigating]);
-  
-    const generateHistoryEntry = (rig: RigRegistration): string | null => {
-        const logParts: string[] = [];
-
-        const addPart = (label: string, value: any) => {
-            if (value !== undefined && value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)) {
-            logParts.push(`${label}: ${value}`);
-            }
-        };
-
-        const addVehiclePart = (vehicleName: string, vehicle: any) => {
-            if (!vehicle) return;
-            const vehicleParts: string[] = [];
-            if (vehicle.type) vehicleParts.push(`Type: ${vehicle.type}`);
-            if (vehicle.regNo) vehicleParts.push(`Reg No: ${vehicle.regNo}`);
-            if (vehicle.chassisNo) vehicleParts.push(`Chassis No: ${vehicle.chassisNo}`);
-            if (vehicle.engineNo) vehicleParts.push(`Engine No: ${vehicle.engineNo}`);
-            if (vehicleParts.length > 0) {
-                logParts.push(`${vehicleName}: ${vehicleParts.join(', ')}`);
-            }
-        };
-
-        const addDetailsPart = (detailsName: string, details: any) => {
-            if (!details) return;
-            const detailParts: string[] = [];
-            if (details.model) detailParts.push(`Model: ${details.model}`);
-            if (details.capacity) detailParts.push(`Capacity: ${details.capacity}`);
-            if (details.type) detailParts.push(`Type: ${details.type}`);
-            if (details.engineNo) detailParts.push(`Engine No: ${details.engineNo}`);
-             if (detailParts.length > 0) {
-                logParts.push(`${detailsName}: ${detailParts.join(', ')}`);
-            }
-        }
-
-        addPart('Rig Reg. No.', rig.rigRegistrationNo);
-        addPart('Type of Rig', rig.typeOfRig);
-        const regDate = toDateOrNull(rig.registrationDate);
-        if (regDate) {
-            addPart('Last Reg/Renewal Date', format(regDate, 'dd/MM/yyyy'));
-        }
-
-        const lastEffectiveDate = regDate;
-        const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
-            ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
-            : null;
-        if(validityDate) {
-            addPart('Validity Upto', format(validityDate, 'dd/MM/yyyy'));
-        }
-        
-        addPart('Reg. Fee', rig.registrationFee);
-        const paymentDate = toDateOrNull(rig.paymentDate);
-        if (paymentDate) {
-            addPart('Payment Date', format(paymentDate, 'dd/MM/yyyy'));
-        }
-        addPart('Challan No.', rig.challanNo);
-
-        addVehiclePart('Rig Vehicle', rig.rigVehicle);
-        addVehiclePart('Compressor Vehicle', rig.compressorVehicle);
-        addVehiclePart('Supporting Vehicle', rig.supportingVehicle);
-
-        addDetailsPart('Compressor Details', rig.compressorDetails);
-        addDetailsPart('Generator Details', rig.generatorDetails);
-        
-        if (logParts.length === 0) return null;
-
-        const timestamp = format(new Date(), 'dd/MM/yyyy HH:mm');
-        return `[${timestamp}] - ${logParts.join(' | ')}`;
-    };
 
   const onSubmit = async (data: AgencyApplication) => {
-      setIsSubmitting(true);
-      try {
-            const dataWithHistory = {
-                ...data,
-                rigs: data.rigs.map(rig => {
-                    const historyEntry = generateHistoryEntry(rig);
-                    const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
-                    return { ...rig, history: newHistory };
-                })
-            };
-
-          if (selectedApplicationId && selectedApplicationId !== 'new') {
-              await updateApplication(selectedApplicationId, dataWithHistory);
-              toast({ title: "Application Updated", description: "The registration details have been updated." });
-          } else {
-              await addApplication(dataWithHistory);
-              toast({ title: "Application Created", description: "The new agency registration has been saved." });
-          }
-          setSelectedApplicationId(null);
-          setIsViewing(false);
-      } catch (error: any) {
-          toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
-      } finally {
-          setIsSubmitting(false);
+    setIsSubmitting(true);
+    try {
+      if (selectedApplicationId && selectedApplicationId !== 'new') {
+        await updateApplication(selectedApplicationId, data);
+        toast({ title: "Application Updated", description: "The registration details have been updated." });
+      } else {
+        await addApplication(data);
+        toast({ title: "Application Created", description: "The new agency registration has been saved." });
       }
+      setSelectedApplicationId(null);
+      setIsViewing(false);
+    } catch (error: any) {
+      toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddNew = () => {
@@ -1118,5 +1041,3 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
-
-    
