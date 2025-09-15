@@ -41,7 +41,9 @@ const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
   if (typeof value === 'string') {
-    let parsed = parseISO(value); // Handles 'yyyy-MM-dd' from date inputs and full ISO strings
+    let parsed = parseISO(value);
+    if (isValid(parsed)) return parsed;
+    parsed = parse(value, 'yyyy-MM-dd', new Date());
     if (isValid(parsed)) return parsed;
   }
   return null;
@@ -50,8 +52,12 @@ const toDateOrNull = (value: any): Date | null => {
 
 const toInputDate = (value: any): string => {
   if (!value) return "";
-  const date = toDateOrNull(value);
-  return date ? format(date, 'yyyy-MM-dd') : '';
+  if (value instanceof Date && isValid(value)) return format(value, "yyyy-MM-dd");
+  if (typeof value === 'string') {
+      const parsed = parseISO(value);
+      if (isValid(parsed)) return format(parsed, 'yyyy-MM-dd');
+  }
+  return "";
 };
 
 const RegistrationTable = ({ 
@@ -153,14 +159,14 @@ const RigAccordionItem = ({
   form: UseFormReturn<any>;
 }) => {
   const rigTypeValue = field.typeOfRig;
-  const registrationDate = field.registrationDate ? toDateOrNull(field.registrationDate) : null;
+  const registrationDate = toDateOrNull(field.registrationDate);
   const enabledSections = useWatch({ control: form.control, name: `rigs.${index}.enabledSections`, defaultValue: [] });
 
   const latestRenewal = useMemo(() => {
     if (!field.renewals || field.renewals.length === 0) return null;
     return [...field.renewals].sort((a, b) => {
-        const dateA = a.renewalDate ? toDateOrNull(a.renewalDate)?.getTime() ?? 0 : 0;
-        const dateB = b.renewalDate ? toDateOrNull(b.renewalDate)?.getTime() ?? 0 : 0;
+        const dateA = toDateOrNull(a.renewalDate)?.getTime() ?? 0;
+        const dateB = toDateOrNull(b.renewalDate)?.getTime() ?? 0;
         return dateB - dateA;
     })[0];
   }, [field.renewals]);
@@ -254,7 +260,7 @@ const RigAccordionItem = ({
                         <FormMessage />
                     </FormItem>
                 )} />
-                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormItem>
                   <FormLabel>Validity Upto</FormLabel>
                   <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
@@ -262,13 +268,13 @@ const RigAccordionItem = ({
             </div>
             <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
             </div>
              <Separator className="my-2" />
             <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.additionalRegistrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.additionalChallanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
             </div>
           </div>
@@ -456,6 +462,8 @@ export default function AgencyRegistrationPage() {
   const form = useForm<AgencyApplication>({
     resolver: zodResolver(AgencyApplicationSchema),
     defaultValues: {
+      fileNo: '',
+      agencyName: '',
       owner: createDefaultOwner(),
       partners: [],
       rigs: [],
@@ -470,15 +478,37 @@ export default function AgencyRegistrationPage() {
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
   
   useEffect(() => {
+    const formatDataForForm = (data: any): any => {
+      if (!data) return data;
+      const newObj: { [key: string]: any } = {};
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          const value = data[key];
+          if (Array.isArray(value)) {
+            newObj[key] = value.map(formatDataForForm);
+          } else if (key.toLowerCase().includes('date')) {
+            const date = toDateOrNull(value);
+            newObj[key] = date ? format(date, 'yyyy-MM-dd') : undefined;
+          } else if (typeof value === 'object' && value !== null) {
+            newObj[key] = formatDataForForm(value);
+          } else {
+            newObj[key] = value;
+          }
+        }
+      }
+      return newObj;
+    };
+    
     if (selectedApplicationId) {
       if (selectedApplicationId === 'new') {
-        form.reset({
+        form.reset(formatDataForForm({
             fileNo: '',
             agencyName: '',
             agencyRegistrationNo: '',
-            agencyRegistrationDate: toInputDate(new Date()),
+            agencyRegistrationDate: new Date(),
             agencyRegistrationFee: undefined,
-            agencyPaymentDate: toInputDate(new Date()),
+            agencyPaymentDate: new Date(),
+            agencyChallanNo: '',
             agencyAdditionalRegFee: undefined,
             agencyAdditionalPaymentDate: undefined,
             agencyAdditionalChallanNo: '',
@@ -487,28 +517,10 @@ export default function AgencyRegistrationPage() {
             rigs: [createDefaultRig()],
             status: 'Pending Verification',
             history: []
-        });
+        }));
       } else {
         const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
         if (app) {
-          const formatDataForForm = (data: any): any => {
-            const newObj: { [key: string]: any } = {};
-            for (const key in data) {
-              if (Object.prototype.hasOwnProperty.call(data, key)) {
-                const value = data[key];
-                if (Array.isArray(value)) {
-                  newObj[key] = value.map(formatDataForForm);
-                } else if (value && typeof value === 'object' && value.seconds) { // Firestore Timestamp
-                  newObj[key] = toInputDate(new Date(value.seconds * 1000));
-                } else if (key.toLowerCase().includes('date') && value) {
-                  newObj[key] = toInputDate(value);
-                } else {
-                  newObj[key] = value;
-                }
-              }
-            }
-            return newObj;
-          };
           const appDataForForm = formatDataForForm(JSON.parse(JSON.stringify(app)));
           form.reset(appDataForForm);
         }
@@ -528,10 +540,11 @@ export default function AgencyRegistrationPage() {
         const newObj: { [key: string]: any } = {};
         for (const key in obj) {
           if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const value = obj[key];
+            let value = obj[key];
             if (key.toLowerCase().includes('date') && typeof value === 'string' && value) {
-              newObj[key] = toDateOrNull(value);
-            } else if (typeof value === 'object') {
+              const parsedDate = toDateOrNull(value);
+              newObj[key] = parsedDate && isValid(parsedDate) ? parsedDate : undefined;
+            } else if (typeof value === 'object' && value !== null) {
               newObj[key] = convertStringsToDates(value);
             } else {
               newObj[key] = value;
@@ -613,7 +626,7 @@ export default function AgencyRegistrationPage() {
   
   const handleRenewRig = (rigIndex: number) => {
       setEditingRenewal(null);
-      setRenewalData({ rigIndex, data: { renewalDate: toInputDate(new Date()) } });
+      setRenewalData({ rigIndex, data: { renewalDate: format(new Date(), 'yyyy-MM-dd') } });
       setIsRenewalDialogOpen(true);
   };
   
@@ -661,8 +674,8 @@ export default function AgencyRegistrationPage() {
         
         const updatedRenewal = {
             ...renewal,
-            renewalDate: renewal.renewalDate ? toInputDate(renewal.renewalDate) : null,
-            paymentDate: renewal.paymentDate ? toInputDate(renewal.paymentDate) : null,
+            renewalDate: renewal.renewalDate,
+            paymentDate: renewal.paymentDate,
         }
 
         const updatedRenewals = rigToUpdate.renewals?.map(r => r.id === renewal.id ? updatedRenewal : r) || [];
@@ -680,11 +693,11 @@ export default function AgencyRegistrationPage() {
 
         const newRenewal: RigRenewalFormData = {
             id: uuidv4(),
-            renewalDate: toInputDate(renewalDateObj),
+            renewalDate: data.renewalDate,
             renewalFee: data.renewalFee,
-            paymentDate: data.paymentDate ? toInputDate(data.paymentDate) : null,
+            paymentDate: data.paymentDate,
             challanNo: data.challanNo ?? "",
-            validTill: addYears(renewalDateObj, 1),
+            validTill: format(addYears(renewalDateObj, 1), 'yyyy-MM-dd'),
         };
         updateRig(rigIndex, {
             ...rigToUpdate,
@@ -733,7 +746,7 @@ export default function AgencyRegistrationPage() {
     updateRig(rigIndex, {
         ...rigToUpdate,
         status: 'Cancelled',
-        cancellationDate: isValid(dateObject) ? toInputDate(dateObject) : toInputDate(new Date()),
+        cancellationDate: isValid(dateObject) ? format(dateObject, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         cancellationReason: reason,
     });
     toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
@@ -864,13 +877,13 @@ export default function AgencyRegistrationPage() {
                             <AccordionTrigger>2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <Separator className="md:col-span-3 my-2" />
                                <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyAdditionalChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             </AccordionContent>
                           </AccordionItem>
@@ -1005,7 +1018,7 @@ export default function AgencyRegistrationPage() {
                             <Input
                                 id="cancellationDate"
                                 type="date"
-                                value={toInputDate(cancellationData.date)}
+                                value={cancellationData.date}
                                 onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))}
                                 className="col-span-3"
                             />
