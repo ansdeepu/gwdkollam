@@ -242,7 +242,7 @@ const RigAccordionItem = ({
           
           <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
             <p className="font-medium text-base text-primary">Registration Details</p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.rigRegistrationNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.typeOfRig`} control={form.control} render={({ field }) => (
                     <FormItem>
@@ -255,12 +255,12 @@ const RigAccordionItem = ({
                     </FormItem>
                 )} />
                 <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+            </div>
+             <div className="grid md:grid-cols-4 gap-4">
                 <FormItem>
                   <FormLabel>Validity Upto</FormLabel>
                   <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
                 </FormItem>
-            </div>
-            <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -394,7 +394,6 @@ const RigAccordionItem = ({
                 </div>
             </div>
           )}
-
         </div>
       </AccordionContent>
     </AccordionItem>
@@ -905,6 +904,27 @@ export default function AgencyRegistrationPage() {
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
+                        <FormField
+                            name="status"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem className="w-full sm:w-1/3">
+                                <FormLabel>Registration Status</FormLabel>
+                                {isReadOnly ? (
+                                    <Input readOnly value={field.value} className="bg-muted/50" />
+                                ) : (
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="Active">Active</SelectItem>
+                                            <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                     </CardContent>
                     {!isReadOnly && (
@@ -925,58 +945,57 @@ export default function AgencyRegistrationPage() {
                     <DialogTitle>{editingRenewal ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                     <DialogDescription>Enter renewal details for the rig.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">Renewal Date</Label>
-                        <Input type="date" className="col-span-3" value={toInputDate(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate)} onChange={(e) => {
-                            const value = e.target.value;
-                             if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: value } }));
-                            }
-                        }}/>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
-                        <Input id="renewalFee" type="number" 
-                         value={editingRenewal?.renewal.renewalFee ?? renewalData?.data.renewalFee ?? ''}
-                         onChange={(e) => {
-                            const value = e.target.value === '' ? undefined : +e.target.value;
-                            if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalFee: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalFee: value } }));
-                            }
-                         }}
-                        className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">Payment Date</Label>
-                        <Input type="date" className="col-span-3" value={toInputDate(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate)} onChange={(e) => {
-                            const value = e.target.value;
-                            if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: value } }));
-                            }
-                        }} />
-
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="challanNo" className="text-right">Challan No.</Label>
-                        <Input id="challanNo"
-                        value={editingRenewal?.renewal.challanNo ?? renewalData?.data.challanNo ?? ''}
-                         onChange={(e) => {
-                            const value = e.target.value;
-                            if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, challanNo: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, challanNo: value } }));
-                            }
-                         }}
-                        className="col-span-3" />
-                    </div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Renewal Date</Label>
+                            <Input type="date" value={toInputDate(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate)} onChange={(e) => {
+                                const value = e.target.value;
+                                if (editingRenewal) {
+                                    setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
+                                } else {
+                                    setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: value } }));
+                                }
+                            }}/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="renewalFee">Renewal Fee</Label>
+                            <Input id="renewalFee" type="number" 
+                            value={editingRenewal?.renewal.renewalFee ?? renewalData?.data.renewalFee ?? ''}
+                            onChange={(e) => {
+                                const value = e.target.value === '' ? undefined : +e.target.value;
+                                if (editingRenewal) {
+                                    setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalFee: value }}));
+                                } else {
+                                    setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalFee: value } }));
+                                }
+                            }}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Payment Date</Label>
+                            <Input type="date" value={toInputDate(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate)} onChange={(e) => {
+                                const value = e.target.value;
+                                if (editingRenewal) {
+                                    setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
+                                } else {
+                                    setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: value } }));
+                                }
+                            }} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="challanNo">Challan No.</Label>
+                            <Input id="challanNo"
+                            value={editingRenewal?.renewal.challanNo ?? renewalData?.data.challanNo ?? ''}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (editingRenewal) {
+                                    setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, challanNo: value }}));
+                                } else {
+                                    setRenewalData(d => ({ ...d!, data: { ...d!.data, challanNo: value } }));
+                                }
+                            }}
+                            />
+                        </div>
                     </div>
                     <DialogFooter>
                     <Button type="button" onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
