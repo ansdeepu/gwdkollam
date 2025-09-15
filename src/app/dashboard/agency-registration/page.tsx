@@ -53,9 +53,22 @@ const toDateOrNull = (value: any): Date | null => {
 };
 
 
-const toInputDate = (dateValue: any): string => {
-    const date = toDateOrNull(dateValue);
-    return date ? format(date, 'yyyy-MM-dd') : '';
+const toInputDate = (value: any): string => {
+    if (!value) return "";
+    if (value instanceof Date && isValid(value)) return format(value, "yyyy-MM-dd");
+    if (typeof value === 'string') { // Handle string state
+        const parsedDate = parseISO(value);
+        if (isValid(parsedDate)) {
+            return format(parsedDate, 'yyyy-MM-dd');
+        }
+        return value.slice(0, 10); // Assume it might already be in yyyy-MM-dd format
+    }
+    // Handle Firestore Timestamp objects
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+        const date = new Date(value.seconds * 1000);
+        if (isValid(date)) return format(date, 'yyyy-MM-dd');
+    }
+    return "";
 };
 
 const RegistrationTable = ({ 
@@ -486,10 +499,9 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
-                // Deep copy to avoid mutating original data
+                // Deep copy and format dates for form
                 const appDataForForm = JSON.parse(JSON.stringify(app));
 
-                // Convert all date-like values to 'yyyy-MM-dd' strings
                 appDataForForm.agencyRegistrationDate = toInputDate(appDataForForm.agencyRegistrationDate);
                 appDataForForm.agencyPaymentDate = toInputDate(appDataForForm.agencyPaymentDate);
                 appDataForForm.agencyAdditionalPaymentDate = toInputDate(appDataForForm.agencyAdditionalPaymentDate);
@@ -517,7 +529,6 @@ export default function AgencyRegistrationPage() {
     const onSubmit = async (data: AgencyApplication) => {
         setIsSubmitting(true);
         
-        // Helper to recursively convert date strings back to Date objects
         const convertStringsToDates = (obj: any): any => {
             if (!obj) return obj;
             if (Array.isArray(obj)) {
@@ -529,7 +540,9 @@ export default function AgencyRegistrationPage() {
                     if (Object.prototype.hasOwnProperty.call(obj, key)) {
                         const value = obj[key];
                         if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                            newObj[key] = toDateOrNull(value);
+                            // Convert yyyy-MM-dd string back to Date object, or undefined if invalid
+                            const parsed = toDateOrNull(value);
+                            newObj[key] = parsed || undefined;
                         } else {
                             newObj[key] = convertStringsToDates(value);
                         }
