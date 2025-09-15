@@ -632,6 +632,8 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
+  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
+
   const handleRenewRig = (rigIndex: number) => {
       setEditingRenewal(null);
       setRenewalData({ rigIndex, data: { renewalDate: toInputDate(new Date()) } });
@@ -824,17 +826,7 @@ export default function AgencyRegistrationPage() {
                                      <FormField name="status" control={form.control} render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Status</FormLabel>
-                                            {canEdit ? (
-                                                <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Active">Active</SelectItem>
-                                                        <SelectItem value="Pending Verification">Pending Verification</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            ) : (
                                                 <Input readOnly value={field.value} className="bg-muted" />
-                                            )}
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -911,11 +903,11 @@ export default function AgencyRegistrationPage() {
                 </TabsContent>
              </Tabs>
           </CardContent>
-          <CardFooter>
-              {totalPages > 1 && (
-                  <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-              )}
-          </CardFooter>
+          {totalPages > 1 && (
+            <CardFooter>
+                <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            </CardFooter>
+          )}
       </Card>
       
       <AlertDialog open={!!deletingApplicationId} onOpenChange={() => setDeletingApplicationId(null)}>
