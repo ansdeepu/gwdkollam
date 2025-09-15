@@ -46,14 +46,21 @@ const toDateOrNull = (value: any): Date | null => {
     if (isValid(date)) return date;
   }
   if (typeof value === 'string') {
-    let parsed = parseISO(value); // Handles yyyy-MM-dd from inputs and ISO strings
+    // Check for yyyy-MM-dd (from input) or full ISO string
+    let parsed = parseISO(value);
     if (isValid(parsed)) return parsed;
 
-    parsed = parse(value, 'dd/MM/yyyy', new Date()); // Handle manual entry format
+    // Check for dd/MM/yyyy (from manual entry or display)
+    parsed = parse(value, 'dd/MM/yyyy', new Date());
+    if (isValid(parsed)) return parsed;
+
+    // Add check for dd-MM-yyyy format from screenshot
+    parsed = parse(value, 'dd-MM-yyyy', new Date());
     if (isValid(parsed)) return parsed;
   }
   return null;
 };
+
 
 const toInputDate = (dateValue: any): string => {
     const date = toDateOrNull(dateValue);
@@ -592,7 +599,7 @@ export default function AgencyRegistrationPage() {
   
   const handleRenewRig = (rigIndex: number) => {
       setEditingRenewal(null);
-      setRenewalData({ rigIndex, data: { renewalDate: toDateOrNull(format(new Date(), 'yyyy-MM-dd')) } });
+      setRenewalData({ rigIndex, data: { renewalDate: new Date() } });
       setIsRenewalDialogOpen(true);
   };
   
@@ -1100,3 +1107,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
