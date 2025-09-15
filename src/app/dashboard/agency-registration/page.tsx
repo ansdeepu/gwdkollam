@@ -54,17 +54,10 @@ const toDateOrNull = (value: any): Date | null => {
 
 const toInputDate = (value: any): string => {
     if (!value) return "";
-    const date = toDateOrNull(value);
-    if (date && isValid(date)) {
-        return format(date, 'yyyy-MM-dd');
-    }
-    // If it's a string, assume it's already in the correct format or close enough
+    if (value instanceof Date && isValid(value)) return format(value, 'yyyy-MM-dd');
     if (typeof value === 'string') {
-        const parsedDate = parseISO(value);
-        if (isValid(parsedDate)) {
-            return format(parsedDate, 'yyyy-MM-dd');
-        }
-        return value.slice(0, 10);
+        const parsedDate = toDateOrNull(value);
+        return parsedDate ? format(parsedDate, 'yyyy-MM-dd') : value.slice(0, 10);
     }
     return "";
 };
@@ -490,12 +483,11 @@ export default function AgencyRegistrationPage() {
                 fileNo: '',
                 agencyName: '',
                 agencyRegistrationNo: '',
-                agencyRegistrationDate: '',
+                agencyRegistrationDate: toInputDate(new Date()),
                 agencyRegistrationFee: undefined,
-                agencyPaymentDate: '',
-                agencyChallanNo: '',
+                agencyPaymentDate: toInputDate(new Date()),
                 agencyAdditionalRegFee: undefined,
-                agencyAdditionalPaymentDate: '',
+                agencyAdditionalPaymentDate: undefined,
                 agencyAdditionalChallanNo: '',
                 owner: createDefaultOwner(),
                 partners: [],
@@ -536,27 +528,30 @@ export default function AgencyRegistrationPage() {
 
     const onSubmit = async (data: AgencyApplication) => {
         setIsSubmitting(true);
-        
-        // This is a new, more robust data conversion logic for submission
-        const payload: Partial<AgencyApplication> = {
-          ...data,
-          agencyRegistrationDate: toDateOrNull(data.agencyRegistrationDate),
-          agencyPaymentDate: toDateOrNull(data.agencyPaymentDate),
-          agencyAdditionalPaymentDate: toDateOrNull(data.agencyAdditionalPaymentDate),
-          rigs: (data.rigs || []).map(rig => ({
-            ...rig,
-            registrationDate: toDateOrNull(rig.registrationDate),
-            paymentDate: toDateOrNull(rig.paymentDate),
-            additionalPaymentDate: toDateOrNull(rig.additionalPaymentDate),
-            cancellationDate: toDateOrNull(rig.cancellationDate),
-            renewals: (rig.renewals || []).map(renewal => ({
-              ...renewal,
-              renewalDate: toDateOrNull(renewal.renewalDate),
-              paymentDate: toDateOrNull(renewal.paymentDate),
-              validTill: toDateOrNull(renewal.validTill),
-            }))
-          }))
+
+        const convertStringsToDates = (obj: any): any => {
+            if (obj === null || obj === undefined) return obj;
+            if (Array.isArray(obj)) {
+                return obj.map(convertStringsToDates);
+            }
+            if (typeof obj === 'object') {
+                const newObj: { [key: string]: any } = {};
+                for (const key in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                        const value = obj[key];
+                        if (key.toLowerCase().includes('date') && typeof value === 'string' && value) {
+                            newObj[key] = toDateOrNull(value);
+                        } else {
+                            newObj[key] = convertStringsToDates(value);
+                        }
+                    }
+                }
+                return newObj;
+            }
+            return obj;
         };
+        
+        const payload: Partial<AgencyApplication> = convertStringsToDates(data);
 
 
         try {
@@ -918,10 +913,13 @@ export default function AgencyRegistrationPage() {
                         </Accordion>
 
                     </CardContent>
-                    {!isReadOnly && selectedApplicationId === 'new' && (
+                    {!isReadOnly && (
                         <CardFooter className="flex justify-end gap-2">
                             <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
-                            <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                <Save className="mr-2 h-4 w-4"/> 
+                                {isSubmitting ? "Saving..." : (selectedApplicationId === 'new' ? "Save Registration" : "Save Changes")}
+                            </Button>
                         </CardFooter>
                     )}
                 </Card>
