@@ -370,7 +370,7 @@ export type RigType = typeof rigTypeOptions[number];
 export const RigRenewalSchema = z.object({
     id: z.string(),
     renewalDate: nativeDateSchema,
-    renewalFee: optionalNumber("Renewal fee is required."),
+    renewalFee: optionalNumber("Renewal fee must be a number."),
     paymentDate: nativeDateSchema,
     challanNo: z.string().optional(),
     validTill: nativeDateSchema,

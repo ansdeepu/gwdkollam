@@ -362,6 +362,7 @@ const RigAccordionItem = ({
                         <TableRow>
                             <TableHead>Renewal No.</TableHead>
                             <TableHead>Renewal Date</TableHead>
+                            <TableHead>Validity Upto</TableHead>
                             <TableHead>Fee (₹)</TableHead>
                             <TableHead>Payment Date</TableHead>
                             <TableHead>Challan No.</TableHead>
@@ -373,10 +374,12 @@ const RigAccordionItem = ({
                             const renewalNum = renewalIndex + 1;
                             const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
                             const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
+                            const validTillDate = renewalDate ? addYears(renewalDate, 1) : null;
                             return (
                                 <TableRow key={renewal.id}>
                                 <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
                                 <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{validTillDate ? format(validTillDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
                                 <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
@@ -538,7 +541,7 @@ export default function AgencyRegistrationPage() {
         if (Array.isArray(obj)) {
             return obj.map(convertStringsToDates);
         }
-        if (typeof obj === 'object') {
+        if (typeof obj === 'object' && obj !== null) {
             const newObj: { [key: string]: any } = {};
             for (const key in obj) {
                 if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -558,7 +561,7 @@ export default function AgencyRegistrationPage() {
         return obj;
     };
     
-    const payload = convertStringsToDates(data);
+    let payload = convertStringsToDates(data);
 
     try {
       if (selectedApplicationId && selectedApplicationId !== 'new') {
@@ -904,27 +907,29 @@ export default function AgencyRegistrationPage() {
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
-                        <FormField
-                            name="status"
-                            control={form.control}
-                            render={({ field }) => (
-                                <FormItem className="w-full sm:w-1/3">
-                                <FormLabel>Registration Status</FormLabel>
-                                {isReadOnly ? (
-                                    <Input readOnly value={field.value} className="bg-muted/50" />
-                                ) : (
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="Active">Active</SelectItem>
-                                            <SelectItem value="Pending Verification">Pending Verification</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                        {selectedApplicationId === 'new' ? null : (
+                            <FormField
+                                name="status"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem className="w-full sm:w-1/3">
+                                    <FormLabel>Registration Status</FormLabel>
+                                    {isReadOnly ? (
+                                        <Input readOnly value={field.value} className="bg-muted/50" />
+                                    ) : (
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Active">Active</SelectItem>
+                                                <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                    <FormMessage />
+                                    </FormItem>
                                 )}
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                            />
+                        )}
 
                     </CardContent>
                     {!isReadOnly && (
