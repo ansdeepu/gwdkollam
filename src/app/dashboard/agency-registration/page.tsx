@@ -40,12 +40,8 @@ export const dynamic = 'force-dynamic';
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
-  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-    return isValid(date) ? date : null;
-  }
   if (typeof value === 'string') {
-    let parsed = parseISO(value); // Handles yyyy-MM-dd from date inputs and full ISO strings
+    let parsed = parseISO(value); // Handles 'yyyy-MM-dd' from date inputs and full ISO strings
     if (isValid(parsed)) return parsed;
   }
   return null;
@@ -53,13 +49,9 @@ const toDateOrNull = (value: any): Date | null => {
 
 
 const toInputDate = (value: any): string => {
-    if (!value) return "";
-    if (value instanceof Date && isValid(value)) return format(value, 'yyyy-MM-dd');
-    if (typeof value === 'string') {
-        const parsedDate = toDateOrNull(value);
-        return parsedDate ? format(parsedDate, 'yyyy-MM-dd') : value.slice(0, 10);
-    }
-    return "";
+  if (!value) return "";
+  const date = toDateOrNull(value);
+  return date ? format(date, 'yyyy-MM-dd') : '';
 };
 
 const RegistrationTable = ({ 
@@ -415,6 +407,7 @@ export default function AgencyRegistrationPage() {
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { setIsNavigating } = usePageNavigation();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -478,98 +471,97 @@ export default function AgencyRegistrationPage() {
   
   useEffect(() => {
     if (selectedApplicationId) {
-        if (selectedApplicationId === 'new') {
-            form.reset({
-                fileNo: '',
-                agencyName: '',
-                agencyRegistrationNo: '',
-                agencyRegistrationDate: toInputDate(new Date()),
-                agencyRegistrationFee: undefined,
-                agencyPaymentDate: toInputDate(new Date()),
-                agencyAdditionalRegFee: undefined,
-                agencyAdditionalPaymentDate: undefined,
-                agencyAdditionalChallanNo: '',
-                owner: createDefaultOwner(),
-                partners: [],
-                rigs: [createDefaultRig()],
-                status: 'Pending Verification',
-                history: []
-            });
-        } else {
-            const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
-            if (app) {
-                // Create a deep copy to avoid mutating the original data
-                const appDataForForm = JSON.parse(JSON.stringify(app));
-
-                // Format all dates to 'yyyy-MM-dd' strings for form inputs
-                appDataForForm.agencyRegistrationDate = toInputDate(appDataForForm.agencyRegistrationDate);
-                appDataForForm.agencyPaymentDate = toInputDate(appDataForForm.agencyPaymentDate);
-                appDataForForm.agencyAdditionalPaymentDate = toInputDate(appDataForForm.agencyAdditionalPaymentDate);
-                
-                if (appDataForForm.rigs) {
-                    appDataForForm.rigs = appDataForForm.rigs.map((rig: any) => ({
-                        ...rig,
-                        registrationDate: toInputDate(rig.registrationDate),
-                        paymentDate: toInputDate(rig.paymentDate),
-                        additionalPaymentDate: toInputDate(rig.additionalPaymentDate),
-                        cancellationDate: toInputDate(rig.cancellationDate),
-                        renewals: (rig.renewals || []).map((renewal: any) => ({
-                            ...renewal,
-                            renewalDate: toInputDate(renewal.renewalDate),
-                            paymentDate: toInputDate(renewal.paymentDate),
-                        })),
-                    }));
+      if (selectedApplicationId === 'new') {
+        form.reset({
+            fileNo: '',
+            agencyName: '',
+            agencyRegistrationNo: '',
+            agencyRegistrationDate: toInputDate(new Date()),
+            agencyRegistrationFee: undefined,
+            agencyPaymentDate: toInputDate(new Date()),
+            agencyAdditionalRegFee: undefined,
+            agencyAdditionalPaymentDate: undefined,
+            agencyAdditionalChallanNo: '',
+            owner: createDefaultOwner(),
+            partners: [],
+            rigs: [createDefaultRig()],
+            status: 'Pending Verification',
+            history: []
+        });
+      } else {
+        const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
+        if (app) {
+          const formatDataForForm = (data: any): any => {
+            const newObj: { [key: string]: any } = {};
+            for (const key in data) {
+              if (Object.prototype.hasOwnProperty.call(data, key)) {
+                const value = data[key];
+                if (Array.isArray(value)) {
+                  newObj[key] = value.map(formatDataForForm);
+                } else if (value && typeof value === 'object' && value.seconds) { // Firestore Timestamp
+                  newObj[key] = toInputDate(new Date(value.seconds * 1000));
+                } else if (key.toLowerCase().includes('date') && value) {
+                  newObj[key] = toInputDate(value);
+                } else {
+                  newObj[key] = value;
                 }
-                form.reset(appDataForForm);
+              }
             }
+            return newObj;
+          };
+          const appDataForForm = formatDataForForm(JSON.parse(JSON.stringify(app)));
+          form.reset(appDataForForm);
         }
+      }
     }
   }, [selectedApplicationId, applications, form]);
 
-    const onSubmit = async (data: AgencyApplication) => {
-        setIsSubmitting(true);
-
-        const convertStringsToDates = (obj: any): any => {
-            if (obj === null || obj === undefined) return obj;
-            if (Array.isArray(obj)) {
-                return obj.map(convertStringsToDates);
-            }
-            if (typeof obj === 'object') {
-                const newObj: { [key: string]: any } = {};
-                for (const key in obj) {
-                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                        const value = obj[key];
-                        if (key.toLowerCase().includes('date') && typeof value === 'string' && value) {
-                            newObj[key] = toDateOrNull(value);
-                        } else {
-                            newObj[key] = convertStringsToDates(value);
-                        }
-                    }
-                }
-                return newObj;
-            }
-            return obj;
-        };
-        
-        const payload: Partial<AgencyApplication> = convertStringsToDates(data);
-
-
-        try {
-            if (selectedApplicationId && selectedApplicationId !== 'new') {
-                await updateApplication(selectedApplicationId, payload);
-                toast({ title: "Application Updated", description: "The registration details have been updated." });
+  const onSubmit = async (data: AgencyApplication) => {
+    setIsSubmitting(true);
+  
+    const convertStringsToDates = (obj: any): any => {
+      if (obj === null || obj === undefined) return undefined;
+      if (Array.isArray(obj)) {
+        return obj.map(convertStringsToDates);
+      }
+      if (typeof obj === 'object') {
+        const newObj: { [key: string]: any } = {};
+        for (const key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const value = obj[key];
+            if (key.toLowerCase().includes('date') && typeof value === 'string' && value) {
+              newObj[key] = toDateOrNull(value);
+            } else if (typeof value === 'object') {
+              newObj[key] = convertStringsToDates(value);
             } else {
-                await addApplication(payload as AgencyApplication);
-                toast({ title: "Application Created", description: "The new agency registration has been saved." });
+              newObj[key] = value;
             }
-            setSelectedApplicationId(null);
-            setIsViewing(false);
-        } catch (error: any) {
-            toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
-        } finally {
-            setIsSubmitting(false);
+          }
         }
+        return newObj;
+      }
+      return obj;
     };
+    
+    const payload = convertStringsToDates(data);
+  
+    try {
+      if (selectedApplicationId && selectedApplicationId !== 'new') {
+        await updateApplication(selectedApplicationId, payload);
+        toast({ title: "Application Updated", description: "The registration details have been updated." });
+      } else {
+        await addApplication(payload as AgencyApplication);
+        toast({ title: "Application Created", description: "The new agency registration has been saved." });
+      }
+      setSelectedApplicationId(null);
+      setIsViewing(false);
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAddNew = () => {
     setIsViewing(false);
