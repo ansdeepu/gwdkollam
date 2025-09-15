@@ -55,18 +55,17 @@ const toDateOrNull = (value: any): Date | null => {
 
 const toInputDate = (value: any): string => {
     if (!value) return "";
-    if (value instanceof Date && isValid(value)) return format(value, "yyyy-MM-dd");
-    if (typeof value === 'string') { // Handle string state
+    const date = toDateOrNull(value);
+    if (date && isValid(date)) {
+        return format(date, 'yyyy-MM-dd');
+    }
+    // If it's a string, assume it's already in the correct format or close enough
+    if (typeof value === 'string') {
         const parsedDate = parseISO(value);
         if (isValid(parsedDate)) {
             return format(parsedDate, 'yyyy-MM-dd');
         }
-        return value.slice(0, 10); // Assume it might already be in yyyy-MM-dd format
-    }
-    // Handle Firestore Timestamp objects
-    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
-        const date = new Date(value.seconds * 1000);
-        if (isValid(date)) return format(date, 'yyyy-MM-dd');
+        return value.slice(0, 10);
     }
     return "";
 };
@@ -499,9 +498,10 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
-                // Deep copy and format dates for form
+                // Create a deep copy to avoid mutating the original data
                 const appDataForForm = JSON.parse(JSON.stringify(app));
 
+                // Format all dates to 'yyyy-MM-dd' strings for form inputs
                 appDataForForm.agencyRegistrationDate = toInputDate(appDataForForm.agencyRegistrationDate);
                 appDataForForm.agencyPaymentDate = toInputDate(appDataForForm.agencyPaymentDate);
                 appDataForForm.agencyAdditionalPaymentDate = toInputDate(appDataForForm.agencyAdditionalPaymentDate);
@@ -530,29 +530,28 @@ export default function AgencyRegistrationPage() {
         setIsSubmitting(true);
         
         const convertStringsToDates = (obj: any): any => {
-            if (obj === null || obj === undefined) return obj;
-            if (Array.isArray(obj)) {
-                return obj.map(item => convertStringsToDates(item));
-            }
-            if (typeof obj === 'object') {
-                const newObj: { [key: string]: any } = {};
-                for (const key in obj) {
-                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                        const value = obj[key];
-                        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                            newObj[key] = toDateOrNull(value) ?? undefined;
-                        } else if (typeof value === 'object') {
-                            newObj[key] = convertStringsToDates(value);
-                        }
-                         else {
-                            newObj[key] = value;
-                        }
-                    }
-                }
-                return newObj;
-            }
-            return obj;
-        };
+          if (obj === null || obj === undefined) return undefined;
+          if (Array.isArray(obj)) {
+              return obj.map(item => convertStringsToDates(item));
+          }
+          if (typeof obj === 'object') {
+              const newObj: { [key: string]: any } = {};
+              for (const key in obj) {
+                  if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                      const value = obj[key];
+                      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                          newObj[key] = toDateOrNull(value) ?? undefined;
+                      } else if (typeof value === 'object') {
+                          newObj[key] = convertStringsToDates(value);
+                      } else {
+                          newObj[key] = value;
+                      }
+                  }
+              }
+              return newObj;
+          }
+          return obj;
+      };
 
         const payload = convertStringsToDates(data);
 
@@ -744,7 +743,7 @@ export default function AgencyRegistrationPage() {
     updateRig(rigIndex, {
         ...rigToUpdate,
         status: 'Cancelled',
-        cancellationDate: isValid(dateObject) ? dateObject : new Date(),
+        cancellationDate: isValid(dateObject) ? toInputDate(dateObject) : toInputDate(new Date()),
         cancellationReason: reason,
     });
     toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
