@@ -770,7 +770,6 @@ export default function AgencyRegistrationPage() {
   }
   
   if (selectedApplicationId) {
-    const formValues = form.getValues();
     return (
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -823,10 +822,12 @@ export default function AgencyRegistrationPage() {
                                     <FormField name="agencyAdditionalRegFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Registration Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                     <FormField name="agencyAdditionalPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                     <FormField name="agencyAdditionalChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                     <FormField name="status" control={form.control} render={({ field }) => (
+                                    <FormField name="status" control={form.control} render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Status</FormLabel>
+                                            <FormControl>
                                                 <Input readOnly value={field.value} className="bg-muted" />
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -874,7 +875,7 @@ export default function AgencyRegistrationPage() {
       </FormProvider>
     )
   }
-
+  
   return (
     <div className="space-y-6">
       <Card>
