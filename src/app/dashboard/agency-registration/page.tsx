@@ -530,7 +530,7 @@ export default function AgencyRegistrationPage() {
         setIsSubmitting(true);
         
         const convertStringsToDates = (obj: any): any => {
-            if (!obj) return obj;
+            if (obj === null || obj === undefined) return obj;
             if (Array.isArray(obj)) {
                 return obj.map(item => convertStringsToDates(item));
             }
@@ -540,11 +540,12 @@ export default function AgencyRegistrationPage() {
                     if (Object.prototype.hasOwnProperty.call(obj, key)) {
                         const value = obj[key];
                         if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                            // Convert yyyy-MM-dd string back to Date object, or undefined if invalid
-                            const parsed = toDateOrNull(value);
-                            newObj[key] = parsed || undefined;
-                        } else {
+                            newObj[key] = toDateOrNull(value) ?? undefined;
+                        } else if (typeof value === 'object') {
                             newObj[key] = convertStringsToDates(value);
+                        }
+                         else {
+                            newObj[key] = value;
                         }
                     }
                 }
