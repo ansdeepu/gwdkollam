@@ -40,7 +40,6 @@ export const dynamic = 'force-dynamic';
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
-  // Handle Firestore Timestamp objects
   if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
     const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
     return isValid(date) ? date : null;
@@ -530,7 +529,7 @@ export default function AgencyRegistrationPage() {
         setIsSubmitting(true);
         
         const convertStringsToDates = (obj: any): any => {
-            if (obj === null || obj === undefined) return undefined;
+            if (obj === null || obj === undefined) return obj;
             if (Array.isArray(obj)) {
               return obj.map(item => convertStringsToDates(item));
             }
@@ -539,7 +538,6 @@ export default function AgencyRegistrationPage() {
               for (const key in obj) {
                 if (Object.prototype.hasOwnProperty.call(obj, key)) {
                   const value = obj[key];
-                  // Check if the key suggests it's a date and the value is a string
                   if (key.toLowerCase().includes('date') && typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
                     const parsedDate = toDateOrNull(value);
                     newObj[key] = parsedDate ? parsedDate : undefined;
@@ -575,7 +573,6 @@ export default function AgencyRegistrationPage() {
     };
 
   const handleAddNew = () => {
-    setIsNavigating(true);
     setIsViewing(false);
     setSelectedApplicationId('new');
   }
