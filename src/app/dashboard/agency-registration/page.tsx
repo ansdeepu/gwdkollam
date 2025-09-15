@@ -1107,5 +1107,3 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
-
-    
