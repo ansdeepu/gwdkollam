@@ -43,7 +43,7 @@ const toDateOrNull = (value: any): Date | null => {
   // Handle Firestore Timestamp objects
   if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
     const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-    if (isValid(date)) return date;
+    return isValid(date) ? date : null;
   }
   if (typeof value === 'string') {
     let parsed = parseISO(value); // Handles yyyy-MM-dd from date inputs and full ISO strings
@@ -1093,4 +1093,3 @@ export default function AgencyRegistrationPage() {
   );
 }
 
-    
