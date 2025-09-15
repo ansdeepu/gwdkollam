@@ -835,10 +835,10 @@ export default function AgencyRegistrationPage() {
                                     <div className="grid md:grid-cols-3 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name="agencyName" render={({ field }) => <FormItem><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                        {canEdit && (
-                                            <FormField name="status" control={form.control} render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Status</FormLabel>
+                                        <FormField name="status" control={form.control} render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Status</FormLabel>
+                                                {canEdit ? (
                                                     <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
                                                         <SelectContent>
@@ -846,10 +846,12 @@ export default function AgencyRegistrationPage() {
                                                             <SelectItem value="Active">Active</SelectItem>
                                                         </SelectContent>
                                                     </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )} />
-                                        )}
+                                                ) : (
+                                                    <Input value={field.value} readOnly disabled className="bg-muted/50" />
+                                                )}
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
                                     </div>
                                     <Separator />
                                      <div className="space-y-2">
