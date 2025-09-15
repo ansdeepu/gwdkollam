@@ -504,7 +504,7 @@ export default function AgencyRegistrationPage() {
   useEffect(() => {
     if (selectedApplicationId) {
       if (selectedApplicationId === 'new') {
-        form.reset(formatDataForForm({
+        form.reset({
             fileNo: '',
             agencyName: '',
             agencyRegistrationNo: '',
@@ -520,7 +520,7 @@ export default function AgencyRegistrationPage() {
             rigs: [createDefaultRig()],
             status: 'Pending Verification',
             history: []
-        }));
+        });
       } else {
         const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
         if (app) {
@@ -568,6 +568,7 @@ export default function AgencyRegistrationPage() {
         await updateApplication(selectedApplicationId, payload);
         toast({ title: "Application Updated", description: "The registration details have been updated." });
       } else {
+        payload.status = payload.agencyRegistrationNo ? 'Active' : 'Pending Verification';
         await addApplication(payload as AgencyApplication);
         toast({ title: "Application Created", description: "The new agency registration has been saved." });
       }
@@ -832,26 +833,9 @@ export default function AgencyRegistrationPage() {
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>1. Application Details</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
-                                    <div className="grid md:grid-cols-3 gap-4">
+                                    <div className="grid md:grid-cols-2 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name="agencyName" render={({ field }) => <FormItem><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="status" control={form.control} render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Status</FormLabel>
-                                                {canEdit ? (
-                                                    <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="Pending Verification">Pending Verification</SelectItem>
-                                                            <SelectItem value="Active">Active</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) : (
-                                                    <Input value={field.value} readOnly disabled className="bg-muted/50" />
-                                                )}
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
                                     </div>
                                     <Separator />
                                      <div className="space-y-2">
