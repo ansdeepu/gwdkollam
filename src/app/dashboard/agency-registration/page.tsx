@@ -530,28 +530,30 @@ export default function AgencyRegistrationPage() {
         setIsSubmitting(true);
         
         const convertStringsToDates = (obj: any): any => {
-          if (obj === null || obj === undefined) return undefined;
-          if (Array.isArray(obj)) {
+            if (obj === null || obj === undefined) return undefined;
+            if (Array.isArray(obj)) {
               return obj.map(item => convertStringsToDates(item));
-          }
-          if (typeof obj === 'object') {
+            }
+            if (typeof obj === 'object') {
               const newObj: { [key: string]: any } = {};
               for (const key in obj) {
-                  if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                      const value = obj[key];
-                      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                          newObj[key] = toDateOrNull(value) ?? undefined;
-                      } else if (typeof value === 'object') {
-                          newObj[key] = convertStringsToDates(value);
-                      } else {
-                          newObj[key] = value;
-                      }
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                  const value = obj[key];
+                  // Check if the key suggests it's a date and the value is a string
+                  if (key.toLowerCase().includes('date') && typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                    const parsedDate = toDateOrNull(value);
+                    newObj[key] = parsedDate ? parsedDate : undefined;
+                  } else if (typeof value === 'object' && value !== null) {
+                    newObj[key] = convertStringsToDates(value);
+                  } else {
+                    newObj[key] = value;
                   }
+                }
               }
               return newObj;
-          }
-          return obj;
-      };
+            }
+            return obj;
+          };
 
         const payload = convertStringsToDates(data);
 
