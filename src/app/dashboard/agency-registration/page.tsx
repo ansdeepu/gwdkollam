@@ -258,7 +258,7 @@ const RigAccordionItem = ({
                         <FormMessage />
                     </FormItem>
                 )} />
-                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormItem>
                   <FormLabel>Validity Upto</FormLabel>
                   <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
@@ -266,13 +266,13 @@ const RigAccordionItem = ({
             </div>
             <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
             </div>
              <Separator className="my-2" />
             <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.additionalRegistrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.additionalChallanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
             </div>
           </div>
@@ -514,24 +514,50 @@ export default function AgencyRegistrationPage() {
     }
   }, [selectedApplicationId, applications, form]);
 
-  const onSubmit = async (data: AgencyApplication) => {
-    setIsSubmitting(true);
-    try {
-      if (selectedApplicationId && selectedApplicationId !== 'new') {
-        await updateApplication(selectedApplicationId, data);
-        toast({ title: "Application Updated", description: "The registration details have been updated." });
-      } else {
-        await addApplication(data);
-        toast({ title: "Application Created", description: "The new agency registration has been saved." });
-      }
-      setSelectedApplicationId(null);
-      setIsViewing(false);
-    } catch (error: any) {
-      toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    const onSubmit = async (data: AgencyApplication) => {
+        setIsSubmitting(true);
+        
+        // Helper to recursively convert date strings back to Date objects
+        const convertStringsToDates = (obj: any): any => {
+            if (!obj) return obj;
+            if (Array.isArray(obj)) {
+                return obj.map(item => convertStringsToDates(item));
+            }
+            if (typeof obj === 'object') {
+                const newObj: { [key: string]: any } = {};
+                for (const key in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                        const value = obj[key];
+                        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                            newObj[key] = toDateOrNull(value);
+                        } else {
+                            newObj[key] = convertStringsToDates(value);
+                        }
+                    }
+                }
+                return newObj;
+            }
+            return obj;
+        };
+
+        const payload = convertStringsToDates(data);
+
+        try {
+            if (selectedApplicationId && selectedApplicationId !== 'new') {
+                await updateApplication(selectedApplicationId, payload);
+                toast({ title: "Application Updated", description: "The registration details have been updated." });
+            } else {
+                await addApplication(payload);
+                toast({ title: "Application Created", description: "The new agency registration has been saved." });
+            }
+            setSelectedApplicationId(null);
+            setIsViewing(false);
+        } catch (error: any) {
+            toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
   const handleAddNew = () => {
     setIsNavigating(true);
@@ -835,13 +861,13 @@ export default function AgencyRegistrationPage() {
                             <AccordionTrigger>2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <Separator className="md:col-span-3 my-2" />
                                <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={(e) => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyAdditionalChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             </AccordionContent>
                           </AccordionItem>
@@ -894,7 +920,7 @@ export default function AgencyRegistrationPage() {
                     <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Renewal Date</Label>
-                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || ''} onChange={(e) => {
+                        <Input type="date" className="col-span-3" value={toInputDate(editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate)} onChange={(e) => {
                             const value = e.target.value;
                              if (editingRenewal) {
                                 setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
@@ -919,7 +945,7 @@ export default function AgencyRegistrationPage() {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Payment Date</Label>
-                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || ''} onChange={(e) => {
+                        <Input type="date" className="col-span-3" value={toInputDate(editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate)} onChange={(e) => {
                             const value = e.target.value;
                             if (editingRenewal) {
                                 setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
@@ -973,7 +999,7 @@ export default function AgencyRegistrationPage() {
                             <Input
                                 id="cancellationDate"
                                 type="date"
-                                value={cancellationData.date}
+                                value={toInputDate(cancellationData.date)}
                                 onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))}
                                 className="col-span-3"
                             />
