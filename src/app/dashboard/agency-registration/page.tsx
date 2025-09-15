@@ -892,6 +892,7 @@ export default function AgencyRegistrationPage() {
                     )}
                 </Card>
             </form>
+          </FormProvider>
             <Dialog open={isRenewalDialogOpen} onOpenChange={setIsRenewalDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
