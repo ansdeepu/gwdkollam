@@ -422,7 +422,6 @@ export default function AgencyRegistrationPage() {
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
-  const { setIsNavigating } = usePageNavigation();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -488,6 +487,16 @@ export default function AgencyRegistrationPage() {
     if (selectedApplicationId) {
         if (selectedApplicationId === 'new') {
             form.reset({
+                fileNo: '',
+                agencyName: '',
+                agencyRegistrationNo: '',
+                agencyRegistrationDate: '',
+                agencyRegistrationFee: undefined,
+                agencyPaymentDate: '',
+                agencyChallanNo: '',
+                agencyAdditionalRegFee: undefined,
+                agencyAdditionalPaymentDate: '',
+                agencyAdditionalChallanNo: '',
                 owner: createDefaultOwner(),
                 partners: [],
                 rigs: [createDefaultRig()],
