@@ -55,7 +55,7 @@ const toDateOrNull = (value: any): Date | null => {
   return null;
 };
 
-const toInputDate = (dateValue: any) => {
+const toInputDate = (dateValue: any): string => {
     const date = toDateOrNull(dateValue);
     return date && isValid(date) ? format(date, 'yyyy-MM-dd') : '';
 };
@@ -903,7 +903,7 @@ export default function AgencyRegistrationPage() {
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Renewal Date</Label>
                         <Input type="date" className="col-span-3" value={toInputDate(editingRenewal?.renewal.renewalDate) || toInputDate(renewalData?.data.renewalDate) || ''} onChange={(e) => {
-                            const value = e.target.valueAsDate;
+                            const value = toDateOrNull(e.target.value);
                              if (editingRenewal) {
                                 setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
                             } else {
@@ -916,7 +916,7 @@ export default function AgencyRegistrationPage() {
                         <Input id="renewalFee" type="number" 
                          value={editingRenewal?.renewal.renewalFee ?? renewalData?.data.renewalFee ?? ''}
                          onChange={(e) => {
-                            const value = +e.target.value;
+                            const value = e.target.value === '' ? undefined : +e.target.value;
                             if (editingRenewal) {
                                 setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalFee: value }}));
                             } else {
@@ -928,7 +928,7 @@ export default function AgencyRegistrationPage() {
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">Payment Date</Label>
                         <Input type="date" className="col-span-3" value={toInputDate(editingRenewal?.renewal.paymentDate) || toInputDate(renewalData?.data.paymentDate) || ''} onChange={(e) => {
-                            const value = e.target.valueAsDate;
+                            const value = toDateOrNull(e.target.value);
                             if (editingRenewal) {
                                 setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
                             } else {
