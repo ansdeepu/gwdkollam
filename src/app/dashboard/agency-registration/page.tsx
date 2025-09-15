@@ -918,11 +918,11 @@ export default function AgencyRegistrationPage() {
                         </Accordion>
 
                     </CardContent>
-                    {!isReadOnly && (
-                      <CardFooter className="flex justify-end gap-2">
-                          <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
-                          <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
-                      </CardFooter>
+                    {!isReadOnly && selectedApplicationId === 'new' && (
+                        <CardFooter className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
+                            <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
+                        </CardFooter>
                     )}
                 </Card>
             </form>
