@@ -46,16 +46,7 @@ const toDateOrNull = (value: any): Date | null => {
     if (isValid(date)) return date;
   }
   if (typeof value === 'string') {
-    // Check for yyyy-MM-dd (from input) or full ISO string
-    let parsed = parseISO(value);
-    if (isValid(parsed)) return parsed;
-
-    // Check for dd/MM/yyyy (from manual entry or display)
-    parsed = parse(value, 'dd/MM/yyyy', new Date());
-    if (isValid(parsed)) return parsed;
-
-    // Add check for dd-MM-yyyy format from screenshot
-    parsed = parse(value, 'dd-MM-yyyy', new Date());
+    let parsed = parseISO(value); // Handles yyyy-MM-dd from date inputs and full ISO strings
     if (isValid(parsed)) return parsed;
   }
   return null;
@@ -64,7 +55,7 @@ const toDateOrNull = (value: any): Date | null => {
 
 const toInputDate = (dateValue: any): string => {
     const date = toDateOrNull(dateValue);
-    return date && isValid(date) ? format(date, 'yyyy-MM-dd') : '';
+    return date ? format(date, 'yyyy-MM-dd') : '';
 };
 
 const RegistrationTable = ({ 
@@ -411,7 +402,7 @@ const RigAccordionItem = ({
         </div>
       </AccordionContent>
     </AccordionItem>
-  )
+  );
 };
 
 
@@ -495,24 +486,28 @@ export default function AgencyRegistrationPage() {
         } else {
             const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
-                const appDataForForm = {
-                    ...app,
-                    agencyRegistrationDate: toDateOrNull(app.agencyRegistrationDate),
-                    agencyPaymentDate: toDateOrNull(app.agencyPaymentDate),
-                    agencyAdditionalPaymentDate: toDateOrNull(app.agencyAdditionalPaymentDate),
-                    rigs: (app.rigs || []).map(rig => ({
+                // Important: Create a deep copy to avoid mutating the original data
+                const appDataForForm = JSON.parse(JSON.stringify(app));
+
+                // Convert all date-like values to Date objects for the form state
+                appDataForForm.agencyRegistrationDate = toDateOrNull(appDataForForm.agencyRegistrationDate);
+                appDataForForm.agencyPaymentDate = toDateOrNull(appDataForForm.agencyPaymentDate);
+                appDataForForm.agencyAdditionalPaymentDate = toDateOrNull(appDataForForm.agencyAdditionalPaymentDate);
+                
+                if (appDataForForm.rigs) {
+                    appDataForForm.rigs = appDataForForm.rigs.map((rig: any) => ({
                         ...rig,
                         registrationDate: toDateOrNull(rig.registrationDate),
                         paymentDate: toDateOrNull(rig.paymentDate),
                         additionalPaymentDate: toDateOrNull(rig.additionalPaymentDate),
                         cancellationDate: toDateOrNull(rig.cancellationDate),
-                        renewals: (rig.renewals || []).map(renewal => ({
+                        renewals: (rig.renewals || []).map((renewal: any) => ({
                             ...renewal,
                             renewalDate: toDateOrNull(renewal.renewalDate),
                             paymentDate: toDateOrNull(renewal.paymentDate),
                         })),
-                    })),
-                };
+                    }));
+                }
                 form.reset(appDataForForm);
             }
         }
@@ -521,22 +516,12 @@ export default function AgencyRegistrationPage() {
 
   const onSubmit = async (data: AgencyApplication) => {
     setIsSubmitting(true);
-
     try {
-      const validationResult = AgencyApplicationSchema.safeParse(data);
-
-      if (!validationResult.success) {
-        console.error("Zod Validation Errors:", validationResult.error.flatten());
-        toast({ title: "Validation Error", description: "Please check the form for errors.", variant: "destructive" });
-        setIsSubmitting(false);
-        return;
-      }
-      
       if (selectedApplicationId && selectedApplicationId !== 'new') {
-        await updateApplication(selectedApplicationId, validationResult.data);
+        await updateApplication(selectedApplicationId, data);
         toast({ title: "Application Updated", description: "The registration details have been updated." });
       } else {
-        await addApplication(validationResult.data);
+        await addApplication(data);
         toast({ title: "Application Created", description: "The new agency registration has been saved." });
       }
       setSelectedApplicationId(null);
@@ -1107,3 +1092,5 @@ export default function AgencyRegistrationPage() {
     </div>
   );
 }
+
+    
