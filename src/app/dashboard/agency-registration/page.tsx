@@ -677,44 +677,44 @@ export default function AgencyRegistrationPage() {
       }
     };
 
-  const handleConfirmRenewal = () => {
-      if (editingRenewal) { // Handle editing an existing renewal
-        const { rigIndex, renewal } = editingRenewal;
-        const currentRig = form.getValues(`rigs.${rigIndex}`);
-        if (!currentRig || !currentRig.renewals) return;
+    const handleConfirmRenewal = () => {
+        if (editingRenewal) { // Handle editing an existing renewal
+            const { rigIndex, renewal } = editingRenewal;
+            const currentRig = form.getValues(`rigs.${rigIndex}`);
+            if (!currentRig || !currentRig.renewals) return;
 
-        const updatedRenewals = currentRig.renewals.map(r =>
-          r.id === renewal.id ? { ...r, ...renewal } : r
-        );
-        
-        updateRig(rigIndex, { ...currentRig, renewals: updatedRenewals });
-        form.trigger(`rigs.${rigIndex}.renewals`);
-        toast({ title: "Renewal Updated", description: "The renewal details have been updated in the form." });
+            const updatedRenewals = currentRig.renewals.map(r =>
+                r.id === renewal.id ? { ...r, ...renewal } : r
+            );
+            
+            updateRig(rigIndex, { ...currentRig, renewals: updatedRenewals });
+            form.trigger(`rigs.${rigIndex}.renewals`);
+            toast({ title: "Renewal Updated", description: "The renewal details have been updated in the form." });
 
-      } else if (renewalData) { // Handle adding a new renewal
-          const { rigIndex, data } = renewalData;
-          const currentRig = form.getValues(`rigs.${rigIndex}`);
-          
-          if (!currentRig) return;
-          
-          const newRenewal: RigRenewalFormData = {
-              id: uuidv4(),
-              renewalDate: data.renewalDate || '',
-              renewalFee: data.renewalFee,
-              paymentDate: data.paymentDate,
-              challanNo: data.challanNo,
-          };
-          
-          const existingRenewals = currentRig.renewals || [];
-          updateRig(rigIndex, { ...currentRig, renewals: [...existingRenewals, newRenewal] });
-          form.trigger(`rigs.${rigIndex}.renewals`);
-          toast({ title: "Renewal Added", description: "The new renewal has been added to the form." });
-      }
+        } else if (renewalData) { // Handle adding a new renewal
+            const { rigIndex, data } = renewalData;
+            const currentRig = form.getValues(`rigs.${rigIndex}`);
+            
+            if (!currentRig) return;
+            
+            const newRenewal: RigRenewalFormData = {
+                id: uuidv4(),
+                renewalDate: data.renewalDate || '',
+                renewalFee: data.renewalFee,
+                paymentDate: data.paymentDate,
+                challanNo: data.challanNo,
+            };
+            
+            const existingRenewals = currentRig.renewals || [];
+            updateRig(rigIndex, { ...currentRig, renewals: [...existingRenewals, newRenewal] });
+            form.trigger(`rigs.${rigIndex}.renewals`);
+            toast({ title: "Renewal Added", description: "The new renewal has been added to the form." });
+        }
 
-      setIsRenewalDialogOpen(false);
-      setEditingRenewal(null);
-      setRenewalData(null);
-  };
+        setIsRenewalDialogOpen(false);
+        setEditingRenewal(null);
+        setRenewalData(null);
+    };
   
     const confirmDeleteRenewal = () => {
         if (!deletingRenewal) return;
@@ -873,7 +873,7 @@ export default function AgencyRegistrationPage() {
           </Card>
         </form>
       </FormProvider>
-    )
+    );
   }
   
   return (
