@@ -295,48 +295,6 @@ const RigAccordionItem = ({
             </div>
           )}
 
-          {field.renewals && field.renewals.length > 0 && (
-            <div className="space-y-2 p-4 border rounded-lg bg-secondary/20">
-                <h4 className="font-medium text-base text-primary">Renewal History</h4>
-                <div className="border rounded-lg p-2 bg-background/50">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Renewal No.</TableHead>
-                            <TableHead>Renewal Date</TableHead>
-                            <TableHead>Fee (₹)</TableHead>
-                            <TableHead>Payment Date</TableHead>
-                            <TableHead>Challan No.</TableHead>
-                            {!isReadOnly && <TableHead className="text-center">Actions</TableHead>}
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {field.renewals.map((renewal, renewalIndex) => {
-                            const renewalNum = renewalIndex + 1;
-                            const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
-                            const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
-                            return (
-                                <TableRow key={renewal.id}>
-                                <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
-                                <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
-                                <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
-                                {!isReadOnly && (
-                                    <TableCell className="text-center">
-                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
-                                    </TableCell>
-                                )}
-                                </TableRow>
-                            );
-                        })}
-                        </TableBody>
-                    </Table>
-                </div>
-            </div>
-          )}
-
            {enabledSections.includes('rigVehicle') && (
             <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
                 <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
@@ -391,6 +349,48 @@ const RigAccordionItem = ({
                 <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+            </div>
+          )}
+
+          {field.renewals && field.renewals.length > 0 && (
+            <div className="space-y-2 p-4 border rounded-lg bg-secondary/20">
+                <h4 className="font-medium text-base text-primary">Renewal History</h4>
+                <div className="border rounded-lg p-2 bg-background/50">
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Renewal No.</TableHead>
+                            <TableHead>Renewal Date</TableHead>
+                            <TableHead>Fee (₹)</TableHead>
+                            <TableHead>Payment Date</TableHead>
+                            <TableHead>Challan No.</TableHead>
+                            {!isReadOnly && <TableHead className="text-center">Actions</TableHead>}
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {field.renewals.map((renewal, renewalIndex) => {
+                            const renewalNum = renewalIndex + 1;
+                            const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
+                            const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
+                            return (
+                                <TableRow key={renewal.id}>
+                                <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
+                                <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
+                                <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
+                                {!isReadOnly && (
+                                    <TableCell className="text-center">
+                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                    </TableCell>
+                                )}
+                                </TableRow>
+                            );
+                        })}
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
           )}
@@ -470,7 +470,7 @@ export default function AgencyRegistrationPage() {
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
   
-  const formatDataForForm = (data: any): any => {
+  const formatDataForForm = useCallback((data: any): any => {
     if (!data) return data;
   
     const transform = (obj: any): any => {
@@ -498,7 +498,7 @@ export default function AgencyRegistrationPage() {
     };
   
     return transform(data);
-  };
+  }, []);
   
 
   useEffect(() => {
@@ -529,38 +529,36 @@ export default function AgencyRegistrationPage() {
         }
       }
     }
-  }, [selectedApplicationId, applications, form]);
+  }, [selectedApplicationId, applications, form, formatDataForForm]);
 
   const onSubmit = async (data: AgencyApplication) => {
     setIsSubmitting(true);
 
     const convertStringsToDates = (obj: any): any => {
-      if (obj === null || obj === undefined) {
-        return undefined;
-      }
-      if (Array.isArray(obj)) {
-        return obj.map(convertStringsToDates);
-      }
-      if (typeof obj === 'object') {
-        const newObj: { [key: string]: any } = {};
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            let value = obj[key];
-            if (key.toLowerCase().includes('date') && typeof value === 'string' && value) {
-              const parsedDate = toDateOrNull(value);
-              newObj[key] = parsedDate && isValid(parsedDate) ? parsedDate : undefined;
-            } else if (typeof value === 'object') { // Recurse for nested objects
-              newObj[key] = convertStringsToDates(value);
-            } else {
-              newObj[key] = value;
-            }
-          }
+        if (!obj) return obj;
+        if (Array.isArray(obj)) {
+            return obj.map(convertStringsToDates);
         }
-        return newObj;
-      }
-      return obj;
+        if (typeof obj === 'object') {
+            const newObj: { [key: string]: any } = {};
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    let value = obj[key];
+                    if (key.toLowerCase().includes('date') && typeof value === 'string' && value) {
+                        const parsedDate = toDateOrNull(value);
+                        newObj[key] = parsedDate && isValid(parsedDate) ? parsedDate : undefined;
+                    } else if (typeof value === 'object') {
+                        newObj[key] = convertStringsToDates(value);
+                    } else {
+                        newObj[key] = value;
+                    }
+                }
+            }
+            return newObj;
+        }
+        return obj;
     };
-
+    
     const payload = convertStringsToDates(data);
 
     try {
