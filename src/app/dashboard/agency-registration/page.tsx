@@ -537,39 +537,34 @@ export default function AgencyRegistrationPage() {
     const onSubmit = async (data: AgencyApplication) => {
         setIsSubmitting(true);
         
-        const convertStringsToDates = (obj: any): any => {
-            if (obj === null || obj === undefined) return obj;
-            if (Array.isArray(obj)) {
-              return obj.map(item => convertStringsToDates(item));
-            }
-            if (typeof obj === 'object') {
-              const newObj: { [key: string]: any } = {};
-              for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                  const value = obj[key];
-                  if (key.toLowerCase().includes('date') && typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                    const parsedDate = toDateOrNull(value);
-                    newObj[key] = parsedDate ? parsedDate : undefined;
-                  } else if (typeof value === 'object' && value !== null) {
-                    newObj[key] = convertStringsToDates(value);
-                  } else {
-                    newObj[key] = value;
-                  }
-                }
-              }
-              return newObj;
-            }
-            return obj;
-          };
+        // This is a new, more robust data conversion logic for submission
+        const payload: Partial<AgencyApplication> = {
+          ...data,
+          agencyRegistrationDate: toDateOrNull(data.agencyRegistrationDate),
+          agencyPaymentDate: toDateOrNull(data.agencyPaymentDate),
+          agencyAdditionalPaymentDate: toDateOrNull(data.agencyAdditionalPaymentDate),
+          rigs: (data.rigs || []).map(rig => ({
+            ...rig,
+            registrationDate: toDateOrNull(rig.registrationDate),
+            paymentDate: toDateOrNull(rig.paymentDate),
+            additionalPaymentDate: toDateOrNull(rig.additionalPaymentDate),
+            cancellationDate: toDateOrNull(rig.cancellationDate),
+            renewals: (rig.renewals || []).map(renewal => ({
+              ...renewal,
+              renewalDate: toDateOrNull(renewal.renewalDate),
+              paymentDate: toDateOrNull(renewal.paymentDate),
+              validTill: toDateOrNull(renewal.validTill),
+            }))
+          }))
+        };
 
-        const payload = convertStringsToDates(data);
 
         try {
             if (selectedApplicationId && selectedApplicationId !== 'new') {
                 await updateApplication(selectedApplicationId, payload);
                 toast({ title: "Application Updated", description: "The registration details have been updated." });
             } else {
-                await addApplication(payload);
+                await addApplication(payload as AgencyApplication);
                 toast({ title: "Application Created", description: "The new agency registration has been saved." });
             }
             setSelectedApplicationId(null);
