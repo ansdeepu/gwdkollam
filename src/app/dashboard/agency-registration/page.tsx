@@ -933,11 +933,13 @@ export default function AgencyRegistrationPage() {
                             Provide a reason and date for cancelling this rig. This action can be reversed later.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <CancellationDialogContent
-                        initialData={rigFields[dialogState.data?.rigIndex]}
-                        onConfirm={handleConfirmCancellation}
-                        onCancel={closeDialog}
-                    />
+                    {dialogState.data && (
+                      <CancellationDialogContent
+                          initialData={rigFields[dialogState.data.rigIndex]}
+                          onConfirm={handleConfirmCancellation}
+                          onCancel={closeDialog}
+                      />
+                    )}
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={dialogState.type === 'activate'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
