@@ -24,7 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { format, addYears, isValid, parseISO, parse } from 'date-fns';
+import { format, addYears, isValid, parseISO, parse, toDate } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,19 +40,31 @@ export const dynamic = 'force-dynamic';
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
+  
   // Handle Firestore Timestamp objects
   if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
     const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
     if (isValid(date)) return date;
   }
+  
   if (typeof value === 'string') {
-    // First, try to parse dd/MM/yyyy format, which is common in our app's manual entry
+    // Try parsing ISO format first (yyyy-MM-dd from date inputs)
     let parsed = parseISO(value);
     if (isValid(parsed)) return parsed;
-    // Then, try to parse ISO format, which is how dates are often stored/transmitted
+
+    // Then try to parse 'dd/MM/yyyy' format
     parsed = parse(value, 'dd/MM/yyyy', new Date());
     if (isValid(parsed)) return parsed;
   }
+  
+  // Try to coerce other types to a Date
+  try {
+    const coercedDate = toDate(value);
+    if (isValid(coercedDate)) return coercedDate;
+  } catch {
+    // Ignore errors from toDate coercion
+  }
+
   return null;
 };
 
@@ -62,7 +74,7 @@ const processDataForForm = (data: any): any => {
     if (Array.isArray(data)) {
         return data.map(item => processDataForForm(item));
     }
-    if (typeof data === 'object' && data !== null) {
+    if (typeof data === 'object' && data !== null && ! (data instanceof Date)) {
         const processed: { [key: string]: any } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -81,6 +93,31 @@ const processDataForForm = (data: any): any => {
     }
     return data;
 };
+
+// Recursively processes an object to convert all date-like strings back to Date objects before saving.
+const processDataForSaving = (data: any): any => {
+    if (!data) return data;
+    if (Array.isArray(data)) {
+        return data.map(item => processDataForSaving(item));
+    }
+    if (typeof data === 'object' && data !== null && !(data instanceof Date)) {
+        const processed: { [key: string]: any } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                const value = data[key];
+                if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
+                    // toDateOrNull handles strings (yyyy-MM-dd), null, undefined, etc.
+                    processed[key] = toDateOrNull(value); 
+                } else {
+                    processed[key] = processDataForSaving(value);
+                }
+            }
+        }
+        return processed;
+    }
+    return data;
+};
+
 
 const RegistrationTable = ({ 
   applications, 
@@ -383,6 +420,7 @@ const RigAccordionItem = ({
                         <TableRow>
                             <TableHead>Renewal No.</TableHead>
                             <TableHead>Renewal Date</TableHead>
+                            <TableHead>Validity Upto</TableHead>
                             <TableHead>Fee (₹)</TableHead>
                             <TableHead>Payment Date</TableHead>
                             <TableHead>Challan No.</TableHead>
@@ -394,10 +432,12 @@ const RigAccordionItem = ({
                             const renewalNum = renewalIndex + 1;
                             const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
                             const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
+                            const validityUpto = renewalDate ? addYears(renewalDate, 1) : null;
                             return (
                                 <TableRow key={renewal.id}>
                                 <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
                                 <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
                                 <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
@@ -492,7 +532,8 @@ export default function AgencyRegistrationPage() {
                 owner: createDefaultOwner(),
                 partners: [],
                 rigs: [createDefaultRig()],
-                history: []
+                history: [],
+                status: 'Pending Verification'
             });
             // Stop the spinner once the new form is ready
             setIsNavigating(false);
@@ -584,11 +625,14 @@ export default function AgencyRegistrationPage() {
       try {
             // Determine status based on agencyRegistrationNo
             const finalStatus = data.agencyRegistrationNo ? 'Active' : 'Pending Verification';
+            
+            // Convert date strings back to Date objects before saving
+            const dataForSave = processDataForSaving(data);
 
             const dataWithHistoryAndStatus = {
-                ...data,
+                ...dataForSave,
                 status: finalStatus,
-                rigs: data.rigs.map(rig => {
+                rigs: dataForSave.rigs.map( (rig: any) => {
                     const historyEntry = generateHistoryEntry(rig);
                     const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
                     return { ...rig, history: newHistory };
@@ -605,6 +649,7 @@ export default function AgencyRegistrationPage() {
           setSelectedApplicationId(null);
           setIsViewing(false);
       } catch (error: any) {
+          console.error("Submission failed:", error);
           toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
       } finally {
           setIsSubmitting(false);
@@ -945,7 +990,7 @@ export default function AgencyRegistrationPage() {
                             Provide a reason and date for cancelling this rig. This action can be reversed later.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    {dialogState.data && (
+                    {dialogState.data && initialData && (
                       <CancellationDialogContent
                           initialData={rigFields[dialogState.data.rigIndex]}
                           onConfirm={handleConfirmCancellation}
@@ -1148,3 +1193,5 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
     
 
     
+
+      
