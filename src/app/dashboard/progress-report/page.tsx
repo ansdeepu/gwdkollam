@@ -555,7 +555,7 @@ export default function ProgressReportPage() {
         }
       });
       if(hasData) {
-        addWorksheet(wellDataExport, `${isBwc ? 'BWC' : 'TWC'} - ${diameter.replace(/[^a-zA-Z0-9]/g, '_'))}`, wellMetricsHeaders);
+        addWorksheet(wellDataExport, `${isBwc ? 'BWC' : 'TWC'} - ${diameter.replace(/[^a-zA-Z0-9]/g, '_')}`, wellMetricsHeaders);
       }
     });
   
