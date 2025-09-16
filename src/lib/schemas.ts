@@ -1,5 +1,4 @@
 
-// src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -80,8 +79,14 @@ const optionalDate = z.preprocess((val) => {
   return val;
 }, z.date({ invalid_type_error: "Invalid date, use dd/mm/yyyy format." }).optional().nullable());
 
-// Use 'yyyy-MM-dd' for native date pickers. Zod will validate it as a string.
-export const nativeDateSchema = z.string().optional();
+// Use 'yyyy-MM-dd' for native date pickers
+const nativeDateSchema = z.preprocess(
+  (val) => (val === "" ? undefined : val), // Treat empty string as undefined
+  z.string()
+    .optional()
+    .refine((val) => !val || !isNaN(Date.parse(val)) || val === '', { message: "Invalid date" }) // Allow empty string
+);
+
 
 // ARS Schemas
 export const arsWorkStatusOptions = [
@@ -369,11 +374,11 @@ export type RigType = typeof rigTypeOptions[number];
 
 export const RigRenewalSchema = z.object({
     id: z.string(),
-    renewalDate: nativeDateSchema,
-    renewalFee: optionalNumber("Renewal fee must be a number."),
+    renewalDate: nativeDateSchema.refine(val => val !== undefined, { message: "Renewal date is required." }),
+    renewalFee: optionalNumber("Renewal fee is required."),
     paymentDate: nativeDateSchema,
     challanNo: z.string().optional(),
-    validTill: nativeDateSchema,
+    validTill: optionalDate,
 });
 export type RigRenewal = z.infer<typeof RigRenewalSchema>;
 
@@ -396,9 +401,8 @@ export const RigRegistrationSchema = z.object({
     status: z.enum(['Active', 'Cancelled']),
     renewals: z.array(RigRenewalSchema).optional(),
     history: z.array(z.string()).optional(),
-    cancellationDate: nativeDateSchema,
+    cancellationDate: optionalDate,
     cancellationReason: z.string().optional(),
-    enabledSections: z.array(z.enum(['rigVehicle', 'compressorVehicle', 'supportingVehicle', 'compressorDetails', 'generatorDetails'])).optional(),
 });
 export type RigRegistration = z.infer<typeof RigRegistrationSchema>;
 

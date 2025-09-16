@@ -1,4 +1,3 @@
-
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -73,7 +72,7 @@ const processDataForForm = (data: any): any => {
 
 // Helper function to create default form values, ensuring consistency.
 const getFormDefaults = (): DataEntryFormData => ({
-  fileNo: "", applicantName: "", phoneNo: "", secondaryPhoneNo: "",
+  fileNo: "", applicantName: "", phoneNo: "",
   applicationType: undefined,
   constituency: undefined,
   estimateAmount: undefined, assignedSupervisorUids: [],

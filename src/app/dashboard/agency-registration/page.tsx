@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye, Settings } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -29,34 +29,57 @@ import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
-"client-only";
+import "client-only";
 
 export const dynamic = 'force-dynamic';
-
-type DialogState = {
-  type: 'renew' | 'cancel' | 'deleteRenewal' | 'deleteApplication' | 'editRenewal' | null;
-  data: any;
-};
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
+  // Handle Firestore Timestamp objects
+  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
+    if (isValid(date)) return date;
+  }
   if (typeof value === 'string') {
+    // First, try to parse dd/MM/yyyy format, which is common in our app's manual entry
     let parsed = parseISO(value);
     if (isValid(parsed)) return parsed;
-    parsed = parse(value, 'yyyy-MM-dd', new Date());
+    // Then, try to parse ISO format, which is how dates are often stored/transmitted
+    parsed = parse(value, 'dd/MM/yyyy', new Date());
     if (isValid(parsed)) return parsed;
   }
   return null;
 };
 
-const toInputDate = (value: any): string => {
-  const date = toDateOrNull(value);
-  return date ? format(date, "yyyy-MM-dd") : "";
+// Recursively processes an object to convert all date-like values to 'yyyy-MM-dd' strings for native date inputs.
+const processDataForForm = (data: any): any => {
+    if (!data) return data;
+    if (Array.isArray(data)) {
+        return data.map(item => processDataForForm(item));
+    }
+    if (typeof data === 'object' && data !== null) {
+        const processed: { [key: string]: any } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                const value = data[key];
+                 // Check for keys that typically represent dates
+                 if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
+                    const date = toDateOrNull(value);
+                    processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
+                } else {
+                    // Recursively process nested objects/arrays
+                    processed[key] = processDataForForm(value);
+                }
+            }
+        }
+        return processed;
+    }
+    return data;
 };
 
 const RegistrationTable = ({ 
@@ -124,42 +147,38 @@ const getOrdinalSuffix = (n: number) => {
   return s[(v - 20) % 10] || s[v] || s[0];
 };
 
-type OptionalRigSection = 'rigVehicle' | 'compressorVehicle' | 'supportingVehicle' | 'compressorDetails' | 'generatorDetails';
-
-const optionalSectionLabels: Record<OptionalRigSection, string> = {
-    rigVehicle: 'Rig Vehicle Details',
-    compressorVehicle: 'Compressor Vehicle Details',
-    supportingVehicle: 'Supporting Vehicle Details',
-    compressorDetails: 'Compressor Details',
-    generatorDetails: 'Generator Details'
-};
 
 const RigAccordionItem = ({
   field,
   index,
   isReadOnly,
   onRemove,
+  onRenew,
   onActivate,
-  onAction,
+  onCancel,
+  onDeleteRenewal,
+  onEditRenewal,
   form,
 }: {
   field: RigRegistration;
   index: number;
   isReadOnly: boolean;
   onRemove?: (index: number) => void;
+  onRenew: (index: number) => void;
   onActivate: (index: number) => void;
-  onAction: (type: 'renew' | 'cancel' | 'deleteRenewal' | 'editRenewal', rigIndex: number, renewalId?: string) => void;
+  onCancel: (rigIndex: number) => void;
+  onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
+  onEditRenewal: (rigIndex: number, renewalId: string) => void;
   form: UseFormReturn<any>;
 }) => {
   const rigTypeValue = field.typeOfRig;
-  const registrationDate = toDateOrNull(field.registrationDate);
-  const enabledSections = useWatch({ control: form.control, name: `rigs.${index}.enabledSections`, defaultValue: [] });
+  const registrationDate = field.registrationDate ? toDateOrNull(field.registrationDate) : null;
 
   const latestRenewal = useMemo(() => {
     if (!field.renewals || field.renewals.length === 0) return null;
     return [...field.renewals].sort((a, b) => {
-        const dateA = toDateOrNull(a.renewalDate)?.getTime() ?? 0;
-        const dateB = toDateOrNull(b.renewalDate)?.getTime() ?? 0;
+        const dateA = a.renewalDate ? toDateOrNull(a.renewalDate)?.getTime() ?? 0 : 0;
+        const dateB = b.renewalDate ? toDateOrNull(b.renewalDate)?.getTime() ?? 0 : 0;
         return dateB - dateA;
     })[0];
   }, [field.renewals]);
@@ -176,51 +195,22 @@ const RigAccordionItem = ({
   const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
     ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
     : 'N/A';
-    
-    const toggleSection = (section: OptionalRigSection) => {
-        const currentSections: OptionalRigSection[] = form.getValues(`rigs.${index}.enabledSections`) || [];
-        const newSections = currentSections.includes(section)
-            ? currentSections.filter(s => s !== section)
-            : [...currentSections, section];
-        form.setValue(`rigs.${index}.enabledSections`, newSections, { shouldDirty: true });
-    };
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
-      <div className="flex items-center w-full">
-        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 py-2 hover:no-underline", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
+      <div className="flex items-center w-full border-b">
+        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-             {!isReadOnly && (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button type="button" size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Details</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuLabel>Optional Sections</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {Object.keys(optionalSectionLabels).map(key => (
-                            <DropdownMenuCheckboxItem
-                                key={key}
-                                checked={enabledSections?.includes(key as OptionalRigSection)}
-                                onCheckedChange={() => toggleSection(key as OptionalRigSection)}
-                                onSelect={(e) => e.preventDefault()}
-                            >
-                                {optionalSectionLabels[key as OptionalRigSection]}
-                            </DropdownMenuCheckboxItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+            {!isReadOnly && field.status === 'Active' && (
+                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onAction('renew', index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
-            )}
-            {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onAction('cancel', index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {!isReadOnly && field.status === 'Cancelled' && (
-                <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
+                <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
             )}
 
             {!isReadOnly && onRemove && (
@@ -241,7 +231,7 @@ const RigAccordionItem = ({
           
           <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
             <p className="font-medium text-base text-primary">Registration Details</p>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <FormField name={`rigs.${index}.rigRegistrationNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.typeOfRig`} control={form.control} render={({ field }) => (
                     <FormItem>
@@ -253,82 +243,24 @@ const RigAccordionItem = ({
                         <FormMessage />
                     </FormItem>
                 )} />
-                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-            </div>
-             <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormItem>
                   <FormLabel>Validity Upto</FormLabel>
                   <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
                 </FormItem>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
             </div>
              <Separator className="my-2" />
             <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.additionalRegistrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.additionalChallanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
             </div>
           </div>
-          
-          {enabledSections.includes('rigVehicle') && (
-            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-                <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
-                <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-            </div>
-          )}
-          
-          {enabledSections.includes('compressorVehicle') && (
-            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-                <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
-                <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
-                </div>
-            </div>
-          )}
-          
-          {enabledSections.includes('supportingVehicle') && (
-            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-                <p className="font-medium text-base text-primary">Supporting Vehicle Details</p>
-                <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.supportingVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-            </div>
-          )}
-          
-          {enabledSections.includes('compressorDetails') && (
-            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-                <p className="font-medium text-base text-primary">Compressor Details</p>
-                <div className="grid md:grid-cols-2 gap-4">
-                <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-            </div>
-          )}
-          
-          {enabledSections.includes('generatorDetails') && (
-            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-                <p className="font-medium text-base text-primary">Generator Details</p>
-                <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                </div>
-            </div>
-          )}
           
           {field.status === 'Cancelled' && (
             <div className="p-4 border rounded-lg bg-destructive/10">
@@ -336,7 +268,7 @@ const RigAccordionItem = ({
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      {!isReadOnly && (
                         <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onAction('cancel', index); }}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}>
                                 <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
@@ -361,7 +293,6 @@ const RigAccordionItem = ({
                         <TableRow>
                             <TableHead>Renewal No.</TableHead>
                             <TableHead>Renewal Date</TableHead>
-                            <TableHead>Validity Upto</TableHead>
                             <TableHead>Fee (₹)</TableHead>
                             <TableHead>Payment Date</TableHead>
                             <TableHead>Challan No.</TableHead>
@@ -373,21 +304,17 @@ const RigAccordionItem = ({
                             const renewalNum = renewalIndex + 1;
                             const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
                             const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
-                            const validTillDate = renewalDate ? addYears(renewalDate, 1) : null;
                             return (
                                 <TableRow key={renewal.id}>
                                 <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
                                 <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell>{validTillDate ? format(new Date(validTillDate.getTime() - 24 * 60 * 60 * 1000), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
                                 <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
                                 {!isReadOnly && (
                                     <TableCell className="text-center">
-                                      <div className="flex items-center justify-center space-x-0">
-                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAction('editRenewal', index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAction('deleteRenewal', index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
-                                      </div>
+                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
                                     </TableCell>
                                 )}
                                 </TableRow>
@@ -398,10 +325,30 @@ const RigAccordionItem = ({
                 </div>
             </div>
           )}
+
+          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+            <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
+            <div className="grid md:grid-cols-4 gap-4">
+               <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+               <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+               <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+               <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+            </div>
+          </div>
+          
+          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+            <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
+            <div className="grid md:grid-cols-4 gap-4">
+               <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+               <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+               <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+               <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+            </div>
+          </div>
         </div>
       </AccordionContent>
     </AccordionItem>
-  );
+  )
 };
 
 
@@ -410,17 +357,22 @@ export default function AgencyRegistrationPage() {
   const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { setIsNavigating } = usePageNavigation();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [isViewing, setIsViewing] = useState(false);
   
-  const [dialogState, setDialogState] = useState<DialogState>({ type: null, data: null });
+  const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
+  const [editingRenewal, setEditingRenewal] = useState<{ rigIndex: number; renewal: RigRenewalFormData } | null>(null);
+  const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
+  const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
 
-  // Separate states for input values in dialogs to avoid premature form updates
-  const [renewalInput, setRenewalInput] = useState<Partial<RigRenewalFormData>>({});
-  const [cancellationInput, setCancellationInput] = useState<{ reason: string; date: string }>({ reason: '', date: '' });
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: string }>({ rigIndex: -1, reason: '', date: '' });
+  
+  const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -446,16 +398,13 @@ export default function AgencyRegistrationPage() {
       status: 'Active',
       renewals: [],
       history: [],
-      cancellationDate: undefined,
+      cancellationDate: null,
       cancellationReason: undefined,
-      enabledSections: [],
   });
 
   const form = useForm<AgencyApplication>({
     resolver: zodResolver(AgencyApplicationSchema),
     defaultValues: {
-      fileNo: '',
-      agencyName: '',
       owner: createDefaultOwner(),
       partners: [],
       rigs: [],
@@ -468,118 +417,133 @@ export default function AgencyRegistrationPage() {
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
-  
-  const formatDataForForm = useCallback((data: any): any => {
-    if (!data) return data;
-  
-    const transform = (obj: any): any => {
-      if (obj === null || obj === undefined) return obj;
-  
-      if (Array.isArray(obj)) {
-        return obj.map(transform);
-      }
-  
-      if (typeof obj === 'object') {
-        const newObj: { [key: string]: any } = {};
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const value = obj[key];
-            if (key.toLowerCase().includes('date')) {
-              newObj[key] = toInputDate(value);
-            } else {
-              newObj[key] = transform(value);
-            }
-          }
-        }
-        return newObj;
-      }
-      return obj;
-    };
-  
-    return transform(data);
-  }, []);
-  
 
+  // Robust useEffect to handle loading and parsing data from Firestore
   useEffect(() => {
     if (selectedApplicationId) {
-      if (selectedApplicationId === 'new') {
-        form.reset({
-            fileNo: '',
-            agencyName: '',
-            agencyRegistrationNo: '',
-            agencyRegistrationDate: toInputDate(new Date()),
-            agencyRegistrationFee: undefined,
-            agencyPaymentDate: toInputDate(new Date()),
-            agencyChallanNo: '',
-            agencyAdditionalRegFee: undefined,
-            agencyAdditionalPaymentDate: undefined,
-            agencyAdditionalChallanNo: '',
-            owner: createDefaultOwner(),
-            partners: [],
-            rigs: [createDefaultRig()],
-            status: 'Pending Verification',
-            history: []
-        });
-      } else {
-        const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
-        if (app) {
-          const appDataForForm = formatDataForForm(JSON.parse(JSON.stringify(app)));
-          form.reset(appDataForForm);
+        if (selectedApplicationId === 'new') {
+            form.reset({
+                owner: createDefaultOwner(),
+                partners: [],
+                rigs: [createDefaultRig()],
+                status: 'Pending Verification',
+                history: []
+            });
+            // Stop the spinner once the new form is ready
+            setIsNavigating(false);
+        } else {
+            const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
+            if (app) {
+                 const processedApp = processDataForForm(app);
+                 form.reset(processedApp);
+            } else {
+                setSelectedApplicationId(null);
+                form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+            }
         }
-      }
+    } else {
+        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
     }
-  }, [selectedApplicationId, applications, form, formatDataForForm]);
+  }, [selectedApplicationId, applications, form, setIsNavigating]);
+  
+    const generateHistoryEntry = (rig: RigRegistration): string | null => {
+        const logParts: string[] = [];
+
+        const addPart = (label: string, value: any) => {
+            if (value !== undefined && value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)) {
+            logParts.push(`${label}: ${value}`);
+            }
+        };
+
+        const addVehiclePart = (vehicleName: string, vehicle: any) => {
+            if (!vehicle) return;
+            const vehicleParts: string[] = [];
+            if (vehicle.type) vehicleParts.push(`Type: ${vehicle.type}`);
+            if (vehicle.regNo) vehicleParts.push(`Reg No: ${vehicle.regNo}`);
+            if (vehicle.chassisNo) vehicleParts.push(`Chassis No: ${vehicle.chassisNo}`);
+            if (vehicle.engineNo) vehicleParts.push(`Engine No: ${vehicle.engineNo}`);
+            if (vehicleParts.length > 0) {
+                logParts.push(`${vehicleName}: ${vehicleParts.join(', ')}`);
+            }
+        };
+
+        const addDetailsPart = (detailsName: string, details: any) => {
+            if (!details) return;
+            const detailParts: string[] = [];
+            if (details.model) detailParts.push(`Model: ${details.model}`);
+            if (details.capacity) detailParts.push(`Capacity: ${details.capacity}`);
+            if (details.type) detailParts.push(`Type: ${details.type}`);
+            if (details.engineNo) detailParts.push(`Engine No: ${details.engineNo}`);
+             if (detailParts.length > 0) {
+                logParts.push(`${detailsName}: ${detailParts.join(', ')}`);
+            }
+        }
+
+        addPart('Rig Reg. No.', rig.rigRegistrationNo);
+        addPart('Type of Rig', rig.typeOfRig);
+        const regDate = toDateOrNull(rig.registrationDate);
+        if (regDate) {
+            addPart('Last Reg/Renewal Date', format(regDate, 'dd/MM/yyyy'));
+        }
+
+        const lastEffectiveDate = regDate;
+        const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
+            ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
+            : null;
+        if(validityDate) {
+            addPart('Validity Upto', format(validityDate, 'dd/MM/yyyy'));
+        }
+        
+        addPart('Reg. Fee', rig.registrationFee);
+        const paymentDate = toDateOrNull(rig.paymentDate);
+        if (paymentDate) {
+            addPart('Payment Date', format(paymentDate, 'dd/MM/yyyy'));
+        }
+        addPart('Challan No.', rig.challanNo);
+
+        addVehiclePart('Rig Vehicle', rig.rigVehicle);
+        addVehiclePart('Compressor Vehicle', rig.compressorVehicle);
+        addVehiclePart('Supporting Vehicle', rig.supportingVehicle);
+
+        addDetailsPart('Compressor Details', rig.compressorDetails);
+        addDetailsPart('Generator Details', rig.generatorDetails);
+        
+        if (logParts.length === 0) return null;
+
+        const timestamp = format(new Date(), 'dd/MM/yyyy HH:mm');
+        return `[${timestamp}] - ${logParts.join(' | ')}`;
+    };
 
   const onSubmit = async (data: AgencyApplication) => {
-    setIsSubmitting(true);
+      setIsSubmitting(true);
+      try {
+            const dataWithHistory = {
+                ...data,
+                rigs: data.rigs.map(rig => {
+                    const historyEntry = generateHistoryEntry(rig);
+                    const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
+                    return { ...rig, history: newHistory };
+                })
+            };
 
-    const convertStringsToDates = (obj: any): any => {
-        if (!obj) return obj;
-        if (Array.isArray(obj)) {
-            return obj.map(convertStringsToDates);
-        }
-        if (typeof obj === 'object' && obj !== null) {
-            const newObj: { [key: string]: any } = {};
-            for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    let value = obj[key];
-                    if (key.toLowerCase().includes('date') && typeof value === 'string' && value) {
-                        const parsedDate = toDateOrNull(value);
-                        newObj[key] = parsedDate && isValid(parsedDate) ? parsedDate : undefined;
-                    } else if (typeof value === 'object') {
-                        newObj[key] = convertStringsToDates(value);
-                    } else {
-                        newObj[key] = value;
-                    }
-                }
-            }
-            return newObj;
-        }
-        return obj;
-    };
-    
-    let payload = convertStringsToDates(data);
-
-    try {
-      if (selectedApplicationId && selectedApplicationId !== 'new') {
-        await updateApplication(selectedApplicationId, payload);
-        toast({ title: "Application Updated", description: "The registration details have been updated." });
-      } else {
-        payload.status = payload.agencyRegistrationNo ? 'Active' : 'Pending Verification';
-        await addApplication(payload as AgencyApplication);
-        toast({ title: "Application Created", description: "The new agency registration has been saved." });
+          if (selectedApplicationId && selectedApplicationId !== 'new') {
+              await updateApplication(selectedApplicationId, dataWithHistory);
+              toast({ title: "Application Updated", description: "The registration details have been updated." });
+          } else {
+              await addApplication(dataWithHistory);
+              toast({ title: "Application Created", description: "The new agency registration has been saved." });
+          }
+          setSelectedApplicationId(null);
+          setIsViewing(false);
+      } catch (error: any) {
+          toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+      } finally {
+          setIsSubmitting(false);
       }
-      setSelectedApplicationId(null);
-      setIsViewing(false);
-    } catch (error: any) {
-      console.error("Submission error:", error);
-      toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleAddNew = () => {
+    setIsNavigating(true);
     setIsViewing(false);
     setSelectedApplicationId('new');
   }
@@ -627,340 +591,488 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
-
-    const handleAction = (type: 'renew' | 'cancel' | 'deleteRenewal' | 'editRenewal', rigIndex: number, renewalId?: string) => {
-      switch (type) {
-        case 'renew':
-          setRenewalInput({ renewalDate: toInputDate(new Date()) });
-          setDialogState({ type: 'renew', data: { rigIndex, isEditing: false } });
-          break;
-        case 'cancel':
-          setCancellationInput({ reason: '', date: format(new Date(), 'yyyy-MM-dd') });
-          setDialogState({ type: 'cancel', data: { rigIndex } });
-          break;
-        case 'editRenewal':
-          const rig = rigFields[rigIndex];
-          const renewalToEdit = rig.renewals?.find(r => r.id === renewalId);
-          if (renewalToEdit) {
-            setRenewalInput({
-              ...renewalToEdit,
-              renewalDate: toInputDate(renewalToEdit.renewalDate),
-              paymentDate: toInputDate(renewalToEdit.paymentDate)
-            });
-            setDialogState({ type: 'editRenewal', data: { rigIndex, renewalId } });
-          }
-          break;
-        case 'deleteRenewal':
-          setDialogState({ type: 'deleteRenewal', data: { rigIndex, renewalId } });
-          break;
-      }
+  const handleRenewRig = (rigIndex: number) => {
+      setEditingRenewal(null);
+      setRenewalData({ rigIndex, data: { renewalDate: format(new Date(), 'yyyy-MM-dd') } });
+      setIsRenewalDialogOpen(true);
+  };
+  
+    const handleEditRenewal = (rigIndex: number, renewalId: string) => {
+        const rig = rigFields[rigIndex];
+        const renewalToEdit = rig.renewals?.find(r => r.id === renewalId);
+        if(renewalToEdit) {
+            setRenewalData(null);
+            setEditingRenewal({ rigIndex, renewal: { ...renewalToEdit } });
+            setIsRenewalDialogOpen(true);
+        }
+    };
+    
+    const handleDeleteRenewal = (rigIndex: number, renewalId: string) => {
+        setDeletingRenewal({ rigIndex, renewalId });
+    };
+    
+    const handleDeleteApplication = (id: string) => {
+      setDeletingApplicationId(id);
     };
 
     const confirmDeleteApplication = async () => {
-      if (dialogState.type !== 'deleteApplication' || !dialogState.data.id) return;
+      if (!deletingApplicationId) return;
       setIsSubmitting(true);
       try {
-        await deleteApplication(dialogState.data.id);
+        await deleteApplication(deletingApplicationId);
         toast({ title: "Registration Removed", description: `The registration has been permanently deleted.` });
       } catch (error: any) {
         toast({ title: "Error", description: error.message, variant: 'destructive' });
       } finally {
         setIsSubmitting(false);
-        setDialogState({ type: null, data: null });
+        setDeletingApplicationId(null);
       }
     };
 
-    const handleConfirmRenewal = () => {
-        if (dialogState.type !== 'renew' && dialogState.type !== 'editRenewal' || !dialogState.data) return;
-        const { rigIndex, renewalId } = dialogState.data;
-        const currentRig = form.getValues(`rigs.${rigIndex}`);
-        if (!currentRig) return;
-        
-        let updatedRenewals: RigRenewalFormData[];
-        const isEditing = dialogState.type === 'editRenewal';
+  const handleConfirmRenewal = () => {
+      if (editingRenewal) { // Handle editing an existing renewal
+        const { rigIndex, renewal } = editingRenewal;
+        const rigToUpdate = rigFields[rigIndex];
+        const updatedRenewals = rigToUpdate.renewals?.map(r => r.id === renewal.id ? renewal : r) || [];
+        updateRig(rigIndex, { ...rigToUpdate, renewals: updatedRenewals });
+        toast({ title: "Renewal Updated", description: "Renewal details have been updated." });
+      } else if (renewalData?.data.renewalDate) { // Handle adding a new renewal
+        const { rigIndex, data } = renewalData;
+        const rigToUpdate = rigFields[rigIndex];
+        const renewalDateObj = toDateOrNull(data.renewalDate);
 
-        if(isEditing) {
-             updatedRenewals = (currentRig.renewals || []).map(r =>
-                r.id === renewalId ? { ...r, ...renewalInput } : r
-            );
-        } else {
-            const newRenewal: RigRenewalFormData = {
-                id: uuidv4(),
-                renewalDate: renewalInput.renewalDate || '',
-                renewalFee: renewalInput.renewalFee,
-                paymentDate: renewalInput.paymentDate,
-                challanNo: renewalInput.challanNo,
-            };
-            updatedRenewals = [...(currentRig.renewals || []), newRenewal];
+        if (!renewalDateObj) {
+            toast({ title: "Invalid Date", description: "Please enter a valid renewal date.", variant: "destructive" });
+            return;
         }
 
-        updateRig(rigIndex, { ...currentRig, renewals: updatedRenewals });
-        form.trigger(`rigs.${rigIndex}.renewals`);
-        toast({ title: isEditing ? "Renewal Updated" : "Renewal Added", description: `The renewal details have been ${isEditing ? 'updated' : 'added'} in the form.` });
-        
-        setDialogState({ type: null, data: null });
-    };
-  
-    const confirmDeleteRenewal = () => {
-        if (dialogState.type !== 'deleteRenewal' || !dialogState.data) return;
-        const { rigIndex, renewalId } = dialogState.data;
-        
-        const rig = form.getValues(`rigs.${rigIndex}`);
-        const updatedRenewals = rig.renewals?.filter(r => r.id !== renewalId);
-        updateRig(rigIndex, { ...rig, renewals: updatedRenewals });
-        
-        toast({ title: "Renewal Removed", description: "The renewal record has been removed." });
-        setDialogState({ type: null, data: null });
-    };
-  
-  const handleActivateRig = (rigIndex: number) => {
-    const currentRig = form.getValues(`rigs.${rigIndex}`);
-    if (currentRig) {
+        const newRenewal: RigRenewalFormData = {
+            id: uuidv4(),
+            renewalDate: data.renewalDate ?? "",
+            renewalFee: data.renewalFee,
+            paymentDate: data.paymentDate ?? "",
+            challanNo: data.challanNo ?? "",
+            validTill: addYears(renewalDateObj, 1),
+        };
         updateRig(rigIndex, {
-            ...currentRig,
+            ...rigToUpdate,
+            registrationDate: newRenewal.renewalDate,
             status: 'Active',
-            cancellationDate: undefined,
-            cancellationReason: undefined,
+            renewals: [...(rigToUpdate.renewals || []), newRenewal],
         });
+        toast({ title: "Rig Renewed", description: "Renewal details added." });
     }
+    
+    setIsRenewalDialogOpen(false);
+    setRenewalData(null);
+    setEditingRenewal(null);
+  };
+  
+    const handleConfirmDeleteRenewal = () => {
+        if (!deletingRenewal) return;
+        const { rigIndex, renewalId } = deletingRenewal;
+        const rigToUpdate = rigFields[rigIndex];
+        const updatedRenewals = rigToUpdate.renewals?.filter(r => r.id !== renewalId) || [];
+        updateRig(rigIndex, { ...rigToUpdate, renewals: updatedRenewals });
+        toast({ title: "Renewal Deleted", description: "The renewal record has been removed." });
+        setDeletingRenewal(null);
+    };
+
+  const handleCancelRig = (rigIndex: number) => {
+      const rig = form.getValues(`rigs.${rigIndex}`);
+      const cancellationDate = rig.cancellationDate;
+      const formattedDate = cancellationDate && isValid(new Date(cancellationDate)) ? format(new Date(cancellationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+
+      setCancellationData({ 
+          rigIndex, 
+          reason: rig.cancellationReason || '', 
+          date: formattedDate
+      });
+      setIsCancelDialogOpen(true);
   };
 
   const handleConfirmCancellation = () => {
-    if (dialogState.type !== 'cancel' || !dialogState.data) return;
-    const { rigIndex } = dialogState.data;
-    const { reason, date } = cancellationInput;
+    if (cancellationData.rigIndex === -1) return;
+    const { rigIndex, reason, date } = cancellationData;
+    const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
     
-    const currentRig = form.getValues(`rigs.${rigIndex}`);
-    if (currentRig) {
-        updateRig(rigIndex, {
-            ...currentRig,
-            status: 'Cancelled',
-            cancellationDate: date,
-            cancellationReason: reason,
-        });
-    }
-    setDialogState({ type: null, data: null });
+    const dateObject = toDateOrNull(date);
+    
+    updateRig(rigIndex, {
+        ...rigToUpdate,
+        status: 'Cancelled',
+        cancellationDate: isValid(dateObject) ? dateObject : new Date(),
+        cancellationReason: reason,
+    });
+    toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
+    setIsCancelDialogOpen(false);
+    setCancellationData({ rigIndex: -1, reason: '', date: '' });
+  };
+  
+  const handleActivateRig = (rigIndex: number) => {
+    const rigToUpdate = rigFields[rigIndex];
+    updateRig(rigIndex, {
+        ...rigToUpdate,
+        status: 'Active',
+        cancellationDate: null,
+        cancellationReason: '',
+    });
+    toast({ title: "Rig Activated", description: "The rig registration has been reactivated." });
   };
 
-  if (authLoading || applicationsLoading) {
+  const paginatedCompletedApplications = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return completedApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [completedApplications, currentPage]);
+
+  const paginatedPendingApplications = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return pendingApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [pendingApplications, currentPage]);
+
+  const totalCompletedPages = Math.ceil(completedApplications.length / ITEMS_PER_PAGE);
+  const totalPendingPages = Math.ceil(pendingApplications.length / ITEMS_PER_PAGE);
+
+  const [activeTab, setActiveTab] = useState('completed');
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
+  const onTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
+  if (applicationsLoading || authLoading) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-3 text-muted-foreground">Loading registration data...</p>
+        <p className="ml-3 text-muted-foreground">Loading registrations...</p>
       </div>
     );
   }
   
-  if (selectedApplicationId) {
+  if (!user) {
     return (
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <Card>
-            <CardHeader>
-               <div className="flex justify-between items-start">
-                    <div>
-                         {isViewing ? <CardTitle>View Rig Registration</CardTitle> : <CardTitle>{selectedApplicationId === 'new' ? 'New Rig Registration' : 'Edit Rig Registration'}</CardTitle>}
-                         {isViewing ? <CardDescription>Viewing agency and rig details.</CardDescription> : <CardDescription>Manage agency and rig details.</CardDescription>}
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={handleCancelForm}>
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to List
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <Accordion type="multiple" defaultValue={['application-details', 'agency-registration', 'rig-details']} className="w-full space-y-4">
-                  <AccordionItem value="application-details" className="border bg-card rounded-lg shadow-sm">
-                      <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">1. Application Details</AccordionTrigger>
-                      <AccordionContent className="p-6 pt-0">
-                          <div className="border-t pt-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <FormField name="fileNo" control={form.control} render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                              <FormField name="agencyName" control={form.control} render={({ field }) => <FormItem><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                            </div>
-                            <Separator />
-                            <p className="font-semibold text-lg text-primary/90">Owner Information</p>
-                            <div className="grid md:grid-cols-3 gap-6">
-                                <FormField name="owner.name" control={form.control} render={({ field }) => <FormItem><FormLabel>Name & Address of Owner</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="owner.mobile" control={form.control} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="owner.secondaryMobile" control={form.control} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                            </div>
-                             <Separator />
-                            <div className="flex justify-between items-center">
-                                <p className="font-semibold text-lg text-primary/90">Partner Details</p>
-                                {!isReadOnly && (<Button type="button" size="sm" variant="outline" onClick={() => appendPartner(createDefaultOwner())}><UserPlus className="mr-2 h-4 w-4" />Add Partner</Button>)}
-                            </div>
-                            <div className="space-y-4">
-                                {partnerFields.map((field, index) => (
-                                    <div key={field.id} className="p-4 border rounded-lg bg-secondary/20 relative">
-                                        {!isReadOnly && (<Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => removePartner(index)}><Trash2 className="h-4 w-4" /></Button>)}
-                                        <div className="grid md:grid-cols-3 gap-6">
-                                            <FormField name={`partners.${index}.name`} control={form.control} render={({ field }) => <FormItem><FormLabel>Name & Address of Partner #{index + 1}</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name={`partners.${index}.mobile`} control={form.control} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name={`partners.${index}.secondaryMobile`} control={form.control} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                          </div>
-                      </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="agency-registration" className="border bg-card rounded-lg shadow-sm">
-                      <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">2. Agency Registration</AccordionTrigger>
-                      <AccordionContent className="p-6 pt-0">
-                          <div className="border-t pt-6 space-y-6">
-                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FormField name="agencyRegistrationNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyRegistrationDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                              </div>
-                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <FormField name="agencyRegistrationFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                              </div>
-                               <Separator />
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <FormField name="agencyAdditionalRegFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                    <FormField name="agencyAdditionalPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                    <FormField name="agencyAdditionalChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                </div>
-
-                          </div>
-                      </AccordionContent>
-                  </AccordionItem>
-                   <AccordionItem value="rig-details" className="border bg-card rounded-lg shadow-sm">
-                      <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
-                      <AccordionContent className="p-6 pt-0">
-                          <div className="border-t pt-6 space-y-4">
-                            <Accordion type="multiple" className="space-y-4" defaultValue={rigFields.map(f => `rig-${f.id}`)}>
-                               {rigFields.map((field, index) => (
-                                <RigAccordionItem
-                                    key={field.id}
-                                    field={field}
-                                    index={index}
-                                    isReadOnly={isReadOnly}
-                                    onRemove={!isReadOnly && rigFields.length > 1 ? removeRig : undefined}
-                                    onActivate={handleActivateRig}
-                                    onAction={handleAction}
-                                    form={form}
-                                />
-                               ))}
-                            </Accordion>
-                            {!isReadOnly && activeRigCount < 3 && <Button type="button" variant="outline" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
-                          </div>
-                      </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end space-x-2">
-              {!isReadOnly && (
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  {selectedApplicationId === 'new' ? "Save Registration" : "Save Changes"}
-                </Button>
-              )}
-              <Button variant="outline" onClick={handleCancelForm}>
-                <X className="mr-2 h-4 w-4" /> Cancel
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
-      </FormProvider>
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+         <div className="space-y-6 p-6 text-center">
+            <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Access Denied</h1>
+            <p className="text-muted-foreground">You do not have permission to access this page.</p>
+        </div>
+      </div>
     );
   }
-  
+
+  // FORM VIEW
+  if (selectedApplicationId) {
+      return (
+        <div>
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Card>
+                    <CardContent className="pt-6 space-y-8">
+                        <div className="flex justify-end mb-4">
+                            <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
+                                <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                            </Button>
+                        </div>
+                        {/* Section 1: Application Details */}
+                        <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>1. Application Details</AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-4">
+                                     <div className="grid md:grid-cols-3 gap-4">
+                                        <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                    </div>
+                                    <Separator />
+                                     <div className="space-y-2">
+                                        <h4 className="font-medium">Owner Details</h4>
+                                        <div className="grid md:grid-cols-2 gap-4 p-2 border rounded-md">
+                                            <FormField name="owner.name" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Name & Address of Owner</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h4 className="font-medium">Partner Details</h4>
+                                        {partnerFields.map((field, index) => (
+                                            <div key={field.id} className="grid md:grid-cols-4 gap-4 p-2 border rounded-md items-end">
+                                                <FormField name={`partners.${index}.name`} render={({ field }) => <FormItem><FormLabel>Partner Name</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                                <FormField name={`partners.${index}.address`} render={({ field }) => <FormItem><FormLabel>Partner Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                                <FormField name={`partners.${index}.mobile`} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                                {!isReadOnly && <Button type="button" variant="destructive" size="icon" onClick={() => removePartner(index)}><Trash2 className="h-4 w-4" /></Button>}
+                                            </div>
+                                        ))}
+                                        {partnerFields.length < 2 && !isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => appendPartner(createDefaultOwner())}><UserPlus className="mr-2 h-4 w-4" /> Add Partner</Button>}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                        
+                        {/* Section 2: Agency Registration */}
+                        <Accordion type="single" collapsible defaultValue="item-1">
+                          <AccordionItem value="item-1">
+                            <AccordionTrigger>2. Agency Registration</AccordionTrigger>
+                            <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
+                               <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <Separator className="md:col-span-3 my-2" />
+                               <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyAdditionalChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
+                        {/* Section 3: Rig Registrations */}
+                        <Accordion type="single" collapsible defaultValue="item-1">
+                          <AccordionItem value="item-1">
+                            <AccordionTrigger>3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
+                            <AccordionContent className="pt-4 space-y-4">
+                              <Accordion type="multiple" className="w-full space-y-2">
+                                {rigFields.map((field, index) => (
+                                  <RigAccordionItem
+                                    key={field.id}
+                                    field={field as RigRegistration}
+                                    index={index}
+                                    isReadOnly={isReadOnly}
+                                    onRemove={isEditor ? removeRig : undefined}
+                                    onRenew={handleRenewRig}
+                                    onActivate={handleActivateRig}
+                                    onCancel={handleCancelRig}
+                                    onEditRenewal={handleEditRenewal}
+                                    onDeleteRenewal={handleDeleteRenewal}
+                                    form={form}
+                                  />
+                                ))}
+                              </Accordion>
+                               {!isReadOnly && isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                               {!isReadOnly && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
+                    </CardContent>
+                    {!isReadOnly && (
+                      <CardFooter className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
+                          <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
+                      </CardFooter>
+                    )}
+                </Card>
+            </form>
+            <Dialog open={isRenewalDialogOpen} onOpenChange={setIsRenewalDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>{editingRenewal ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
+                    <DialogDescription>Enter renewal details for the rig.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right">Renewal Date</Label>
+                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || ''} onChange={(e) => {
+                            const value = e.target.value;
+                             if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: value } }));
+                            }
+                        }}/>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
+                        <Input id="renewalFee" type="number" 
+                         value={editingRenewal?.renewal.renewalFee ?? renewalData?.data.renewalFee ?? ''}
+                         onChange={(e) => {
+                            const value = +e.target.value;
+                            if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalFee: value }}));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalFee: value } }));
+                            }
+                         }}
+                        className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right">Payment Date</Label>
+                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || ''} onChange={(e) => {
+                            const value = e.target.value;
+                            if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: value } }));
+                            }
+                        }} />
+
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="challanNo" className="text-right">Challan No.</Label>
+                        <Input id="challanNo"
+                        value={editingRenewal?.renewal.challanNo ?? renewalData?.data.challanNo ?? ''}
+                         onChange={(e) => {
+                            const value = e.target.value;
+                            if (editingRenewal) {
+                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, challanNo: value }}));
+                            } else {
+                                setRenewalData(d => ({ ...d!, data: { ...d!.data, challanNo: value } }));
+                            }
+                         }}
+                        className="col-span-3" />
+                    </div>
+                    </div>
+                    <DialogFooter>
+                    <Button type="button" onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Cancel Rig Registration</DialogTitle>
+                        <DialogDescription>
+                            Provide a reason and date for cancelling this rig. This action can be reversed later.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="cancellationReason" className="text-right">Reason</Label>
+                            <Textarea
+                                id="cancellationReason"
+                                value={cancellationData.reason}
+                                onChange={(e) => setCancellationData(d => ({ ...d!, reason: e.target.value }))}
+                                className="col-span-3"
+                                placeholder="Enter reason for cancellation"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="cancellationDate" className="text-right">Date</Label>
+                            <Input
+                                id="cancellationDate"
+                                type="date"
+                                value={cancellationData.date}
+                                onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))}
+                                className="col-span-3"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setIsCancelDialogOpen(false)}>Cancel</Button>
+                        <Button type="button" onClick={handleConfirmCancellation}>Confirm Cancellation</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <AlertDialog open={!!deletingRenewal} onOpenChange={() => setDeletingRenewal(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete this renewal record. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDeleteRenewal}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </FormProvider>
+      </div>
+      );
+  }
+
+  // LIST VIEW
   return (
     <div className="space-y-6">
-      <Card>
-          <CardHeader>
-             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="relative flex-grow min-w-[250px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input type="search" placeholder="Search by Agency, Owner, File No, Rig No..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                </div>
-                 <div className="flex flex-wrap items-center gap-2">
-                    {canEdit && <Button size="sm" onClick={handleAddNew}> <PlusCircle className="mr-2 h-4 w-4" /> Add New Registration</Button>}
-                 </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-             <Tabs defaultValue="completed">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
-                    <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
-                </TabsList>
-                <TabsContent value="completed">
-                    <RegistrationTable applications={completedApplications} onEdit={handleEdit} onDelete={(id) => setDialogState({ type: 'deleteApplication', data: { id } })} onView={handleView} searchTerm={searchTerm} canEdit={canEdit} />
-                </TabsContent>
-                <TabsContent value="pending">
-                     <RegistrationTable applications={pendingApplications} onEdit={handleEdit} onDelete={(id) => setDialogState({ type: 'deleteApplication', data: { id } })} onView={handleView} searchTerm={searchTerm} canEdit={canEdit} />
-                </TabsContent>
-             </Tabs>
-          </CardContent>
-          {totalPages > 1 && (
-            <CardFooter>
-                <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-            </CardFooter>
-          )}
+      <Card className="shadow-lg">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative flex-grow w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                    type="search" 
+                    placeholder="Search by Agency, Owner, File No, or Rig No..." 
+                    className="w-full rounded-lg bg-background pl-10 shadow-sm" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                />
+              </div>
+              {canEdit && (
+                <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
+                    <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
+                </Button>
+              )}
+          </div>
+          <Tabs defaultValue="completed" onValueChange={onTabChange} className="pt-4 border-t">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
+                <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="completed" className="mt-4">
+                {totalCompletedPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalCompletedPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
+                <RegistrationTable 
+                    applications={paginatedCompletedApplications}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteApplication}
+                    searchTerm={searchTerm}
+                    canEdit={canEdit}
+                />
+                 {totalCompletedPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalCompletedPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
+            </TabsContent>
+            <TabsContent value="pending" className="mt-4">
+                 {totalPendingPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalPendingPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
+                <RegistrationTable 
+                    applications={paginatedPendingApplications}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteApplication}
+                    searchTerm={searchTerm}
+                    canEdit={canEdit}
+                />
+                 {totalPendingPages > 1 && (
+                    <div className="flex items-center justify-center py-4">
+                        <PaginationControls currentPage={currentPage} totalPages={totalPendingPages} onPageChange={setCurrentPage} />
+                    </div>
+                )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
       </Card>
-      
-      <AlertDialog open={dialogState.type === 'deleteApplication'} onOpenChange={() => setDialogState({ type: null, data: null })}>
+      <AlertDialog open={!!deletingApplicationId} onOpenChange={() => setDeletingApplicationId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete the registration and all its data. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDeleteApplication} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">{isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}</AlertDialogAction></AlertDialogFooter>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete the registration for <strong>{applications.find((a: AgencyApplication) => a.id === deletingApplicationId)?.agencyName}</strong>. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteApplication} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={() => setDialogState({ type: null, data: null })}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit' : 'Renew'} Rig Registration</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 py-4">
-                  <div className="space-y-2">
-                      <Label>Renewal Date</Label>
-                      <Input type="date" value={toInputDate(renewalInput.renewalDate)} onChange={e => setRenewalInput(prev => ({...prev, renewalDate: e.target.value}))} />
-                  </div>
-                   <div className="space-y-2">
-                      <Label>Renewal Fee (₹)</Label>
-                      <Input type="number" value={renewalInput.renewalFee ?? ''} onChange={e => setRenewalInput(prev => ({...prev, renewalFee: e.target.value === '' ? undefined : +e.target.value}))}/>
-                  </div>
-                  <div className="space-y-2">
-                      <Label>Payment Date</Label>
-                      <Input type="date" value={toInputDate(renewalInput.paymentDate)} onChange={e => setRenewalInput(prev => ({...prev, paymentDate: e.target.value}))} />
-                  </div>
-                  <div className="space-y-2">
-                      <Label>Challan No.</Label>
-                      <Input value={renewalInput.challanNo ?? ''} onChange={e => setRenewalInput(prev => ({...prev, challanNo: e.target.value}))} />
-                  </div>
-              </div>
-              <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setDialogState({ type: null, data: null })}>Cancel</Button>
-                  <Button type="button" onClick={handleConfirmRenewal}>Save</Button>
-              </DialogFooter>
-          </DialogContent>
-      </Dialog>
-      
-      <AlertDialog open={dialogState.type === 'deleteRenewal'} onOpenChange={() => setDialogState({ type: null, data: null })}>
-        <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete Renewal?</AlertDialogTitle><AlertDialogDescription>Are you sure you want to delete this renewal record? This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDeleteRenewal} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Dialog open={dialogState.type === 'cancel'} onOpenChange={() => setDialogState({ type: null, data: null })}>
-          <DialogContent>
-              <DialogHeader><DialogTitle>Cancel Rig Registration</DialogTitle></DialogHeader>
-              <div className="grid gap-4 py-4">
-                  <div className="space-y-2"><Label>Reason for Cancellation</Label><Input value={cancellationInput.reason} onChange={(e) => setCancellationInput(prev => ({...prev, reason: e.target.value}))}/></div>
-                  <div className="space-y-2"><Label>Date of Cancellation</Label><Input type="date" value={cancellationInput.date} onChange={(e) => setCancellationInput(prev => ({...prev, date: e.target.value}))} /></div>
-              </div>
-              <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogState({ type: null, data: null })}>Cancel</Button><Button type="button" onClick={handleConfirmCancellation}>Confirm Cancellation</Button></DialogFooter>
-          </DialogContent>
-      </Dialog>
     </div>
   );
 }
+
+    

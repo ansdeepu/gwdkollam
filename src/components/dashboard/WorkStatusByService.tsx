@@ -96,20 +96,13 @@ export default function WorkStatusByService({ allFileEntries, onOpenDialog, curr
 
   const handleWorkStatusCellClick = (data: any[], title: string) => {
     const dialogData = data.map((site, index) => ({
-      slNo: index + 1,
-      fileNo: site.fileNo,
-      applicantName: site.applicantName || 'N/A', // Add applicant name
-      siteName: site.nameOfSite,
-      purpose: site.purpose,
-      workStatus: site.workStatus,
+      slNo: index + 1, fileNo: site.fileNo, siteName: site.nameOfSite, purpose: site.purpose,
+      workStatus: site.workStatus, supervisorName: site.supervisorName || 'N/A'
     }));
     const columns = [
-      { key: 'slNo', label: 'Sl. No.' },
-      { key: 'fileNo', label: 'File No.' },
-      { key: 'applicantName', label: 'Applicant Name' }, // Add column header
-      { key: 'siteName', label: 'Site Name' },
-      { key: 'purpose', label: 'Purpose' },
-      { key: 'workStatus', label: 'Work Status' },
+      { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' },
+      { key: 'siteName', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' },
+      { key: 'workStatus', label: 'Work Status' }, { key: 'supervisorName', label: 'Supervisor' }
     ];
     onOpenDialog(dialogData, title, columns, 'detail');
   };
