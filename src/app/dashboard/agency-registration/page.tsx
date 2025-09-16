@@ -38,7 +38,7 @@ import PaginationControls from "@/components/shared/PaginationControls";
 export const dynamic = 'force-dynamic';
 
 type DialogState = {
-  type: 'renew' | 'cancel' | 'deleteRenewal' | 'deleteApplication' | null;
+  type: 'renew' | 'cancel' | 'deleteRenewal' | 'deleteApplication' | 'editRenewal' | null;
   data: any;
 };
 
@@ -648,7 +648,7 @@ export default function AgencyRegistrationPage() {
               renewalDate: toInputDate(renewalToEdit.renewalDate),
               paymentDate: toInputDate(renewalToEdit.paymentDate)
             });
-            setDialogState({ type: 'renew', data: { rigIndex, isEditing: true, renewalId } });
+            setDialogState({ type: 'editRenewal', data: { rigIndex, renewalId } });
           }
           break;
         case 'deleteRenewal':
@@ -672,12 +672,13 @@ export default function AgencyRegistrationPage() {
     };
 
     const handleConfirmRenewal = () => {
-        if (dialogState.type !== 'renew' || !dialogState.data) return;
-        const { rigIndex, isEditing, renewalId } = dialogState.data;
+        if (dialogState.type !== 'renew' && dialogState.type !== 'editRenewal' || !dialogState.data) return;
+        const { rigIndex, renewalId } = dialogState.data;
         const currentRig = form.getValues(`rigs.${rigIndex}`);
         if (!currentRig) return;
         
         let updatedRenewals: RigRenewalFormData[];
+        const isEditing = dialogState.type === 'editRenewal';
 
         if(isEditing) {
              updatedRenewals = (currentRig.renewals || []).map(r =>
@@ -759,12 +760,12 @@ export default function AgencyRegistrationPage() {
             <CardHeader>
                <div className="flex justify-between items-start">
                     <div>
-                         {isViewing && <CardTitle>View Rig Registration</CardTitle>}
-                         {isViewing && <CardDescription>Viewing agency and rig details.</CardDescription>}
+                         {isViewing ? <CardTitle>View Rig Registration</CardTitle> : <CardTitle>{selectedApplicationId === 'new' ? 'New Rig Registration' : 'Edit Rig Registration'}</CardTitle>}
+                         {isViewing ? <CardDescription>Viewing agency and rig details.</CardDescription> : <CardDescription>Manage agency and rig details.</CardDescription>}
                     </div>
-                    <Button variant="destructive" size="sm" onClick={handleCancelForm}>
+                    <Button variant="ghost" size="sm" onClick={handleCancelForm}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
+                        Back to List
                     </Button>
                 </div>
             </CardHeader>
@@ -854,6 +855,17 @@ export default function AgencyRegistrationPage() {
                 </Accordion>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end space-x-2">
+              {!isReadOnly && (
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  {selectedApplicationId === 'new' ? "Save Registration" : "Save Changes"}
+                </Button>
+              )}
+              <Button variant="outline" onClick={handleCancelForm}>
+                <X className="mr-2 h-4 w-4" /> Cancel
+              </Button>
+            </CardFooter>
           </Card>
         </form>
       </FormProvider>
@@ -902,10 +914,10 @@ export default function AgencyRegistrationPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={dialogState.type === 'renew'} onOpenChange={() => setDialogState({ type: null, data: null })}>
+      <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={() => setDialogState({ type: null, data: null })}>
           <DialogContent>
               <DialogHeader>
-                  <DialogTitle>{dialogState.data?.isEditing ? 'Edit' : 'Renew'} Rig Registration</DialogTitle>
+                  <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit' : 'Renew'} Rig Registration</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">
                   <div className="space-y-2">
