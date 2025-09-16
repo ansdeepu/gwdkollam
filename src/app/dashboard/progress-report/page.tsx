@@ -249,17 +249,18 @@ export default function ProgressReportPage() {
     // 1. Create a pre-filtered list of all sites to be included in the report.
     const includedSites: SiteDetailWithFileContext[] = [];
     fileEntries.forEach(entry => {
+        if (entry.siteDetails?.some(site => site.workStatus === "Addl. AS Awaited")) {
+          return; // Skip the entire file entry if any site has this status
+        }
         const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
         entry.siteDetails?.forEach(site => {
-            if (site.workStatus !== "Addl. AS Awaited") {
-                includedSites.push({
-                    ...site,
-                    fileNo: entry.fileNo!,
-                    applicantName: entry.applicantName!,
-                    applicationType: entry.applicationType!,
-                    fileRemittanceDate: firstRemittanceDate
-                });
-            }
+            includedSites.push({
+                ...site,
+                fileNo: entry.fileNo!,
+                applicantName: entry.applicantName!,
+                applicationType: entry.applicationType!,
+                fileRemittanceDate: firstRemittanceDate
+            });
         });
     });
 
@@ -337,7 +338,9 @@ export default function ProgressReportPage() {
     
     // 3. Process file-level data for Financial Summary using the original `fileEntries`
     const processedFilesForFinancials = new Set<string>();
-    fileEntries.forEach(entry => {
+    const filesToIncludeForFinancials = fileEntries.filter(entry => !entry.siteDetails?.some(site => site.workStatus === "Addl. AS Awaited"));
+
+    filesToIncludeForFinancials.forEach(entry => {
         const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
         const isCurrentApplicationInPeriod = firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
         
@@ -349,7 +352,7 @@ export default function ProgressReportPage() {
             
             const fileEntryForDialog: DataEntryFormData = { ...entry };
 
-            const uniquePurposesInFile = new Set((entry.siteDetails || []).filter(site => site.workStatus !== 'Addl. AS Awaited').map(site => site.purpose as SitePurpose).filter(p => financialSummaryOrder.includes(p)));
+            const uniquePurposesInFile = new Set((entry.siteDetails || []).map(site => site.purpose as SitePurpose).filter(p => financialSummaryOrder.includes(p)));
             
             uniquePurposesInFile.forEach(purpose => {
                 const summary = targetFinancialSummary[purpose];
@@ -394,7 +397,7 @@ export default function ProgressReportPage() {
       }
     });
 
-    fileEntries.forEach(entry => {
+    filesToIncludeForFinancials.forEach(entry => {
         entry.remittanceDetails?.forEach(rd => {
             const remDate = safeParseDate(rd.dateOfRemittance);
             if (rd.remittedAccount === 'RevenueHead' && remDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
@@ -433,7 +436,8 @@ export default function ProgressReportPage() {
 
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
         stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
-        
+        stats.balance = stats.totalApplications - stats.completed;
+
         const totalApplicationSites = new Map<string, SiteDetailWithFileContext>();
         [...stats.previousBalanceData, ...stats.currentApplicationsData].forEach(site => {
             const key = `${site.fileNo}-${site.nameOfSite}`;
@@ -449,7 +453,6 @@ export default function ProgressReportPage() {
         
         const completedKeys = new Set(stats.completedData.map(site => `${site.fileNo}-${site.nameOfSite}`));
         stats.balanceData = stats.totalApplicationsData.filter(site => !completedKeys.has(`${site.fileNo}-${site.nameOfSite}`));
-        stats.balance = stats.balanceData.length;
     };
     
     applicationTypeOptions.forEach(appType => {
@@ -902,3 +905,4 @@ export default function ProgressReportPage() {
     </div>
   );
 }
+
