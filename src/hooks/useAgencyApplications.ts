@@ -34,7 +34,7 @@ export function useAgencyApplications() {
   const { user } = useAuth();
   const { allAgencyApplications, isLoading: dataStoreLoading, refetchAgencyApplications } = useDataStore(); // Use the central store
 
-  const addApplication = useCallback(async (applicationData: Omit<AgencyApplication, 'id'>) => {
+  const addApplication = useCallback(async (applicationData: Omit<AgencyApplication, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user) throw new Error("User must be logged in to add an application.");
 
     const payload = {
@@ -54,6 +54,11 @@ export function useAgencyApplications() {
         ...applicationData,
         updatedAt: serverTimestamp(),
     };
+    // The ID should not be part of the data being updated in Firestore
+    if ('id' in payload) {
+      delete (payload as any).id;
+    }
+    
     await updateDoc(docRef, payload);
     refetchAgencyApplications(); // Trigger refetch
   }, [user, refetchAgencyApplications]);

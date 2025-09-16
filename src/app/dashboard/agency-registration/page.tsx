@@ -48,8 +48,12 @@ const toDateOrNull = (value: any): Date | null => {
   }
   
   if (typeof value === 'string') {
-    // Try parsing ISO format first (yyyy-MM-dd from date inputs)
-    let parsed = parseISO(value);
+    // Try parsing 'yyyy-MM-dd' format first (from date inputs)
+    let parsed = parse(value, 'yyyy-MM-dd', new Date());
+    if (isValid(parsed)) return parsed;
+    
+    // Then try ISO format
+    parsed = parseISO(value);
     if (isValid(parsed)) return parsed;
 
     // Then try to parse 'dd/MM/yyyy' format
@@ -305,7 +309,7 @@ const RigAccordionItem = ({
                 <FormField name={`rigs.${index}.typeOfRig`} control={form.control} render={({ field }) => (
                     <FormItem>
                         <FormLabel>Type of Rig</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
+                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger></FormControl>
                             <SelectContent>{rigTypeOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
                         </Select>
@@ -472,7 +476,6 @@ export default function AgencyRegistrationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
-  const [isViewing, setIsViewing] = useState(false);
   
   const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view'; data: any }>({ type: null, data: null });
   
@@ -484,19 +487,25 @@ export default function AgencyRegistrationPage() {
   const ITEMS_PER_PAGE = 50;
 
   const isEditor = user?.role === 'editor';
-  const isReadOnlyForForm = isViewing || user?.role === 'supervisor' || user?.role === 'viewer';
+  const isSupervisor = user?.role === 'supervisor';
+  const isViewer = user?.role === 'viewer';
+  
+  const isViewing = dialogState.type === 'view';
+
+  const isReadOnlyForForm = isViewing || isSupervisor || isViewer;
   const canEdit = isEditor;
 
   useEffect(() => {
     if (selectedApplicationId) {
-      let title = 'Edit Rig Registration';
-      if (isViewing) title = 'View Rig Registration';
-      else if (selectedApplicationId === 'new') title = 'New Rig Registration';
+      const app = applications.find(a => a.id === selectedApplicationId);
+      const appName = app ? `: ${app.agencyName}` : '';
+      let title = isViewing ? `View Rig Registration${appName}` : `Edit Rig Registration${appName}`;
+      if (selectedApplicationId === 'new') title = 'New Rig Registration';
       setHeader(title, 'Manage all details related to an agency and its rigs.');
     } else {
       setHeader('Rig Registration', 'Manage agency and rig registrations.');
     }
-  }, [selectedApplicationId, isViewing, setHeader]);
+  }, [selectedApplicationId, isViewing, setHeader, applications]);
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
   const createDefaultRig = (): RigRegistration => ({
@@ -514,7 +523,7 @@ export default function AgencyRegistrationPage() {
       owner: createDefaultOwner(),
       partners: [],
       rigs: [],
-      status: 'Active', // Default to Active, will be changed on save
+      status: 'Active',
       history: []
     },
   });
@@ -533,9 +542,8 @@ export default function AgencyRegistrationPage() {
                 partners: [],
                 rigs: [createDefaultRig()],
                 history: [],
-                status: 'Active' // Default to Active
+                status: 'Active'
             });
-            // Stop the spinner once the new form is ready
             setIsNavigating(false);
         } else {
             const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
@@ -647,7 +655,6 @@ export default function AgencyRegistrationPage() {
               toast({ title: "Application Created", description: "The new agency registration has been saved." });
           }
           setSelectedApplicationId(null);
-          setIsViewing(false);
       } catch (error: any) {
           console.error("Submission failed:", error);
           toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
@@ -658,12 +665,10 @@ export default function AgencyRegistrationPage() {
 
   const handleAddNew = () => {
     setIsNavigating(true);
-    setIsViewing(false);
     setSelectedApplicationId('new');
   }
 
   const handleEdit = (id: string) => {
-    setIsViewing(false);
     setSelectedApplicationId(id);
   }
   
@@ -676,7 +681,6 @@ export default function AgencyRegistrationPage() {
 
   const handleCancelForm = () => {
     setSelectedApplicationId(null);
-    setIsViewing(false);
   }
 
   const handleAddRig = () => {
@@ -1150,7 +1154,7 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                     <Label className="text-right">Renewal Date</Label>
-                    <Input type="date" value={data.renewalDate || ''} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
+                    <Input type="date" value={data.renewalDate ?? ''} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="renewalFee">Renewal Fee</Label>
@@ -1158,7 +1162,7 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
                 </div>
                  <div className="space-y-2">
                     <Label className="text-right">Payment Date</Label>
-                    <Input type="date" value={data.paymentDate || ''} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
+                    <Input type="date" value={data.paymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="challanNo">Challan No.</Label>
@@ -1175,8 +1179,8 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRegistration>, onConfirm: (data: any) => void, onCancel: () => void }) {
     const [cancellationData, setCancellationData] = useState({ 
-        reason: initialData?.cancellationReason || '', 
-        date: initialData?.cancellationDate ? format(new Date(initialData.cancellationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+        reason: initialData?.cancellationReason ?? '', 
+        date: initialData?.cancellationDate ? format(toDateOrNull(initialData.cancellationDate)!, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
     });
     
     return (
