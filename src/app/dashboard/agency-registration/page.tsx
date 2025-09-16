@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -147,15 +147,14 @@ const getOrdinalSuffix = (n: number) => {
   return s[(v - 20) % 10] || s[v] || s[0];
 };
 
+type OptionalSection = "rigVehicle" | "compressorVehicle" | "supportingVehicle" | "compressorDetails" | "generatorDetails";
 
 const RigAccordionItem = ({
   field,
   index,
   isReadOnly,
   onRemove,
-  onRenew,
-  onActivate,
-  onCancel,
+  openDialog,
   onDeleteRenewal,
   onEditRenewal,
   form,
@@ -164,11 +163,9 @@ const RigAccordionItem = ({
   index: number;
   isReadOnly: boolean;
   onRemove?: (index: number) => void;
-  onRenew: (index: number) => void;
-  onActivate: (index: number) => void;
-  onCancel: (rigIndex: number) => void;
+  openDialog: (type: 'renew' | 'cancel' | 'activate', data: any) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
-  onEditRenewal: (rigIndex: number, renewalId: string) => void;
+  onEditRenewal: (rigIndex: number, renewal: RigRenewalFormData) => void;
   form: UseFormReturn<any>;
 }) => {
   const rigTypeValue = field.typeOfRig;
@@ -195,6 +192,23 @@ const RigAccordionItem = ({
   const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
     ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
     : 'N/A';
+    
+   const detailSections: { key: OptionalSection, label: string }[] = [
+    { key: "rigVehicle", label: "Rig Vehicle" },
+    { key: "compressorVehicle", label: "Compressor Vehicle" },
+    { key: "supportingVehicle", label: "Supporting Vehicle" },
+    { key: "compressorDetails", label: "Compressor Details" },
+    { key: "generatorDetails", label: "Generator Details" },
+  ];
+
+  const handleSectionToggle = (sectionKey: OptionalSection, checked: boolean) => {
+    const showFieldKey = `rigs.${index}.show${sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1)}`;
+    form.setValue(showFieldKey, checked);
+    if (!checked) {
+      form.setValue(`rigs.${index}.${sectionKey}`, undefined);
+    }
+  };
+
 
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
@@ -203,14 +217,32 @@ const RigAccordionItem = ({
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-            {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+            {!isReadOnly && (
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild><Button type="button" size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Details</Button></DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Optional Details</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {detailSections.map(({ key, label }) => (
+                      <DropdownMenuCheckboxItem
+                        key={key}
+                        checked={form.watch(`rigs.${index}.show${key.charAt(0).toUpperCase() + key.slice(1)}`)}
+                        onCheckedChange={(checked) => handleSectionToggle(key, checked)}
+                      >
+                        {label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('renew', { rigIndex: index }); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+            )}
+            {!isReadOnly && field.status === 'Active' && (
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('cancel', { rigIndex: index }); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {!isReadOnly && field.status === 'Cancelled' && (
-                <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
+                <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); openDialog('activate', { rigIndex: index }); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
             )}
 
             {!isReadOnly && onRemove && (
@@ -268,10 +300,10 @@ const RigAccordionItem = ({
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      {!isReadOnly && (
                         <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('cancel', { rigIndex: index }); }}>
                                 <Edit2 className="h-4 w-4" />
                             </Button>
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('activate', { rigIndex: index }); }}>
                                 <RotateCcw className="h-4 w-4" />
                             </Button>
                         </div>
@@ -284,7 +316,65 @@ const RigAccordionItem = ({
             </div>
           )}
 
-          {field.renewals && field.renewals.length > 0 && (
+          {form.watch(`rigs.${index}.showRigVehicle`) && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+            </div>
+          )}
+          
+          {form.watch(`rigs.${index}.showCompressorVehicle`) && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                </div>
+            </div>
+          )}
+          
+          {form.watch(`rigs.${index}.showSupportingVehicle`) && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Supporting Vehicle Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+            </div>
+           )}
+
+          {form.watch(`rigs.${index}.showCompressorDetails`) && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Compressor Details</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+            </div>
+           )}
+
+          {form.watch(`rigs.${index}.showGeneratorDetails`) && (
+            <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
+                <p className="font-medium text-base text-primary">Generator Details</p>
+                <div className="grid md:grid-cols-4 gap-4">
+                <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                </div>
+            </div>
+           )}
+
+           {field.renewals && field.renewals.length > 0 && (
             <div className="space-y-2 p-4 border rounded-lg bg-secondary/20">
                 <h4 className="font-medium text-base text-primary">Renewal History</h4>
                 <div className="border rounded-lg p-2 bg-background/50">
@@ -313,7 +403,7 @@ const RigAccordionItem = ({
                                 <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
                                 {!isReadOnly && (
                                     <TableCell className="text-center">
-                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
                                         <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
                                     </TableCell>
                                 )}
@@ -325,26 +415,6 @@ const RigAccordionItem = ({
                 </div>
             </div>
           )}
-
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
-            <div className="grid md:grid-cols-4 gap-4">
-               <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-            </div>
-          </div>
-          
-          <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
-            <div className="grid md:grid-cols-4 gap-4">
-               <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-               <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl></FormItem>} />
-            </div>
-          </div>
         </div>
       </AccordionContent>
     </AccordionItem>
@@ -364,13 +434,9 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [isViewing, setIsViewing] = useState(false);
   
-  const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
-  const [editingRenewal, setEditingRenewal] = useState<{ rigIndex: number; renewal: RigRenewalFormData } | null>(null);
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal'; data: any }>({ type: null, data: null });
+  
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
-  const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
-
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: string }>({ rigIndex: -1, reason: '', date: '' });
   
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
@@ -591,20 +657,16 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const handleRenewRig = (rigIndex: number) => {
-      setEditingRenewal(null);
-      setRenewalData({ rigIndex, data: { renewalDate: format(new Date(), 'yyyy-MM-dd') } });
-      setIsRenewalDialogOpen(true);
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal', data: any) => {
+    setDialogState({ type, data });
   };
-  
-    const handleEditRenewal = (rigIndex: number, renewalId: string) => {
-        const rig = rigFields[rigIndex];
-        const renewalToEdit = rig.renewals?.find(r => r.id === renewalId);
-        if(renewalToEdit) {
-            setRenewalData(null);
-            setEditingRenewal({ rigIndex, renewal: { ...renewalToEdit } });
-            setIsRenewalDialogOpen(true);
-        }
+
+  const closeDialog = () => {
+    setDialogState({ type: null, data: null });
+  };
+    
+    const handleEditRenewal = (rigIndex: number, renewal: RigRenewalFormData) => {
+        openDialog('editRenewal', { rigIndex, renewal: { ...renewal } });
     };
     
     const handleDeleteRenewal = (rigIndex: number, renewalId: string) => {
@@ -629,18 +691,17 @@ export default function AgencyRegistrationPage() {
       }
     };
 
-  const handleConfirmRenewal = () => {
-      if (editingRenewal) { // Handle editing an existing renewal
-        const { rigIndex, renewal } = editingRenewal;
+  const handleConfirmRenewal = (renewalData: any) => {
+      if (dialogState.type === 'editRenewal') {
+        const { rigIndex, renewal } = dialogState.data;
         const rigToUpdate = rigFields[rigIndex];
-        const updatedRenewals = rigToUpdate.renewals?.map(r => r.id === renewal.id ? renewal : r) || [];
+        const updatedRenewals = rigToUpdate.renewals?.map(r => r.id === renewal.id ? renewalData : r) || [];
         updateRig(rigIndex, { ...rigToUpdate, renewals: updatedRenewals });
         toast({ title: "Renewal Updated", description: "Renewal details have been updated." });
-      } else if (renewalData?.data.renewalDate) { // Handle adding a new renewal
-        const { rigIndex, data } = renewalData;
+      } else if (dialogState.type === 'renew') {
+        const { rigIndex } = dialogState.data;
         const rigToUpdate = rigFields[rigIndex];
-        const renewalDateObj = toDateOrNull(data.renewalDate);
-
+        const renewalDateObj = toDateOrNull(renewalData.renewalDate);
         if (!renewalDateObj) {
             toast({ title: "Invalid Date", description: "Please enter a valid renewal date.", variant: "destructive" });
             return;
@@ -648,10 +709,10 @@ export default function AgencyRegistrationPage() {
 
         const newRenewal: RigRenewalFormData = {
             id: uuidv4(),
-            renewalDate: data.renewalDate ?? "",
-            renewalFee: data.renewalFee,
-            paymentDate: data.paymentDate ?? "",
-            challanNo: data.challanNo ?? "",
+            renewalDate: renewalData.renewalDate ?? "",
+            renewalFee: renewalData.renewalFee,
+            paymentDate: renewalData.paymentDate ?? "",
+            challanNo: renewalData.challanNo ?? "",
             validTill: addYears(renewalDateObj, 1),
         };
         updateRig(rigIndex, {
@@ -663,9 +724,7 @@ export default function AgencyRegistrationPage() {
         toast({ title: "Rig Renewed", description: "Renewal details added." });
     }
     
-    setIsRenewalDialogOpen(false);
-    setRenewalData(null);
-    setEditingRenewal(null);
+    closeDialog();
   };
   
     const handleConfirmDeleteRenewal = () => {
@@ -678,24 +737,11 @@ export default function AgencyRegistrationPage() {
         setDeletingRenewal(null);
     };
 
-  const handleCancelRig = (rigIndex: number) => {
-      const rig = form.getValues(`rigs.${rigIndex}`);
-      const cancellationDate = rig.cancellationDate;
-      const formattedDate = cancellationDate && isValid(new Date(cancellationDate)) ? format(new Date(cancellationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
-
-      setCancellationData({ 
-          rigIndex, 
-          reason: rig.cancellationReason || '', 
-          date: formattedDate
-      });
-      setIsCancelDialogOpen(true);
-  };
-
-  const handleConfirmCancellation = () => {
-    if (cancellationData.rigIndex === -1) return;
-    const { rigIndex, reason, date } = cancellationData;
+  const handleConfirmCancellation = (cancellationData: any) => {
+    if (dialogState.type !== 'cancel') return;
+    const { rigIndex } = dialogState.data;
+    const { reason, date } = cancellationData;
     const rigToUpdate = form.getValues(`rigs.${rigIndex}`);
-    
     const dateObject = toDateOrNull(date);
     
     updateRig(rigIndex, {
@@ -705,11 +751,12 @@ export default function AgencyRegistrationPage() {
         cancellationReason: reason,
     });
     toast({ title: "Rig Cancelled", description: "The rig registration has been cancelled." });
-    setIsCancelDialogOpen(false);
-    setCancellationData({ rigIndex: -1, reason: '', date: '' });
+    closeDialog();
   };
   
-  const handleActivateRig = (rigIndex: number) => {
+  const handleActivateRig = () => {
+    if (dialogState.type !== 'activate') return;
+    const { rigIndex } = dialogState.data;
     const rigToUpdate = rigFields[rigIndex];
     updateRig(rigIndex, {
         ...rigToUpdate,
@@ -718,6 +765,7 @@ export default function AgencyRegistrationPage() {
         cancellationReason: '',
     });
     toast({ title: "Rig Activated", description: "The rig registration has been reactivated." });
+    closeDialog();
   };
 
   const paginatedCompletedApplications = useMemo(() => {
@@ -842,9 +890,7 @@ export default function AgencyRegistrationPage() {
                                     index={index}
                                     isReadOnly={isReadOnly}
                                     onRemove={isEditor ? removeRig : undefined}
-                                    onRenew={handleRenewRig}
-                                    onActivate={handleActivateRig}
-                                    onCancel={handleCancelRig}
+                                    openDialog={openDialog}
                                     onEditRenewal={handleEditRenewal}
                                     onDeleteRenewal={handleDeleteRenewal}
                                     form={form}
@@ -866,106 +912,46 @@ export default function AgencyRegistrationPage() {
                     )}
                 </Card>
             </form>
-            <Dialog open={isRenewalDialogOpen} onOpenChange={setIsRenewalDialogOpen}>
+             <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent>
                     <DialogHeader>
-                    <DialogTitle>{editingRenewal ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
-                    <DialogDescription>Enter renewal details for the rig.</DialogDescription>
+                        <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
+                        <DialogDescription>Enter renewal details for the rig.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">Renewal Date</Label>
-                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.renewalDate || renewalData?.data.renewalDate || ''} onChange={(e) => {
-                            const value = e.target.value;
-                             if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalDate: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalDate: value } }));
-                            }
-                        }}/>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
-                        <Input id="renewalFee" type="number" 
-                         value={editingRenewal?.renewal.renewalFee ?? renewalData?.data.renewalFee ?? ''}
-                         onChange={(e) => {
-                            const value = +e.target.value;
-                            if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, renewalFee: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, renewalFee: value } }));
-                            }
-                         }}
-                        className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">Payment Date</Label>
-                        <Input type="date" className="col-span-3" value={editingRenewal?.renewal.paymentDate || renewalData?.data.paymentDate || ''} onChange={(e) => {
-                            const value = e.target.value;
-                            if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, paymentDate: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, paymentDate: value } }));
-                            }
-                        }} />
-
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="challanNo" className="text-right">Challan No.</Label>
-                        <Input id="challanNo"
-                        value={editingRenewal?.renewal.challanNo ?? renewalData?.data.challanNo ?? ''}
-                         onChange={(e) => {
-                            const value = e.target.value;
-                            if (editingRenewal) {
-                                setEditingRenewal(ed => ({ ...ed!, renewal: { ...ed!.renewal, challanNo: value }}));
-                            } else {
-                                setRenewalData(d => ({ ...d!, data: { ...d!.data, challanNo: value } }));
-                            }
-                         }}
-                        className="col-span-3" />
-                    </div>
-                    </div>
-                    <DialogFooter>
-                    <Button type="button" onClick={handleConfirmRenewal}>{editingRenewal ? "Save Changes" : "Confirm Renewal"}</Button>
-                    </DialogFooter>
+                    <RenewalDialogContent
+                        initialData={dialogState.data?.renewal ?? { renewalDate: format(new Date(), 'yyyy-MM-dd') }}
+                        onConfirm={handleConfirmRenewal}
+                        onCancel={closeDialog}
+                    />
                 </DialogContent>
             </Dialog>
-            <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Cancel Rig Registration</DialogTitle>
-                        <DialogDescription>
+            <AlertDialog open={dialogState.type === 'cancel'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel Rig Registration</AlertDialogTitle>
+                        <AlertDialogDescription>
                             Provide a reason and date for cancelling this rig. This action can be reversed later.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="cancellationReason" className="text-right">Reason</Label>
-                            <Textarea
-                                id="cancellationReason"
-                                value={cancellationData.reason}
-                                onChange={(e) => setCancellationData(d => ({ ...d!, reason: e.target.value }))}
-                                className="col-span-3"
-                                placeholder="Enter reason for cancellation"
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="cancellationDate" className="text-right">Date</Label>
-                            <Input
-                                id="cancellationDate"
-                                type="date"
-                                value={cancellationData.date}
-                                onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))}
-                                className="col-span-3"
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsCancelDialogOpen(false)}>Cancel</Button>
-                        <Button type="button" onClick={handleConfirmCancellation}>Confirm Cancellation</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <CancellationDialogContent
+                        initialData={rigFields[dialogState.data?.rigIndex]}
+                        onConfirm={handleConfirmCancellation}
+                        onCancel={closeDialog}
+                    />
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={dialogState.type === 'activate'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Activate Rig</AlertDialogTitle>
+                        <AlertDialogDescription>Are you sure you want to reactivate this rig?</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={closeDialog}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleActivateRig}>Activate</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <AlertDialog open={!!deletingRenewal} onOpenChange={() => setDeletingRenewal(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -1075,4 +1061,60 @@ export default function AgencyRegistrationPage() {
   );
 }
 
+function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRenewalFormData>, onConfirm: (data: any) => void, onCancel: () => void }) {
+    const [data, setData] = useState(initialData);
+
+    return (
+        <>
+            <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Renewal Date</Label>
+                    <Input type="date" className="col-span-3" value={data.renewalDate || ''} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
+                    <Input id="renewalFee" type="number" value={data.renewalFee ?? ''} onChange={(e) => setData(d => ({ ...d, renewalFee: +e.target.value }))} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Payment Date</Label>
+                    <Input type="date" className="col-span-3" value={data.paymentDate || ''} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="challanNo" className="text-right">Challan No.</Label>
+                    <Input id="challanNo" value={data.challanNo ?? ''} onChange={(e) => setData(d => ({ ...d, challanNo: e.target.value }))} className="col-span-3" />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button type="button" onClick={() => onConfirm(data)}>Confirm</Button>
+            </DialogFooter>
+        </>
+    );
+}
+
+function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRegistration>, onConfirm: (data: any) => void, onCancel: () => void }) {
+    const [cancellationData, setCancellationData] = useState({ 
+        reason: initialData.cancellationReason || '', 
+        date: initialData.cancellationDate ? format(new Date(initialData.cancellationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+    });
+    
+    return (
+        <>
+            <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="cancellationReason" className="text-right">Reason</Label>
+                    <Textarea id="cancellationReason" value={cancellationData.reason} onChange={(e) => setCancellationData(d => ({ ...d, reason: e.target.value }))} className="col-span-3" placeholder="Enter reason" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="cancellationDate" className="text-right">Date</Label>
+                    <Input id="cancellationDate" type="date" value={cancellationData.date} onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))} className="col-span-3" />
+                </div>
+            </div>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onConfirm(cancellationData)}>Confirm Cancellation</AlertDialogAction>
+            </AlertDialogFooter>
+        </>
+    );
+}
     

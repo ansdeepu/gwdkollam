@@ -403,6 +403,12 @@ export const RigRegistrationSchema = z.object({
     history: z.array(z.string()).optional(),
     cancellationDate: optionalDate,
     cancellationReason: z.string().optional(),
+    // Fields to control visibility of optional sections
+    showRigVehicle: z.boolean().optional(),
+    showCompressorVehicle: z.boolean().optional(),
+    showSupportingVehicle: z.boolean().optional(),
+    showCompressorDetails: z.boolean().optional(),
+    showGeneratorDetails: z.boolean().optional(),
 });
 export type RigRegistration = z.infer<typeof RigRegistrationSchema>;
 
