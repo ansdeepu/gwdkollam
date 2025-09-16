@@ -65,7 +65,7 @@ function renderDetail(label: string, value: any) {
   } else if (typeof value === 'boolean') {
     displayValue = value ? "Yes" : "No";
   } else if (typeof value === 'number') {
-    displayValue = value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    displayValue = value.toLocaleString('en-IN');
      if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
         displayValue = `₹ ${displayValue}`;
     }
@@ -395,8 +395,9 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   {renderDetail("File No", viewItem?.fileNo)}
                   {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
                   {renderDetail("Phone No", viewItem?.phoneNo)}
+                  {renderDetail("Secondary Mobile No", viewItem?.secondaryMobileNo)}
+                  {renderDetail("Constituency (LAC)", viewItem?.constituency)}
                   {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
-                  {renderDetail("Total Estimate Amount (₹)", viewItem?.estimateAmount)}
                 </div>
 
                 <div className="space-y-2">
@@ -411,7 +412,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                       </div>
                     ))
                   ) : (<p className="text-sm text-muted-foreground">No remittance details available.</p>)}
-                  {renderDetail("Total Remittance (All Entries) (₹)", viewItem?.totalRemittance)}
+                  {renderDetail("Total Remittance (₹)", viewItem?.totalRemittance)}
                 </div>
                 
                 <div className="space-y-2">
@@ -536,6 +537,12 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     ))
                   ) : (<p className="text-sm text-muted-foreground">No payment details available.</p>)}
                   {renderDetail("Total Payment (All Entries) (₹)", viewItem?.totalPaymentAllEntries)}
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Overall Financial Summary</h3>
+                  {renderDetail("Total Remittance (₹)", viewItem?.totalRemittance)}
+                  {renderDetail("Total Payment (₹)", viewItem?.totalPaymentAllEntries)}
                   {renderDetail("Overall Balance (₹)", viewItem?.overallBalance)}
                 </div>
 
