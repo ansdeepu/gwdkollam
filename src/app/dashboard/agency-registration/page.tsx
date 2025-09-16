@@ -215,10 +215,10 @@ const RigAccordionItem = ({
                 </DropdownMenu>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => onRenew(index)}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={() => onCancel(index)}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {!isReadOnly && field.status === 'Cancelled' && (
                 <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
