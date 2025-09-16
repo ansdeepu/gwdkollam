@@ -1,4 +1,3 @@
-"use client"
 
 // Inspired by react-hot-toast library
 import * as React from "react"
@@ -158,6 +157,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      duration: props.duration || 1500, // Set default duration to 1.5 seconds
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
