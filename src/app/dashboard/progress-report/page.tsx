@@ -304,7 +304,7 @@ export default function ProgressReportPage() {
         
         // A file is part of previous balance if it was remitted before the period and not yet completed or refunded before the period started.
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) &&
-                                       (!completionDate || isAfter(completionDate, sDate)) &&
+                                       (!completionDate || !isWithinInterval(completionDate, { start: new Date(0), end: sDate })) &&
                                        !isToBeRefunded;
 
 
