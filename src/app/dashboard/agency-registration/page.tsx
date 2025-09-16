@@ -629,29 +629,31 @@ export default function AgencyRegistrationPage() {
   const onSubmit = async (data: AgencyApplication) => {
       setIsSubmitting(true);
       try {
-            // Determine status based on agencyRegistrationNo
             const finalStatus = data.agencyRegistrationNo ? 'Active' : 'Pending Verification';
-            
-            // Convert date strings back to Date objects before saving
             const dataForSave = processDataForSaving(data);
 
-            const dataWithHistoryAndStatus = {
-                ...dataForSave,
-                status: finalStatus,
-                rigs: dataForSave.rigs.map( (rig: any) => {
-                    const historyEntry = generateHistoryEntry(rig);
-                    const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
-                    return { ...rig, history: newHistory };
-                })
-            };
-
-          if (selectedApplicationId && selectedApplicationId !== 'new') {
-              await updateApplication(selectedApplicationId, dataWithHistoryAndStatus);
-              toast({ title: "Application Updated", description: "The registration details have been updated." });
-          } else {
-              await addApplication(dataWithHistoryAndStatus);
-              toast({ title: "Application Created", description: "The new agency registration has been saved." });
-          }
+            if (selectedApplicationId && selectedApplicationId !== 'new') {
+                const originalApp = applications.find(a => a.id === selectedApplicationId);
+                if (originalApp) {
+                    const mergedData = { ...originalApp, ...dataForSave, status: finalStatus };
+                    await updateApplication(selectedApplicationId, mergedData);
+                    toast({ title: "Application Updated", description: "The registration details have been updated." });
+                } else {
+                    throw new Error("Original application not found for update.");
+                }
+            } else {
+                const dataWithHistory = {
+                    ...dataForSave,
+                    status: finalStatus,
+                    rigs: dataForSave.rigs.map((rig: any) => {
+                        const historyEntry = generateHistoryEntry(rig);
+                        const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
+                        return { ...rig, history: newHistory };
+                    })
+                };
+                await addApplication(dataWithHistory);
+                toast({ title: "Application Created", description: "The new agency registration has been saved." });
+            }
           setSelectedApplicationId(null);
       } catch (error: any) {
           console.error("Submission failed:", error);
@@ -660,6 +662,7 @@ export default function AgencyRegistrationPage() {
           setIsSubmitting(false);
       }
   };
+
 
   const handleAddNew = () => {
     setIsNavigating(true);
@@ -982,7 +985,7 @@ export default function AgencyRegistrationPage() {
                     {!isReadOnlyForForm && (
                       <CardFooter className="flex justify-end gap-2">
                           <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
-                          <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
+                          <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : (selectedApplicationId === 'new' ? 'Save Registration' : 'Save Changes')}</Button>
                       </CardFooter>
                     )}
                 </Card>
@@ -1352,5 +1355,10 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
     
 
     
+
+    
+
+
+
 
     
