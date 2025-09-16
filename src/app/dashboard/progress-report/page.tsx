@@ -355,7 +355,7 @@ export default function ProgressReportPage() {
             
             const fileEntryForDialog: DataEntryFormData = { ...entry };
 
-            const uniquePurposesInFile = new Set((entry.siteDetails || []).map(site => site.purpose as SitePurpose).filter(p => financialSummaryOrder.includes(p)));
+            const uniquePurposesInFile = new Set((entry.siteDetails || []).filter(site => site.workStatus !== 'Addl. AS Awaited').map(site => site.purpose as SitePurpose).filter(p => financialSummaryOrder.includes(p)));
             
             uniquePurposesInFile.forEach(purpose => {
                 const summary = targetFinancialSummary[purpose];
@@ -897,7 +897,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-  
-
-    
