@@ -72,7 +72,7 @@ const processDataForForm = (data: any): any => {
 
 // Helper function to create default form values, ensuring consistency.
 const getFormDefaults = (): DataEntryFormData => ({
-  fileNo: "", applicantName: "", phoneNo: "",
+  fileNo: "", applicantName: "", phoneNo: "", secondaryMobileNo: "",
   applicationType: undefined,
   constituency: undefined,
   estimateAmount: undefined, assignedSupervisorUids: [],
