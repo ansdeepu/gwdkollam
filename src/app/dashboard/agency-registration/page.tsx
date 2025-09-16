@@ -497,9 +497,7 @@ export default function AgencyRegistrationPage() {
 
   useEffect(() => {
     if (selectedApplicationId) {
-      const app = applications.find(a => a.id === selectedApplicationId);
-      const appName = app ? `: ${app.agencyName}` : '';
-      let title = isViewing ? `View Rig Registration${appName}` : `Edit Rig Registration${appName}`;
+      let title = isViewing ? `View Rig Registration` : `Edit Rig Registration`;
       if (selectedApplicationId === 'new') title = 'New Rig Registration';
       setHeader(title, 'Manage all details related to an agency and its rigs.');
     } else {
