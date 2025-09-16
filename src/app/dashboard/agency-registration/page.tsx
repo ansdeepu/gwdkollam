@@ -250,7 +250,7 @@ const RigAccordionItem = ({
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
       <div className="flex items-center w-full border-b">
-        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
+        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
@@ -474,7 +474,7 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [isViewing, setIsViewing] = useState(false);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig'; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view'; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
@@ -484,7 +484,7 @@ export default function AgencyRegistrationPage() {
   const ITEMS_PER_PAGE = 50;
 
   const isEditor = user?.role === 'editor';
-  const isReadOnly = isViewing || user?.role === 'supervisor' || user?.role === 'viewer';
+  const isReadOnlyForForm = isViewing || user?.role === 'supervisor' || user?.role === 'viewer';
   const canEdit = isEditor;
 
   useEffect(() => {
@@ -514,7 +514,7 @@ export default function AgencyRegistrationPage() {
       owner: createDefaultOwner(),
       partners: [],
       rigs: [],
-      status: 'Pending Verification',
+      status: 'Active', // Default to Active, will be changed on save
       history: []
     },
   });
@@ -533,7 +533,7 @@ export default function AgencyRegistrationPage() {
                 partners: [],
                 rigs: [createDefaultRig()],
                 history: [],
-                status: 'Pending Verification'
+                status: 'Active' // Default to Active
             });
             // Stop the spinner once the new form is ready
             setIsNavigating(false);
@@ -668,8 +668,10 @@ export default function AgencyRegistrationPage() {
   }
   
   const handleView = (id: string) => {
-    setIsViewing(true);
-    setSelectedApplicationId(id);
+    const appToView = applications.find(a => a.id === id);
+    if(appToView) {
+      openDialog('view', appToView);
+    }
   }
 
   const handleCancelForm = () => {
@@ -705,7 +707,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -888,29 +890,29 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-primary">1. Application Details</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      <div className="grid md:grid-cols-3 gap-4">
-                                        <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                     <Separator />
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
                                         <div className="grid md:grid-cols-2 gap-4 p-2 border rounded-md">
-                                            <FormField name="owner.name" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Name & Address of Owner</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.name" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Name & Address of Owner</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <h4 className="font-medium">Partner Details</h4>
                                         {partnerFields.map((field, index) => (
                                             <div key={field.id} className="grid md:grid-cols-4 gap-4 p-2 border rounded-md items-end">
-                                                <FormField name={`partners.${index}.name`} render={({ field }) => <FormItem><FormLabel>Partner Name</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                                <FormField name={`partners.${index}.address`} render={({ field }) => <FormItem><FormLabel>Partner Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                                <FormField name={`partners.${index}.mobile`} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                                {!isReadOnly && <Button type="button" variant="destructive" size="icon" onClick={() => removePartner(index)}><Trash2 className="h-4 w-4" /></Button>}
+                                                <FormField name={`partners.${index}.name`} render={({ field }) => <FormItem><FormLabel>Partner Name</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                                <FormField name={`partners.${index}.address`} render={({ field }) => <FormItem><FormLabel>Partner Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                                <FormField name={`partners.${index}.mobile`} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                                {!isReadOnlyForForm && <Button type="button" variant="destructive" size="icon" onClick={() => removePartner(index)}><Trash2 className="h-4 w-4" /></Button>}
                                             </div>
                                         ))}
-                                        {partnerFields.length < 2 && !isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => appendPartner(createDefaultOwner())}><UserPlus className="mr-2 h-4 w-4" /> Add Partner</Button>}
+                                        {partnerFields.length < 2 && !isReadOnlyForForm && <Button type="button" variant="outline" size="sm" onClick={() => appendPartner(createDefaultOwner())}><UserPlus className="mr-2 h-4 w-4" /> Add Partner</Button>}
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
@@ -921,15 +923,15 @@ export default function AgencyRegistrationPage() {
                           <AccordionItem value="item-1">
                             <AccordionTrigger className="text-xl font-semibold text-primary">2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
-                               <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                <Separator className="md:col-span-3 my-2" />
-                               <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyAdditionalChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyAdditionalChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
@@ -945,7 +947,7 @@ export default function AgencyRegistrationPage() {
                                     key={field.id}
                                     field={field as RigRegistration}
                                     index={index}
-                                    isReadOnly={isReadOnly}
+                                    isReadOnly={isReadOnlyForForm}
                                     onRemove={isEditor ? removeRig : undefined}
                                     openDialog={openDialog}
                                     onEditRenewal={handleEditRenewal}
@@ -954,14 +956,14 @@ export default function AgencyRegistrationPage() {
                                   />
                                 ))}
                               </Accordion>
-                               {!isReadOnly && isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
-                               {!isReadOnly && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
+                               {!isReadOnlyForForm && isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                               {!isReadOnlyForForm && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
 
                     </CardContent>
-                    {!isReadOnly && (
+                    {!isReadOnlyForForm && (
                       <CardFooter className="flex justify-end gap-2">
                           <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
                           <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : "Save Registration"}</Button>
@@ -990,7 +992,7 @@ export default function AgencyRegistrationPage() {
                             Provide a reason and date for cancelling this rig. This action can be reversed later.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    {dialogState.data && initialData && (
+                    {dialogState.type === 'cancel' && dialogState.data && (
                       <CancellationDialogContent
                           initialData={rigFields[dialogState.data.rigIndex]}
                           onConfirm={handleConfirmCancellation}
@@ -1130,6 +1132,12 @@ export default function AgencyRegistrationPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ViewDialog
+        isOpen={dialogState.type === 'view'}
+        onClose={closeDialog}
+        application={dialogState.type === 'view' ? dialogState.data : null}
+      />
     </div>
   );
 }
@@ -1188,6 +1196,131 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
                 <AlertDialogAction onClick={() => onConfirm(cancellationData)}>Confirm Cancellation</AlertDialogAction>
             </AlertDialogFooter>
         </>
+    );
+}
+
+const ViewDetailRow = ({ label, value }: { label: string; value: any }) => {
+  if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+    return null;
+  }
+
+  let displayValue = String(value);
+  const isDate = label.toLowerCase().includes('date') || label.toLowerCase().includes('validity');
+  
+  if (isDate) {
+    const date = toDateOrNull(value);
+    displayValue = date ? format(date, 'dd/MM/yyyy') : 'N/A';
+    if(displayValue === 'N/A' && String(value)) displayValue = String(value); // fallback for non-standard date strings
+  } else if (typeof value === 'number') {
+    displayValue = value.toLocaleString('en-IN');
+  } else if (typeof value === 'boolean') {
+    displayValue = value ? 'Yes' : 'No';
+  } else if (typeof value === 'object' && value !== null) {
+      displayValue = Object.entries(value)
+        .map(([key, val]) => (val ? `${key}: ${val}` : null))
+        .filter(Boolean)
+        .join(', ');
+      if (!displayValue) return null;
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-4 py-1.5 border-b last:border-b-0">
+      <dt className="text-sm font-medium text-muted-foreground col-span-1">{label}</dt>
+      <dd className="text-sm col-span-2 break-words">{displayValue}</dd>
+    </div>
+  );
+};
+
+
+function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose: () => void; application: AgencyApplication | null }) {
+    if (!application) return null;
+
+    const detailSections = [
+      { title: "Application Details", data: { "File No": application.fileNo, "Agency Name & Address": application.agencyName, Status: application.status } },
+      { title: "Owner Details", data: application.owner },
+      ...application.partners?.map((p, i) => ({ title: `Partner #${i + 1}`, data: p })) || [],
+      { title: "Agency Registration", data: { "Agency Reg. No": application.agencyRegistrationNo, "Reg. Date": application.agencyRegistrationDate, "Reg. Fee": application.agencyRegistrationFee, "Payment Date": application.agencyPaymentDate, "Challan No": application.agencyChallanNo, "Additional Reg. Fee": application.agencyAdditionalRegFee, "Additional Payment Date": application.agencyAdditionalPaymentDate, "Additional Challan No.": application.agencyAdditionalChallanNo, } },
+    ];
+    
+    const camelCaseToTitle = (s: string) => s.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+    
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>View Registration: {application.agencyName}</DialogTitle>
+                    <DialogDescription>A summary of the registration details.</DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="max-h-[70vh] pr-4">
+                    <div className="space-y-6 py-4">
+                        {detailSections.map((section, idx) => (
+                            <div key={idx}>
+                                <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>
+                                <dl className="space-y-1">
+                                    {Object.entries(section.data).map(([key, value]) => <ViewDetailRow key={key} label={camelCaseToTitle(key)} value={value} />)}
+                                </dl>
+                            </div>
+                        ))}
+                        
+                        {application.rigs.map((rig, rigIdx) => {
+                            const lastEffDate = rig.renewals && rig.renewals.length > 0 ? [...rig.renewals].sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate : rig.registrationDate;
+                            const validityDate = lastEffDate ? addYears(new Date(lastEffDate), 1) : null;
+
+                             const rigDetails = [
+                                { title: `Rig #${rigIdx + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status, } },
+                                { title: "Cancellation Details", data: { "Reason": rig.cancellationReason, "Date": rig.cancellationDate }, condition: rig.status === 'Cancelled' },
+                                { title: "Rig Vehicle", data: rig.rigVehicle },
+                                { title: "Compressor Vehicle", data: rig.compressorVehicle },
+                                { title: "Supporting Vehicle", data: rig.supportingVehicle },
+                                { title: "Compressor", data: rig.compressorDetails },
+                                { title: "Generator", data: rig.generatorDetails },
+                            ];
+                            
+                            return (
+                                <div key={rig.id} className="mt-4 pt-4 border-t">
+                                    {rigDetails.filter(s => s.condition !== false).map((section, sIdx) => {
+                                        if (!section.data || Object.values(section.data).every(v => v === null || v === undefined || v === '')) return null;
+                                        return (
+                                        <div key={sIdx} className="mb-4">
+                                            <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>
+                                            <dl className="space-y-1">
+                                                {Object.entries(section.data).map(([key, value]) => <ViewDetailRow key={key} label={camelCaseToTitle(key)} value={value} />)}
+                                            </dl>
+                                        </div>
+                                    )})}
+                                    
+                                     {rig.renewals && rig.renewals.length > 0 && (
+                                        <div>
+                                            <h4 className="text-base font-semibold text-primary mb-2">Renewal History</h4>
+                                            <Table>
+                                                <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Date</TableHead><TableHead>Validity</TableHead><TableHead>Fee</TableHead></TableRow></TableHeader>
+                                                <TableBody>
+                                                    {rig.renewals.map((r, rIdx) => {
+                                                        const validity = r.renewalDate ? addYears(new Date(r.renewalDate), 1) : null;
+                                                        return (
+                                                        <TableRow key={r.id}>
+                                                            <TableCell>{rIdx + 1}</TableCell>
+                                                            <TableCell>{r.renewalDate ? formatDate(new Date(r.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                                            <TableCell>{validity ? formatDate(validity, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                                            <TableCell>{r.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
+                                                        </TableRow>
+                                                    )})}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </ScrollArea>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button>Close</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
     
