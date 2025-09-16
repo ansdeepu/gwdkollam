@@ -197,7 +197,7 @@ export default function ProgressReportPage() {
   const { reportEntries: fileEntries, isReportLoading: entriesLoading } = useAllFileEntriesForReports();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [isFiltering, setIsFiltering] = useState(isFiltering);
+  const [isFiltering, setIsFiltering] = useState(false);
   const { toast } = useToast();
 
   const [reportData, setReportData] = useState<{
