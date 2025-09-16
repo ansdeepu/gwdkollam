@@ -79,9 +79,8 @@ const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
 ];
 
 const REFUNDED_STATUSES: SiteWorkStatus[] = ['To be Refunded'];
-const ACTIVE_FIELD_WORK_STATUSES: SiteWorkStatus[] = [
-    "Awaiting Dept. Rig", "Work Order Issued", "Work Initiated", "Work in Progress", "Tendered", "Selection Notice Issued"
-];
+const ACTIVE_FIELD_WORK_STATUSES: SiteWorkStatus[] = ["Awaiting Dept. Rig", "Work Order Issued", "Work Initiated", "Work in Progress"];
+
 
 
 interface DetailDialogColumn {
@@ -815,7 +814,7 @@ export default function ProgressReportPage() {
                 </Card>
                 <div className="space-y-8">
                     <FinancialSummaryTable title="Financial Summary - Private Applications" summaryData={reportData.privateFinancialSummaryData} />
-                    <FinancialSummaryTable title="Financial Summary - Government & Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
+                    <FinancialSummaryTable title="Financial Summary - Government &amp; Other Applications" summaryData={reportData.governmentFinancialSummaryData} />
                     
                     <Card className="shadow-lg">
                     <CardHeader>
@@ -905,4 +904,6 @@ export default function ProgressReportPage() {
 
 
     
+    
+
     
