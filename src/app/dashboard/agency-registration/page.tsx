@@ -379,7 +379,7 @@ const RigAccordionItem = ({
                                 <TableRow key={renewal.id}>
                                 <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
                                 <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell>{validTillDate ? format(validTillDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell>{validTillDate ? format(new Date(validTillDate.getTime() - 24 * 60 * 60 * 1000), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
                                 <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
@@ -804,6 +804,23 @@ export default function AgencyRegistrationPage() {
                                 <FormField name="owner.mobile" control={form.control} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="owner.secondaryMobile" control={form.control} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             </div>
+                             <Separator />
+                            <div className="flex justify-between items-center">
+                                <p className="font-semibold text-lg text-primary/90">Partner Details</p>
+                                {!isReadOnly && (<Button type="button" size="sm" variant="outline" onClick={() => appendPartner(createDefaultOwner())}><UserPlus className="mr-2 h-4 w-4" />Add Partner</Button>)}
+                            </div>
+                            <div className="space-y-4">
+                                {partnerFields.map((field, index) => (
+                                    <div key={field.id} className="p-4 border rounded-lg bg-secondary/20 relative">
+                                        {!isReadOnly && (<Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => removePartner(index)}><Trash2 className="h-4 w-4" /></Button>)}
+                                        <div className="grid md:grid-cols-3 gap-6">
+                                            <FormField name={`partners.${index}.name`} control={form.control} render={({ field }) => <FormItem><FormLabel>Name & Address of Partner #{index + 1}</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name={`partners.${index}.mobile`} control={form.control} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name={`partners.${index}.secondaryMobile`} control={form.control} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                           </div>
                       </AccordionContent>
                   </AccordionItem>
@@ -811,9 +828,11 @@ export default function AgencyRegistrationPage() {
                       <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">2. Agency Registration</AccordionTrigger>
                       <AccordionContent className="p-6 pt-0">
                           <div className="border-t pt-6 space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FormField name="agencyRegistrationNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyRegistrationDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                              </div>
+                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField name="agencyRegistrationFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -849,7 +868,7 @@ export default function AgencyRegistrationPage() {
                                 />
                                ))}
                             </Accordion>
-                            {!isReadOnly && <Button type="button" variant="outline" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                            {!isReadOnly && activeRigCount < 3 && <Button type="button" variant="outline" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                           </div>
                       </AccordionContent>
                   </AccordionItem>
