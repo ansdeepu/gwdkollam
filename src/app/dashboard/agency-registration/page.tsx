@@ -37,6 +37,11 @@ import PaginationControls from "@/components/shared/PaginationControls";
 
 export const dynamic = 'force-dynamic';
 
+type DialogState = {
+  type: 'renew' | 'cancel' | 'deleteRenewal' | 'deleteApplication' | null;
+  data: any;
+};
+
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
@@ -135,22 +140,16 @@ const RigAccordionItem = ({
   isReadOnly,
   onRemove,
   onActivate,
-  onDeleteRenewal,
-  onEditRenewal,
+  onAction,
   form,
-  onRenew,
-  onCancel,
 }: {
   field: RigRegistration;
   index: number;
   isReadOnly: boolean;
   onRemove?: (index: number) => void;
   onActivate: (index: number) => void;
-  onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
-  onEditRenewal: (rigIndex: number, renewalId: string) => void;
+  onAction: (type: 'renew' | 'cancel' | 'deleteRenewal' | 'editRenewal', rigIndex: number, renewalId?: string) => void;
   form: UseFormReturn<any>;
-  onRenew: (index: number) => void;
-  onCancel: (index: number) => void;
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = toDateOrNull(field.registrationDate);
@@ -215,10 +214,10 @@ const RigAccordionItem = ({
                 </DropdownMenu>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onAction('renew', index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onAction('cancel', index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {!isReadOnly && field.status === 'Cancelled' && (
                 <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
@@ -337,7 +336,7 @@ const RigAccordionItem = ({
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      {!isReadOnly && (
                         <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onCancel(index); }}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onAction('cancel', index); }}>
                                 <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
@@ -386,8 +385,8 @@ const RigAccordionItem = ({
                                 {!isReadOnly && (
                                     <TableCell className="text-center">
                                       <div className="flex items-center justify-center space-x-0">
-                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAction('editRenewal', index, renewal.id); }}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAction('deleteRenewal', index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
                                       </div>
                                     </TableCell>
                                 )}
@@ -417,14 +416,11 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [isViewing, setIsViewing] = useState(false);
   
-  const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
-  const [currentRenewal, setCurrentRenewal] = useState<Partial<RigRenewalFormData> & { rigIndex: number; isEditing: boolean }>({ rigIndex: -1, isEditing: false });
+  const [dialogState, setDialogState] = useState<DialogState>({ type: null, data: null });
 
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: string }>({ rigIndex: -1, reason: '', date: '' });
-  
-  const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
-  const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
+  // Separate states for input values in dialogs to avoid premature form updates
+  const [renewalInput, setRenewalInput] = useState<Partial<RigRenewalFormData>>({});
+  const [cancellationInput, setCancellationInput] = useState<{ reason: string; date: string }>({ reason: '', date: '' });
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -633,55 +629,51 @@ export default function AgencyRegistrationPage() {
   
   const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
 
-    const handleRenewClick = (rigIndex: number) => {
-        setCurrentRenewal({ rigIndex, isEditing: false, renewalDate: toInputDate(new Date()) });
-        setIsRenewalDialogOpen(true);
-    };
-
-    const handleCancelClick = (rigIndex: number) => {
-        setCancellationData({ rigIndex, reason: '', date: format(new Date(), 'yyyy-MM-dd') });
-        setIsCancelDialogOpen(true);
-    };
-  
-    const handleEditRenewal = (rigIndex: number, renewalId: string) => {
-        const rig = rigFields[rigIndex];
-        const renewalToEdit = rig.renewals?.find(r => r.id === renewalId);
-        if(renewalToEdit) {
-            const renewalDataForForm = {
+    const handleAction = (type: 'renew' | 'cancel' | 'deleteRenewal' | 'editRenewal', rigIndex: number, renewalId?: string) => {
+      switch (type) {
+        case 'renew':
+          setRenewalInput({ renewalDate: toInputDate(new Date()) });
+          setDialogState({ type: 'renew', data: { rigIndex, isEditing: false } });
+          break;
+        case 'cancel':
+          setCancellationInput({ reason: '', date: format(new Date(), 'yyyy-MM-dd') });
+          setDialogState({ type: 'cancel', data: { rigIndex } });
+          break;
+        case 'editRenewal':
+          const rig = rigFields[rigIndex];
+          const renewalToEdit = rig.renewals?.find(r => r.id === renewalId);
+          if (renewalToEdit) {
+            setRenewalInput({
               ...renewalToEdit,
               renewalDate: toInputDate(renewalToEdit.renewalDate),
               paymentDate: toInputDate(renewalToEdit.paymentDate)
-            }
-            setCurrentRenewal({ ...renewalDataForForm, rigIndex, isEditing: true });
-            setIsRenewalDialogOpen(true);
-        }
-    };
-    
-    const handleDeleteRenewal = (rigIndex: number, renewalId: string) => {
-        setDeletingRenewal({ rigIndex, renewalId });
-    };
-    
-    const handleDeleteApplication = (id: string) => {
-      setDeletingApplicationId(id);
+            });
+            setDialogState({ type: 'renew', data: { rigIndex, isEditing: true, renewalId } });
+          }
+          break;
+        case 'deleteRenewal':
+          setDialogState({ type: 'deleteRenewal', data: { rigIndex, renewalId } });
+          break;
+      }
     };
 
     const confirmDeleteApplication = async () => {
-      if (!deletingApplicationId) return;
+      if (dialogState.type !== 'deleteApplication' || !dialogState.data.id) return;
       setIsSubmitting(true);
       try {
-        await deleteApplication(deletingApplicationId);
+        await deleteApplication(dialogState.data.id);
         toast({ title: "Registration Removed", description: `The registration has been permanently deleted.` });
       } catch (error: any) {
         toast({ title: "Error", description: error.message, variant: 'destructive' });
       } finally {
         setIsSubmitting(false);
-        setDeletingApplicationId(null);
+        setDialogState({ type: null, data: null });
       }
     };
 
     const handleConfirmRenewal = () => {
-        if (currentRenewal.rigIndex === -1) return;
-        const { rigIndex, isEditing, ...renewalData } = currentRenewal;
+        if (dialogState.type !== 'renew' || !dialogState.data) return;
+        const { rigIndex, isEditing, renewalId } = dialogState.data;
         const currentRig = form.getValues(`rigs.${rigIndex}`);
         if (!currentRig) return;
         
@@ -689,15 +681,15 @@ export default function AgencyRegistrationPage() {
 
         if(isEditing) {
              updatedRenewals = (currentRig.renewals || []).map(r =>
-                r.id === renewalData.id ? { ...r, ...renewalData } : r
+                r.id === renewalId ? { ...r, ...renewalInput } : r
             );
         } else {
             const newRenewal: RigRenewalFormData = {
                 id: uuidv4(),
-                renewalDate: renewalData.renewalDate || '',
-                renewalFee: renewalData.renewalFee,
-                paymentDate: renewalData.paymentDate,
-                challanNo: renewalData.challanNo,
+                renewalDate: renewalInput.renewalDate || '',
+                renewalFee: renewalInput.renewalFee,
+                paymentDate: renewalInput.paymentDate,
+                challanNo: renewalInput.challanNo,
             };
             updatedRenewals = [...(currentRig.renewals || []), newRenewal];
         }
@@ -706,20 +698,19 @@ export default function AgencyRegistrationPage() {
         form.trigger(`rigs.${rigIndex}.renewals`);
         toast({ title: isEditing ? "Renewal Updated" : "Renewal Added", description: `The renewal details have been ${isEditing ? 'updated' : 'added'} in the form.` });
         
-        setIsRenewalDialogOpen(false);
-        setCurrentRenewal({ rigIndex: -1, isEditing: false });
+        setDialogState({ type: null, data: null });
     };
   
     const confirmDeleteRenewal = () => {
-        if (!deletingRenewal) return;
-        const { rigIndex, renewalId } = deletingRenewal;
+        if (dialogState.type !== 'deleteRenewal' || !dialogState.data) return;
+        const { rigIndex, renewalId } = dialogState.data;
         
         const rig = form.getValues(`rigs.${rigIndex}`);
         const updatedRenewals = rig.renewals?.filter(r => r.id !== renewalId);
         updateRig(rigIndex, { ...rig, renewals: updatedRenewals });
         
         toast({ title: "Renewal Removed", description: "The renewal record has been removed." });
-        setDeletingRenewal(null);
+        setDialogState({ type: null, data: null });
     };
   
   const handleActivateRig = (rigIndex: number) => {
@@ -735,8 +726,10 @@ export default function AgencyRegistrationPage() {
   };
 
   const handleConfirmCancellation = () => {
-    const { rigIndex, reason, date } = cancellationData;
-    if (rigIndex === -1) return;
+    if (dialogState.type !== 'cancel' || !dialogState.data) return;
+    const { rigIndex } = dialogState.data;
+    const { reason, date } = cancellationInput;
+    
     const currentRig = form.getValues(`rigs.${rigIndex}`);
     if (currentRig) {
         updateRig(rigIndex, {
@@ -746,7 +739,7 @@ export default function AgencyRegistrationPage() {
             cancellationReason: reason,
         });
     }
-    setIsCancelDialogOpen(false);
+    setDialogState({ type: null, data: null });
   };
 
   if (authLoading || applicationsLoading) {
@@ -849,11 +842,8 @@ export default function AgencyRegistrationPage() {
                                     isReadOnly={isReadOnly}
                                     onRemove={!isReadOnly && rigFields.length > 1 ? removeRig : undefined}
                                     onActivate={handleActivateRig}
-                                    onDeleteRenewal={handleDeleteRenewal}
-                                    onEditRenewal={handleEditRenewal}
+                                    onAction={handleAction}
                                     form={form}
-                                    onRenew={handleRenewClick}
-                                    onCancel={handleCancelClick}
                                 />
                                ))}
                             </Accordion>
@@ -897,10 +887,10 @@ export default function AgencyRegistrationPage() {
                     <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
                 </TabsList>
                 <TabsContent value="completed">
-                    <RegistrationTable applications={completedApplications} onEdit={handleEdit} onDelete={handleDeleteApplication} onView={handleView} searchTerm={searchTerm} canEdit={canEdit} />
+                    <RegistrationTable applications={completedApplications} onEdit={handleEdit} onDelete={(id) => setDialogState({ type: 'deleteApplication', data: { id } })} onView={handleView} searchTerm={searchTerm} canEdit={canEdit} />
                 </TabsContent>
                 <TabsContent value="pending">
-                     <RegistrationTable applications={pendingApplications} onEdit={handleEdit} onDelete={handleDeleteApplication} onView={handleView} searchTerm={searchTerm} canEdit={canEdit} />
+                     <RegistrationTable applications={pendingApplications} onEdit={handleEdit} onDelete={(id) => setDialogState({ type: 'deleteApplication', data: { id } })} onView={handleView} searchTerm={searchTerm} canEdit={canEdit} />
                 </TabsContent>
              </Tabs>
           </CardContent>
@@ -911,58 +901,58 @@ export default function AgencyRegistrationPage() {
           )}
       </Card>
       
-      <AlertDialog open={!!deletingApplicationId} onOpenChange={() => setDeletingApplicationId(null)}>
+      <AlertDialog open={dialogState.type === 'deleteApplication'} onOpenChange={() => setDialogState({ type: null, data: null })}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete the registration and all its data. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDeleteApplication} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">{isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={isRenewalDialogOpen} onOpenChange={setIsRenewalDialogOpen}>
+      <Dialog open={dialogState.type === 'renew'} onOpenChange={() => setDialogState({ type: null, data: null })}>
           <DialogContent>
               <DialogHeader>
-                  <DialogTitle>{currentRenewal.isEditing ? 'Edit' : 'Renew'} Rig Registration</DialogTitle>
+                  <DialogTitle>{dialogState.data?.isEditing ? 'Edit' : 'Renew'} Rig Registration</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">
                   <div className="space-y-2">
                       <Label>Renewal Date</Label>
-                      <Input type="date" value={toInputDate(currentRenewal.renewalDate)} onChange={e => setCurrentRenewal(prev => ({...prev, renewalDate: e.target.value}))} />
+                      <Input type="date" value={toInputDate(renewalInput.renewalDate)} onChange={e => setRenewalInput(prev => ({...prev, renewalDate: e.target.value}))} />
                   </div>
                    <div className="space-y-2">
                       <Label>Renewal Fee (₹)</Label>
-                      <Input type="number" value={currentRenewal.renewalFee ?? ''} onChange={e => setCurrentRenewal(prev => ({...prev, renewalFee: e.target.value === '' ? undefined : +e.target.value}))}/>
+                      <Input type="number" value={renewalInput.renewalFee ?? ''} onChange={e => setRenewalInput(prev => ({...prev, renewalFee: e.target.value === '' ? undefined : +e.target.value}))}/>
                   </div>
                   <div className="space-y-2">
                       <Label>Payment Date</Label>
-                      <Input type="date" value={toInputDate(currentRenewal.paymentDate)} onChange={e => setCurrentRenewal(prev => ({...prev, paymentDate: e.target.value}))} />
+                      <Input type="date" value={toInputDate(renewalInput.paymentDate)} onChange={e => setRenewalInput(prev => ({...prev, paymentDate: e.target.value}))} />
                   </div>
                   <div className="space-y-2">
                       <Label>Challan No.</Label>
-                      <Input value={currentRenewal.challanNo ?? ''} onChange={e => setCurrentRenewal(prev => ({...prev, challanNo: e.target.value}))} />
+                      <Input value={renewalInput.challanNo ?? ''} onChange={e => setRenewalInput(prev => ({...prev, challanNo: e.target.value}))} />
                   </div>
               </div>
               <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsRenewalDialogOpen(false)}>Cancel</Button>
+                  <Button type="button" variant="outline" onClick={() => setDialogState({ type: null, data: null })}>Cancel</Button>
                   <Button type="button" onClick={handleConfirmRenewal}>Save</Button>
               </DialogFooter>
           </DialogContent>
       </Dialog>
       
-      <AlertDialog open={!!deletingRenewal} onOpenChange={() => setDeletingRenewal(null)}>
+      <AlertDialog open={dialogState.type === 'deleteRenewal'} onOpenChange={() => setDialogState({ type: null, data: null })}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Delete Renewal?</AlertDialogTitle><AlertDialogDescription>Are you sure you want to delete this renewal record? This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDeleteRenewal} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+      <Dialog open={dialogState.type === 'cancel'} onOpenChange={() => setDialogState({ type: null, data: null })}>
           <DialogContent>
               <DialogHeader><DialogTitle>Cancel Rig Registration</DialogTitle></DialogHeader>
               <div className="grid gap-4 py-4">
-                  <div className="space-y-2"><Label>Reason for Cancellation</Label><Input value={cancellationData.reason} onChange={(e) => setCancellationData(prev => ({...prev, reason: e.target.value}))}/></div>
-                  <div className="space-y-2"><Label>Date of Cancellation</Label><Input type="date" value={cancellationData.date} onChange={(e) => setCancellationData(prev => ({...prev, date: e.target.value}))} /></div>
+                  <div className="space-y-2"><Label>Reason for Cancellation</Label><Input value={cancellationInput.reason} onChange={(e) => setCancellationInput(prev => ({...prev, reason: e.target.value}))}/></div>
+                  <div className="space-y-2"><Label>Date of Cancellation</Label><Input type="date" value={cancellationInput.date} onChange={(e) => setCancellationInput(prev => ({...prev, date: e.target.value}))} /></div>
               </div>
-              <DialogFooter><Button type="button" variant="outline" onClick={() => setIsCancelDialogOpen(false)}>Cancel</Button><Button type="button" onClick={handleConfirmCancellation}>Confirm Cancellation</Button></DialogFooter>
+              <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogState({ type: null, data: null })}>Cancel</Button><Button type="button" onClick={handleConfirmCancellation}>Confirm Cancellation</Button></DialogFooter>
           </DialogContent>
       </Dialog>
     </div>
