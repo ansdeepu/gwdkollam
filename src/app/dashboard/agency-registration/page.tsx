@@ -138,8 +138,8 @@ const RigAccordionItem = ({
   onDeleteRenewal,
   onEditRenewal,
   form,
-  onRenewClick,
-  onCancelClick
+  onRenew,
+  onCancel,
 }: {
   field: RigRegistration;
   index: number;
@@ -149,8 +149,8 @@ const RigAccordionItem = ({
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
   form: UseFormReturn<any>;
-  onRenewClick: (rigIndex: number) => void;
-  onCancelClick: (rigIndex: number) => void;
+  onRenew: (index: number) => void;
+  onCancel: (index: number) => void;
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = toDateOrNull(field.registrationDate);
@@ -215,10 +215,10 @@ const RigAccordionItem = ({
                 </DropdownMenu>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={(e) => {e.stopPropagation(); onRenewClick(index);}}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => {e.stopPropagation(); onCancelClick(index);}}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {!isReadOnly && field.status === 'Cancelled' && (
                 <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
@@ -337,7 +337,7 @@ const RigAccordionItem = ({
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      {!isReadOnly && (
                         <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => {e.stopPropagation(); onCancelClick(index);}}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.stopPropagation(); onCancel(index); }}>
                                 <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
@@ -417,14 +417,13 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [isViewing, setIsViewing] = useState(false);
   
-  const [renewalData, setRenewalData] = useState<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>(null);
-  const [editingRenewal, setEditingRenewal] = useState<{ rigIndex: number; renewal: RigRenewalFormData } | null>(null);
-  const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
+  const [currentRenewal, setCurrentRenewal] = useState<Partial<RigRenewalFormData> & { rigIndex: number; isEditing: boolean }>({ rigIndex: -1, isEditing: false });
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancellationData, setCancellationData] = useState<{ rigIndex: number; reason: string; date: string }>({ rigIndex: -1, reason: '', date: '' });
   
+  const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -635,8 +634,7 @@ export default function AgencyRegistrationPage() {
   const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
 
     const handleRenewClick = (rigIndex: number) => {
-        setEditingRenewal(null);
-        setRenewalData({ rigIndex, data: { renewalDate: toInputDate(new Date()) } });
+        setCurrentRenewal({ rigIndex, isEditing: false, renewalDate: toInputDate(new Date()) });
         setIsRenewalDialogOpen(true);
     };
 
@@ -649,13 +647,12 @@ export default function AgencyRegistrationPage() {
         const rig = rigFields[rigIndex];
         const renewalToEdit = rig.renewals?.find(r => r.id === renewalId);
         if(renewalToEdit) {
-            setRenewalData(null);
             const renewalDataForForm = {
               ...renewalToEdit,
               renewalDate: toInputDate(renewalToEdit.renewalDate),
               paymentDate: toInputDate(renewalToEdit.paymentDate)
             }
-            setEditingRenewal({ rigIndex, renewal: renewalDataForForm as RigRenewalFormData });
+            setCurrentRenewal({ ...renewalDataForForm, rigIndex, isEditing: true });
             setIsRenewalDialogOpen(true);
         }
     };
@@ -683,42 +680,34 @@ export default function AgencyRegistrationPage() {
     };
 
     const handleConfirmRenewal = () => {
-        if (editingRenewal) {
-            const { rigIndex, renewal } = editingRenewal;
-            const currentRig = form.getValues(`rigs.${rigIndex}`);
-            if (!currentRig || !currentRig.renewals) return;
+        if (currentRenewal.rigIndex === -1) return;
+        const { rigIndex, isEditing, ...renewalData } = currentRenewal;
+        const currentRig = form.getValues(`rigs.${rigIndex}`);
+        if (!currentRig) return;
+        
+        let updatedRenewals: RigRenewalFormData[];
 
-            const updatedRenewals = currentRig.renewals.map(r =>
-                r.id === renewal.id ? { ...r, ...renewal } : r
+        if(isEditing) {
+             updatedRenewals = (currentRig.renewals || []).map(r =>
+                r.id === renewalData.id ? { ...r, ...renewalData } : r
             );
-            
-            updateRig(rigIndex, { ...currentRig, renewals: updatedRenewals });
-            form.trigger(`rigs.${rigIndex}.renewals`);
-            toast({ title: "Renewal Updated", description: "The renewal details have been updated in the form." });
-
-        } else if (renewalData) {
-            const { rigIndex, data } = renewalData;
-            const currentRig = form.getValues(`rigs.${rigIndex}`);
-            
-            if (!currentRig) return;
-            
+        } else {
             const newRenewal: RigRenewalFormData = {
                 id: uuidv4(),
-                renewalDate: data.renewalDate || '',
-                renewalFee: data.renewalFee,
-                paymentDate: data.paymentDate,
-                challanNo: data.challanNo,
+                renewalDate: renewalData.renewalDate || '',
+                renewalFee: renewalData.renewalFee,
+                paymentDate: renewalData.paymentDate,
+                challanNo: renewalData.challanNo,
             };
-            
-            const existingRenewals = currentRig.renewals || [];
-            updateRig(rigIndex, { ...currentRig, renewals: [...existingRenewals, newRenewal] });
-            form.trigger(`rigs.${rigIndex}.renewals`);
-            toast({ title: "Renewal Added", description: "The new renewal has been added to the form." });
+            updatedRenewals = [...(currentRig.renewals || []), newRenewal];
         }
 
+        updateRig(rigIndex, { ...currentRig, renewals: updatedRenewals });
+        form.trigger(`rigs.${rigIndex}.renewals`);
+        toast({ title: isEditing ? "Renewal Updated" : "Renewal Added", description: `The renewal details have been ${isEditing ? 'updated' : 'added'} in the form.` });
+        
         setIsRenewalDialogOpen(false);
-        setEditingRenewal(null);
-        setRenewalData(null);
+        setCurrentRenewal({ rigIndex: -1, isEditing: false });
     };
   
     const confirmDeleteRenewal = () => {
@@ -863,8 +852,8 @@ export default function AgencyRegistrationPage() {
                                     onDeleteRenewal={handleDeleteRenewal}
                                     onEditRenewal={handleEditRenewal}
                                     form={form}
-                                    onRenewClick={handleRenewClick}
-                                    onCancelClick={handleCancelClick}
+                                    onRenew={handleRenewClick}
+                                    onCancel={handleCancelClick}
                                 />
                                ))}
                             </Accordion>
@@ -932,40 +921,24 @@ export default function AgencyRegistrationPage() {
       <Dialog open={isRenewalDialogOpen} onOpenChange={setIsRenewalDialogOpen}>
           <DialogContent>
               <DialogHeader>
-                  <DialogTitle>{editingRenewal ? 'Edit' : 'Renew'} Rig Registration</DialogTitle>
+                  <DialogTitle>{currentRenewal.isEditing ? 'Edit' : 'Renew'} Rig Registration</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">
                   <div className="space-y-2">
                       <Label>Renewal Date</Label>
-                      <Input type="date" value={toInputDate(editingRenewal?.renewal.renewalDate ?? renewalData?.data.renewalDate)} onChange={e => {
-                          const value = e.target.value;
-                          if (editingRenewal) setEditingRenewal(prev => ({...prev!, renewal: {...prev!.renewal, renewalDate: value }}));
-                          else setRenewalData(prev => ({...prev!, data: {...prev!.data, renewalDate: value }}));
-                      }} />
+                      <Input type="date" value={toInputDate(currentRenewal.renewalDate)} onChange={e => setCurrentRenewal(prev => ({...prev, renewalDate: e.target.value}))} />
                   </div>
                    <div className="space-y-2">
                       <Label>Renewal Fee (₹)</Label>
-                      <Input type="number" value={editingRenewal?.renewal.renewalFee ?? renewalData?.data.renewalFee ?? ''} onChange={e => {
-                          const value = e.target.value === '' ? undefined : +e.target.value;
-                          if (editingRenewal) setEditingRenewal(prev => ({...prev!, renewal: {...prev!.renewal, renewalFee: value }}));
-                          else setRenewalData(prev => ({...prev!, data: {...prev!.data, renewalFee: value }}));
-                      }} />
+                      <Input type="number" value={currentRenewal.renewalFee ?? ''} onChange={e => setCurrentRenewal(prev => ({...prev, renewalFee: e.target.value === '' ? undefined : +e.target.value}))}/>
                   </div>
                   <div className="space-y-2">
                       <Label>Payment Date</Label>
-                      <Input type="date" value={toInputDate(editingRenewal?.renewal.paymentDate ?? renewalData?.data.paymentDate)} onChange={e => {
-                           const value = e.target.value;
-                           if (editingRenewal) setEditingRenewal(prev => ({...prev!, renewal: {...prev!.renewal, paymentDate: value }}));
-                           else setRenewalData(prev => ({...prev!, data: {...prev!.data, paymentDate: value }}));
-                      }} />
+                      <Input type="date" value={toInputDate(currentRenewal.paymentDate)} onChange={e => setCurrentRenewal(prev => ({...prev, paymentDate: e.target.value}))} />
                   </div>
                   <div className="space-y-2">
                       <Label>Challan No.</Label>
-                      <Input value={editingRenewal?.renewal.challanNo ?? renewalData?.data.challanNo ?? ''} onChange={e => {
-                           const value = e.target.value;
-                           if (editingRenewal) setEditingRenewal(prev => ({...prev!, renewal: {...prev!.renewal, challanNo: value }}));
-                           else setRenewalData(prev => ({...prev!, data: {...prev!.data, challanNo: value }}));
-                      }} />
+                      <Input value={currentRenewal.challanNo ?? ''} onChange={e => setCurrentRenewal(prev => ({...prev, challanNo: e.target.value}))} />
                   </div>
               </div>
               <DialogFooter>
