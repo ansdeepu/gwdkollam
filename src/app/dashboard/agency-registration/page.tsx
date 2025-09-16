@@ -273,29 +273,7 @@ const RigAccordionItem = ({
             </div>
           </div>
           
-          {field.status === 'Cancelled' && (
-            <div className="p-4 border rounded-lg bg-destructive/10">
-                <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold text-destructive">Cancellation Details</h4>
-                     {!isReadOnly && (
-                        <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}>
-                                <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
-                                <RotateCcw className="h-4 w-4" />
-                            </Button>
-                        </div>
-                     )}
-                </div>
-                <p className="text-destructive"><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
-                 <p className="text-destructive">
-                  <strong>Date of Cancellation:</strong> {formattedCancellationDate}
-                </p>
-            </div>
-          )}
-
-           {enabledSections.includes('rigVehicle') && (
+          {enabledSections.includes('rigVehicle') && (
             <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
                 <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
@@ -350,6 +328,28 @@ const RigAccordionItem = ({
                 <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 </div>
+            </div>
+          )}
+          
+          {field.status === 'Cancelled' && (
+            <div className="p-4 border rounded-lg bg-destructive/10">
+                <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold text-destructive">Cancellation Details</h4>
+                     {!isReadOnly && (
+                        <div className="flex items-center space-x-1">
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}>
+                                <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
+                                <RotateCcw className="h-4 w-4" />
+                            </Button>
+                        </div>
+                     )}
+                </div>
+                <p className="text-destructive"><strong>Reason:</strong> {field.cancellationReason || 'N/A'}</p>
+                 <p className="text-destructive">
+                  <strong>Date of Cancellation:</strong> {formattedCancellationDate}
+                </p>
             </div>
           )}
 
@@ -678,7 +678,7 @@ export default function AgencyRegistrationPage() {
     };
 
     const handleConfirmRenewal = () => {
-        if (editingRenewal) { // Handle editing an existing renewal
+        if (editingRenewal) {
             const { rigIndex, renewal } = editingRenewal;
             const currentRig = form.getValues(`rigs.${rigIndex}`);
             if (!currentRig || !currentRig.renewals) return;
@@ -691,7 +691,7 @@ export default function AgencyRegistrationPage() {
             form.trigger(`rigs.${rigIndex}.renewals`);
             toast({ title: "Renewal Updated", description: "The renewal details have been updated in the form." });
 
-        } else if (renewalData) { // Handle adding a new renewal
+        } else if (renewalData) {
             const { rigIndex, data } = renewalData;
             const currentRig = form.getValues(`rigs.${rigIndex}`);
             
@@ -822,15 +822,6 @@ export default function AgencyRegistrationPage() {
                                     <FormField name="agencyAdditionalRegFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Registration Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                     <FormField name="agencyAdditionalPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                     <FormField name="agencyAdditionalChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                    <FormField name="status" control={form.control} render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Status</FormLabel>
-                                            <FormControl>
-                                                <Input readOnly value={field.value} className="bg-muted" />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
                                 </div>
 
                           </div>
