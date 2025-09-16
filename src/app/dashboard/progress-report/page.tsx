@@ -79,7 +79,7 @@ const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
 ];
 
 const REFUNDED_STATUSES: SiteWorkStatus[] = ['To be Refunded'];
-const ACTIVE_FIELD_WORK_STATUSES: SiteWorkStatus[] = ["Awaiting Dept. Rig", "Work Order Issued", "Work Initiated", "Work in Progress"];
+const ACTIVE_FIELD_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress", "Awaiting Dept. Rig"];
 
 
 
@@ -354,7 +354,12 @@ export default function ProgressReportPage() {
                 const summary = targetFinancialSummary[purpose];
                 if(summary) {
                     const sitesForThisPurpose = relevantSites.map(site => ({ ...site, fileNo: entry.fileNo, applicantName: entry.applicantName, applicationType: entry.applicationType }) as SiteDetailWithFileContext);
-                    summary.applicationData.push(...sitesForThisPurpose);
+                    
+                    // Add sites to applicationData only if the file hasn't been added yet for this purpose
+                    if (!summary.applicationData.some(s => s.fileNo === entry.fileNo)) {
+                      summary.applicationData.push(...sitesForThisPurpose);
+                    }
+                    
                     const totalRemittanceForFile = Number(entry.remittanceDetails?.[0]?.amountRemitted) || 0;
                     summary.totalRemittance += totalRemittanceForFile;
                 }
@@ -364,10 +369,10 @@ export default function ProgressReportPage() {
 
     // Post-process to fix counts for financial summary
     financialSummaryOrder.forEach(purpose => {
-      const pvtSummary = privateFinancialSummary[purpose];
-      const govtSummary = governmentFinancialSummary[purpose];
-      if (pvtSummary) pvtSummary.totalApplications = pvtSummary.applicationData.length;
-      if (govtSummary) govtSummary.totalApplications = govtSummary.applicationData.length;
+        const pvtSummary = privateFinancialSummary[purpose];
+        const govtSummary = governmentFinancialSummary[purpose];
+        if (pvtSummary) pvtSummary.totalApplications = new Set(pvtSummary.applicationData.map(s => s.fileNo)).size;
+        if (govtSummary) govtSummary.totalApplications = new Set(govtSummary.applicationData.map(s => s.fileNo)).size;
     });
 
     allCompletedSitesInPeriod.forEach(site => {
@@ -420,17 +425,23 @@ export default function ProgressReportPage() {
 
     const calculateBalanceAndTotal = (stats: ProgressStats) => {
         stats.totalApplications = stats.previousBalance + stats.currentApplications - stats.toBeRefunded;
-        const totalApplicationSites = [...stats.previousBalanceData, ...stats.currentApplicationsData];
-        stats.totalApplicationsData = totalApplicationSites.filter(
-            site => !stats.toBeRefundedData.some(refundedSite =>
-                refundedSite.nameOfSite === site.nameOfSite && refundedSite.fileNo === site.fileNo
-            )
-        );
+        
+        const totalApplicationSites = new Map<string, SiteDetailWithFileContext>();
+        [...stats.previousBalanceData, ...stats.currentApplicationsData].forEach(site => {
+            const key = `${site.fileNo}-${site.nameOfSite}`;
+            if (!totalApplicationSites.has(key)) {
+                totalApplicationSites.set(key, site);
+            }
+        });
 
-        stats.balance = stats.totalApplications - stats.completed;
-        stats.balanceData = stats.totalApplicationsData.filter(
-            item => !stats.completedData.some(cd => cd.nameOfSite === item.nameOfSite && cd.fileNo === item.fileNo)
-        );
+        const toBeRefundedKeys = new Set(stats.toBeRefundedData.map(site => `${site.fileNo}-${site.nameOfSite}`));
+        toBeRefundedKeys.forEach(key => totalApplicationSites.delete(key));
+
+        stats.totalApplicationsData = Array.from(totalApplicationSites.values());
+        
+        const completedKeys = new Set(stats.completedData.map(site => `${site.fileNo}-${site.nameOfSite}`));
+        stats.balanceData = stats.totalApplicationsData.filter(site => !completedKeys.has(`${site.fileNo}-${site.nameOfSite}`));
+        stats.balance = stats.balanceData.length;
     };
     
     applicationTypeOptions.forEach(appType => {
