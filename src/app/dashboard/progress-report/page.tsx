@@ -79,6 +79,10 @@ const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
 ];
 
 const REFUNDED_STATUSES: SiteWorkStatus[] = ['To be Refunded'];
+const ACTIVE_FIELD_WORK_STATUSES: SiteWorkStatus[] = [
+    "Awaiting Dept. Rig", "Work Order Issued", "Work Initiated", "Work in Progress", "Tendered", "Selection Notice Issued"
+];
+
 
 interface DetailDialogColumn {
   key: string;
@@ -295,14 +299,16 @@ export default function ProgressReportPage() {
         const siteWithFileContext: SiteDetailWithFileContext = { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName!, applicationType: entry.applicationType! };
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
-        const workStatus = site.workStatus;
+        const workStatus = site.workStatus as SiteWorkStatus | undefined;
 
         const completionDate = safeParseDate(site.dateOfCompletion);
         
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
-        const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) && (!completionDate || isAfter(completionDate, sDate));
+        const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) &&
+                                       (!completionDate || isAfter(completionDate, sDate)) &&
+                                       workStatus && ACTIVE_FIELD_WORK_STATUSES.includes(workStatus);
         
-        const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus as SiteWorkStatus);
+        const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplicationInPeriod) { 
@@ -898,4 +904,5 @@ export default function ProgressReportPage() {
 }
 
 
+    
     
