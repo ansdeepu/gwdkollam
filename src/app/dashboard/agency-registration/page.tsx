@@ -492,7 +492,6 @@ export default function AgencyRegistrationPage() {
                 owner: createDefaultOwner(),
                 partners: [],
                 rigs: [createDefaultRig()],
-                status: 'Pending Verification',
                 history: []
             });
             // Stop the spinner once the new form is ready
@@ -504,11 +503,11 @@ export default function AgencyRegistrationPage() {
                  form.reset(processedApp);
             } else {
                 setSelectedApplicationId(null);
-                form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+                form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], history: [] });
             }
         }
     } else {
-        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], status: 'Pending Verification', history: [] });
+        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], history: [] });
     }
   }, [selectedApplicationId, applications, form, setIsNavigating]);
   
@@ -583,8 +582,12 @@ export default function AgencyRegistrationPage() {
   const onSubmit = async (data: AgencyApplication) => {
       setIsSubmitting(true);
       try {
-            const dataWithHistory = {
+            // Determine status based on agencyRegistrationNo
+            const finalStatus = data.agencyRegistrationNo ? 'Active' : 'Pending Verification';
+
+            const dataWithHistoryAndStatus = {
                 ...data,
+                status: finalStatus,
                 rigs: data.rigs.map(rig => {
                     const historyEntry = generateHistoryEntry(rig);
                     const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
@@ -593,10 +596,10 @@ export default function AgencyRegistrationPage() {
             };
 
           if (selectedApplicationId && selectedApplicationId !== 'new') {
-              await updateApplication(selectedApplicationId, dataWithHistory);
+              await updateApplication(selectedApplicationId, dataWithHistoryAndStatus);
               toast({ title: "Application Updated", description: "The registration details have been updated." });
           } else {
-              await addApplication(dataWithHistory);
+              await addApplication(dataWithHistoryAndStatus);
               toast({ title: "Application Created", description: "The new agency registration has been saved." });
           }
           setSelectedApplicationId(null);
@@ -1143,4 +1146,3 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
     );
 }
     
-
