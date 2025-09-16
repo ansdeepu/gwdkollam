@@ -138,11 +138,8 @@ const RigAccordionItem = ({
   onDeleteRenewal,
   onEditRenewal,
   form,
-  setRenewalData,
-  setIsRenewalDialogOpen,
-  setEditingRenewal,
-  setCancellationData,
-  setIsCancelDialogOpen,
+  onRenewClick,
+  onCancelClick
 }: {
   field: RigRegistration;
   index: number;
@@ -152,11 +149,8 @@ const RigAccordionItem = ({
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
   form: UseFormReturn<any>;
-  setRenewalData: React.Dispatch<React.SetStateAction<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>>;
-  setIsRenewalDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setEditingRenewal: React.Dispatch<React.SetStateAction<{ rigIndex: number; renewal: RigRenewalFormData } | null>>;
-  setCancellationData: React.Dispatch<React.SetStateAction<{ rigIndex: number; reason: string; date: string }>>;
-  setIsCancelDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onRenewClick: (rigIndex: number) => void;
+  onCancelClick: (rigIndex: number) => void;
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = toDateOrNull(field.registrationDate);
@@ -192,23 +186,10 @@ const RigAccordionItem = ({
         form.setValue(`rigs.${index}.enabledSections`, newSections, { shouldDirty: true });
     };
 
-    const handleRenewRig = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setEditingRenewal(null);
-        setRenewalData({ rigIndex: index, data: { renewalDate: toInputDate(new Date()) } });
-        setIsRenewalDialogOpen(true);
-    };
-
-    const handleCancelRig = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCancellationData({ rigIndex: index, reason: '', date: format(new Date(), 'yyyy-MM-dd') });
-        setIsCancelDialogOpen(true);
-    };
-
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
-      <div className="flex items-center w-full border-b">
-        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
+      <div className="flex items-center w-full">
+        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 py-2 hover:no-underline", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
           Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
@@ -234,13 +215,13 @@ const RigAccordionItem = ({
                 </DropdownMenu>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={handleRenewRig}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+                <Button type="button" size="sm" variant="outline" onClick={(e) => {e.stopPropagation(); onRenewClick(index);}}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={handleCancelRig}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={(e) => {e.stopPropagation(); onCancelClick(index);}}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {!isReadOnly && field.status === 'Cancelled' && (
-                <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
+                <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
             )}
 
             {!isReadOnly && onRemove && (
@@ -356,7 +337,7 @@ const RigAccordionItem = ({
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      {!isReadOnly && (
                         <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => handleCancelRig(e)}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => {e.stopPropagation(); onCancelClick(index);}}>
                                 <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
@@ -652,6 +633,17 @@ export default function AgencyRegistrationPage() {
   }, [filteredApplications]);
   
   const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
+
+    const handleRenewClick = (rigIndex: number) => {
+        setEditingRenewal(null);
+        setRenewalData({ rigIndex, data: { renewalDate: toInputDate(new Date()) } });
+        setIsRenewalDialogOpen(true);
+    };
+
+    const handleCancelClick = (rigIndex: number) => {
+        setCancellationData({ rigIndex, reason: '', date: format(new Date(), 'yyyy-MM-dd') });
+        setIsCancelDialogOpen(true);
+    };
   
     const handleEditRenewal = (rigIndex: number, renewalId: string) => {
         const rig = rigFields[rigIndex];
@@ -871,11 +863,8 @@ export default function AgencyRegistrationPage() {
                                     onDeleteRenewal={handleDeleteRenewal}
                                     onEditRenewal={handleEditRenewal}
                                     form={form}
-                                    setRenewalData={setRenewalData}
-                                    setIsRenewalDialogOpen={setIsRenewalDialogOpen}
-                                    setEditingRenewal={setEditingRenewal}
-                                    setCancellationData={setCancellationData}
-                                    setIsCancelDialogOpen={setIsCancelDialogOpen}
+                                    onRenewClick={handleRenewClick}
+                                    onCancelClick={handleCancelClick}
                                 />
                                ))}
                             </Accordion>
