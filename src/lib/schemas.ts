@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -378,6 +379,15 @@ export const applicationFeeTypes = [
 ] as const;
 export type ApplicationFeeType = typeof applicationFeeTypes[number];
 
+export const ApplicationFeeSchema = z.object({
+    id: z.string(),
+    applicationFeeType: z.enum(applicationFeeTypes).optional(),
+    applicationFeeAmount: optionalNumber(),
+    applicationFeePaymentDate: nativeDateSchema,
+    applicationFeeChallanNo: z.string().optional(),
+});
+export type ApplicationFee = z.infer<typeof ApplicationFeeSchema>;
+
 export const RigRenewalSchema = z.object({
     id: z.string(),
     renewalDate: nativeDateSchema.refine(val => val !== undefined, { message: "Renewal date is required." }),
@@ -424,12 +434,8 @@ export const AgencyApplicationSchema = z.object({
   agencyName: z.string().min(1, "Agency name & address is required."),
   owner: OwnerInfoSchema,
   partners: z.array(OwnerInfoSchema).optional(),
-
-  // Application Fees
-  applicationFeeType: z.enum(applicationFeeTypes).optional(),
-  applicationFeeAmount: optionalNumber(),
-  applicationFeePaymentDate: nativeDateSchema,
-  applicationFeeChallanNo: z.string().optional(),
+  
+  applicationFees: z.array(ApplicationFeeSchema).optional(),
 
   // Agency Registration
   agencyRegistrationNo: z.string().optional(),

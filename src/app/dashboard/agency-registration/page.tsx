@@ -3,10 +3,10 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
+import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo, type ApplicationFee } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes } from "@/lib/schemas";
+import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -506,6 +506,7 @@ export default function AgencyRegistrationPage() {
   }, [selectedApplicationId, isViewing, setHeader, applications]);
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
+  const createDefaultFee = (): ApplicationFee => ({ id: uuidv4() });
   const createDefaultRig = (): RigRegistration => ({
       id: uuidv4(),
       status: 'Active',
@@ -520,6 +521,7 @@ export default function AgencyRegistrationPage() {
     defaultValues: {
       owner: createDefaultOwner(),
       partners: [],
+      applicationFees: [],
       rigs: [],
       status: 'Active',
       history: []
@@ -527,6 +529,7 @@ export default function AgencyRegistrationPage() {
   });
   
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
+  const { fields: feeFields, append: appendFee, remove: removeFee } = useFieldArray({ control: form.control, name: "applicationFees" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
@@ -538,6 +541,7 @@ export default function AgencyRegistrationPage() {
             form.reset({
                 owner: createDefaultOwner(),
                 partners: [],
+                applicationFees: [createDefaultFee()],
                 rigs: [createDefaultRig()],
                 history: [],
                 status: 'Active'
@@ -926,11 +930,25 @@ export default function AgencyRegistrationPage() {
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
                             <AccordionTrigger className="text-xl font-semibold text-primary">Application Fees</AccordionTrigger>
-                            <AccordionContent className="pt-4 grid md:grid-cols-4 gap-4">
-                               <FormField name="applicationFeeType" render={({ field }) => <FormItem><FormLabel>Type of Application</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnlyForForm}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
-                               <FormField name="applicationFeeAmount" render={({ field }) => <FormItem><FormLabel>Fees Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="applicationFeePaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="applicationFeeChallanNo" render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                            <AccordionContent className="pt-4 space-y-4">
+                                {feeFields.map((field, index) => (
+                                    <div key={field.id} className="grid md:grid-cols-5 gap-4 p-4 border rounded-lg items-end bg-secondary/20">
+                                        <FormField name={`applicationFees.${index}.applicationFeeType`} render={({ field }) => <FormItem><FormLabel>Type of Application</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnlyForForm}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                                        <FormField name={`applicationFees.${index}.applicationFeeAmount`} render={({ field }) => <FormItem><FormLabel>Fees Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name={`applicationFees.${index}.applicationFeePaymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name={`applicationFees.${index}.applicationFeeChallanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                        {!isReadOnlyForForm && (
+                                            <Button type="button" variant="destructive" size="icon" onClick={() => removeFee(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                                {!isReadOnlyForForm && (
+                                    <Button type="button" variant="outline" size="sm" onClick={() => appendFee(createDefaultFee())}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Application Fee
+                                    </Button>
+                                )}
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
@@ -942,12 +960,12 @@ export default function AgencyRegistrationPage() {
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                <Separator className="md:col-span-3 my-2" />
                                <div className="md:col-span-3 grid md:grid-cols-3 gap-4">
-                                <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyAdditionalChallanNo" render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                </div>
