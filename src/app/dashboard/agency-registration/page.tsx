@@ -775,16 +775,16 @@ export default function AgencyRegistrationPage() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>{isViewing ? 'View' : (selectedApplicationId === 'new' ? 'New' : 'Edit')} Rig Registration</CardTitle>
-                  <CardDescription>Manage agency and rig details below.</CardDescription>
+               <div className="flex justify-between items-start">
+                    <div>
+                         {isViewing && <CardTitle>View Rig Registration</CardTitle>}
+                         {isViewing && <CardDescription>Viewing agency and rig details.</CardDescription>}
+                    </div>
+                    <Button variant="destructive" size="sm" onClick={handleCancelForm}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back
+                    </Button>
                 </div>
-                <div className="flex gap-2">
-                    {!isReadOnly && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>} Save Registration</Button>}
-                    <Button type="button" variant="outline" onClick={handleCancelForm}><X className="mr-2 h-4 w-4"/>Cancel</Button>
-                </div>
-              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -877,7 +877,7 @@ export default function AgencyRegistrationPage() {
             </CardContent>
              {!isReadOnly && (
                 <CardFooter className="flex justify-end gap-2">
-                    <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>} Save Changes</Button>
+                    <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>} Save Registration</Button>
                     <Button type="button" variant="outline" onClick={handleCancelForm}><X className="mr-2 h-4 w-4"/>Cancel</Button>
                 </CardFooter>
              )}
