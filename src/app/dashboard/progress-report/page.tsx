@@ -299,8 +299,7 @@ export default function ProgressReportPage() {
         const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
         
         const wasActiveBeforePeriod = fileRemittanceDate && isBefore(fileRemittanceDate, sDate) &&
-                                  (!completionDate || isAfter(completionDate, sDate)) &&
-                                  !isToBeRefunded;
+                                  (!completionDate || isAfter(completionDate, sDate));
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplicationInPeriod) { 
