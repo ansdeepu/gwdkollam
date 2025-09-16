@@ -79,8 +79,6 @@ const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
 ];
 
 const REFUNDED_STATUSES: SiteWorkStatus[] = ['To be Refunded'];
-const ACTIVE_FIELD_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress", "Awaiting Dept. Rig"];
-
 
 
 interface DetailDialogColumn {
@@ -299,15 +297,16 @@ export default function ProgressReportPage() {
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus as SiteWorkStatus | undefined;
-
         const completionDate = safeParseDate(site.dateOfCompletion);
         
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
+        const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
+        
+        // A file is part of previous balance if it was remitted before the period and not yet completed or refunded before the period started.
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) &&
                                        (!completionDate || isAfter(completionDate, sDate)) &&
-                                       workStatus && ACTIVE_FIELD_WORK_STATUSES.includes(workStatus);
-        
-        const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
+                                       !isToBeRefunded;
+
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplicationInPeriod) { 
@@ -381,7 +380,7 @@ export default function ProgressReportPage() {
         const isPrivate = site.applicationType ? PRIVATE_APPLICATION_TYPES.includes(site.applicationType) : false;
         const targetSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
         targetSummary[purpose].completedData.push(site);
-        targetSummary[purpose].totalCompleted++;
+        targetSummary[purpose].totalCompleted = new Set(targetSummary[purpose].completedData.map(s => s.fileNo)).size;
         targetSummary[purpose].totalPayment += Number(site.totalExpenditure) || 0;
       }
     });
@@ -556,7 +555,7 @@ export default function ProgressReportPage() {
         }
       });
       if(hasData) {
-        addWorksheet(wellDataExport, `${isBwc ? 'BWC' : 'TWC'} - ${diameter.replace(/[^a-zA-Z0-9]/g, '_')}`, wellMetricsHeaders);
+        addWorksheet(wellDataExport, `${isBwc ? 'BWC' : 'TWC'} - ${diameter.replace(/[^a-zA-Z0-9]/g, '_'))}`, wellMetricsHeaders);
       }
     });
   
@@ -912,9 +911,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-
-    
-    
-
-    
