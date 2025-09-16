@@ -477,11 +477,12 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view'; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' ; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
+  const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -529,7 +530,7 @@ export default function AgencyRegistrationPage() {
   });
   
   const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
-  const { fields: feeFields, append: appendFee, remove: removeFee } = useFieldArray({ control: form.control, name: "applicationFees" });
+  const { fields: feeFields, append: appendFee, remove: removeFee, update: updateFee } = useFieldArray({ control: form.control, name: "applicationFees" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
@@ -716,7 +717,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -748,6 +749,20 @@ export default function AgencyRegistrationPage() {
         setIsSubmitting(false);
         setDeletingApplicationId(null);
       }
+    };
+
+    const handleConfirmFeeChange = (feeData: ApplicationFee) => {
+        const { index, fee } = dialogState.data;
+        updateFee(index, feeData);
+        closeDialog();
+        toast({ title: "Application Fee Updated", description: "The fee details have been saved." });
+    };
+
+    const confirmDeleteFee = () => {
+        if (deletingFeeIndex === null) return;
+        removeFee(deletingFeeIndex);
+        toast({ title: "Application Fee Removed", description: `The fee entry has been removed from the form.` });
+        setDeletingFeeIndex(null);
     };
 
   const handleConfirmRenewal = (renewalData: any) => {
@@ -938,9 +953,14 @@ export default function AgencyRegistrationPage() {
                                         <FormField name={`applicationFees.${index}.applicationFeePaymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeeChallanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         {!isReadOnlyForForm && (
-                                            <Button type="button" variant="destructive" size="icon" onClick={() => removeFee(index)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                           <div className="flex items-center gap-1">
+                                                <Button type="button" variant="outline" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button type="button" variant="destructive" size="icon" onClick={() => setDeletingFeeIndex(index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
                                 ))}
@@ -957,13 +977,15 @@ export default function AgencyRegistrationPage() {
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
                             <AccordionTrigger className="text-xl font-semibold text-primary">2. Agency Registration</AccordionTrigger>
-                            <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
-                               <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               <Separator className="md:col-span-3 my-2" />
+                            <AccordionContent className="pt-4 space-y-4">
+                               <div className="grid md:grid-cols-3 gap-4">
+                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                               </div>
+                               <Separator className="my-2" />
                                <div className="md:col-span-3 grid md:grid-cols-3 gap-4">
                                 <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1021,6 +1043,30 @@ export default function AgencyRegistrationPage() {
                     />
                 </DialogContent>
             </Dialog>
+            <Dialog open={dialogState.type === 'editFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Application Fee</DialogTitle>
+                    </DialogHeader>
+                    <ApplicationFeeDialogContent
+                        initialData={dialogState.data?.fee}
+                        onConfirm={handleConfirmFeeChange}
+                        onCancel={closeDialog}
+                    />
+                </DialogContent>
+            </Dialog>
+            <AlertDialog open={!!deletingFeeIndex} onOpenChange={() => setDeletingFeeIndex(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This will remove this application fee from the form. This action cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDeletingFeeIndex(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteFee}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <AlertDialog open={dialogState.type === 'cancel'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -1177,6 +1223,49 @@ export default function AgencyRegistrationPage() {
       />
     </div>
   );
+}
+
+function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<ApplicationFee>, onConfirm: (data: any) => void, onCancel: () => void }) {
+    const [data, setData] = useState(initialData);
+
+    const handleConfirm = () => {
+        // Basic validation before confirming
+        if (!data.applicationFeeType) {
+            alert("Please select a type of application.");
+            return;
+        }
+        onConfirm(data);
+    };
+
+    return (
+        <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+                <div className="space-y-2 sm:col-span-2">
+                    <Label>Type of Application</Label>
+                    <Select onValueChange={(value) => setData(d => ({ ...d, applicationFeeType: value as ApplicationFeeType }))} value={data.applicationFeeType}>
+                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                        <SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label>Fees Amount</Label>
+                    <Input type="number" value={data.applicationFeeAmount ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeeAmount: e.target.value === '' ? undefined : +e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                    <Label>Payment Date</Label>
+                    <Input type="date" value={data.applicationFeePaymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                    <Label>Challan No.</Label>
+                    <Input value={data.applicationFeeChallanNo ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeeChallanNo: e.target.value }))} />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button type="button" onClick={handleConfirm}>Confirm</Button>
+            </DialogFooter>
+        </>
+    );
 }
 
 function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRenewalFormData>, onConfirm: (data: any) => void, onCancel: () => void }) {
