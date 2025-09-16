@@ -192,13 +192,15 @@ const RigAccordionItem = ({
         form.setValue(`rigs.${index}.enabledSections`, newSections, { shouldDirty: true });
     };
 
-    const handleRenewRig = () => {
+    const handleRenewRig = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setEditingRenewal(null);
         setRenewalData({ rigIndex: index, data: { renewalDate: toInputDate(new Date()) } });
         setIsRenewalDialogOpen(true);
     };
 
-    const handleCancelRig = () => {
+    const handleCancelRig = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setCancellationData({ rigIndex: index, reason: '', date: format(new Date(), 'yyyy-MM-dd') });
         setIsCancelDialogOpen(true);
     };
@@ -354,7 +356,7 @@ const RigAccordionItem = ({
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      {!isReadOnly && (
                         <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={handleCancelRig}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => handleCancelRig(e)}>
                                 <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
