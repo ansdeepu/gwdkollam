@@ -854,12 +854,6 @@ export default function AgencyRegistrationPage() {
                 </Accordion>
               </div>
             </CardContent>
-             {!isReadOnly && (
-                <CardFooter className="flex justify-end gap-2">
-                    <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>} Save Registration</Button>
-                    <Button type="button" variant="outline" onClick={handleCancelForm}><X className="mr-2 h-4 w-4"/>Cancel</Button>
-                </CardFooter>
-             )}
           </Card>
         </form>
       </FormProvider>
