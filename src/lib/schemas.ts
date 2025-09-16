@@ -372,6 +372,12 @@ export const rigTypeOptions = [
 ] as const;
 export type RigType = typeof rigTypeOptions[number];
 
+export const applicationFeeTypes = [
+    "Agency Registration",
+    "Rig Registration",
+] as const;
+export type ApplicationFeeType = typeof applicationFeeTypes[number];
+
 export const RigRenewalSchema = z.object({
     id: z.string(),
     renewalDate: nativeDateSchema.refine(val => val !== undefined, { message: "Renewal date is required." }),
@@ -418,6 +424,14 @@ export const AgencyApplicationSchema = z.object({
   agencyName: z.string().min(1, "Agency name & address is required."),
   owner: OwnerInfoSchema,
   partners: z.array(OwnerInfoSchema).optional(),
+
+  // Application Fees
+  applicationFeeType: z.enum(applicationFeeTypes).optional(),
+  applicationFeeAmount: optionalNumber(),
+  applicationFeePaymentDate: nativeDateSchema,
+  applicationFeeChallanNo: z.string().optional(),
+
+  // Agency Registration
   agencyRegistrationNo: z.string().optional(),
   agencyRegistrationDate: nativeDateSchema,
   agencyRegistrationFee: optionalNumber(),
@@ -426,6 +440,7 @@ export const AgencyApplicationSchema = z.object({
   agencyAdditionalRegFee: optionalNumber(),
   agencyAdditionalPaymentDate: nativeDateSchema,
   agencyAdditionalChallanNo: z.string().optional(),
+  
   rigs: z.array(RigRegistrationSchema),
   status: z.enum(['Active', 'Pending Verification']),
   history: z.array(z.string()).optional(),
