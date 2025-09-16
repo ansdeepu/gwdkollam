@@ -1300,8 +1300,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                                                         return (
                                                         <TableRow key={r.id}>
                                                             <TableCell>{rIdx + 1}</TableCell>
-                                                            <TableCell>{r.renewalDate ? formatDate(new Date(r.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                                            <TableCell>{validity ? formatDate(validity, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                                            <TableCell>{r.renewalDate ? format(new Date(r.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                                            <TableCell>{validity ? format(validity, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                                             <TableCell>{r.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                                                         </TableRow>
                                                     )})}
@@ -1328,3 +1328,5 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
     
 
       
+
+    
