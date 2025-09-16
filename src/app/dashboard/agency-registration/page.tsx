@@ -263,7 +263,7 @@ const RigAccordionItem = ({
           
           <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
             <p className="font-medium text-base text-primary">Registration Details</p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.rigRegistrationNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.typeOfRig`} control={form.control} render={({ field }) => (
                     <FormItem>
@@ -276,12 +276,12 @@ const RigAccordionItem = ({
                     </FormItem>
                 )} />
                 <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+            </div>
+            <div className="grid md:grid-cols-4 gap-4">
                 <FormItem>
                   <FormLabel>Validity Upto</FormLabel>
                   <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
                 </FormItem>
-            </div>
-            <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -772,7 +772,7 @@ export default function AgencyRegistrationPage() {
   };
 
   const confirmDeleteRig = () => {
-      if (dialogState.type !== 'deleteRig' || !onRemove) return;
+      if (dialogState.type !== 'deleteRig') return;
       const { rigIndex } = dialogState.data;
       removeRig(rigIndex);
       toast({ title: "Rig Removed", description: `Rig #${rigIndex + 1} has been removed from the form.` });
@@ -1094,22 +1094,22 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     return (
         <>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+                <div className="space-y-2">
                     <Label className="text-right">Renewal Date</Label>
-                    <Input type="date" className="col-span-3" value={data.renewalDate || ''} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
+                    <Input type="date" value={data.renewalDate || ''} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="renewalFee" className="text-right">Renewal Fee</Label>
-                    <Input id="renewalFee" type="number" value={data.renewalFee ?? ''} onChange={(e) => setData(d => ({ ...d, renewalFee: +e.target.value }))} className="col-span-3" />
+                 <div className="space-y-2">
+                    <Label htmlFor="renewalFee">Renewal Fee</Label>
+                    <Input id="renewalFee" type="number" value={data.renewalFee ?? ''} onChange={(e) => setData(d => ({ ...d, renewalFee: +e.target.value }))} />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
+                 <div className="space-y-2">
                     <Label className="text-right">Payment Date</Label>
-                    <Input type="date" className="col-span-3" value={data.paymentDate || ''} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
+                    <Input type="date" value={data.paymentDate || ''} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="challanNo" className="text-right">Challan No.</Label>
-                    <Input id="challanNo" value={data.challanNo ?? ''} onChange={(e) => setData(d => ({ ...d, challanNo: e.target.value }))} className="col-span-3" />
+                 <div className="space-y-2">
+                    <Label htmlFor="challanNo">Challan No.</Label>
+                    <Input id="challanNo" value={data.challanNo ?? ''} onChange={(e) => setData(d => ({ ...d, challanNo: e.target.value }))} />
                 </div>
             </div>
             <DialogFooter>
@@ -1128,14 +1128,14 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
     
     return (
         <>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="cancellationReason" className="text-right">Reason</Label>
-                    <Textarea id="cancellationReason" value={cancellationData.reason} onChange={(e) => setCancellationData(d => ({ ...d, reason: e.target.value }))} className="col-span-3" placeholder="Enter reason" />
+            <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="cancellationReason">Reason</Label>
+                    <Textarea id="cancellationReason" value={cancellationData.reason} onChange={(e) => setCancellationData(d => ({ ...d, reason: e.target.value }))} placeholder="Enter reason" />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="cancellationDate" className="text-right">Date</Label>
-                    <Input id="cancellationDate" type="date" value={cancellationData.date} onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))} className="col-span-3" />
+                <div className="space-y-2">
+                    <Label htmlFor="cancellationDate">Date</Label>
+                    <Input id="cancellationDate" type="date" value={cancellationData.date} onChange={(e) => setCancellationData(d => ({ ...d, date: e.target.value }))} />
                 </div>
             </div>
             <AlertDialogFooter>
@@ -1145,4 +1145,6 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
         </>
     );
 }
+    
+
     
