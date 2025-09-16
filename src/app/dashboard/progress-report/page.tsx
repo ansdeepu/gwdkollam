@@ -197,7 +197,7 @@ export default function ProgressReportPage() {
   const { reportEntries: fileEntries, isReportLoading: entriesLoading } = useAllFileEntriesForReports();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [isFiltering, setIsFiltering] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(isFiltering);
   const { toast } = useToast();
 
   const [reportData, setReportData] = useState<{
@@ -247,22 +247,20 @@ export default function ProgressReportPage() {
     };
     
     // 1. Create a pre-filtered list of all sites to be included in the report.
-    const includedSites: SiteDetailWithFileContext[] = [];
-    fileEntries.forEach(entry => {
-        if (entry.siteDetails?.some(site => site.workStatus === "Addl. AS Awaited")) {
-          return; // Skip the entire file entry if any site has this status
-        }
-        const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
-        entry.siteDetails?.forEach(site => {
-            includedSites.push({
+    const includedSites: SiteDetailWithFileContext[] = fileEntries.flatMap(entry => 
+        (entry.siteDetails || [])
+        .filter(site => site.workStatus !== "Addl. AS Awaited")
+        .map(site => {
+            const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
+            return {
                 ...site,
                 fileNo: entry.fileNo!,
                 applicantName: entry.applicantName!,
                 applicationType: entry.applicationType!,
                 fileRemittanceDate: firstRemittanceDate
-            });
-        });
-    });
+            };
+        })
+    );
 
     const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, toBeRefunded: 0, totalApplications: 0, completed: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], toBeRefundedData: [], totalApplicationsData: [], completedData: [], balanceData: [] });
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
@@ -893,7 +891,7 @@ export default function ProgressReportPage() {
             </ScrollArea>
           </div>
           <DialogFooter className="p-6 pt-4 border-t">
-            <Button variant="outline" disabled={detailDialogData.length === 0}>
+            <Button variant="outline" disabled={detailDialogData.length === 0} onClick={handleExportExcel}>
               <FileDown className="mr-2 h-4 w-4" /> Export to Excel
             </Button>
             <DialogClose asChild>
@@ -906,3 +904,6 @@ export default function ProgressReportPage() {
   );
 }
 
+
+
+    
