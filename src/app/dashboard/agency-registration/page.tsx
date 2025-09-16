@@ -788,47 +788,48 @@ export default function AgencyRegistrationPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <Accordion type="multiple" defaultValue={['application-details', 'owner-details']} className="w-full space-y-4">
+                <Accordion type="multiple" defaultValue={['application-details', 'agency-registration', 'rig-details']} className="w-full space-y-4">
                   <AccordionItem value="application-details" className="border bg-card rounded-lg shadow-sm">
                       <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">1. Application Details</AccordionTrigger>
                       <AccordionContent className="p-6 pt-0">
-                          <div className="border-t pt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="border-t pt-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <FormField name="fileNo" control={form.control} render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                              <FormField name="agencyName" control={form.control} render={({ field }) => <FormItem><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                            </div>
+                            <Separator />
+                            <p className="font-semibold text-lg text-primary/90">Owner Information</p>
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <FormField name="owner.name" control={form.control} render={({ field }) => <FormItem><FormLabel>Name & Address of Owner</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="owner.mobile" control={form.control} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="owner.secondaryMobile" control={form.control} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                            </div>
                           </div>
                       </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="owner-details" className="border bg-card rounded-lg shadow-sm">
+                  <AccordionItem value="agency-registration" className="border bg-card rounded-lg shadow-sm">
                       <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">2. Agency Registration</AccordionTrigger>
                       <AccordionContent className="p-6 pt-0">
                           <div className="border-t pt-6 space-y-6">
-                              <FormField name="agencyName" control={form.control} render={({ field }) => <FormItem><FormLabel>Agency Name & Address</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                              <Separator />
-                              <p className="font-semibold text-lg text-primary/90">Owner Information</p>
-                              <div className="grid md:grid-cols-3 gap-6">
-                                <FormField name="owner.name" control={form.control} render={({ field }) => <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="owner.address" control={form.control} render={({ field }) => <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="owner.mobile" control={form.control} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                              </div>
-                               <Separator />
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                                 <FormField name="agencyRegistrationNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyRegistrationDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Date of Registration</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyRegistrationFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Registration Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="agencyRegistrationDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="agencyRegistrationFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="agencyChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                               </div>
                                <Separator />
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                    <FormField name="agencyAdditionalRegFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Registration Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                    <FormField name="agencyAdditionalPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                    <FormField name="agencyAdditionalChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Addl. Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <FormField name="agencyAdditionalRegFee" control={form.control} render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                    <FormField name="agencyAdditionalPaymentDate" control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={toInputDate(field.value)} onChange={e => field.onChange(e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                    <FormField name="agencyAdditionalChallanNo" control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 </div>
 
                           </div>
                       </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="rig-details" className="border bg-card rounded-lg shadow-sm">
-                      <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">3. Rig Details</AccordionTrigger>
+                      <AccordionTrigger className="p-4 hover:no-underline text-primary text-xl font-semibold">3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
                       <AccordionContent className="p-6 pt-0">
                           <div className="border-t pt-6 space-y-4">
                             <Accordion type="multiple" className="space-y-4" defaultValue={rigFields.map(f => `rig-${f.id}`)}>
