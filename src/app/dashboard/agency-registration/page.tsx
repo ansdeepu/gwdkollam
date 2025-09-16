@@ -163,7 +163,7 @@ const RigAccordionItem = ({
   index: number;
   isReadOnly: boolean;
   onRemove?: (index: number) => void;
-  openDialog: (type: 'renew' | 'cancel' | 'activate', data: any) => void;
+  openDialog: (type: 'renew' | 'cancel' | 'activate' | 'deleteRig', data: any) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewal: RigRenewalFormData) => void;
   form: UseFormReturn<any>;
@@ -251,7 +251,7 @@ const RigAccordionItem = ({
                 variant="ghost"
                 size="icon"
                 className="text-destructive hover:text-destructive/90"
-                onClick={(e) => { e.stopPropagation(); onRemove(index); }}
+                onClick={(e) => { e.stopPropagation(); openDialog('deleteRig', { rigIndex: index }); }}
                 >
                 <Trash2 className="h-4 w-4" />
                 </Button>
@@ -434,7 +434,7 @@ export default function AgencyRegistrationPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [isViewing, setIsViewing] = useState(false);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal'; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig'; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
@@ -657,7 +657,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -768,6 +768,15 @@ export default function AgencyRegistrationPage() {
     closeDialog();
   };
 
+  const confirmDeleteRig = () => {
+      if (dialogState.type !== 'deleteRig' || !onRemove) return;
+      const { rigIndex } = dialogState.data;
+      removeRig(rigIndex);
+      toast({ title: "Rig Removed", description: `Rig #${rigIndex + 1} has been removed from the form.` });
+      closeDialog();
+  };
+
+
   const paginatedCompletedApplications = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return completedApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -828,7 +837,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>1. Application Details</AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-primary">1. Application Details</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      <div className="grid md:grid-cols-3 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -862,7 +871,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 2: Agency Registration */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger>2. Agency Registration</AccordionTrigger>
+                            <AccordionTrigger className="text-xl font-semibold text-primary">2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 grid md:grid-cols-3 gap-4">
                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -880,7 +889,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 3: Rig Registrations */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger>3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
+                            <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
                               <Accordion type="multiple" className="w-full space-y-2">
                                 {rigFields.map((field, index) => (
@@ -940,6 +949,20 @@ export default function AgencyRegistrationPage() {
                           onCancel={closeDialog}
                       />
                     )}
+                </AlertDialogContent>
+            </AlertDialog>
+             <AlertDialog open={dialogState.type === 'deleteRig'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently remove this rig from the form. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={closeDialog}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteRig}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={dialogState.type === 'activate'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
@@ -1096,8 +1119,8 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRegistration>, onConfirm: (data: any) => void, onCancel: () => void }) {
     const [cancellationData, setCancellationData] = useState({ 
-        reason: initialData.cancellationReason || '', 
-        date: initialData.cancellationDate ? format(new Date(initialData.cancellationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+        reason: initialData?.cancellationReason || '', 
+        date: initialData?.cancellationDate ? format(new Date(initialData.cancellationDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
     });
     
     return (
@@ -1120,3 +1143,4 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
     );
 }
     
+
