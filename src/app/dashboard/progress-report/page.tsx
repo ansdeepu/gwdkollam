@@ -79,8 +79,6 @@ const PRIVATE_APPLICATION_TYPES: ApplicationType[] = [
 ];
 
 const REFUNDED_STATUSES: SiteWorkStatus[] = ['To be Refunded'];
-const ACTIVE_FIELD_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress", "Awaiting Dept. Rig"];
-
 
 interface DetailDialogColumn {
   key: string;
@@ -276,6 +274,11 @@ export default function ProgressReportPage() {
 
     fileEntries.forEach(entry => {
         (entry.siteDetails || []).forEach(site => {
+            // EXCLUDE "Addl. AS Awaited" from ALL calculations
+            if (site.workStatus === "Addl. AS Awaited") {
+                return; 
+            }
+
             const completionDate = safeParseDate(site.dateOfCompletion);
             if (completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
                 const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
@@ -294,6 +297,11 @@ export default function ProgressReportPage() {
       (entry.siteDetails || []).forEach(site => {
         if (!site) return;
         
+        // EXCLUDE "Addl. AS Awaited" from ALL calculations
+        if (site.workStatus === "Addl. AS Awaited") {
+            return;
+        }
+
         const siteWithFileContext: SiteDetailWithFileContext = { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName!, applicationType: entry.applicationType! };
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
@@ -303,9 +311,10 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
         
+        // A site is part of previous balance if its remittance was before the start, and it wasn't completed before the start
         const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) &&
-                                  (!completionDate || isAfter(completionDate, eDate)) &&
-                                  !isToBeRefunded && site.workStatus && ACTIVE_FIELD_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                                  (!completionDate || isAfter(completionDate, sDate)) &&
+                                  !isToBeRefunded;
 
 
         const updateStats = (statsObj: ProgressStats) => {
@@ -890,3 +899,5 @@ export default function ProgressReportPage() {
 }
 
   
+
+    
