@@ -35,6 +35,7 @@ interface SiteDetailWithFileContext extends SiteDetailFormData {
   fileNo: string;
   applicantName: string;
   applicationType: ApplicationType;
+  fileRemittanceDate?: Date | null;
 }
 
 interface ProgressStats {
@@ -244,7 +245,23 @@ export default function ProgressReportPage() {
         }
         return null;
     };
-
+    
+    // 1. Create a pre-filtered list of all sites to be included in the report.
+    const includedSites: SiteDetailWithFileContext[] = [];
+    fileEntries.forEach(entry => {
+        const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
+        entry.siteDetails?.forEach(site => {
+            if (site.workStatus !== "Addl. AS Awaited") {
+                includedSites.push({
+                    ...site,
+                    fileNo: entry.fileNo!,
+                    applicantName: entry.applicantName!,
+                    applicationType: entry.applicationType!,
+                    fileRemittanceDate: firstRemittanceDate
+                });
+            }
+        });
+    });
 
     const initialStats = (): ProgressStats => ({ previousBalance: 0, currentApplications: 0, toBeRefunded: 0, totalApplications: 0, completed: 0, balance: 0, previousBalanceData: [], currentApplicationsData: [], toBeRefundedData: [], totalApplicationsData: [], completedData: [], balanceData: [] });
     const bwcData: ApplicationTypeProgress = {} as ApplicationTypeProgress;
@@ -269,53 +286,22 @@ export default function ProgressReportPage() {
     
     let totalRevenueHeadCredit = 0;
     const revenueHeadCreditData: any[] = [];
-
-    const uniqueCompletedSites = new Map<string, SiteDetailWithFileContext>();
-
-    fileEntries.forEach(entry => {
-        (entry.siteDetails || []).forEach(site => {
-            // EXCLUDE "Addl. AS Awaited" from ALL calculations
-            if (site.workStatus === "Addl. AS Awaited") {
-                return; 
-            }
-
-            const completionDate = safeParseDate(site.dateOfCompletion);
-            if (completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
-                const siteKey = `${entry.fileNo}-${site.nameOfSite}-${site.purpose}`;
-                if (!uniqueCompletedSites.has(siteKey)) {
-                    uniqueCompletedSites.set(siteKey, { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName!, applicationType: entry.applicationType! });
-                }
-            }
-        });
-    });
-    const allCompletedSitesInPeriod = Array.from(uniqueCompletedSites.values());
-
-    fileEntries.forEach(entry => {
-      const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
-      const isCurrentApplicationInPeriod = firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
-
-      (entry.siteDetails || []).forEach(site => {
-        if (!site) return;
-        
-        // EXCLUDE "Addl. AS Awaited" from ALL calculations
-        if (site.workStatus === "Addl. AS Awaited") {
-            return;
-        }
-
-        const siteWithFileContext: SiteDetailWithFileContext = { ...site, fileNo: entry.fileNo!, applicantName: entry.applicantName!, applicationType: entry.applicationType! };
+    
+    // 2. Process the pre-filtered list of sites
+    includedSites.forEach(siteWithFileContext => {
+        const { fileRemittanceDate, ...site } = siteWithFileContext;
         const purpose = site.purpose as SitePurpose;
         const diameter = site.diameter;
         const workStatus = site.workStatus as SiteWorkStatus | undefined;
         const completionDate = safeParseDate(site.dateOfCompletion);
         
+        const isCurrentApplicationInPeriod = fileRemittanceDate && isWithinInterval(fileRemittanceDate, { start: sDate, end: eDate });
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
         
-        // A site is part of previous balance if its remittance was before the start, and it wasn't completed before the start
-        const wasActiveBeforePeriod = firstRemittanceDate && isBefore(firstRemittanceDate, sDate) &&
+        const wasActiveBeforePeriod = fileRemittanceDate && isBefore(fileRemittanceDate, sDate) &&
                                   (!completionDate || isAfter(completionDate, sDate)) &&
                                   !isToBeRefunded;
-
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplicationInPeriod) { 
@@ -330,26 +316,34 @@ export default function ProgressReportPage() {
                 statsObj.completed++; 
                 statsObj.completedData.push(siteWithFileContext); 
             }
-            if (isToBeRefunded && firstRemittanceDate && isBefore(firstRemittanceDate, eDate)) {
+            if (isToBeRefunded && fileRemittanceDate && isBefore(fileRemittanceDate, eDate)) {
                 statsObj.toBeRefunded++; 
                 statsObj.toBeRefundedData.push(siteWithFileContext); 
             }
         };
         
-        if (entry.applicationType && purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
-          if (!bwcData[entry.applicationType]?.[diameter]) return;
-          updateStats(bwcData[entry.applicationType][diameter]);
-        } else if (entry.applicationType && purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
-          if (!twcData[entry.applicationType]?.[diameter]) return;
-          updateStats(twcData[entry.applicationType][diameter]);
+        if (siteWithFileContext.applicationType && purpose === 'BWC' && diameter && BWC_DIAMETERS.includes(diameter)) {
+          if (!bwcData[siteWithFileContext.applicationType]?.[diameter]) return;
+          updateStats(bwcData[siteWithFileContext.applicationType][diameter]);
+        } else if (siteWithFileContext.applicationType && purpose === 'TWC' && diameter && TWC_DIAMETERS.includes(diameter)) {
+          if (!twcData[siteWithFileContext.applicationType]?.[diameter]) return;
+          updateStats(twcData[siteWithFileContext.applicationType][diameter]);
         }
         
         if (allServicePurposesForSummary.includes(purpose)) {
           updateStats(progressSummaryData[purpose]);
         }
-      });
-        // Financial Summary Update (File-level)
-        if (isCurrentApplicationInPeriod) {
+    });
+    
+    // 3. Process file-level data for Financial Summary using the original `fileEntries`
+    const processedFilesForFinancials = new Set<string>();
+    fileEntries.forEach(entry => {
+        const firstRemittanceDate = safeParseDate(entry.remittanceDetails?.[0]?.dateOfRemittance);
+        const isCurrentApplicationInPeriod = firstRemittanceDate && isWithinInterval(firstRemittanceDate, { start: sDate, end: eDate });
+        
+        if (isCurrentApplicationInPeriod && !processedFilesForFinancials.has(entry.fileNo!)) {
+            processedFilesForFinancials.add(entry.fileNo!);
+
             const isPrivate = PRIVATE_APPLICATION_TYPES.includes(entry.applicationType as ApplicationType);
             const targetFinancialSummary = isPrivate ? privateFinancialSummary : governmentFinancialSummary;
             
@@ -368,6 +362,17 @@ export default function ProgressReportPage() {
         }
     });
 
+    const uniqueCompletedSites = new Map<string, SiteDetailWithFileContext>();
+    includedSites.forEach(site => {
+        const completionDate = safeParseDate(site.dateOfCompletion);
+        if (completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate })) {
+            const siteKey = `${site.fileNo}-${site.nameOfSite}-${site.purpose}`;
+            if (!uniqueCompletedSites.has(siteKey)) {
+                uniqueCompletedSites.set(siteKey, site);
+            }
+        }
+    });
+
     // Post-process to fix counts for financial summary
     financialSummaryOrder.forEach(purpose => {
         const pvtSummary = privateFinancialSummary[purpose];
@@ -376,7 +381,7 @@ export default function ProgressReportPage() {
         if (govtSummary) govtSummary.totalApplications = new Set(govtSummary.applicationData.map(e => e.fileNo)).size;
     });
 
-    allCompletedSitesInPeriod.forEach(site => {
+    Array.from(uniqueCompletedSites.values()).forEach(site => {
       const purpose = site.purpose as SitePurpose;
       if (purpose && financialSummaryOrder.includes(purpose)) {
         const isPrivate = site.applicationType ? PRIVATE_APPLICATION_TYPES.includes(site.applicationType) : false;
