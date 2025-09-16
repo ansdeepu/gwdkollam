@@ -134,23 +134,29 @@ const RigAccordionItem = ({
   index,
   isReadOnly,
   onRemove,
-  onRenew,
   onActivate,
-  onCancel,
   onDeleteRenewal,
   onEditRenewal,
   form,
+  setRenewalData,
+  setIsRenewalDialogOpen,
+  setEditingRenewal,
+  setCancellationData,
+  setIsCancelDialogOpen,
 }: {
   field: RigRegistration;
   index: number;
   isReadOnly: boolean;
   onRemove?: (index: number) => void;
-  onRenew: (index: number) => void;
   onActivate: (index: number) => void;
-  onCancel: (rigIndex: number) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewalId: string) => void;
   form: UseFormReturn<any>;
+  setRenewalData: React.Dispatch<React.SetStateAction<{ rigIndex: number; data: Partial<RigRenewalFormData> } | null>>;
+  setIsRenewalDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setEditingRenewal: React.Dispatch<React.SetStateAction<{ rigIndex: number; renewal: RigRenewalFormData } | null>>;
+  setCancellationData: React.Dispatch<React.SetStateAction<{ rigIndex: number; reason: string; date: string }>>;
+  setIsCancelDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const rigTypeValue = field.typeOfRig;
   const registrationDate = toDateOrNull(field.registrationDate);
@@ -186,6 +192,17 @@ const RigAccordionItem = ({
         form.setValue(`rigs.${index}.enabledSections`, newSections, { shouldDirty: true });
     };
 
+    const handleRenewRig = () => {
+        setEditingRenewal(null);
+        setRenewalData({ rigIndex: index, data: { renewalDate: toInputDate(new Date()) } });
+        setIsRenewalDialogOpen(true);
+    };
+
+    const handleCancelRig = () => {
+        setCancellationData({ rigIndex: index, reason: '', date: format(new Date(), 'yyyy-MM-dd') });
+        setIsCancelDialogOpen(true);
+    };
+
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
       <div className="flex items-center w-full border-b">
@@ -215,10 +232,10 @@ const RigAccordionItem = ({
                 </DropdownMenu>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRenew(index); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
+                <Button type="button" size="sm" variant="outline" onClick={handleRenewRig}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>
             )}
             {!isReadOnly && field.status === 'Active' && (
-                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
+                <Button type="button" size="sm" variant="destructive" onClick={handleCancelRig}><Ban className="mr-2 h-4 w-4" />Cancel</Button>
             )}
             {!isReadOnly && field.status === 'Cancelled' && (
                 <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); onActivate(index); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
@@ -337,7 +354,7 @@ const RigAccordionItem = ({
                     <h4 className="font-semibold text-destructive">Cancellation Details</h4>
                      {!isReadOnly && (
                         <div className="flex items-center space-x-1">
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(index); }}>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={handleCancelRig}>
                                 <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/20" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onActivate(index); }}>
@@ -633,12 +650,6 @@ export default function AgencyRegistrationPage() {
   }, [filteredApplications]);
   
   const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
-
-  const handleRenewRig = (rigIndex: number) => {
-      setEditingRenewal(null);
-      setRenewalData({ rigIndex, data: { renewalDate: toInputDate(new Date()) } });
-      setIsRenewalDialogOpen(true);
-  };
   
     const handleEditRenewal = (rigIndex: number, renewalId: string) => {
         const rig = rigFields[rigIndex];
@@ -727,11 +738,6 @@ export default function AgencyRegistrationPage() {
         toast({ title: "Renewal Removed", description: "The renewal record has been removed." });
         setDeletingRenewal(null);
     };
-
-  const handleCancelRig = (rigIndex: number) => {
-      setCancellationData({ rigIndex, reason: '', date: format(new Date(), 'yyyy-MM-dd') });
-      setIsCancelDialogOpen(true);
-  };
   
   const handleActivateRig = (rigIndex: number) => {
     const currentRig = form.getValues(`rigs.${rigIndex}`);
@@ -859,12 +865,15 @@ export default function AgencyRegistrationPage() {
                                     index={index}
                                     isReadOnly={isReadOnly}
                                     onRemove={!isReadOnly && rigFields.length > 1 ? removeRig : undefined}
-                                    onRenew={handleRenewRig}
                                     onActivate={handleActivateRig}
-                                    onCancel={handleCancelRig}
                                     onDeleteRenewal={handleDeleteRenewal}
                                     onEditRenewal={handleEditRenewal}
                                     form={form}
+                                    setRenewalData={setRenewalData}
+                                    setIsRenewalDialogOpen={setIsRenewalDialogOpen}
+                                    setEditingRenewal={setEditingRenewal}
+                                    setCancellationData={setCancellationData}
+                                    setIsCancelDialogOpen={setIsCancelDialogOpen}
                                 />
                                ))}
                             </Accordion>
