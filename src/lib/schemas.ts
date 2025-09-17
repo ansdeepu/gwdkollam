@@ -1,9 +1,52 @@
 
-
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
 export * from './schemas/DataEntrySchema';
+
+const toDateOrNull = (value: any): Date | null => {
+  if (value === null || value === undefined || value === '') return null;
+  if (value instanceof Date && !isNaN(value.getTime())) return value;
+  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+    try {
+      const ms = value.seconds * 1000 + (value.nanoseconds ? Math.round(value.nanoseconds / 1e6) : 0);
+      const d = new Date(ms);
+      if (!isNaN(d.getTime())) return d;
+    } catch { /* fallthrough */ }
+  }
+  if (typeof value === 'number' && isFinite(value)) {
+    const ms = value < 1e12 ? value * 1000 : value;
+    const d = new Date(ms);
+    if (!isNaN(d.getTime())) return d;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+    const iso = Date.parse(trimmed);
+    if (!isNaN(iso)) return new Date(iso);
+    const ymd = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const ymdMatch = trimmed.match(ymd);
+    if (ymdMatch) {
+      const [_, y, m, d] = ymdMatch;
+      const dt = new Date(Number(y), Number(m) - 1, Number(d));
+      if (!isNaN(dt.getTime())) return dt;
+    }
+    const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    const dmyMatch = trimmed.match(dmy);
+    if (dmyMatch) {
+      const [_, dd, mm, yyyy] = dmyMatch;
+      const dt = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      if (!isNaN(dt.getTime())) return dt;
+    }
+    try {
+      const fallback = new Date(trimmed);
+      if (!isNaN(fallback.getTime())) return fallback;
+    } catch { /* ignore */ }
+  }
+  return null;
+};
+
+const optionalDateSchema = z.preprocess((val) => (val ? toDateOrNull(val) : null), z.date().nullable().optional());
 
 export const LoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -70,25 +113,6 @@ const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
     return val;
 }, z.coerce.number({ invalid_type_error: errorMessage }).min(0, "Cannot be negative.").optional());
 
-const optionalDate = z.preprocess((val) => {
-  if (typeof val === "string") {
-    // Allows empty string, dd/mm/yyyy, and ISO
-    if (val.trim() === "") return null;
-    const parsedDate = parse(val, 'dd/MM/yyyy', new Date());
-    return isValid(parsedDate) ? parsedDate : val; // Return string if invalid, Zod will catch it
-  }
-  return val;
-}, z.date({ invalid_type_error: "Invalid date, use dd/mm/yyyy format." }).optional().nullable());
-
-// Use 'yyyy-MM-dd' for native date pickers
-const nativeDateSchema = z.preprocess(
-  (val) => (val === "" ? undefined : val), // Treat empty string as undefined
-  z.string()
-    .optional()
-    .refine((val) => !val || !isNaN(Date.parse(val)) || val === '', { message: "Invalid date" }) // Allow empty string
-);
-
-
 // ARS Schemas
 export const arsWorkStatusOptions = [
   "Proposal Submitted",
@@ -131,11 +155,11 @@ export const ArsEntrySchema = z.object({
   estimateAmount: optionalNumber(),
   arsAsTsDetails: z.string().optional(),
   tsAmount: optionalNumber(),
-  arsSanctionedDate: nativeDateSchema,
+  arsSanctionedDate: optionalDateSchema,
   arsTenderedAmount: optionalNumber(),
   arsAwardedAmount: optionalNumber(),
   workStatus: z.enum(arsWorkStatusOptions, { required_error: "Present status is required." }),
-  dateOfCompletion: nativeDateSchema,
+  dateOfCompletion: optionalDateSchema,
   totalExpenditure: optionalNumber(),
   noOfBeneficiary: z.string().optional(),
   workRemarks: z.string().optional(),
@@ -383,18 +407,18 @@ export const ApplicationFeeSchema = z.object({
     id: z.string(),
     applicationFeeType: z.enum(applicationFeeTypes).optional(),
     applicationFeeAmount: optionalNumber(),
-    applicationFeePaymentDate: nativeDateSchema,
+    applicationFeePaymentDate: optionalDateSchema,
     applicationFeeChallanNo: z.string().optional(),
 });
 export type ApplicationFee = z.infer<typeof ApplicationFeeSchema>;
 
 export const RigRenewalSchema = z.object({
     id: z.string(),
-    renewalDate: nativeDateSchema.refine(val => val !== undefined && val !== '', { message: "Renewal date is required." }),
+    renewalDate: z.preprocess((val) => (val ? toDateOrNull(val) : null), z.date({ required_error: "Renewal date is required." })),
     renewalFee: optionalNumber("Renewal fee is required."),
-    paymentDate: nativeDateSchema.optional(),
+    paymentDate: optionalDateSchema,
     challanNo: z.string().optional(),
-    validTill: optionalDate,
+    validTill: optionalDateSchema,
 });
 export type RigRenewal = z.infer<typeof RigRenewalSchema>;
 
@@ -402,12 +426,12 @@ export const RigRegistrationSchema = z.object({
     id: z.string(),
     rigRegistrationNo: z.string().optional(),
     typeOfRig: z.enum(rigTypeOptions).optional(),
-    registrationDate: nativeDateSchema.optional(),
+    registrationDate: optionalDateSchema,
     registrationFee: optionalNumber(),
-    paymentDate: nativeDateSchema.optional(),
+    paymentDate: optionalDateSchema,
     challanNo: z.string().optional(),
     additionalRegistrationFee: optionalNumber(),
-    additionalPaymentDate: nativeDateSchema.optional(),
+    additionalPaymentDate: optionalDateSchema,
     additionalChallanNo: z.string().optional(),
     rigVehicle: VehicleDetailsSchema,
     compressorVehicle: VehicleDetailsSchema,
@@ -417,7 +441,7 @@ export const RigRegistrationSchema = z.object({
     status: z.enum(['Active', 'Cancelled']),
     renewals: z.array(RigRenewalSchema).optional(),
     history: z.array(z.string()).optional(),
-    cancellationDate: optionalDate,
+    cancellationDate: optionalDateSchema,
     cancellationReason: z.string().optional(),
     // Fields to control visibility of optional sections
     showRigVehicle: z.boolean().optional(),
@@ -439,12 +463,12 @@ export const AgencyApplicationSchema = z.object({
 
   // Agency Registration
   agencyRegistrationNo: z.string().optional(),
-  agencyRegistrationDate: nativeDateSchema.optional(),
+  agencyRegistrationDate: optionalDateSchema,
   agencyRegistrationFee: optionalNumber(),
-  agencyPaymentDate: nativeDateSchema.optional(),
+  agencyPaymentDate: optionalDateSchema,
   agencyChallanNo: z.string().optional(),
   agencyAdditionalRegFee: optionalNumber(),
-  agencyAdditionalPaymentDate: nativeDateSchema.optional(),
+  agencyAdditionalPaymentDate: optionalDateSchema,
   agencyAdditionalChallanNo: z.string().optional(),
   
   rigs: z.array(RigRegistrationSchema),
@@ -452,5 +476,3 @@ export const AgencyApplicationSchema = z.object({
   history: z.array(z.string()).optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
-
-

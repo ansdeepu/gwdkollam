@@ -1341,7 +1341,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
                 </div>
                 <div className="space-y-2">
                     <Label>Payment Date</Label>
-                    <Input type="date" value={data.applicationFeePaymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
+                    <Input type="date" value={formatDateForInput(toDateOrNull(data.applicationFeePaymentDate))} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                     <Label>Challan No.</Label>
@@ -1364,7 +1364,7 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                     <Label className="text-right">Renewal Date</Label>
-                    <Input type="date" value={data.renewalDate ?? ''} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
+                    <Input type="date" value={formatDateForInput(toDateOrNull(data.renewalDate))} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="renewalFee">Renewal Fee</Label>
@@ -1372,7 +1372,7 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
                 </div>
                  <div className="space-y-2">
                     <Label className="text-right">Payment Date</Label>
-                    <Input type="date" value={data.paymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
+                    <Input type="date" value={formatDateForInput(toDateOrNull(data.paymentDate))} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="challanNo">Challan No.</Label>
