@@ -109,10 +109,13 @@ const processDataForSaving = (data: any): any => {
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
-                 if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && value) {
-                    processed[key] = toDateOrNull(value); 
-                } else {
+                 if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && typeof value === 'string' && value) {
+                    processed[key] = toDateOrNull(value) || null; // Convert to Date or null
+                } else if (typeof value === 'object') {
                     processed[key] = processDataForSaving(value);
+                }
+                else {
+                    processed[key] = value;
                 }
             }
         }
@@ -630,24 +633,6 @@ export default function AgencyRegistrationPage() {
         return `[${timestamp}] - ${logParts.join(' | ')}`;
     };
 
-    const deepMerge = (target: any, source: any) => {
-      const output = { ...target };
-      if (isObject(target) && isObject(source)) {
-          Object.keys(source).forEach(key => {
-              if (isObject(source[key])) {
-                  if (!(key in target))
-                      Object.assign(output, { [key]: source[key] });
-                  else
-                      output[key] = deepMerge(target[key], source[key]);
-              } else {
-                  Object.assign(output, { [key]: source[key] });
-              }
-          });
-      }
-      return output;
-  }
-  const isObject = (item: any) => (item && typeof item === 'object' && !Array.isArray(item));
-
   const onSubmit = async (data: AgencyApplication) => {
       setIsSubmitting(true);
       try {
@@ -657,8 +642,7 @@ export default function AgencyRegistrationPage() {
             if (selectedApplicationId && selectedApplicationId !== 'new') {
                 const originalApp = applications.find(a => a.id === selectedApplicationId);
                 if (originalApp) {
-                    const mergedData = deepMerge(originalApp, dataForSave);
-                    await updateApplication(selectedApplicationId, { ...mergedData, status: finalStatus });
+                    await updateApplication(selectedApplicationId, { ...originalApp, ...dataForSave, status: finalStatus });
                     toast({ title: "Application Updated", description: "The registration details have been updated." });
                 } else {
                     throw new Error("Original application not found for update.");
