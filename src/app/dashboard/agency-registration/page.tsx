@@ -95,6 +95,7 @@ const processDataForSaving = (data: any): any => {
         return Object.fromEntries(
             Object.entries(data).map(([key, value]) => {
                 if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && value && typeof value === 'string') {
+                     if (value.trim() === '') return [key, null]; // Convert empty string to null
                     return [key, toDateOrNull(value) || null];
                 }
                  if (typeof value === 'object' && value !== null) {
@@ -616,40 +617,58 @@ export default function AgencyRegistrationPage() {
     };
 
   const onSubmit = async (data: AgencyApplication) => {
-      setIsSubmitting(true);
-      try {
-            const finalStatus = data.agencyRegistrationNo ? 'Active' : 'Pending Verification';
-            const dataForSave = processDataForSaving(data);
+    setIsSubmitting(true);
+    try {
+        const finalStatus = data.agencyRegistrationNo ? 'Active' : 'Pending Verification';
+        const dataForSave = processDataForSaving(data);
 
-            if (selectedApplicationId && selectedApplicationId !== 'new') {
-                const originalApp = applications.find(a => a.id === selectedApplicationId);
-                if (originalApp) {
-                    const finalPayload = { ...originalApp, ...dataForSave, status: finalStatus };
-                    await updateApplication(selectedApplicationId, finalPayload);
-                    toast({ title: "Application Updated", description: "The registration details have been updated." });
-                } else {
-                    throw new Error("Original application not found for update.");
-                }
-            } else {
-                const dataWithHistory = {
+        if (selectedApplicationId && selectedApplicationId !== 'new') {
+            const originalApp = applications.find(a => a.id === selectedApplicationId);
+            if (originalApp) {
+                // Perform a more careful merge
+                const mergedRigs = (dataForSave.rigs || []).map((updatedRig: any) => {
+                    const originalRig = originalApp.rigs.find(r => r.id === updatedRig.id);
+                    // Preserve nested arrays like renewals and history from the original rig
+                    return {
+                        ...originalRig,
+                        ...updatedRig,
+                        renewals: updatedRig.renewals || originalRig?.renewals || [],
+                        history: updatedRig.history || originalRig?.history || [],
+                    };
+                });
+
+                const finalPayload = {
+                    ...originalApp,
                     ...dataForSave,
-                    status: finalStatus,
-                    rigs: dataForSave.rigs.map((rig: any) => {
-                        const historyEntry = generateHistoryEntry(rig);
-                        const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
-                        return { ...rig, history: newHistory };
-                    })
+                    rigs: mergedRigs,
+                    status: finalStatus
                 };
-                await addApplication(dataWithHistory);
-                toast({ title: "Application Created", description: "The new agency registration has been saved." });
+
+                await updateApplication(selectedApplicationId, finalPayload);
+                toast({ title: "Application Updated", description: "The registration details have been updated." });
+            } else {
+                throw new Error("Original application not found for update.");
             }
-          setSelectedApplicationId(null);
-      } catch (error: any) {
-          console.error("Submission failed:", error);
-          toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
-      } finally {
-          setIsSubmitting(false);
-      }
+        } else {
+            const dataWithHistory = {
+                ...dataForSave,
+                status: finalStatus,
+                rigs: dataForSave.rigs.map((rig: any) => {
+                    const historyEntry = generateHistoryEntry(rig);
+                    const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
+                    return { ...rig, history: newHistory };
+                })
+            };
+            await addApplication(dataWithHistory);
+            toast({ title: "Application Created", description: "The new agency registration has been saved." });
+        }
+        setSelectedApplicationId(null);
+    } catch (error: any) {
+        console.error("Submission failed:", error);
+        toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
 
@@ -1215,7 +1234,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
 
     const handleConfirm = () => {
         if (!data.applicationFeeType) {
-            alert("Please select a type of application.");
+            toast({ title: "Validation Error", description: "Please select a type of application.", variant: "destructive" });
             return;
         }
         onConfirm(data);
