@@ -75,7 +75,7 @@ const processDataForForm = (data: any): any => {
     if (typeof data === 'object' && data !== null && ! (data instanceof Date)) {
         return Object.fromEntries(
             Object.entries(data).map(([key, value]) => {
-                if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
+                if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && value) {
                     const date = toDateOrNull(value);
                     return [key, date ? format(date, 'yyyy-MM-dd') : ''];
                 }
@@ -539,11 +539,11 @@ export default function AgencyRegistrationPage() {
                  form.reset(processedApp);
             } else {
                 setSelectedApplicationId(null);
-                form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], history: [] });
+                form.reset({ owner: createDefaultOwner(), partners: [], applicationFees: [], rigs: [], history: [] });
             }
         }
     } else {
-        form.reset({ owner: createDefaultOwner(), partners: [], rigs: [], history: [] });
+        form.reset({ owner: createDefaultOwner(), partners: [], applicationFees: [], rigs: [], history: [] });
     }
   }, [selectedApplicationId, applications, form, setIsNavigating]);
   
@@ -735,7 +735,8 @@ export default function AgencyRegistrationPage() {
     };
 
     const handleConfirmFeeChange = (feeData: ApplicationFee) => {
-        const { index, fee } = dialogState.data;
+        if (!dialogState.data) return;
+        const { index } = dialogState.data;
         updateFee(index, feeData);
         closeDialog();
         toast({ title: "Application Fee Updated", description: "The fee details have been saved." });
