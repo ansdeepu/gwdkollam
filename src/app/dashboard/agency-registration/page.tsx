@@ -1230,6 +1230,7 @@ export default function AgencyRegistrationPage() {
 }
 
 function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<ApplicationFee>, onConfirm: (data: any) => void, onCancel: () => void }) {
+    const { toast } = useToast();
     const [data, setData] = useState(initialData);
 
     const handleConfirm = () => {
@@ -1452,6 +1453,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
 
     
 
