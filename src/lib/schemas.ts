@@ -390,9 +390,9 @@ export type ApplicationFee = z.infer<typeof ApplicationFeeSchema>;
 
 export const RigRenewalSchema = z.object({
     id: z.string(),
-    renewalDate: nativeDateSchema.refine(val => val !== undefined, { message: "Renewal date is required." }),
+    renewalDate: nativeDateSchema.refine(val => val !== undefined && val !== '', { message: "Renewal date is required." }),
     renewalFee: optionalNumber("Renewal fee is required."),
-    paymentDate: nativeDateSchema,
+    paymentDate: nativeDateSchema.optional(),
     challanNo: z.string().optional(),
     validTill: optionalDate,
 });
@@ -402,12 +402,12 @@ export const RigRegistrationSchema = z.object({
     id: z.string(),
     rigRegistrationNo: z.string().optional(),
     typeOfRig: z.enum(rigTypeOptions).optional(),
-    registrationDate: nativeDateSchema,
+    registrationDate: nativeDateSchema.optional(),
     registrationFee: optionalNumber(),
-    paymentDate: nativeDateSchema,
+    paymentDate: nativeDateSchema.optional(),
     challanNo: z.string().optional(),
     additionalRegistrationFee: optionalNumber(),
-    additionalPaymentDate: nativeDateSchema,
+    additionalPaymentDate: nativeDateSchema.optional(),
     additionalChallanNo: z.string().optional(),
     rigVehicle: VehicleDetailsSchema,
     compressorVehicle: VehicleDetailsSchema,
@@ -439,12 +439,12 @@ export const AgencyApplicationSchema = z.object({
 
   // Agency Registration
   agencyRegistrationNo: z.string().optional(),
-  agencyRegistrationDate: nativeDateSchema,
+  agencyRegistrationDate: nativeDateSchema.optional(),
   agencyRegistrationFee: optionalNumber(),
-  agencyPaymentDate: nativeDateSchema,
+  agencyPaymentDate: nativeDateSchema.optional(),
   agencyChallanNo: z.string().optional(),
   agencyAdditionalRegFee: optionalNumber(),
-  agencyAdditionalPaymentDate: nativeDateSchema,
+  agencyAdditionalPaymentDate: nativeDateSchema.optional(),
   agencyAdditionalChallanNo: z.string().optional(),
   
   rigs: z.array(RigRegistrationSchema),
@@ -452,3 +452,4 @@ export const AgencyApplicationSchema = z.object({
   history: z.array(z.string()).optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
+
