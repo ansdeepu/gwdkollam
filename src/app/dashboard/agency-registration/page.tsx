@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from "react"
 import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo, type ApplicationFee } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema } from "@/lib/schemas";
+import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -109,8 +109,7 @@ const processDataForSaving = (data: any): any => {
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
-                if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
-                    // toDateOrNull handles strings (yyyy-MM-dd), null, undefined, etc.
+                 if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && value) {
                     processed[key] = toDateOrNull(value); 
                 } else {
                     processed[key] = processDataForSaving(value);
@@ -631,6 +630,24 @@ export default function AgencyRegistrationPage() {
         return `[${timestamp}] - ${logParts.join(' | ')}`;
     };
 
+    const deepMerge = (target: any, source: any) => {
+      const output = { ...target };
+      if (isObject(target) && isObject(source)) {
+          Object.keys(source).forEach(key => {
+              if (isObject(source[key])) {
+                  if (!(key in target))
+                      Object.assign(output, { [key]: source[key] });
+                  else
+                      output[key] = deepMerge(target[key], source[key]);
+              } else {
+                  Object.assign(output, { [key]: source[key] });
+              }
+          });
+      }
+      return output;
+  }
+  const isObject = (item: any) => (item && typeof item === 'object' && !Array.isArray(item));
+
   const onSubmit = async (data: AgencyApplication) => {
       setIsSubmitting(true);
       try {
@@ -640,8 +657,8 @@ export default function AgencyRegistrationPage() {
             if (selectedApplicationId && selectedApplicationId !== 'new') {
                 const originalApp = applications.find(a => a.id === selectedApplicationId);
                 if (originalApp) {
-                    const mergedData = { ...originalApp, ...dataForSave, status: finalStatus };
-                    await updateApplication(selectedApplicationId, mergedData);
+                    const mergedData = deepMerge(originalApp, dataForSave);
+                    await updateApplication(selectedApplicationId, { ...mergedData, status: finalStatus });
                     toast({ title: "Application Updated", description: "The registration details have been updated." });
                 } else {
                     throw new Error("Original application not found for update.");
@@ -1055,7 +1072,7 @@ export default function AgencyRegistrationPage() {
                     />
                 </DialogContent>
             </Dialog>
-            <AlertDialog open={!!deletingFeeIndex} onOpenChange={() => setDeletingFeeIndex(null)}>
+            <AlertDialog open={deletingFeeIndex !== null} onOpenChange={() => setDeletingFeeIndex(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
