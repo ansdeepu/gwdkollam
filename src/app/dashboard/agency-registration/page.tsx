@@ -38,76 +38,150 @@ import "client-only";
 export const dynamic = 'force-dynamic';
 
 const toDateOrNull = (value: any): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date && isValid(value)) return value;
-  
-  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-    if (isValid(date)) return date;
+  if (value === null || value === undefined || value === '') return null;
+
+  // Already a valid Date
+  if (value instanceof Date && !isNaN(value.getTime())) return value;
+
+  // Firestore-like Timestamp ({ seconds, nanoseconds })
+  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+    try {
+      const ms = value.seconds * 1000 + (value.nanoseconds ? Math.round(value.nanoseconds / 1e6) : 0);
+      const d = new Date(ms);
+      if (!isNaN(d.getTime())) return d;
+    } catch { /* fallthrough */ }
   }
-  
+
+  // Numeric epoch (seconds or milliseconds)
+  if (typeof value === 'number' && isFinite(value)) {
+    // Heuristic: if < 1e12 treat as seconds
+    const ms = value < 1e12 ? value * 1000 : value;
+    const d = new Date(ms);
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  // String parsing: try ISO first, then common patterns
   if (typeof value === 'string') {
-    if (value.trim() === '') return null; // Handle empty strings
-    let parsed = parseISO(value); // Standard ISO format
-    if (isValid(parsed)) return parsed;
-    
-    parsed = parse(value, 'yyyy-MM-dd', new Date()); // Date picker format
-    if (isValid(parsed)) return parsed;
-    
-    parsed = parse(value, 'dd/MM/yyyy', new Date()); // Common display format
-    if (isValid(parsed)) return parsed;
-  }
-  
-  try {
-    const coercedDate = toDate(value);
-    if (isValid(coercedDate)) return coercedDate;
-  } catch {
-    // Ignore errors from toDate coercion
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+
+    // ISO / RFC parsable
+    const iso = Date.parse(trimmed);
+    if (!isNaN(iso)) return new Date(iso);
+
+    // yyyy-MM-dd (common for <input type=date>)
+    const ymd = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const ymdMatch = trimmed.match(ymd);
+    if (ymdMatch) {
+      const [_, y, m, d] = ymdMatch;
+      const dt = new Date(Number(y), Number(m) - 1, Number(d));
+      if (!isNaN(dt.getTime())) return dt;
+    }
+
+    // dd/MM/yyyy
+    const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    const dmyMatch = trimmed.match(dmy);
+    if (dmyMatch) {
+      const [_, dd, mm, yyyy] = dmyMatch;
+      const dt = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      if (!isNaN(dt.getTime())) return dt;
+    }
+
+    // fallback: attempt Date constructor
+    try {
+      const fallback = new Date(trimmed);
+      if (!isNaN(fallback.getTime())) return fallback;
+    } catch { /* ignore */ }
   }
 
   return null;
 };
 
+const formatDateForInput = (d: Date | null) => {
+  if (!d) return '';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const processDataForForm = (data: any): any => {
-    if (!data) return data;
-    if (Array.isArray(data)) {
-        return data.map(item => processDataForForm(item));
+  if (data === null || data === undefined) return data;
+
+  if (Array.isArray(data)) {
+    return data.map(item => processDataForForm(item));
+  }
+
+  if (typeof data === 'object') {
+    // handle Date-like or timestamp objects directly
+    const maybeDate = toDateOrNull(data);
+    if (maybeDate) {
+      return formatDateForInput(maybeDate);
     }
-    if (typeof data === 'object' && data !== null && ! (data instanceof Date)) {
-        return Object.fromEntries(
-            Object.entries(data).map(([key, value]) => {
-                if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && value) {
-                    const date = toDateOrNull(value);
-                    return [key, date ? format(date, 'yyyy-MM-dd') : ''];
-                }
-                return [key, processDataForForm(value)];
-            })
-        );
+
+    // otherwise recursively process keys
+    const out: any = {};
+    for (const [k, v] of Object.entries(data)) {
+      // treat anything with "date" or "till" in key name as date-ish
+      if (typeof v !== 'function' && (k.toLowerCase().includes('date') || k.toLowerCase().includes('till') || k.toLowerCase().includes('valid'))) {
+        const dt = toDateOrNull(v);
+        out[k] = formatDateForInput(dt);
+      } else {
+        out[k] = processDataForForm(v);
+      }
     }
-    return data;
+    return out;
+  }
+
+  // primitives
+  return data;
 };
 
 const processDataForSaving = (data: any): any => {
-    if (data === null || data === undefined) return data;
-    if (Array.isArray(data)) {
-        return data.map(item => processDataForSaving(item));
+  if (data === null || data === undefined) return data;
+
+  if (Array.isArray(data)) {
+    return data.map(item => processDataForSaving(item));
+  }
+
+  if (typeof data === 'object') {
+    // If object itself looks like a date-like (timestamp), convert
+    const maybeDate = toDateOrNull(data);
+    if (maybeDate) return maybeDate;
+
+    const out: any = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (typeof v === 'string') {
+        const trimmed = v.trim();
+        // For fields that look like date keys, convert to Date or null
+        if (k.toLowerCase().includes('date') || k.toLowerCase().includes('till') || k.toLowerCase().includes('valid')) {
+          if (trimmed === '') {
+            out[k] = null;
+          } else {
+            const parsed = toDateOrNull(trimmed);
+            out[k] = parsed ? parsed : null;
+          }
+          continue;
+        }
+        // For non-date strings, keep as-is (but convert empty -> undefined only if needed)
+        out[k] = trimmed === '' ? undefined : v;
+        continue;
+      }
+
+      // numbers, booleans: keep as-is
+      if (typeof v === 'number' || typeof v === 'boolean') {
+        out[k] = v;
+        continue;
+      }
+
+      // nested objects/arrays: recurse
+      out[k] = processDataForSaving(v);
     }
-    if (typeof data === 'object' && !(data instanceof Date)) {
-        return Object.fromEntries(
-            Object.entries(data).map(([key, value]) => {
-                const lowerKey = key.toLowerCase();
-                if ((lowerKey.includes('date') || lowerKey.includes('till')) && typeof value === 'string') {
-                     if (value.trim() === '') return [key, null]; // Convert empty string to null
-                    return [key, toDateOrNull(value) || null];
-                }
-                 if (typeof value === 'object' && value !== null) {
-                    return [key, processDataForSaving(value)];
-                }
-                return [key, value];
-            })
-        );
-    }
-    return data;
+    return out;
+  }
+
+  // primitves (string/number/bool) : return as-is
+  return data;
 };
 
 
@@ -619,6 +693,7 @@ export default function AgencyRegistrationPage() {
     };
 
   const onSubmit = async (data: AgencyApplication) => {
+    console.debug("onSubmit called, data snapshot:", data);
     setIsSubmitting(true);
     try {
         const finalStatus = data.agencyRegistrationNo ? 'Active' : 'Pending Verification';
@@ -628,7 +703,7 @@ export default function AgencyRegistrationPage() {
             const originalApp = applications.find(a => a.id === selectedApplicationId);
             if (originalApp) {
                  const mergedRigs = (dataForSave.rigs || []).map((updatedRig: RigRegistration) => {
-                    const originalRig = originalApp.rigs.find(r => r.id === updatedRig.id);
+                    const originalRig = (originalApp.rigs || []).find(r => r.id === updatedRig.id);
                     return {
                         ...originalRig,
                         ...updatedRig,
@@ -653,7 +728,7 @@ export default function AgencyRegistrationPage() {
             const dataWithHistory = {
                 ...dataForSave,
                 status: finalStatus,
-                rigs: dataForSave.rigs.map((rig: any) => {
+                rigs: (dataForSave.rigs || []).map((rig: any) => {
                     const historyEntry = generateHistoryEntry(rig);
                     const newHistory = historyEntry ? [...(rig.history || []), historyEntry] : (rig.history || []);
                     return { ...rig, history: newHistory };
@@ -904,7 +979,16 @@ export default function AgencyRegistrationPage() {
       return (
         <div>
           <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(
+                onSubmit,
+                (errors) => {
+                  console.debug("Form validation errors:", errors);
+                  toast({ title: "Validation Error", description: "Please check highlighted fields.", variant: "destructive" });
+                }
+              )}
+              className="space-y-6"
+            >
                 <Card>
                     <CardContent className="pt-6 space-y-8">
                         <div className="flex justify-end mb-4">
@@ -1453,6 +1537,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
 
     
 
