@@ -41,85 +41,68 @@ const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date && isValid(value)) return value;
   
-  // Handle Firestore Timestamp objects
   if (typeof value === 'object' && value !== null && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
     const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
     if (isValid(date)) return date;
   }
   
   if (typeof value === 'string') {
-    // Try parsing 'yyyy-MM-dd' format first (from date inputs)
-    let parsed = parse(value, 'yyyy-MM-dd', new Date());
+    let parsed = parseISO(value);
     if (isValid(parsed)) return parsed;
     
-    // Then try ISO format
-    parsed = parseISO(value);
+    parsed = parse(value, 'yyyy-MM-dd', new Date());
     if (isValid(parsed)) return parsed;
-
-    // Then try to parse 'dd/MM/yyyy' format
+    
     parsed = parse(value, 'dd/MM/yyyy', new Date());
     if (isValid(parsed)) return parsed;
   }
   
-  // Try to coerce other types to a Date
   try {
     const coercedDate = toDate(value);
     if (isValid(coercedDate)) return coercedDate;
   } catch {
-    // Ignore errors from toDate coercion
+    // Ignore errors
   }
 
   return null;
 };
 
-// Recursively processes an object to convert all date-like values to 'yyyy-MM-dd' strings for native date inputs.
 const processDataForForm = (data: any): any => {
     if (!data) return data;
     if (Array.isArray(data)) {
         return data.map(item => processDataForForm(item));
     }
     if (typeof data === 'object' && data !== null && ! (data instanceof Date)) {
-        const processed: { [key: string]: any } = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                const value = data[key];
-                 // Check for keys that typically represent dates
-                 if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
+        return Object.fromEntries(
+            Object.entries(data).map(([key, value]) => {
+                if (key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) {
                     const date = toDateOrNull(value);
-                    processed[key] = date ? format(date, 'yyyy-MM-dd') : '';
-                } else {
-                    // Recursively process nested objects/arrays
-                    processed[key] = processDataForForm(value);
+                    return [key, date ? format(date, 'yyyy-MM-dd') : ''];
                 }
-            }
-        }
-        return processed;
+                return [key, processDataForForm(value)];
+            })
+        );
     }
     return data;
 };
 
-// Recursively processes an object to convert all date-like strings back to Date objects before saving.
 const processDataForSaving = (data: any): any => {
     if (!data) return data;
     if (Array.isArray(data)) {
         return data.map(item => processDataForSaving(item));
     }
     if (typeof data === 'object' && data !== null && !(data instanceof Date)) {
-        const processed: { [key: string]: any } = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                const value = data[key];
-                 if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && typeof value === 'string' && value) {
-                    processed[key] = toDateOrNull(value) || null; // Convert to Date or null
-                } else if (typeof value === 'object') {
-                    processed[key] = processDataForSaving(value);
+        return Object.fromEntries(
+            Object.entries(data).map(([key, value]) => {
+                if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && typeof value === 'string' && value) {
+                    return [key, toDateOrNull(value) || null];
                 }
-                else {
-                    processed[key] = value;
+                if (typeof value === 'object' && value !== null) {
+                    return [key, processDataForSaving(value)];
                 }
-            }
-        }
-        return processed;
+                return [key, value];
+            })
+        );
     }
     return data;
 };
@@ -537,7 +520,6 @@ export default function AgencyRegistrationPage() {
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
 
-  // Robust useEffect to handle loading and parsing data from Firestore
   useEffect(() => {
     if (selectedApplicationId) {
         if (selectedApplicationId === 'new') {
@@ -1230,7 +1212,6 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
     const [data, setData] = useState(initialData);
 
     const handleConfirm = () => {
-        // Basic validation before confirming
         if (!data.applicationFeeType) {
             alert("Please select a type of application.");
             return;
@@ -1450,25 +1431,5 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
-    
-
-    
-
-      
-
-    
-
-
-
-    
-
-    
-
-    
-
-
-
-
-    
 
     
