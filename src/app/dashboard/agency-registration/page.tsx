@@ -94,10 +94,10 @@ const processDataForSaving = (data: any): any => {
     if (typeof data === 'object' && data !== null && !(data instanceof Date)) {
         return Object.fromEntries(
             Object.entries(data).map(([key, value]) => {
-                if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && typeof value === 'string' && value) {
+                if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && value && typeof value === 'string') {
                     return [key, toDateOrNull(value) || null];
                 }
-                if (typeof value === 'object' && value !== null) {
+                 if (typeof value === 'object' && value !== null) {
                     return [key, processDataForSaving(value)];
                 }
                 return [key, value];
@@ -624,7 +624,8 @@ export default function AgencyRegistrationPage() {
             if (selectedApplicationId && selectedApplicationId !== 'new') {
                 const originalApp = applications.find(a => a.id === selectedApplicationId);
                 if (originalApp) {
-                    await updateApplication(selectedApplicationId, { ...originalApp, ...dataForSave, status: finalStatus });
+                    const finalPayload = { ...originalApp, ...dataForSave, status: finalStatus };
+                    await updateApplication(selectedApplicationId, finalPayload);
                     toast({ title: "Application Updated", description: "The registration details have been updated." });
                 } else {
                     throw new Error("Original application not found for update.");
@@ -1432,5 +1433,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
 
     
