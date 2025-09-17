@@ -47,13 +47,14 @@ const toDateOrNull = (value: any): Date | null => {
   }
   
   if (typeof value === 'string') {
-    let parsed = parseISO(value);
+    if (value.trim() === '') return null; // Handle empty strings
+    let parsed = parseISO(value); // Standard ISO format
     if (isValid(parsed)) return parsed;
     
-    parsed = parse(value, 'yyyy-MM-dd', new Date());
+    parsed = parse(value, 'yyyy-MM-dd', new Date()); // Date picker format
     if (isValid(parsed)) return parsed;
     
-    parsed = parse(value, 'dd/MM/yyyy', new Date());
+    parsed = parse(value, 'dd/MM/yyyy', new Date()); // Common display format
     if (isValid(parsed)) return parsed;
   }
   
@@ -61,7 +62,7 @@ const toDateOrNull = (value: any): Date | null => {
     const coercedDate = toDate(value);
     if (isValid(coercedDate)) return coercedDate;
   } catch {
-    // Ignore errors
+    // Ignore errors from toDate coercion
   }
 
   return null;
@@ -87,14 +88,15 @@ const processDataForForm = (data: any): any => {
 };
 
 const processDataForSaving = (data: any): any => {
-    if (!data) return data;
+    if (data === null || data === undefined) return data;
     if (Array.isArray(data)) {
         return data.map(item => processDataForSaving(item));
     }
-    if (typeof data === 'object' && data !== null && !(data instanceof Date)) {
+    if (typeof data === 'object' && !(data instanceof Date)) {
         return Object.fromEntries(
             Object.entries(data).map(([key, value]) => {
-                if ((key.toLowerCase().includes('date') || key.toLowerCase().includes('till')) && value && typeof value === 'string') {
+                const lowerKey = key.toLowerCase();
+                if ((lowerKey.includes('date') || lowerKey.includes('till')) && typeof value === 'string') {
                      if (value.trim() === '') return [key, null]; // Convert empty string to null
                     return [key, toDateOrNull(value) || null];
                 }
@@ -625,10 +627,8 @@ export default function AgencyRegistrationPage() {
         if (selectedApplicationId && selectedApplicationId !== 'new') {
             const originalApp = applications.find(a => a.id === selectedApplicationId);
             if (originalApp) {
-                // Perform a more careful merge
-                const mergedRigs = (dataForSave.rigs || []).map((updatedRig: any) => {
+                 const mergedRigs = (dataForSave.rigs || []).map((updatedRig: RigRegistration) => {
                     const originalRig = originalApp.rigs.find(r => r.id === updatedRig.id);
-                    // Preserve nested arrays like renewals and history from the original rig
                     return {
                         ...originalRig,
                         ...updatedRig,
