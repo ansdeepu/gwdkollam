@@ -990,13 +990,13 @@ export default function AgencyRegistrationPage() {
               className="space-y-6"
             >
                 <Card>
-                    <CardContent className="p-4">
+                    <CardHeader className="p-4">
                         <div className="flex justify-end">
                             <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
                                 <ArrowLeft className="mr-2 h-4 w-4"/> Back
                             </Button>
                         </div>
-                    </CardContent>
+                    </CardHeader>
                     <CardContent className="space-y-8 pt-0">
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
@@ -1010,8 +1010,8 @@ export default function AgencyRegistrationPage() {
                                     <Separator />
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
-                                        <div className="grid md:grid-cols-3 gap-4 p-2 border rounded-md">
-                                          <FormItem className="md:col-span-1">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2 border rounded-md">
+                                          <FormItem className="md:col-span-2">
                                             <FormLabel>Name &amp; Address of Owner</FormLabel>
                                             <FormControl>
                                               <Textarea {...form.register("owner.name")} className="min-h-[40px]" readOnly={isReadOnlyForForm} />
@@ -1365,47 +1365,51 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
 }
 
 function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRenewalFormData>, onConfirm: (data: any) => void, onCancel: () => void }) {
-    const [renewalDate, setRenewalDate] = useState(formatDateForInput(toDateOrNull(initialData.renewalDate)));
-    const [paymentDate, setPaymentDate] = useState(formatDateForInput(toDateOrNull(initialData.paymentDate)));
-    const [renewalFee, setRenewalFee] = useState(initialData.renewalFee);
-    const [challanNo, setChallanNo] = useState(initialData.challanNo);
+  const [data, setData] = useState({
+    renewalDate: formatDateForInput(toDateOrNull(initialData.renewalDate)),
+    paymentDate: formatDateForInput(toDateOrNull(initialData.paymentDate)),
+    renewalFee: initialData.renewalFee,
+    challanNo: initialData.challanNo,
+  });
 
-    const handleConfirm = () => {
-        onConfirm({
-            ...initialData,
-            renewalDate,
-            paymentDate,
-            renewalFee,
-            challanNo,
-        });
-    };
+  const handleConfirm = () => {
+    onConfirm({ ...initialData, ...data });
+  };
 
-    return (
-        <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                    <Label className="text-right">Renewal Date</Label>
-                    <Input type="date" value={renewalDate} onChange={(e) => setRenewalDate(e.target.value)} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="renewalFee">Renewal Fee</Label>
-                    <Input id="renewalFee" type="number" value={renewalFee ?? ''} onChange={(e) => setRenewalFee(e.target.value === '' ? undefined : +e.target.value)} />
-                </div>
-                 <div className="space-y-2">
-                    <Label className="text-right">Payment Date</Label>
-                    <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="challanNo">Challan No.</Label>
-                    <Input id="challanNo" value={challanNo ?? ''} onChange={(e) => setChallanNo(e.target.value)} />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-                <Button type="button" onClick={handleConfirm}>Confirm</Button>
-            </DialogFooter>
-        </>
-    );
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type } = e.target;
+    setData(prev => ({
+      ...prev,
+      [id]: type === 'number' ? (value === '' ? undefined : +value) : value,
+    }));
+  };
+
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+        <div className="space-y-2">
+          <Label htmlFor="renewalDate">Renewal Date</Label>
+          <Input id="renewalDate" type="date" value={data.renewalDate} onChange={handleChange} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="renewalFee">Renewal Fee</Label>
+          <Input id="renewalFee" type="number" value={data.renewalFee ?? ''} onChange={handleChange} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="paymentDate">Payment Date</Label>
+          <Input id="paymentDate" type="date" value={data.paymentDate} onChange={handleChange} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="challanNo">Challan No.</Label>
+          <Input id="challanNo" value={data.challanNo ?? ''} onChange={handleChange} />
+        </div>
+      </div>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="button" onClick={handleConfirm}>Confirm</Button>
+      </DialogFooter>
+    </>
+  );
 }
 
 function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRegistration>, onConfirm: (data: any) => void, onCancel: () => void }) {
@@ -1558,3 +1562,4 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
