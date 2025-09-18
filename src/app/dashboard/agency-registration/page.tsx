@@ -1008,16 +1008,8 @@ export default function AgencyRegistrationPage() {
                                     <Separator />
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2 border rounded-md">
-                                          <FormItem className="md:col-span-2">
-                                            <FormField name="owner.name" render={({ field }) => (
-                                              <>
-                                                <FormLabel>Name &amp; Address of Owner</FormLabel>
-                                                <FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl>
-                                                <FormMessage />
-                                              </>
-                                            )} />
-                                          </FormItem>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md">
+                                          <FormField name="owner.name" render={({ field }) => <FormItem><FormLabel>Name &amp; Address of Owner</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                           <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                           <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
