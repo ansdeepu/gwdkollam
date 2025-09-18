@@ -990,12 +990,12 @@ export default function AgencyRegistrationPage() {
               className="space-y-6"
             >
                 <Card>
-                    <CardContent className="pt-6 space-y-8">
-                        <div className="flex justify-end">
-                            <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
-                                <ArrowLeft className="mr-2 h-4 w-4"/> Back
-                            </Button>
-                        </div>
+                    <div className="flex justify-end p-4">
+                        <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                        </Button>
+                    </div>
+                    <CardContent className="space-y-8 pt-0">
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                             <AccordionItem value="item-1">
@@ -1008,8 +1008,14 @@ export default function AgencyRegistrationPage() {
                                     <Separator />
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md">
-                                          <FormField name="owner.name" render={({ field }) => <FormItem><FormLabel>Name &amp; Address of Owner</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                        <div className="grid md:grid-cols-3 gap-4 p-2 border rounded-md">
+                                          <FormItem className="md:col-span-1">
+                                            <FormLabel>Name &amp; Address of Owner</FormLabel>
+                                            <FormControl>
+                                              <Textarea {...form.register("owner.name")} className="min-h-[40px]" readOnly={isReadOnlyForForm} />
+                                            </FormControl>
+                                            <FormMessage>{form.formState.errors.owner?.name?.message}</FormMessage>
+                                          </FormItem>
                                           <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                           <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
