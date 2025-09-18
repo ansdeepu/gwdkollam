@@ -991,7 +991,7 @@ export default function AgencyRegistrationPage() {
             >
                 <Card>
                     <CardContent className="pt-6 space-y-8">
-                        <div className="flex justify-end mb-4">
+                        <div className="flex justify-end">
                             <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
                                 <ArrowLeft className="mr-2 h-4 w-4"/> Back
                             </Button>
