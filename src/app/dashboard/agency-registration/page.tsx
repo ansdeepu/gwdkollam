@@ -990,11 +990,13 @@ export default function AgencyRegistrationPage() {
               className="space-y-6"
             >
                 <Card>
-                    <div className="flex justify-end p-4">
-                        <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
-                        </Button>
-                    </div>
+                    <CardContent className="p-4">
+                        <div className="flex justify-end">
+                            <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
+                                <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                            </Button>
+                        </div>
+                    </CardContent>
                     <CardContent className="space-y-8 pt-0">
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
@@ -1363,31 +1365,44 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
 }
 
 function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRenewalFormData>, onConfirm: (data: any) => void, onCancel: () => void }) {
-    const [data, setData] = useState(initialData);
+    const [renewalDate, setRenewalDate] = useState(formatDateForInput(toDateOrNull(initialData.renewalDate)));
+    const [paymentDate, setPaymentDate] = useState(formatDateForInput(toDateOrNull(initialData.paymentDate)));
+    const [renewalFee, setRenewalFee] = useState(initialData.renewalFee);
+    const [challanNo, setChallanNo] = useState(initialData.challanNo);
+
+    const handleConfirm = () => {
+        onConfirm({
+            ...initialData,
+            renewalDate,
+            paymentDate,
+            renewalFee,
+            challanNo,
+        });
+    };
 
     return (
         <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                     <Label className="text-right">Renewal Date</Label>
-                    <Input type="date" value={formatDateForInput(toDateOrNull(data.renewalDate))} onChange={(e) => setData(d => ({ ...d, renewalDate: e.target.value }))} />
+                    <Input type="date" value={renewalDate} onChange={(e) => setRenewalDate(e.target.value)} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="renewalFee">Renewal Fee</Label>
-                    <Input id="renewalFee" type="number" value={data.renewalFee ?? ''} onChange={(e) => setData(d => ({ ...d, renewalFee: +e.target.value }))} />
+                    <Input id="renewalFee" type="number" value={renewalFee ?? ''} onChange={(e) => setRenewalFee(e.target.value === '' ? undefined : +e.target.value)} />
                 </div>
                  <div className="space-y-2">
                     <Label className="text-right">Payment Date</Label>
-                    <Input type="date" value={formatDateForInput(toDateOrNull(data.paymentDate))} onChange={(e) => setData(d => ({ ...d, paymentDate: e.target.value }))} />
+                    <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="challanNo">Challan No.</Label>
-                    <Input id="challanNo" value={data.challanNo ?? ''} onChange={(e) => setData(d => ({ ...d, challanNo: e.target.value }))} />
+                    <Input id="challanNo" value={challanNo ?? ''} onChange={(e) => setChallanNo(e.target.value)} />
                 </div>
             </div>
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-                <Button type="button" onClick={() => onConfirm(data)}>Confirm</Button>
+                <Button type="button" onClick={handleConfirm}>Confirm</Button>
             </DialogFooter>
         </>
     );
