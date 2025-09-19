@@ -954,13 +954,13 @@ export default function AgencyRegistrationPage() {
   };
   
   const { activeRigs, cancelledRigs } = useMemo(() => {
-    const active: { field: RigRegistration, index: number }[] = [];
-    const cancelled: { field: RigRegistration, index: number }[] = [];
+    const active: { field: RigRegistration, originalIndex: number }[] = [];
+    const cancelled: { field: RigRegistration, originalIndex: number }[] = [];
     rigFields.forEach((field, index) => {
       if (field.status === 'Cancelled') {
-        cancelled.push({ field, index });
+        cancelled.push({ field, originalIndex: index });
       } else {
-        active.push({ field, index });
+        active.push({ field, originalIndex: index });
       }
     });
     return { activeRigs: active, cancelledRigs: cancelled };
@@ -1021,7 +1021,7 @@ export default function AgencyRegistrationPage() {
                                     <Separator />
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
                                             <FormItem className="md:col-span-1">
                                                 <FormLabel>Name &amp; Address of Owner</FormLabel>
                                                 <FormControl>
@@ -1111,7 +1111,7 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({activeRigs.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                 <Accordion type="multiple" className="w-full space-y-2">
-                                    {activeRigs.map(({ field, index }) => (
+                                    {activeRigs.map(({ field }, index) => (
                                     <RigAccordionItem
                                         key={field.id}
                                         field={field}
@@ -1137,7 +1137,7 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-destructive">4. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
-                                    {cancelledRigs.map(({ field, index }) => (
+                                    {cancelledRigs.map(({ field }, index) => (
                                         <RigAccordionItem
                                         key={field.id}
                                         field={field}
@@ -1602,6 +1602,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
 
     
 
