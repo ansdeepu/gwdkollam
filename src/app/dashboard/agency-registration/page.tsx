@@ -486,13 +486,13 @@ const RigAccordionItem = ({
                     <Table>
                         <TableHeader>
                         <TableRow>
-                            <TableHead className="whitespace-normal break-words">Renewal No.</TableHead>
-                            <TableHead className="whitespace-normal break-words">Renewal Date</TableHead>
-                            <TableHead className="whitespace-normal break-words">Validity Upto</TableHead>
-                            <TableHead className="whitespace-normal break-words">Fee (₹)</TableHead>
-                            <TableHead className="whitespace-normal break-words">Payment Date</TableHead>
-                            <TableHead className="whitespace-normal break-words">Challan No.</TableHead>
-                            {!isReadOnly && <TableHead className="text-center whitespace-normal break-words">Actions</TableHead>}
+                            <TableHead className="py-2 px-4 whitespace-normal break-words">Renewal No.</TableHead>
+                            <TableHead className="py-2 px-4 whitespace-normal break-words">Renewal Date</TableHead>
+                            <TableHead className="py-2 px-4 whitespace-normal break-words">Validity Upto</TableHead>
+                            <TableHead className="py-2 px-4 whitespace-normal break-words">Fee (₹)</TableHead>
+                            <TableHead className="py-2 px-4 whitespace-normal break-words">Payment Date</TableHead>
+                            <TableHead className="py-2 px-4 whitespace-normal break-words">Challan No.</TableHead>
+                            {!isReadOnly && <TableHead className="py-2 px-4 text-center whitespace-normal break-words">Actions</TableHead>}
                         </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -503,14 +503,14 @@ const RigAccordionItem = ({
                             const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
                             return (
                                 <TableRow key={renewal.id}>
-                                <TableCell className="font-medium whitespace-normal break-words">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
+                                <TableCell className="py-2 px-4 font-medium whitespace-normal break-words">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
+                                <TableCell className="py-2 px-4 whitespace-normal break-words">{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="py-2 px-4 whitespace-normal break-words">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
+                                <TableCell className="py-2 px-4 whitespace-normal break-words">{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                                 {!isReadOnly && (
-                                    <TableCell className="text-center whitespace-normal break-words">
+                                    <TableCell className="py-2 px-4 text-center whitespace-normal break-words">
                                         <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
                                         <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
                                     </TableCell>
@@ -1606,11 +1606,3 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
-
-    
-
-    
-
-    
-
-    
