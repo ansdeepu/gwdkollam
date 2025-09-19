@@ -498,7 +498,7 @@ const RigAccordionItem = ({
                             const renewalNum = renewalIndex + 1;
                             const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
                             const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
-                            const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - 24 * 60 * 60 * 1000) : null;
+                            const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
                             return (
                                 <TableRow key={renewal.id}>
                                 <TableCell className="font-medium whitespace-normal break-words">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
@@ -952,6 +952,19 @@ export default function AgencyRegistrationPage() {
   const onTabChange = (value: string) => {
     setActiveTab(value);
   };
+  
+  const { activeRigs, cancelledRigs } = useMemo(() => {
+    const active: { field: RigRegistration, index: number }[] = [];
+    const cancelled: { field: RigRegistration, index: number }[] = [];
+    rigFields.forEach((field, index) => {
+      if (field.status === 'Cancelled') {
+        cancelled.push({ field, index });
+      } else {
+        active.push({ field, index });
+      }
+    });
+    return { activeRigs: active, cancelledRigs: cancelled };
+  }, [rigFields]);
 
   if (applicationsLoading || authLoading) {
     return (
@@ -1023,7 +1036,7 @@ export default function AgencyRegistrationPage() {
                                     <div className="space-y-2">
                                         <h4 className="font-medium">Partner Details</h4>
                                         {partnerFields.map((field, index) => (
-                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-2 border rounded-md items-end">
+                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
                                                 <FormItem className="md:col-span-1">
                                                     <FormLabel>Partner Name &amp; Address</FormLabel>
                                                     <FormControl><Textarea {...form.register(`partners.${index}.name`)} readOnly={isReadOnlyForForm} /></FormControl>
@@ -1095,28 +1108,50 @@ export default function AgencyRegistrationPage() {
 
                         {/* Section 3: Rig Registrations */}
                         <Accordion type="single" collapsible defaultValue="item-1">
-                          <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
-                            <AccordionContent className="pt-4 space-y-4">
-                              <Accordion type="multiple" className="w-full space-y-2">
-                                {rigFields.map((field, index) => (
-                                  <RigAccordionItem
-                                    key={field.id}
-                                    field={field as RigRegistration}
-                                    index={index}
-                                    isReadOnly={isReadOnlyForForm}
-                                    onRemove={isEditor ? removeRig : undefined}
-                                    openDialog={openDialog}
-                                    onEditRenewal={handleEditRenewal}
-                                    onDeleteRenewal={handleDeleteRenewal}
-                                    form={form}
-                                  />
-                                ))}
-                              </Accordion>
-                               {!isReadOnlyForForm && isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
-                               {!isReadOnlyForForm && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
-                            </AccordionContent>
-                          </AccordionItem>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-4">
+                                <Accordion type="multiple" className="w-full space-y-2">
+                                    {activeRigs.map(({ field, index }) => (
+                                    <RigAccordionItem
+                                        key={field.id}
+                                        field={field}
+                                        index={index}
+                                        isReadOnly={isReadOnlyForForm}
+                                        onRemove={isEditor ? removeRig : undefined}
+                                        openDialog={openDialog}
+                                        onEditRenewal={handleEditRenewal}
+                                        onDeleteRenewal={handleDeleteRenewal}
+                                        form={form}
+                                    />
+                                    ))}
+                                </Accordion>
+
+                                {cancelledRigs.length > 0 && (
+                                    <div className="pt-6 mt-6 border-t">
+                                    <h4 className="text-lg font-semibold text-destructive mb-4">Cancelled Rigs ({cancelledRigs.length})</h4>
+                                    <Accordion type="multiple" className="w-full space-y-2">
+                                        {cancelledRigs.map(({ field, index }) => (
+                                        <RigAccordionItem
+                                            key={field.id}
+                                            field={field}
+                                            index={index}
+                                            isReadOnly={isReadOnlyForForm}
+                                            onRemove={isEditor ? removeRig : undefined}
+                                            openDialog={openDialog}
+                                            onEditRenewal={handleEditRenewal}
+                                            onDeleteRenewal={handleDeleteRenewal}
+                                            form={form}
+                                        />
+                                        ))}
+                                    </Accordion>
+                                    </div>
+                                )}
+                                
+                                {!isReadOnlyForForm && isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
+                                {!isReadOnlyForForm && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
+                                </AccordionContent>
+                            </AccordionItem>
                         </Accordion>
 
                     </CardContent>
@@ -1564,3 +1599,5 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
