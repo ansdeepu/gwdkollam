@@ -484,47 +484,55 @@ const RigAccordionItem = ({
            {field.renewals && field.renewals.length > 0 && (
             <div className="space-y-2 p-4 border rounded-lg bg-secondary/20">
                 <h4 className="font-medium text-base text-primary">Renewal History</h4>
-                <div className="border rounded-lg p-2 bg-background/50">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead className="py-2 px-4 whitespace-normal break-words">Renewal No.</TableHead>
-                            <TableHead className="py-2 px-4 whitespace-normal break-words">Renewal Date</TableHead>
-                            <TableHead className="py-2 px-4 whitespace-normal break-words">Validity Upto</TableHead>
-                            <TableHead className="py-2 px-4 whitespace-normal break-words">Fee (₹)</TableHead>
-                            <TableHead className="py-2 px-4 whitespace-normal break-words">Payment Date</TableHead>
-                            <TableHead className="py-2 px-4 whitespace-normal break-words">Challan No.</TableHead>
-                            {!isReadOnly && <TableHead className="py-2 px-4 text-center whitespace-normal break-words">Actions</TableHead>}
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {field.renewals.map((renewal, renewalIndex) => {
-                            const renewalNum = renewalIndex + 1;
-                            const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
-                            const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
-                            const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
-                            return (
-                                <TableRow key={renewal.id}>
-                                <TableCell className="py-2 px-4 font-medium whitespace-normal break-words">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
-                                <TableCell className="py-2 px-4 whitespace-normal break-words">{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="py-2 px-4 whitespace-normal break-words">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
-                                <TableCell className="py-2 px-4 whitespace-normal break-words">{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
-                                {!isReadOnly && (
-                                    <TableCell className="py-2 px-4 text-center whitespace-normal break-words">
-                                      <div className="flex items-center justify-center">
-                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
-                                      </div>
-                                    </TableCell>
-                                )}
-                                </TableRow>
-                            );
-                        })}
-                        </TableBody>
-                    </Table>
-                </div>
+                 <Accordion type="multiple" className="w-full space-y-2">
+                    {field.renewals.map((renewal, renewalIndex) => {
+                        const renewalNum = renewalIndex + 1;
+                        const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
+                        const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
+
+                        return (
+                            <AccordionItem key={renewal.id} value={`renewal-${renewal.id}`} className="border bg-background rounded-lg shadow-sm">
+                                <AccordionTrigger className="px-4 py-2 hover:no-underline text-sm">
+                                    <span className="font-semibold text-primary">{`${renewalNum}${getOrdinalSuffix(renewalNum)} Renewal`}</span>
+                                    <span className="ml-auto mr-4 text-xs text-muted-foreground">
+                                        Valid until: {validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}
+                                    </span>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-4 pt-0">
+                                    <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                        <FormItem>
+                                            <FormLabel className="text-xs">Renewal Date</FormLabel>
+                                            <FormControl><Input value={renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
+                                        </FormItem>
+                                        <FormItem>
+                                            <FormLabel className="text-xs">Renewal Fee (₹)</FormLabel>
+                                            <FormControl><Input value={renewal.renewalFee?.toLocaleString() ?? 'N/A'} disabled className="bg-muted/50" /></FormControl>
+                                        </FormItem>
+                                        <FormItem>
+                                            <FormLabel className="text-xs">Payment Date</FormLabel>
+                                            <FormControl><Input value={renewal.paymentDate ? format(toDateOrNull(renewal.paymentDate)!, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
+                                        </FormItem>
+                                        <FormItem>
+                                            <FormLabel className="text-xs">Challan No.</FormLabel>
+                                            <FormControl><Input value={renewal.challanNo || 'N/A'} disabled className="bg-muted/50" /></FormControl>
+                                        </FormItem>
+
+                                        {!isReadOnly && (
+                                            <div className="col-span-full flex items-center justify-end gap-2 mt-2">
+                                                <Button type="button" variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}>
+                                                    <Edit className="mr-2 h-4 w-4"/>Edit
+                                                </Button>
+                                                <Button type="button" variant="destructive" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}>
+                                                    <Trash2 className="mr-2 h-4 w-4"/>Delete
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        );
+                    })}
+                </Accordion>
             </div>
           )}
         </div>
