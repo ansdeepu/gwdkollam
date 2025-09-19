@@ -513,8 +513,10 @@ const RigAccordionItem = ({
                                 <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                                 {!isReadOnly && (
                                     <TableCell className="py-2 px-4 text-center whitespace-normal break-words">
+                                      <div className="flex items-center justify-center">
                                         <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
                                         <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                      </div>
                                     </TableCell>
                                 )}
                                 </TableRow>
@@ -1040,7 +1042,7 @@ export default function AgencyRegistrationPage() {
                                     <div className="space-y-2">
                                         <h4 className="font-medium">Partner Details</h4>
                                         {partnerFields.map((field, index) => (
-                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-2 border rounded-md items-end">
+                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
                                                 <FormItem className="md:col-span-1">
                                                     <FormLabel>Partner Name &amp; Address</FormLabel>
                                                     <FormControl><Textarea {...form.register(`partners.${index}.name`)} readOnly={isReadOnlyForForm} /></FormControl>
