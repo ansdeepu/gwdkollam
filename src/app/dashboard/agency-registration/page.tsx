@@ -479,8 +479,8 @@ const RigAccordionItem = ({
             <AccordionItem value="renewal-history">
               <AccordionTrigger className="text-base font-semibold text-primary">Renewal History</AccordionTrigger>
               <AccordionContent>
-                {field.renewals && field.renewals.length > 0 ? (
-                  <div className="border-t pt-4">
+                <div className="border-t pt-4">
+                  {field.renewals && field.renewals.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -488,9 +488,7 @@ const RigAccordionItem = ({
                           <TableHead className="py-2 px-4 h-auto">Fee</TableHead>
                           <TableHead className="py-2 px-4 h-auto whitespace-normal break-words">Challan No.</TableHead>
                           <TableHead className="py-2 px-4 h-auto">Validity</TableHead>
-                          <TableHead className="text-center py-2 px-4 h-auto">
-                            Actions
-                          </TableHead>
+                          <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -522,12 +520,12 @@ const RigAccordionItem = ({
                         })}
                       </TableBody>
                     </Table>
-                  </div>
-                ) : (
-                  <div className="border-t pt-4 text-center text-muted-foreground">
-                    No renewal history found.
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      No renewal history found.
+                    </div>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -1604,6 +1602,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+    
+
     
 
     
