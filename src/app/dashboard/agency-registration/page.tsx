@@ -503,7 +503,7 @@ const RigAccordionItem = ({
                               <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4 text-center">
                                 {isReadOnly ? (
-                                  <span></span>
+                                  <span />
                                 ) : (
                                   <div className="flex items-center justify-center">
                                     <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
@@ -1471,8 +1471,8 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
                 </div>
             </div>
             <AlertDialogFooter>
-                <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onConfirm(cancellationData)}>Confirm Cancellation</AlertDialogAction>
+                <AlertDialogCancel onClick={onCancel}><span>Cancel</span></AlertDialogCancel>
+                <AlertDialogAction onClick={() => onConfirm(cancellationData)}><span>Confirm Cancellation</span></AlertDialogAction>
             </AlertDialogFooter>
         </>
     );
