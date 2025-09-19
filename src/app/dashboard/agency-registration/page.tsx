@@ -1105,11 +1105,10 @@ export default function AgencyRegistrationPage() {
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
-
-                        {/* Section 3: Rig Registrations */}
+                        
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({rigFields.length} Total)</AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({activeRigs.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                 <Accordion type="multiple" className="w-full space-y-2">
                                     {activeRigs.map(({ field, index }) => (
@@ -1126,33 +1125,37 @@ export default function AgencyRegistrationPage() {
                                     />
                                     ))}
                                 </Accordion>
-
-                                {cancelledRigs.length > 0 && (
-                                    <div className="pt-6 mt-6 border-t">
-                                    <h4 className="text-lg font-semibold text-destructive mb-4">Cancelled Rigs ({cancelledRigs.length})</h4>
-                                    <Accordion type="multiple" className="w-full space-y-2">
-                                        {cancelledRigs.map(({ field, index }) => (
-                                        <RigAccordionItem
-                                            key={field.id}
-                                            field={field}
-                                            index={index}
-                                            isReadOnly={isReadOnlyForForm}
-                                            onRemove={isEditor ? removeRig : undefined}
-                                            openDialog={openDialog}
-                                            onEditRenewal={handleEditRenewal}
-                                            onDeleteRenewal={handleDeleteRenewal}
-                                            form={form}
-                                        />
-                                        ))}
-                                    </Accordion>
-                                    </div>
-                                )}
-                                
                                 {!isReadOnlyForForm && isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 {!isReadOnlyForForm && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
+                        
+                        {cancelledRigs.length > 0 && (
+                            <Accordion type="single" collapsible defaultValue="item-1">
+                                <AccordionItem value="item-1">
+                                <AccordionTrigger className="text-xl font-semibold text-destructive">4. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-4">
+                                    <Accordion type="multiple" className="w-full space-y-2">
+                                    {cancelledRigs.map(({ field, index }) => (
+                                        <RigAccordionItem
+                                        key={field.id}
+                                        field={field}
+                                        index={index}
+                                        isReadOnly={isReadOnlyForForm}
+                                        onRemove={isEditor ? removeRig : undefined}
+                                        openDialog={openDialog}
+                                        onEditRenewal={handleEditRenewal}
+                                        onDeleteRenewal={handleDeleteRenewal}
+                                        form={form}
+                                        />
+                                    ))}
+                                    </Accordion>
+                                </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        )}
+
 
                     </CardContent>
                     {!isReadOnlyForForm && (
@@ -1599,5 +1602,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
 
     
