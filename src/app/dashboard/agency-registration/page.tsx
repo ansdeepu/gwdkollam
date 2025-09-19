@@ -320,7 +320,9 @@ const RigAccordionItem = ({
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
             {!isReadOnly && (
                  <DropdownMenu>
-                  <DropdownMenuTrigger asChild><Button type="button" size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Details</Button></DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Details</Button>
+                  </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuLabel>Optional Details</DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -370,8 +372,8 @@ const RigAccordionItem = ({
                     <FormItem>
                         <FormLabel>Type of Rig</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger></FormControl>
-                            <SelectContent>{rigTypeOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
+                          <SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger>
+                          <SelectContent>{rigTypeOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
                         </Select>
                         <FormMessage />
                     </FormItem>
@@ -488,7 +490,7 @@ const RigAccordionItem = ({
                           <TableHead className="py-2 px-4 h-auto">Fee</TableHead>
                           <TableHead className="py-2 px-4 h-auto whitespace-normal break-words">Challan No.</TableHead>
                           <TableHead className="py-2 px-4 h-auto">Validity</TableHead>
-                          <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>
+                          {!isReadOnly && <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -501,10 +503,8 @@ const RigAccordionItem = ({
                               <TableCell className="py-2 px-4">{renewal.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              <TableCell className="py-2 px-4 text-center">
-                                {isReadOnly ? (
-                                  <span />
-                                ) : (
+                              {!isReadOnly && (
+                                <TableCell className="py-2 px-4 text-center">
                                   <div className="flex items-center justify-center">
                                     <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
                                       <Edit className="h-4 w-4"/>
@@ -513,8 +513,8 @@ const RigAccordionItem = ({
                                       <Trash2 className="h-4 w-4"/>
                                     </Button>
                                   </div>
-                                )}
-                              </TableCell>
+                                </TableCell>
+                              )}
                             </TableRow>
                           );
                         })}
@@ -1057,7 +1057,7 @@ export default function AgencyRegistrationPage() {
                             <AccordionContent className="pt-4 space-y-4">
                                 {feeFields.map((field, index) => (
                                     <div key={field.id} className="grid md:grid-cols-5 gap-4 p-4 border rounded-lg items-end bg-secondary/20">
-                                        <FormField name={`applicationFees.${index}.applicationFeeType`} render={({ field }) => <FormItem><FormLabel>Type of Application</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnlyForForm}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                                        <FormField name={`applicationFees.${index}.applicationFeeType`} render={({ field: formField }) => <FormItem><FormLabel>Type of Application</FormLabel><Select onValueChange={formField.onChange} value={formField.value ?? undefined} disabled={isReadOnlyForForm}><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger><SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeeAmount`} render={({ field }) => <FormItem><FormLabel>Fees Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeePaymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeeChallanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1344,7 +1344,7 @@ export default function AgencyRegistrationPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}><span>Cancel</span></AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteApplication} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span>Delete</span>}
             </AlertDialogAction>
