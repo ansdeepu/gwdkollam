@@ -222,13 +222,15 @@ const RegistrationTable = ({
                           <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
                           <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
                           <TableCell className="text-center">
-                              <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
-                              {canEdit && (
-                                <>
-                                <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
-                                </>
-                              )}
+                              <div className="flex items-center justify-center">
+                                <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
+                                {canEdit && (
+                                  <>
+                                  <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
+                                  </>
+                                )}
+                              </div>
                           </TableCell>
                       </TableRow>
                   ))
@@ -1038,7 +1040,7 @@ export default function AgencyRegistrationPage() {
                                     <div className="space-y-2">
                                         <h4 className="font-medium">Partner Details</h4>
                                         {partnerFields.map((field, index) => (
-                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
+                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-2 border rounded-md items-end">
                                                 <FormItem className="md:col-span-1">
                                                     <FormLabel>Partner Name &amp; Address</FormLabel>
                                                     <FormControl><Textarea {...form.register(`partners.${index}.name`)} readOnly={isReadOnlyForForm} /></FormControl>
@@ -1409,7 +1411,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
 }
 
 function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRenewalFormData>, onConfirm: (data: any) => void, onCancel: () => void }) {
-  const [data, setData] = useState({
+  const [renewalData, setRenewalData] = useState({
     renewalDate: formatDateForInput(toDateOrNull(initialData.renewalDate)),
     paymentDate: formatDateForInput(toDateOrNull(initialData.paymentDate)),
     renewalFee: initialData.renewalFee,
@@ -1417,12 +1419,12 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
   });
 
   const handleConfirm = () => {
-    onConfirm({ ...initialData, ...data });
+    onConfirm({ ...initialData, ...renewalData });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value, type } = e.target as HTMLInputElement;
-    setData(prev => ({
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type } = e.target;
+    setRenewalData(prev => ({
       ...prev,
       [id]: type === 'number' ? (value === '' ? undefined : +value) : value,
     }));
@@ -1433,19 +1435,19 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
         <div className="space-y-2">
           <Label htmlFor="renewalDate">Renewal Date</Label>
-          <Input id="renewalDate" type="date" value={data.renewalDate} onChange={handleChange} />
+          <Input id="renewalDate" type="date" value={renewalData.renewalDate} onChange={handleChange} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="renewalFee">Renewal Fee</Label>
-          <Input id="renewalFee" type="number" value={data.renewalFee ?? ''} onChange={handleChange} />
+          <Input id="renewalFee" type="number" value={renewalData.renewalFee ?? ''} onChange={handleChange} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="paymentDate">Payment Date</Label>
-          <Input id="paymentDate" type="date" value={data.paymentDate} onChange={handleChange} />
+          <Input id="paymentDate" type="date" value={renewalData.paymentDate} onChange={handleChange} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="challanNo">Challan No.</Label>
-          <Input id="challanNo" value={data.challanNo ?? ''} onChange={handleChange} />
+          <Input id="challanNo" value={renewalData.challanNo ?? ''} onChange={handleChange} />
         </div>
       </div>
       <DialogFooter>
@@ -1606,3 +1608,5 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
