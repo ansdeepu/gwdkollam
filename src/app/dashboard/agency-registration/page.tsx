@@ -475,11 +475,11 @@ const RigAccordionItem = ({
             </div>
            )}
 
-           {field.renewals && field.renewals.length > 0 && (
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="renewal-history">
-                <AccordionTrigger className="text-base font-semibold text-primary">Renewal History</AccordionTrigger>
-                <AccordionContent>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="renewal-history">
+              <AccordionTrigger className="text-base font-semibold text-primary">Renewal History</AccordionTrigger>
+              <AccordionContent>
+                {field.renewals && field.renewals.length > 0 ? (
                   <div className="border-t pt-4">
                     <Table>
                       <TableHeader>
@@ -489,7 +489,7 @@ const RigAccordionItem = ({
                           <TableHead className="py-2 px-4 h-auto whitespace-normal break-words">Challan No.</TableHead>
                           <TableHead className="py-2 px-4 h-auto">Validity</TableHead>
                           <TableHead className="text-center py-2 px-4 h-auto">
-                            {!isReadOnly ? "Actions" : <span></span>}
+                            Actions
                           </TableHead>
                         </TableRow>
                       </TableHeader>
@@ -504,17 +504,17 @@ const RigAccordionItem = ({
                               <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4 text-center">
-                                {!isReadOnly ? (
-                                    <div className="flex items-center justify-center">
-                                      <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
-                                        <Edit className="h-4 w-4"/>
-                                      </Button>
-                                      <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}>
-                                        <Trash2 className="h-4 w-4"/>
-                                      </Button>
-                                    </div>
+                                {isReadOnly ? (
+                                  <span></span>
                                 ) : (
-                                    <span></span>
+                                  <div className="flex items-center justify-center">
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
+                                      <Edit className="h-4 w-4"/>
+                                    </Button>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}>
+                                      <Trash2 className="h-4 w-4"/>
+                                    </Button>
+                                  </div>
                                 )}
                               </TableCell>
                             </TableRow>
@@ -523,10 +523,14 @@ const RigAccordionItem = ({
                       </TableBody>
                     </Table>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
+                ) : (
+                  <div className="border-t pt-4 text-center text-muted-foreground">
+                    No renewal history found.
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </AccordionContent>
     </AccordionItem>
