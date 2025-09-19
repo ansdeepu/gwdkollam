@@ -255,6 +255,7 @@ type OptionalSection = "rigVehicle" | "compressorVehicle" | "supportingVehicle" 
 const RigAccordionItem = ({
   field,
   index,
+  displayIndex,
   isReadOnly,
   onRemove,
   openDialog,
@@ -263,7 +264,8 @@ const RigAccordionItem = ({
   form,
 }: {
   field: RigRegistration;
-  index: number;
+  index: number; // The original index for react-hook-form
+  displayIndex: number; // The UI index for display
   isReadOnly: boolean;
   onRemove?: (index: number) => void;
   openDialog: (type: 'renew' | 'cancel' | 'activate' | 'deleteRig', data: any) => void;
@@ -317,7 +319,7 @@ const RigAccordionItem = ({
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
       <div className="flex items-center w-full border-b">
         <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
-          Rig #{index + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
+          Rig #{displayIndex + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
             {!isReadOnly && (
@@ -1111,11 +1113,12 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({activeRigs.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                 <Accordion type="multiple" className="w-full space-y-2">
-                                    {activeRigs.map(({ field }, index) => (
+                                    {activeRigs.map(({ field, originalIndex }, displayIndex) => (
                                     <RigAccordionItem
                                         key={field.id}
                                         field={field}
-                                        index={index}
+                                        index={originalIndex}
+                                        displayIndex={displayIndex}
                                         isReadOnly={isReadOnlyForForm}
                                         onRemove={isEditor ? removeRig : undefined}
                                         openDialog={openDialog}
@@ -1137,11 +1140,12 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-destructive">4. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
-                                    {cancelledRigs.map(({ field }, index) => (
+                                    {cancelledRigs.map(({ field, originalIndex }, displayIndex) => (
                                         <RigAccordionItem
                                         key={field.id}
                                         field={field}
-                                        index={index}
+                                        index={originalIndex}
+                                        displayIndex={displayIndex}
                                         isReadOnly={isReadOnlyForForm}
                                         onRemove={isEditor ? removeRig : undefined}
                                         openDialog={openDialog}
@@ -1602,6 +1606,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
 
     
 
