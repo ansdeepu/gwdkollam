@@ -488,7 +488,9 @@ const RigAccordionItem = ({
                           <TableHead className="py-2 px-4 h-auto">Fee</TableHead>
                           <TableHead className="py-2 px-4 h-auto whitespace-normal break-words">Challan No.</TableHead>
                           <TableHead className="py-2 px-4 h-auto">Validity</TableHead>
-                          {!isReadOnly && <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>}
+                          <TableHead className="text-center py-2 px-4 h-auto">
+                            {!isReadOnly ? "Actions" : <span></span>}
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1596,5 +1598,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+
+    
 
     
