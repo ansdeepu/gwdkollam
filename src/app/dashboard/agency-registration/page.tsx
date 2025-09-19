@@ -503,18 +503,20 @@ const RigAccordionItem = ({
                               <TableCell className="py-2 px-4">{renewal.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              {!isReadOnly && (
-                                <TableCell className="py-2 px-4 text-center">
-                                  <div className="flex items-center justify-center">
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
-                                      <Edit className="h-4 w-4"/>
-                                    </Button>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}>
-                                      <Trash2 className="h-4 w-4"/>
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              )}
+                              <TableCell className="py-2 px-4 text-center">
+                                {!isReadOnly ? (
+                                    <div className="flex items-center justify-center">
+                                      <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
+                                        <Edit className="h-4 w-4"/>
+                                      </Button>
+                                      <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}>
+                                        <Trash2 className="h-4 w-4"/>
+                                      </Button>
+                                    </div>
+                                ) : (
+                                    <span></span>
+                                )}
+                              </TableCell>
                             </TableRow>
                           );
                         })}
@@ -1034,7 +1036,7 @@ export default function AgencyRegistrationPage() {
                                     <div className="space-y-2">
                                         <h4 className="font-medium">Partner Details</h4>
                                         {partnerFields.map((field, index) => (
-                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-2 border rounded-md items-end">
+                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
                                                 <FormField name={`partners.${index}.name`} render={({ field }) => ( <FormItem className="md:col-span-1"> <FormLabel>Partner Name &amp; Address</FormLabel> <FormControl> <Textarea {...field} className="min-h-[40px]" readOnly={isReadOnlyForForm} /> </FormControl> <FormMessage/> </FormItem> )}/>
                                                   <FormField name={`partners.${index}.mobile`} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                                   <FormField name={`partners.${index}.secondaryMobile`} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1598,7 +1600,6 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
-
     
 
     
