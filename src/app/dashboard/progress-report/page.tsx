@@ -633,6 +633,54 @@ export default function ProgressReportPage() {
     setDetailDialogData(dialogData);
     setIsDetailDialogOpen(true);
   };
+  
+    const exportDialogDataToExcel = async () => {
+    if (detailDialogData.length === 0) {
+      toast({ title: "No Data to Export", variant: "default" });
+      return;
+    }
+    
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(detailDialogTitle.replace(/[\\/*?:]/g, "").substring(0, 30));
+    
+    // Add title and headers
+    worksheet.addRow([detailDialogTitle]);
+    worksheet.getRow(1).font = { bold: true, size: 16 };
+    worksheet.mergeCells('A1', `${String.fromCharCode(65 + detailDialogColumns.length - 1)}1`);
+    worksheet.addRow([]); // Spacer
+    worksheet.addRow(detailDialogColumns.map(c => c.label)).font = { bold: true };
+
+    // Add data
+    detailDialogData.forEach(row => {
+      const values = detailDialogColumns.map(col => (row as any)[col.key]);
+      worksheet.addRow(values);
+    });
+
+    // Auto-fit columns
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, (cell) => {
+            const columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 15 ? 15 : maxLength + 2;
+    });
+
+    // Save the file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${detailDialogTitle.replace(/ /g,"_")}_${format(new Date(), 'yyyyMMdd')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({ title: "Export Successful", description: "The detailed list has been exported." });
+  };
+
 
   const FinancialSummaryTable = ({ title, summaryData }: { title: string; summaryData: FinancialSummaryReport }) => {
     if (!reportData) return null;
@@ -890,7 +938,7 @@ export default function ProgressReportPage() {
             </ScrollArea>
           </div>
           <DialogFooter className="p-6 pt-4 border-t">
-            <Button variant="outline" disabled={detailDialogData.length === 0} onClick={handleExportExcel}>
+            <Button variant="outline" disabled={detailDialogData.length === 0} onClick={exportDialogDataToExcel}>
               <FileDown className="mr-2 h-4 w-4" /> Export to Excel
             </Button>
             <DialogClose asChild>
