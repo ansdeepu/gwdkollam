@@ -498,7 +498,7 @@ const RigAccordionItem = ({
                             const renewalNum = renewalIndex + 1;
                             const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
                             const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
-                            const validityUpto = renewalDate ? addYears(renewalDate, 1) : null;
+                            const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - 24 * 60 * 60 * 1000) : null;
                             return (
                                 <TableRow key={renewal.id}>
                                 <TableCell className="font-medium whitespace-normal break-words">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
@@ -990,12 +990,10 @@ export default function AgencyRegistrationPage() {
               className="space-y-6"
             >
                 <Card>
-                    <CardHeader className="p-4">
-                        <div className="flex justify-end">
-                            <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
-                                <ArrowLeft className="mr-2 h-4 w-4"/> Back
-                            </Button>
-                        </div>
+                    <CardHeader className="p-4 flex flex-row justify-end">
+                        <Button type="button" variant="destructive" onClick={handleCancelForm} disabled={isSubmitting}>
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-8 pt-0">
                         {/* Section 1: Application Details */}
@@ -1507,7 +1505,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                         
                         {application.rigs.map((rig, rigIdx) => {
                             const lastEffDate = rig.renewals && rig.renewals.length > 0 ? [...rig.renewals].sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate : rig.registrationDate;
-                            const validityDate = lastEffDate ? addYears(new Date(lastEffDate), 1) : null;
+                            const validityDate = lastEffDate ? new Date(addYears(new Date(lastEffDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
 
                              const rigDetails = [
                                 { title: `Rig #${rigIdx + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status, } },
@@ -1539,7 +1537,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                                                 <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Date</TableHead><TableHead>Validity</TableHead><TableHead>Fee</TableHead></TableRow></TableHeader>
                                                 <TableBody>
                                                     {rig.renewals.map((r, rIdx) => {
-                                                        const validity = r.renewalDate ? addYears(new Date(r.renewalDate), 1) : null;
+                                                        const validity = r.renewalDate ? new Date(addYears(new Date(r.renewalDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
                                                         return (
                                                         <TableRow key={r.id}>
                                                             <TableCell>{rIdx + 1}</TableCell>
@@ -1566,5 +1564,3 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
-
-    
