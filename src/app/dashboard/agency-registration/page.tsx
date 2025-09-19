@@ -1346,7 +1346,7 @@ export default function AgencyRegistrationPage() {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteApplication} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete"}
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span>Delete</span>}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
