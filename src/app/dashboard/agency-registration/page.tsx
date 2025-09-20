@@ -315,7 +315,9 @@ const RigAccordionItem = ({
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
       <div className="flex items-center w-full border-b">
         <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
-          Rig #{displayIndex + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
+            <div>
+              Rig #{displayIndex + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
+            </div>
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
             {!isReadOnly && (
@@ -491,7 +493,7 @@ const RigAccordionItem = ({
 
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="renewal-history">
-              <AccordionTrigger className="text-base font-semibold text-primary">Renewal History</AccordionTrigger>
+              <AccordionTrigger className="text-base font-semibold text-primary"><div>Renewal History</div></AccordionTrigger>
               <AccordionContent>
                 <div className="border-t pt-4">
                   {field.renewals && field.renewals.length > 0 ? (
@@ -502,7 +504,7 @@ const RigAccordionItem = ({
                           <TableHead className="py-2 px-4 h-auto">Fee</TableHead>
                           <TableHead className="py-2 px-4 h-auto whitespace-normal break-words">Challan No.</TableHead>
                           <TableHead className="py-2 px-4 h-auto">Validity</TableHead>
-                          {!isReadOnly && <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>}
+                          <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -515,18 +517,20 @@ const RigAccordionItem = ({
                               <TableCell className="py-2 px-4">{renewal.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              {!isReadOnly && (
                                 <TableCell className="py-2 px-4 text-center">
-                                  <div className="flex items-center justify-center">
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
-                                      <Edit className="h-4 w-4"/>
-                                    </Button>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}>
-                                      <Trash2 className="h-4 w-4"/>
-                                    </Button>
-                                  </div>
+                                  {!isReadOnly ? (
+                                    <div className="flex items-center justify-center">
+                                      <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
+                                        <Edit className="h-4 w-4"/>
+                                      </Button>
+                                      <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}>
+                                        <Trash2 className="h-4 w-4"/>
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <span>-</span>
+                                  )}
                                 </TableCell>
-                              )}
                             </TableRow>
                           );
                         })}
@@ -1032,7 +1036,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-primary">1. Application Details</AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-primary"><div>1. Application Details</div></AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      <div className="grid md:grid-cols-3 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1065,7 +1069,7 @@ export default function AgencyRegistrationPage() {
                          
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-xl font-semibold text-primary">Application Fees</AccordionTrigger>
+                            <AccordionTrigger className="text-xl font-semibold text-primary"><div>Application Fees</div></AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
                                 {feeFields.map((field, index) => (
                                     <div key={field.id} className="grid md:grid-cols-5 gap-4 p-4 border rounded-lg items-end bg-secondary/20">
@@ -1117,7 +1121,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 2: Agency Registration */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-xl font-semibold text-primary">2. Agency Registration</AccordionTrigger>
+                            <AccordionTrigger className="text-xl font-semibold text-primary"><div>2. Agency Registration</div></AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
                                <div className="grid md:grid-cols-3 gap-4">
                                 <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1138,7 +1142,7 @@ export default function AgencyRegistrationPage() {
                         
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({activeRigs.length} Total)</AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-primary"><div>3. Rig Registration ({activeRigs.length} Total)</div></AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                 <Accordion type="multiple" className="w-full space-y-2">
                                     {activeRigs.map(({ field, originalIndex }, displayIndex) => (
@@ -1165,7 +1169,7 @@ export default function AgencyRegistrationPage() {
                         {cancelledRigs.length > 0 && (
                             <Accordion type="single" collapsible defaultValue="item-1">
                                 <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-destructive">4. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-destructive"><div>4. Cancelled Rigs ({cancelledRigs.length})</div></AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
                                     {cancelledRigs.map(({ field, originalIndex }, displayIndex) => (
@@ -1321,8 +1325,12 @@ export default function AgencyRegistrationPage() {
           </div>
           <Tabs defaultValue="completed" onValueChange={onTabChange} className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
-                <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
+                <TabsTrigger value="completed">
+                    <div className="flex items-center gap-2">Registration Completed <Badge variant={activeTab === 'completed' ? 'default' : 'secondary'} className="h-5 px-2">{completedApplications.length}</Badge></div>
+                </TabsTrigger>
+                <TabsTrigger value="pending">
+                     <div className="flex items-center gap-2">Pending Applications <Badge variant={activeTab === 'pending' ? 'default' : 'secondary'} className="h-5 px-2">{pendingApplications.length}</Badge></div>
+                </TabsTrigger>
             </TabsList>
             <TabsContent value="completed" className="mt-4">
                 {totalCompletedPages > 1 && (
@@ -1503,7 +1511,7 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
                 </div>
             </div>
             <AlertDialogFooter>
-                <AlertDialogCancel onClick={onCancel}><span>Cancel</span></AlertDialogCancel>
+                <AlertDialogCancel><span>Cancel</span></AlertDialogCancel>
                 <AlertDialogAction onClick={() => onConfirm(cancellationData)}><span>Confirm Cancellation</span></AlertDialogAction>
             </AlertDialogFooter>
         </>
@@ -1639,4 +1647,3 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
     
 
     
-
