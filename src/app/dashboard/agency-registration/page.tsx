@@ -375,6 +375,7 @@ const RigAccordionItem = ({
                 <DetailRow label="Additional Reg. Fee" value={field.additionalRegistrationFee} />
                 <DetailRow label="Additional Payment Date" value={field.additionalPaymentDate} />
                 <DetailRow label="Additional Challan No." value={field.additionalChallanNo} />
+                
                 <div className="col-span-full border-t pt-4 mt-2"></div>
                 <div className="col-span-full"><DetailRow label="Remarks" value={field.remarks} /></div>
 
@@ -1798,7 +1799,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                             const validityDate = lastEffDate ? new Date(addYears(new Date(lastEffDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
 
                              const rigDetails = [
-                                { title: `Rig #${rigIdx + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status, } },
+                                { title: `Rig #${rigIdx + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status, "Remarks": rig.remarks, } },
                                 { title: "Cancellation Details", data: { "Reason": rig.cancellationReason, "Date": rig.cancellationDate }, condition: rig.status === 'Cancelled' },
                                 { title: "Rig Vehicle", data: rig.rigVehicle },
                                 { title: "Compressor Vehicle", data: rig.compressorVehicle },
@@ -1935,4 +1936,5 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
 
 
     
+
 
