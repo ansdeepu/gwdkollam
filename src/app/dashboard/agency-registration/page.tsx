@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye, FileDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
+import ExcelJS from "exceljs";
+
 
 export const dynamic = 'force-dynamic';
 
@@ -102,6 +104,12 @@ const formatDateForInput = (d: Date | null) => {
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
 };
+
+const formatDateSafe = (d: any): string => {
+    if (!d) return 'N/A';
+    const date = toDateOrNull(d);
+    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+}
 
 const processDataForForm = (data: any): any => {
   if (data === null || data === undefined) return data;
@@ -958,6 +966,113 @@ export default function AgencyRegistrationPage() {
     });
     return { activeRigs: active, cancelledRigs: cancelled };
   }, [rigFields]);
+  
+  const handleExportExcel = useCallback(async () => {
+    if (filteredApplications.length === 0) {
+      toast({ title: "No Data", description: "There is no data to export." });
+      return;
+    }
+    const reportTitle = "Agency Rig Registration Report";
+    const fileNamePrefix = "gwd_rig_reg_report";
+    
+    const headers = [
+      "Sl. No.", "Agency Name & Address", "Owner & Partner Details", "Mobile No.",
+      "Agency Reg. No. & Date", "Active Rigs", "Expired Rigs", "Cancelled Rigs"
+    ];
+
+    const dataForExport = filteredApplications.map((app, index) => {
+        const ownerDetails = `Owner: ${app.owner.name}${app.owner.address ? `, ${app.owner.address}` : ''}`;
+        const partnerDetails = (app.partners || []).map((p, i) => `Partner ${i+1}: ${p.name}${p.address ? `, ${p.address}`: ''}`).join('\n');
+        const allMobiles = [app.owner.mobile, app.owner.secondaryMobile, ...(app.partners || []).flatMap(p => [p.mobile, p.secondaryMobile])].filter(Boolean).join(', ');
+
+        const agencyRegInfo = app.agencyRegistrationNo ? `${app.agencyRegistrationNo} (${formatDateSafe(app.agencyRegistrationDate)})` : 'N/A';
+        
+        let activeRigsStr = '';
+        let expiredRigsStr = '';
+        let cancelledRigsStr = '';
+
+        (app.rigs || []).forEach(rig => {
+            const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
+                ? toDateOrNull([...rig.renewals].sort((a,b) => (toDateOrNull(b.renewalDate)?.getTime() ?? 0) - (toDateOrNull(a.renewalDate)?.getTime() ?? 0))[0].renewalDate)
+                : toDateOrNull(rig.registrationDate);
+
+            const validityDate = lastEffectiveDate && isValid(lastEffectiveDate)
+                ? new Date(addYears(lastEffectiveDate, 1).getTime() - (24 * 60 * 60 * 1000))
+                : null;
+            
+            const isExpired = validityDate ? new Date() > validityDate : false;
+            
+            const rigInfo = `Type: ${rig.typeOfRig || 'N/A'}, Reg No: ${rig.rigVehicle?.regNo || 'N/A'}, Validity: ${formatDateSafe(validityDate)}`;
+
+            if (rig.status === 'Cancelled') {
+                cancelledRigsStr += (cancelledRigsStr ? '\n' : '') + rigInfo;
+            } else if (isExpired) {
+                expiredRigsStr += (expiredRigsStr ? '\n' : '') + rigInfo;
+            } else {
+                activeRigsStr += (activeRigsStr ? '\n' : '') + rigInfo;
+            }
+        });
+
+        return {
+          "Sl. No.": index + 1,
+          "Agency Name & Address": app.agencyName,
+          "Owner & Partner Details": [ownerDetails, partnerDetails].filter(Boolean).join('\n'),
+          "Mobile No.": allMobiles,
+          "Agency Reg. No. & Date": agencyRegInfo,
+          "Active Rigs": activeRigsStr || 'None',
+          "Expired Rigs": expiredRigsStr || 'None',
+          "Cancelled Rigs": cancelledRigsStr || 'None'
+        };
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("RigRegistrationReport");
+
+    worksheet.addRow([reportTitle]).commit();
+    worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
+    worksheet.addRow([]).commit();
+
+    worksheet.mergeCells('A1:H1');
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.getRow(1).font = { bold: true, size: 16 };
+    worksheet.getRow(2).font = { bold: false, size: 10 };
+    worksheet.getCell('A2').alignment = { horizontal: 'center' };
+
+    const headerRow = worksheet.addRow(headers);
+    headerRow.font = { bold: true };
+    headerRow.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F0F0F0' } };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
+    });
+
+    dataForExport.forEach(row => {
+        const values = headers.map(header => row[header as keyof typeof row]);
+        const newRow = worksheet.addRow(values);
+        newRow.eachCell(cell => {
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            cell.alignment = { wrapText: true, vertical: 'top' };
+        });
+    });
+
+    worksheet.columns.forEach((column, i) => {
+        if (i > 0) { // Don't resize Sl. No.
+          column.width = 30;
+        }
+    });
+    worksheet.getColumn(1).width = 8; // Sl. No.
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    toast({ title: "Excel Exported", description: `Report downloaded.` });
+  }, [filteredApplications, toast]);
 
   if (applicationsLoading || authLoading) {
     return (
@@ -1318,11 +1433,16 @@ export default function AgencyRegistrationPage() {
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />
               </div>
-              {canEdit && (
-                <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
-                    <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
+              <div className="flex items-center gap-2">
+                {canEdit && (
+                  <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
+                      <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
+                  </Button>
+                )}
+                <Button onClick={handleExportExcel} variant="outline" className="shrink-0 w-full sm:w-auto">
+                    <FileDown className="mr-2 h-4 w-4" /> Export Excel
                 </Button>
-              )}
+              </div>
           </div>
           <Tabs defaultValue="completed" onValueChange={onTabChange} className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
@@ -1751,4 +1871,5 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
     
 
     
+
 
