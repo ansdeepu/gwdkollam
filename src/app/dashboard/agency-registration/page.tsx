@@ -222,15 +222,13 @@ const RegistrationTable = ({
                           <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
                           <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
                           <TableCell className="text-center">
-                              <div className="flex items-center justify-center">
-                                <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
-                                {canEdit && (
-                                  <>
-                                  <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
-                                  </>
-                                )}
-                              </div>
+                              <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
+                              {canEdit && (
+                                <>
+                                <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
+                                </>
+                              )}
                           </TableCell>
                       </TableRow>
                   ))
@@ -245,6 +243,12 @@ const RegistrationTable = ({
       </Table>
     </div>
 );
+
+const getOrdinalSuffix = (n: number) => {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+};
 
 type OptionalSection = "rigVehicle" | "compressorVehicle" | "supportingVehicle" | "compressorDetails" | "generatorDetails";
 
@@ -264,7 +268,7 @@ const RigAccordionItem = ({
   displayIndex: number; // The UI index for display
   isReadOnly: boolean;
   onRemove?: (index: number) => void;
-  openDialog: (type: 'renew' | 'cancel' | 'activate' | 'deleteRig', data: any) => void;
+  openDialog: (type: 'renew' | 'cancel' | 'activate' | 'deleteRig' | 'editRigDetails', data: any) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewal: RigRenewalFormData) => void;
   form: UseFormReturn<any>;
@@ -315,9 +319,7 @@ const RigAccordionItem = ({
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
       <div className="flex items-center w-full border-b">
         <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
-            <div>
-              Rig #{displayIndex + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
-            </div>
+          Rig #{displayIndex + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
         </AccordionTrigger>
         <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
             {!isReadOnly && (
@@ -367,47 +369,42 @@ const RigAccordionItem = ({
         <div className="border-t pt-6 space-y-4">
           
           <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
-            <p className="font-medium text-base text-primary">Registration Details</p>
+            <div className="flex justify-between items-center mb-2">
+                <p className="font-medium text-base text-primary">Registration Details</p>
+                {!isReadOnly && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => openDialog('editRigDetails', { rigIndex: index })}>
+                        <Edit className="mr-2 h-4 w-4" /> Edit Details
+                    </Button>
+                )}
+            </div>
             <div className="grid md:grid-cols-3 gap-4">
-                <FormField name={`rigs.${index}.rigRegistrationNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField
-                  name={`rigs.${index}.typeOfRig`}
-                  control={form.control}
-                  render={({ field }) => (
+                <FormField name={`rigs.${index}.rigRegistrationNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.typeOfRig`} control={form.control} render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type of Rig</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Type of Rig" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {rigTypeOptions.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
+                        <FormLabel>Type of Rig</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled>
+                            <SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger>
+                            <SelectContent>{rigTypeOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <FormMessage />
                     </FormItem>
-                  )}
-                />
-                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                )} />
+                <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
             </div>
             <div className="grid md:grid-cols-4 gap-4">
                 <FormItem>
                   <FormLabel>Validity Upto</FormLabel>
                   <FormControl><Input value={validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'} disabled className="bg-muted/50" /></FormControl>
                 </FormItem>
-                <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.registrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.paymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.challanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
             </div>
              <Separator className="my-2" />
             <div className="grid md:grid-cols-3 gap-4">
-                <FormField name={`rigs.${index}.additionalRegistrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.additionalChallanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.additionalRegistrationFee`} control={form.control} render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.additionalPaymentDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.additionalChallanNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
             </div>
           </div>
           
@@ -437,10 +434,10 @@ const RigAccordionItem = ({
             <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
                 <p className="font-medium text-base text-primary">Rig Vehicle Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.rigVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
                 </div>
             </div>
           )}
@@ -449,10 +446,10 @@ const RigAccordionItem = ({
             <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
                 <p className="font-medium text-base text-primary">Compressor Vehicle Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl></FormItem>} />
                 </div>
             </div>
           )}
@@ -461,10 +458,10 @@ const RigAccordionItem = ({
             <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
                 <p className="font-medium text-base text-primary">Supporting Vehicle Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.supportingVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.regNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Reg No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.chassisNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.supportingVehicle.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
                 </div>
             </div>
            )}
@@ -473,8 +470,8 @@ const RigAccordionItem = ({
             <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
                 <p className="font-medium text-base text-primary">Compressor Details</p>
                 <div className="grid md:grid-cols-2 gap-4">
-                <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.compressorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
                 </div>
             </div>
            )}
@@ -483,66 +480,64 @@ const RigAccordionItem = ({
             <div className="p-4 border rounded-lg space-y-4 bg-secondary/20">
                 <p className="font-medium text-base text-primary">Generator Details</p>
                 <div className="grid md:grid-cols-4 gap-4">
-                <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.model`} control={form.control} render={({ field }) => <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.capacity`} control={form.control} render={({ field }) => <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.type`} control={form.control} render={({ field }) => <FormItem><FormLabel>Type</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
+                <FormField name={`rigs.${index}.generatorDetails.engineNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Engine No</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly /></FormControl><FormMessage /></FormItem>} />
                 </div>
             </div>
            )}
 
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="renewal-history">
-              <AccordionTrigger className="text-base font-semibold text-primary"><div>Renewal History</div></AccordionTrigger>
-              <AccordionContent>
-                <div className="border-t pt-4">
-                  {(field.renewals && field.renewals.length > 0) ? (
+           {field.renewals && field.renewals.length > 0 && (
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="renewal-history">
+                <AccordionTrigger>
+                  <div className="font-medium text-base text-primary">Renewal History</div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="border rounded-lg p-2 bg-background/50">
                     <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="py-2 px-4 h-auto">Date</TableHead>
-                          <TableHead className="py-2 px-4 h-auto">Fee</TableHead>
-                          <TableHead className="py-2 px-4 h-auto whitespace-normal break-words">Challan No.</TableHead>
-                          <TableHead className="py-2 px-4 h-auto">Validity</TableHead>
-                          {!isReadOnly && <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {field.renewals.map((renewal) => {
-                          const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
-                          const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - 24 * 60 * 60 * 1000) : null;
-                          return (
-                            <TableRow key={renewal.id}>
-                              <TableCell className="py-2 px-4">{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              <TableCell className="py-2 px-4">{renewal.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                              <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
-                              <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              {!isReadOnly && (
-                                <TableCell className="py-2 px-4 text-center">
-                                    <div className="flex items-center justify-center">
-                                      <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
-                                        <Edit className="h-4 w-4"/>
-                                      </Button>
-                                      <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteRenewal(index, renewal.id)}>
-                                        <Trash2 className="h-4 w-4"/>
-                                      </Button>
-                                    </div>
-                                </TableCell>
-                              )}
-                            </TableRow>
-                          );
+                        <TableHeader>
+                          <TableRow>
+                              <TableHead className="whitespace-normal break-words">Renewal No.</TableHead>
+                              <TableHead className="whitespace-normal break-words">Renewal Date</TableHead>
+                              <TableHead className="whitespace-normal break-words">Validity Upto</TableHead>
+                              <TableHead className="whitespace-normal break-words">Fee (₹)</TableHead>
+                              <TableHead className="whitespace-normal break-words">Payment Date</TableHead>
+                              <TableHead className="whitespace-normal break-words">Challan No.</TableHead>
+                              {!isReadOnly && <TableHead className="text-center whitespace-normal break-words">Actions</TableHead>}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {field.renewals.map((renewal, renewalIndex) => {
+                            const renewalNum = renewalIndex + 1;
+                            const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
+                            const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
+                            const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
+                            return (
+                                <TableRow key={renewal.id}>
+                                <TableCell className="font-medium whitespace-normal break-words">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                <TableCell className="whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
+                                {!isReadOnly && (
+                                    <TableCell className="text-center whitespace-normal break-words">
+                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                    </TableCell>
+                                )}
+                                </TableRow>
+                            );
                         })}
-                      </TableBody>
+                        </TableBody>
                     </Table>
-                  ) : (
-                    <div className="text-center text-muted-foreground">
-                      No renewal history found.
-                    </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
         </div>
       </AccordionContent>
     </AccordionItem>
@@ -561,7 +556,7 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' ; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' ; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
@@ -817,7 +812,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -950,6 +945,15 @@ export default function AgencyRegistrationPage() {
       toast({ title: "Rig Removed", description: `Rig #${rigIndex + 1} has been removed from the form.` });
       closeDialog();
   };
+  
+  const handleConfirmRigDetails = (rigData: RigRegistration) => {
+    if (dialogState.type !== 'editRigDetails') return;
+    const { rigIndex } = dialogState.data;
+    const currentRig = form.getValues(`rigs.${rigIndex}`);
+    updateRig(rigIndex, { ...currentRig, ...rigData });
+    toast({ title: "Rig Details Updated" });
+    closeDialog();
+  }
 
 
   const paginatedCompletedApplications = useMemo(() => {
@@ -1034,7 +1038,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-primary"><div>1. Application Details</div></AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-primary">1. Application Details</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      <div className="grid md:grid-cols-3 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1044,7 +1048,13 @@ export default function AgencyRegistrationPage() {
                                      <div className="space-y-2">
                                         <h4 className="font-medium">Owner Details</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
-                                            <FormField name="owner.name" render={({ field }) => ( <FormItem className="md:col-span-1"> <FormLabel>Name &amp; Address of Owner</FormLabel> <FormControl> <Textarea {...field} className="min-h-[40px]" readOnly={isReadOnlyForForm} /> </FormControl> <FormMessage/> </FormItem> )}/>
+                                            <FormItem className="md:col-span-1">
+                                                <FormLabel>Name &amp; Address of Owner</FormLabel>
+                                                <FormControl>
+                                                <Textarea {...form.register("owner.name")} className="min-h-[40px]" readOnly={isReadOnlyForForm} />
+                                                </FormControl>
+                                                <FormMessage>{form.formState.errors.owner?.name?.message}</FormMessage>
+                                            </FormItem>
                                             <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
@@ -1053,7 +1063,11 @@ export default function AgencyRegistrationPage() {
                                         <h4 className="font-medium">Partner Details</h4>
                                         {partnerFields.map((field, index) => (
                                             <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
-                                                <FormField name={`partners.${index}.name`} render={({ field }) => ( <FormItem className="md:col-span-1"> <FormLabel>Partner Name &amp; Address</FormLabel> <FormControl> <Textarea {...field} className="min-h-[40px]" readOnly={isReadOnlyForForm} /> </FormControl> <FormMessage/> </FormItem> )}/>
+                                                <FormItem className="md:col-span-1">
+                                                    <FormLabel>Partner Name &amp; Address</FormLabel>
+                                                    <FormControl><Textarea {...form.register(`partners.${index}.name`)} readOnly={isReadOnlyForForm} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
                                                   <FormField name={`partners.${index}.mobile`} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                                   <FormField name={`partners.${index}.secondaryMobile`} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                                   {!isReadOnlyForForm && <Button type="button" variant="destructive" size="icon" onClick={() => removePartner(index)}><Trash2 className="h-4 w-4" /></Button>}
@@ -1067,31 +1081,20 @@ export default function AgencyRegistrationPage() {
                          
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-xl font-semibold text-primary"><div>Application Fees</div></AccordionTrigger>
+                            <AccordionTrigger className="text-xl font-semibold text-primary">Application Fees</AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
                                 {feeFields.map((field, index) => (
                                     <div key={field.id} className="grid md:grid-cols-5 gap-4 p-4 border rounded-lg items-end bg-secondary/20">
-                                        <FormField
-                                          name={`applicationFees.${index}.applicationFeeType`}
-                                          render={({ field: formField }) => (
-                                            <FormItem>
-                                              <FormLabel>Type of Application</FormLabel>
-                                              <Select onValueChange={formField.onChange} value={formField.value} disabled={isReadOnlyForForm}>
-                                                <SelectTrigger>
-                                                  <SelectValue placeholder="Select Type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                  {applicationFeeTypes.map((o) => (
-                                                    <SelectItem key={o} value={o}>
-                                                      {o}
-                                                    </SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
+                                        <FormField name={`applicationFees.${index}.applicationFeeType`} render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Type of Application</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnlyForForm}>
+                                                <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                                                <SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )} />
                                         <FormField name={`applicationFees.${index}.applicationFeeAmount`} render={({ field }) => <FormItem><FormLabel>Fees Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeePaymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeeChallanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1119,7 +1122,7 @@ export default function AgencyRegistrationPage() {
                         {/* Section 2: Agency Registration */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-xl font-semibold text-primary"><div>2. Agency Registration</div></AccordionTrigger>
+                            <AccordionTrigger className="text-xl font-semibold text-primary">2. Agency Registration</AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
                                <div className="grid md:grid-cols-3 gap-4">
                                 <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1140,7 +1143,7 @@ export default function AgencyRegistrationPage() {
                         
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-primary"><div>3. Rig Registration ({activeRigs.length} Total)</div></AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({activeRigs.length} Total)</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                 <Accordion type="multiple" className="w-full space-y-2">
                                     {activeRigs.map(({ field, originalIndex }, displayIndex) => (
@@ -1167,7 +1170,7 @@ export default function AgencyRegistrationPage() {
                         {cancelledRigs.length > 0 && (
                             <Accordion type="single" collapsible defaultValue="item-1">
                                 <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-destructive"><div>4. Cancelled Rigs ({cancelledRigs.length})</div></AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-destructive">4. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
                                     {cancelledRigs.map(({ field, originalIndex }, displayIndex) => (
@@ -1232,10 +1235,8 @@ export default function AgencyRegistrationPage() {
                         <AlertDialogDescription>This will remove this application fee from the form. This action cannot be undone.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button variant="outline" onClick={() => setDeletingFeeIndex(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={confirmDeleteFee}>
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span>Delete</span>}
-                        </Button>
+                        <Button variant="ghost" onClick={() => setDeletingFeeIndex(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmDeleteFee}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1265,8 +1266,8 @@ export default function AgencyRegistrationPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                         <Button variant="outline" onClick={closeDialog}>Cancel</Button>
-                         <Button variant="destructive" onClick={confirmDeleteRig}>Delete</Button>
+                        <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmDeleteRig}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1277,7 +1278,7 @@ export default function AgencyRegistrationPage() {
                         <AlertDialogDescription>Are you sure you want to reactivate this rig?</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+                        <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
                         <Button onClick={handleActivateRig}>Activate</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1291,11 +1292,29 @@ export default function AgencyRegistrationPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button variant="outline" onClick={() => setDeletingRenewal(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleConfirmDeleteRenewal}>Delete</Button>
+                       <Button variant="ghost" onClick={() => setDeletingRenewal(null)}>Cancel</Button>
+                       <Button variant="destructive" onClick={handleConfirmDeleteRenewal}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+             <Dialog open={dialogState.type === 'editRigDetails'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+                <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Rig Details</DialogTitle>
+                        <DialogDescription>
+                            Modify the registration and optional details for this rig.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {dialogState.type === 'editRigDetails' && (
+                        <RigDetailsDialog
+                            form={form}
+                            rigIndex={dialogState.data.rigIndex}
+                            onConfirm={handleConfirmRigDetails}
+                            onCancel={closeDialog}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </FormProvider>
       </div>
       );
@@ -1325,12 +1344,8 @@ export default function AgencyRegistrationPage() {
           </div>
           <Tabs defaultValue="completed" onValueChange={onTabChange} className="pt-4 border-t">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="completed">
-                    <div className="flex items-center gap-2">Registration Completed <Badge variant={activeTab === 'completed' ? 'default' : 'secondary'} className="h-5 px-2">{completedApplications.length}</Badge></div>
-                </TabsTrigger>
-                <TabsTrigger value="pending">
-                     <div className="flex items-center gap-2">Pending Applications <Badge variant={activeTab === 'pending' ? 'default' : 'secondary'} className="h-5 px-2">{pendingApplications.length}</Badge></div>
-                </TabsTrigger>
+                <TabsTrigger value="completed">Registration Completed ({completedApplications.length})</TabsTrigger>
+                <TabsTrigger value="pending">Pending Applications ({pendingApplications.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="completed" className="mt-4">
                 {totalCompletedPages > 1 && (
@@ -1384,8 +1399,8 @@ export default function AgencyRegistrationPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button variant="outline" onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</Button>
-            <Button onClick={confirmDeleteApplication} disabled={isSubmitting} variant="destructive">
+            <Button variant="ghost" onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteApplication} disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span>Delete</span>}
             </Button>
           </AlertDialogFooter>
@@ -1445,7 +1460,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
 }
 
 function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRenewalFormData>, onConfirm: (data: any) => void, onCancel: () => void }) {
-  const [renewalData, setRenewalData] = useState({
+  const [data, setData] = useState({
     renewalDate: formatDateForInput(toDateOrNull(initialData.renewalDate)),
     paymentDate: formatDateForInput(toDateOrNull(initialData.paymentDate)),
     renewalFee: initialData.renewalFee,
@@ -1453,12 +1468,12 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
   });
 
   const handleConfirm = () => {
-    onConfirm({ ...initialData, ...renewalData });
+    onConfirm({ ...initialData, ...data });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value, type } = e.target;
-    setRenewalData(prev => ({
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value, type } = e.target as HTMLInputElement;
+    setData(prev => ({
       ...prev,
       [id]: type === 'number' ? (value === '' ? undefined : +value) : value,
     }));
@@ -1469,19 +1484,19 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
         <div className="space-y-2">
           <Label htmlFor="renewalDate">Renewal Date</Label>
-          <Input id="renewalDate" type="date" value={renewalData.renewalDate} onChange={handleChange} />
+          <Input id="renewalDate" type="date" value={data.renewalDate} onChange={handleChange} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="renewalFee">Renewal Fee</Label>
-          <Input id="renewalFee" type="number" value={renewalData.renewalFee ?? ''} onChange={handleChange} />
+          <Input id="renewalFee" type="number" value={data.renewalFee ?? ''} onChange={handleChange} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="paymentDate">Payment Date</Label>
-          <Input id="paymentDate" type="date" value={renewalData.paymentDate} onChange={handleChange} />
+          <Input id="paymentDate" type="date" value={data.paymentDate} onChange={handleChange} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="challanNo">Challan No.</Label>
-          <Input id="challanNo" value={renewalData.challanNo ?? ''} onChange={handleChange} />
+          <Input id="challanNo" value={data.challanNo ?? ''} onChange={handleChange} />
         </div>
       </div>
       <DialogFooter>
@@ -1511,7 +1526,7 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
                 </div>
             </div>
             <AlertDialogFooter>
-                <Button variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button variant="ghost" onClick={onCancel}>Cancel</Button>
                 <Button variant="destructive" onClick={() => onConfirm(cancellationData)}>Confirm Cancellation</Button>
             </AlertDialogFooter>
         </>
@@ -1642,7 +1657,60 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
-    
+
+function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFormReturn<any>, rigIndex: number, onConfirm: (data: any) => void, onCancel: () => void }) {
+    const currentRigData = form.getValues(`rigs.${rigIndex}`);
+    const [localRigData, setLocalRigData] = useState(currentRigData);
+
+    const handleConfirm = () => {
+        onConfirm(localRigData);
+    };
+
+    return (
+        <ScrollArea className="max-h-[70vh] pr-4">
+            <div className="space-y-6 py-4">
+                {/* Registration Details */}
+                <Card>
+                    <CardHeader><CardTitle>Registration Details</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <FormItem><FormLabel>Rig Reg. No.</FormLabel><Input value={localRigData.rigRegistrationNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, rigRegistrationNo: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={value => setLocalRigData(d => ({ ...d, typeOfRig: value }))} value={localRigData.typeOfRig}><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger><SelectContent>{rigTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>
+                            <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Input type="date" value={formatDateForInput(toDateOrNull(localRigData.registrationDate))} onChange={e => setLocalRigData(d => ({ ...d, registrationDate: e.target.value }))} /></FormItem>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <FormItem><FormLabel>Reg. Fee</FormLabel><Input type="number" value={localRigData.registrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, registrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(toDateOrNull(localRigData.paymentDate))} onChange={e => setLocalRigData(d => ({ ...d, paymentDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.challanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, challanNo: e.target.value }))} /></FormItem>
+                        </div>
+                        <Separator />
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <FormItem><FormLabel>Additional Reg. Fee</FormLabel><Input type="number" value={localRigData.additionalRegistrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalRegistrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(toDateOrNull(localRigData.additionalPaymentDate))} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.additionalChallanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalChallanNo: e.target.value }))} /></FormItem>
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                {/* Optional Details */}
+                <Card>
+                    <CardHeader><CardTitle>Optional Details</CardTitle></CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2"><h4 className="font-medium text-primary">Rig Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.rigVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.rigVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.rigVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.rigVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
+                        <div className="space-y-2"><h4 className="font-medium text-primary">Compressor Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.compressorVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.compressorVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.compressorVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.compressorVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
+                        <div className="space-y-2"><h4 className="font-medium text-primary">Supporting Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.supportingVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.supportingVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.supportingVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.supportingVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
+                        <div className="space-y-2"><h4 className="font-medium text-primary">Compressor Details</h4><div className="grid md:grid-cols-2 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.compressorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.compressorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, capacity: e.target.value}}))} /></FormItem></div></div>
+                        <div className="space-y-2"><h4 className="font-medium text-primary">Generator Details</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.generatorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.generatorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, capacity: e.target.value}}))} /></FormItem><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.generatorDetails?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.generatorDetails?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, engineNo: e.target.value}}))} /></FormItem></div></div>
+                    </CardContent>
+                </Card>
+            </div>
+             <DialogFooter className="mt-6">
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button type="button" onClick={handleConfirm}>Save Details</Button>
+            </DialogFooter>
+        </ScrollArea>
+    );
+}
 
     
 
