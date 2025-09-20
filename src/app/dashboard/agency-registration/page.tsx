@@ -1002,14 +1002,20 @@ export default function AgencyRegistrationPage() {
             
             const isExpired = validityDate ? new Date() > validityDate : false;
             
-            const rigInfo = `Type: ${rig.typeOfRig || 'N/A'}, Reg No: ${rig.rigVehicle?.regNo || 'N/A'}, Validity: ${formatDateSafe(validityDate)}`;
+            const rigDetails = [
+              `Type: ${rig.typeOfRig || 'N/A'}`,
+              `Rig Vehicle Reg: ${rig.rigVehicle?.regNo || 'N/A'}`,
+              `Compressor Vehicle Reg: ${rig.compressorVehicle?.regNo || 'N/A'}`,
+              `Support Vehicle Reg: ${rig.supportingVehicle?.regNo || 'N/A'}`,
+              `Validity: ${formatDateSafe(validityDate)}`
+            ].join(', ');
 
             if (rig.status === 'Cancelled') {
-                cancelledRigsStr += (cancelledRigsStr ? '\n' : '') + rigInfo;
+                cancelledRigsStr += (cancelledRigsStr ? '\n\n' : '') + rigDetails;
             } else if (isExpired) {
-                expiredRigsStr += (expiredRigsStr ? '\n' : '') + rigInfo;
+                expiredRigsStr += (expiredRigsStr ? '\n\n' : '') + rigDetails;
             } else {
-                activeRigsStr += (activeRigsStr ? '\n' : '') + rigInfo;
+                activeRigsStr += (activeRigsStr ? '\n\n' : '') + rigDetails;
             }
         });
 
@@ -1042,7 +1048,7 @@ export default function AgencyRegistrationPage() {
     headerRow.font = { bold: true };
     headerRow.eachCell(cell => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F0F0F0' } };
-        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' };
         cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
     });
 
@@ -1050,7 +1056,7 @@ export default function AgencyRegistrationPage() {
         const values = headers.map(header => row[header as keyof typeof row]);
         const newRow = worksheet.addRow(values);
         newRow.eachCell(cell => {
-            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' };
             cell.alignment = { wrapText: true, vertical: 'top' };
         });
     });
@@ -1871,5 +1877,7 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
     
 
     
+
+
 
 
