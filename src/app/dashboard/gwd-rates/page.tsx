@@ -1,8 +1,7 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -18,6 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -58,6 +58,7 @@ import {
   X,
   ShieldAlert,
   ArrowUpDown,
+  ClipboardList
 } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,6 +77,121 @@ export const dynamic = 'force-dynamic';
 const db = getFirestore(app);
 const RATES_COLLECTION = 'gwdRates';
 
+// Fee Details Dialog Component
+const RigFeeDetailsDialog = () => {
+    const calculateNextYearFee = (amount: number) => Math.round((amount * 1.05) / 50) * 50;
+
+    const staticFees = [
+        { description: 'Application Fee - Agency Registration', amount: 1000 },
+        { description: 'Application Fee - Rig Registration', amount: 1000 },
+        { description: 'Agency Registration Fee', amount: 60000 },
+    ];
+    
+    const registrationFees = [
+        { description: 'Agency Registration Fee', baseAmount: 60000 },
+        { description: 'Rig Registration Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 12000 },
+        { description: 'Agency Registration Fee - Filterpoint, Hand bore', baseAmount: 15000 },
+        { description: 'Rig Registration Fee - Filterpoint, Hand bore', baseAmount: 5000 },
+    ];
+    
+    const renewalFees = [
+        { description: 'Rig Registration Renewal Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 6000 },
+        { description: 'Rig Registration Renewal Fee - Filterpoint, Hand bore', baseAmount: 3000 },
+    ];
+
+    const currentYear = new Date().getFullYear();
+    const registrationYears = [currentYear, currentYear + 1, currentYear + 2];
+    
+    return (
+        <div className="space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">One-time Fees</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {staticFees.map(item => (
+                                <TableRow key={item.description}><TableCell>{item.description}</TableCell><TableCell className="text-right font-mono">{item.amount.toLocaleString()}</TableCell></TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">Yearly Registration Fees</CardTitle>
+                    <CardDescription>Fees with a 5% yearly increment, rounded to the nearest ₹50.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Description</TableHead>
+                                {registrationYears.map(year => <TableHead key={year} className="text-right">{format(new Date(year, 0, 24), 'dd/MM/yyyy')}</TableHead>)}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {registrationFees.map(item => {
+                                let year1 = item.baseAmount;
+                                let year2 = calculateNextYearFee(year1);
+                                let year3 = calculateNextYearFee(year2);
+                                return (
+                                    <TableRow key={item.description}>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right font-mono">{year1.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono">{year2.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono">{year3.toLocaleString()}</TableCell>
+                                    </TableRow>
+                                )
+                            })}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">Yearly Renewal Fees</CardTitle>
+                    <CardDescription>Renewal fees with a 5% yearly increment, rounded to the nearest ₹50.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                         <TableHeader>
+                            <TableRow>
+                                <TableHead>Description</TableHead>
+                                <TableHead className="text-center">Year I</TableHead>
+                                <TableHead className="text-center">Year II</TableHead>
+                                <TableHead className="text-center">Year III</TableHead>
+                                <TableHead className="text-center">Year IV</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {renewalFees.map(item => {
+                                let year1 = item.baseAmount;
+                                let year2 = calculateNextYearFee(year1);
+                                let year3 = calculateNextYearFee(year2);
+                                let year4 = calculateNextYearFee(year3);
+                                return (
+                                     <TableRow key={item.description}>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right font-mono">{year1.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono">{year2.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono">{year3.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right font-mono">{year4.toLocaleString()}</TableCell>
+                                    </TableRow>
+                                )
+                            })}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
 export default function GwdRatesPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
@@ -89,6 +205,7 @@ export default function GwdRatesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
+  const [isFeeDetailsOpen, setIsFeeDetailsOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GwdRateItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<GwdRateItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -355,6 +472,7 @@ export default function GwdRatesPage() {
         <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4">
                 <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
+                <Button variant="outline" onClick={() => setIsFeeDetailsOpen(true)}><ClipboardList className="mr-2 h-4 w-4" /> Rig Registration Fee Details</Button>
                 {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
             </div>
         </CardContent>
@@ -501,6 +619,23 @@ export default function GwdRatesPage() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFeeDetailsOpen} onOpenChange={setIsFeeDetailsOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Rig Registration Fee Details</DialogTitle>
+            <DialogDescription>A detailed breakdown of all fees associated with rig registration and renewals.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto p-1">
+            <RigFeeDetailsDialog />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+                <Button type="button" variant="secondary">Close</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
