@@ -4,7 +4,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FileStack, Wrench, CheckCircle, AlertTriangle, Ban } from "lucide-react";
-import type { AgencyApplication, RigRegistration } from '@/lib/schemas';
+import type { AgencyApplication, RigRegistration, RigType } from '@/lib/schemas';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
 interface RigRegistrationOverviewProps {
   data: {
@@ -22,14 +23,36 @@ interface RigRegistrationOverviewProps {
   onCardClick: (data: any[], title: string) => void;
 }
 
+const rigTypeColumns: RigType[] = ["Hand Bore", "Filter Point Rig", "Calyx Rig", "Rotary Rig", "DTH Rig", "Rotary cum DTH Rig"];
+
 export default function RigRegistrationOverview({ data, onCardClick }: RigRegistrationOverviewProps) {
+
+  const abstractData = React.useMemo(() => {
+    const counts: Record<RigType, number> = {
+      "Hand Bore": 0,
+      "Filter Point Rig": 0,
+      "Calyx Rig": 0,
+      "Rotary Rig": 0,
+      "DTH Rig": 0,
+      "Rotary cum DTH Rig": 0,
+    };
+
+    data.allRigsData.forEach(rig => {
+      if (rig.typeOfRig && rigTypeColumns.includes(rig.typeOfRig)) {
+        counts[rig.typeOfRig]++;
+      }
+    });
+
+    return counts;
+  }, [data.allRigsData]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><FileStack className="h-5 w-5 text-primary" />Rig Registration Overview</CardTitle>
         <CardDescription>Summary of all registered rig agencies and their status.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <button onClick={() => onCardClick(data.allAgenciesData, 'Total Agencies')} disabled={data.totalAgencies === 0} className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             <FileStack className="h-8 w-8 text-primary mx-auto mb-2" /><p className="text-3xl font-bold">{data.totalAgencies}</p><p className="text-sm font-medium text-muted-foreground">Total Agencies</p>
@@ -47,6 +70,33 @@ export default function RigRegistrationOverview({ data, onCardClick }: RigRegist
             <Ban className="h-8 w-8 text-red-600 mx-auto mb-2" /><p className="text-3xl font-bold text-red-700">{data.cancelledRigs}</p><p className="text-sm font-medium text-red-800">Cancelled Rigs</p>
           </button>
         </div>
+        
+        <div className="pt-6 border-t">
+            <h4 className="text-base font-semibold text-primary mb-2">Abstract Details</h4>
+            <div className="border rounded-lg overflow-hidden">
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-secondary/50">
+                            <TableHead className="text-center font-bold">Agency</TableHead>
+                            {rigTypeColumns.map(type => (
+                                <TableHead key={type} className="text-center font-bold">{type}</TableHead>
+                            ))}
+                            <TableHead className="text-center font-bold">Total Rigs</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell className="text-center font-semibold text-lg">{data.totalAgencies}</TableCell>
+                            {rigTypeColumns.map(type => (
+                                <TableCell key={type} className="text-center font-semibold text-lg">{abstractData[type]}</TableCell>
+                            ))}
+                            <TableCell className="text-center font-semibold text-lg">{data.totalRigs}</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+
       </CardContent>
     </Card>
   );
