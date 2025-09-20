@@ -161,7 +161,7 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
                         <FinancialRow label="No. of Rig Registrations" data={summaryData.rigRegCount} total={summaryData.totals.rigRegCount} />
                         <FinancialRow label="No. of Renewals" data={summaryData.renewalCount} total={summaryData.totals.renewalCount} />
                         
-                        <TableRow className="bg-secondary/50 font-semibold"><TableCell colSpan={8} className="p-2">Application Fees (₹)</TableCell></TableRow>
+                        <TableRow className="bg-secondary/50 font-semibold"><TableCell colSpan={8} className="p-2">fees details (₹)</TableCell></TableRow>
                         
                         <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} />
                         <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} />
