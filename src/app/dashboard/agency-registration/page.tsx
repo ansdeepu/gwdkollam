@@ -363,7 +363,7 @@ const RigAccordionItem = ({
                 )}
             </div>
             
-             <dl className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4">
+             <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
                 <DetailRow label="Rig Reg. No." value={field.rigRegistrationNo} />
                 <DetailRow label="Type of Rig" value={field.typeOfRig} />
                 <DetailRow label="Last Reg/Renewal Date" value={field.registrationDate} />
@@ -438,9 +438,8 @@ const RigAccordionItem = ({
                     </div>
                 )}
               </div>
-              <div className="border rounded-md">
+              <ScrollArea className="h-72 w-full rounded-md border">
                 {field.renewals && field.renewals.length > 0 ? (
-                  <ScrollArea className="h-72 w-full">
                     <Table>
                       <TableHeader className="sticky top-0 bg-secondary">
                         <TableRow>
@@ -469,8 +468,10 @@ const RigAccordionItem = ({
                               <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
                               {!isReadOnly && (
                                 <TableCell className="text-center">
-                                  <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
-                                  <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                  <div className="flex justify-center space-x-1">
+                                    <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                  </div>
                                 </TableCell>
                               )}
                             </TableRow>
@@ -478,13 +479,12 @@ const RigAccordionItem = ({
                         })}
                       </TableBody>
                     </Table>
-                  </ScrollArea>
                 ) : (
                   <div className="text-center p-4 text-muted-foreground bg-background/50">
                     No renewal history for this rig.
                   </div>
                 )}
-              </div>
+              </ScrollArea>
           </div>
         </div>
       </AccordionContent>
@@ -1187,7 +1187,7 @@ export default function AgencyRegistrationPage() {
                         <AlertDialogDescription>This will remove this application fee from the form. This action cannot be undone.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button variant="ghost" onClick={() => setDeletingFeeIndex(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setDeletingFeeIndex(null)}>Cancel</Button>
                         <Button variant="destructive" onClick={confirmDeleteFee}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1673,6 +1673,8 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
         </ScrollArea>
     );
 }
+
+    
 
     
 
