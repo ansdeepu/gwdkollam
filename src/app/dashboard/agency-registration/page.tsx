@@ -358,10 +358,10 @@ const RigAccordionItem = ({
             </div>
             
              <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
-                <DetailRow label="Rig Reg. No." value={field.rigRegistrationNo} />
-                <DetailRow label="Type of Rig" value={field.typeOfRig} />
-                <DetailRow label="Last Reg/Renewal Date" value={field.registrationDate} />
-                <div className="col-span-full md:col-span-1"><DetailRow label="Validity Upto" value={validityDate} /></div>
+                <div className="md:col-span-2"><DetailRow label="Rig Reg. No." value={field.rigRegistrationNo} /></div>
+                <div className="md:col-span-1"><DetailRow label="Type of Rig" value={field.typeOfRig} /></div>
+                <div className="md:col-span-2"><DetailRow label="Last Reg/Renewal Date" value={field.registrationDate} /></div>
+                <div className="md:col-span-1"><DetailRow label="Validity Upto" value={validityDate} /></div>
                 
                 <div className="col-span-full border-t pt-4 mt-2"></div>
                 <DetailRow label="Reg. Fee" value={field.registrationFee} />
@@ -1550,7 +1550,8 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
         <>
             <ScrollArea className="max-h-[60vh] p-1">
                 <div className="space-y-4 p-4">
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <h4 className="text-md font-semibold text-primary">Registration Details</h4>
+                    <div className="grid md:grid-cols-2 gap-4 border p-4 rounded-md">
                         <FormItem><Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label><Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={handleChange} /></FormItem>
                         <FormItem><Label htmlFor="agencyRegistrationDate">Reg. Date</Label><Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={handleChange} /></FormItem>
                         <FormItem><Label htmlFor="agencyRegistrationFee">Reg. Fee</Label><Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ""} onChange={handleChange} /></FormItem>
@@ -1558,7 +1559,8 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                         <FormItem className="md:col-span-2"><Label htmlFor="agencyChallanNo">Challan No.</Label><Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} /></FormItem>
                     </div>
                     <Separator />
-                    <div className="grid md:grid-cols-2 gap-4">
+                     <h4 className="text-md font-semibold text-primary">Additional Registration</h4>
+                    <div className="grid md:grid-cols-2 gap-4 border p-4 rounded-md">
                         <FormItem><Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label><Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ""} onChange={handleChange} /></FormItem>
                         <FormItem><Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label><Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={handleChange} /></FormItem>
                         <FormItem className="md:col-span-2"><Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label><Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} /></FormItem>
@@ -1826,7 +1828,6 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
     return (
         <ScrollArea className="max-h-[70vh] pr-4">
             <div className="space-y-6 py-4">
-                {/* Registration Details */}
                 <Card>
                     <CardHeader><CardTitle>Registration Details</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
@@ -1855,7 +1856,6 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                     </CardContent>
                 </Card>
                 
-                {/* Optional Details */}
                 <Card>
                     <CardHeader><CardTitle>Optional Details</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
@@ -1885,3 +1885,4 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
 
 
     
+
