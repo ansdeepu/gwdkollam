@@ -1,6 +1,5 @@
 
 "use client";
-// src/app/dashboard/agency-registration/page.tsx
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
@@ -1049,7 +1048,7 @@ export default function AgencyRegistrationPage() {
                                         <DetailRow label="Type of Application" value={field.applicationFeeType} />
                                         <DetailRow label="Fees Amount" value={field.applicationFeeAmount} />
                                         <DetailRow label="Payment Date" value={field.applicationFeePaymentDate} />
-                                        <DetailRow label="Challan No." value={field.applicationFeeChallanNo} />
+                                        <div className="md:col-span-3"><DetailRow label="Challan No." value={field.applicationFeeChallanNo} /></div>
                                       </dl>
                                     </div>
                                 ))}
@@ -1727,5 +1726,7 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
         </ScrollArea>
     );
 }
+
+    
 
     
