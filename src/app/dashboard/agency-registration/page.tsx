@@ -1,4 +1,5 @@
 
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -98,12 +99,15 @@ const toDateOrNull = (value: any): Date | null => {
   return null;
 };
 
-const formatDateForInput = (d: Date | null) => {
-  if (!d) return '';
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+const formatDateForInput = (d: Date | null | string) => {
+    if (!d) return '';
+    const date = typeof d === 'string' ? parseISO(d) : d;
+    if (!date || !isValid(date)) return '';
+    try {
+        return format(date, 'yyyy-MM-dd');
+    } catch {
+        return '';
+    }
 };
 
 const formatDateSafe = (d: any): string => {
@@ -1547,37 +1551,68 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
     };
 
     return (
-        <>
-            <ScrollArea className="max-h-[60vh] p-1">
-                <div className="space-y-4 p-4">
-                    <h4 className="text-md font-semibold text-primary">Registration Details</h4>
-                    <div className="grid md:grid-cols-2 gap-4 border p-4 rounded-md">
-                        <FormItem><Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label><Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={handleChange} /></FormItem>
-                        <FormItem><Label htmlFor="agencyRegistrationDate">Reg. Date</Label><Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={handleChange} /></FormItem>
-                        <FormItem><Label htmlFor="agencyRegistrationFee">Reg. Fee</Label><Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ""} onChange={handleChange} /></FormItem>
-                        <FormItem><Label htmlFor="agencyPaymentDate">Payment Date</Label><Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={handleChange} /></FormItem>
-                        <FormItem className="md:col-span-2"><Label htmlFor="agencyChallanNo">Challan No.</Label><Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} /></FormItem>
-                    </div>
-                    <Separator />
-                     <h4 className="text-md font-semibold text-primary">Additional Registration</h4>
-                    <div className="grid md:grid-cols-2 gap-4 border p-4 rounded-md">
-                        <FormItem><Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label><Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ""} onChange={handleChange} /></FormItem>
-                        <FormItem><Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label><Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={handleChange} /></FormItem>
-                        <FormItem className="md:col-span-2"><Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label><Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} /></FormItem>
-                    </div>
-                </div>
-            </ScrollArea>
-            <DialogFooter>
-                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-                <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
-            </DialogFooter>
-        </>
+      <>
+        <ScrollArea className="max-h-[60vh] p-1">
+          <div className="space-y-6 p-4">
+            <div className="space-y-4 rounded-lg border p-4">
+              <h4 className="font-medium text-primary">Registration</h4>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormItem>
+                  <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
+                  <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={handleChange} />
+                </FormItem>
+                <FormItem>
+                  <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
+                  <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={handleChange} />
+                </FormItem>
+                <FormItem>
+                  <Label htmlFor="agencyRegistrationFee">Reg. Fee</Label>
+                  <Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ''} onChange={handleChange} />
+                </FormItem>
+                <FormItem>
+                  <Label htmlFor="agencyPaymentDate">Payment Date</Label>
+                  <Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={handleChange} />
+                </FormItem>
+                <FormItem className="md:col-span-2">
+                  <Label htmlFor="agencyChallanNo">Challan No.</Label>
+                  <Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} />
+                </FormItem>
+              </div>
+            </div>
+
+            <div className="space-y-4 rounded-lg border p-4">
+              <h4 className="font-medium text-primary">Additional Registration</h4>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormItem>
+                  <Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label>
+                  <Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ''} onChange={handleChange} />
+                </FormItem>
+                <FormItem>
+                  <Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label>
+                  <Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={handleChange} />
+                </FormItem>
+                <FormItem className="md:col-span-2">
+                  <Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label>
+                  <Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} />
+                </FormItem>
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+        <DialogFooter className="mt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
+        </DialogFooter>
+      </>
     );
 }
 
 function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<ApplicationFee>, onConfirm: (data: any) => void, onCancel: () => void }) {
     const { toast } = useToast();
-    const [data, setData] = useState(initialData);
+    const [data, setData] = useState({
+        ...initialData,
+        applicationFeePaymentDate: formatDateForInput(initialData.applicationFeePaymentDate),
+    });
 
     const handleConfirm = () => {
         if (!data.applicationFeeType) {
@@ -1603,7 +1638,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
                 </div>
                 <div className="space-y-2">
                     <Label>Payment Date</Label>
-                    <Input type="date" value={formatDateForInput(toDateOrNull(data.applicationFeePaymentDate))} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
+                    <Input type="date" value={data.applicationFeePaymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                     <Label>Challan No.</Label>
@@ -1840,17 +1875,17 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                                     <SelectContent>{rigTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                 </Select>
                             </FormItem>
-                            <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Input type="date" value={formatDateForInput(toDateOrNull(localRigData.registrationDate))} onChange={e => setLocalRigData(d => ({ ...d, registrationDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.registrationDate)} onChange={e => setLocalRigData(d => ({ ...d, registrationDate: e.target.value }))} /></FormItem>
                         </div>
                         <div className="grid md:grid-cols-3 gap-4">
                             <FormItem><FormLabel>Reg. Fee</FormLabel><Input type="number" value={localRigData.registrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, registrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
-                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(toDateOrNull(localRigData.paymentDate))} onChange={e => setLocalRigData(d => ({ ...d, paymentDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.paymentDate)} onChange={e => setLocalRigData(d => ({ ...d, paymentDate: e.target.value }))} /></FormItem>
                             <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.challanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, challanNo: e.target.value }))} /></FormItem>
                         </div>
                         <Separator />
                         <div className="grid md:grid-cols-3 gap-4">
                             <FormItem><FormLabel>Additional Reg. Fee</FormLabel><Input type="number" value={localRigData.additionalRegistrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalRegistrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
-                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(toDateOrNull(localRigData.additionalPaymentDate))} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.additionalPaymentDate)} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value }))} /></FormItem>
                             <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.additionalChallanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalChallanNo: e.target.value }))} /></FormItem>
                         </div>
                     </CardContent>
@@ -1886,3 +1921,6 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
 
     
 
+
+
+    
