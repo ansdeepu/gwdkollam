@@ -1,6 +1,6 @@
 
-// src/app/dashboard/agency-registration/page.tsx
 "use client";
+// src/app/dashboard/agency-registration/page.tsx
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
@@ -33,7 +33,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
-import "client-only";
 
 export const dynamic = 'force-dynamic';
 
@@ -367,37 +366,40 @@ const RigAccordionItem = ({
                 <DetailRow label="Rig Reg. No." value={field.rigRegistrationNo} />
                 <DetailRow label="Type of Rig" value={field.typeOfRig} />
                 <DetailRow label="Last Reg/Renewal Date" value={field.registrationDate} />
-                <DetailRow label="Validity Upto" value={validityDate} />
+                <div className="col-span-full md:col-span-1"><DetailRow label="Validity Upto" value={validityDate} /></div>
+                
+                <div className="col-span-full border-t pt-4 mt-2"></div>
                 <DetailRow label="Reg. Fee" value={field.registrationFee} />
                 <DetailRow label="Payment Date" value={field.paymentDate} />
                 <DetailRow label="Challan No." value={field.challanNo} />
+                <div className="col-span-full border-t pt-4 mt-2"></div>
                 <DetailRow label="Additional Reg. Fee" value={field.additionalRegistrationFee} />
                 <DetailRow label="Additional Payment Date" value={field.additionalPaymentDate} />
                 <DetailRow label="Additional Challan No." value={field.additionalChallanNo} />
 
-                {field.rigVehicle && <div className="col-span-full pt-2 mt-2 border-t"><h4 className="font-medium text-sm text-muted-foreground">Rig Vehicle</h4></div>}
+                {field.rigVehicle && <div className="col-span-full pt-4 mt-4 border-t"><h4 className="font-medium text-sm text-primary">Rig Vehicle</h4></div>}
                 {field.rigVehicle?.type && <DetailRow label="Type" value={field.rigVehicle.type} />}
                 {field.rigVehicle?.regNo && <DetailRow label="Reg No" value={field.rigVehicle.regNo} />}
                 {field.rigVehicle?.chassisNo && <DetailRow label="Chassis No" value={field.rigVehicle.chassisNo} />}
                 {field.rigVehicle?.engineNo && <DetailRow label="Engine No" value={field.rigVehicle.engineNo} />}
 
-                {field.compressorVehicle && <div className="col-span-full pt-2 mt-2 border-t"><h4 className="font-medium text-sm text-muted-foreground">Compressor Vehicle</h4></div>}
+                {field.compressorVehicle && <div className="col-span-full pt-4 mt-4 border-t"><h4 className="font-medium text-sm text-primary">Compressor Vehicle</h4></div>}
                 {field.compressorVehicle?.type && <DetailRow label="Type" value={field.compressorVehicle.type} />}
                 {field.compressorVehicle?.regNo && <DetailRow label="Reg No" value={field.compressorVehicle.regNo} />}
                 {field.compressorVehicle?.chassisNo && <DetailRow label="Chassis No" value={field.compressorVehicle.chassisNo} />}
                 {field.compressorVehicle?.engineNo && <DetailRow label="Engine No" value={field.compressorVehicle.engineNo} />}
 
-                {field.supportingVehicle && <div className="col-span-full pt-2 mt-2 border-t"><h4 className="font-medium text-sm text-muted-foreground">Supporting Vehicle</h4></div>}
+                {field.supportingVehicle && <div className="col-span-full pt-4 mt-4 border-t"><h4 className="font-medium text-sm text-primary">Supporting Vehicle</h4></div>}
                 {field.supportingVehicle?.type && <DetailRow label="Type" value={field.supportingVehicle.type} />}
                 {field.supportingVehicle?.regNo && <DetailRow label="Reg No" value={field.supportingVehicle.regNo} />}
                 {field.supportingVehicle?.chassisNo && <DetailRow label="Chassis No" value={field.supportingVehicle.chassisNo} />}
                 {field.supportingVehicle?.engineNo && <DetailRow label="Engine No" value={field.supportingVehicle.engineNo} />}
 
-                {field.compressorDetails && <div className="col-span-full pt-2 mt-2 border-t"><h4 className="font-medium text-sm text-muted-foreground">Compressor</h4></div>}
+                {field.compressorDetails && <div className="col-span-full pt-4 mt-4 border-t"><h4 className="font-medium text-sm text-primary">Compressor</h4></div>}
                 {field.compressorDetails?.model && <DetailRow label="Model" value={field.compressorDetails.model} />}
                 {field.compressorDetails?.capacity && <DetailRow label="Capacity" value={field.compressorDetails.capacity} />}
                 
-                {field.generatorDetails && <div className="col-span-full pt-2 mt-2 border-t"><h4 className="font-medium text-sm text-muted-foreground">Generator</h4></div>}
+                {field.generatorDetails && <div className="col-span-full pt-4 mt-4 border-t"><h4 className="font-medium text-sm text-primary">Generator</h4></div>}
                 {field.generatorDetails?.model && <DetailRow label="Model" value={field.generatorDetails.model} />}
                 {field.generatorDetails?.capacity && <DetailRow label="Capacity" value={field.generatorDetails.capacity} />}
                 {field.generatorDetails?.type && <DetailRow label="Type" value={field.generatorDetails.type} />}
@@ -429,7 +431,7 @@ const RigAccordionItem = ({
 
            <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
-                <div className="font-medium text-base text-primary">Renewal History</div>
+                <p className="font-medium text-base text-primary">Renewal History</p>
                  {!isReadOnly && (
                     <div className="flex items-center space-x-1">
                          {field.status === 'Active' && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); openDialog('renew', { rigIndex: index }); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>}
@@ -439,51 +441,49 @@ const RigAccordionItem = ({
                 )}
               </div>
               <ScrollArea className="h-72 w-full rounded-md border">
-                {field.renewals && field.renewals.length > 0 ? (
-                    <Table>
-                      <TableHeader className="sticky top-0 bg-secondary">
-                        <TableRow>
-                          <TableHead>Renewal No.</TableHead>
-                          <TableHead>Renewal Date</TableHead>
-                          <TableHead>Validity Upto</TableHead>
-                          <TableHead>Fee (₹)</TableHead>
-                          <TableHead>Payment Date</TableHead>
-                          <TableHead>Challan No.</TableHead>
-                          {!isReadOnly && <TableHead className="text-center">Actions</TableHead>}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {field.renewals.map((renewal, renewalIndex) => {
-                          const renewalNum = renewalIndex + 1;
-                          const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
-                          const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
-                          const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
-                          return (
+                <Table>
+                    <TableHeader className="sticky top-0 bg-secondary">
+                    <TableRow>
+                        <TableHead>Renewal No.</TableHead>
+                        <TableHead>Renewal Date</TableHead>
+                        <TableHead>Validity Upto</TableHead>
+                        <TableHead>Fee (₹)</TableHead>
+                        <TableHead>Payment Date</TableHead>
+                        <TableHead>Challan No.</TableHead>
+                        {!isReadOnly && <TableHead className="text-center">Actions</TableHead>}
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {field.renewals && field.renewals.length > 0 ? (
+                        field.renewals.map((renewal, renewalIndex) => {
+                        const renewalNum = renewalIndex + 1;
+                        const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
+                        const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
+                        const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
+                        return (
                             <TableRow key={renewal.id}>
-                              <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
-                              <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              <TableCell>{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
-                              <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                              <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
-                              {!isReadOnly && (
+                            <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
+                            <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                            <TableCell>{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                            <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
+                            <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                            <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
+                            {!isReadOnly && (
                                 <TableCell className="text-center">
-                                  <div className="flex justify-center space-x-1">
+                                    <div className="flex justify-center space-x-1">
                                     <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
                                     <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
-                                  </div>
+                                    </div>
                                 </TableCell>
-                              )}
+                            )}
                             </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                ) : (
-                  <div className="text-center p-4 text-muted-foreground bg-background/50">
-                    No renewal history for this rig.
-                  </div>
-                )}
+                        );
+                        })
+                    ) : (
+                        <TableRow><TableCell colSpan={!isReadOnly ? 7 : 6} className="h-24 text-center text-muted-foreground bg-background/50">No renewal history for this rig.</TableCell></TableRow>
+                    )}
+                    </TableBody>
+                </Table>
               </ScrollArea>
           </div>
         </div>
@@ -504,7 +504,7 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' ; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg' ; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
@@ -760,7 +760,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -903,6 +903,18 @@ export default function AgencyRegistrationPage() {
     closeDialog();
   }
 
+  const handleConfirmAgencyReg = (regData: any) => {
+    form.setValue('agencyRegistrationNo', regData.agencyRegistrationNo);
+    form.setValue('agencyRegistrationDate', regData.agencyRegistrationDate);
+    form.setValue('agencyRegistrationFee', regData.agencyRegistrationFee);
+    form.setValue('agencyPaymentDate', regData.agencyPaymentDate);
+    form.setValue('agencyChallanNo', regData.agencyChallanNo);
+    form.setValue('agencyAdditionalRegFee', regData.agencyAdditionalRegFee);
+    form.setValue('agencyAdditionalPaymentDate', regData.agencyAdditionalPaymentDate);
+    form.setValue('agencyAdditionalChallanNo', regData.agencyAdditionalChallanNo);
+    toast({ title: "Agency Registration Updated" });
+    closeDialog();
+  }
 
   const paginatedCompletedApplications = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -1074,21 +1086,28 @@ export default function AgencyRegistrationPage() {
                         {/* Section 2: Agency Registration */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-xl font-semibold text-primary">2. Agency Registration</AccordionTrigger>
+                            <AccordionTrigger className="text-xl font-semibold text-primary">
+                                <div className="flex justify-between items-center w-full">
+                                    <span>2. Agency Registration</span>
+                                    {!isReadOnlyForForm && (
+                                        <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('editAgencyReg', { regData: form.getValues() }) }}>
+                                            <Edit className="mr-2 h-4 w-4" /> Edit
+                                        </Button>
+                                    )}
+                                </div>
+                            </AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
-                               <div className="grid md:grid-cols-3 gap-4">
-                                <FormField name="agencyRegistrationNo" render={({ field }) => <FormItem><FormLabel>Agency Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyRegistrationDate" render={({ field }) => <FormItem><FormLabel>Reg. Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyRegistrationFee" render={({ field }) => <FormItem><FormLabel>Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyChallanNo" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               </div>
-                               <Separator className="my-2" />
-                               <div className="md:col-span-3 grid md:grid-cols-3 gap-4">
-                                <FormField name="agencyAdditionalRegFee" render={({ field }) => <FormItem><FormLabel>Additional Reg. Fee</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyAdditionalPaymentDate" render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="agencyAdditionalChallanNo" render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                               </div>
+                               <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
+                                <DetailRow label="Agency Reg. No." value={form.watch('agencyRegistrationNo')} />
+                                <DetailRow label="Reg. Date" value={form.watch('agencyRegistrationDate')} />
+                                <DetailRow label="Reg. Fee" value={form.watch('agencyRegistrationFee')} />
+                                <DetailRow label="Payment Date" value={form.watch('agencyPaymentDate')} />
+                                <DetailRow label="Challan No." value={form.watch('agencyChallanNo')} />
+                                <div className="col-span-full border-t pt-4 mt-2"></div>
+                                <DetailRow label="Additional Reg. Fee" value={form.watch('agencyAdditionalRegFee')} />
+                                <DetailRow label="Additional Payment Date" value={form.watch('agencyAdditionalPaymentDate')} />
+                                <DetailRow label="Additional Challan No." value={form.watch('agencyAdditionalChallanNo')} />
+                               </dl>
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
@@ -1155,6 +1174,18 @@ export default function AgencyRegistrationPage() {
                     )}
                 </Card>
             </form>
+            <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Agency Registration</DialogTitle>
+                    </DialogHeader>
+                    <AgencyRegistrationDialogContent
+                        initialData={dialogState.data?.regData}
+                        onConfirm={handleConfirmAgencyReg}
+                        onCancel={closeDialog}
+                    />
+                </DialogContent>
+            </Dialog>
              <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent>
                     <DialogHeader>
@@ -1218,7 +1249,7 @@ export default function AgencyRegistrationPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
+                        <Button variant="outline" onClick={closeDialog}>Cancel</Button>
                         <Button variant="destructive" onClick={confirmDeleteRig}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1230,8 +1261,8 @@ export default function AgencyRegistrationPage() {
                         <AlertDialogDescription>Are you sure you want to reactivate this rig?</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
-                        <Button onClick={handleActivateRig}>Activate</Button>
+                        <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+                        <Button variant="default" onClick={handleActivateRig}>Activate</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1244,7 +1275,7 @@ export default function AgencyRegistrationPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                       <Button variant="ghost" onClick={() => setDeletingRenewal(null)}>Cancel</Button>
+                       <Button variant="outline" onClick={() => setDeletingRenewal(null)}>Cancel</Button>
                        <Button variant="destructive" onClick={handleConfirmDeleteRenewal}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1355,7 +1386,7 @@ export default function AgencyRegistrationPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button variant="ghost" onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</Button>
             <Button variant="destructive" onClick={confirmDeleteApplication} disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span>Delete</span>}
             </Button>
@@ -1370,6 +1401,50 @@ export default function AgencyRegistrationPage() {
       />
     </div>
   );
+}
+
+function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<AgencyApplication>, onConfirm: (data: any) => void, onCancel: () => void }) {
+    const [data, setData] = useState({
+        agencyRegistrationNo: initialData?.agencyRegistrationNo ?? '',
+        agencyRegistrationDate: formatDateForInput(toDateOrNull(initialData?.agencyRegistrationDate)),
+        agencyRegistrationFee: initialData?.agencyRegistrationFee,
+        agencyPaymentDate: formatDateForInput(toDateOrNull(initialData?.agencyPaymentDate)),
+        agencyChallanNo: initialData?.agencyChallanNo ?? '',
+        agencyAdditionalRegFee: initialData?.agencyAdditionalRegFee,
+        agencyAdditionalPaymentDate: formatDateForInput(toDateOrNull(initialData?.agencyAdditionalPaymentDate)),
+        agencyAdditionalChallanNo: initialData?.agencyAdditionalChallanNo ?? '',
+    });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value, type } = e.target;
+        setData(prev => ({ ...prev, [id]: type === 'number' ? (value === '' ? undefined : +value) : value }));
+    };
+
+    return (
+        <>
+            <ScrollArea className="max-h-[60vh] p-1">
+                <div className="space-y-4 p-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormItem><Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label><Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={handleChange} /></FormItem>
+                        <FormItem><Label htmlFor="agencyRegistrationDate">Reg. Date</Label><Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={handleChange} /></FormItem>
+                        <FormItem><Label htmlFor="agencyRegistrationFee">Reg. Fee</Label><Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ""} onChange={handleChange} /></FormItem>
+                        <FormItem><Label htmlFor="agencyPaymentDate">Payment Date</Label><Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={handleChange} /></FormItem>
+                        <FormItem className="md:col-span-2"><Label htmlFor="agencyChallanNo">Challan No.</Label><Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} /></FormItem>
+                    </div>
+                    <Separator />
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormItem><Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label><Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ""} onChange={handleChange} /></FormItem>
+                        <FormItem><Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label><Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={handleChange} /></FormItem>
+                        <FormItem className="md:col-span-2"><Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label><Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} /></FormItem>
+                    </div>
+                </div>
+            </ScrollArea>
+            <DialogFooter>
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
+            </DialogFooter>
+        </>
+    );
 }
 
 function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<ApplicationFee>, onConfirm: (data: any) => void, onCancel: () => void }) {
@@ -1482,8 +1557,8 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
                 </div>
             </div>
             <AlertDialogFooter>
-                <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-                <Button variant="destructive" onClick={() => onConfirm(cancellationData)}>Confirm Cancellation</Button>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onConfirm(cancellationData)}>Confirm Cancellation</AlertDialogAction>
             </AlertDialogFooter>
         </>
     );
