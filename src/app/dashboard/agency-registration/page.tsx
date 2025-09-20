@@ -329,26 +329,11 @@ const RigAccordionItem = ({
     
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
-      <div className="flex items-center w-full border-b">
-        <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
+      <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
             <div className="flex items-center gap-2">
                 Rig #{displayIndex + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
             </div>
         </AccordionTrigger>
-        <div className="flex items-center ml-auto mr-2 shrink-0 space-x-1">
-            {!isReadOnly && onRemove && (
-                <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive/90"
-                onClick={(e) => { e.stopPropagation(); openDialog('deleteRig', { rigIndex: index }); }}
-                >
-                <Trash2 className="h-4 w-4" />
-                </Button>
-            )}
-        </div>
-      </div>
       <AccordionContent className="p-6 pt-0">
         <div className="border-t pt-6 space-y-4">
           
@@ -1044,26 +1029,11 @@ export default function AgencyRegistrationPage() {
                             <AccordionTrigger className="text-xl font-semibold text-primary">Application Fees</AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-4">
                                 {feeFields.map((field, index) => (
-                                    <div key={field.id} className="grid md:grid-cols-5 gap-4 p-4 border rounded-lg items-end bg-secondary/20">
-                                        <FormField
-                                            name={`applicationFees.${index}.applicationFeeType`}
-                                            control={form.control}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Type of Application</FormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnlyForForm}>
-                                                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                                                        <SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField name={`applicationFees.${index}.applicationFeeAmount`} render={({ field }) => <FormItem><FormLabel>Fees Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name={`applicationFees.${index}.applicationFeePaymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name={`applicationFees.${index}.applicationFeeChallanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                    <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <h4 className="font-medium text-primary">Fee #{index + 1}: {field.applicationFeeType || 'Not Set'}</h4>
                                         {!isReadOnlyForForm && (
-                                           <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1">
                                                 <Button type="button" variant="outline" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
@@ -1072,6 +1042,13 @@ export default function AgencyRegistrationPage() {
                                                 </Button>
                                             </div>
                                         )}
+                                      </div>
+                                      <dl className="grid md:grid-cols-3 gap-4 border-t pt-2">
+                                        <DetailRow label="Type of Application" value={field.applicationFeeType} />
+                                        <DetailRow label="Fees Amount" value={field.applicationFeeAmount} />
+                                        <DetailRow label="Payment Date" value={field.applicationFeePaymentDate} />
+                                        <DetailRow label="Challan No." value={field.applicationFeeChallanNo} />
+                                      </dl>
                                     </div>
                                 ))}
                                 {!isReadOnlyForForm && (
