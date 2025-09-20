@@ -64,29 +64,43 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
             const d = safeParseDate(date);
             return d ? isWithinInterval(d, { start: sDate, end: eDate }) : false;
         };
+        
+        const initialKeys = [
+            'agencyRegCount', 'rigRegCount', 'renewalCount',
+            'agencyRegAppFee', 'rigRegAppFee', 'agencyRegFee', 'rigRegFee', 'renewalFee'
+        ];
 
-        let initialData: Record<string, Record<string, number>> = {
-            agencyRegCount: {}, rigRegCount: {}, renewalCount: {},
-            agencyRegFee: {}, rigRegFee: {}, renewalFee: {}
-        };
-        rigTypeColumns.forEach(rigType => {
-            Object.keys(initialData).forEach(key => initialData[key][rigType] = 0);
+        let data: Record<string, Record<string, number>> = {};
+        initialKeys.forEach(key => {
+            data[key] = {};
+            rigTypeColumns.forEach(rigType => data[key][rigType] = 0);
         });
-
+        
         applications.forEach(app => {
-            // Agency Registration
+            // Counts
             if (checkDate(app.agencyRegistrationDate)) {
-                initialData.agencyRegCount["Agency"] = (initialData.agencyRegCount["Agency"] || 0) + 1;
-                initialData.agencyRegFee["Agency"] = (initialData.agencyRegFee["Agency"] || 0) + (Number(app.agencyRegistrationFee) || 0);
+                data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
             }
-            if (app.applicationFees) {
-                app.applicationFees.forEach(fee => {
-                    if (checkDate(fee.applicationFeePaymentDate)) {
-                        if (fee.applicationFeeType === "Agency Registration") {
-                             initialData.agencyRegFee["Agency"] = (initialData.agencyRegFee["Agency"] || 0) + (Number(fee.applicationFeeAmount) || 0);
-                        }
+            
+            // Fees from ApplicationFees array
+            app.applicationFees?.forEach(fee => {
+                if(checkDate(fee.applicationFeePaymentDate)) {
+                    if (fee.applicationFeeType === "Agency Registration") {
+                        data.agencyRegAppFee["Agency"] = (data.agencyRegAppFee["Agency"] || 0) + (Number(fee.applicationFeeAmount) || 0);
+                    } else if (fee.applicationFeeType === "Rig Registration") {
+                        // This fee is general for rigs, we can't assign to a type.
+                        // For simplicity, let's add it to a general 'Agency' bucket for this fee type.
+                         data.rigRegAppFee["Agency"] = (data.rigRegAppFee["Agency"] || 0) + (Number(fee.applicationFeeAmount) || 0);
                     }
-                });
+                }
+            });
+
+            // Agency Registration Fee (from main fields)
+            if (checkDate(app.agencyPaymentDate)) {
+                 data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyRegistrationFee) || 0);
+            }
+            if (checkDate(app.agencyAdditionalPaymentDate)) {
+                 data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyAdditionalRegFee) || 0);
             }
 
             // Rigs and Renewals
@@ -94,26 +108,31 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
                 const rigType = rig.typeOfRig;
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
 
+                // Rig Registration
                 if (checkDate(rig.registrationDate)) {
-                    initialData.rigRegCount[rigType] = (initialData.rigRegCount[rigType] || 0) + 1;
-                    initialData.rigRegFee[rigType] = (initialData.rigRegFee[rigType] || 0) + (Number(rig.registrationFee) || 0);
+                    data.rigRegCount[rigType] = (data.rigRegCount[rigType] || 0) + 1;
+                    data.rigRegFee[rigType] = (data.rigRegFee[rigType] || 0) + (Number(rig.registrationFee) || 0);
+                }
+                 if (checkDate(rig.additionalPaymentDate)) {
+                    data.rigRegFee[rigType] = (data.rigRegFee[rigType] || 0) + (Number(rig.additionalRegistrationFee) || 0);
                 }
                 
+                // Renewals
                 rig.renewals?.forEach(renewal => {
                     if (checkDate(renewal.renewalDate)) {
-                        initialData.renewalCount[rigType] = (initialData.renewalCount[rigType] || 0) + 1;
-                        initialData.renewalFee[rigType] = (initialData.renewalFee[rigType] || 0) + (Number(renewal.renewalFee) || 0);
+                        data.renewalCount[rigType] = (data.renewalCount[rigType] || 0) + 1;
+                        data.renewalFee[rigType] = (data.renewalFee[rigType] || 0) + (Number(renewal.renewalFee) || 0);
                     }
                 });
             });
         });
         
         const totals: Record<string, number> = {};
-        Object.keys(initialData).forEach(key => {
-            totals[key] = Object.values(initialData[key]).reduce((sum, val) => sum + val, 0);
+        Object.keys(data).forEach(key => {
+            totals[key] = Object.values(data[key]).reduce((sum, val) => sum + val, 0);
         });
 
-        return { ...initialData, totals };
+        return { ...data, totals };
 
     }, [applications, startDate, endDate]);
 
@@ -141,10 +160,14 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
                         <FinancialRow label="No. of Agency Registrations" data={summaryData.agencyRegCount} total={summaryData.totals.agencyRegCount} />
                         <FinancialRow label="No. of Rig Registrations" data={summaryData.rigRegCount} total={summaryData.totals.rigRegCount} />
                         <FinancialRow label="No. of Renewals" data={summaryData.renewalCount} total={summaryData.totals.renewalCount} />
+                        
                         <TableRow className="bg-secondary/50 font-semibold"><TableCell colSpan={8} className="p-2">Application Fees (₹)</TableCell></TableRow>
-                        <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} />
+                        
+                        <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} />
+                        <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} />
+                        <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summary.totals.agencyRegFee} />
                         <FinancialAmountRow label="Rig Registration Fee" data={summaryData.rigRegFee} total={summaryData.totals.rigRegFee} />
-                        <FinancialAmountRow label="Rig Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} />
+                        <FinancialAmountRow label="Rig Registration Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} />
                     </TableBody>
                 </Table>
             </CardContent>
