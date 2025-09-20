@@ -140,7 +140,7 @@ const RigFeeDetailsDialog = () => {
                         <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {staticFees.map(item => (
-                                <TableRow key={item.description}><TableCell>{item.description}</TableCell><TableCell className="text-right font-mono">{item.amount.toLocaleString()}</TableCell></TableRow>
+                                <TableRow key={item.description}><TableCell>{item.description}</TableCell><TableCell className="text-right font-mono">{item.amount.toLocaleString('en-IN')}</TableCell></TableRow>
                             ))}
                         </TableBody>
                     </Table>
@@ -176,7 +176,7 @@ const RigFeeDetailsDialog = () => {
                                 <TableRow key={item.description}>
                                     <TableCell>{item.description}</TableCell>
                                     <TableCell className="text-right font-mono">
-                                        {calculateFeeForYear(item.baseAmount, item.baseYear, selectedRegYear).toLocaleString()}
+                                        {calculateFeeForYear(item.baseAmount, item.baseYear, selectedRegYear).toLocaleString('en-IN')}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -214,7 +214,7 @@ const RigFeeDetailsDialog = () => {
                                  <TableRow key={item.description}>
                                     <TableCell>{item.description}</TableCell>
                                     <TableCell className="text-right font-mono">
-                                        {calculateRenewalFee(item.baseAmount, selectedRenewalNum).toLocaleString()}
+                                        {calculateRenewalFee(item.baseAmount, selectedRenewalNum).toLocaleString('en-IN')}
                                     </TableCell>
                                 </TableRow>
                             ))}
