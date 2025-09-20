@@ -376,7 +376,7 @@ const RigAccordionItem = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type of Rig</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Type of Rig" />
                         </SelectTrigger>
@@ -517,8 +517,8 @@ const RigAccordionItem = ({
                               <TableCell className="py-2 px-4">{renewal.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                              {!isReadOnly && (
                                 <TableCell className="py-2 px-4 text-center">
-                                  {!isReadOnly && (
                                     <div className="flex items-center justify-center">
                                       <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
                                         <Edit className="h-4 w-4"/>
@@ -527,8 +527,8 @@ const RigAccordionItem = ({
                                         <Trash2 className="h-4 w-4"/>
                                       </Button>
                                     </div>
-                                  )}
                                 </TableCell>
+                              )}
                             </TableRow>
                           );
                         })}
@@ -1076,7 +1076,7 @@ export default function AgencyRegistrationPage() {
                                           render={({ field: formField }) => (
                                             <FormItem>
                                               <FormLabel>Type of Application</FormLabel>
-                                              <Select onValueChange={formField.onChange} value={formField.value ?? undefined} disabled={isReadOnlyForForm}>
+                                              <Select onValueChange={formField.onChange} value={formField.value} disabled={isReadOnlyForForm}>
                                                 <SelectTrigger>
                                                   <SelectValue placeholder="Select Type" />
                                                 </SelectTrigger>
@@ -1232,8 +1232,8 @@ export default function AgencyRegistrationPage() {
                         <AlertDialogDescription>This will remove this application fee from the form. This action cannot be undone.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setDeletingFeeIndex(null)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteFee}>Delete</AlertDialogAction>
+                        <Button variant="outline" onClick={() => setDeletingFeeIndex(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmDeleteFee}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1263,8 +1263,8 @@ export default function AgencyRegistrationPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={closeDialog}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteRig}>Delete</AlertDialogAction>
+                         <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+                         <Button variant="destructive" onClick={confirmDeleteRig}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1275,8 +1275,8 @@ export default function AgencyRegistrationPage() {
                         <AlertDialogDescription>Are you sure you want to reactivate this rig?</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={closeDialog}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleActivateRig}>Activate</AlertDialogAction>
+                        <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+                        <Button onClick={handleActivateRig}>Activate</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1289,8 +1289,8 @@ export default function AgencyRegistrationPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel><span>Cancel</span></AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmDeleteRenewal}><span>Delete</span></AlertDialogAction>
+                        <Button variant="outline" onClick={() => setDeletingRenewal(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={handleConfirmDeleteRenewal}>Delete</Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1382,10 +1382,10 @@ export default function AgencyRegistrationPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}><span>Cancel</span></AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteApplication} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">
+            <Button variant="outline" onClick={() => setDeletingApplicationId(null)} disabled={isSubmitting}>Cancel</Button>
+            <Button onClick={confirmDeleteApplication} disabled={isSubmitting} variant="destructive">
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span>Delete</span>}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1509,8 +1509,8 @@ function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initi
                 </div>
             </div>
             <AlertDialogFooter>
-                <AlertDialogCancel><span>Cancel</span></AlertDialogCancel>
-                <AlertDialogAction onClick={() => onConfirm(cancellationData)}><span>Confirm Cancellation</span></AlertDialogAction>
+                <Button variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button variant="destructive" onClick={() => onConfirm(cancellationData)}>Confirm Cancellation</Button>
             </AlertDialogFooter>
         </>
     );
