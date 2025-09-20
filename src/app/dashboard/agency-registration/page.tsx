@@ -496,7 +496,7 @@ const RigAccordionItem = ({
               <AccordionTrigger className="text-base font-semibold text-primary"><div>Renewal History</div></AccordionTrigger>
               <AccordionContent>
                 <div className="border-t pt-4">
-                  {field.renewals && field.renewals.length > 0 ? (
+                  {(field.renewals && field.renewals.length > 0) ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -504,7 +504,7 @@ const RigAccordionItem = ({
                           <TableHead className="py-2 px-4 h-auto">Fee</TableHead>
                           <TableHead className="py-2 px-4 h-auto whitespace-normal break-words">Challan No.</TableHead>
                           <TableHead className="py-2 px-4 h-auto">Validity</TableHead>
-                          <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>
+                          {!isReadOnly && <TableHead className="text-center py-2 px-4 h-auto">Actions</TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -518,7 +518,7 @@ const RigAccordionItem = ({
                               <TableCell className="py-2 px-4 whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
                               <TableCell className="py-2 px-4">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                 <TableCell className="py-2 px-4 text-center">
-                                  {!isReadOnly ? (
+                                  {!isReadOnly && (
                                     <div className="flex items-center justify-center">
                                       <Button type="button" variant="ghost" size="icon" onClick={() => onEditRenewal(index, renewal)}>
                                         <Edit className="h-4 w-4"/>
@@ -527,8 +527,6 @@ const RigAccordionItem = ({
                                         <Trash2 className="h-4 w-4"/>
                                       </Button>
                                     </div>
-                                  ) : (
-                                    <span>-</span>
                                   )}
                                 </TableCell>
                             </TableRow>
@@ -1642,6 +1640,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
         </Dialog>
     );
 }
+    
+
     
 
     
