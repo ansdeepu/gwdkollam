@@ -91,21 +91,21 @@ const RigFeeDetailsDialog = () => {
 
     const calculateFeeForYear = useCallback((baseAmount: number, baseYear: number, targetYear: number) => {
         let fee = baseAmount;
-        const roundUpToNearest50 = (num: number) => Math.ceil(num / 50) * 50;
+        const roundUpToNearest10 = (num: number) => Math.ceil(num / 10) * 10;
 
         for (let i = baseYear; i < targetYear; i++) {
-            fee = roundUpToNearest50(fee * 1.05);
+            fee = roundUpToNearest10(fee * 1.05);
         }
         return fee;
     }, []);
 
     const calculateRenewalFee = useCallback((baseAmount: number, renewalNum: number) => {
         let fee = baseAmount;
-        const roundUpToNearest50 = (num: number) => Math.ceil(num / 50) * 50;
+        const roundUpToNearest10 = (num: number) => Math.ceil(num / 10) * 10;
         
         // A 1st renewal happens on the base amount. A 2nd renewal has one 5% increment, etc.
         for (let i = 1; i < renewalNum; i++) {
-            fee = roundUpToNearest50(fee * 1.05);
+            fee = roundUpToNearest10(fee * 1.05);
         }
         return fee;
     }, []);
@@ -114,6 +114,7 @@ const RigFeeDetailsDialog = () => {
         { description: 'Application Fee - Agency Registration', amount: 1000 },
         { description: 'Application Fee - Rig Registration', amount: 1000 },
         { description: 'Agency Registration Fee as on 24-01-2023', amount: 60000 },
+        { description: 'Fine without valid registration as on 24-01-2023', amount: 100000 },
     ];
     
     const registrationFeeItems = [
@@ -149,7 +150,7 @@ const RigFeeDetailsDialog = () => {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-lg">Yearly Registration Fees</CardTitle>
-                    <CardDescription>Fees with a 5% yearly increment, rounded up to the nearest ₹50.</CardDescription>
+                    <CardDescription>Fees with a 5% yearly increment, rounded up to the nearest ₹10.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-4 mb-4">
@@ -187,7 +188,7 @@ const RigFeeDetailsDialog = () => {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-lg">Yearly Renewal Fees</CardTitle>
-                    <CardDescription>Renewal fees with a 5% yearly increment, rounded up to the nearest ₹50.</CardDescription>
+                    <CardDescription>Renewal fees with a 5% yearly increment, rounded up to the nearest ₹10.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-4 mb-4">
