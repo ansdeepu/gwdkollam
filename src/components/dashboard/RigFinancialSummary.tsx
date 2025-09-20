@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DollarSign, XCircle } from "lucide-react";
@@ -77,25 +77,20 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
         });
         
         applications.forEach(app => {
-            // Counts
             if (checkDate(app.agencyRegistrationDate)) {
                 data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
             }
             
-            // Fees from ApplicationFees array
             app.applicationFees?.forEach(fee => {
                 if(checkDate(fee.applicationFeePaymentDate)) {
                     if (fee.applicationFeeType === "Agency Registration") {
                         data.agencyRegAppFee["Agency"] = (data.agencyRegAppFee["Agency"] || 0) + (Number(fee.applicationFeeAmount) || 0);
                     } else if (fee.applicationFeeType === "Rig Registration") {
-                        // This fee is general for rigs, we can't assign to a type.
-                        // For simplicity, let's add it to a general 'Agency' bucket for this fee type.
                          data.rigRegAppFee["Agency"] = (data.rigRegAppFee["Agency"] || 0) + (Number(fee.applicationFeeAmount) || 0);
                     }
                 }
             });
 
-            // Agency Registration Fee (from main fields)
             if (checkDate(app.agencyPaymentDate)) {
                  data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyRegistrationFee) || 0);
             }
@@ -103,12 +98,10 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
                  data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyAdditionalRegFee) || 0);
             }
 
-            // Rigs and Renewals
             app.rigs?.forEach(rig => {
                 const rigType = rig.typeOfRig;
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
 
-                // Rig Registration
                 if (checkDate(rig.registrationDate)) {
                     data.rigRegCount[rigType] = (data.rigRegCount[rigType] || 0) + 1;
                     data.rigRegFee[rigType] = (data.rigRegFee[rigType] || 0) + (Number(rig.registrationFee) || 0);
@@ -117,7 +110,6 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
                     data.rigRegFee[rigType] = (data.rigRegFee[rigType] || 0) + (Number(rig.additionalRegistrationFee) || 0);
                 }
                 
-                // Renewals
                 rig.renewals?.forEach(renewal => {
                     if (checkDate(renewal.renewalDate)) {
                         data.renewalCount[rigType] = (data.renewalCount[rigType] || 0) + 1;
@@ -132,7 +124,14 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
             totals[key] = Object.values(data[key]).reduce((sum, val) => sum + val, 0);
         });
 
-        return { ...data, totals };
+        const grandTotalOfFees =
+            (totals.agencyRegAppFee || 0) +
+            (totals.rigRegAppFee || 0) +
+            (totals.agencyRegFee || 0) +
+            (totals.rigRegFee || 0) +
+            (totals.renewalFee || 0);
+
+        return { ...data, totals, grandTotalOfFees };
 
     }, [applications, startDate, endDate]);
 
@@ -169,6 +168,12 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
                         <FinancialAmountRow label="Rig Registration Fee" data={summaryData.rigRegFee} total={summaryData.totals.rigRegFee} />
                         <FinancialAmountRow label="Rig Registration Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} />
                     </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableHead colSpan={rigTypeColumns.length + 1} className="text-right font-bold">Grand Total (₹)</TableHead>
+                            <TableCell className="text-right font-bold text-lg text-primary font-mono">{summaryData.grandTotalOfFees.toLocaleString('en-IN')}</TableCell>
+                        </TableRow>
+                    </TableFooter>
                 </Table>
             </CardContent>
         </Card>
