@@ -730,12 +730,33 @@ export default function AgencyRegistrationPage() {
     const lowercasedFilter = searchTerm.toLowerCase();
     if (!lowercasedFilter) return applications;
 
-    return applications.filter((app: AgencyApplication) => 
-        (app.agencyName.toLowerCase().includes(lowercasedFilter)) ||
-        (app.owner.name.toLowerCase().includes(lowercasedFilter)) ||
-        (app.fileNo?.toLowerCase().includes(lowercasedFilter)) ||
-        (app.rigs.some(rig => rig.rigRegistrationNo?.toLowerCase().includes(lowercasedFilter)))
-      );
+    return applications.filter((app: AgencyApplication) => {
+        const searchableContent = [
+            app.agencyName,
+            app.fileNo,
+            app.agencyRegistrationNo,
+            app.agencyChallanNo,
+            app.agencyAdditionalChallanNo,
+            app.owner?.name,
+            app.owner?.mobile,
+            app.owner?.secondaryMobile,
+            app.owner?.address,
+            ...(app.partners || []).flatMap(p => [p.name, p.mobile, p.secondaryMobile, p.address]),
+            ...(app.applicationFees || []).flatMap(fee => [fee.applicationFeeType, fee.applicationFeeChallanNo]),
+            ...(app.rigs || []).flatMap(rig => [
+                rig.rigRegistrationNo,
+                rig.typeOfRig,
+                rig.challanNo,
+                rig.additionalChallanNo,
+                rig.rigVehicle?.regNo,
+                rig.compressorVehicle?.regNo,
+                rig.supportingVehicle?.regNo,
+                ...(rig.renewals || []).map(r => r.challanNo)
+            ]),
+        ].filter(Boolean).map(String).join(' ').toLowerCase();
+
+        return searchableContent.includes(lowercasedFilter);
+    });
   }, [applications, searchTerm]);
 
   const completedApplications = useMemo(() => {
@@ -1730,3 +1751,4 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
     
 
     
+
