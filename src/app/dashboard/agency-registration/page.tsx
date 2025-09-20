@@ -1256,7 +1256,7 @@ export default function AgencyRegistrationPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel><span>Cancel</span></AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmDeleteRenewal}>Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={handleConfirmDeleteRenewal}><span>Delete</span></AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
