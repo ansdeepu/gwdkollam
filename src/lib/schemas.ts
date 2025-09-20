@@ -439,6 +439,7 @@ export const RigRegistrationSchema = z.object({
     compressorDetails: CompressorDetailsSchema,
     generatorDetails: GeneratorDetailsSchema,
     status: z.enum(['Active', 'Cancelled']),
+    remarks: z.string().optional(),
     renewals: z.array(RigRenewalSchema).optional(),
     history: z.array(z.string()).optional(),
     cancellationDate: optionalDateSchema,
