@@ -117,6 +117,7 @@ export default function DashboardPage() {
     const allRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
     const activeRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
     const expiredRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
+    const cancelledRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
 
     agencyApplications.forEach(app => {
         (app.rigs || []).forEach(rig => {
@@ -136,6 +137,8 @@ export default function DashboardPage() {
                         expiredRigs.push(rigWithContext);
                     }
                 }
+            } else if (rig.status === 'Cancelled') {
+              cancelledRigs.push(rigWithContext);
             }
         });
     });
@@ -145,10 +148,12 @@ export default function DashboardPage() {
         totalRigs: allRigs.length,
         activeRigs: activeRigs.length,
         expiredRigs: expiredRigs.length,
+        cancelledRigs: cancelledRigs.length,
         allAgenciesData: agencyApplications,
         allRigsData: allRigs,
         activeRigsData: activeRigs,
         expiredRigsData: expiredRigs,
+        cancelledRigsData: cancelledRigs,
     };
   }, [agencyApplications, agenciesLoading]);
 

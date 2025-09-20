@@ -1,9 +1,10 @@
+
 // src/components/dashboard/RigRegistrationOverview.tsx
 "use client";
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FileStack, Wrench, CheckCircle, AlertTriangle } from "lucide-react";
+import { FileStack, Wrench, CheckCircle, AlertTriangle, Ban } from "lucide-react";
 import type { AgencyApplication, RigRegistration } from '@/hooks/useAgencyApplications';
 
 interface RigRegistrationOverviewProps {
@@ -12,10 +13,12 @@ interface RigRegistrationOverviewProps {
     totalRigs: number;
     activeRigs: number;
     expiredRigs: number;
+    cancelledRigs: number;
     allAgenciesData: AgencyApplication[];
     allRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
     activeRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
     expiredRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
+    cancelledRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
   };
   onCardClick: (data: any[], title: string) => void;
 }
@@ -28,7 +31,7 @@ export default function RigRegistrationOverview({ data, onCardClick }: RigRegist
         <CardDescription>Summary of all registered rig agencies and their status.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <button onClick={() => onCardClick(data.allAgenciesData, 'Total Agencies')} disabled={data.totalAgencies === 0} className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             <FileStack className="h-8 w-8 text-primary mx-auto mb-2" /><p className="text-3xl font-bold">{data.totalAgencies}</p><p className="text-sm font-medium text-muted-foreground">Total Agencies</p>
           </button>
@@ -40,6 +43,9 @@ export default function RigRegistrationOverview({ data, onCardClick }: RigRegist
           </button>
           <button onClick={() => onCardClick(data.expiredRigsData, 'Expired Rigs')} disabled={data.expiredRigs === 0} className="p-4 border rounded-lg bg-amber-500/10 text-center hover:bg-amber-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             <AlertTriangle className="h-8 w-8 text-amber-600 mx-auto mb-2" /><p className="text-3xl font-bold text-amber-700">{data.expiredRigs}</p><p className="text-sm font-medium text-amber-800">Expired Rigs</p>
+          </button>
+          <button onClick={() => onCardClick(data.cancelledRigsData, 'Cancelled Rigs')} disabled={data.cancelledRigs === 0} className="p-4 border rounded-lg bg-red-500/10 text-center hover:bg-red-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            <Ban className="h-8 w-8 text-red-600 mx-auto mb-2" /><p className="text-3xl font-bold text-red-700">{data.cancelledRigs}</p><p className="text-sm font-medium text-red-800">Cancelled Rigs</p>
           </button>
         </div>
       </CardContent>
