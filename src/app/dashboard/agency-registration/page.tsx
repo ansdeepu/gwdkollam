@@ -1233,7 +1233,9 @@ export default function AgencyRegistrationPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <Button variant="outline" onClick={() => setDeletingFeeIndex(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={confirmDeleteFee}>Delete</Button>
+                        <Button variant="destructive" onClick={confirmDeleteFee}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <span>Delete</span>}
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
