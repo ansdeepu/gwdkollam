@@ -99,7 +99,7 @@ const toDateOrNull = (value: any): Date | null => {
   return null;
 };
 
-const formatDateForInput = (d: Date | null | string) => {
+const formatDateForInput = (d: Date | null | string | undefined) => {
     if (!d) return '';
     const date = typeof d === 'string' ? parseISO(d) : d;
     if (!date || !isValid(date)) return '';
@@ -1611,7 +1611,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
     const { toast } = useToast();
     const [data, setData] = useState({
         ...initialData,
-        applicationFeePaymentDate: formatDateForInput(initialData.applicationFeePaymentDate),
+        applicationFeePaymentDate: formatDateForInput(initialData?.applicationFeePaymentDate),
     });
 
     const handleConfirm = () => {
