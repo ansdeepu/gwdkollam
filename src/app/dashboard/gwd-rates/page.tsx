@@ -80,6 +80,27 @@ export const dynamic = 'force-dynamic';
 const db = getFirestore(app);
 const RATES_COLLECTION = 'gwdRates';
 
+const calculateFeeForYear = (baseAmount: number, baseYear: number, targetYear: number) => {
+    let fee = baseAmount;
+    const roundUpToNearest10 = (num: number) => Math.ceil(num / 10) * 10;
+
+    for (let i = baseYear; i < targetYear; i++) {
+        fee = roundUpToNearest10(fee * 1.05);
+    }
+    return fee;
+};
+
+const calculateRenewalFee = (baseAmount: number, renewalNum: number) => {
+    let fee = baseAmount;
+    const roundUpToNearest10 = (num: number) => Math.ceil(num / 10) * 10;
+    
+    for (let i = 1; i < renewalNum; i++) {
+        fee = roundUpToNearest10(fee * 1.05);
+    }
+    return fee;
+};
+
+
 // Fee Details Dialog Component
 const RigFeeDetailsDialog = () => {
     const currentYear = new Date().getFullYear();
@@ -88,27 +109,6 @@ const RigFeeDetailsDialog = () => {
 
     const registrationYears = Array.from({ length: 28 }, (_, i) => 2023 + i); // 2023 to 2050
     const renewalNumbers = Array.from({ length: 30 }, (_, i) => i + 1);
-
-    const calculateFeeForYear = useCallback((baseAmount: number, baseYear: number, targetYear: number) => {
-        let fee = baseAmount;
-        const roundUpToNearest10 = (num: number) => Math.ceil(num / 10) * 10;
-
-        for (let i = baseYear; i < targetYear; i++) {
-            fee = roundUpToNearest10(fee * 1.05);
-        }
-        return fee;
-    }, []);
-
-    const calculateRenewalFee = useCallback((baseAmount: number, renewalNum: number) => {
-        let fee = baseAmount;
-        const roundUpToNearest10 = (num: number) => Math.ceil(num / 10) * 10;
-        
-        // A 1st renewal happens on the base amount. A 2nd renewal has one 5% increment, etc.
-        for (let i = 1; i < renewalNum; i++) {
-            fee = roundUpToNearest10(fee * 1.05);
-        }
-        return fee;
-    }, []);
     
     const staticFees = [
         { description: 'Application Fee - Agency Registration', amount: 1000 },
@@ -433,44 +433,90 @@ export default function GwdRatesPage() {
   };
   
   const handleExportExcel = async () => {
-    if (rateItems.length === 0) {
-      toast({ title: "No Data to Export", variant: "default" });
-      return;
-    }
-
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("GWD_Rates");
 
-    worksheet.addRow(["Ground Water Department, Kollam"]).commit();
-    worksheet.addRow(["GWD Rates Report"]).commit();
-    worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
-    worksheet.addRow([]).commit();
+    // Sheet 1: GWD Rates
+    if (rateItems.length > 0) {
+      const gwdSheet = workbook.addWorksheet("GWD_Rates");
+      gwdSheet.addRow(["GWD Rates Report"]).commit();
+      gwdSheet.mergeCells('A1:C1');
+      gwdSheet.getCell('A1').alignment = { horizontal: 'center' };
+      gwdSheet.getRow(1).font = { bold: true, size: 14 };
+      gwdSheet.addRow([]).commit();
 
-    worksheet.mergeCells('A1:C1');
-    worksheet.mergeCells('A2:C2');
-    worksheet.mergeCells('A3:C3');
-    worksheet.getCell('A1').alignment = { horizontal: 'center' };
-    worksheet.getCell('A2').alignment = { horizontal: 'center' };
+      const gwdHeaders = ["Sl. No.", "Name of Item", "Rate (₹)"];
+      gwdSheet.addRow(gwdHeaders).font = { bold: true };
+      rateItems.forEach((item, index) => {
+        gwdSheet.addRow([index + 1, item.itemName, item.rate]);
+      });
+      gwdSheet.columns = [
+        { header: 'Sl. No.', key: 'slNo', width: 10 },
+        { header: 'Name of Item', key: 'itemName', width: 50 },
+        { header: 'Rate (₹)', key: 'rate', width: 20, style: { numFmt: '"₹"#,##0.00' } },
+      ];
+    }
     
-    worksheet.getRow(1).font = { bold: true, size: 16 };
-    worksheet.getRow(2).font = { bold: true, size: 14 };
+    // Sheet 2: Rig Registration Fees
+    const feeSheet = workbook.addWorksheet("Rig_Registration_Fees");
+    feeSheet.addRow(["Rig Registration Fee Details Report"]).commit();
+    feeSheet.mergeCells('A1:C1');
+    feeSheet.getCell('A1').alignment = { horizontal: 'center' };
+    feeSheet.getRow(1).font = { bold: true, size: 14 };
+    feeSheet.addRow([]).commit();
 
-    const headerRow = worksheet.addRow(["Sl. No.", "Name of Item", "Rate (₹)"]);
-    headerRow.font = { bold: true };
-    headerRow.eachCell(cell => {
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F0F0F0' } };
-    });
-
-    rateItems.forEach((item, index) => {
-      worksheet.addRow([index + 1, item.itemName, item.rate]);
-    });
-
-    worksheet.columns = [
-      { header: 'Sl. No.', key: 'slNo', width: 10 },
-      { header: 'Name of Item', key: 'itemName', width: 50 },
-      { header: 'Rate (₹)', key: 'rate', width: 20, style: { numFmt: '"₹"#,##0.00' } },
+    // One-time fees
+    feeSheet.addRow(["One-time Fees"]).font = { bold: true };
+    const staticFees = [
+        { description: 'Application Fee - Agency Registration', amount: 1000 },
+        { description: 'Application Fee - Rig Registration', amount: 1000 },
+        { description: 'Agency Registration Fee as on 24-01-2023', amount: 60000 },
+        { description: 'Fine without valid registration as on 24-01-2023', amount: 100000 },
     ];
+    feeSheet.addRow(["Description", "Amount (₹)"]).font = { bold: true };
+    staticFees.forEach(fee => feeSheet.addRow([fee.description, fee.amount]));
+    feeSheet.addRow([]).commit();
     
+    // Yearly Registration fees for next 10 years
+    feeSheet.addRow(["Yearly Registration Fees (Next 10 Years)"]).font = { bold: true };
+    const registrationFeeItems = [
+        { description: 'Agency Registration Fee', baseAmount: 60000, baseYear: 2023 },
+        { description: 'Rig Registration Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 12000, baseYear: 2023 },
+        { description: 'Agency Registration Fee - Filterpoint, Hand bore', baseAmount: 15000, baseYear: 2023 },
+        { description: 'Rig Registration Fee - Filterpoint, Hand bore', baseAmount: 5000, baseYear: 2023 },
+    ];
+    const currentYear = new Date().getFullYear();
+    const yearlyRegHeaders = ["Description"];
+    for(let i=0; i<10; i++) { yearlyRegHeaders.push(String(currentYear + i)); }
+    feeSheet.addRow(yearlyRegHeaders).font = { bold: true };
+    registrationFeeItems.forEach(item => {
+        const row = [item.description];
+        for(let i=0; i<10; i++) {
+            row.push(calculateFeeForYear(item.baseAmount, item.baseYear, currentYear + i));
+        }
+        feeSheet.addRow(row);
+    });
+    feeSheet.addRow([]).commit();
+
+    // Yearly Renewal fees for first 10 renewals
+    feeSheet.addRow(["Yearly Renewal Fees (First 10 Renewals)"]).font = { bold: true };
+    const renewalFeeItems = [
+        { description: 'Rig Registration Renewal Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 6000 },
+        { description: 'Rig Registration Renewal Fee - Filterpoint, Hand bore', baseAmount: 3000 },
+    ];
+    const renewalHeaders = ["Description"];
+    for(let i=1; i<=10; i++) { renewalHeaders.push(`${i}${i === 1 ? 'st' : i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Renewal`); }
+    feeSheet.addRow(renewalHeaders).font = { bold: true };
+    renewalFeeItems.forEach(item => {
+        const row = [item.description];
+        for(let i=1; i<=10; i++) {
+            row.push(calculateRenewalFee(item.baseAmount, i));
+        }
+        feeSheet.addRow(row);
+    });
+
+    feeSheet.columns.forEach(column => { column.width = 30; });
+
+
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
