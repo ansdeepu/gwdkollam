@@ -488,56 +488,60 @@ const RigAccordionItem = ({
             </div>
            )}
 
-           {field.renewals && field.renewals.length > 0 && (
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="renewal-history">
-                <AccordionTrigger>
-                  <div className="font-medium text-base text-primary">Renewal History</div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="border rounded-lg p-2 bg-background/50">
+           <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="renewal-history">
+              <AccordionTrigger>
+                <div className="font-medium text-base text-primary">Renewal History</div>
+              </AccordionTrigger>
+              <AccordionContent>
+                {field.renewals && field.renewals.length > 0 ? (
+                  <ScrollArea className="h-72 w-full rounded-md border">
                     <Table>
-                        <TableHeader>
-                          <TableRow>
-                              <TableHead className="whitespace-normal break-words">Renewal No.</TableHead>
-                              <TableHead className="whitespace-normal break-words">Renewal Date</TableHead>
-                              <TableHead className="whitespace-normal break-words">Validity Upto</TableHead>
-                              <TableHead className="whitespace-normal break-words">Fee (₹)</TableHead>
-                              <TableHead className="whitespace-normal break-words">Payment Date</TableHead>
-                              <TableHead className="whitespace-normal break-words">Challan No.</TableHead>
-                              {!isReadOnly && <TableHead className="text-center whitespace-normal break-words">Actions</TableHead>}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                      <TableHeader className="sticky top-0 bg-secondary">
+                        <TableRow>
+                          <TableHead>Renewal No.</TableHead>
+                          <TableHead>Renewal Date</TableHead>
+                          <TableHead>Validity Upto</TableHead>
+                          <TableHead>Fee (₹)</TableHead>
+                          <TableHead>Payment Date</TableHead>
+                          <TableHead>Challan No.</TableHead>
+                          {!isReadOnly && <TableHead className="text-center">Actions</TableHead>}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {field.renewals.map((renewal, renewalIndex) => {
-                            const renewalNum = renewalIndex + 1;
-                            const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
-                            const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
-                            const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
-                            return (
-                                <TableRow key={renewal.id}>
-                                <TableCell className="font-medium whitespace-normal break-words">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell className="whitespace-normal break-words">{renewal.challanNo || 'N/A'}</TableCell>
-                                {!isReadOnly && (
-                                    <TableCell className="text-center whitespace-normal break-words">
-                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
-                                    </TableCell>
-                                )}
-                                </TableRow>
-                            );
+                          const renewalNum = renewalIndex + 1;
+                          const renewalDate = renewal.renewalDate ? toDateOrNull(renewal.renewalDate) : null;
+                          const paymentDate = renewal.paymentDate ? toDateOrNull(renewal.paymentDate) : null;
+                          const validityUpto = renewalDate ? new Date(addYears(renewalDate, 1).getTime() - (24 * 60 * 60 * 1000)) : null;
+                          return (
+                            <TableRow key={renewal.id}>
+                              <TableCell className="font-medium">{`${renewalNum}${getOrdinalSuffix(renewalNum)}`}</TableCell>
+                              <TableCell>{renewalDate ? format(renewalDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                              <TableCell>{validityUpto ? format(validityUpto, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                              <TableCell>{renewal.renewalFee?.toLocaleString() ?? 'N/A'}</TableCell>
+                              <TableCell>{paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                              <TableCell>{renewal.challanNo || 'N/A'}</TableCell>
+                              {!isReadOnly && (
+                                <TableCell className="text-center">
+                                  <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditRenewal(index, renewal); }}><Edit className="h-4 w-4"/></Button>
+                                  <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRenewal(index, renewal.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
                         })}
-                        </TableBody>
+                      </TableBody>
                     </Table>
+                  </ScrollArea>
+                ) : (
+                  <div className="text-center p-4 text-muted-foreground border rounded-lg bg-background/50">
+                    No renewal history for this rig.
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </AccordionContent>
     </AccordionItem>
