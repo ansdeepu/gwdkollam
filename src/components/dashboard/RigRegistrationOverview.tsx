@@ -1,11 +1,10 @@
-
 // src/components/dashboard/RigRegistrationOverview.tsx
 "use client";
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FileStack, Wrench, CheckCircle, AlertTriangle, Ban } from "lucide-react";
-import type { AgencyApplication, RigRegistration } from '@/hooks/useAgencyApplications';
+import type { AgencyApplication, RigRegistration } from '@/lib/schemas';
 
 interface RigRegistrationOverviewProps {
   data: {

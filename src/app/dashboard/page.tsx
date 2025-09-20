@@ -23,6 +23,7 @@ import UserActivity from '@/components/dashboard/UserActivity';
 import SupervisorWork from '@/components/dashboard/SupervisorWork';
 import DashboardDialogs from '@/components/dashboard/DashboardDialogs';
 import FinanceOverview from '@/components/dashboard/FinanceOverview';
+import RigFinancialSummary from '@/components/dashboard/RigFinancialSummary';
 
 export const dynamic = 'force-dynamic';
 
@@ -257,6 +258,10 @@ export default function DashboardPage() {
               data={rigRegistrationData}
               onCardClick={handleOpenRigDialog}
             />
+          )}
+
+          {agencyApplications && (
+            <RigFinancialSummary applications={agencyApplications} />
           )}
         </>
       )}
