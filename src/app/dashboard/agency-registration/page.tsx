@@ -368,16 +368,28 @@ const RigAccordionItem = ({
             <p className="font-medium text-base text-primary">Registration Details</p>
             <div className="grid md:grid-cols-3 gap-4">
                 <FormField name={`rigs.${index}.rigRegistrationNo`} control={form.control} render={({ field }) => <FormItem><FormLabel>Rig Reg. No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                <FormField name={`rigs.${index}.typeOfRig`} control={form.control} render={({ field }) => (
+                <FormField
+                  name={`rigs.${index}.typeOfRig`}
+                  control={form.control}
+                  render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Type of Rig</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly}>
-                          <SelectTrigger><SelectValue placeholder="Select Type of Rig" /></SelectTrigger>
-                          <SelectContent>{rigTypeOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
-                        </Select>
-                        <FormMessage />
+                      <FormLabel>Type of Rig</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Type of Rig" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {rigTypeOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
-                )} />
+                  )}
+                />
                 <FormField name={`rigs.${index}.registrationDate`} control={form.control} render={({ field }) => <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
             </div>
             <div className="grid md:grid-cols-4 gap-4">
@@ -1057,7 +1069,27 @@ export default function AgencyRegistrationPage() {
                             <AccordionContent className="pt-4 space-y-4">
                                 {feeFields.map((field, index) => (
                                     <div key={field.id} className="grid md:grid-cols-5 gap-4 p-4 border rounded-lg items-end bg-secondary/20">
-                                        <FormField name={`applicationFees.${index}.applicationFeeType`} render={({ field: formField }) => <FormItem><FormLabel>Type of Application</FormLabel><Select onValueChange={formField.onChange} value={formField.value ?? undefined} disabled={isReadOnlyForForm}><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger><SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                                        <FormField
+                                          name={`applicationFees.${index}.applicationFeeType`}
+                                          render={({ field: formField }) => (
+                                            <FormItem>
+                                              <FormLabel>Type of Application</FormLabel>
+                                              <Select onValueChange={formField.onChange} value={formField.value ?? undefined} disabled={isReadOnlyForForm}>
+                                                <SelectTrigger>
+                                                  <SelectValue placeholder="Select Type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {applicationFeeTypes.map((o) => (
+                                                    <SelectItem key={o} value={o}>
+                                                      {o}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
                                         <FormField name={`applicationFees.${index}.applicationFeeAmount`} render={({ field }) => <FormItem><FormLabel>Fees Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeePaymentDate`} render={({ field }) => <FormItem><FormLabel>Payment Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
                                         <FormField name={`applicationFees.${index}.applicationFeeChallanNo`} render={({ field }) => <FormItem><FormLabel>Challan No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
@@ -1607,3 +1639,4 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
     
 
     
+
