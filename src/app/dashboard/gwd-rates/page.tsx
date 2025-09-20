@@ -1,3 +1,4 @@
+
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -71,6 +72,8 @@ import { app } from "@/lib/firebase";
 import { GwdRateItemFormDataSchema, type GwdRateItem, type GwdRateItemFormData } from "@/lib/schemas";
 import { z } from 'zod';
 import { usePageHeader } from "@/hooks/usePageHeader";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export const dynamic = 'force-dynamic';
 
@@ -79,28 +82,51 @@ const RATES_COLLECTION = 'gwdRates';
 
 // Fee Details Dialog Component
 const RigFeeDetailsDialog = () => {
-    const calculateNextYearFee = (amount: number) => Math.round((amount * 1.05) / 50) * 50;
+    const currentYear = new Date().getFullYear();
+    const [selectedRegYear, setSelectedRegYear] = useState<number>(currentYear);
+    const [selectedRenewalNum, setSelectedRenewalNum] = useState<number>(1);
 
+    const registrationYears = Array.from({ length: 28 }, (_, i) => 2023 + i); // 2023 to 2050
+    const renewalNumbers = Array.from({ length: 30 }, (_, i) => i + 1);
+
+    const calculateFeeForYear = useCallback((baseAmount: number, baseYear: number, targetYear: number) => {
+        let fee = baseAmount;
+        const roundUpToNearest50 = (num: number) => Math.ceil(num / 50) * 50;
+
+        for (let i = baseYear; i < targetYear; i++) {
+            fee = roundUpToNearest50(fee * 1.05);
+        }
+        return fee;
+    }, []);
+
+    const calculateRenewalFee = useCallback((baseAmount: number, renewalNum: number) => {
+        let fee = baseAmount;
+        const roundUpToNearest50 = (num: number) => Math.ceil(num / 50) * 50;
+        
+        // A 1st renewal happens on the base amount. A 2nd renewal has one 5% increment, etc.
+        for (let i = 1; i < renewalNum; i++) {
+            fee = roundUpToNearest50(fee * 1.05);
+        }
+        return fee;
+    }, []);
+    
     const staticFees = [
         { description: 'Application Fee - Agency Registration', amount: 1000 },
         { description: 'Application Fee - Rig Registration', amount: 1000 },
-        { description: 'Agency Registration Fee', amount: 60000 },
+        { description: 'Agency Registration Fee as on 24-01-2023', amount: 60000 },
     ];
     
-    const registrationFees = [
-        { description: 'Agency Registration Fee', baseAmount: 60000 },
-        { description: 'Rig Registration Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 12000 },
-        { description: 'Agency Registration Fee - Filterpoint, Hand bore', baseAmount: 15000 },
-        { description: 'Rig Registration Fee - Filterpoint, Hand bore', baseAmount: 5000 },
+    const registrationFeeItems = [
+        { description: 'Agency Registration Fee', baseAmount: 60000, baseYear: 2023 },
+        { description: 'Rig Registration Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 12000, baseYear: 2023 },
+        { description: 'Agency Registration Fee - Filterpoint, Hand bore', baseAmount: 15000, baseYear: 2023 },
+        { description: 'Rig Registration Fee - Filterpoint, Hand bore', baseAmount: 5000, baseYear: 2023 },
     ];
     
-    const renewalFees = [
+    const renewalFeeItems = [
         { description: 'Rig Registration Renewal Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 6000 },
         { description: 'Rig Registration Renewal Fee - Filterpoint, Hand bore', baseAmount: 3000 },
     ];
-
-    const currentYear = new Date().getFullYear();
-    const registrationYears = [currentYear, currentYear + 1, currentYear + 2];
     
     return (
         <div className="space-y-8">
@@ -123,30 +149,36 @@ const RigFeeDetailsDialog = () => {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-lg">Yearly Registration Fees</CardTitle>
-                    <CardDescription>Fees with a 5% yearly increment, rounded to the nearest ₹50.</CardDescription>
+                    <CardDescription>Fees with a 5% yearly increment, rounded up to the nearest ₹50.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex items-center gap-4 mb-4">
+                        <Label htmlFor="reg-year-select" className="shrink-0">Select Year:</Label>
+                        <Select value={String(selectedRegYear)} onValueChange={(val) => setSelectedRegYear(Number(val))}>
+                            <SelectTrigger id="reg-year-select" className="w-[180px]">
+                                <SelectValue placeholder="Select Year" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {registrationYears.map(year => <SelectItem key={year} value={String(year)}>{year}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Description</TableHead>
-                                {registrationYears.map(year => <TableHead key={year} className="text-right">{format(new Date(year, 0, 24), 'dd/MM/yyyy')}</TableHead>)}
+                                <TableHead className="text-right">Fee for {selectedRegYear}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {registrationFees.map(item => {
-                                let year1 = item.baseAmount;
-                                let year2 = calculateNextYearFee(year1);
-                                let year3 = calculateNextYearFee(year2);
-                                return (
-                                    <TableRow key={item.description}>
-                                        <TableCell>{item.description}</TableCell>
-                                        <TableCell className="text-right font-mono">{year1.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-mono">{year2.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-mono">{year3.toLocaleString()}</TableCell>
-                                    </TableRow>
-                                )
-                            })}
+                            {registrationFeeItems.map(item => (
+                                <TableRow key={item.description}>
+                                    <TableCell>{item.description}</TableCell>
+                                    <TableCell className="text-right font-mono">
+                                        {calculateFeeForYear(item.baseAmount, item.baseYear, selectedRegYear).toLocaleString()}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -155,35 +187,36 @@ const RigFeeDetailsDialog = () => {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-lg">Yearly Renewal Fees</CardTitle>
-                    <CardDescription>Renewal fees with a 5% yearly increment, rounded to the nearest ₹50.</CardDescription>
+                    <CardDescription>Renewal fees with a 5% yearly increment, rounded up to the nearest ₹50.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex items-center gap-4 mb-4">
+                        <Label htmlFor="renewal-num-select" className="shrink-0">Select Renewal:</Label>
+                        <Select value={String(selectedRenewalNum)} onValueChange={(val) => setSelectedRenewalNum(Number(val))}>
+                            <SelectTrigger id="renewal-num-select" className="w-[180px]">
+                                <SelectValue placeholder="Select Renewal No." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {renewalNumbers.map(num => <SelectItem key={num} value={String(num)}>{num}{num === 1 ? 'st' : num === 2 ? 'nd' : num === 3 ? 'rd' : 'th'} Renewal</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <Table>
                          <TableHeader>
                             <TableRow>
                                 <TableHead>Description</TableHead>
-                                <TableHead className="text-center">Year I</TableHead>
-                                <TableHead className="text-center">Year II</TableHead>
-                                <TableHead className="text-center">Year III</TableHead>
-                                <TableHead className="text-center">Year IV</TableHead>
+                                <TableHead className="text-right">Fee for Renewal #{selectedRenewalNum}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {renewalFees.map(item => {
-                                let year1 = item.baseAmount;
-                                let year2 = calculateNextYearFee(year1);
-                                let year3 = calculateNextYearFee(year2);
-                                let year4 = calculateNextYearFee(year3);
-                                return (
-                                     <TableRow key={item.description}>
-                                        <TableCell>{item.description}</TableCell>
-                                        <TableCell className="text-right font-mono">{year1.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-mono">{year2.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-mono">{year3.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-mono">{year4.toLocaleString()}</TableCell>
-                                    </TableRow>
-                                )
-                            })}
+                            {renewalFeeItems.map(item => (
+                                 <TableRow key={item.description}>
+                                    <TableCell>{item.description}</TableCell>
+                                    <TableCell className="text-right font-mono">
+                                        {calculateRenewalFee(item.baseAmount, selectedRenewalNum).toLocaleString()}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 </CardContent>
