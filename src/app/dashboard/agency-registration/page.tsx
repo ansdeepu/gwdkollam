@@ -407,6 +407,25 @@ const RigAccordionItem = ({
             </dl>
           </div>
 
+          <FormField
+            name={`rigs.${index}.remarks`}
+            control={form.control}
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Remarks</FormLabel>
+                    <FormControl>
+                        <Textarea
+                            {...field}
+                            value={field.value ?? ""}
+                            readOnly={isReadOnly}
+                            placeholder="Add any remarks for this specific rig..."
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+            />
+
           {field.status === 'Cancelled' && (
             <div className="p-4 border rounded-lg bg-destructive/10">
                 <div className="flex justify-between items-center mb-2">
@@ -552,7 +571,6 @@ export default function AgencyRegistrationPage() {
       applicationFees: [],
       rigs: [],
       status: 'Active',
-      history: [],
       remarks: '',
     },
   });
@@ -1056,7 +1074,7 @@ export default function AgencyRegistrationPage() {
     headerRow.font = { bold: true };
     headerRow.eachCell(cell => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F0F0F0' } };
-        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' };
         cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
     });
 
@@ -1064,7 +1082,7 @@ export default function AgencyRegistrationPage() {
         const values = headers.map(header => row[header as keyof typeof row]);
         const newRow = worksheet.addRow(values);
         newRow.eachCell(cell => {
-            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' };
             cell.alignment = { wrapText: true, vertical: 'top' };
         });
     });
@@ -1879,7 +1897,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
 
 function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFormReturn<any>, rigIndex: number, onConfirm: (data: any) => void, onCancel: () => void }) {
     const currentRigData = form.getValues(`rigs.${rigIndex}`);
-    const [localRigData, setLocalRigData] = useState(currentRigData);
+    const [localRigData, setLocalRigData] = useState<RigRegistration>(currentRigData);
 
     const handleConfirm = () => {
         onConfirm(localRigData);
@@ -1895,7 +1913,7 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                             <FormItem><FormLabel>Rig Reg. No.</FormLabel><Input value={localRigData.rigRegistrationNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, rigRegistrationNo: e.target.value }))} /></FormItem>
                             <FormItem>
                                 <FormLabel>Type of Rig</FormLabel>
-                                <Select onValueChange={value => setLocalRigData(d => ({ ...d, typeOfRig: value }))} value={localRigData.typeOfRig}>
+                                <Select onValueChange={value => setLocalRigData(d => ({ ...d, typeOfRig: value as RigType }))} value={localRigData.typeOfRig}>
                                     <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
                                     <SelectContent>{rigTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                 </Select>
@@ -1934,27 +1952,5 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
         </ScrollArea>
     );
 }
-
-    
-
-    
-
-
-
-
-
-
-    
-
-
-
-    
-
-
-
-
-    
-
-    
 
     
