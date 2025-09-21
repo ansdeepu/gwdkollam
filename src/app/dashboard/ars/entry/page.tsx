@@ -91,7 +91,8 @@ const CompletionDateField = ({ isFieldReadOnly }: { isFieldReadOnly: (fieldName:
                         <Input
                             type="date"
                             {...field}
-                            value={field.value ?? ""}
+                            value={field.value ? (field.value instanceof Date ? format(field.value, "yyyy-MM-dd") : field.value) : ""}
+                            onChange={(e) => field.onChange(e.target.value || undefined)}
                             readOnly={isFieldReadOnly('dateOfCompletion')}
                         />
                     </FormControl>
