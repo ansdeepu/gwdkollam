@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from "react"
 import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee, remarksSchema } from "@/lib/schemas";
+import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -1917,7 +1917,7 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                             <FormItem><FormLabel>Rig Reg. No.</FormLabel><Input value={localRigData.rigRegistrationNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, rigRegistrationNo: e.target.value }))} /></FormItem>
                             <FormItem>
                                 <FormLabel>Type of Rig</FormLabel>
-                                <Select onValueChange={value => setLocalRigData(d => ({ ...d, typeOfRig: value as RigType }))} value={localRigData.typeOfRig}>
+                                <Select onValueChange={(value) => setLocalRigData(d => ({ ...d, typeOfRig: value as RigType }))} value={localRigData.typeOfRig}>
                                     <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
                                     <SelectContent>{rigTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                 </Select>
@@ -1964,6 +1964,8 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
         </ScrollArea>
     );
 }
+
+    
 
     
 

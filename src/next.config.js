@@ -25,7 +25,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https'
         hostname: 'drive.google.com',
         port: '',
         pathname: '/**',
@@ -50,13 +50,6 @@ const nextConfig = {
       },
     ],
   },
-  allowedDevOrigins: [
-      "*.google.com",
-      "*.cloud.google.com",
-      "*.firebase.google.com",
-      "*.cloud.goog",
-      "*.corp.google.com",
-  ],
   output: 'standalone',
 };
 
