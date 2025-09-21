@@ -91,7 +91,13 @@ const CompletionDateField = ({ isFieldReadOnly }: { isFieldReadOnly: (fieldName:
                         <Input
                             type="date"
                             {...field}
-                            value={field.value ? (field.value instanceof Date ? format(field.value, "yyyy-MM-dd") : field.value) : ""}
+                            value={
+                                field.value
+                                ? (field.value instanceof Date
+                                    ? format(field.value, "yyyy-MM-dd")
+                                    : field.value)
+                                : ""
+                            }
                             onChange={(e) => field.onChange(e.target.value || undefined)}
                             readOnly={isFieldReadOnly('dateOfCompletion')}
                         />
@@ -303,7 +309,31 @@ export default function ArsEntryPage() {
                           <FormField name="estimateAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 500000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('estimateAmount')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAsTsDetails" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Accorded Details</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsAsTsDetails')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="tsAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>AS/TS Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('tsAmount')}/></FormControl><FormMessage /></FormItem>)} />
-                           <FormField name="arsSanctionedDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Sanctioned Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsSanctionedDate')} /></FormControl><FormMessage /></FormItem> )} />
+                           <FormField
+                              name="arsSanctionedDate"
+                              control={form.control}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Sanctioned Date</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="date"
+                                      {...field}
+                                      value={
+                                        field.value
+                                          ? (field.value instanceof Date
+                                              ? format(field.value, "yyyy-MM-dd")
+                                              : field.value)
+                                          : ""
+                                      }
+                                      onChange={(e) => field.onChange(e.target.value || undefined)}
+                                      readOnly={isFieldReadOnly("arsSanctionedDate")}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsTenderedAmount')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsAwardedAmount')}/></FormControl><FormMessage /></FormItem>)} />
                            <FormField name="workStatus" control={form.control} render={({ field }) => (
