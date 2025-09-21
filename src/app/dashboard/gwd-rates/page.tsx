@@ -485,13 +485,13 @@ export default function GwdRatesPage() {
         { description: 'Rig Registration Fee - Filterpoint, Hand bore', baseAmount: 5000, baseYear: 2023 },
     ];
     const currentYear = new Date().getFullYear();
-    const yearlyRegHeaders = ["Description"];
+    const yearlyRegHeaders: string[] = ["Description"];
     for(let i=0; i<10; i++) { yearlyRegHeaders.push(String(currentYear + i)); }
     feeSheet.addRow(yearlyRegHeaders).font = { bold: true };
     registrationFeeItems.forEach(item => {
-        const row = [item.description];
+        const row: string[] = [item.description];
         for(let i=0; i<10; i++) {
-            row.push(calculateFeeForYear(item.baseAmount, item.baseYear, currentYear + i));
+            row.push(String(calculateFeeForYear(item.baseAmount, item.baseYear, currentYear + i)));
         }
         feeSheet.addRow(row);
     });
@@ -503,18 +503,18 @@ export default function GwdRatesPage() {
         { description: 'Rig Registration Renewal Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 6000 },
         { description: 'Rig Registration Renewal Fee - Filterpoint, Hand bore', baseAmount: 3000 },
     ];
-    const renewalHeaders = ["Description"];
+    const renewalHeaders: string[] = ["Description"];
     for(let i=1; i<=10; i++) { renewalHeaders.push(`${i}${i === 1 ? 'st' : i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Renewal`); }
     feeSheet.addRow(renewalHeaders).font = { bold: true };
     renewalFeeItems.forEach(item => {
-        const row = [item.description];
+        const row: string[] = [item.description];
         for(let i=1; i<=10; i++) {
-            row.push(calculateRenewalFee(item.baseAmount, i));
+            row.push(String(calculateRenewalFee(item.baseAmount, i)));
         }
         feeSheet.addRow(row);
     });
 
-    feeSheet.columns.forEach(column => { column.width = 30; });
+    feeSheet.columns.forEach(column => { if (column) column.width = 30; });
 
 
     const buffer = await workbook.xlsx.writeBuffer();
