@@ -16,6 +16,21 @@ interface RigFinancialSummaryProps {
 
 const rigTypeColumns: RigType[] = ["Hand Bore", "Filter Point Rig", "Calyx Rig", "Rotary Rig", "DTH Rig", "Rotary cum DTH Rig"];
 
+// Define the type for the summary data object
+interface SummaryData {
+    agencyRegCount: Record<string, number>;
+    rigRegCount: Record<string, number>;
+    renewalCount: Record<string, number>;
+    agencyRegAppFee: Record<string, number>;
+    rigRegAppFee: Record<string, number>;
+    agencyRegFee: Record<string, number>;
+    rigRegFee: Record<string, number>;
+    renewalFee: Record<string, number>;
+    totals: Record<string, number>;
+    grandTotalOfFees: number;
+}
+
+
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
   if (dateValue instanceof Date) return dateValue;
@@ -54,7 +69,7 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
     const [startDate, setStartDate] = useState<Date | undefined>();
     const [endDate, setEndDate] = useState<Date | undefined>();
 
-    const summaryData = useMemo(() => {
+    const summaryData: SummaryData = useMemo(() => {
         const sDate = startDate ? startOfDay(startDate) : null;
         const eDate = endDate ? endOfDay(endDate) : null;
         const isDateFilterActive = sDate && eDate;
@@ -131,7 +146,7 @@ export default function RigFinancialSummary({ applications }: RigFinancialSummar
             (totals.rigRegFee || 0) +
             (totals.renewalFee || 0);
 
-        return { ...data, totals, grandTotalOfFees };
+        return { ...(data as any), totals, grandTotalOfFees };
 
     }, [applications, startDate, endDate]);
 
