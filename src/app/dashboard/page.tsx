@@ -122,7 +122,7 @@ export default function DashboardPage() {
     
     const completedAgencyApplications = agencyApplications.filter(app => app.status === 'Active');
 
-    agencyApplications.forEach(app => {
+    completedAgencyApplications.forEach(app => {
         (app.rigs || []).forEach(rig => {
             const rigWithContext = { ...rig, agencyName: app.agencyName, ownerName: app.owner.name };
             allRigs.push(rigWithContext);
