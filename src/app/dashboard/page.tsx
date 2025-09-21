@@ -119,6 +119,8 @@ export default function DashboardPage() {
     const activeRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
     const expiredRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
     const cancelledRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
+    
+    const completedAgencyApplications = agencyApplications.filter(app => app.status === 'Active');
 
     agencyApplications.forEach(app => {
         (app.rigs || []).forEach(rig => {
@@ -145,12 +147,12 @@ export default function DashboardPage() {
     });
 
     return {
-        totalAgencies: agencyApplications.length,
+        totalAgencies: completedAgencyApplications.length,
         totalRigs: allRigs.length,
         activeRigs: activeRigs.length,
         expiredRigs: expiredRigs.length,
         cancelledRigs: cancelledRigs.length,
-        allAgenciesData: agencyApplications,
+        allAgenciesData: completedAgencyApplications,
         allRigsData: allRigs,
         activeRigsData: activeRigs,
         expiredRigsData: expiredRigs,
