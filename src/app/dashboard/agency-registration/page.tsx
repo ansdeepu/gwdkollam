@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useAgencyApplications, type AgencyApplication, type RigRegistration, type OwnerInfo } from "@/hooks/useAgencyApplications";
+import { useAgencyApplications, type AgencyApplication, type RigRegistration as RigRegistrationType, type OwnerInfo } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee, type RigType } from "@/lib/schemas";
@@ -305,7 +305,7 @@ const RigAccordionItem = ({
   onEditRenewal,
   form,
 }: {
-  field: RigRegistration;
+  field: RigRegistrationType;
   index: number; // The original index for react-hook-form
   displayIndex: number; // The UI index for display
   isReadOnly: boolean;
@@ -537,7 +537,7 @@ export default function AgencyRegistrationPage() {
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
   const createDefaultFee = (): ApplicationFee => ({ id: uuidv4() });
-  const createDefaultRig = (): RigRegistration => ({
+  const createDefaultRig = (): RigRegistrationType => ({
       id: uuidv4(),
       status: 'Active',
       renewals: [],
@@ -592,7 +592,7 @@ export default function AgencyRegistrationPage() {
     }
   }, [selectedApplicationId, applications, form, setIsNavigating]);
   
-    const generateHistoryEntry = (rig: RigRegistration): string | null => {
+    const generateHistoryEntry = (rig: RigRegistrationType): string | null => {
         const logParts: string[] = [];
 
         const addPart = (label: string, value: any) => {
@@ -671,7 +671,7 @@ export default function AgencyRegistrationPage() {
         if (selectedApplicationId && selectedApplicationId !== 'new') {
             const originalApp = applications.find(a => a.id === selectedApplicationId);
             if (originalApp) {
-                 const mergedRigs = (dataForSave.rigs || []).map((updatedRig: RigRegistration) => {
+                 const mergedRigs = (dataForSave.rigs || []).map((updatedRig: RigRegistrationType) => {
                     const originalRig = (originalApp.rigs || []).find(r => r.id === updatedRig.id);
                     return {
                         ...originalRig,
@@ -919,7 +919,7 @@ export default function AgencyRegistrationPage() {
       closeDialog();
   };
   
-  const handleConfirmRigDetails = (rigData: RigRegistration) => {
+  const handleConfirmRigDetails = (rigData: RigRegistrationType) => {
     if (dialogState.type !== 'editRigDetails') return;
     const { rigIndex } = dialogState.data;
     const currentRig = form.getValues(`rigs.${rigIndex}`);
@@ -965,8 +965,8 @@ export default function AgencyRegistrationPage() {
   };
   
   const { activeRigs, cancelledRigs } = useMemo(() => {
-    const active: { field: RigRegistration, originalIndex: number }[] = [];
-    const cancelled: { field: RigRegistration, originalIndex: number }[] = [];
+    const active: { field: RigRegistrationType, originalIndex: number }[] = [];
+    const cancelled: { field: RigRegistrationType, originalIndex: number }[] = [];
     rigFields.forEach((field, index) => {
       if (field.status === 'Cancelled') {
         cancelled.push({ field, originalIndex: index });
@@ -1728,7 +1728,7 @@ function RenewalDialogContent({ initialData, onConfirm, onCancel }: { initialDat
   );
 }
 
-function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRegistration>, onConfirm: (data: any) => void, onCancel: () => void }) {
+function CancellationDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<RigRegistrationType>, onConfirm: (data: any) => void, onCancel: () => void }) {
     const [cancellationData, setCancellationData] = useState({ 
         reason: initialData?.cancellationReason ?? '', 
         date: initialData?.cancellationDate ? format(toDateOrNull(initialData.cancellationDate)!, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
@@ -1881,7 +1881,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
 
 function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFormReturn<any>, rigIndex: number, onConfirm: (data: any) => void, onCancel: () => void }) {
     const currentRigData = form.getValues(`rigs.${rigIndex}`);
-    const [localRigData, setLocalRigData] = useState<RigRegistration>(currentRigData);
+    const [localRigData, setLocalRigData] = useState<RigRegistrationType>(currentRigData);
 
     const handleConfirm = () => {
         onConfirm(localRigData);
@@ -1902,17 +1902,17 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                                     <SelectContent>{rigTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                 </Select>
                             </FormItem>
-                            <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.registrationDate)} onChange={e => setLocalRigData(d => ({ ...d, registrationDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.registrationDate)} onChange={e => setLocalRigData(d => ({ ...d, registrationDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
                         </div>
                         <div className="grid md:grid-cols-3 gap-4">
                             <FormItem><FormLabel>Reg. Fee</FormLabel><Input type="number" value={localRigData.registrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, registrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
-                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.paymentDate)} onChange={e => setLocalRigData(d => ({ ...d, paymentDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.paymentDate)} onChange={e => setLocalRigData(d => ({ ...d, paymentDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
                             <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.challanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, challanNo: e.target.value }))} /></FormItem>
                         </div>
                         <Separator />
                         <div className="grid md:grid-cols-3 gap-4">
                             <FormItem><FormLabel>Additional Reg. Fee</FormLabel><Input type="number" value={localRigData.additionalRegistrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalRegistrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
-                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.additionalPaymentDate)} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value }))} /></FormItem>
+                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.additionalPaymentDate)} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
                             <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.additionalChallanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalChallanNo: e.target.value }))} /></FormItem>
                         </div>
                     </CardContent>
