@@ -71,14 +71,8 @@ export function useArsEntries() {
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
     if (!user || user.role !== 'editor') throw new Error("Permission denied.");
     
-    const entryForFirestore = {
-        ...entryData,
-        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'yyyy-MM-dd', new Date()) : null,
-        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'yyyy-MM-dd', new Date()) : null,
-    };
-    
     const payload = {
-        ...entryForFirestore,
+        ...entryData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -90,14 +84,8 @@ export function useArsEntries() {
     if (!user) throw new Error("Permission denied.");
     const docRef = doc(db, ARS_COLLECTION, id);
 
-    const entryForFirestore = {
-        ...entryData,
-        arsSanctionedDate: entryData.arsSanctionedDate ? parse(entryData.arsSanctionedDate, 'yyyy-MM-dd', new Date()) : null,
-        dateOfCompletion: entryData.dateOfCompletion ? parse(entryData.dateOfCompletion, 'yyyy-MM-dd', new Date()) : null,
-    };
-
     const payload = {
-        ...entryForFirestore,
+        ...entryData,
         updatedAt: serverTimestamp(),
     };
 
