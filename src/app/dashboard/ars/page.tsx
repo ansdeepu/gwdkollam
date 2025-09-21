@@ -401,13 +401,13 @@ export default function ArsPage() {
 
         for (const rowData of jsonData) {
           try {
-            const parseDate = (dateValue: any): string | undefined => {
+            const parseDate = (dateValue: any): Date | undefined => {
                 if (!dateValue) return undefined;
                 if (dateValue instanceof Date && isValid(dateValue)) {
-                  return format(dateValue, 'dd/MM/yyyy');
+                  return dateValue;
                 }
                 const d = parse(String(dateValue), 'dd/MM/yyyy', new Date());
-                return isValid(d) ? format(d, 'dd/MM/yyyy') : undefined;
+                return isValid(d) ? d : undefined;
             };
 
             const expenditureValue = String((rowData as any)['Expenditure (₹)'] || '');
@@ -719,4 +719,5 @@ export default function ArsPage() {
     </div>
   );
 }
+
 
