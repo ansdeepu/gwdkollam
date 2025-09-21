@@ -1,5 +1,4 @@
 
-
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -407,25 +406,6 @@ const RigAccordionItem = ({
                 {field.generatorDetails?.engineNo && <DetailRow label="Engine No" value={field.generatorDetails.engineNo} />}
             </dl>
           </div>
-          
-           <FormField
-                name={`rigs.${index}.remarks`}
-                control={form.control}
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Remarks</FormLabel>
-                        <FormControl>
-                            <Textarea
-                                {...field}
-                                value={field.value ?? ""}
-                                readOnly={isReadOnly}
-                                placeholder="Add any relevant remarks for this rig..."
-                            />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
 
           {field.status === 'Cancelled' && (
             <div className="p-4 border rounded-lg bg-destructive/10">
@@ -562,7 +542,6 @@ export default function AgencyRegistrationPage() {
       history: [],
       cancellationDate: null,
       cancellationReason: undefined,
-      remarks: undefined,
   });
 
   const form = useForm<AgencyApplication>({
@@ -573,7 +552,8 @@ export default function AgencyRegistrationPage() {
       applicationFees: [],
       rigs: [],
       status: 'Active',
-      history: []
+      history: [],
+      remarks: '',
     },
   });
   
@@ -592,7 +572,8 @@ export default function AgencyRegistrationPage() {
                 applicationFees: [createDefaultFee()],
                 rigs: [createDefaultRig()],
                 history: [],
-                status: 'Active'
+                status: 'Active',
+                remarks: '',
             });
             setIsNavigating(false);
         } else {
@@ -602,11 +583,11 @@ export default function AgencyRegistrationPage() {
                  form.reset(processedApp);
             } else {
                 setSelectedApplicationId(null);
-                form.reset({ owner: createDefaultOwner(), partners: [], applicationFees: [], rigs: [], history: [] });
+                form.reset({ owner: createDefaultOwner(), partners: [], applicationFees: [], rigs: [], history: [], remarks: '' });
             }
         }
     } else {
-        form.reset({ owner: createDefaultOwner(), partners: [], applicationFees: [], rigs: [], history: [] });
+        form.reset({ owner: createDefaultOwner(), partners: [], applicationFees: [], rigs: [], history: [], remarks: '' });
     }
   }, [selectedApplicationId, applications, form, setIsNavigating]);
   
@@ -1311,6 +1292,28 @@ export default function AgencyRegistrationPage() {
                             </Accordion>
                         )}
 
+                        <Separator />
+
+                        <FormField
+                            name="remarks"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xl font-semibold text-primary">Remarks</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            {...field}
+                                            value={field.value ?? ""}
+                                            readOnly={isReadOnlyForForm}
+                                            placeholder="Add any final remarks for this agency registration..."
+                                            rows={4}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
 
                     </CardContent>
                     {!isReadOnlyForForm && (
@@ -1817,7 +1820,7 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                             const validityDate = lastEffDate ? new Date(addYears(new Date(lastEffDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
 
                              const rigDetails = [
-                                { title: `Rig #${rigIdx + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status, "Remarks": rig.remarks, } },
+                                { title: `Rig #${rigIdx + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status, } },
                                 { title: "Cancellation Details", data: { "Reason": rig.cancellationReason, "Date": rig.cancellationDate }, condition: rig.status === 'Cancelled' },
                                 { title: "Rig Vehicle", data: rig.rigVehicle },
                                 { title: "Compressor Vehicle", data: rig.compressorVehicle },
@@ -1949,6 +1952,8 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
 
 
 
+
+    
 
     
 

@@ -439,7 +439,6 @@ export const RigRegistrationSchema = z.object({
     compressorDetails: CompressorDetailsSchema,
     generatorDetails: GeneratorDetailsSchema,
     status: z.enum(['Active', 'Cancelled']),
-    remarks: z.string().optional(),
     renewals: z.array(RigRenewalSchema).optional(),
     history: z.array(z.string()).optional(),
     cancellationDate: optionalDateSchema,
@@ -475,5 +474,9 @@ export const AgencyApplicationSchema = z.object({
   rigs: z.array(RigRegistrationSchema),
   status: z.enum(['Active', 'Pending Verification']),
   history: z.array(z.string()).optional(),
+  remarks: z.string().optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
+
+
+    
