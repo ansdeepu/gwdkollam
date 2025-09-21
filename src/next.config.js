@@ -25,7 +25,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https'
+        protocol: 'https',
         hostname: 'drive.google.com',
         port: '',
         pathname: '/**',
@@ -50,7 +50,6 @@ const nextConfig = {
       },
     ],
   },
-  output: 'standalone',
 };
 
 module.exports = nextConfig;
