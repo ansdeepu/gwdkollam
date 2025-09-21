@@ -377,8 +377,7 @@ const RigAccordionItem = ({
                 <DetailRow label="Additional Challan No." value={field.additionalChallanNo} />
                 
                 <div className="col-span-full border-t pt-4 mt-2"></div>
-                <div className="col-span-full"><DetailRow label="Remarks" value={field.remarks} /></div>
-
+                
                 {field.rigVehicle && <div className="col-span-full pt-4 mt-4 border-t"><h4 className="font-medium text-sm text-primary">Rig Vehicle</h4></div>}
                 {field.rigVehicle?.type && <DetailRow label="Type" value={field.rigVehicle.type} />}
                 {field.rigVehicle?.regNo && <DetailRow label="Reg No" value={field.rigVehicle.regNo} />}
@@ -409,6 +408,25 @@ const RigAccordionItem = ({
             </dl>
           </div>
           
+           <FormField
+                name={`rigs.${index}.remarks`}
+                control={form.control}
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Remarks</FormLabel>
+                        <FormControl>
+                            <Textarea
+                                {...field}
+                                value={field.value ?? ""}
+                                readOnly={isReadOnly}
+                                placeholder="Add any relevant remarks for this rig..."
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+
           {field.status === 'Cancelled' && (
             <div className="p-4 border rounded-lg bg-destructive/10">
                 <div className="flex justify-between items-center mb-2">
@@ -1892,14 +1910,6 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                             <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.additionalPaymentDate)} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value }))} /></FormItem>
                             <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.additionalChallanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalChallanNo: e.target.value }))} /></FormItem>
                         </div>
-                         <div className="space-y-2">
-                            <FormLabel>Remarks</FormLabel>
-                            <Textarea
-                                value={localRigData.remarks ?? ""}
-                                onChange={e => setLocalRigData(d => ({ ...d, remarks: e.target.value }))}
-                                placeholder="Add any relevant remarks for this rig..."
-                            />
-                        </div>
                     </CardContent>
                 </Card>
                 
@@ -1939,5 +1949,7 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
 
 
 
+
+    
 
     
