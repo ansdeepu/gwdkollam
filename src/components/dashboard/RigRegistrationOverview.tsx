@@ -37,14 +37,15 @@ export default function RigRegistrationOverview({ data, onCardClick }: RigRegist
       "Rotary cum DTH Rig": 0,
     };
 
-    data.allRigsData.forEach(rig => {
+    // Only count active rigs for the abstract breakdown
+    data.activeRigsData.forEach(rig => {
       if (rig.typeOfRig && rigTypeColumns.includes(rig.typeOfRig)) {
         counts[rig.typeOfRig]++;
       }
     });
 
     return counts;
-  }, [data.allRigsData]);
+  }, [data.activeRigsData]);
 
   return (
     <Card>
@@ -72,25 +73,23 @@ export default function RigRegistrationOverview({ data, onCardClick }: RigRegist
         </div>
         
         <div className="pt-6 border-t">
-            <h4 className="text-base font-semibold text-primary mb-2">Abstract Details</h4>
+            <h4 className="text-base font-semibold text-primary mb-2">Abstract Details (Active Rigs)</h4>
             <div className="border rounded-lg overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-secondary/50">
-                            <TableHead className="text-center font-bold">Agency</TableHead>
                             {rigTypeColumns.map(type => (
                                 <TableHead key={type} className="text-center font-bold">{type}</TableHead>
                             ))}
-                            <TableHead className="text-center font-bold">Total Rigs</TableHead>
+                            <TableHead className="text-center font-bold">Total Active Rigs</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow>
-                            <TableCell className="text-center font-semibold text-lg">{data.totalAgencies}</TableCell>
                             {rigTypeColumns.map(type => (
                                 <TableCell key={type} className="text-center font-semibold text-lg">{abstractData[type]}</TableCell>
                             ))}
-                            <TableCell className="text-center font-semibold text-lg">{data.totalRigs}</TableCell>
+                            <TableCell className="text-center font-semibold text-lg">{data.activeRigs}</TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>

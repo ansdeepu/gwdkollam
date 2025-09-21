@@ -11,7 +11,7 @@ import { useAuth, type UserProfile } from '@/hooks/useAuth';
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import type { SiteDetailFormData, SiteWorkStatus, SitePurpose, AgencyApplication, RigRegistration, DataEntryFormData } from '@/lib/schemas';
-import { format, addYears } from 'date-fns';
+import { format, addYears, isValid } from 'date-fns';
 import FileStatusOverview from '@/components/dashboard/FileStatusOverview';
 import NoticeBoard from '@/components/dashboard/NoticeBoard';
 import ImportantUpdates from '@/components/dashboard/ImportantUpdates';
@@ -128,17 +128,23 @@ export default function DashboardPage() {
             allRigs.push(rigWithContext);
 
             if (rig.status === 'Active') {
-                activeRigs.push(rigWithContext);
-                
                 const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
-                    ? [...rig.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate
+                    ? [...rig.renewals].sort((a, b) => {
+                        const dateA = a.renewalDate ? safeParseDate(a.renewalDate)?.getTime() ?? 0 : 0;
+                        const dateB = b.renewalDate ? safeParseDate(b.renewalDate)?.getTime() ?? 0 : 0;
+                        return dateB - dateA;
+                    })[0].renewalDate
                     : rig.registrationDate;
 
                 if (lastEffectiveDate) {
                     const validityDate = addYears(new Date(lastEffectiveDate), 1);
-                    if (new Date() > validityDate) {
+                    if (isValid(validityDate) && new Date() > validityDate) {
                         expiredRigs.push(rigWithContext);
+                    } else {
+                        activeRigs.push(rigWithContext);
                     }
+                } else {
+                    activeRigs.push(rigWithContext); // If no date, consider it active but not expired
                 }
             } else if (rig.status === 'Cancelled') {
               cancelledRigs.push(rigWithContext);
