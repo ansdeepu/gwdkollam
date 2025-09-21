@@ -1611,7 +1611,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
     );
 }
 
-function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { initialData: Partial<ApplicationFee>, onConfirm: (data: any) => void, onCancel: () => void }) {
+function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { initialData?: Partial<ApplicationFee>, onConfirm: (data: any) => void, onCancel: () => void }) {
     const { toast } = useToast();
     const [data, setData] = useState({
         ...initialData,
@@ -1892,6 +1892,14 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                             <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.additionalPaymentDate)} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value }))} /></FormItem>
                             <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.additionalChallanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalChallanNo: e.target.value }))} /></FormItem>
                         </div>
+                         <div className="space-y-2">
+                            <FormLabel>Remarks</FormLabel>
+                            <Textarea
+                                value={localRigData.remarks ?? ""}
+                                onChange={e => setLocalRigData(d => ({ ...d, remarks: e.target.value }))}
+                                placeholder="Add any relevant remarks for this rig..."
+                            />
+                        </div>
                     </CardContent>
                 </Card>
                 
@@ -1903,14 +1911,6 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
                         <div className="space-y-2"><h4 className="font-medium text-primary">Supporting Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.supportingVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.supportingVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.supportingVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.supportingVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
                         <div className="space-y-2"><h4 className="font-medium text-primary">Compressor Details</h4><div className="grid md:grid-cols-2 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.compressorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.compressorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, capacity: e.target.value}}))} /></FormItem></div></div>
                         <div className="space-y-2"><h4 className="font-medium text-primary">Generator Details</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.generatorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.generatorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, capacity: e.target.value}}))} /></FormItem><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.generatorDetails?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.generatorDetails?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, engineNo: e.target.value}}))} /></FormItem></div></div>
-                        <div className="space-y-2">
-                            <h4 className="font-medium text-primary">Remarks</h4>
-                            <Textarea
-                                value={localRigData.remarks ?? ""}
-                                onChange={e => setLocalRigData(d => ({ ...d, remarks: e.target.value }))}
-                                placeholder="Add any relevant remarks for this rig..."
-                            />
-                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -1938,3 +1938,6 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
     
 
 
+
+
+    
