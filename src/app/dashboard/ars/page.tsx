@@ -135,9 +135,16 @@ export default function ArsPage() {
       const eDate = endDate ? endOfDay(parse(endDate, 'yyyy-MM-dd', new Date())) : null;
 
       sites = sites.filter(site => {
-        const completionDateString = site.dateOfCompletion;
-        if (!completionDateString) return false;
-        const completionDate = parse(completionDateString, 'dd/MM/yyyy', new Date());
+        const completionValue = site.dateOfCompletion;
+        if (!completionValue) return false;
+        
+        let completionDate: Date;
+        if (completionValue instanceof Date) {
+          completionDate = completionValue;
+        } else {
+          completionDate = parse(String(completionValue), 'dd/MM/yyyy', new Date());
+        }
+
         if (!isValid(completionDate)) return false;
 
         if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
@@ -712,3 +719,4 @@ export default function ArsPage() {
     </div>
   );
 }
+
