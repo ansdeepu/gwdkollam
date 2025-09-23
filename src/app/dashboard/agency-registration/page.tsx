@@ -578,7 +578,7 @@ export default function AgencyRegistrationPage() {
                 owner: createDefaultOwner(),
                 partners: [],
                 applicationFees: [],
-                rigs: [createDefaultRig()],
+                rigs: [],
                 history: [],
                 status: 'Active',
                 remarks: '',
@@ -1246,7 +1246,7 @@ export default function AgencyRegistrationPage() {
                                     {feeFields.length > 0 ? feeFields.map((field, index) => (
                                         <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
                                           <div className="flex justify-between items-center mb-2">
-                                            <h4 className="font-medium text-primary">Fee #{index + 1}: {field.applicationFeeType || 'Not Set'}</h4>
+                                            <h4 className="font-medium text-primary">Sl. No. {index + 1}: {field.applicationFeeType || 'Not Set'}</h4>
                                             {!isReadOnlyForForm && (
                                                 <div className="flex items-center gap-1">
                                                     <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
@@ -1303,7 +1303,16 @@ export default function AgencyRegistrationPage() {
                         
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-primary">3. Rig Registration ({activeRigs.length} Total)</AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-primary">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span>3. Rig Registration ({activeRigs.length} Total)</span>
+                                        {!isReadOnlyForForm && (
+                                            <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); handleAddRig(); }}>
+                                                <PlusCircle className="mr-2 h-4 w-4" /> Add Rig
+                                            </Button>
+                                        )}
+                                    </div>
+                                </AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                 <Accordion type="multiple" className="w-full space-y-2">
                                     {activeRigs.map(({ field, originalIndex }, displayIndex) => (
@@ -1321,7 +1330,6 @@ export default function AgencyRegistrationPage() {
                                     />
                                     ))}
                                 </Accordion>
-                                {!isReadOnlyForForm && isEditor && activeRigCount < 3 && <Button className="mt-4" type="button" variant="outline" size="sm" onClick={handleAddRig}><PlusCircle className="mr-2 h-4 w-4" /> Add Another Rig</Button>}
                                 {!isReadOnlyForForm && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
                                 </AccordionContent>
                             </AccordionItem>
@@ -2088,5 +2096,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
 
+
+    
 
     
