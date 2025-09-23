@@ -1099,7 +1099,7 @@ export default function AgencyRegistrationPage() {
     headerRow.font = { bold: true };
     headerRow.eachCell(cell => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F0F0F0' } };
-        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' };
         cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
     });
 
@@ -1107,7 +1107,7 @@ export default function AgencyRegistrationPage() {
         const values = headers.map(header => row[header as keyof typeof row]);
         const newRow = worksheet.addRow(values);
         newRow.eachCell(cell => {
-            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' };
             cell.alignment = { wrapText: true, vertical: 'top' };
         });
     });
@@ -1237,7 +1237,7 @@ export default function AgencyRegistrationPage() {
                                         <span>Application Fees</span>
                                         {!isReadOnlyForForm && (
                                             <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
-                                                <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                                                <PlusCircle className="mr-2 h-4 w-4" /> Add Application Fee
                                             </Button>
                                         )}
                                     </div>
@@ -1396,7 +1396,7 @@ export default function AgencyRegistrationPage() {
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Edit Agency Registration</DialogTitle>
+                        <DialogTitle>Add Agency Registration</DialogTitle>
                     </DialogHeader>
                     <AgencyRegistrationDialogContent
                         initialData={dialogState.data?.regData}
@@ -2096,6 +2096,8 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
 
+
+    
 
     
 
