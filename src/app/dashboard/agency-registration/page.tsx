@@ -201,19 +201,24 @@ const RegistrationTable = ({
   onEdit, 
   onDelete, 
   searchTerm,
-  canEdit
+  canEdit,
+  currentPage,
+  itemsPerPage,
 }: { 
   applications: AgencyApplication[],
   onView: (id: string) => void,
   onEdit: (id: string) => void, 
   onDelete: (id: string) => void,
   searchTerm: string,
-  canEdit: boolean
+  canEdit: boolean,
+  currentPage: number,
+  itemsPerPage: number,
 }) => (
     <div className="max-h-[70vh] overflow-auto">
       <Table>
           <TableHeader className="bg-secondary sticky top-0">
               <TableRow>
+                  <TableHead className="w-[80px]">Sl. No.</TableHead>
                   <TableHead>File No.</TableHead>
                   <TableHead>Agency Name</TableHead>
                   <TableHead>Owner</TableHead>
@@ -224,8 +229,9 @@ const RegistrationTable = ({
           </TableHeader>
           <TableBody>
               {applications.length > 0 ? (
-                  applications.map((app) => (
+                  applications.map((app, index) => (
                       <TableRow key={app.id}>
+                          <TableCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
                           <TableCell>{app.fileNo || 'N/A'}</TableCell>
                           <TableCell className="font-medium">{app.agencyName}</TableCell>
                           <TableCell>{app.owner.name}</TableCell>
@@ -246,7 +252,7 @@ const RegistrationTable = ({
                   ))
               ) : (
                   <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
+                      <TableCell colSpan={7} className="h-24 text-center">
                           No registrations found {searchTerm ? "matching your search" : ""}.
                       </TableCell>
                   </TableRow>
@@ -746,9 +752,16 @@ export default function AgencyRegistrationPage() {
 
   const filteredApplications = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
-    if (!lowercasedFilter) return applications;
+    
+    let sortedApps = [...applications].sort((a, b) => {
+        const dateA = toDateOrNull(a.agencyRegistrationDate)?.getTime() ?? 0;
+        const dateB = toDateOrNull(b.agencyRegistrationDate)?.getTime() ?? 0;
+        return dateB - dateA;
+    });
 
-    return applications.filter((app: AgencyApplication) => {
+    if (!lowercasedFilter) return sortedApps;
+
+    return sortedApps.filter((app: AgencyApplication) => {
         const searchableContent = [
             app.agencyName,
             app.fileNo,
@@ -1504,6 +1517,8 @@ export default function AgencyRegistrationPage() {
                     onDelete={handleDeleteApplication}
                     searchTerm={searchTerm}
                     canEdit={canEdit}
+                    currentPage={currentPage}
+                    itemsPerPage={ITEMS_PER_PAGE}
                 />
                  {totalCompletedPages > 1 && (
                     <div className="flex items-center justify-center py-4">
@@ -1524,6 +1539,8 @@ export default function AgencyRegistrationPage() {
                     onDelete={handleDeleteApplication}
                     searchTerm={searchTerm}
                     canEdit={canEdit}
+                    currentPage={currentPage}
+                    itemsPerPage={ITEMS_PER_PAGE}
                 />
                  {totalPendingPages > 1 && (
                     <div className="flex items-center justify-center py-4">
