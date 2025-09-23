@@ -321,7 +321,7 @@ const RigAccordionItem = ({
   onEditRenewal: (rigIndex: number, renewal: RigRenewalFormData) => void;
   form: UseFormReturn<any>;
 }) => {
-  const rigTypeValue = field.typeOfRig;
+  const rigTypeValue = field.rigRegistrationNo ? `${field.rigRegistrationNo} - ${field.typeOfRig || 'Unspecified'}` : `${field.typeOfRig || 'Unspecified Type'}`;
   const registrationDate = field.registrationDate ? toDateOrNull(field.registrationDate) : null;
 
   const latestRenewal = useMemo(() => {
@@ -348,9 +348,20 @@ const RigAccordionItem = ({
     
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
-      <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
-            <div className="flex items-center gap-2">
-                Rig #{displayIndex + 1} - {rigTypeValue || 'Unspecified Type'} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
+      <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 text-primary group", field.status === 'Cancelled' && "text-destructive line-through", field.status === 'Active' && isExpired && "text-amber-600")}>
+            <div className="flex justify-between items-center w-full">
+                <div className="flex items-center gap-2">
+                    Rig #{displayIndex + 1} - {rigTypeValue} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
+                </div>
+                 {!isReadOnly && (
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity mr-2">
+                         <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('editRigDetails', { rigIndex: index }); }}><Edit className="h-4 w-4" /></Button>
+                         {field.status === 'Active' && <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('renew', { rigIndex: index }); }}><RefreshCw className="h-4 w-4" /></Button>}
+                         {field.status === 'Active' && <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('cancel', { rigIndex: index }); }}><Ban className="h-4 w-4" /></Button>}
+                         {field.status === 'Cancelled' && <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('activate', { rigIndex: index }); }}><CheckCircle className="h-4 w-4" /></Button>}
+                         <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('deleteRig', { rigIndex: index }); }}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                )}
             </div>
         </AccordionTrigger>
       <AccordionContent className="p-6 pt-0">
@@ -443,8 +454,6 @@ const RigAccordionItem = ({
                  {!isReadOnly && (
                     <div className="flex items-center space-x-1">
                          {field.status === 'Active' && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.preventDefault(); openDialog('renew', { rigIndex: index }); }}><RefreshCw className="mr-2 h-4 w-4" />Renew</Button>}
-                         {field.status === 'Active' && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.preventDefault(); openDialog('cancel', { rigIndex: index }); }}><Ban className="mr-2 h-4 w-4" />Cancel</Button>}
-                         {field.status === 'Cancelled' && <Button type="button" size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); openDialog('activate', { rigIndex: index }); }}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>}
                     </div>
                 )}
               </div>
@@ -512,7 +521,7 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner'; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'addRig' | 'editAgencyReg' | 'addPartner' | 'editPartner'; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
@@ -744,11 +753,11 @@ export default function AgencyRegistrationPage() {
   }
 
   const handleAddRig = () => {
-    if (activeRigCount < 3) {
-      appendRig(createDefaultRig());
-    } else {
+    if (activeRigCount >= 3) {
       toast({ title: "Maximum Rigs Reached", description: "You can only register a maximum of 3 active rigs per agency.", variant: "default" });
+      return;
     }
+    openDialog('addRig', {});
   };
 
   const filteredApplications = useMemo(() => {
@@ -798,7 +807,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'addRig' | 'editAgencyReg' | 'addPartner' | 'editPartner', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -840,7 +849,7 @@ export default function AgencyRegistrationPage() {
             updateFee(index, feeData);
             toast({ title: "Application Fee Updated", description: "The fee details have been saved." });
         } else if (dialogState.type === 'addFee') {
-            appendFee(feeData);
+            appendFee({ ...feeData, id: uuidv4() });
             toast({ title: "Application Fee Added", description: "A new fee has been added." });
         }
         
@@ -961,11 +970,15 @@ export default function AgencyRegistrationPage() {
   };
   
   const handleConfirmRigDetails = (rigData: RigRegistrationType) => {
-    if (dialogState.type !== 'editRigDetails') return;
-    const { rigIndex } = dialogState.data;
-    const currentRig = form.getValues(`rigs.${rigIndex}`);
-    updateRig(rigIndex, { ...currentRig, ...rigData });
-    toast({ title: "Rig Details Updated" });
+    if (dialogState.type === 'editRigDetails') {
+      const { rigIndex } = dialogState.data;
+      const currentRig = form.getValues(`rigs.${rigIndex}`);
+      updateRig(rigIndex, { ...currentRig, ...rigData });
+      toast({ title: "Rig Details Updated" });
+    } else if (dialogState.type === 'addRig') {
+      appendRig({ ...createDefaultRig(), ...rigData });
+      toast({ title: "New Rig Added" });
+    }
     closeDialog();
   }
 
@@ -1523,20 +1536,21 @@ export default function AgencyRegistrationPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-             <Dialog open={dialogState.type === 'editRigDetails'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+             <Dialog open={dialogState.type === 'editRigDetails' || dialogState.type === 'addRig'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent className="max-w-4xl">
                     <DialogHeader>
-                        <DialogTitle>Edit Rig Details</DialogTitle>
+                        <DialogTitle>{dialogState.type === 'addRig' ? 'Add New Rig' : 'Edit Rig Details'}</DialogTitle>
                         <DialogDescription>
-                            Modify the registration and optional details for this rig.
+                            {dialogState.type === 'addRig' ? 'Enter the details for the new rig.' : 'Modify the registration and optional details for this rig.'}
                         </DialogDescription>
                     </DialogHeader>
-                    {dialogState.type === 'editRigDetails' && (
+                    {(dialogState.type === 'editRigDetails' || dialogState.type === 'addRig') && (
                         <RigDetailsDialog
                             form={form}
                             rigIndex={dialogState.data.rigIndex}
                             onConfirm={handleConfirmRigDetails}
                             onCancel={closeDialog}
+                            isAdding={dialogState.type === 'addRig'}
                         />
                     )}
                 </DialogContent>
@@ -1667,8 +1681,6 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
         agencyAdditionalChallanNo: initialData?.agencyAdditionalChallanNo ?? '',
     });
     const [showRegFee, setShowRegFee] = useState(false);
-    const [showAdditionalFee, setShowAdditionalFee] = useState(false);
-
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type } = e.target;
@@ -1710,10 +1722,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
             </div>
             
             <div className="space-y-4 rounded-lg border p-4">
-                 <Button variant="outline" size="sm" onClick={() => setShowAdditionalFee(!showAdditionalFee)}>
-                    {showAdditionalFee ? 'Hide' : 'Add'} Additional Reg. Fee Details
-                 </Button>
-                 {showAdditionalFee && (
+                 <h4 className="font-medium text-primary">Additional Registration Fee</h4>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
                         <FormItem>
                         <Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label>
@@ -1728,7 +1737,6 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                         <Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} />
                         </FormItem>
                     </div>
-                 )}
             </div>
           </div>
         </ScrollArea>
@@ -1985,8 +1993,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
     );
 }
 
-function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFormReturn<any>, rigIndex: number, onConfirm: (data: any) => void, onCancel: () => void }) {
-    const currentRigData = form.getValues(`rigs.${rigIndex}`);
+function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel, isAdding }: { form: UseFormReturn<any>, rigIndex?: number, onConfirm: (data: any) => void, onCancel: () => void, isAdding?: boolean }) {
+    const currentRigData = rigIndex !== undefined ? form.getValues(`rigs.${rigIndex}`) : createDefaultRig();
     const [localRigData, setLocalRigData] = useState<RigRegistrationType>(currentRigData);
 
     const handleConfirm = () => {
@@ -2038,7 +2046,7 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
             </div>
              <DialogFooter className="mt-6">
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-                <Button type="button" onClick={handleConfirm}>Save Details</Button>
+                <Button type="button" onClick={handleConfirm}>{isAdding ? 'Add Rig' : 'Save Details'}</Button>
             </DialogFooter>
         </ScrollArea>
     );
@@ -2106,3 +2114,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
+      
