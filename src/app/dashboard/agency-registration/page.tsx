@@ -329,7 +329,7 @@ const RigAccordionItem = ({
   onEditRenewal: (rigIndex: number, renewal: RigRenewalFormData) => void;
   form: UseFormReturn<any>;
 }) => {
-  const rigTypeValue = field.rigRegistrationNo ? `${field.rigRegistrationNo} - ${field.typeOfRig || 'Unspecified'}` : `${field.typeOfRig || 'Unspecified Type'}`;
+  const rigTypeValue = field.typeOfRig || 'Unspecified Type';
   const registrationDate = field.registrationDate ? toDateOrNull(field.registrationDate) : null;
 
   const latestRenewal = useMemo(() => {
@@ -362,7 +362,7 @@ const RigAccordionItem = ({
                     Rig #{displayIndex + 1} - {rigTypeValue} ({field.status === 'Active' && isExpired ? <span className="text-destructive">Expired</span> : field.status})
                 </div>
                  {!isReadOnly && (
-                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity mr-2">
+                    <div className="flex items-center space-x-1 mr-2">
                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('editRigDetails', { rigIndex: index }); }}><Edit className="h-4 w-4" /></Button>
                          {field.status === 'Active' && <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('renew', { rigIndex: index }); }}><RefreshCw className="h-4 w-4" /></Button>}
                          {field.status === 'Active' && <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('cancel', { rigIndex: index }); }}><Ban className="h-4 w-4" /></Button>}
@@ -1318,7 +1318,7 @@ export default function AgencyRegistrationPage() {
                             <AccordionItem value="item-1">
                                 <AccordionTrigger className="text-xl font-semibold text-primary">
                                     <div className="flex justify-between items-center w-full">
-                                        <span>3. Rig Registration ({activeRigs.length} Total)</span>
+                                        <span>3. Rig Registration ({activeRigs.length} Active)</span>
                                         {!isReadOnlyForForm && (
                                             <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); handleAddRig(); }}>
                                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Rig
