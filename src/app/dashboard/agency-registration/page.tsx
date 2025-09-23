@@ -3,10 +3,10 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useAgencyApplications, type AgencyApplication, type RigRegistration as RigRegistrationType, type OwnerInfo } from "@/hooks/useAgencyApplications";
+import { useAgencyApplications, type AgencyApplication, type RigRegistration as RigRegistrationType, type OwnerInfo, RigType } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee, type RigType } from "@/lib/schemas";
+import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -756,7 +756,7 @@ export default function AgencyRegistrationPage() {
     let sortedApps = [...applications].sort((a, b) => {
         const dateA = toDateOrNull(a.agencyRegistrationDate)?.getTime() ?? 0;
         const dateB = toDateOrNull(b.agencyRegistrationDate)?.getTime() ?? 0;
-        return dateB - dateA;
+        return dateA - dateB;
     });
 
     if (!lowercasedFilter) return sortedApps;
