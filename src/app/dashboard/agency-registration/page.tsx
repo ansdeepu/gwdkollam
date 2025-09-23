@@ -512,7 +512,7 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner'; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner'; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
@@ -798,7 +798,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -834,10 +834,17 @@ export default function AgencyRegistrationPage() {
 
     const handleConfirmFeeChange = (feeData: ApplicationFee) => {
         if (!dialogState.data) return;
-        const { index } = dialogState.data;
-        updateFee(index, feeData);
+        
+        if (dialogState.type === 'editFee') {
+            const { index } = dialogState.data;
+            updateFee(index, feeData);
+            toast({ title: "Application Fee Updated", description: "The fee details have been saved." });
+        } else if (dialogState.type === 'addFee') {
+            appendFee(feeData);
+            toast({ title: "Application Fee Added", description: "A new fee has been added." });
+        }
+        
         closeDialog();
-        toast({ title: "Application Fee Updated", description: "The fee details have been saved." });
     };
 
     const confirmDeleteFee = () => {
@@ -1223,39 +1230,45 @@ export default function AgencyRegistrationPage() {
                         </Accordion>
                          
                         <Accordion type="single" collapsible defaultValue="item-1">
-                          <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-xl font-semibold text-primary">Application Fees</AccordionTrigger>
-                            <AccordionContent className="pt-4 space-y-4">
-                                {feeFields.map((field, index) => (
-                                    <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
-                                      <div className="flex justify-between items-center mb-2">
-                                        <h4 className="font-medium text-primary">Fee #{index + 1}: {field.applicationFeeType || 'Not Set'}</h4>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger className="text-xl font-semibold text-primary">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span>Application Fees</span>
                                         {!isReadOnlyForForm && (
-                                            <div className="flex items-center gap-1">
-                                                <Button type="button" variant="outline" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button type="button" variant="destructive" size="icon" onClick={() => setDeletingFeeIndex(index)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                            <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', { index: 'new' }) }}>
+                                                <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                                            </Button>
                                         )}
-                                      </div>
-                                      <dl className="grid md:grid-cols-3 gap-4 border-t pt-2">
-                                        <DetailRow label="Type of Application" value={field.applicationFeeType} />
-                                        <DetailRow label="Fees Amount" value={field.applicationFeeAmount} />
-                                        <DetailRow label="Payment Date" value={field.applicationFeePaymentDate} />
-                                        <div className="md:col-span-3"><DetailRow label="Challan No." value={field.applicationFeeChallanNo} /></div>
-                                      </dl>
                                     </div>
-                                ))}
-                                {!isReadOnlyForForm && (
-                                    <Button type="button" variant="outline" size="sm" onClick={() => appendFee(createDefaultFee())}>
-                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Application Fee
-                                    </Button>
-                                )}
-                            </AccordionContent>
-                          </AccordionItem>
+                                </AccordionTrigger>
+                                <AccordionContent className="pt-4 space-y-4">
+                                    {feeFields.length > 0 ? feeFields.map((field, index) => (
+                                        <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <h4 className="font-medium text-primary">Fee #{index + 1}: {field.applicationFeeType || 'Not Set'}</h4>
+                                            {!isReadOnlyForForm && (
+                                                <div className="flex items-center gap-1">
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setDeletingFeeIndex(index)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                          </div>
+                                          <dl className="grid md:grid-cols-3 gap-4 border-t pt-2">
+                                            <DetailRow label="Type of Application" value={field.applicationFeeType} />
+                                            <DetailRow label="Fees Amount" value={field.applicationFeeAmount} />
+                                            <DetailRow label="Payment Date" value={field.applicationFeePaymentDate} />
+                                            <div className="md:col-span-3"><DetailRow label="Challan No." value={field.applicationFeeChallanNo} /></div>
+                                          </dl>
+                                        </div>
+                                    )) : (
+                                        <p className="text-sm text-muted-foreground text-center py-4">No application fees added.</p>
+                                    )}
+                                </AccordionContent>
+                            </AccordionItem>
                         </Accordion>
 
                         {/* Section 2: Agency Registration */}
@@ -1396,13 +1409,13 @@ export default function AgencyRegistrationPage() {
                     />
                 </DialogContent>
             </Dialog>
-            <Dialog open={dialogState.type === 'editFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+            <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Application Fee</DialogTitle>
+                        <DialogTitle>{dialogState.type === 'addFee' ? 'Add Application Fee' : 'Edit Application Fee'}</DialogTitle>
                     </DialogHeader>
                     <ApplicationFeeDialogContent
-                        initialData={dialogState.data?.fee}
+                        initialData={dialogState.type === 'editFee' ? dialogState.data?.fee : createDefaultFee()}
                         onConfirm={handleConfirmFeeChange}
                         onCancel={closeDialog}
                     />
@@ -2061,3 +2074,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
     
+
