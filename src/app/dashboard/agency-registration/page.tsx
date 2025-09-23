@@ -194,6 +194,14 @@ const processDataForSaving = (data: any): any => {
   return data;
 };
 
+const createDefaultRig = (): RigRegistrationType => ({
+    id: uuidv4(),
+    status: 'Active',
+    renewals: [],
+    history: [],
+    cancellationDate: null,
+    cancellationReason: undefined,
+});
 
 const RegistrationTable = ({ 
   applications, 
@@ -553,15 +561,7 @@ export default function AgencyRegistrationPage() {
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
   const createDefaultFee = (): ApplicationFee => ({ id: uuidv4() });
-  const createDefaultRig = (): RigRegistrationType => ({
-      id: uuidv4(),
-      status: 'Active',
-      renewals: [],
-      history: [],
-      cancellationDate: null,
-      cancellationReason: undefined,
-  });
-
+  
   const form = useForm<AgencyApplication>({
     resolver: zodResolver(AgencyApplicationSchema),
     defaultValues: {
@@ -2116,3 +2116,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
       
+
+    
