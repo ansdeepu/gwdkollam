@@ -1680,7 +1680,6 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
         agencyAdditionalPaymentDate: formatDateForInput(toDateOrNull(initialData?.agencyAdditionalPaymentDate)),
         agencyAdditionalChallanNo: initialData?.agencyAdditionalChallanNo ?? '',
     });
-    const [showRegFee, setShowRegFee] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type } = e.target;
@@ -1692,50 +1691,50 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
         <ScrollArea className="max-h-[60vh] p-1">
           <div className="space-y-6 p-4">
             <div className="space-y-4 rounded-lg border p-4">
-                <FormItem>
+              <div className="grid grid-cols-3 gap-4 items-end">
+                <div className="col-span-2 space-y-2">
                   <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
                   <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={handleChange} />
-                </FormItem>
-                <FormItem>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
                   <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={handleChange} />
-                </FormItem>
-                 <Button variant="outline" size="sm" onClick={() => setShowRegFee(!showRegFee)} className="mt-2">
-                    {showRegFee ? 'Hide' : 'Add'} Reg. Fee Details
-                </Button>
-                {showRegFee && (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
-                        <FormItem>
-                        <Label htmlFor="agencyRegistrationFee">Reg. Fee</Label>
-                        <Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ''} onChange={handleChange} />
-                        </FormItem>
-                        <FormItem>
-                        <Label htmlFor="agencyPaymentDate">Payment Date</Label>
-                        <Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={handleChange} />
-                        </FormItem>
-                        <FormItem>
-                        <Label htmlFor="agencyChallanNo">Challan No.</Label>
-                        <Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} />
-                        </FormItem>
-                    </div>
-                )}
+                </div>
+              </div>
             </div>
             
             <div className="space-y-4 rounded-lg border p-4">
+                 <h4 className="font-medium text-primary">Registration Fee Details</h4>
+                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Label htmlFor="agencyRegistrationFee">Reg. Fee</Label>
+                      <Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ''} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="agencyPaymentDate">Payment Date</Label>
+                      <Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="agencyChallanNo">Challan No.</Label>
+                      <Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} />
+                    </div>
+                </div>
+            </div>
+            <div className="space-y-4 rounded-lg border p-4">
                  <h4 className="font-medium text-primary">Additional Registration Fee</h4>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
-                        <FormItem>
+                        <div className="space-y-2">
                         <Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label>
                         <Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ''} onChange={handleChange} />
-                        </FormItem>
-                        <FormItem>
+                        </div>
+                        <div className="space-y-2">
                         <Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label>
                         <Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={handleChange} />
-                        </FormItem>
-                        <FormItem>
+                        </div>
+                        <div className="space-y-2">
                         <Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label>
                         <Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} />
-                        </FormItem>
+                        </div>
                     </div>
             </div>
           </div>
