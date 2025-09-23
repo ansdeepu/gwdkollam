@@ -577,7 +577,7 @@ export default function AgencyRegistrationPage() {
             form.reset({
                 owner: createDefaultOwner(),
                 partners: [],
-                applicationFees: [createDefaultFee()],
+                applicationFees: [],
                 rigs: [createDefaultRig()],
                 history: [],
                 status: 'Active',
@@ -856,11 +856,12 @@ export default function AgencyRegistrationPage() {
     
     const handleConfirmPartner = (partnerData: OwnerInfo) => {
         if (!dialogState.data) return;
-        const { index } = dialogState.data;
-        if (index === 'new') {
+        
+        if (dialogState.type === 'addPartner') {
             appendPartner(partnerData);
             toast({ title: "Partner Added" });
-        } else {
+        } else if (dialogState.type === 'editPartner') {
+             const { index } = dialogState.data;
             updatePartner(index, partnerData);
             toast({ title: "Partner Updated" });
         }
@@ -1184,7 +1185,12 @@ export default function AgencyRegistrationPage() {
                                     </div>
                                     <Separator />
                                      <div className="space-y-2">
-                                        <h4 className="font-medium">Owner Details</h4>
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-medium">Owner Details</h4>
+                                            {!isReadOnlyForForm && (
+                                                <Button type="button" variant="outline" size="sm" onClick={() => openDialog('addPartner', { index: 'new' })}><UserPlus className="mr-2 h-4 w-4"/> Add Partner</Button>
+                                            )}
+                                        </div>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
                                             <FormItem className="md:col-span-1">
                                                 <FormLabel>Name &amp; Address of Owner</FormLabel>
@@ -1198,12 +1204,7 @@ export default function AgencyRegistrationPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="font-medium">Partner Details</h4>
-                                            {!isReadOnlyForForm && (
-                                                <Button type="button" variant="outline" size="sm" onClick={() => openDialog('addPartner', { index: 'new' })}><UserPlus className="mr-2 h-4 w-4"/> Add Partner</Button>
-                                            )}
-                                        </div>
+                                        
                                         {partnerFields.length > 0 ? (
                                             <div className="space-y-2">
                                                 {partnerFields.map((field, index) => (
@@ -1235,7 +1236,7 @@ export default function AgencyRegistrationPage() {
                                     <div className="flex justify-between items-center w-full">
                                         <span>Application Fees</span>
                                         {!isReadOnlyForForm && (
-                                            <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', { index: 'new' }) }}>
+                                            <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
                                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
                                             </Button>
                                         )}
@@ -1279,7 +1280,7 @@ export default function AgencyRegistrationPage() {
                                     <span>2. Agency Registration</span>
                                     {!isReadOnlyForForm && (
                                         <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('editAgencyReg', { regData: form.getValues() }) }}>
-                                            <Edit className="mr-2 h-4 w-4" /> Edit
+                                            <Edit className="mr-2 h-4 w-4" /> Add
                                         </Button>
                                     )}
                                 </div>
@@ -1385,7 +1386,7 @@ export default function AgencyRegistrationPage() {
                 </Card>
             </form>
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Edit Agency Registration</DialogTitle>
                     </DialogHeader>
@@ -1657,6 +1658,9 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
         agencyAdditionalPaymentDate: formatDateForInput(toDateOrNull(initialData?.agencyAdditionalPaymentDate)),
         agencyAdditionalChallanNo: initialData?.agencyAdditionalChallanNo ?? '',
     });
+    const [showRegFee, setShowRegFee] = useState(false);
+    const [showAdditionalFee, setShowAdditionalFee] = useState(false);
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type } = e.target;
@@ -1668,8 +1672,6 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
         <ScrollArea className="max-h-[60vh] p-1">
           <div className="space-y-6 p-4">
             <div className="space-y-4 rounded-lg border p-4">
-              <h4 className="font-medium text-primary">Registration</h4>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormItem>
                   <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
                   <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={handleChange} />
@@ -1678,37 +1680,47 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                   <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
                   <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={handleChange} />
                 </FormItem>
-                <FormItem>
-                  <Label htmlFor="agencyRegistrationFee">Reg. Fee</Label>
-                  <Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ''} onChange={handleChange} />
-                </FormItem>
-                <FormItem>
-                  <Label htmlFor="agencyPaymentDate">Payment Date</Label>
-                  <Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={handleChange} />
-                </FormItem>
-                <FormItem className="md:col-span-2">
-                  <Label htmlFor="agencyChallanNo">Challan No.</Label>
-                  <Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} />
-                </FormItem>
-              </div>
+                 <Button variant="outline" size="sm" onClick={() => setShowRegFee(!showRegFee)} className="mt-2">
+                    {showRegFee ? 'Hide' : 'Add'} Reg. Fee Details
+                </Button>
+                {showRegFee && (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
+                        <FormItem>
+                        <Label htmlFor="agencyRegistrationFee">Reg. Fee</Label>
+                        <Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ''} onChange={handleChange} />
+                        </FormItem>
+                        <FormItem>
+                        <Label htmlFor="agencyPaymentDate">Payment Date</Label>
+                        <Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={handleChange} />
+                        </FormItem>
+                        <FormItem>
+                        <Label htmlFor="agencyChallanNo">Challan No.</Label>
+                        <Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={handleChange} />
+                        </FormItem>
+                    </div>
+                )}
             </div>
-
+            
             <div className="space-y-4 rounded-lg border p-4">
-              <h4 className="font-medium text-primary">Additional Registration</h4>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormItem>
-                  <Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label>
-                  <Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ''} onChange={handleChange} />
-                </FormItem>
-                <FormItem>
-                  <Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label>
-                  <Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={handleChange} />
-                </FormItem>
-                <FormItem className="md:col-span-2">
-                  <Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label>
-                  <Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} />
-                </FormItem>
-              </div>
+                 <Button variant="outline" size="sm" onClick={() => setShowAdditionalFee(!showAdditionalFee)}>
+                    {showAdditionalFee ? 'Hide' : 'Add'} Additional Reg. Fee Details
+                 </Button>
+                 {showAdditionalFee && (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
+                        <FormItem>
+                        <Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label>
+                        <Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ''} onChange={handleChange} />
+                        </FormItem>
+                        <FormItem>
+                        <Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label>
+                        <Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={handleChange} />
+                        </FormItem>
+                        <FormItem>
+                        <Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label>
+                        <Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={handleChange} />
+                        </FormItem>
+                    </div>
+                 )}
             </div>
           </div>
         </ScrollArea>
@@ -1732,7 +1744,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
             toast({ title: "Validation Error", description: "Please select a type of application.", variant: "destructive" });
             return;
         }
-        onConfirm(data);
+        onConfirm({ ...data, id: data.id || uuidv4() });
     };
 
     return (
@@ -2075,3 +2087,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     
 
+
+
+    
