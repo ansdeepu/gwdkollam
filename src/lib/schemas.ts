@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -360,8 +361,8 @@ export const UpdatePasswordSchema = z.object({
 export type UpdatePasswordFormData = z.infer<typeof UpdatePasswordSchema>;
 
 // Agency Registration Schemas
-const OwnerInfoSchema = z.object({
-  name: z.string().min(1, "Owner name is required."),
+export const OwnerInfoSchema = z.object({
+  name: z.string().min(1, "Partner name is required."),
   address: z.string().optional(),
   mobile: z.string().optional(),
   secondaryMobile: z.string().optional(),

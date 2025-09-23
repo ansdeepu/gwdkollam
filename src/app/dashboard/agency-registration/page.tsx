@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from "react"
 import { useAgencyApplications, type AgencyApplication, type RigRegistration as RigRegistrationType, type OwnerInfo, RigType } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee } from "@/lib/schemas";
+import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee, OwnerInfoSchema } from "@/lib/schemas";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -512,12 +512,13 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg' ; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner'; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
   const [deletingApplicationId, setDeletingApplicationId] = useState<string | null>(null);
   const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);
+  const [deletingPartnerIndex, setDeletingPartnerIndex] = useState<number | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -564,7 +565,7 @@ export default function AgencyRegistrationPage() {
     },
   });
   
-  const { fields: partnerFields, append: appendPartner, remove: removePartner } = useFieldArray({ control: form.control, name: "partners" });
+  const { fields: partnerFields, append: appendPartner, remove: removePartner, update: updatePartner } = useFieldArray({ control: form.control, name: "partners" });
   const { fields: feeFields, append: appendFee, remove: removeFee, update: updateFee } = useFieldArray({ control: form.control, name: "applicationFees" });
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
@@ -751,14 +752,13 @@ export default function AgencyRegistrationPage() {
   };
 
   const filteredApplications = useMemo(() => {
-    const lowercasedFilter = searchTerm.toLowerCase();
-    
     let sortedApps = [...applications].sort((a, b) => {
         const dateA = toDateOrNull(a.agencyRegistrationDate)?.getTime() ?? 0;
         const dateB = toDateOrNull(b.agencyRegistrationDate)?.getTime() ?? 0;
         return dateA - dateB;
     });
 
+    const lowercasedFilter = searchTerm.toLowerCase();
     if (!lowercasedFilter) return sortedApps;
 
     return sortedApps.filter((app: AgencyApplication) => {
@@ -798,7 +798,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'editRigDetails' | 'editAgencyReg' | 'addPartner' | 'editPartner', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -845,6 +845,26 @@ export default function AgencyRegistrationPage() {
         removeFee(deletingFeeIndex);
         toast({ title: "Application Fee Removed", description: `The fee entry has been removed from the form.` });
         setDeletingFeeIndex(null);
+    };
+    
+    const handleConfirmPartner = (partnerData: OwnerInfo) => {
+        if (!dialogState.data) return;
+        const { index } = dialogState.data;
+        if (index === 'new') {
+            appendPartner(partnerData);
+            toast({ title: "Partner Added" });
+        } else {
+            updatePartner(index, partnerData);
+            toast({ title: "Partner Updated" });
+        }
+        closeDialog();
+    };
+
+    const confirmDeletePartner = () => {
+        if (deletingPartnerIndex === null) return;
+        removePartner(deletingPartnerIndex);
+        toast({ title: "Partner Removed", description: "The partner has been removed from the list." });
+        setDeletingPartnerIndex(null);
     };
 
   const handleConfirmRenewal = (renewalData: any) => {
@@ -1171,20 +1191,32 @@ export default function AgencyRegistrationPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <h4 className="font-medium">Partner Details</h4>
-                                        {partnerFields.map((field, index) => (
-                                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
-                                                <FormItem className="md:col-span-1">
-                                                    <FormLabel>Partner Name &amp; Address</FormLabel>
-                                                    <FormControl><Textarea {...form.register(`partners.${index}.name`)} readOnly={isReadOnlyForForm} /></FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                                  <FormField name={`partners.${index}.mobile`} render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                                  <FormField name={`partners.${index}.secondaryMobile`} render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                                  {!isReadOnlyForForm && <Button type="button" variant="destructive" size="icon" onClick={() => removePartner(index)}><Trash2 className="h-4 w-4" /></Button>}
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-medium">Partner Details</h4>
+                                            {!isReadOnlyForForm && (
+                                                <Button type="button" variant="outline" size="sm" onClick={() => openDialog('addPartner', { index: 'new' })}><UserPlus className="mr-2 h-4 w-4"/> Add Partner</Button>
+                                            )}
+                                        </div>
+                                        {partnerFields.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {partnerFields.map((field, index) => (
+                                                    <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                                        <div>
+                                                            <p className="font-semibold">{field.name}</p>
+                                                            <p className="text-sm text-muted-foreground">{field.mobile}</p>
+                                                        </div>
+                                                        {!isReadOnlyForForm && (
+                                                            <div className="flex items-center gap-1">
+                                                                <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editPartner', { index, partner: field })}><Edit className="h-4 w-4"/></Button>
+                                                                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setDeletingPartnerIndex(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                        {partnerFields.length < 2 && !isReadOnlyForForm && <Button type="button" variant="outline" size="sm" onClick={() => appendPartner(createDefaultOwner())}><UserPlus className="mr-2 h-4 w-4" /> Add Partner</Button>}
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground text-center py-4">No partners added.</p>
+                                        )}
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
@@ -1376,6 +1408,30 @@ export default function AgencyRegistrationPage() {
                     />
                 </DialogContent>
             </Dialog>
+            <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{dialogState.type === 'addPartner' ? 'Add New Partner' : 'Edit Partner'}</DialogTitle>
+                    </DialogHeader>
+                    <PartnerDialogContent
+                        initialData={dialogState.type === 'editPartner' ? dialogState.data?.partner : createDefaultOwner()}
+                        onConfirm={handleConfirmPartner}
+                        onCancel={closeDialog}
+                    />
+                </DialogContent>
+            </Dialog>
+            <AlertDialog open={deletingPartnerIndex !== null} onOpenChange={() => setDeletingPartnerIndex(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This will remove this partner from the list. This action cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <Button variant="outline" onClick={() => setDeletingPartnerIndex(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmDeletePartner}>Delete</Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <AlertDialog open={deletingFeeIndex !== null} onOpenChange={() => setDeletingFeeIndex(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -1955,8 +2011,51 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel }: { form: UseFo
     );
 }
 
-    
+function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialData: OwnerInfo, onConfirm: (data: OwnerInfo) => void, onCancel: () => void }) {
+    const { toast } = useToast();
+    const form = useForm<OwnerInfo>({
+        resolver: zodResolver(OwnerInfoSchema),
+        defaultValues: initialData || { name: '', address: '', mobile: '', secondaryMobile: '' }
+    });
 
+    const handleConfirm = (data: OwnerInfo) => {
+        onConfirm(data);
+    };
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleConfirm)} className="space-y-4 pt-4">
+                <FormField name="name" control={form.control} render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Partner Name & Address</FormLabel>
+                        <FormControl><Textarea placeholder="Enter name and address" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField name="mobile" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Mobile No.</FormLabel>
+                            <FormControl><Input placeholder="Enter mobile number" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                    <FormField name="secondaryMobile" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Secondary Mobile No.</FormLabel>
+                            <FormControl><Input placeholder="Enter secondary mobile" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                    <Button type="submit">Confirm</Button>
+                </DialogFooter>
+            </form>
+        </Form>
+    );
+}
     
 
     
