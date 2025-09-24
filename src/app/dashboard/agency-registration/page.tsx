@@ -38,6 +38,15 @@ import ExcelJS from "exceljs";
 
 export const dynamic = 'force-dynamic';
 
+const createDefaultRig = (): RigRegistrationType => ({
+    id: uuidv4(),
+    status: 'Active',
+    renewals: [],
+    history: [],
+    cancellationDate: null,
+    cancellationReason: undefined,
+});
+
 const toDateOrNull = (value: any): Date | null => {
   if (value === null || value === undefined || value === '') return null;
 
@@ -193,15 +202,6 @@ const processDataForSaving = (data: any): any => {
   // primitves (string/number/bool) : return as-is
   return data;
 };
-
-const createDefaultRig = (): RigRegistrationType => ({
-    id: uuidv4(),
-    status: 'Active',
-    renewals: [],
-    history: [],
-    cancellationDate: null,
-    cancellationReason: undefined,
-});
 
 const RegistrationTable = ({ 
   applications, 
@@ -2117,5 +2117,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
       
 
     
+
 
 
