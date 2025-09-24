@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -173,7 +174,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         const totals: Record<string, number> = {};
         Object.keys(data).forEach(key => {
             if(typeof data[key] === 'object' && !Array.isArray(data[key])) {
-                totals[key] = Object.values(data[key]).reduce((sum: any, val: any) => sum + (typeof val === 'number' ? val : 0), 0);
+                totals[key] = (Object.values(data[key]) as number[]).reduce((sum: number, val: number) => sum + (typeof val === 'number' ? val : 0), 0);
             }
         });
 
