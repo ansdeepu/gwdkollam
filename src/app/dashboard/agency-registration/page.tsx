@@ -212,6 +212,7 @@ const RegistrationTable = ({
   canEdit,
   currentPage,
   itemsPerPage,
+  isPendingTable = false,
 }: { 
   applications: AgencyApplication[],
   onView: (id: string) => void,
@@ -221,6 +222,7 @@ const RegistrationTable = ({
   canEdit: boolean,
   currentPage: number,
   itemsPerPage: number,
+  isPendingTable?: boolean,
 }) => (
     <div className="max-h-[70vh] overflow-auto">
       <Table>
@@ -230,7 +232,7 @@ const RegistrationTable = ({
                   <TableHead>File No.</TableHead>
                   <TableHead>Agency Name</TableHead>
                   <TableHead>Owner</TableHead>
-                  <TableHead>Active Rigs</TableHead>
+                  {!isPendingTable && <TableHead>Active Rigs</TableHead>}
                   <TableHead>Status</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
               </TableRow>
@@ -243,7 +245,7 @@ const RegistrationTable = ({
                           <TableCell>{app.fileNo || 'N/A'}</TableCell>
                           <TableCell className="font-medium">{app.agencyName}</TableCell>
                           <TableCell>{app.owner.name}</TableCell>
-                          <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>
+                           {!isPendingTable && <TableCell>{(app.rigs || []).filter(r => r.status === 'Active').length} / {(app.rigs || []).length}</TableCell>}
                           <TableCell><Badge variant={app.status === 'Active' ? 'default' : 'secondary'}>{app.status}</Badge></TableCell>
                           <TableCell className="text-center">
                               <div className="flex items-center justify-center">
@@ -260,7 +262,7 @@ const RegistrationTable = ({
                   ))
               ) : (
                   <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
+                      <TableCell colSpan={isPendingTable ? 6 : 7} className="h-24 text-center">
                           No registrations found {searchTerm ? "matching your search" : ""}.
                       </TableCell>
                   </TableRow>
@@ -1636,6 +1638,7 @@ export default function AgencyRegistrationPage() {
                     canEdit={canEdit}
                     currentPage={currentPage}
                     itemsPerPage={ITEMS_PER_PAGE}
+                    isPendingTable={true}
                 />
                  {totalPendingPages > 1 && (
                     <div className="flex items-center justify-center py-4">
@@ -2115,6 +2118,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
       
 
     
+
 
 
 
