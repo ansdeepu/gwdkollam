@@ -1695,16 +1695,16 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
         <ScrollArea className="max-h-[60vh] p-1">
           <div className="space-y-6 p-4">
             <div className="space-y-4 rounded-lg border p-4">
-              <div className="grid grid-cols-3 gap-4 items-end">
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
-                  <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
+                <div className="grid grid-cols-3 gap-4 items-end">
+                    <div className="col-span-2 space-y-2">
+                        <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
+                        <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
+                        <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
+                    </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
-                  <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
-                </div>
-              </div>
             </div>
             
             <div className="space-y-4 rounded-lg border p-4">
@@ -1768,8 +1768,8 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
 
     return (
         <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-                <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-4 py-4">
+                <div className="space-y-2">
                     <Label>Type of Application</Label>
                     <Select onValueChange={(value) => setData(d => ({ ...d, applicationFeeType: value as ApplicationFeeType }))} value={data.applicationFeeType}>
                         <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
@@ -1784,7 +1784,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
                     <Label>Payment Date</Label>
                     <Input type="date" value={data.applicationFeePaymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
                 </div>
-                <div className="space-y-2 sm:col-span-2">
+                <div className="space-y-2">
                     <Label>Challan No.</Label>
                     <Input value={data.applicationFeeChallanNo ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeeChallanNo: e.target.value }))} />
                 </div>
@@ -2129,5 +2129,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
 
+
+    
 
     
