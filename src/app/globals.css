@@ -30,7 +30,7 @@
     --destructive-foreground: 0 0% 98%;
 
     --border: 210 30% 88%;           /* Light blue-gray border */
-    --input: 0 0% 100%;
+    --input: 210 30% 92%;
     --ring: 180 65% 55%;             /* Accent for focus rings */
 
     --radius: 0.5rem;
@@ -129,7 +129,7 @@
     overflow: hidden;
   }
   .marquee-content-updates {
-    animation: marquee-vertical-animation-updates 30s linear infinite;
+    animation: marquee-vertical-animation-updates 90s linear infinite;
   }
   .marquee-container-updates:hover .marquee-content-updates {
     animation-play-state: paused;
@@ -138,6 +138,22 @@
     0%   { transform: translateY(0%); }
     100% { transform: translateY(-50%); } /* Assumes content is duplicated */
   }
+
+  /* Marquee styles for Birthdays */
+  .marquee-container-birthdays {
+    overflow: hidden;
+  }
+  .marquee-content-birthdays {
+    animation: marquee-vertical-animation-birthdays 30s linear infinite;
+  }
+  .marquee-container-birthdays:hover .marquee-content-birthdays {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-vertical-animation-birthdays {
+    0%   { transform: translateY(0%); }
+    100% { transform: translateY(-50%); }
+  }
+
 
   /* Utility to hide scrollbars */
   .no-scrollbar::-webkit-scrollbar {
@@ -329,3 +345,5 @@
     display: block !important;
   }
 }
+
+    
