@@ -1169,6 +1169,9 @@ export default function AgencyRegistrationPage() {
 
   // FORM VIEW
   if (selectedApplicationId) {
+      const hasCancelledRigs = cancelledRigs.length > 0;
+      const remarksSectionNumber = hasCancelledRigs ? 6 : 5;
+      
       return (
         <div>
           <FormProvider {...form}>
@@ -1353,7 +1356,7 @@ export default function AgencyRegistrationPage() {
                             </AccordionItem>
                         </Accordion>
                         
-                        {cancelledRigs.length > 0 && (
+                        {hasCancelledRigs && (
                             <Accordion type="single" collapsible defaultValue="item-1">
                                 <AccordionItem value="item-1">
                                 <AccordionTrigger className="text-xl font-semibold text-destructive">5. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
@@ -1386,7 +1389,7 @@ export default function AgencyRegistrationPage() {
                             control={form.control}
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-xl font-semibold text-primary">6. Remarks</FormLabel>
+                                    <FormLabel className="text-xl font-semibold text-primary">{remarksSectionNumber}. Remarks</FormLabel>
                                     <FormControl>
                                         <Textarea
                                             {...field}
@@ -2125,3 +2128,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
 
+
+
+    
