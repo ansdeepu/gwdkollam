@@ -1247,7 +1247,7 @@ export default function AgencyRegistrationPage() {
                             <AccordionItem value="item-1">
                                 <AccordionTrigger className="text-xl font-semibold text-primary">
                                     <div className="flex justify-between items-center w-full">
-                                        <span>Application Fees</span>
+                                        <span>2. Application Fees</span>
                                         {!isReadOnlyForForm && (
                                             <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
                                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Application Fee
@@ -1293,7 +1293,7 @@ export default function AgencyRegistrationPage() {
                           <AccordionItem value="item-1">
                             <AccordionTrigger className="text-xl font-semibold text-primary">
                                 <div className="flex justify-between items-center w-full">
-                                    <span>2. Agency Registration</span>
+                                    <span>3. Agency Registration</span>
                                     {!isReadOnlyForForm && (
                                         <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('editAgencyReg', { regData: form.getValues() }) }}>
                                             <Edit className="mr-2 h-4 w-4" /> Add
@@ -1321,7 +1321,7 @@ export default function AgencyRegistrationPage() {
                             <AccordionItem value="item-1">
                                 <AccordionTrigger className="text-xl font-semibold text-primary">
                                     <div className="flex justify-between items-center w-full">
-                                        <span>3. Rig Registration ({activeRigs.length} Active)</span>
+                                        <span>4. Rig Registration ({activeRigs.length} Active)</span>
                                         {!isReadOnlyForForm && (
                                             <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); handleAddRig(); }}>
                                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Rig
@@ -1354,7 +1354,7 @@ export default function AgencyRegistrationPage() {
                         {cancelledRigs.length > 0 && (
                             <Accordion type="single" collapsible defaultValue="item-1">
                                 <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-destructive">4. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
+                                <AccordionTrigger className="text-xl font-semibold text-destructive">5. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
                                     {cancelledRigs.map(({ field, originalIndex }, displayIndex) => (
@@ -1384,7 +1384,7 @@ export default function AgencyRegistrationPage() {
                             control={form.control}
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-xl font-semibold text-primary">Remarks</FormLabel>
+                                    <FormLabel className="text-xl font-semibold text-primary">6. Remarks</FormLabel>
                                     <FormControl>
                                         <Textarea
                                             {...field}
@@ -2115,6 +2115,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
       
 
     
+
 
 
 
