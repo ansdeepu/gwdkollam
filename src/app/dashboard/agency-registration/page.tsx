@@ -1259,7 +1259,10 @@ export default function AgencyRegistrationPage() {
                                     {feeFields.length > 0 ? feeFields.map((field, index) => (
                                         <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
                                           <div className="flex justify-between items-center mb-2">
-                                            <h4 className="font-medium text-primary">Sl. No. {index + 1}: {field.applicationFeeType || 'Not Set'}</h4>
+                                             <div className="flex items-center gap-3">
+                                                <div className="font-bold text-sm text-muted-foreground">Sl. No. {index + 1}</div>
+                                                <h4 className="font-medium text-primary">{field.applicationFeeType || 'Not Set'}</h4>
+                                             </div>
                                             {!isReadOnlyForForm && (
                                                 <div className="flex items-center gap-1">
                                                     <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
@@ -2117,6 +2120,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
       
 
     
+
 
 
 
