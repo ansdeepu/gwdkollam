@@ -47,6 +47,7 @@ export function useFileEntries() {
       let entries = allFileEntries;
 
       if (user.role === 'supervisor') {
+        // For supervisors, only show files where they are assigned.
         entries = allFileEntries.filter(entry => entry.assignedSupervisorUids?.includes(user.uid));
         
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
@@ -54,12 +55,16 @@ export function useFileEntries() {
           pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
         );
         
+        // Attach a `isPending` flag to sites if their parent file has a pending update from the current supervisor.
         if (pendingFileNumbers.size > 0) {
           entries = entries.map(entry => {
             const isFilePending = pendingFileNumbers.has(entry.fileNo);
+            if (!isFilePending) return entry;
+
             const updatedSiteDetails = entry.siteDetails?.map(site => {
+              // Only mark the specific sites assigned to the current supervisor as pending.
               if (site.supervisorUid === user.uid) {
-                return { ...site, isPending: isFilePending };
+                return { ...site, isPending: true };
               }
               return site;
             });
