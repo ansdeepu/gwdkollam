@@ -1170,6 +1170,7 @@ export default function AgencyRegistrationPage() {
   // FORM VIEW
   if (selectedApplicationId) {
       const hasCancelledRigs = cancelledRigs.length > 0;
+      
       const remarksSectionNumber = hasCancelledRigs ? 6 : 5;
       
       return (
@@ -1915,7 +1916,61 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
     ];
     
     const camelCaseToTitle = (s: string) => s.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+
+    const activeRigs = (application.rigs || []).filter(rig => rig.status === 'Active');
+    const cancelledRigs = (application.rigs || []).filter(rig => rig.status === 'Cancelled');
     
+    const RigDetails = ({ rig, index }: { rig: RigRegistrationType; index: number }) => {
+        const lastEffDate = rig.renewals && rig.renewals.length > 0 ? [...rig.renewals].sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate : rig.registrationDate;
+        const validityDate = lastEffDate ? new Date(addYears(new Date(lastEffDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
+
+        const rigDetails = [
+            { title: `Rig #${index + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status} },
+            { title: "Cancellation Details", data: { "Reason": rig.cancellationReason, "Date": rig.cancellationDate }, condition: rig.status === 'Cancelled' },
+            { title: "Rig Vehicle", data: rig.rigVehicle },
+            { title: "Compressor Vehicle", data: rig.compressorVehicle },
+            { title: "Supporting Vehicle", data: rig.supportingVehicle },
+            { title: "Compressor", data: rig.compressorDetails },
+            { title: "Generator", data: rig.generatorDetails },
+        ];
+
+        return (
+            <div className="mt-4 pt-4 border-t">
+                {rigDetails.filter(s => s.condition !== false).map((section, sIdx) => {
+                    if (!section.data || Object.values(section.data).every(v => v === null || v === undefined || v === '')) return null;
+                    return (
+                    <div key={sIdx} className="mb-4">
+                        <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>
+                        <dl className="space-y-1">
+                            {Object.entries(section.data).map(([key, value]) => <ViewDetailRow key={key} label={camelCaseToTitle(key)} value={value} />)}
+                        </dl>
+                    </div>
+                )})}
+                
+                 {rig.renewals && rig.renewals.length > 0 && (
+                    <div>
+                        <h4 className="text-base font-semibold text-primary mb-2">Renewal History</h4>
+                        <Table>
+                            <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Date</TableHead><TableHead>Validity</TableHead><TableHead>Fee</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {rig.renewals.map((r, rIdx) => {
+                                    const validity = r.renewalDate ? new Date(addYears(new Date(r.renewalDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
+                                    return (
+                                    <TableRow key={r.id}>
+                                        <TableCell>{rIdx + 1}</TableCell>
+                                        <TableCell>{r.renewalDate ? format(new Date(r.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                        <TableCell>{validity ? format(validity, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                        <TableCell>{r.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
+                                    </TableRow>
+                                )})}
+                            </TableBody>
+                        </Table>
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-3xl">
@@ -1934,56 +1989,19 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                             </div>
                         ))}
                         
-                        {application.rigs.map((rig, rigIdx) => {
-                            const lastEffDate = rig.renewals && rig.renewals.length > 0 ? [...rig.renewals].sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate : rig.registrationDate;
-                            const validityDate = lastEffDate ? new Date(addYears(new Date(lastEffDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
+                        {activeRigs.length > 0 && (
+                          <div className="pt-4 mt-4 border-t">
+                            <h3 className="text-xl font-bold text-primary mb-2">Active Rigs ({activeRigs.length})</h3>
+                            {activeRigs.map((rig, idx) => <RigDetails key={rig.id} rig={rig} index={idx} />)}
+                          </div>
+                        )}
 
-                             const rigDetails = [
-                                { title: `Rig #${rigIdx + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status} },
-                                { title: "Cancellation Details", data: { "Reason": rig.cancellationReason, "Date": rig.cancellationDate }, condition: rig.status === 'Cancelled' },
-                                { title: "Rig Vehicle", data: rig.rigVehicle },
-                                { title: "Compressor Vehicle", data: rig.compressorVehicle },
-                                { title: "Supporting Vehicle", data: rig.supportingVehicle },
-                                { title: "Compressor", data: rig.compressorDetails },
-                                { title: "Generator", data: rig.generatorDetails },
-                            ];
-                            
-                            return (
-                                <div key={rig.id} className="mt-4 pt-4 border-t">
-                                    {rigDetails.filter(s => s.condition !== false).map((section, sIdx) => {
-                                        if (!section.data || Object.values(section.data).every(v => v === null || v === undefined || v === '')) return null;
-                                        return (
-                                        <div key={sIdx} className="mb-4">
-                                            <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>
-                                            <dl className="space-y-1">
-                                                {Object.entries(section.data).map(([key, value]) => <ViewDetailRow key={key} label={camelCaseToTitle(key)} value={value} />)}
-                                            </dl>
-                                        </div>
-                                    )})}
-                                    
-                                     {rig.renewals && rig.renewals.length > 0 && (
-                                        <div>
-                                            <h4 className="text-base font-semibold text-primary mb-2">Renewal History</h4>
-                                            <Table>
-                                                <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Date</TableHead><TableHead>Validity</TableHead><TableHead>Fee</TableHead></TableRow></TableHeader>
-                                                <TableBody>
-                                                    {rig.renewals.map((r, rIdx) => {
-                                                        const validity = r.renewalDate ? new Date(addYears(new Date(r.renewalDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
-                                                        return (
-                                                        <TableRow key={r.id}>
-                                                            <TableCell>{rIdx + 1}</TableCell>
-                                                            <TableCell>{r.renewalDate ? format(new Date(r.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                                            <TableCell>{validity ? format(validity, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                                            <TableCell>{r.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                                                        </TableRow>
-                                                    )})}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })}
+                        {cancelledRigs.length > 0 && (
+                           <div className="pt-4 mt-4 border-t">
+                             <h3 className="text-xl font-bold text-destructive mb-2">Cancelled Rigs ({cancelledRigs.length})</h3>
+                             {cancelledRigs.map((rig, idx) => <RigDetails key={rig.id} rig={rig} index={idx} />)}
+                           </div>
+                        )}
                     </div>
                 </ScrollArea>
                 <DialogFooter>
@@ -2135,3 +2153,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
     
+
