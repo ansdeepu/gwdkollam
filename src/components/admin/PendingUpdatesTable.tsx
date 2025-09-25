@@ -73,15 +73,15 @@ const UpdateTable = ({
   arsEntries: ArsEntry[];
 }) => {
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon className="h-5 w-5 text-primary" />
           {title} ({updates.length})
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="border rounded-lg">
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
