@@ -18,7 +18,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { DataEntryFormData } from '@/lib/schemas';
+import type { DataEntryFormData, SiteWorkStatus } from '@/lib/schemas';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { usePendingUpdates } from './usePendingUpdates';
@@ -47,25 +47,30 @@ export function useFileEntries() {
       let entries = allFileEntries;
 
       if (user.role === 'supervisor') {
-        // For supervisors, only show files where they are assigned.
-        // Do NOT filter by work status here. The component will handle display logic.
-        entries = allFileEntries.filter(entry => 
-            entry.assignedSupervisorUids?.includes(user.uid)
-        );
+        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress", "Awaiting Dept. Rig"];
+        // For supervisors, only show files where they are assigned to at least one site with an ongoing status.
+        entries = allFileEntries
+            .map(entry => {
+                const assignedOngoingSites = entry.siteDetails?.filter(site => 
+                    site.supervisorUid === user.uid && 
+                    site.workStatus && 
+                    ongoingStatuses.includes(site.workStatus as SiteWorkStatus)
+                );
+                return { ...entry, siteDetails: assignedOngoingSites };
+            })
+            .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
         
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
           pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
         );
         
-        // Attach a `isPending` flag to sites if their parent file has a pending update from the current supervisor.
         if (pendingFileNumbers.size > 0) {
           entries = entries.map(entry => {
             const isFilePending = pendingFileNumbers.has(entry.fileNo);
             if (!isFilePending) return entry;
 
             const updatedSiteDetails = entry.siteDetails?.map(site => {
-              // Only mark the specific sites assigned to the current supervisor as pending.
               if (site.supervisorUid === user.uid) {
                 return { ...site, isPending: true };
               }

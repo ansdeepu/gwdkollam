@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { ArsEntryFormData } from '@/lib/schemas';
+import type { ArsEntryFormData, SiteWorkStatus } from '@/lib/schemas';
 import { useAuth, type UserProfile } from './useAuth';
 import { toast } from './use-toast';
 import { parse, isValid } from 'date-fns';
@@ -21,6 +21,7 @@ export type ArsEntry = ArsEntryFormData & {
   id: string;
   createdAt?: Date;
   updatedAt?: Date;
+  isPending?: boolean;
 };
 
 export function useArsEntries() {
@@ -42,7 +43,12 @@ export function useArsEntries() {
       let entries = allArsEntries;
 
       if (user.role === 'supervisor') {
-        entries = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
+        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
+        entries = allArsEntries.filter(entry => 
+            entry.supervisorUid === user.uid && 
+            entry.workStatus &&
+            ongoingStatuses.includes(entry.workStatus as SiteWorkStatus)
+        );
         
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingArsIds = new Set(

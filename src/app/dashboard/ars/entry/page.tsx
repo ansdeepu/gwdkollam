@@ -29,7 +29,8 @@ export const dynamic = 'force-dynamic';
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
-const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
+const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Failed", "Work Completed", "Work Initiated"];
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
 
 
 const toDateOrNull = (value: any): Date | null => {
@@ -122,7 +123,7 @@ export default function ArsEntryPage() {
     const approveUpdateId = searchParams.get("approveUpdateId");
     
     const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry } = useArsEntries();
-    const { createArsPendingUpdate, getPendingUpdateById } = usePendingUpdates();
+    const { createArsPendingUpdate, getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     
@@ -132,18 +133,16 @@ export default function ArsEntryPage() {
     const isViewer = user?.role === 'viewer';
     const isApprovingUpdate = canEdit && !!approveUpdateId;
     
-    // Determine the base read-only state for the entire form
-    const isFormReadOnly = isViewer || (isSupervisor && !isEditing);
+    const [isFormDisabledForSupervisor, setIsFormDisabledForSupervisor] = useState(false);
     
     const isFieldReadOnly = (fieldName: keyof ArsEntryFormData): boolean => {
-      if (canEdit) return false; // Editors can ALWAYS edit everything.
+      if (canEdit) return false;
       if (isViewer) return true;
       if (isSupervisor) {
-        if (!isEditing) return true;
-        // Supervisors can only edit specific fields when in edit mode
+        if (!isEditing || isFormDisabledForSupervisor) return true;
         return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
       }
-      return true; // Default to read-only
+      return true;
     };
 
 
@@ -216,6 +215,17 @@ export default function ArsEntryPage() {
                 router.push('/dashboard/ars');
                 return;
             }
+            
+             if (isSupervisor && user) {
+                const hasPending = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
+                const isOngoing = originalEntry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(originalEntry.workStatus as SiteWorkStatus);
+                if (hasPending || !isOngoing) {
+                    setIsFormDisabledForSupervisor(true);
+                    if (hasPending) toast({ title: "Edits Locked", description: "This site has a pending update and cannot be edited until reviewed.", duration: 6000 });
+                    else if (!isOngoing) toast({ title: "Edits Locked", description: "This site is no longer in an ongoing status and cannot be edited.", duration: 6000, variant: 'destructive' });
+                }
+            }
+
 
             if (isApprovingUpdate && pendingUpdate) {
                 const mergedData = { ...originalEntry, ...pendingUpdate.updatedSiteDetails[0] };
@@ -228,7 +238,7 @@ export default function ArsEntryPage() {
         if (isEditing) {
           loadArsEntry();
         }
-    }, [isEditing, entryIdToEdit, approveUpdateId, getArsEntryById, getPendingUpdateById, form, router, toast, isApprovingUpdate]);
+    }, [isEditing, entryIdToEdit, approveUpdateId, getArsEntryById, getPendingUpdateById, form, router, toast, isApprovingUpdate, isSupervisor, user, hasPendingUpdateForFile]);
 
     const handleFormSubmit = async (data: ArsEntryFormData) => {
         if (!user || isViewer) {
@@ -387,7 +397,7 @@ export default function ArsEntryPage() {
                         </div>
                         <div className="flex justify-end pt-8 space-x-3">
                            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/ars')} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
-                           {!(isViewer || (isSupervisor && !isEditing)) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
+                           {!(isViewer || (isSupervisor && !isEditing) || isFormDisabledForSupervisor) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
                         </div>
                       </form>
                     </FormProvider>
