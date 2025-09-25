@@ -1,3 +1,4 @@
+
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Search, FilePlus2 } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData } from '@/lib/schemas';
@@ -42,6 +43,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 export default function FileManagerPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
@@ -56,6 +58,8 @@ export default function FileManagerPage() {
   const { setIsNavigating } = usePageNavigation();
   
   const canCreate = user?.role === 'editor';
+  
+  const currentlyEditingFileId = searchParams.get('id');
 
   const depositWorkEntries = useMemo(() => {
     let entries: DataEntryFormData[];
@@ -63,10 +67,18 @@ export default function FileManagerPage() {
     if (user?.role === 'supervisor') {
       entries = fileEntries
         .map(entry => {
-          const assignedSites = entry.siteDetails?.filter(site => 
-            site.supervisorUid === user.uid && 
-            (!site.workStatus || !FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus))
-          );
+          const assignedSites = entry.siteDetails?.filter(site => {
+            const isAssigned = site.supervisorUid === user.uid;
+            if (!isAssigned) return false;
+            
+            // If the user is editing THIS specific file, always include all their assigned sites from it, regardless of status.
+            if (entry.id === currentlyEditingFileId) {
+                return true;
+            }
+
+            // Otherwise, only show sites with a non-final status.
+            return !site.workStatus || !FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
+          });
           return { ...entry, siteDetails: assignedSites };
         })
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
@@ -97,7 +109,7 @@ export default function FileManagerPage() {
     });
 
     return sortedEntries;
-  }, [fileEntries, user?.role, user?.uid]);
+  }, [fileEntries, user?.role, user?.uid, currentlyEditingFileId]);
 
 
   const handleAddNewClick = () => {
