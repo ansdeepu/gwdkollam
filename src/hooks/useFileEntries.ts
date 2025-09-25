@@ -48,7 +48,10 @@ export function useFileEntries() {
 
       if (user.role === 'supervisor') {
         // For supervisors, only show files where they are assigned.
-        entries = allFileEntries.filter(entry => entry.assignedSupervisorUids?.includes(user.uid));
+        // Do NOT filter by work status here. The component will handle display logic.
+        entries = allFileEntries.filter(entry => 
+            entry.assignedSupervisorUids?.includes(user.uid)
+        );
         
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
