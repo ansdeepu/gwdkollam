@@ -47,7 +47,7 @@ export default function FileManagerPage() {
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
-      ? 'List of all ongoing sites assigned to you.'
+      ? 'List of all sites assigned to you, including ongoing and completed works.'
       : 'List of all non-ARS files in the system, sorted by most recent remittance.';
     setHeader('Deposit Works', description);
   }, [setHeader, user]);
@@ -65,24 +65,15 @@ export default function FileManagerPage() {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
+      // For supervisors, show all files where they are assigned to at least one site.
       entries = fileEntries
         .map(entry => {
-          const assignedSites = entry.siteDetails?.filter(site => {
-            const isAssigned = site.supervisorUid === user.uid;
-            if (!isAssigned) return false;
-            
-            // If the user is editing THIS specific file, always include all their assigned sites from it, regardless of status.
-            if (entry.id === currentlyEditingFileId) {
-                return true;
-            }
-
-            // Otherwise, only show sites with a non-final status.
-            return !site.workStatus || !FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
-          });
+          const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
           return { ...entry, siteDetails: assignedSites };
         })
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     } else {
+      // For other roles, filter out ARS-only files.
       entries = fileEntries
         .map(entry => {
           const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
@@ -91,9 +82,10 @@ export default function FileManagerPage() {
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     }
 
-    // Clone the array before sorting
+    // Clone the array before sorting to avoid mutating the original
     const sortedEntries = [...entries];
 
+    // Sort all entries by the first remittance date, newest first.
     sortedEntries.sort((a, b) => {
       const dateAValue = a.remittanceDetails?.[0]?.dateOfRemittance;
       const dateBValue = b.remittanceDetails?.[0]?.dateOfRemittance;
@@ -109,7 +101,7 @@ export default function FileManagerPage() {
     });
 
     return sortedEntries;
-  }, [fileEntries, user?.role, user?.uid, currentlyEditingFileId]);
+  }, [fileEntries, user?.role, user?.uid]);
 
 
   const handleAddNewClick = () => {
