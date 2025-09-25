@@ -472,6 +472,11 @@ export default function DataEntryFormComponent({
                             {siteFields.map((item, index) => {
                             const site = watchedSiteDetails?.[index];
                             const isAssignedToCurrentUser = !!user?.uid && site?.supervisorUid === user.uid;
+
+                            // Supervisor role specific filtering
+                            if (isSupervisor && !isAssignedToCurrentUser) {
+                                return null;
+                            }
                             const isSitePendingForSupervisor = isSupervisor && !!initialData.siteDetails?.[index]?.isPending;
                             
                             const siteIsEditable = isEditor || (isSupervisor && isAssignedToCurrentUser && !isSitePendingForSupervisor);
@@ -560,11 +565,6 @@ export default function DataEntryFormComponent({
                                 </div>
                               </>
                             );
-                            
-                            // Supervisor role specific filtering
-                            if (isSupervisor && (!isAssignedToCurrentUser || isFinalStatus)) {
-                                return null;
-                            }
 
                             return (
                                 <AccordionItem value={`site-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
@@ -849,5 +849,7 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    
 
     
