@@ -36,7 +36,7 @@ interface DashboardDialogsProps {
 
 export default function DashboardDialogs({ dialogState, setDialogState, allFileEntries, financeDates }: DashboardDialogsProps) {
   const { toast } = useToast();
-  const { isOpen, title, data, columns } = dialogState;
+  const { isOpen, title, data, columns, type } = dialogState;
   
   const exportDialogDataToExcel = async () => {
     const reportTitle = title;
@@ -110,7 +110,45 @@ export default function DashboardDialogs({ dialogState, setDialogState, allFileE
     URL.revokeObjectURL(url);
     toast({ title: "Excel Exported", description: `Report downloaded.` });
   };
-
+  
+    const getColumnsForType = (type: DialogState['type'], title: string) => {
+        if (type === 'rig') {
+            if (title === 'Total Agencies') {
+                return [
+                    { key: 'slNo', label: 'Sl. No.' },
+                    { key: 'agencyName', label: 'Agency Name' },
+                    { key: 'ownerName', label: 'Owner Name' },
+                    { key: 'fileNo', label: 'File No.' },
+                    { key: 'status', label: 'Status' },
+                ];
+            } else if (title.toLowerCase().includes('renewal')) {
+                return [
+                    { key: 'slNo', label: 'Sl. No.'},
+                    { key: 'agencyName', label: 'Agency Name'},
+                    { key: 'renewalNo', label: 'Rig Reg. No.' },
+                    { key: 'paymentDate', label: 'Payment Date'},
+                    { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
+                ];
+            } else if (title.toLowerCase().includes('application fee')) {
+               return [
+                    { key: 'slNo', label: 'Sl. No.'},
+                    { key: 'agencyName', label: 'Agency Name'},
+                    { key: 'feeType', label: 'Fee Type'},
+                    { key: 'paymentDate', label: 'Payment Date'},
+                    { key: 'amount', label: 'Amount (₹)', isNumeric: true },
+                ];
+            } else { // Agency and Rig Registrations
+                return [
+                    { key: 'slNo', label: 'Sl. No.'},
+                    { key: 'agencyName', label: 'Agency Name'},
+                    { key: 'regNo', label: 'Registration No'},
+                    { key: 'paymentDate', label: 'Payment Date'},
+                    { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
+                ];
+            }
+        }
+        return columns; // Fallback to original columns
+    };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setDialogState({ ...dialogState, isOpen: open })}>
@@ -124,10 +162,10 @@ export default function DashboardDialogs({ dialogState, setDialogState, allFileE
         <ScrollArea className="max-h-[60vh] pr-4">
           {data.length > 0 ? (
             <Table>
-              <TableHeader><TableRow>{columns.map(col => <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>)}</TableRow></TableHeader>
+              <TableHeader><TableRow>{getColumnsForType(type, title).map(col => <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>)}</TableRow></TableHeader>
               <TableBody>
                 {data.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>{columns.map(col => <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>{row[col.key]}</TableCell>)}</TableRow>
+                  <TableRow key={rowIndex}>{getColumnsForType(type, title).map(col => <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>{row[col.key]}</TableCell>)}</TableRow>
                 ))}
               </TableBody>
             </Table>
