@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -55,7 +56,7 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-const FinancialRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType) => void; onTotalClick: () => void; }) => (
+const FinancialRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType | 'Agency') => void; onTotalClick: () => void; }) => (
     <TableRow>
       <TableHead>{label}</TableHead>
       {rigTypeColumns.map(rigType => (
@@ -69,7 +70,7 @@ const FinancialRow = ({ label, data, total, onCellClick, onTotalClick }: { label
     </TableRow>
 );
 
-const FinancialAmountRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType) => void; onTotalClick: () => void; }) => (
+const FinancialAmountRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType | 'Agency') => void; onTotalClick: () => void; }) => (
     <TableRow>
       <TableHead>{label}</TableHead>
       {rigTypeColumns.map(rigType => (
@@ -117,7 +118,8 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         })
         
         applications.forEach(app => {
-            if (checkDate(app.agencyRegistrationDate)) {
+            // No. of Agency Registration Applications based on agencyPaymentDate
+            if (checkDate(app.agencyPaymentDate)) {
                 data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
                 data.agencyRegData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, regDate: app.agencyRegistrationDate, fee: app.agencyRegistrationFee });
             }
@@ -148,22 +150,30 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 const rigType = rig.typeOfRig;
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
 
-                if (checkDate(rig.registrationDate)) {
+                // No. of Rig Registration Applications based on rig's paymentDate
+                if (checkDate(rig.paymentDate)) {
                     data.rigRegCount[rigType] = (data.rigRegCount[rigType] || 0) + 1;
-                    data.rigRegFee[rigType] = (data.rigRegFee[rigType] || 0) + (Number(rig.registrationFee) || 0);
                     data.rigRegData[rigType].push({ agencyName: app.agencyName, regNo: rig.rigRegistrationNo, regDate: rig.registrationDate });
+                }
+                
+                if (checkDate(rig.paymentDate)) {
+                    data.rigRegFee[rigType] = (data.rigRegFee[rigType] || 0) + (Number(rig.registrationFee) || 0);
                     data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regDate: rig.paymentDate, fee: rig.registrationFee });
                 }
+
                  if (checkDate(rig.additionalPaymentDate)) {
                     data.rigRegFee[rigType] = (data.rigRegFee[rigType] || 0) + (Number(rig.additionalRegistrationFee) || 0);
                     data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regDate: rig.additionalPaymentDate, fee: rig.additionalRegistrationFee });
                 }
                 
+                // No. of Rig Registration Renewal Applications based on renewal's paymentDate
                 rig.renewals?.forEach(renewal => {
-                    if (checkDate(renewal.renewalDate)) {
+                    if (checkDate(renewal.paymentDate)) {
                         data.renewalCount[rigType] = (data.renewalCount[rigType] || 0) + 1;
-                        data.renewalFee[rigType] = (data.renewalFee[rigType] || 0) + (Number(renewal.renewalFee) || 0);
                         data.renewalData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: renewal.renewalDate });
+                    }
+                    if (checkDate(renewal.paymentDate)) {
+                        data.renewalFee[rigType] = (data.renewalFee[rigType] || 0) + (Number(renewal.renewalFee) || 0);
                         data.renewalFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: renewal.paymentDate, renewalFee: renewal.renewalFee });
                     }
                 });
