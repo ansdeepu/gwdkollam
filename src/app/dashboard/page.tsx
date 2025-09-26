@@ -1,4 +1,5 @@
 
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -137,7 +138,7 @@ export default function DashboardPage() {
                     : rig.registrationDate;
 
                 if (lastEffectiveDate) {
-                    const validityDate = addYears(new Date(lastEffectiveDate), 1);
+                    const validityDate = new Date(addYears(new Date(lastEffectiveDate), 1).getTime() - 24 * 60 * 60 * 1000);
                     if (isValid(validityDate) && new Date() > validityDate) {
                         expiredRigs.push(rigWithContext);
                     } else {
@@ -205,7 +206,7 @@ export default function DashboardPage() {
                     ? [...rig.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate
                     : rig.registrationDate;
 
-            const validityDate = lastEffectiveDate ? addYears(new Date(lastEffectiveDate), 1) : null;
+            const validityDate = lastEffectiveDate ? new Date(addYears(new Date(lastEffectiveDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
             return {
                 slNo: index + 1, rigRegistrationNo: rig.rigRegistrationNo || 'N/A',
                 agencyName: rig.agencyName, ownerName: rig.ownerName, typeOfRig: rig.typeOfRig || 'N/A',
