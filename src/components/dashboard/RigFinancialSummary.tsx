@@ -170,7 +170,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 rig.renewals?.forEach(renewal => {
                     if (checkDate(renewal.paymentDate)) {
                         data.renewalCount[rigType] = (data.renewalCount[rigType] || 0) + 1;
-                        data.renewalData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: renewal.renewalDate });
+                        data.renewalData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: renewal.renewalDate, renewalFee: renewal.renewalFee });
                     }
                     if (checkDate(renewal.paymentDate)) {
                         data.renewalFee[rigType] = (data.renewalFee[rigType] || 0) + (Number(renewal.renewalFee) || 0);
