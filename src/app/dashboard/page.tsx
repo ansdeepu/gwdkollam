@@ -12,7 +12,7 @@ import { useAuth, type UserProfile } from '@/hooks/useAuth';
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import type { SiteDetailFormData, SiteWorkStatus, SitePurpose, AgencyApplication, RigRegistration, DataEntryFormData, RigType } from '@/lib/schemas';
-import { format, addYears, isValid } from 'date-fns';
+import { format, addYears, isValid, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import FileStatusOverview from '@/components/dashboard/FileStatusOverview';
 import NoticeBoard from '@/components/dashboard/NoticeBoard';
 import ImportantUpdates from '@/components/dashboard/ImportantUpdates';
@@ -120,7 +120,12 @@ export default function DashboardPage() {
     const activeRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
     const expiredRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
     const cancelledRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
+    const expiredThisMonthRigs: (RigRegistration & { agencyName: string; ownerName: string; })[] = [];
     
+    const today = new Date();
+    const startOfCurrentMonth = startOfMonth(today);
+    const endOfCurrentMonth = endOfMonth(today);
+
     const completedAgencyApplications = agencyApplications.filter(app => app.status === 'Active');
 
     completedAgencyApplications.forEach(app => {
@@ -141,6 +146,10 @@ export default function DashboardPage() {
                     const validityDate = new Date(addYears(new Date(lastEffectiveDate), 1).getTime() - 24 * 60 * 60 * 1000);
                     if (isValid(validityDate) && new Date() > validityDate) {
                         expiredRigs.push(rigWithContext);
+                        // Check if it expired this month
+                        if (isWithinInterval(validityDate, { start: startOfCurrentMonth, end: endOfCurrentMonth })) {
+                            expiredThisMonthRigs.push(rigWithContext);
+                        }
                     } else {
                         activeRigs.push(rigWithContext);
                     }
@@ -158,11 +167,13 @@ export default function DashboardPage() {
         totalRigs: allRigs.length,
         activeRigs: activeRigs.length,
         expiredRigs: expiredRigs.length,
+        expiredThisMonthRigs: expiredThisMonthRigs.length,
         cancelledRigs: cancelledRigs.length,
         allAgenciesData: completedAgencyApplications,
         allRigsData: allRigs,
         activeRigsData: activeRigs,
         expiredRigsData: expiredRigs,
+        expiredThisMonthRigsData: expiredThisMonthRigs,
         cancelledRigsData: cancelledRigs,
     };
   }, [agencyApplications, agenciesLoading]);

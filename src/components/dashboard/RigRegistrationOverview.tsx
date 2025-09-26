@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FileStack, Wrench, CheckCircle, AlertTriangle, Ban } from "lucide-react";
+import { FileStack, Wrench, CheckCircle, AlertTriangle, Ban, CalendarX } from "lucide-react";
 import type { AgencyApplication, RigRegistration, RigType } from '@/lib/schemas';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
@@ -13,11 +13,13 @@ interface RigRegistrationOverviewProps {
     totalRigs: number;
     activeRigs: number;
     expiredRigs: number;
+    expiredThisMonthRigs: number;
     cancelledRigs: number;
     allAgenciesData: AgencyApplication[];
     allRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
     activeRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
     expiredRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
+    expiredThisMonthRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
     cancelledRigsData: (RigRegistration & { agencyName: string; ownerName: string; })[];
   };
   onCardClick: (data: any[], title: string) => void;
@@ -54,7 +56,7 @@ export default function RigRegistrationOverview({ data, onCardClick }: RigRegist
         <CardDescription>Summary of all registered rig agencies and their status.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <button onClick={() => onCardClick(data.allAgenciesData, 'Total Agencies')} disabled={data.totalAgencies === 0} className="p-4 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             <FileStack className="h-8 w-8 text-primary mx-auto mb-2" /><p className="text-3xl font-bold">{data.totalAgencies}</p><p className="text-sm font-medium text-muted-foreground">Total Agencies</p>
           </button>
@@ -64,8 +66,11 @@ export default function RigRegistrationOverview({ data, onCardClick }: RigRegist
           <button onClick={() => onCardClick(data.activeRigsData, 'Active Rigs')} disabled={data.activeRigs === 0} className="p-4 border rounded-lg bg-green-500/10 text-center hover:bg-green-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" /><p className="text-3xl font-bold text-green-700">{data.activeRigs}</p><p className="text-sm font-medium text-green-800">Active Rigs</p>
           </button>
-          <button onClick={() => onCardClick(data.expiredRigsData, 'Expired Rigs')} disabled={data.expiredRigs === 0} className="p-4 border rounded-lg bg-amber-500/10 text-center hover:bg-amber-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-            <AlertTriangle className="h-8 w-8 text-amber-600 mx-auto mb-2" /><p className="text-3xl font-bold text-amber-700">{data.expiredRigs}</p><p className="text-sm font-medium text-amber-800">Expired Rigs</p>
+          <button onClick={() => onCardClick(data.expiredRigsData, 'Expired Rigs (All-Time)')} disabled={data.expiredRigs === 0} className="p-4 border rounded-lg bg-amber-500/10 text-center hover:bg-amber-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            <AlertTriangle className="h-8 w-8 text-amber-600 mx-auto mb-2" /><p className="text-3xl font-bold text-amber-700">{data.expiredRigs}</p><p className="text-sm font-medium text-amber-800">Total Expired</p>
+          </button>
+           <button onClick={() => onCardClick(data.expiredThisMonthRigsData, 'Rigs Expired This Month')} disabled={data.expiredThisMonthRigs === 0} className="p-4 border rounded-lg bg-orange-500/10 text-center hover:bg-orange-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            <CalendarX className="h-8 w-8 text-orange-600 mx-auto mb-2" /><p className="text-3xl font-bold text-orange-700">{data.expiredThisMonthRigs}</p><p className="text-sm font-medium text-orange-800">Expired This Month</p>
           </button>
           <button onClick={() => onCardClick(data.cancelledRigsData, 'Cancelled Rigs')} disabled={data.cancelledRigs === 0} className="p-4 border rounded-lg bg-red-500/10 text-center hover:bg-red-500/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             <Ban className="h-8 w-8 text-red-600 mx-auto mb-2" /><p className="text-3xl font-bold text-red-700">{data.cancelledRigs}</p><p className="text-sm font-medium text-red-800">Cancelled Rigs</p>
