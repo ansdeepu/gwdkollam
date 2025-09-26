@@ -116,9 +116,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             data.rigRegFeeData[rt] = []; data.renewalFeeData[rt] = [];
         })
         
-        const completedApplications = applications.filter(app => app.status === 'Active');
-
-        // Application Fees (from all applications)
+        // Application fees from ALL applications
         applications.forEach(app => {
             app.applicationFees?.forEach(fee => {
                 if(checkDate(fee.applicationFeePaymentDate)) {
@@ -134,7 +132,9 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             });
         });
 
-        // Other metrics (from completed applications only)
+        // Other metrics from COMPLETED applications only
+        const completedApplications = applications.filter(app => app.status === 'Active');
+
         completedApplications.forEach(app => {
             if (checkDate(app.agencyPaymentDate)) {
                 data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
@@ -198,8 +198,54 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
     const handleCellClick = (dataType: keyof SummaryData, rigType: RigType | 'Agency', title: string) => {
         const data = (summaryData as any)[dataType];
         const records = rigType === 'Agency' ? data : data[rigType];
+
+        let dialogData: any[] = [];
+        let columns: any[] = [];
+
+        if (title.toLowerCase().includes('agency registration')) {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'regNo', label: 'Registration No'},
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
+            ];
+            dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        } 
+        else if (title.toLowerCase().includes('rig registration')) {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'regNo', label: 'Registration No'},
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
+            ];
+            dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        }
+        else if (title.toLowerCase().includes('renewal')) {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'renewalNo', label: 'Rig Reg. No.' },
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
+            ];
+             dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        }
+        else if (title.toLowerCase().includes('application fee')) {
+           columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'feeType', label: 'Fee Type'},
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'amount', label: 'Amount (₹)', isNumeric: true },
+            ];
+            dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        }
+
+
         if(records && records.length > 0) {
-            onCellClick(records, title);
+            onCellClick(dialogData, title);
         }
     };
     
@@ -211,8 +257,53 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         } else if (typeof data === 'object') {
             allRecords = Object.values(data).flat();
         }
+
+        let dialogData: any[] = [];
+        let columns: any[] = [];
+
+        if (title.toLowerCase().includes('agency registration')) {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'regNo', label: 'Registration No'},
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
+            ];
+            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        } 
+        else if (title.toLowerCase().includes('rig registration')) {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'regNo', label: 'Registration No'},
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
+            ];
+            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        }
+        else if (title.toLowerCase().includes('renewal')) {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'renewalNo', label: 'Rig Reg. No.' },
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
+            ];
+             dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        }
+        else if (title.toLowerCase().includes('application fee')) {
+           columns = [
+                { key: 'slNo', label: 'Sl. No.'},
+                { key: 'agencyName', label: 'Agency Name'},
+                { key: 'feeType', label: 'Fee Type'},
+                { key: 'paymentDate', label: 'Payment Date'},
+                { key: 'amount', label: 'Amount (₹)', isNumeric: true },
+            ];
+            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1 }));
+        }
+
         if (allRecords.length > 0) {
-            onCellClick(allRecords, title);
+            onCellClick(dialogData, title);
         }
     };
 
