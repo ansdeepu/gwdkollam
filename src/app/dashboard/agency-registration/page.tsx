@@ -1910,13 +1910,16 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
     if (!application) return null;
 
     const detailSections = [
-      { title: "Application Details", data: { "File No": application.fileNo, "Agency Name & Address": application.agencyName, Status: application.status } },
-      { title: "Owner Details", data: application.owner },
-      ...application.partners?.map((p, i) => ({ title: `Partner #${i + 1}`, data: p })) || [],
-      { title: "Agency Registration", data: { "Agency Reg. No": application.agencyRegistrationNo, "Reg. Date": application.agencyRegistrationDate, "Reg. Fee": application.agencyRegistrationFee, "Payment Date": application.agencyPaymentDate, "Challan No": application.agencyChallanNo, "Additional Reg. Fee": application.agencyAdditionalRegFee, "Additional Payment Date": application.agencyAdditionalPaymentDate, "Additional Challan No.": application.agencyAdditionalChallanNo, } },
+        { title: "Application Details", data: { "File No": application.fileNo, "Agency Name & Address": application.agencyName, Status: application.status } },
+        { title: "Owner Details", data: application.owner },
+        ...(application.partners?.map((p, i) => ({ title: `Partner #${i + 1}`, data: p })) || []),
+        { title: "Agency Registration", data: { "Agency Reg. No": application.agencyRegistrationNo, "Reg. Date": application.agencyRegistrationDate, "Reg. Fee": application.agencyRegistrationFee, "Payment Date": application.agencyPaymentDate, "Challan No": application.agencyChallanNo, "Additional Reg. Fee": application.agencyAdditionalRegFee, "Additional Payment Date": application.agencyAdditionalPaymentDate, "Additional Challan No.": application.agencyAdditionalChallanNo, } },
     ];
     
-    const camelCaseToTitle = (s: string) => s.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+    const camelCaseToTitle = (s: string) => {
+        const result = s.replace(/([A-Z])/g, ' $1');
+        return result.charAt(0).toUpperCase() + result.slice(1);
+    };
 
     const activeRigs = (application.rigs || []).filter(rig => rig.status === 'Active');
     const cancelledRigs = (application.rigs || []).filter(rig => rig.status === 'Cancelled');
@@ -1990,6 +1993,20 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                             </div>
                         ))}
                         
+                        {(application.applicationFees && application.applicationFees.length > 0) && (
+                            <div>
+                                <h4 className="text-base font-semibold text-primary mb-2">Application Fees</h4>
+                                {application.applicationFees.map((fee, idx) => (
+                                    <div key={fee.id} className="mb-2 p-2 border-t">
+                                        <ViewDetailRow label={`Fee #${idx + 1} Type`} value={fee.applicationFeeType} />
+                                        <ViewDetailRow label="Fee Amount" value={fee.applicationFeeAmount} />
+                                        <ViewDetailRow label="Payment Date" value={fee.applicationFeePaymentDate} />
+                                        <ViewDetailRow label="Challan No." value={fee.applicationFeeChallanNo} />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
                         {activeRigs.length > 0 && (
                           <div className="pt-4 mt-4 border-t">
                             <h3 className="text-xl font-bold text-primary mb-2">Active Rigs ({activeRigs.length})</h3>
@@ -2003,6 +2020,13 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                              {cancelledRigs.map((rig, idx) => <RigDetails key={rig.id} rig={rig} index={idx} />)}
                            </div>
                         )}
+
+                         {application.remarks && (
+                            <div className="pt-4 mt-4 border-t">
+                                <h3 className="text-base font-semibold text-primary mb-2">Remarks</h3>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{application.remarks}</p>
+                            </div>
+                         )}
                     </div>
                 </ScrollArea>
                 <DialogFooter>
@@ -2156,3 +2180,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
 
+
+
+    
