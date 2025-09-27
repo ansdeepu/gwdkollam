@@ -215,7 +215,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             if (!dateA && !dateB) return 0;
             if (!dateA) return 1;
             if (!dateB) return -1;
-            return dateA.getTime() - dateB.getTime(); // Ascending order
+            return dateA.getTime() - dateB.getTime();
         });
 
         let columns: { key: string; label: string; isNumeric?: boolean; }[];
@@ -230,7 +230,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             ];
             dialogData = sortedRecords.map((record, index) => {
                 const totalFee = (Number(record.agencyRegistrationFee) || 0) + (Number(record.agencyAdditionalRegFee) || 0);
-                 const paymentDate = record.agencyPaymentDate || record.agencyAdditionalPaymentDate;
+                const paymentDate = record.agencyPaymentDate || record.agencyAdditionalPaymentDate;
                 return {
                     slNo: index + 1,
                     agencyName: record.agencyName,
