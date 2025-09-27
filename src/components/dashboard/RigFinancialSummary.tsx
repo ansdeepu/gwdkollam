@@ -154,6 +154,9 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                 if (checkDate(app.agencyAdditionalPaymentDate)) {
                     data.agencyRegFee["Agency"].amount += (Number(app.agencyAdditionalRegFee) || 0);
                 }
+                 if (!data.agencyRegFee["Agency"].records.some(r => r.id === app.id)) {
+                    data.agencyRegFee["Agency"].records.push(app);
+                }
             }
 
             app.rigs?.forEach(rig => {
@@ -171,6 +174,9 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                     }
                     if (checkDate(rig.additionalPaymentDate)) {
                         data.rigRegFee[sanitizedKey].amount += (Number(rig.additionalRegistrationFee) || 0);
+                    }
+                    if (!data.rigRegFee[sanitizedKey].records.some(r => r.id === rig.id)) {
+                       data.rigRegFee[sanitizedKey].records.push({ ...rig, agencyName: app.agencyName });
                     }
                 }
                 
@@ -212,24 +218,44 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             return dateB.getTime() - dateA.getTime();
         });
 
-        const columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'agencyName', label: 'Name of Agency' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'amount', label: 'Amount (₹)', isNumeric: true },
-        ];
-        
-        const dialogData = sortedRecords.map((record, index) => {
-            const paymentDate = record.paymentDate || record.agencyPaymentDate || record.applicationFeePaymentDate;
-            const amount = record.renewalFee || record.registrationFee || record.agencyRegistrationFee || record.applicationFeeAmount || record.agencyAdditionalRegFee || record.additionalRegistrationFee || 0;
-            return {
-                slNo: index + 1,
-                agencyName: record.agencyName,
-                paymentDate: paymentDate ? format(safeParseDate(paymentDate)!, 'dd/MM/yyyy') : 'N/A',
-                amount: (Number(amount) || 0).toLocaleString('en-IN'),
-            };
-        });
+        let columns: { key: string; label: string; isNumeric?: boolean; }[];
+        let dialogData: Record<string, any>[];
 
+        if (title.includes("Agency Registration Fee") || title.includes("No. of Agency Registration")) {
+             columns = [
+                { key: 'slNo', label: 'Sl. No.' },
+                { key: 'agencyName', label: 'Name of Agency' },
+                { key: 'paymentDate', label: 'Payment Date' },
+                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
+            ];
+            dialogData = sortedRecords.map((record, index) => {
+                const totalFee = (Number(record.agencyRegistrationFee) || 0) + (Number(record.agencyAdditionalRegFee) || 0);
+                 const paymentDate = record.agencyPaymentDate || record.agencyAdditionalPaymentDate;
+                return {
+                    slNo: index + 1,
+                    agencyName: record.agencyName,
+                    paymentDate: paymentDate ? format(safeParseDate(paymentDate)!, 'dd/MM/yyyy') : 'N/A',
+                    fee: totalFee.toLocaleString('en-IN'),
+                };
+            });
+        } else {
+             columns = [
+                { key: 'slNo', label: 'Sl. No.' },
+                { key: 'agencyName', label: 'Name of Agency' },
+                { key: 'paymentDate', label: 'Payment Date' },
+                { key: 'amount', label: 'Amount (₹)', isNumeric: true },
+            ];
+             dialogData = sortedRecords.map((record, index) => {
+                const paymentDate = record.paymentDate || record.applicationFeePaymentDate;
+                const amount = record.renewalFee || record.registrationFee || record.applicationFeeAmount || record.additionalRegistrationFee || 0;
+                return {
+                    slNo: index + 1,
+                    agencyName: record.agencyName,
+                    paymentDate: paymentDate ? format(safeParseDate(paymentDate)!, 'dd/MM/yyyy') : 'N/A',
+                    amount: (Number(amount) || 0).toLocaleString('en-IN'),
+                };
+            });
+        }
         onOpenDialog(dialogData, title, columns, 'rig');
     };
 
