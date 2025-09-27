@@ -201,13 +201,13 @@ export default function DashboardPage() {
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'agencyName', label: 'Agency Name' },
             { key: 'registrationNo', label: 'Registration No' },
-            { key: 'registrationDate', label: 'Registration Date' },
+            { key: 'paymentDate', label: 'Payment Date' },
             { key: 'fee', label: 'Fee (₹)', isNumeric: true },
         ];
         
         const sortedData = [...(data as AgencyApplication[])].sort((a,b) => {
-            const dateA = safeParseDate(a.agencyRegistrationDate);
-            const dateB = safeParseDate(b.agencyRegistrationDate);
+            const dateA = safeParseDate(a.agencyPaymentDate);
+            const dateB = safeParseDate(b.agencyPaymentDate);
             if (!dateA && !dateB) return 0;
             if (!dateA) return 1;
             if (!dateB) return -1;
@@ -216,12 +216,12 @@ export default function DashboardPage() {
 
         dialogData = sortedData.map((app, index) => {
             const totalFee = (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
-            const regDate = safeParseDate(app.agencyRegistrationDate);
+            const paymentDate = safeParseDate(app.agencyPaymentDate);
             return {
                 slNo: index + 1,
                 agencyName: app.agencyName,
                 registrationNo: app.agencyRegistrationNo || 'N/A',
-                registrationDate: regDate ? format(regDate, 'dd/MM/yyyy') : 'N/A',
+                paymentDate: paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A',
                 fee: totalFee.toLocaleString('en-IN')
             };
         });
