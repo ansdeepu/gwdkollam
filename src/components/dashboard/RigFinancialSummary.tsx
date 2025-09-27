@@ -61,7 +61,7 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-const FinancialRow = ({ label, data, total, onCellClick, onTotalClick, dataType }: { label: string; data: Record<string, number>; total: number; onCellClick: (dataType: string, sanitizedRigType: string, rigType: string) => void; onTotalClick: () => void; dataType: keyof SummaryData | string; }) => (
+const FinancialRow = ({ label, data, total, onCellClick, onTotalClick, dataType }: { label: string; data: Record<string, number>; total: number; onCellClick: (dataType: string, sanitizedRigType: string, rigType: string) => void; onTotalClick: () => void; dataType: string; }) => (
     <TableRow>
       <TableHead>{label}</TableHead>
       {rigTypeColumns.map(rigType => {
@@ -155,32 +155,26 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         const completedApplications = applications.filter(app => app.status === 'Active');
 
         completedApplications.forEach(app => {
-            let agencyRegisteredInPeriod = false;
-            if (checkDate(app.agencyPaymentDate) || checkDate(app.agencyAdditionalPaymentDate)) {
-                agencyRegisteredInPeriod = true;
-            }
+            const agencyRegRecord = { agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: app.agencyRegistrationFee };
             
-            if(agencyRegisteredInPeriod) {
-                 if (!data.agencyRegData.some((r: any) => r.agencyName === app.agencyName)) {
+            if (checkDate(app.agencyPaymentDate) || checkDate(app.agencyAdditionalPaymentDate)) {
+                 if (!data.agencyRegData.some((r: any) => r.regNo === app.agencyRegistrationNo)) {
                     data.agencyRegCount["Agency"]++;
+                    data.agencyRegData.push(agencyRegRecord);
                  }
-
-                if (checkDate(app.agencyPaymentDate)) {
+                 if (checkDate(app.agencyPaymentDate)) {
                     data.agencyRegFee["Agency"] += (Number(app.agencyRegistrationFee) || 0);
-                    const agencyRegRecord = { agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: app.agencyRegistrationFee };
-                    data.agencyRegFeeData.push(agencyRegRecord);
-                    if (!data.agencyRegData.some((r: any) => r.regNo === app.agencyRegistrationNo)) {
-                        data.agencyRegData.push(agencyRegRecord);
+                    if (!data.agencyRegFeeData.some((r: any) => r.regNo === app.agencyRegistrationNo && r.paymentDate === app.agencyPaymentDate)) {
+                        data.agencyRegFeeData.push(agencyRegRecord);
                     }
-                }
-                if (checkDate(app.agencyAdditionalPaymentDate)) {
+                 }
+                 if (checkDate(app.agencyAdditionalPaymentDate)) {
                     data.agencyRegFee["Agency"] += (Number(app.agencyAdditionalRegFee) || 0);
-                    const agencyRegRecord = { agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyAdditionalPaymentDate, fee: app.agencyAdditionalRegFee };
-                    data.agencyRegFeeData.push(agencyRegRecord);
-                     if (!data.agencyRegData.some((r: any) => r.regNo === app.agencyRegistrationNo)) {
-                        data.agencyRegData.push(agencyRegRecord);
+                    const additionalRecord = { ...agencyRegRecord, paymentDate: app.agencyAdditionalPaymentDate, fee: app.agencyAdditionalRegFee };
+                    if (!data.agencyRegFeeData.some((r: any) => r.regNo === app.agencyRegistrationNo && r.paymentDate === app.agencyAdditionalPaymentDate)) {
+                        data.agencyRegFeeData.push(additionalRecord);
                     }
-                }
+                 }
             }
 
 
@@ -189,29 +183,24 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
                 const sanitizedKey = sanitizeRigType(rigType);
                 
-                let rigRegisteredInPeriod = false;
-                if (checkDate(rig.paymentDate) || checkDate(rig.additionalPaymentDate)) {
-                    rigRegisteredInPeriod = true;
-                }
+                const rigRegRecord = { agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: rig.registrationFee };
                 
-                if (rigRegisteredInPeriod) {
+                if (checkDate(rig.paymentDate) || checkDate(rig.additionalPaymentDate)) {
                     if (!data.rigRegData[sanitizedKey].some((r: any) => r.regNo === rig.rigRegistrationNo)) {
                          data.rigRegCount[sanitizedKey]++;
+                         data.rigRegData[sanitizedKey].push(rigRegRecord);
                     }
                     if (checkDate(rig.paymentDate)) {
                         data.rigRegFee[sanitizedKey] += (Number(rig.registrationFee) || 0);
-                        const rigRegRecord = { agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: rig.registrationFee };
-                        data.rigRegFeeData[sanitizedKey].push(rigRegRecord);
-                        if (!data.rigRegData[sanitizedKey].some((r: any) => r.regNo === rig.rigRegistrationNo)) {
-                            data.rigRegData[sanitizedKey].push(rigRegRecord);
+                        if (!data.rigRegFeeData[sanitizedKey].some((r:any) => r.regNo === rig.rigRegistrationNo && r.paymentDate === rig.paymentDate)) {
+                            data.rigRegFeeData[sanitizedKey].push(rigRegRecord);
                         }
                     }
                     if (checkDate(rig.additionalPaymentDate)) {
                         data.rigRegFee[sanitizedKey] += (Number(rig.additionalRegistrationFee) || 0);
-                        const rigRegRecord = { agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.additionalPaymentDate, fee: rig.additionalRegistrationFee };
-                        data.rigRegFeeData[sanitizedKey].push(rigRegRecord);
-                        if (!data.rigRegData[sanitizedKey].some((r: any) => r.regNo === rig.rigRegistrationNo)) {
-                            data.rigRegData[sanitizedKey].push(rigRegRecord);
+                        const additionalRecord = { ...rigRegRecord, paymentDate: rig.additionalPaymentDate, fee: rig.additionalRegistrationFee };
+                        if (!data.rigRegFeeData[sanitizedKey].some((r:any) => r.regNo === rig.rigRegistrationNo && r.paymentDate === rig.additionalPaymentDate)) {
+                            data.rigRegFeeData[sanitizedKey].push(additionalRecord);
                         }
                     }
                 }
@@ -221,8 +210,12 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                         data.renewalCount[sanitizedKey]++;
                         data.renewalFee[sanitizedKey] += (Number(renewal.renewalFee) || 0);
                         const renewalRecord = { agencyName: app.agencyName, rigType: rigType, renewalNo: rig.rigRegistrationNo, paymentDate: renewal.paymentDate, renewalFee: renewal.renewalFee };
-                        data.renewalData[sanitizedKey].push(renewalRecord);
-                        data.renewalFeeData[sanitizedKey].push(renewalRecord);
+                        if (!data.renewalData[sanitizedKey].some((r: any) => r.renewalNo === rig.rigRegistrationNo && r.paymentDate === renewal.paymentDate)) {
+                            data.renewalData[sanitizedKey].push(renewalRecord);
+                        }
+                        if (!data.renewalFeeData[sanitizedKey].some((r: any) => r.renewalNo === rig.rigRegistrationNo && r.paymentDate === renewal.paymentDate)) {
+                            data.renewalFeeData[sanitizedKey].push(renewalRecord);
+                        }
                     }
                 });
             });
@@ -265,7 +258,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         let dialogData: any[] = [];
         let columns: any[] = [];
 
-        if (title.toLowerCase().includes('agency registrations')) {
+        if (title.toLowerCase().includes('agency registration')) {
             columns = [
                 { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
                 { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
@@ -328,21 +321,27 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         let dialogData: any[] = [];
         let columns: any[] = [];
 
-        if (title.toLowerCase().includes('agency registrations')) {
+        if (title.toLowerCase().includes('agency registration')) {
             columns = [
                 { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
                 { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
             ];
-            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), fee: item.fee?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', fee: item.fee?.toLocaleString('en-IN') ?? '0' };
+            });
         } 
-        else if (title.toLowerCase().includes('rig registrations')) {
+        else if (title.toLowerCase().includes('rig registration')) {
             columns = [
                 { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
                 { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
             ];
-            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), fee: item.fee?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', fee: item.fee?.toLocaleString('en-IN') ?? '0' };
+            });
         }
         else if (title.toLowerCase().includes('renewal')) {
             columns = [
@@ -350,7 +349,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'renewalNo', label: 'Rig Reg. No.' }, { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
             ];
-             dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0' }));
+             dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0' };
+             });
         }
         else if (title.toLowerCase().includes('application fees')) {
            columns = [
@@ -358,7 +360,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'feeType', label: 'Fee Type'}, { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'amount', label: 'Amount (₹)', isNumeric: true },
             ];
-            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A', amount: item.amount?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', amount: item.amount?.toLocaleString('en-IN') ?? '0' };
+            });
         }
 
         if (dialogData.length > 0) {
