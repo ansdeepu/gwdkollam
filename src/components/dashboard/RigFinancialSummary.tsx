@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -60,36 +61,36 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-const FinancialRow = ({ label, data, total, onCellClick, onTotalClick, dataType }: { label: string; data: Record<string, number>; total: number; onCellClick: (dataType: keyof SummaryData, sanitizedRigType: string, rigType: string) => void; onTotalClick: (dataType: keyof SummaryData) => void; dataType: keyof SummaryData; }) => (
+const FinancialRow = ({ label, data, total }: { label: string; data: Record<string, number>; total: number; }) => (
     <TableRow>
       <TableHead>{label}</TableHead>
       {rigTypeColumns.map(rigType => {
         const sanitizedKey = sanitizeRigType(rigType);
         return (
-            <TableCell key={rigType} className="text-center">
-                <Button variant="link" disabled={!data[sanitizedKey]} onClick={() => onCellClick(dataType, sanitizedKey, rigType)} className="p-0 h-auto font-semibold">{data[sanitizedKey] || 0}</Button>
+            <TableCell key={rigType} className="text-center font-semibold">
+                {data[sanitizedKey] || 0}
             </TableCell>
         );
       })}
        <TableCell className="text-center font-bold">
-            <Button variant="link" disabled={!total} onClick={() => onTotalClick(dataType)} className="p-0 h-auto font-bold">{total}</Button>
+            {total}
        </TableCell>
     </TableRow>
 );
 
-const FinancialAmountRow = ({ label, data, total, onCellClick, onTotalClick, dataType }: { label: string; data: Record<string, number>; total: number; onCellClick: (dataType: keyof SummaryData, sanitizedRigType: string, rigType: string) => void; onTotalClick: (dataType: keyof SummaryData) => void; dataType: keyof SummaryData; }) => (
+const FinancialAmountRow = ({ label, data, total }: { label: string; data: Record<string, number>; total: number; }) => (
     <TableRow>
       <TableHead>{label}</TableHead>
       {rigTypeColumns.map(rigType => {
         const sanitizedKey = sanitizeRigType(rigType);
         return (
             <TableCell key={rigType} className="text-right font-mono">
-                <Button variant="link" disabled={!data[sanitizedKey]} onClick={() => onCellClick(dataType, sanitizedKey, rigType)} className="p-0 h-auto font-mono text-right w-full block">{(data[sanitizedKey] || 0).toLocaleString('en-IN')}</Button>
+                {(data[sanitizedKey] || 0).toLocaleString('en-IN')}
             </TableCell>
         );
       })}
        <TableCell className="text-right font-bold font-mono">
-            <Button variant="link" disabled={!total} onClick={() => onTotalClick(dataType)} className="p-0 h-auto font-mono font-bold text-right w-full block">{total.toLocaleString('en-IN')}</Button>
+            {total.toLocaleString('en-IN')}
        </TableCell>
     </TableRow>
 );
@@ -245,57 +246,6 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
 
     }, [applications, startDate, endDate]);
 
-    const handleCellClick = (dataType: keyof SummaryData, rigTypeOrSanitizedKey: string, dialogTitleSuffix: string) => {
-        const dataCollection = (summaryData as any)[dataType];
-        if (!dataCollection) {
-            toast({ title: "Data not found", description: `Could not find data for ${dialogTitleSuffix}`});
-            return;
-        }
-
-        const isAgency = rigTypeOrSanitizedKey === 'Agency';
-        const records = isAgency ? dataCollection : dataCollection[rigTypeOrSanitizedKey];
-        const title = isAgency ? dialogTitleSuffix : `${dialogTitleSuffix} - ${rigTypeOrSanitizedKey}`;
-
-        if (!records || records.length === 0) {
-            toast({ title: "No records", description: `No records to display for ${title}`});
-            return;
-        }
-
-        onCellClick(records, title);
-    };
-    
-    const handleTotalClick = (dataType: keyof SummaryData) => {
-        const dataCollection = (summaryData as any)[dataType];
-        if (!dataCollection) {
-            toast({ title: "No records to display for this total."});
-            return;
-        }
-
-        let allRecords: any[] = [];
-        if(Array.isArray(dataCollection)) {
-            allRecords = dataCollection;
-        } else if (typeof dataCollection === 'object') {
-            allRecords = Object.values(dataCollection).flat();
-        }
-
-        if (allRecords.length === 0) {
-            toast({ title: "No records", description: `No records to display for this total.`});
-            return;
-        }
-
-        let title = "Total Details";
-        if(dataType.includes("agencyReg")) title = "Total Agency Registrations";
-        else if(dataType.includes("rigReg")) title = "Total Rig Registrations";
-        else if(dataType.includes("renewal")) title = "Total Rig Renewals";
-        else if(dataType.includes("AppFee")) title = `Total ${dataType.includes('agency') ? 'Agency' : 'Rig'} Application Fees`;
-        else if (dataType.includes('FeeData')) {
-             title = `Total ${dataType.includes('agency') ? 'Agency Registration' : dataType.includes('renewal') ? 'Renewal' : 'Rig Registration'} Fees`;
-        }
-
-        onCellClick(allRecords, title);
-    };
-
-
     return (
         <Card>
             <CardHeader>
@@ -317,17 +267,17 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <FinancialRow label="No. of Agency Registration Applications" data={summaryData.agencyRegCount} total={summaryData.totals.agencyRegCount} onCellClick={(dataType) => handleCellClick(dataType, 'Agency', 'Agency Registrations')} onTotalClick={handleTotalClick} dataType="agencyRegData" />
-                        <FinancialRow label="No. of Rig Registration Applications" data={summaryData.rigRegCount} total={summaryData.totals.rigRegCount} onCellClick={handleCellClick} onTotalClick={handleTotalClick} dataType="rigRegData"/>
-                        <FinancialRow label="No. of Rig Registration Renewal Applications" data={summaryData.renewalCount} total={summaryData.totals.renewalCount} onCellClick={handleCellClick} onTotalClick={handleTotalClick} dataType="renewalData"/>
+                        <FinancialRow label="No. of Agency Registration Applications" data={summaryData.agencyRegCount} total={summaryData.totals.agencyRegCount} />
+                        <FinancialRow label="No. of Rig Registration Applications" data={summaryData.rigRegCount} total={summaryData.totals.rigRegCount} />
+                        <FinancialRow label="No. of Rig Registration Renewal Applications" data={summaryData.renewalCount} total={summaryData.totals.renewalCount} />
                         
                         <TableRow className="bg-secondary/50 font-semibold"><TableCell colSpan={8} className="p-2">fees details (₹)</TableCell></TableRow>
                         
-                        <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} onCellClick={(dataType) => handleCellClick(dataType, 'Agency', 'Agency Application Fees')} onTotalClick={handleTotalClick} dataType="agencyRegAppFeeData"/>
-                        <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} onCellClick={(dataType) => handleCellClick(dataType, 'Agency', 'Rig Application Fees')} onTotalClick={handleTotalClick} dataType="rigRegAppFeeData"/>
-                        <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} onCellClick={(dataType) => handleCellClick(dataType, 'Agency', 'Agency Registration Fees')} onTotalClick={handleTotalClick} dataType="agencyRegFeeData"/>
-                        <FinancialAmountRow label="Rig Registration Fee" data={summaryData.rigRegFee} total={summaryData.totals.rigRegFee} onCellClick={handleCellClick} onTotalClick={handleTotalClick} dataType="rigRegFeeData" />
-                        <FinancialAmountRow label="Rig Registration Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} onCellClick={handleCellClick} onTotalClick={handleTotalClick} dataType="renewalFeeData"/>
+                        <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} />
+                        <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} />
+                        <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} />
+                        <FinancialAmountRow label="Rig Registration Fee" data={summaryData.rigRegFee} total={summaryData.totals.rigRegFee} />
+                        <FinancialAmountRow label="Rig Registration Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} />
                     </TableBody>
                     <TableFooter>
                         <TableRow>
