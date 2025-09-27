@@ -198,13 +198,33 @@ export default function DashboardPage() {
 
     if (title === 'Total Agencies') {
         columns = [
-            { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Agency Name' },
-            { key: 'ownerName', label: 'Owner Name' }, { key: 'fileNo', label: 'File No.' }, { key: 'status', label: 'Status' },
+            { key: 'slNo', label: 'Sl. No.' },
+            { key: 'agencyName', label: 'Agency Name' },
+            { key: 'registrationNo', label: 'Registration No' },
+            { key: 'registrationDate', label: 'Registration Date' },
+            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
         ];
-        dialogData = (data as AgencyApplication[]).map((app, index) => ({
-            slNo: index + 1, agencyName: app.agencyName, ownerName: app.owner.name,
-            fileNo: app.fileNo || 'N/A', status: app.status,
-        }));
+        
+        const sortedData = [...(data as AgencyApplication[])].sort((a,b) => {
+            const dateA = safeParseDate(a.agencyRegistrationDate);
+            const dateB = safeParseDate(b.agencyRegistrationDate);
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateB.getTime() - dateA.getTime();
+        });
+
+        dialogData = sortedData.map((app, index) => {
+            const regDate = safeParseDate(app.agencyRegistrationDate);
+            const totalFee = (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
+            return {
+                slNo: index + 1,
+                agencyName: app.agencyName,
+                registrationNo: app.agencyRegistrationNo || 'N/A',
+                registrationDate: regDate ? format(regDate, 'dd/MM/yyyy') : 'N/A',
+                fee: totalFee.toLocaleString('en-IN')
+            };
+        });
     } else {
         columns = [
             { key: 'slNo', label: 'Sl. No.' }, { key: 'rigRegistrationNo', label: 'Rig Reg. No.' },
