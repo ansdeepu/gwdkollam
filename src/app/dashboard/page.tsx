@@ -201,6 +201,7 @@ export default function DashboardPage() {
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'agencyName', label: 'Agency Name' },
             { key: 'registrationNo', label: 'Registration No' },
+            { key: 'registrationDate', label: 'Registration Date' },
             { key: 'paymentDate', label: 'Payment Date' },
             { key: 'fee', label: 'Fee (₹)', isNumeric: true },
         ];
@@ -216,12 +217,14 @@ export default function DashboardPage() {
 
         dialogData = sortedData.map((app, index) => {
             const totalFee = (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
-            const paymentDate = safeParseDate(app.agencyPaymentDate);
+            const regDate = safeParseDate(app.agencyRegistrationDate);
+            const payDate = safeParseDate(app.agencyPaymentDate);
             return {
                 slNo: index + 1,
                 agencyName: app.agencyName,
                 registrationNo: app.agencyRegistrationNo || 'N/A',
-                paymentDate: paymentDate ? format(paymentDate, 'dd/MM/yyyy') : 'N/A',
+                registrationDate: regDate ? format(regDate, 'dd/MM/yyyy') : 'N/A',
+                paymentDate: payDate ? format(payDate, 'dd/MM/yyyy') : 'N/A',
                 fee: totalFee.toLocaleString('en-IN')
             };
         });
