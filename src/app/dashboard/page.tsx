@@ -1,5 +1,4 @@
 
-
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -264,70 +263,6 @@ export default function DashboardPage() {
     setDialogState({ isOpen: true, data: dialogData, title, columns, type: 'rig' });
   }, []);
 
-  const handleRigFinancialsClick = useCallback((
-    data: any[],
-    title: string
-  ) => {
-    if (data.length === 0) return;
-
-    let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
-    let dialogData: Record<string, any>[] = [];
-
-    // All clicks will produce a list of registrations or renewals
-    if (title.includes('Renewal')) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.'},
-            { key: 'agencyName', label: 'Agency Name'},
-            { key: 'rigType', label: 'Rig Type'},
-            { key: 'renewalNo', label: 'Rig Reg. No.'},
-            { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
-        ];
-        dialogData = data.map((item, index) => {
-            return {
-                slNo: index + 1,
-                agencyName: item.agencyName,
-                rigType: item.rigType,
-                renewalNo: item.renewalNo || 'N/A',
-                renewalFee: (item.renewalFee || 0).toLocaleString('en-IN'),
-            }
-        });
-    } else if (title.toLowerCase().includes('application fee')) {
-       columns = [
-            { key: 'slNo', label: 'Sl. No.'},
-            { key: 'agencyName', label: 'Agency Name'},
-            { key: 'feeType', label: 'Fee Type'},
-            { key: 'amount', label: 'Amount (₹)', isNumeric: true },
-        ];
-        dialogData = data.map((item, index) => {
-            return {
-                slNo: index + 1,
-                agencyName: item.agencyName,
-                feeType: item.feeType,
-                amount: (item.amount || 0).toLocaleString('en-IN'),
-            }
-        });
-    }
-     else { // Agency and Rig Registrations
-        columns = [
-            { key: 'slNo', label: 'Sl. No.'},
-            { key: 'agencyName', label: 'Agency Name'},
-            { key: 'regNo', label: 'Registration No'},
-            { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
-        ];
-        dialogData = data.map((item, index) => {
-            return {
-                slNo: index + 1,
-                agencyName: item.agencyName,
-                regNo: item.regNo || 'N/A',
-                fee: (item.fee || 0).toLocaleString('en-IN'),
-            }
-        });
-    }
-
-    setDialogState({ isOpen: true, data: dialogData, title, columns, type: 'detail' });
-
-  }, []);
-
   const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || !dashboardData;
   
   if (isPageLoading) {
@@ -382,7 +317,6 @@ export default function DashboardPage() {
           {agencyApplications && (
             <RigFinancialSummary 
               applications={agencyApplications}
-              onCellClick={handleRigFinancialsClick}
              />
           )}
         </>
