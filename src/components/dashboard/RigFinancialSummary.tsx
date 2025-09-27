@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -305,14 +306,12 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     { key: 'slNo', label: 'Sl. No.' },
                     { key: 'agencyName', label: 'Name of Agency' },
                     { key: 'regNo', label: 'Agency Reg. No.' },
-                    { key: 'paymentDate', label: 'Payment Date' },
                     { key: 'fee', label: 'Reg. Fee', isNumeric: true },
                 ];
                 records = records.map((item, index) => ({ 
                     slNo: index + 1,
                     agencyName: item.agencyName,
                     regNo: item.regNo || 'N/A',
-                    paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     fee: item.fee?.toLocaleString('en-IN') ?? '0'
                 }));
                 break;
@@ -323,7 +322,6 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     { key: 'agencyName', label: 'Name of Agency' },
                     { key: 'rigType', label: 'Type of Rig' },
                     { key: 'regNo', label: 'Rig Reg. No.' },
-                    { key: 'paymentDate', label: 'Payment Date' },
                     { key: 'fee', label: 'Reg. Fee', isNumeric: true },
                 ];
                 records = records.map((item, index) => ({ 
@@ -331,7 +329,6 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     agencyName: item.agencyName,
                     rigType: item.rigType,
                     regNo: item.regNo || 'N/A',
-                    paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     fee: item.fee?.toLocaleString('en-IN') ?? '0'
                 }));
                 break;
@@ -342,7 +339,6 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     { key: 'agencyName', label: 'Name of Agency' },
                     { key: 'rigType', label: 'Type of Rig' },
                     { key: 'renewalNo', label: 'Rig Reg. No.' },
-                    { key: 'paymentDate', label: 'Payment Date' },
                     { key: 'renewalFee', label: 'Reg. Fee', isNumeric: true },
                 ];
                 records = records.map((item, index) => ({ 
@@ -350,17 +346,15 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     agencyName: item.agencyName,
                     rigType: item.rigType,
                     renewalNo: item.renewalNo || 'N/A',
-                    paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0'
                 }));
                 break;
             default:
                 title = 'Fee Details';
-                columns = [{ key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency'}, { key: 'paymentDate', label: 'Date'}, { key: 'amount', label: 'Amount', isNumeric: true}];
+                columns = [{ key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency'}, { key: 'amount', label: 'Amount', isNumeric: true}];
                 records = records.map((item, index) => ({
                     slNo: index + 1,
                     agencyName: item.agencyName,
-                    paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     amount: item.fee?.toLocaleString('en-IN') ?? item.renewalFee?.toLocaleString('en-IN') ?? item.amount?.toLocaleString('en-IN') ?? '0'
                 }));
                 break;
