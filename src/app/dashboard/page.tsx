@@ -201,6 +201,7 @@ export default function DashboardPage() {
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'agencyName', label: 'Agency Name' },
             { key: 'registrationNo', label: 'Registration No' },
+            { key: 'registrationDate', label: 'Registration Date' },
             { key: 'fee', label: 'Fee (₹)', isNumeric: true },
         ];
         
@@ -215,10 +216,12 @@ export default function DashboardPage() {
 
         dialogData = sortedData.map((app, index) => {
             const totalFee = (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
+            const regDate = safeParseDate(app.agencyRegistrationDate);
             return {
                 slNo: index + 1,
                 agencyName: app.agencyName,
                 registrationNo: app.agencyRegistrationNo || 'N/A',
+                registrationDate: regDate ? format(regDate, 'dd/MM/yyyy') : 'N/A',
                 fee: totalFee.toLocaleString('en-IN')
             };
         });
@@ -274,7 +277,7 @@ export default function DashboardPage() {
                 renewalFee: (item.renewalFee || 0).toLocaleString('en-IN'),
             }
         });
-    } else if (title.includes('Application Fee')) {
+    } else if (title.toLowerCase().includes('application fee')) {
        columns = [
             { key: 'slNo', label: 'Sl. No.'},
             { key: 'agencyName', label: 'Agency Name'},
