@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -49,7 +48,7 @@ interface SummaryData {
 
 
 const safeParseDate = (dateValue: any): Date | null => {
-  if (dateValue === null || value === undefined || value === '') return null;
+  if (dateValue === null || dateValue === undefined || dateValue === '') return null;
   if (dateValue instanceof Date) return dateValue;
   if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
     return new Date((dateValue as any).seconds * 1000);
@@ -136,6 +135,8 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             rigRegFeeData: rigTypeColumns.reduce((acc, r) => ({...acc, [sanitizeRigType(r)]: []}), {}),
             renewalFeeData: rigTypeColumns.reduce((acc, r) => ({...acc, [sanitizeRigType(r)]: []}), {}),
         };
+
+        const completedApplications = applications.filter(app => app.status === 'Active');
         
         applications.forEach(app => {
             app.applicationFees?.forEach(fee => {
@@ -152,51 +153,49 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             });
         });
 
-        const completedApplications = applications.filter(app => app.status === 'Active');
-        const processedAgencies = new Set<string>();
-        const processedRigs = new Set<string>();
-
+        const processedAgencyRegs = new Set<string>();
         completedApplications.forEach(app => {
-            const agencyRegRecord = { agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: app.agencyRegistrationFee };
-            
             if (checkDate(app.agencyPaymentDate) || checkDate(app.agencyAdditionalPaymentDate)) {
-                 if (!processedAgencies.has(app.id)) {
+                if (!processedAgencyRegs.has(app.id)) {
                     data.agencyRegCount["Agency"]++;
-                    data.agencyRegData.push(agencyRegRecord);
-                    processedAgencies.add(app.id);
-                 }
-                 if (checkDate(app.agencyPaymentDate)) {
+                    processedAgencyRegs.add(app.id);
+                }
+                const agencyRegRecord = { agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: app.agencyRegistrationFee };
+                
+                if (checkDate(app.agencyPaymentDate)) {
                     data.agencyRegFee["Agency"] += (Number(app.agencyRegistrationFee) || 0);
-                     if (!data.agencyRegFeeData.some((r: any) => r.regNo === app.agencyRegistrationNo && r.paymentDate === app.agencyPaymentDate)) {
+                    if (!data.agencyRegFeeData.some((r: any) => r.regNo === app.agencyRegistrationNo && r.paymentDate === app.agencyPaymentDate)) {
                         data.agencyRegFeeData.push(agencyRegRecord);
                     }
-                 }
-                 if (checkDate(app.agencyAdditionalPaymentDate)) {
+                }
+                if (checkDate(app.agencyAdditionalPaymentDate)) {
                     data.agencyRegFee["Agency"] += (Number(app.agencyAdditionalRegFee) || 0);
                     const additionalRecord = { ...agencyRegRecord, paymentDate: app.agencyAdditionalPaymentDate, fee: app.agencyAdditionalRegFee };
                     if (!data.agencyRegFeeData.some((r: any) => r.regNo === app.agencyRegistrationNo && r.paymentDate === app.agencyAdditionalPaymentDate)) {
                         data.agencyRegFeeData.push(additionalRecord);
                     }
-                 }
+                }
+                if (!data.agencyRegData.some((r: any) => r.regNo === app.agencyRegistrationNo)) {
+                    data.agencyRegData.push(agencyRegRecord);
+                }
             }
 
-
+            const processedRigRegs = new Set<string>();
             app.rigs?.forEach(rig => {
                 const rigType = rig.typeOfRig;
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
                 const sanitizedKey = sanitizeRigType(rigType);
                 
-                const rigRegRecord = { agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: rig.registrationFee };
-                
                 if (checkDate(rig.paymentDate) || checkDate(rig.additionalPaymentDate)) {
-                    if (!processedRigs.has(rig.id)) {
-                         data.rigRegCount[sanitizedKey]++;
-                         data.rigRegData[sanitizedKey].push(rigRegRecord);
-                         processedRigs.add(rig.id);
+                    if (!processedRigRegs.has(rig.id)) {
+                        data.rigRegCount[sanitizedKey]++;
+                        processedRigRegs.add(rig.id);
                     }
+
+                    const rigRegRecord = { agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: rig.registrationFee };
                     if (checkDate(rig.paymentDate)) {
                         data.rigRegFee[sanitizedKey] += (Number(rig.registrationFee) || 0);
-                        if (!data.rigRegFeeData[sanitizedKey].some((r:any) => r.regNo === rig.rigRegistrationNo && r.paymentDate === rig.paymentDate)) {
+                         if (!data.rigRegFeeData[sanitizedKey].some((r:any) => r.regNo === rig.rigRegistrationNo && r.paymentDate === rig.paymentDate)) {
                             data.rigRegFeeData[sanitizedKey].push(rigRegRecord);
                         }
                     }
@@ -206,6 +205,9 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                          if (!data.rigRegFeeData[sanitizedKey].some((r:any) => r.regNo === rig.rigRegistrationNo && r.paymentDate === rig.additionalPaymentDate)) {
                             data.rigRegFeeData[sanitizedKey].push(additionalRecord);
                         }
+                    }
+                     if (!data.rigRegData[sanitizedKey].some((r: any) => r.regNo === rig.rigRegistrationNo)) {
+                        data.rigRegData[sanitizedKey].push(rigRegRecord);
                     }
                 }
                 
@@ -259,58 +261,16 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             return;
         }
 
-        let dialogData: any[] = [];
-        let columns: any[] = [];
-        
-        const formatItem = (item: any, index: number) => {
-            const parsedDate = item.paymentDate ? safeParseDate(item.paymentDate) : null;
-            return { 
-                ...item, 
-                slNo: index + 1, 
-                paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', 
-                fee: (item.fee || 0).toLocaleString('en-IN'),
-                renewalFee: (item.renewalFee || 0).toLocaleString('en-IN'),
-                amount: (item.amount || 0).toLocaleString('en-IN')
-            };
-        };
-
-        if (dataType.includes('agencyReg')) {
-            columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
-            ];
-            dialogData = records.map(formatItem);
-        } else if (dataType.includes('rigReg')) {
-            columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
-            ];
-            dialogData = records.map(formatItem);
-        } else if (dataType.includes('renewal')) {
-            columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'renewalNo', label: 'Rig Reg. No.' }, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
-            ];
-            dialogData = records.map(formatItem);
-        } else if (dataType.includes('AppFee')) {
-           columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'feeType', label: 'Fee Type'}, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'amount', label: 'Amount (₹)', isNumeric: true },
-            ];
-            dialogData = records.map(formatItem);
-        }
-
-        if(dialogData.length > 0) {
-            onCellClick(dialogData, title);
-        }
+        onCellClick(records, title);
     };
     
     const handleTotalClick = (dataType: keyof SummaryData) => {
         const dataCollection = (summaryData as any)[dataType];
+        if (!dataCollection) {
+            toast({ title: "No records to display for this total."});
+            return;
+        }
+
         let allRecords: any[] = [];
         if(Array.isArray(dataCollection)) {
             allRecords = dataCollection;
@@ -323,76 +283,16 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             return;
         }
 
-        let dialogData: any[] = [];
-        let columns: any[] = [];
         let title = "Total Details";
-
-        const formatItem = (item: any, index: number) => {
-            const parsedDate = item.paymentDate ? safeParseDate(item.paymentDate) : null;
-            return { 
-                ...item, 
-                slNo: index + 1, 
-                paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', 
-                fee: (item.fee || 0).toLocaleString('en-IN'),
-                renewalFee: (item.renewalFee || 0).toLocaleString('en-IN'),
-                amount: (item.amount || 0).toLocaleString('en-IN')
-            };
-        };
-
-        if (dataType.includes('agencyRegData')) {
-            title = 'Total Agency Registrations';
-            columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
-            ];
-            dialogData = allRecords.map(formatItem);
-        } else if (dataType.includes('rigRegData')) {
-            title = 'Total Rig Registrations';
-            columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
-            ];
-            dialogData = allRecords.map(formatItem);
-        } else if (dataType.includes('renewalData')) {
-            title = 'Total Rig Renewals';
-            columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'renewalNo', label: 'Rig Reg. No.' }, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
-            ];
-            dialogData = allRecords.map(formatItem);
-        } else if (dataType.includes('AppFeeData')) {
-            title = `Total ${dataType.includes('agency') ? 'Agency' : 'Rig'} Application Fees`;
-            columns = [
-                { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                { key: 'feeType', label: 'Fee Type'}, { key: 'paymentDate', label: 'Payment Date'},
-                { key: 'amount', label: 'Amount (₹)', isNumeric: true },
-            ];
-            dialogData = allRecords.map(formatItem);
-        } else if (dataType.includes('FeeData')) {
+        if(dataType.includes("agencyReg")) title = "Total Agency Registrations";
+        else if(dataType.includes("rigReg")) title = "Total Rig Registrations";
+        else if(dataType.includes("renewal")) title = "Total Rig Renewals";
+        else if(dataType.includes("AppFee")) title = `Total ${dataType.includes('agency') ? 'Agency' : 'Rig'} Application Fees`;
+        else if (dataType.includes('FeeData')) {
              title = `Total ${dataType.includes('agency') ? 'Agency Registration' : dataType.includes('renewal') ? 'Renewal' : 'Rig Registration'} Fees`;
-             if (dataType.includes('renewal')) {
-                 columns = [
-                    { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                    { key: 'renewalNo', label: 'Rig Reg. No.' }, { key: 'paymentDate', label: 'Payment Date'},
-                    { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
-                ];
-             } else {
-                 columns = [
-                    { key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency Name'},
-                    { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date'},
-                    { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
-                ];
-             }
-             dialogData = allRecords.map(formatItem);
         }
 
-
-        if (dialogData.length > 0) {
-            onCellClick(dialogData, title);
-        }
+        onCellClick(allRecords, title);
     };
 
 
