@@ -48,9 +48,9 @@ const safeParseDate = (dateValue: any): Date | null => {
   if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
     return new Date((dateValue as any).seconds * 1000);
   }
-  if (typeof dateValue === 'string') {
+  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
     const parsed = new Date(dateValue);
-    if (isValid(parsed)) return parsed;
+    if (!isNaN(parsed.getTime())) return parsed;
   }
   return null;
 };
@@ -138,8 +138,9 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
 
         completedApplications.forEach(app => {
             let agencyRegisteredInPeriod = false;
-            if (checkDate(app.agencyPaymentDate)) agencyRegisteredInPeriod = true;
-            if (!agencyRegisteredInPeriod && checkDate(app.agencyAdditionalPaymentDate)) agencyRegisteredInPeriod = true;
+            if (checkDate(app.agencyPaymentDate) || checkDate(app.agencyAdditionalPaymentDate)) {
+                agencyRegisteredInPeriod = true;
+            }
 
             if (agencyRegisteredInPeriod && !processedAgencies.has(app.id!)) {
                 data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
@@ -162,8 +163,9 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
                 
                 let rigRegisteredInPeriod = false;
-                if (checkDate(rig.paymentDate)) rigRegisteredInPeriod = true;
-                if (!rigRegisteredInPeriod && checkDate(rig.additionalPaymentDate)) rigRegisteredInPeriod = true;
+                if (checkDate(rig.paymentDate) || checkDate(rig.additionalPaymentDate)) {
+                    rigRegisteredInPeriod = true;
+                }
 
                 if(rigRegisteredInPeriod && !processedRigs.has(rig.id)) {
                     data.rigRegCount[rigType] = (data.rigRegCount[rigType] || 0) + 1;
@@ -225,7 +227,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
             ];
-            dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), fee: item.fee?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = records.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', fee: item.fee?.toLocaleString('en-IN') ?? '0' }
+            });
         } 
         else if (title.toLowerCase().includes('rig registration')) {
             columns = [
@@ -235,7 +240,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
             ];
-            dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), fee: item.fee?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = records.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', fee: item.fee?.toLocaleString('en-IN') ?? '0' }
+            });
         }
         else if (title.toLowerCase().includes('renewal')) {
             columns = [
@@ -245,7 +253,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
             ];
-             dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0' }));
+             dialogData = records.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0' }
+             });
         }
         else if (title.toLowerCase().includes('application fee')) {
            columns = [
@@ -255,7 +266,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'amount', label: 'Amount (₹)', isNumeric: true },
             ];
-            dialogData = records.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), amount: item.amount?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = records.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', amount: item.amount?.toLocaleString('en-IN') ?? '0' }
+            });
         }
 
 
@@ -284,7 +298,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
             ];
-            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), fee: item.fee?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', fee: item.fee?.toLocaleString('en-IN') ?? '0' };
+            });
         } 
         else if (title.toLowerCase().includes('rig registrations')) {
             columns = [
@@ -294,7 +311,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
             ];
-            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), fee: item.fee?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', fee: item.fee?.toLocaleString('en-IN') ?? '0' };
+            });
         }
         else if (title.toLowerCase().includes('renewal')) {
             columns = [
@@ -304,7 +324,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
             ];
-             dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0' }));
+             dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0' };
+             });
         }
         else if (title.toLowerCase().includes('application fees')) {
            columns = [
@@ -314,7 +337,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 { key: 'paymentDate', label: 'Payment Date'},
                 { key: 'amount', label: 'Amount (₹)', isNumeric: true },
             ];
-            dialogData = allRecords.map((item: any, index: number) => ({ ...item, slNo: index + 1, paymentDate: format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy'), amount: item.amount?.toLocaleString('en-IN') ?? '0' }));
+            dialogData = allRecords.map((item: any, index: number) => {
+                const parsedDate = safeParseDate(item.paymentDate);
+                return { ...item, slNo: index + 1, paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A', amount: item.amount?.toLocaleString('en-IN') ?? '0' };
+            });
         }
 
         if (allRecords.length > 0) {
