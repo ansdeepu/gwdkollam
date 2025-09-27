@@ -317,6 +317,7 @@ export default function DashboardPage() {
           {agencyApplications && (
             <RigFinancialSummary 
               applications={agencyApplications}
+              onOpenDialog={handleOpenDialog}
              />
           )}
         </>
