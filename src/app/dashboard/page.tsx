@@ -247,13 +247,16 @@ export default function DashboardPage() {
             { key: 'renewalDate', label: 'Renewal Date'},
             { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
         ];
-        dialogData = data.map((item, index) => ({
-            slNo: index + 1,
-            agencyName: item.agencyName,
-            rigType: item.rigType,
-            renewalDate: item.renewalDate ? format(safeParseDate(item.renewalDate)!, 'dd/MM/yyyy') : 'N/A',
-            renewalFee: (item.renewalFee || 0).toLocaleString('en-IN'),
-        }));
+        dialogData = data.map((item, index) => {
+            const parsedDate = safeParseDate(item.renewalDate);
+            return {
+                slNo: index + 1,
+                agencyName: item.agencyName,
+                rigType: item.rigType,
+                renewalDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A',
+                renewalFee: (item.renewalFee || 0).toLocaleString('en-IN'),
+            }
+        });
     } else if (title.includes('Application Fee')) {
        columns = [
             { key: 'slNo', label: 'Sl. No.'},
@@ -262,13 +265,16 @@ export default function DashboardPage() {
             { key: 'paymentDate', label: 'Payment Date'},
             { key: 'amount', label: 'Amount (₹)', isNumeric: true },
         ];
-        dialogData = data.map((item, index) => ({
-            slNo: index + 1,
-            agencyName: item.agencyName,
-            feeType: item.feeType,
-            paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
-            amount: (item.amount || 0).toLocaleString('en-IN'),
-        }));
+        dialogData = data.map((item, index) => {
+            const parsedDate = safeParseDate(item.paymentDate);
+            return {
+                slNo: index + 1,
+                agencyName: item.agencyName,
+                feeType: item.feeType,
+                paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A',
+                amount: (item.amount || 0).toLocaleString('en-IN'),
+            }
+        });
     }
      else { // Agency and Rig Registrations
         columns = [
@@ -278,13 +284,16 @@ export default function DashboardPage() {
             { key: 'regDate', label: 'Registration Date'},
             { key: 'fee', label: 'Fee (₹)', isNumeric: true },
         ];
-        dialogData = data.map((item, index) => ({
-            slNo: index + 1,
-            agencyName: item.agencyName,
-            regNo: item.regNo || 'N/A',
-            regDate: item.regDate ? format(safeParseDate(item.regDate)!, 'dd/MM/yyyy') : 'N/A',
-            fee: (item.fee || 0).toLocaleString('en-IN'),
-        }));
+        dialogData = data.map((item, index) => {
+            const parsedDate = safeParseDate(item.regDate);
+            return {
+                slNo: index + 1,
+                agencyName: item.agencyName,
+                regNo: item.regNo || 'N/A',
+                regDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A',
+                fee: (item.fee || 0).toLocaleString('en-IN'),
+            }
+        });
     }
 
     setDialogState({ isOpen: true, data: dialogData, title, columns, type: 'detail' });
