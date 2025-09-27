@@ -227,22 +227,37 @@ export default function DashboardPage() {
         });
     } else {
         columns = [
-            { key: 'slNo', label: 'Sl. No.' }, { key: 'rigRegistrationNo', label: 'Rig Reg. No.' },
-            { key: 'agencyName', label: 'Agency Name' }, { key: 'ownerName', label: 'Owner' },
-            { key: 'typeOfRig', label: 'Type' }, { key: 'status', label: 'Status' },
-            { key: 'validity', label: 'Validity Date' },
+          { key: 'slNo', label: 'Sl. No.' },
+          { key: 'rigRegistrationNo', label: 'Rig Reg. No.' },
+          { key: 'agencyName', label: 'Agency Name' },
+          { key: 'ownerName', label: 'Owner' },
+          { key: 'typeOfRig', label: 'Type' },
+          { key: 'status', label: 'Status' },
+          { key: 'registrationDate', label: 'Registration Date' },
+          { key: 'validity', label: 'Validity Date' },
         ];
         dialogData = (data as (RigRegistration & {agencyName: string, ownerName: string})[]).map((rig, index) => {
-             const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
-                    ? [...rig.renewals].sort((a, b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate
-                    : rig.registrationDate;
+          const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
+              ? [...rig.renewals].sort((a, b) => {
+                  const dateA = safeParseDate(a.renewalDate)?.getTime() ?? 0;
+                  const dateB = safeParseDate(b.renewalDate)?.getTime() ?? 0;
+                  return dateB - dateA;
+                })[0].renewalDate
+              : rig.registrationDate;
 
-            const validityDate = lastEffectiveDate ? new Date(addYears(new Date(lastEffectiveDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
-            return {
-                slNo: index + 1, rigRegistrationNo: rig.rigRegistrationNo || 'N/A',
-                agencyName: rig.agencyName, ownerName: rig.ownerName, typeOfRig: rig.typeOfRig || 'N/A',
-                status: rig.status, validity: validityDate ? format(validityDate, 'dd/MM/yyyy') : 'N/A'
-            };
+          const regDate = safeParseDate(rig.registrationDate);
+          const validityDate = lastEffectiveDate ? addYears(safeParseDate(lastEffectiveDate)!, 1) : null;
+
+          return {
+            slNo: index + 1,
+            rigRegistrationNo: rig.rigRegistrationNo || 'N/A',
+            agencyName: rig.agencyName,
+            ownerName: rig.ownerName,
+            typeOfRig: rig.typeOfRig || 'N/A',
+            status: rig.status,
+            registrationDate: regDate ? format(regDate, 'dd/MM/yyyy') : 'N/A',
+            validity: validityDate ? format(new Date(validityDate.getTime() - 24*60*60*1000), 'dd/MM/yyyy') : 'N/A',
+          };
         });
     }
 
@@ -264,16 +279,15 @@ export default function DashboardPage() {
             { key: 'slNo', label: 'Sl. No.'},
             { key: 'agencyName', label: 'Agency Name'},
             { key: 'rigType', label: 'Rig Type'},
-            { key: 'renewalDate', label: 'Renewal Date'},
+            { key: 'renewalNo', label: 'Rig Reg. No.'},
             { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
         ];
         dialogData = data.map((item, index) => {
-            const parsedDate = safeParseDate(item.renewalDate);
             return {
                 slNo: index + 1,
                 agencyName: item.agencyName,
                 rigType: item.rigType,
-                renewalDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A',
+                renewalNo: item.renewalNo || 'N/A',
                 renewalFee: (item.renewalFee || 0).toLocaleString('en-IN'),
             }
         });
@@ -282,16 +296,13 @@ export default function DashboardPage() {
             { key: 'slNo', label: 'Sl. No.'},
             { key: 'agencyName', label: 'Agency Name'},
             { key: 'feeType', label: 'Fee Type'},
-            { key: 'paymentDate', label: 'Payment Date'},
             { key: 'amount', label: 'Amount (₹)', isNumeric: true },
         ];
         dialogData = data.map((item, index) => {
-            const parsedDate = safeParseDate(item.paymentDate);
             return {
                 slNo: index + 1,
                 agencyName: item.agencyName,
                 feeType: item.feeType,
-                paymentDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A',
                 amount: (item.amount || 0).toLocaleString('en-IN'),
             }
         });
@@ -301,16 +312,13 @@ export default function DashboardPage() {
             { key: 'slNo', label: 'Sl. No.'},
             { key: 'agencyName', label: 'Agency Name'},
             { key: 'regNo', label: 'Registration No'},
-            { key: 'regDate', label: 'Registration Date'},
-            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
+            { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
         ];
         dialogData = data.map((item, index) => {
-            const parsedDate = safeParseDate(item.regDate);
             return {
                 slNo: index + 1,
                 agencyName: item.agencyName,
                 regNo: item.regNo || 'N/A',
-                regDate: parsedDate ? format(parsedDate, 'dd/MM/yyyy') : 'N/A',
                 fee: (item.fee || 0).toLocaleString('en-IN'),
             }
         });
