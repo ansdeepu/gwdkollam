@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -14,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface RigFinancialSummaryProps {
     applications: AgencyApplication[];
-    onOpenDialog: (data: any[], title: string, columns: any[]) => void;
+    onOpenDialog: (data: any[], title: string, columns: any[], type: 'rig') => void;
 }
 
 const rigTypeColumns: RigType[] = ["Hand Bore", "Filter Point Rig", "Calyx Rig", "Rotary Rig", "DTH Rig", "Rotary cum DTH Rig"];
@@ -204,19 +203,25 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
     const handleCellClick = (records: any[], title: string) => {
         if (records.length === 0) return;
 
-        let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
-        let dialogData: Record<string, any>[] = [];
+        const sortedRecords = [...records].sort((a, b) => {
+            const dateA = safeParseDate(a.paymentDate || a.agencyPaymentDate || a.applicationFeePaymentDate);
+            const dateB = safeParseDate(b.paymentDate || b.agencyPaymentDate || b.applicationFeePaymentDate);
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateB.getTime() - dateA.getTime();
+        });
 
-        columns = [
+        const columns = [
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'agencyName', label: 'Name of Agency' },
             { key: 'paymentDate', label: 'Payment Date' },
             { key: 'amount', label: 'Amount (₹)', isNumeric: true },
         ];
         
-        dialogData = records.map((record, index) => {
+        const dialogData = sortedRecords.map((record, index) => {
             const paymentDate = record.paymentDate || record.agencyPaymentDate || record.applicationFeePaymentDate;
-            const amount = record.renewalFee || record.registrationFee || record.agencyRegistrationFee || record.applicationFeeAmount || 0;
+            const amount = record.renewalFee || record.registrationFee || record.agencyRegistrationFee || record.applicationFeeAmount || record.agencyAdditionalRegFee || record.additionalRegistrationFee || 0;
             return {
                 slNo: index + 1,
                 agencyName: record.agencyName,
@@ -225,7 +230,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             };
         });
 
-        onOpenDialog(dialogData, title, columns);
+        onOpenDialog(dialogData, title, columns, 'rig');
     };
 
     return (
