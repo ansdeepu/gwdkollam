@@ -215,7 +215,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             if (!dateA && !dateB) return 0;
             if (!dateA) return 1;
             if (!dateB) return -1;
-            return dateB.getTime() - dateA.getTime();
+            return dateA.getTime() - dateB.getTime(); // Ascending order
         });
 
         let columns: { key: string; label: string; isNumeric?: boolean; }[];
