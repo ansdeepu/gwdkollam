@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -284,11 +283,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         let title = '';
         let records: any[] = [];
         let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
-
+    
         const allRecordsForType = (summaryData as any)[dataType];
-
+    
         if (key === 'total') {
-            // Aggregate all records for that data type
             if(dataType === 'agencyRegData' || dataType === 'agencyRegFeeData' || dataType === 'agencyRegAppFeeData' || dataType === 'rigRegAppFeeData') {
                 records = allRecordsForType;
             } else {
@@ -299,20 +297,21 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         } else {
             records = (allRecordsForType as Record<string, any[]>)[key] || [];
         }
-
+    
         switch (dataType) {
             case 'agencyRegData':
                 title = 'Agency Registrations';
                 columns = [
-                    { key: 'slNo', label: 'Sl. No.'},
-                    { key: 'agencyName', label: 'Name of Agency'},
+                    { key: 'slNo', label: 'Sl. No.' },
+                    { key: 'agencyName', label: 'Name of Agency' },
                     { key: 'regNo', label: 'Agency Reg. No.' },
-                    { key: 'paymentDate', label: 'Payment Date'},
+                    { key: 'paymentDate', label: 'Payment Date' },
                     { key: 'fee', label: 'Reg. Fee', isNumeric: true },
                 ];
                 records = records.map((item, index) => ({ 
-                    ...item, 
-                    slNo: index + 1, 
+                    slNo: index + 1,
+                    agencyName: item.agencyName,
+                    regNo: item.regNo || 'N/A',
                     paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     fee: item.fee?.toLocaleString('en-IN') ?? '0'
                 }));
@@ -320,15 +319,18 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             case 'rigRegData':
                 title = 'Rig Registrations';
                 columns = [
-                    { key: 'slNo', label: 'Sl. No.'},
-                    { key: 'agencyName', label: 'Name of Agency'},
-                    { key: 'rigType', label: 'Type of Rig'},
-                    { key: 'paymentDate', label: 'Payment Date'},
+                    { key: 'slNo', label: 'Sl. No.' },
+                    { key: 'agencyName', label: 'Name of Agency' },
+                    { key: 'rigType', label: 'Type of Rig' },
+                    { key: 'regNo', label: 'Rig Reg. No.' },
+                    { key: 'paymentDate', label: 'Payment Date' },
                     { key: 'fee', label: 'Reg. Fee', isNumeric: true },
                 ];
-                 records = records.map((item, index) => ({ 
-                    ...item, 
-                    slNo: index + 1, 
+                records = records.map((item, index) => ({ 
+                    slNo: index + 1,
+                    agencyName: item.agencyName,
+                    rigType: item.rigType,
+                    regNo: item.regNo || 'N/A',
                     paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     fee: item.fee?.toLocaleString('en-IN') ?? '0'
                 }));
@@ -336,32 +338,34 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             case 'renewalData':
                 title = 'Rig Registration Renewals';
                 columns = [
-                    { key: 'slNo', label: 'Sl. No.'},
-                    { key: 'agencyName', label: 'Name of Agency'},
-                    { key: 'rigType', label: 'Type of Rig'},
-                    { key: 'paymentDate', label: 'Payment Date'},
-                    { key: 'fee', label: 'Reg. Fee', isNumeric: true },
+                    { key: 'slNo', label: 'Sl. No.' },
+                    { key: 'agencyName', label: 'Name of Agency' },
+                    { key: 'rigType', label: 'Type of Rig' },
+                    { key: 'renewalNo', label: 'Rig Reg. No.' },
+                    { key: 'paymentDate', label: 'Payment Date' },
+                    { key: 'renewalFee', label: 'Reg. Fee', isNumeric: true },
                 ];
                 records = records.map((item, index) => ({ 
-                    ...item, 
                     slNo: index + 1,
-                    fee: item.renewalFee,
-                    paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A'
+                    agencyName: item.agencyName,
+                    rigType: item.rigType,
+                    renewalNo: item.renewalNo || 'N/A',
+                    paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
+                    renewalFee: item.renewalFee?.toLocaleString('en-IN') ?? '0'
                 }));
                 break;
-            // Default case for fee amounts
             default:
                 title = 'Fee Details';
                 columns = [{ key: 'slNo', label: 'Sl. No.'}, { key: 'agencyName', label: 'Agency'}, { key: 'paymentDate', label: 'Date'}, { key: 'amount', label: 'Amount', isNumeric: true}];
                 records = records.map((item, index) => ({
-                    ...item,
                     slNo: index + 1,
+                    agencyName: item.agencyName,
                     paymentDate: item.paymentDate ? format(safeParseDate(item.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     amount: item.fee?.toLocaleString('en-IN') ?? item.renewalFee?.toLocaleString('en-IN') ?? item.amount?.toLocaleString('en-IN') ?? '0'
                 }));
                 break;
         }
-
+    
         onCellClick(records, title);
     };
 
@@ -386,15 +390,15 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <FinancialRow label="No. of Agency Registration Applications" data={{Agency: summaryData.agencyRegCount.Agency}} total={summaryData.totals.agencyRegCount} onCellClick={() => handleCellClick('Agency', 'agencyRegData')} dataType="agencyRegData" />
+                        <FinancialRow label="No. of Agency Registration Applications" data={{Agency: summaryData.agencyRegCount.Agency}} total={summaryData.totals.agencyRegCount} onCellClick={(key, type) => handleCellClick(key, type)} dataType="agencyRegData" />
                         <FinancialRow label="No. of Rig Registration Applications" data={summaryData.rigRegCount} total={summaryData.totals.rigRegCount} onCellClick={handleCellClick} dataType="rigRegData" />
                         <FinancialRow label="No. of Rig Registration Renewal Applications" data={summaryData.renewalCount} total={summaryData.totals.renewalCount} onCellClick={handleCellClick} dataType="renewalData" />
                         
                         <TableRow className="bg-secondary/50 font-semibold"><TableCell colSpan={8} className="p-2">fees details (₹)</TableCell></TableRow>
                         
-                        <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} onCellClick={() => handleCellClick('Agency', 'agencyRegAppFeeData')} dataType="agencyRegAppFeeData" />
-                        <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} onCellClick={() => handleCellClick('Agency', 'rigRegAppFeeData')} dataType="rigRegAppFeeData" />
-                        <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} onCellClick={() => handleCellClick('Agency', 'agencyRegFeeData')} dataType="agencyRegFeeData" />
+                        <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} onCellClick={(key, type) => handleCellClick(key, type)} dataType="agencyRegAppFeeData" />
+                        <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} onCellClick={(key, type) => handleCellClick(key, type)} dataType="rigRegAppFeeData" />
+                        <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} onCellClick={(key, type) => handleCellClick(key, type)} dataType="agencyRegFeeData" />
                         <FinancialAmountRow label="Rig Registration Fee" data={summaryData.rigRegFee} total={summaryData.totals.rigRegFee} onCellClick={handleCellClick} dataType="rigRegFeeData" />
                         <FinancialAmountRow label="Rig Registration Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} onCellClick={handleCellClick} dataType="renewalFeeData" />
                     </TableBody>
