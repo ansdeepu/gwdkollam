@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -114,7 +115,7 @@ export default function DashboardPage() {
   const handleOpenDialog = useCallback((
     data: any[],
     title: string,
-    columns: { key: string; label: string; isNumeric?: boolean; }[],
+    columns: { key: string; label: string; isNumeric?: boolean; }[] = [],
     type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance' = 'detail'
   ) => {
     setDialogState({ isOpen: true, data, title, columns, type });
