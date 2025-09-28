@@ -157,10 +157,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
 
                     if (fee.applicationFeeType === "Agency Registration") {
                         data.agencyRegAppFee["Agency"] = (data.agencyRegAppFee["Agency"] || 0) + amount;
-                        if(amount > 0) data.agencyRegAppFeeData.push(feeData);
+                        data.agencyRegAppFeeData.push(feeData);
                     } else if (fee.applicationFeeType === "Rig Registration") {
                          data.rigRegAppFee["Agency"] = (data.rigRegAppFee["Agency"] || 0) + amount;
-                         if(amount > 0) data.rigRegAppFeeData.push(feeData);
+                         data.rigRegAppFeeData.push(feeData);
                     }
                 }
             });
@@ -176,12 +176,12 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             if (checkDate(app.agencyPaymentDate)) {
                 const mainFee = Number(app.agencyRegistrationFee) || 0;
                 data.agencyRegFee["Agency"] += mainFee;
-                if(mainFee > 0) data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: mainFee });
+                data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: mainFee });
             }
             if (checkDate(app.agencyAdditionalPaymentDate)) {
                 const addlFee = Number(app.agencyAdditionalRegFee) || 0;
                 data.agencyRegFee["Agency"] += addlFee;
-                if(addlFee > 0) data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyAdditionalPaymentDate, fee: addlFee });
+                data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyAdditionalPaymentDate, fee: addlFee });
             }
 
             app.rigs?.forEach(rig => {
@@ -189,22 +189,19 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
 
                 if (checkDate(rig.registrationDate)) {
-                  const hasFeePayment = (Number(rig.registrationFee) || 0) > 0 || (Number(rig.additionalRegistrationFee) || 0) > 0;
-                  if (hasFeePayment) {
-                      data.rigRegCount[rigType]++;
-                      data.rigRegData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, regDate: rig.registrationDate });
-                  }
+                  data.rigRegCount[rigType]++;
+                  data.rigRegData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, regDate: rig.registrationDate });
                 }
                 
                 if (checkDate(rig.paymentDate)) {
                     const feeAmount = Number(rig.registrationFee) || 0;
                     data.rigRegFee[rigType] += feeAmount;
-                    if(feeAmount > 0) data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: feeAmount });
+                    data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: feeAmount });
                 }
                  if (checkDate(rig.additionalPaymentDate)) {
                     const feeAmount = Number(rig.additionalRegistrationFee) || 0;
                     data.rigRegFee[rigType] += feeAmount;
-                    if(feeAmount > 0) data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.additionalPaymentDate, fee: feeAmount });
+                    data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.additionalPaymentDate, fee: feeAmount });
                 }
 
                 rig.renewals?.forEach(renewal => {
@@ -215,7 +212,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     if (checkDate(renewal.paymentDate)) {
                         const feeAmount = Number(renewal.renewalFee) || 0;
                         data.renewalFee[rigType] += feeAmount;
-                        if(feeAmount > 0) data.renewalFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: renewal.paymentDate, renewalFee: feeAmount });
+                        data.renewalFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: renewal.paymentDate, renewalFee: feeAmount });
                     }
                 });
             });
