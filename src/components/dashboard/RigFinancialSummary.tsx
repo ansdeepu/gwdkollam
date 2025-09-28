@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, XCircle } from "lucide-react";
 import type { AgencyApplication } from '@/lib/schemas';
 import { format, startOfDay, endOfDay, isWithinInterval, isValid, parse } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface RigFinancialSummaryProps {
     applications: AgencyApplication[];
@@ -34,8 +34,8 @@ const formatDateSafe = (d: any): string => {
     return date ? format(date, 'dd/MM/yyyy') : 'N/A';
 }
 
-const SummaryCard = ({ title, value, onClick, details }: { title: string; value: number; onClick: () => void; details: Array<{ label: string; value: number; onClick: () => void }> }) => (
-    <Card className="flex flex-col">
+const SummaryCard = ({ title, value, onClick, details, className }: { title: string; value: number; onClick: () => void; details: Array<{ label: string; value: number; onClick: () => void }>, className?: string }) => (
+    <Card className={cn("flex flex-col", className)}>
         <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </CardHeader>
@@ -224,6 +224,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                         { label: 'Agency Application', value: summaryData.totals.agencyApplicationFee, onClick: () => handleOpenFeeDialog(summaryData.detailedData.agencyApplicationFee, 'Agency Application Fees') },
                         { label: 'Rig Application', value: summaryData.totals.rigApplicationFee, onClick: () => handleOpenFeeDialog(summaryData.detailedData.rigApplicationFee, 'Rig Application Fees') },
                     ]}
+                    className="border-blue-500/50 bg-blue-500/5"
                 />
                 <SummaryCard
                     title="Total Registration Fees"
@@ -233,12 +234,14 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                         { label: 'Agency Registration', value: summaryData.totals.agencyRegistrationFee, onClick: () => handleOpenFeeDialog(summaryData.detailedData.agencyRegistrationFee, 'Agency Registration Fees') },
                         { label: 'Rig Registration', value: summaryData.totals.rigRegistrationFee, onClick: () => handleOpenFeeDialog(summaryData.detailedData.rigRegistrationFee, 'Rig Registration Fees') },
                     ]}
+                    className="border-green-500/50 bg-green-500/5"
                 />
                 <SummaryCard
                     title="Total Renewal Fees"
                     value={summaryData.totals.renewalFee}
                     onClick={() => handleOpenFeeDialog(summaryData.detailedData.renewalFee, "Total Renewal Fees")}
                     details={[]}
+                    className="border-orange-500/50 bg-orange-500/5"
                 />
                 <Card className="flex flex-col justify-center items-center bg-primary/10">
                     <CardHeader className="pb-2 text-center">
