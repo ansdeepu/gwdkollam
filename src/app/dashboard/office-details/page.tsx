@@ -155,7 +155,7 @@ export default function OfficeDetailsPage() {
   }, [toast, officeDetailsForm]);
 
   useEffect(() => {
-    setHeader('Office & Constituency', 'Manage office details and constituency-LSG mappings.');
+    setHeader('Settings', 'Manage office details and constituency-LSG mappings.');
     fetchData();
   }, [setHeader, fetchData]);
 
