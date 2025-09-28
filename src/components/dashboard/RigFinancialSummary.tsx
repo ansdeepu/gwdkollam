@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -26,6 +27,12 @@ const safeParseDate = (dateValue: any): Date | null => {
   }
   return null;
 };
+
+const formatDateSafe = (d: any): string => {
+    if (!d) return 'N/A';
+    const date = safeParseDate(d);
+    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+}
 
 const SummaryCard = ({ title, value, onClick, details }: { title: string; value: number; onClick: () => void; details: Array<{ label: string; value: number; onClick: () => void }> }) => (
     <Card className="flex flex-col">
@@ -83,53 +90,62 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             renewalFee: [] as any[],
         };
 
-        applications.forEach(app => {
-            app.applicationFees?.forEach(fee => {
-                if (checkDate(fee.applicationFeePaymentDate)) {
-                    const amount = Number(fee.applicationFeeAmount) || 0;
-                    const feeData = { agencyName: app.agencyName, feeType: fee.applicationFeeType, paymentDate: formatDateSafe(fee.applicationFeePaymentDate), amount };
+        if (applications) {
+            applications.forEach(app => {
+                if (app.applicationFees) {
+                    app.applicationFees.forEach(fee => {
+                        if (checkDate(fee.applicationFeePaymentDate)) {
+                            const amount = Number(fee.applicationFeeAmount) || 0;
+                            const feeData = { agencyName: app.agencyName, feeType: fee.applicationFeeType, paymentDate: formatDateSafe(fee.applicationFeePaymentDate), amount };
 
-                    if (fee.applicationFeeType === "Agency Registration") {
-                        totals.agencyApplicationFee += amount;
-                        detailedData.agencyApplicationFee.push(feeData);
-                    } else if (fee.applicationFeeType === "Rig Registration") {
-                        totals.rigApplicationFee += amount;
-                        detailedData.rigApplicationFee.push(feeData);
-                    }
+                            if (fee.applicationFeeType === "Agency Registration") {
+                                totals.agencyApplicationFee += amount;
+                                detailedData.agencyApplicationFee.push(feeData);
+                            } else if (fee.applicationFeeType === "Rig Registration") {
+                                totals.rigApplicationFee += amount;
+                                detailedData.rigApplicationFee.push(feeData);
+                            }
+                        }
+                    });
+                }
+
+
+                if (checkDate(app.agencyPaymentDate)) {
+                    const amount = Number(app.agencyRegistrationFee) || 0;
+                    totals.agencyRegistrationFee += amount;
+                    detailedData.agencyRegistrationFee.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyPaymentDate), fee: amount });
+                }
+                if (checkDate(app.agencyAdditionalPaymentDate)) {
+                    const amount = Number(app.agencyAdditionalRegFee) || 0;
+                    totals.agencyRegistrationFee += amount;
+                    detailedData.agencyRegistrationFee.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyAdditionalPaymentDate), fee: amount });
+                }
+
+                if (app.rigs) {
+                    app.rigs.forEach(rig => {
+                        if (checkDate(rig.paymentDate)) {
+                            const amount = Number(rig.registrationFee) || 0;
+                            totals.rigRegistrationFee += amount;
+                            detailedData.rigRegistrationFee.push({ agencyName: app.agencyName, rigType: rig.typeOfRig, regDate: formatDateSafe(rig.paymentDate), fee: amount });
+                        }
+                        if (checkDate(rig.additionalPaymentDate)) {
+                            const amount = Number(rig.additionalRegistrationFee) || 0;
+                            totals.rigRegistrationFee += amount;
+                            detailedData.rigRegistrationFee.push({ agencyName: app.agencyName, rigType: rig.typeOfRig, regDate: formatDateSafe(rig.additionalPaymentDate), fee: amount });
+                        }
+                        if (rig.renewals) {
+                            rig.renewals.forEach(renewal => {
+                                if (checkDate(renewal.paymentDate)) {
+                                    const amount = Number(renewal.renewalFee) || 0;
+                                    totals.renewalFee += amount;
+                                    detailedData.renewalFee.push({ agencyName: app.agencyName, rigType: rig.typeOfRig, renewalDate: formatDateSafe(renewal.paymentDate), renewalFee: amount });
+                                }
+                            });
+                        }
+                    });
                 }
             });
-
-            if (checkDate(app.agencyPaymentDate)) {
-                const amount = Number(app.agencyRegistrationFee) || 0;
-                totals.agencyRegistrationFee += amount;
-                detailedData.agencyRegistrationFee.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyPaymentDate), fee: amount });
-            }
-             if (checkDate(app.agencyAdditionalPaymentDate)) {
-                const amount = Number(app.agencyAdditionalRegFee) || 0;
-                totals.agencyRegistrationFee += amount;
-                detailedData.agencyRegistrationFee.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyAdditionalPaymentDate), fee: amount });
-            }
-
-            app.rigs?.forEach(rig => {
-                if (checkDate(rig.paymentDate)) {
-                    const amount = Number(rig.registrationFee) || 0;
-                    totals.rigRegistrationFee += amount;
-                    detailedData.rigRegistrationFee.push({ agencyName: app.agencyName, rigType: rig.typeOfRig, regDate: formatDateSafe(rig.paymentDate), fee: amount });
-                }
-                 if (checkDate(rig.additionalPaymentDate)) {
-                    const amount = Number(rig.additionalRegistrationFee) || 0;
-                    totals.rigRegistrationFee += amount;
-                    detailedData.rigRegistrationFee.push({ agencyName: app.agencyName, rigType: rig.typeOfRig, regDate: formatDateSafe(rig.additionalPaymentDate), fee: amount });
-                }
-                rig.renewals?.forEach(renewal => {
-                    if (checkDate(renewal.paymentDate)) {
-                        const amount = Number(renewal.renewalFee) || 0;
-                        totals.renewalFee += amount;
-                        detailedData.renewalFee.push({ agencyName: app.agencyName, rigType: rig.typeOfRig, renewalDate: formatDateSafe(renewal.paymentDate), renewalFee: amount });
-                    }
-                });
-            });
-        });
+        }
 
         totals.applicationFee = totals.agencyApplicationFee + totals.rigApplicationFee;
         totals.registrationFee = totals.agencyRegistrationFee + totals.rigRegistrationFee;
@@ -139,12 +155,6 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
         return { totals, detailedData, grandTotal };
 
     }, [applications, startDate, endDate]);
-
-    const formatDateSafe = (d: any): string => {
-        if (!d) return 'N/A';
-        const date = safeParseDate(d);
-        return date ? format(date, 'dd/MM/yyyy') : 'N/A';
-    }
 
     const handleOpenFeeDialog = (data: any[], title: string) => {
         if (data.length === 0) return;
