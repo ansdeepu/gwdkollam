@@ -190,30 +190,14 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
         dialogData = records.map(d => {
             const fee = (Number(d.agencyRegistrationFee) || 0) + (Number(d.agencyAdditionalRegFee) || 0);
             const paymentDate = safeParseDate(d.agencyPaymentDate) || safeParseDate(d.agencyAdditionalPaymentDate);
-            return {
-                ...d,
-                regNo: d.agencyRegistrationNo,
-                paymentDate: paymentDate,
-                fee: fee
-            };
+            return { ...d, regNo: d.agencyRegistrationNo, paymentDate: paymentDate, fee: fee };
         });
     } else if (title.startsWith("Total - No. of Rig Registration Applications")) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'agencyName', label: 'Name of Agency' },
-            { key: 'typeOfRig', label: 'Type of Rig' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
-        ];
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
         dialogData = records.map((record: any) => {
             const paymentDate = record.paymentDate || record.additionalPaymentDate;
             const fee = (Number(record.registrationFee) || 0) + (Number(record.additionalRegistrationFee) || 0);
-            return {
-                agencyName: record.agencyName,
-                typeOfRig: record.typeOfRig || 'N/A',
-                paymentDate: safeParseDate(paymentDate),
-                fee: fee,
-            };
+            return { agencyName: record.agencyName, typeOfRig: record.typeOfRig || 'N/A', paymentDate: safeParseDate(paymentDate), fee: fee };
         });
     } else if (title.includes("Rig Registration Fee")) {
       columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
@@ -225,19 +209,8 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
         columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
         dialogData = records.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0), paymentDate: safeParseDate(d.paymentDate) }));
     } else if (title.startsWith("Total - No. of Rig Registration Renewal Applications")) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'agencyName', label: 'Name of Agency' },
-            { key: 'typeOfRig', label: 'Type of Rig' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
-        ];
-        dialogData = records.map((record) => ({
-            agencyName: record.agencyName,
-            typeOfRig: record.typeOfRig || 'N/A',
-            paymentDate: safeParseDate(record.paymentDate),
-            fee: Number(record.renewalFee) || 0,
-        }));
+        columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true } ];
+        dialogData = records.map((record) => ({ agencyName: record.agencyName, typeOfRig: record.typeOfRig || 'N/A', paymentDate: safeParseDate(record.paymentDate), fee: Number(record.renewalFee) || 0 }));
     } else if (title.includes("Rig Registration Renewal")) {
       columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0), paymentDate: safeParseDate(d.paymentDate) }));
