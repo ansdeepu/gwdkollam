@@ -3,12 +3,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileStack, Wrench, CheckCircle, AlertTriangle, Ban, CalendarX } from "lucide-react";
+import { FileStack, CheckCircle, AlertTriangle, Ban } from "lucide-react";
 import type { AgencyApplication, RigRegistration, RigType } from '@/lib/schemas';
 import { rigTypeOptions } from '@/lib/schemas';
-import { addYears, isValid, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { addYears, isValid } from 'date-fns';
 
 interface RigRegistrationOverviewProps {
   agencyApplications: AgencyApplication[];
@@ -30,25 +29,52 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-const rigHeaderLabels: Record<string, string> = {
-    "Hand Bore": "Hand<br/>Bore",
-    "Filter Point Rig": "Filter<br/>Point",
-    "Calyx Rig": "Calyx",
-    "Rotary Rig": "Rotary",
-    "DTH Rig": "DTH",
-    "Rotary cum DTH Rig": "Rotary<br/>cum DTH",
+const StatusCard = ({ title, icon: Icon, totalData, breakdownData, onOpenDialog, rigTypes, cardClass }: { title: string, icon: React.ElementType, totalData: any, breakdownData: any, onOpenDialog: any, rigTypes: RigType[], cardClass: string }) => {
+  const handleTotalClick = () => {
+    onOpenDialog(totalData.data, `Total ${title}`, []);
+  };
+
+  const handleTypeClick = (type: RigType) => {
+    onOpenDialog(breakdownData[type].data, `${title} - ${type}`, []);
+  };
+
+  return (
+    <Card className={cardClass}>
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2">
+          <Icon className="h-6 w-6" /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center mb-4">
+          <button onClick={handleTotalClick} disabled={totalData.count === 0} className="disabled:cursor-not-allowed">
+            <p className="text-5xl font-bold">{totalData.count}</p>
+            <p className="text-sm text-muted-foreground">Total Rigs</p>
+          </button>
+        </div>
+        <div className="space-y-2">
+          {rigTypes.map(type => (
+            <button key={type} onClick={() => handleTypeClick(type)} disabled={breakdownData[type].count === 0} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+              <span className="font-medium">{type}</span>
+              <span className="font-bold">{breakdownData[type].count}</span>
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
+
 
 export default function RigRegistrationOverview({ agencyApplications, onOpenDialog }: RigRegistrationOverviewProps) {
 
   const summaryData = React.useMemo(() => {
-    const initialCounts = () => rigTypeColumns.reduce((acc, type) => ({ ...acc, [type]: { count: 0, data: [] } }), {});
+    const initialCounts = () => rigTypeColumns.reduce((acc, type) => ({ ...acc, [type]: { count: 0, data: [] } }), {} as Record<RigType, { count: number; data: any[] }>);
     
-    const activeRigs: Record<RigType, { count: number; data: any[] }> = initialCounts();
-    const expiredRigs: Record<RigType, { count: number; data: any[] }> = initialCounts();
-    const cancelledRigs: Record<RigType, { count: number; data: any[] }> = initialCounts();
+    const activeRigs = initialCounts();
+    const expiredRigs = initialCounts();
+    const cancelledRigs = initialCounts();
     let totalAgencies = 0;
-    let allRigsData: any[] = [];
     
     const completedApps = agencyApplications.filter(app => app.status === 'Active');
     totalAgencies = completedApps.length;
@@ -56,7 +82,6 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
     completedApps.forEach(app => {
         (app.rigs || []).forEach(rig => {
             const rigWithContext = { ...rig, agencyName: app.agencyName, ownerName: app.owner.name };
-            allRigsData.push(rigWithContext);
             const rigType = rig.typeOfRig;
             if (!rigType || !rigTypeColumns.includes(rigType)) return;
 
@@ -91,8 +116,6 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
     });
     
     return {
-        totalAgencies: { count: totalAgencies, data: completedApps },
-        totalRigs: { count: allRigsData.length, data: allRigsData },
         activeRigs,
         expiredRigs,
         cancelledRigs,
@@ -134,77 +157,42 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
 
     onOpenDialog(dialogData, title, columns);
   };
-  
-  const renderCell = (title: string, data: { count: number, data: any[] }) => (
-    <TableCell className="text-center font-semibold">
-      <Button variant="link" className="p-0 h-auto font-semibold" disabled={data.count === 0} onClick={() => handleCellClick(data.data, title)}>
-        {data.count}
-      </Button>
-    </TableCell>
-  );
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2"><FileStack className="h-5 w-5 text-primary" />Rig Registration Overview</CardTitle>
-        <CardDescription>Summary of all registered rig agencies and their status.</CardDescription>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="w-[200px] font-semibold text-sm">Status</TableHead>
-                    {rigTypeColumns.map(type => (
-                        <TableHead key={type} className="text-center font-semibold text-xs p-1" dangerouslySetInnerHTML={{ __html: rigHeaderLabels[type] }} />
-                    ))}
-                    <TableHead className="text-center font-semibold text-sm p-2">Total</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                <TableRow>
-                    <TableCell className="font-medium">Total Agencies</TableCell>
-                    <TableCell colSpan={rigTypeColumns.length} className="text-center font-semibold">
-                        <Button variant="link" className="p-0 h-auto font-semibold" disabled={summaryData.totalAgencies.count === 0} onClick={() => handleCellClick(summaryData.totalAgencies.data, "Total Registered Agencies")}>
-                            {summaryData.totalAgencies.count}
-                        </Button>
-                    </TableCell>
-                     <TableCell className="text-center font-semibold">
-                        <Button variant="link" className="p-0 h-auto font-semibold" disabled={summaryData.totalAgencies.count === 0} onClick={() => handleCellClick(summaryData.totalAgencies.data, "Total Registered Agencies")}>
-                            {summaryData.totalAgencies.count}
-                        </Button>
-                    </TableCell>
-                </TableRow>
-                 <TableRow>
-                    <TableCell className="font-medium">Total Rigs</TableCell>
-                     <TableCell colSpan={rigTypeColumns.length} className="text-center font-semibold">
-                        <Button variant="link" className="p-0 h-auto font-semibold" disabled={summaryData.totalRigs.count === 0} onClick={() => handleCellClick(summaryData.totalRigs.data, "Total Registered Rigs")}>
-                            {summaryData.totalRigs.count}
-                        </Button>
-                    </TableCell>
-                     <TableCell className="text-center font-semibold">
-                        <Button variant="link" className="p-0 h-auto font-semibold" disabled={summaryData.totalRigs.count === 0} onClick={() => handleCellClick(summaryData.totalRigs.data, "Total Registered Rigs")}>
-                            {summaryData.totalRigs.count}
-                        </Button>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell className="font-medium text-green-700">Active Rigs</TableCell>
-                    {rigTypeColumns.map(type => renderCell(`Active Rigs - ${type}`, summaryData.activeRigs[type]))}
-                    {renderCell('Total Active Rigs', summaryData.activeTotal)}
-                </TableRow>
-                <TableRow>
-                    <TableCell className="font-medium text-amber-700">Expired Rigs</TableCell>
-                    {rigTypeColumns.map(type => renderCell(`Expired Rigs - ${type}`, summaryData.expiredRigs[type]))}
-                    {renderCell('Total Expired Rigs', summaryData.expiredTotal)}
-                </TableRow>
-                <TableRow>
-                    <TableCell className="font-medium text-red-700">Cancelled Rigs</TableCell>
-                     {rigTypeColumns.map(type => renderCell(`Cancelled Rigs - ${type}`, summaryData.cancelledRigs[type]))}
-                    {renderCell('Total Cancelled Rigs', summaryData.cancelledTotal)}
-                </TableRow>
-            </TableBody>
-        </Table>
-      </CardContent>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2"><FileStack className="h-5 w-5 text-primary" />Abstract Details (Rig Registration)</CardTitle>
+            <CardDescription>A summary of all registered rigs by their current status.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <StatusCard
+                title="Active Rigs"
+                icon={CheckCircle}
+                totalData={summaryData.activeTotal}
+                breakdownData={summaryData.activeRigs}
+                onOpenDialog={handleCellClick}
+                rigTypes={rigTypeColumns}
+                cardClass="border-green-500/50 bg-green-500/5 text-green-700"
+            />
+            <StatusCard
+                title="Expired Rigs"
+                icon={AlertTriangle}
+                totalData={summaryData.expiredTotal}
+                breakdownData={summaryData.expiredRigs}
+                onOpenDialog={handleCellClick}
+                rigTypes={rigTypeColumns}
+                cardClass="border-amber-500/50 bg-amber-500/5 text-amber-700"
+            />
+            <StatusCard
+                title="Cancelled Rigs"
+                icon={Ban}
+                totalData={summaryData.cancelledTotal}
+                breakdownData={summaryData.cancelledRigs}
+                onOpenDialog={handleCellClick}
+                rigTypes={rigTypeColumns}
+                cardClass="border-red-500/50 bg-red-500/5 text-red-700"
+            />
+        </CardContent>
     </Card>
   );
 }
