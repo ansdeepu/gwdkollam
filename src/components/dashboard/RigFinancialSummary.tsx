@@ -83,9 +83,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
     const completedApplications = agencyApplications.filter(app => app.status === 'Active');
     
-    agencyReg.records = completedApplications;
     agencyReg.count = completedApplications.length;
-
 
     agencyApplications.forEach(app => {
         // --- Application Fees (from ALL applications, including pending) ---
@@ -110,7 +108,6 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
 
     completedApplications.forEach(app => {
-        // Agency Registration Fee
         const agencyPaymentDate = safeParseDate(app.agencyPaymentDate) || safeParseDate(app.agencyAdditionalPaymentDate);
         if (checkDate(agencyPaymentDate)) {
             const regFee = (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
@@ -118,6 +115,11 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
               agencyReg.amount += regFee;
             }
         }
+        agencyReg.records.push({
+            ...app,
+            fee: (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0),
+            paymentDate: agencyPaymentDate,
+        });
 
         // Rig Registrations & Renewals
         (app.rigs || []).forEach(rig => {
@@ -239,7 +241,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     }
     
     const formattedAndSortedData = dialogData
-        .sort((a, b) => (safeParseDate(a.paymentDate)?.getTime() || 0) - (safeParseDate(b.paymentDate)?.getTime() || 0))
+        .sort((a, b) => (safeParseDate(b.paymentDate)?.getTime() || 0) - (safeParseDate(a.paymentDate)?.getTime() || 0))
         .map((d, i) => ({
             ...d,
             slNo: i + 1,
@@ -380,4 +382,3 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     </Card>
   );
 }
-
