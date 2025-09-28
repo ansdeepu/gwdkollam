@@ -223,7 +223,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
         dialogData = records.map(d => ({ ...d, fee: (Number(d.registrationFee) || 0) + (Number(d.additionalRegistrationFee) || 0), paymentDate: d.paymentDate || d.additionalPaymentDate }));
     } else if (title.startsWith("Total Rig Registration Renewal")) {
         columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
-        dialogData = records.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0) }));
+        dialogData = records.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0), paymentDate: safeParseDate(d.paymentDate) }));
     } else if (title.startsWith("Total - No. of Rig Registration Renewal Applications")) {
         columns = [
             { key: 'slNo', label: 'Sl. No.' },
@@ -240,7 +240,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
         }));
     } else if (title.includes("Rig Registration Renewal")) {
       columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
-      dialogData = records.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0) }));
+      dialogData = records.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0), paymentDate: safeParseDate(d.paymentDate) }));
     } else if (title.includes("No. of Applications")) {
         columns = [...baseCols];
         dialogData = records.map(d => ({...d}));
