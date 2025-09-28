@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -115,7 +114,6 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
             const regFee = (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
             if (regFee > 0) {
               agencyReg.amount += regFee;
-              // we don't increment count here as it's already set to total completed apps
             }
         }
 
@@ -124,15 +122,13 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
             const rigType = rig.typeOfRig;
             const regPaymentDate = safeParseDate(rig.paymentDate) || safeParseDate(rig.additionalPaymentDate);
             
-            // For counts, include all rigs from completed applications, regardless of date
-             if (rigType && rigColumns.includes(rigType)) {
+            if (rigType && rigColumns.includes(rigType)) {
                 rigReg[rigType].count++;
                 rigReg[rigType].records.push({ ...rig, agencyName: app.agencyName });
             }
             rigReg.Total.count++;
             rigReg.Total.records.push({ ...rig, agencyName: app.agencyName });
 
-            // For amounts, only include if payment date is within range
             if (checkDate(regPaymentDate)) {
                 const regFee = (Number(rig.registrationFee) || 0) + (Number(rig.additionalRegistrationFee) || 0);
                 if (regFee > 0) {
@@ -145,7 +141,6 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
             (rig.renewals || []).forEach(renewal => {
                 const renewalPaymentDate = safeParseDate(renewal.paymentDate);
-                 // For counts, include all renewals
                  if (rigType && rigColumns.includes(rigType)) {
                     rigRenewal[rigType].count++;
                     rigRenewal[rigType].records.push({ ...renewal, agencyName: app.agencyName, typeOfRig: rigType });
@@ -153,7 +148,6 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
                 rigRenewal.Total.count++;
                 rigRenewal.Total.records.push({ ...renewal, agencyName: app.agencyName, typeOfRig: rigType });
 
-                // For amounts, only include if payment date is within range
                 if (checkDate(renewalPaymentDate)) {
                     const renewalFee = Number(renewal.renewalFee) || 0;
                     if (renewalFee > 0) {
