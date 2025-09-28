@@ -131,16 +131,12 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
 
         const completedApps = applications.filter(app => app.status === 'Active');
 
-        completedApps.forEach(app => {
-            if (checkDate(app.agencyRegistrationDate)) {
-                data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
-                data.agencyRegData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, regDate: formatDateSafe(app.agencyRegistrationDate), fee: app.agencyRegistrationFee });
-            }
-            
+        // Calculate Application fees from ALL applications
+        applications.forEach(app => {
             app.applicationFees?.forEach(fee => {
                 if(checkDate(fee.applicationFeePaymentDate)) {
                     const amount = Number(fee.applicationFeeAmount) || 0;
-                    const feeData = { agencyName: app.agencyName, feeType: fee.applicationFeeType, paymentDate: formatDateSafe(fee.applicationFeePaymentDate), amount: fee.applicationFeeAmount };
+                    const feeData = { agencyName: app.agencyName, feeType: fee.applicationFeeType, paymentDate: formatDateSafe(fee.applicationFeePaymentDate), amount };
                     if (fee.applicationFeeType === "Agency Registration") {
                         data.agencyRegAppFee["Agency"] = (data.agencyRegAppFee["Agency"] || 0) + amount;
                         data.agencyRegAppFeeData.push(feeData);
@@ -150,6 +146,14 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     }
                 }
             });
+        });
+
+        // Calculate all other fees and counts from COMPLETED applications only
+        completedApps.forEach(app => {
+            if (checkDate(app.agencyRegistrationDate)) {
+                data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
+                data.agencyRegData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, regDate: formatDateSafe(app.agencyRegistrationDate), fee: app.agencyRegistrationFee });
+            }
 
             if (checkDate(app.agencyPaymentDate)) {
                  data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyRegistrationFee) || 0);
@@ -210,7 +214,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
 
         if (rigType === 'Agency') {
             records = Array.isArray(data) ? data : (data['Agency'] || []);
-        } else if (data[rigType]) {
+        } else if (data && data[rigType]) {
             records = data[rigType];
         }
 
@@ -246,7 +250,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         } else if (typeof data === 'object') {
             allRecords = Object.values(data).flat();
         }
-
+        
         if (allRecords.length > 0) {
             let columns: any[] = [];
             const dataWithSlNo = allRecords.map((r, i) => ({ ...r, slNo: i + 1 }));
