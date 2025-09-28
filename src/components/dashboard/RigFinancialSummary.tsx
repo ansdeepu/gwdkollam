@@ -176,14 +176,14 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                  const feeAmount = Number(app.agencyRegistrationFee) || 0;
                  if (feeAmount > 0) {
                     data.agencyRegFee["Agency"] += feeAmount;
-                    data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: feeAmount, type: 'Main' });
+                    data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyPaymentDate, fee: feeAmount });
                  }
             }
             if (checkDate(app.agencyAdditionalPaymentDate)) {
                  const feeAmount = Number(app.agencyAdditionalRegFee) || 0;
                  if (feeAmount > 0) {
                     data.agencyRegFee["Agency"] += feeAmount;
-                    data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyAdditionalPaymentDate, fee: feeAmount, type: 'Additional' });
+                    data.agencyRegFeeData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, paymentDate: app.agencyAdditionalPaymentDate, fee: feeAmount });
                  }
             }
 
@@ -200,14 +200,14 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     const feeAmount = Number(rig.registrationFee) || 0;
                     if (feeAmount > 0) {
                         data.rigRegFee[rigType] += feeAmount;
-                        data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: feeAmount, type: 'Main' });
+                        data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: feeAmount });
                     }
                 }
                  if (checkDate(rig.additionalPaymentDate)) {
                     const feeAmount = Number(rig.additionalRegistrationFee) || 0;
                     if (feeAmount > 0) {
                         data.rigRegFee[rigType] += feeAmount;
-                        data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.additionalPaymentDate, fee: feeAmount, type: 'Additional' });
+                        data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.additionalPaymentDate, fee: feeAmount });
                     }
                 }
                 
@@ -253,6 +253,8 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         if (rigType === 'Agency') {
             if (Array.isArray(dataSet)) {
                 records = dataSet;
+            } else {
+                 records = (dataSet as Record<string, any[]>)['Agency'] || [];
             }
         } else {
             const rigSpecificData = (dataSet as Record<string, any[]>)[rigType];
@@ -284,7 +286,8 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         else if (dataType === 'rigRegData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regDate', label: 'Reg Date'}];
         else if (dataType === 'renewalData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'renewalDate', label: 'Renewal Date'}];
         else if (dataType.includes('AppFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'feeType', label: 'Fee Type'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'amount', label: 'Amount', isNumeric: true}];
-        else if (dataType.includes('RegFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}, {key: 'type', label: 'Fee Type'}];
+        else if (dataType === 'agencyRegFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
+        else if (dataType === 'rigRegFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
         else if (dataType === 'renewalFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'renewalFee', label: 'Fee', isNumeric: true}];
     
         const processedData = records.map((row, index) => {
@@ -312,6 +315,8 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         let allRecords: any[] = [];
         if (dataType === 'agencyRegFeeData') {
             allRecords = summaryData.agencyRegFeeData;
+        } else if (dataType.includes('AppFeeData')) {
+            allRecords = (summaryData as any)[dataType] || [];
         } else if (typeof dataSet === 'object' && !Array.isArray(dataSet)) {
             allRecords = Object.values(dataSet).flat();
         } else if (Array.isArray(dataSet)) {
@@ -325,8 +330,9 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         else if (dataType === 'rigRegData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regDate', label: 'Reg Date'}];
         else if (dataType === 'renewalData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'renewalDate', label: 'Renewal Date'}];
         else if (dataType.includes('AppFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'feeType', label: 'Fee Type'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'amount', label: 'Amount', isNumeric: true}];
-        else if (dataType.includes('RegFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
-        else if (dataType === 'renewalFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'renewalFee', label: 'Fee', isNumeric: true}];
+        else if (dataType === 'agencyRegFeeData') columns = [{ key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
+        else if (dataType === 'rigRegFeeData') columns = [{ key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
+        else if (dataType === 'renewalFeeData') columns = [{ key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'renewalFee', label: 'Fee', isNumeric: true}];
     
         const sortKey = (dataType.includes('renewal') && !dataType.includes('Fee')) ? 'renewalDate' : (dataType.includes('Fee') || dataType.includes('AppFee')) ? 'paymentDate' : 'regDate';
         allRecords.sort((a, b) => {
