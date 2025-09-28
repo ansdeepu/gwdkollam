@@ -216,7 +216,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     }
     
     const formattedAndSortedData = dialogData
-        .sort((a, b) => (safeParseDate(b.paymentDate)?.getTime() || 0) - (safeParseDate(a.paymentDate)?.getTime() || 0))
+        .sort((a, b) => (safeParseDate(a.paymentDate)?.getTime() || 0) - (safeParseDate(b.paymentDate)?.getTime() || 0))
         .map((d, i) => ({
             ...d,
             slNo: i + 1,
