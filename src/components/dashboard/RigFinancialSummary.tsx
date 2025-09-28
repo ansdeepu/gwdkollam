@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -181,10 +182,10 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     let dialogData: Record<string, any>[] = [];
     
     if (title.includes("Agency Registration Application")) {
-      columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
+      columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Amount (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, amount: d.amount, paymentDate: safeParseDate(d.applicationFeePaymentDate) }));
     } else if (title.includes("Total Rig Registration Application")) {
-      columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
+      columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Amount (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, amount: d.amount, paymentDate: safeParseDate(d.applicationFeePaymentDate) }));
     } else if (title.includes("Agency Registration Fee")) {
         columns = [...baseCols, { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
