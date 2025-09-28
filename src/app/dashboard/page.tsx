@@ -169,10 +169,10 @@ export default function DashboardPage() {
             onOpenDialog={handleOpenDialog}
           />
            
-           <RigFinancialSummary 
-            applications={agencyApplications}
-            onOpenDialog={handleOpenDialog}
-          />
+           <RigFinancialSummary
+              applications={agencyApplications}
+              onCellClick={handleOpenDialog}
+            />
         </>
       )}
       
