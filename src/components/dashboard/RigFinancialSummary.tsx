@@ -144,7 +144,6 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
         completedApplications.forEach(app => {
             if (checkDate(app.agencyPaymentDate) || checkDate(app.agencyAdditionalPaymentDate)) {
                 if (!data.agencyRegCount["Agency"].records.some(r => r.id === app.id)) {
-                    data.agencyRegCount["Agency"].count++;
                     data.agencyRegCount["Agency"].records.push(app);
                 }
                 
@@ -161,6 +160,8 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                     data.agencyRegFee["Agency"].records.push(app);
                 }
             }
+            data.agencyRegCount["Agency"].count = data.agencyRegCount["Agency"].records.length;
+
 
             app.rigs?.forEach(rig => {
                 const rigType = rig.typeOfRig;
@@ -169,7 +170,6 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                 
                 if (checkDate(rig.paymentDate) || checkDate(rig.additionalPaymentDate)) {
                     if (!data.rigRegCount[sanitizedKey].records.some((r: any) => r.id === rig.id)) {
-                        data.rigRegCount[sanitizedKey].count++;
                         data.rigRegCount[sanitizedKey].records.push({ ...rig, agencyName: app.agencyName });
                     }
                     
@@ -186,15 +186,16 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                        data.rigRegFee[sanitizedKey].records.push({ ...rig, agencyName: app.agencyName });
                     }
                 }
+                 data.rigRegCount[sanitizedKey].count = data.rigRegCount[sanitizedKey].records.length;
                 
                 rig.renewals?.forEach(renewal => {
                     if (checkDate(renewal.paymentDate)) {
-                        data.renewalCount[sanitizedKey].count++;
-                        data.renewalFee[sanitizedKey].amount += (Number(renewal.renewalFee) || 0);
                         data.renewalCount[sanitizedKey].records.push({ ...renewal, rigType: rig.typeOfRig, agencyName: app.agencyName });
+                        data.renewalFee[sanitizedKey].amount += (Number(renewal.renewalFee) || 0);
                         data.renewalFee[sanitizedKey].records.push({ ...renewal, rigType: rig.typeOfRig, agencyName: app.agencyName });
                     }
                 });
+                data.renewalCount[sanitizedKey].count = data.renewalCount[sanitizedKey].records.length;
             });
         });
         
@@ -234,6 +235,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                     agencyName: record.agencyName,
                     paymentDate: paymentDate ? format(safeParseDate(paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     fee: totalFee.toLocaleString('en-IN'),
+                    regNo: record.agencyRegistrationNo || 'N/A',
                 };
             });
         } else if (title.includes("Rig Registration Applications")) {
@@ -278,8 +280,8 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                 { key: 'amount', label: 'Amount (₹)', isNumeric: true },
             ];
              dialogData = records.map((record, index) => {
-                const paymentDate = record.paymentDate || record.applicationFeePaymentDate;
-                const amount = record.renewalFee || record.applicationFeeAmount || record.registrationFee || 0;
+                const paymentDate = record.paymentDate || record.applicationFeePaymentDate || record.agencyPaymentDate;
+                const amount = record.renewalFee || record.applicationFeeAmount || record.registrationFee || ((Number(record.agencyRegistrationFee) || 0) + (Number(record.agencyAdditionalRegFee) || 0));
                 return {
                     slNo: index + 1,
                     agencyName: record.agencyName,
@@ -290,11 +292,11 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
         }
         
         const sortedData = dialogData.sort((a, b) => {
-            const dateA = safeParseDate(a.paymentDate);
-            const dateB = safeParseDate(b.paymentDate);
+            const dateA = a.paymentDate === 'N/A' ? null : parse(a.paymentDate, 'dd/MM/yyyy', new Date());
+            const dateB = b.paymentDate === 'N/A' ? null : parse(b.paymentDate, 'dd/MM/yyyy', new Date());
             if (!dateA && !dateB) return 0;
-            if (!dateA) return -1;
-            if (!dateB) return 1;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
             return dateA.getTime() - dateB.getTime();
         }).map((item, index) => ({ ...item, slNo: index + 1 }));
 
