@@ -36,7 +36,6 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
   { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
-  { href: '/dashboard/office-details', label: 'Settings', icon: Landmark, roles: ['editor', 'viewer'] },
   { href: '/dashboard/help', label: 'Help & About', icon: HelpCircle },
 ];
 
