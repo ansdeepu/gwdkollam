@@ -27,6 +27,7 @@ const db = getFirestore(app);
 
 // Schemas
 const OfficeDetailsSchema = z.object({
+  id: z.string().optional(),
   officeName: z.string().min(1, "Office name is required."),
   address: z.string().min(1, "Address is required."),
   phone: z.string().optional(),
@@ -137,7 +138,8 @@ export default function OfficeDetailsPage() {
       const officeDetailsQuery = query(collection(db, 'officeDetails'));
       const officeSnapshot = await getDocs(officeDetailsQuery);
       if (!officeSnapshot.empty) {
-        const officeData = officeSnapshot.docs[0].data() as OfficeDetailsFormData;
+        const officeDoc = officeSnapshot.docs[0];
+        const officeData = { id: officeDoc.id, ...officeDoc.data() } as OfficeDetailsFormData;
         setOfficeDetails(officeData);
         officeDetailsForm.reset(officeData);
       }
@@ -162,19 +164,25 @@ export default function OfficeDetailsPage() {
   const handleOfficeDetailsSubmit = async (data: OfficeDetailsFormData) => {
     setIsSubmitting(true);
     try {
-      const officeDetailsRef = collection(db, 'officeDetails');
-      const officeSnapshot = await getDocs(query(officeDetailsRef));
-      if (officeSnapshot.empty) {
-        await addDoc(officeDetailsRef, data);
-      } else {
-        const docId = officeSnapshot.docs[0].id;
-        await updateDoc(doc(db, 'officeDetails', docId), data);
-      }
-      toast({ title: "Success", description: "Office details have been saved." });
+        const { id, ...payload } = data; // Destructure to remove id
+        const officeDetailsRef = collection(db, 'officeDetails');
+        
+        if (id) {
+            // Update existing document
+            const docRef = doc(officeDetailsRef, id);
+            await updateDoc(docRef, payload);
+        } else {
+            // Add new document if no ID exists (e.g., first time setup)
+            await addDoc(officeDetailsRef, payload);
+        }
+
+        toast({ title: "Success", description: "Office details have been saved." });
+        await fetchData(); // Refetch to get the new ID if one was created
     } catch (error) {
-      toast({ title: "Error", description: "Failed to save office details.", variant: "destructive" });
+        console.error("Error saving office details: ", error);
+        toast({ title: "Error", description: "Failed to save office details.", variant: "destructive" });
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
   

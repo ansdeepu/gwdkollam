@@ -478,6 +478,3 @@ export const AgencyApplicationSchema = z.object({
   remarks: z.string().optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
-
-
-    
