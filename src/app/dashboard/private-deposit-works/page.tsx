@@ -1,4 +1,4 @@
-// src/app/dashboard/file-room/page.tsx
+// src/app/dashboard/private-deposit-works/page.tsx
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -39,16 +39,15 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 
-export default function FileManagerPage() {
+export default function PrivateDepositWorksPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
-  const searchParams = useSearchParams();
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
-      ? 'List of all sites assigned to you, including ongoing and completed works.'
-      : 'List of all public and government deposit works in the system, sorted by most recent remittance.';
-    setHeader('Deposit Works', description);
+      ? 'List of all privately funded sites assigned to you.'
+      : 'List of all deposit works funded by private individuals or institutions.';
+    setHeader('Private Deposit Works', description);
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,24 +56,23 @@ export default function FileManagerPage() {
   const { setIsNavigating } = usePageNavigation();
   
   const canCreate = user?.role === 'editor';
-  
-  const currentlyEditingFileId = searchParams.get('id');
 
-  const depositWorkEntries = useMemo(() => {
+  const privateDepositWorkEntries = useMemo(() => {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
-      // For supervisors, show all files where they are assigned to at least one site.
+      // For supervisors, show all files where they are assigned to at least one site and the application type is private.
       entries = fileEntries
+        .filter(entry => entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
           return { ...entry, siteDetails: assignedSites };
         })
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     } else {
-      // For other roles, filter out ARS-only files and Private works.
+      // For other roles, filter for private application types and exclude ARS-only files.
       entries = fileEntries
-        .filter(entry => entry.applicationType && !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
+        .filter(entry => entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
           return { ...entry, siteDetails: nonArsSites };
@@ -82,7 +80,6 @@ export default function FileManagerPage() {
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     }
 
-    // Clone the array before sorting to avoid mutating the original
     const sortedEntries = [...entries];
 
     // Sort all entries by the first remittance date, newest first.
@@ -126,7 +123,7 @@ export default function FileManagerPage() {
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
+                Total Files: <span className="font-bold text-primary">{privateDepositWorkEntries.length}</span>
               </div>
               {canCreate && (
                 <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
@@ -140,7 +137,7 @@ export default function FileManagerPage() {
       
       <FileDatabaseTable 
         searchTerm={searchTerm} 
-        fileEntries={depositWorkEntries} 
+        fileEntries={privateDepositWorkEntries} 
       />
     </div>
   );

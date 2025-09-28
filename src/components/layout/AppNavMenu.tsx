@@ -27,6 +27,7 @@ export interface NavItem {
 export const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/file-room', label: 'Deposit Works', icon: FolderOpen },
+  { href: '/dashboard/private-deposit-works', label: 'Private Deposit Works', icon: Landmark },
   { href: '/dashboard/ars', label: 'ARS', icon: Waves },
   { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList, roles: ['editor', 'viewer', 'supervisor'] },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
