@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigRegistrationOverview.tsx
 "use client";
 
