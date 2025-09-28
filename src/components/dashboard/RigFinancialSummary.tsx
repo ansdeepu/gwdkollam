@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -61,33 +62,50 @@ const formatDateSafe = (d: any): string => {
     return date ? format(date, 'dd/MM/yyyy') : 'N/A';
 };
 
-const FinancialRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType) => void; onTotalClick: () => void; }) => (
+const FinancialRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType | "Agency") => void; onTotalClick: () => void; }) => (
     <TableRow>
       <TableHead>{label}</TableHead>
-      {rigTypeColumns.map(rigType => (
-        <TableCell key={rigType} className="text-center">
-            <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType)} className="p-0 h-auto font-semibold">{data[rigType] || 0}</Button>
-        </TableCell>
-      ))}
+      {label === "No. of Agency Registrations" ? (
+        <>
+            <TableCell colSpan={rigTypeColumns.length} className="text-center font-bold">
+                 <Button variant="link" disabled={!total} onClick={() => onCellClick("Agency")} className="p-0 h-auto font-bold">{total}</Button>
+            </TableCell>
+        </>
+      ) : (
+        rigTypeColumns.map(rigType => (
+            <TableCell key={rigType} className="text-center">
+                <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType as RigType)} className="p-0 h-auto font-semibold">{data[rigType] || 0}</Button>
+            </TableCell>
+        ))
+      )}
        <TableCell className="text-center font-bold">
             <Button variant="link" disabled={!total} onClick={onTotalClick} className="p-0 h-auto font-bold">{total}</Button>
        </TableCell>
     </TableRow>
 );
 
-const FinancialAmountRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType | "Agency") => void; onTotalClick: () => void; }) => (
+const FinancialAmountRow = ({ label, data, total, onCellClick, onTotalClick }: { label: string; data: Record<string, number>; total: number; onCellClick: (rigType: RigType | "Agency") => void; onTotalClick: () => void; }) => {
+    const isAgencyRow = label.toLowerCase().includes('agency');
+    
+    return (
     <TableRow>
       <TableHead>{label}</TableHead>
-      {rigTypeColumns.map(rigType => (
-        <TableCell key={rigType} className="text-right font-mono">
-            <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType as RigType)} className="p-0 h-auto font-mono text-right w-full block">{(data[rigType] || 0).toLocaleString('en-IN')}</Button>
-        </TableCell>
-      ))}
+      {isAgencyRow ? (
+         <TableCell colSpan={rigTypeColumns.length} className="text-right font-mono font-bold">
+              <Button variant="link" disabled={!data["Agency"]} onClick={() => onCellClick("Agency")} className="p-0 h-auto font-mono text-right w-full block">{(data["Agency"] || 0).toLocaleString('en-IN')}</Button>
+         </TableCell>
+      ) : (
+        rigTypeColumns.map(rigType => (
+            <TableCell key={rigType} className="text-right font-mono">
+                <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType as RigType)} className="p-0 h-auto font-mono text-right w-full block">{(data[rigType] || 0).toLocaleString('en-IN')}</Button>
+            </TableCell>
+        ))
+      )}
        <TableCell className="text-right font-bold font-mono">
             <Button variant="link" disabled={!total} onClick={onTotalClick} className="p-0 h-auto font-mono font-bold text-right w-full block">{total.toLocaleString('en-IN')}</Button>
        </TableCell>
     </TableRow>
-);
+)};
 
 
 export default function RigFinancialSummary({ applications, onCellClick }: RigFinancialSummaryProps) {
@@ -266,7 +284,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     if (col.accessor) {
                         newRow[col.key] = col.accessor(row);
                     } else if (col.isNumeric) {
-                        newRow[col.key] = (Number(row[col.key]) || 0).toLocaleString('en-IN');
+                        newRow[col.key] = (Number(row[col.key]||row['amount']||row['fee']||row['renewalFee']) || 0).toLocaleString('en-IN');
                     }
                      else {
                         newRow[col.key] = row[col.key];
@@ -333,7 +351,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     if (col.accessor) {
                         newRow[col.key] = col.accessor(row);
                     } else if (col.isNumeric) {
-                        newRow[col.key] = (Number(row[col.key]) || 0).toLocaleString('en-IN');
+                        newRow[col.key] = (Number(row[col.key]||row['amount']||row['fee']||row['renewalFee']) || 0).toLocaleString('en-IN');
                     } else {
                         newRow[col.key] = row[col.key];
                     }
@@ -367,7 +385,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <FinancialRow label="No. of Agency Registrations" data={summaryData.agencyRegCount} total={summaryData.totals.agencyRegCount} onCellClick={() => {}} onTotalClick={() => handleTotalClick('agencyRegData', 'Total Agency Registrations')} />
+                            <FinancialRow label="No. of Agency Registrations" data={summaryData.agencyRegCount} total={summaryData.totals.agencyRegCount} onCellClick={(rt) => handleCellClick('agencyRegData', rt, 'Agency Registrations')} onTotalClick={() => handleTotalClick('agencyRegData', 'Total Agency Registrations')} />
                             <FinancialRow label="No. of Rig Registrations" data={summaryData.rigRegCount} total={summaryData.totals.rigRegCount} onCellClick={(rt) => handleCellClick('rigRegData', rt, `${rt} Registrations`)} onTotalClick={() => handleTotalClick('rigRegData', 'Total Rig Registrations')}/>
                             <FinancialRow label="No. of Renewals" data={summaryData.renewalCount} total={summaryData.totals.renewalCount} onCellClick={(rt) => handleCellClick('renewalData', rt, `${rt} Renewals`)} onTotalClick={() => handleTotalClick('renewalData', 'Total Rig Renewals')}/>
                             
