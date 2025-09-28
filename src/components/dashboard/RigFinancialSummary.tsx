@@ -225,6 +225,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
              columns = [
                 { key: 'slNo', label: 'Sl. No.' },
                 { key: 'agencyName', label: 'Name of Agency' },
+                { key: 'regNo', label: 'Registration No.' },
                 { key: 'paymentDate', label: 'Payment Date' },
                 { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
             ];
@@ -234,6 +235,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                 return {
                     slNo: index + 1,
                     agencyName: record.agencyName,
+                    regNo: record.agencyRegistrationNo || 'N/A',
                     paymentDate: paymentDate ? format(safeParseDate(paymentDate)!, 'dd/MM/yyyy') : 'N/A',
                     fee: totalFee.toLocaleString('en-IN'),
                 };
