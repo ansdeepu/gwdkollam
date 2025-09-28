@@ -174,12 +174,12 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
    const handleCellClick = (records: any[], title: string) => {
     if (!records || records.length === 0) return;
 
-    let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
-    let dialogData: Record<string, any>[] = [];
     const baseCols = [
         { key: 'slNo', label: 'Sl. No.' },
         { key: 'agencyName', label: 'Agency Name' },
     ];
+    let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
+    let dialogData: Record<string, any>[] = [];
     
     if (title.includes("Agency Registration Application")) {
       columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
@@ -320,7 +320,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
                         {rigColumns.map(type => <TableCell key={type} className="text-center p-2">0</TableCell>)}
                         {renderAmountTableCell(financialData.rigAppFee.Total, "Total Rig Registration Application Fee")}
                     </TableRow>
-                    
+
                     <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">No. of Applications</TableCell></TableRow>
                     <TableRow>
                         <TableCell className="p-2 pl-6">Agency Registration</TableCell>
@@ -329,12 +329,12 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
                     </TableRow>
                      <TableRow>
                         <TableCell className="p-2 pl-6">Rig Registration</TableCell>
-                        {rigColumns.map(type => renderTableCell(financialData.rigReg[type], `Rig Registration Fee - ${type}`))}
+                        {rigColumns.map(type => renderTableCell(financialData.rigReg[type], `No. of Applications - Rig Registration Fee - ${type}`))}
                         {renderTableCell(financialData.rigReg.Total, "Total - No. of Rig Registration Applications")}
                     </TableRow>
                     <TableRow>
                         <TableCell className="p-2 pl-6">Rig Registration Renewal</TableCell>
-                         {rigColumns.map(type => renderTableCell(financialData.rigRenewal[type], `Rig Registration Renewal - ${type}`))}
+                         {rigColumns.map(type => renderTableCell(financialData.rigRenewal[type], `No. of Applications - Rig Registration Renewal - ${type}`))}
                         {renderTableCell(financialData.rigRenewal.Total, "Total - No. of Rig Registration Renewal Applications")}
                     </TableRow>
 
