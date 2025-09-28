@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -26,6 +27,15 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 const rigColumns: RigType[] = ["Hand Bore", "Filter Point Rig", "Calyx Rig", "Rotary Rig", "DTH Rig", "Rotary cum DTH Rig"];
+const rigHeaderLabels: Record<RigType, string> = {
+    "Hand Bore": "Hand<br/>Bore",
+    "Filter Point Rig": "Filter<br/>Point Rig",
+    "Calyx Rig": "Calyx<br/>Rig",
+    "Rotary Rig": "Rotary<br/>Rig",
+    "DTH Rig": "DTH<br/>Rig",
+    "Rotary cum DTH Rig": "Rotary<br/>cum<br/>DTH Rig",
+};
+
 
 interface FinancialMetric {
   count: number;
@@ -262,9 +272,9 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
             <Table className="min-w-max border">
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[300px] font-bold p-2">Description</TableHead>
-                        {rigColumns.map(type => <TableHead key={type} className="text-center font-bold p-2">{type}</TableHead>)}
-                        <TableHead className="text-center font-bold p-2">Total</TableHead>
+                        <TableHead className="w-[300px] font-bold p-2 text-sm">Description</TableHead>
+                        {rigColumns.map(type => <TableHead key={type} className="text-center font-bold p-1 text-xs" dangerouslySetInnerHTML={{ __html: rigHeaderLabels[type] }} />)}
+                        <TableHead className="text-center font-bold p-2 text-sm">Total</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
