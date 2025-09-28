@@ -111,71 +111,6 @@ export default function DashboardPage() {
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
-  const rigRegistrationData = useMemo(() => {
-    if (agenciesLoading) return null;
-
-    const allRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
-    const activeRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
-    const expiredRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
-    const cancelledRigs: (RigRegistration & {agencyName: string, ownerName: string})[] = [];
-    const expiredThisMonthRigs: (RigRegistration & { agencyName: string; ownerName: string; })[] = [];
-    
-    const today = new Date();
-    const startOfCurrentMonth = startOfMonth(today);
-    const endOfCurrentMonth = endOfMonth(today);
-
-    const completedAgencyApplications = agencyApplications.filter(app => app.status === 'Active');
-
-    completedAgencyApplications.forEach(app => {
-        (app.rigs || []).forEach(rig => {
-            const rigWithContext = { ...rig, agencyName: app.agencyName, ownerName: app.owner.name };
-            allRigs.push(rigWithContext);
-
-            if (rig.status === 'Active') {
-                const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
-                    ? [...rig.renewals].sort((a, b) => {
-                        const dateA = a.renewalDate ? safeParseDate(a.renewalDate)?.getTime() ?? 0 : 0;
-                        const dateB = b.renewalDate ? safeParseDate(b.renewalDate)?.getTime() ?? 0 : 0;
-                        return dateB - dateA;
-                    })[0].renewalDate
-                    : rig.registrationDate;
-
-                if (lastEffectiveDate) {
-                    const validityDate = new Date(addYears(new Date(lastEffectiveDate), 1).getTime() - 24 * 60 * 60 * 1000);
-                    if (isValid(validityDate) && new Date() > validityDate) {
-                        expiredRigs.push(rigWithContext);
-                        // Check if it expired this month
-                        if (isWithinInterval(validityDate, { start: startOfCurrentMonth, end: endOfCurrentMonth })) {
-                            expiredThisMonthRigs.push(rigWithContext);
-                        }
-                    } else {
-                        activeRigs.push(rigWithContext);
-                    }
-                } else {
-                    activeRigs.push(rigWithContext); // If no date, consider it active but not expired
-                }
-            } else if (rig.status === 'Cancelled') {
-              cancelledRigs.push(rigWithContext);
-            }
-        });
-    });
-
-    return {
-        totalAgencies: completedAgencyApplications.length,
-        totalRigs: allRigs.length,
-        activeRigs: activeRigs.length,
-        expiredRigs: expiredRigs.length,
-        expiredThisMonthRigs: expiredThisMonthRigs.length,
-        cancelledRigs: cancelledRigs.length,
-        allAgenciesData: completedAgencyApplications,
-        allRigsData: allRigs,
-        activeRigsData: activeRigs,
-        expiredRigsData: expiredRigs,
-        expiredThisMonthRigsData: expiredThisMonthRigs,
-        cancelledRigsData: cancelledRigs,
-    };
-  }, [agencyApplications, agenciesLoading]);
-
   const handleOpenDialog = useCallback((
     data: any[],
     title: string,
@@ -237,12 +172,10 @@ export default function DashboardPage() {
             onSetDates={setArsDates}
           />
           
-          {rigRegistrationData && (
-            <RigRegistrationOverview 
-              data={rigRegistrationData}
-              onCardClick={(data, title) => handleOpenRigDialog(data, title, [])}
-            />
-          )}
+          <RigRegistrationOverview 
+            agencyApplications={agencyApplications}
+            onOpenDialog={handleOpenRigDialog}
+          />
            
            <RigFinancialSummary 
             agencyApplications={agencyApplications}
