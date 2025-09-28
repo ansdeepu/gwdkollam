@@ -247,28 +247,28 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
         let columns: { key: string; label: string; isNumeric?: boolean; }[];
         let dialogData: Record<string, any>[];
         
-        if (title.includes("No. of Agency Registration")) {
+        if (title.includes("No. of Agency Registration Applications")) {
             columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true }, ];
             dialogData = records.map(record => ({
                 agencyName: record.agencyName,
+                regNo: record.agencyRegistrationNo || 'N/A',
                 fee: ((Number(record.agencyRegistrationFee) || 0) + (Number(record.agencyAdditionalRegFee) || 0)).toLocaleString('en-IN'),
                 paymentDate: safeParseDate(record.agencyPaymentDate || record.agencyAdditionalPaymentDate)
             }));
         } else if (title.startsWith("Total - No. of Rig Registration Applications")) {
-             columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'rigRegistrationNo', label: 'Registration No'}, { key: 'typeOfRig', label: 'Type of Rig'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }, ];
+             columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'typeOfRig', label: 'Type of Rig'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }, ];
              dialogData = records.map((record) => {
                 const paymentDate = record.paymentDate || record.additionalPaymentDate;
                 const fee = (Number(record.registrationFee) || 0) + (Number(record.additionalRegistrationFee) || 0);
                 return {
                     agencyName: record.agencyName,
-                    rigRegistrationNo: record.rigRegistrationNo,
                     typeOfRig: record.typeOfRig || 'N/A',
                     paymentDate: safeParseDate(paymentDate),
                     fee: fee.toLocaleString('en-IN'),
                 };
             });
         } else if (title.startsWith("Total - No. of Rig Registration Renewal Applications")) {
-             columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'rigRegistrationNo', label: 'Rig Registration No' }, { key: 'typeOfRig', label: 'Type of Rig'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }, ];
+             columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'rigRegistrationNo', label: 'Rig Registration No' }, { key: 'typeOfRig', label: 'Type of Rig'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true } ];
              dialogData = records.map((record) => ({
                 agencyName: record.agencyName,
                 rigRegistrationNo: record.rigRegistrationNo,
