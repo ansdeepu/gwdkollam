@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -156,10 +157,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
 
                     if (fee.applicationFeeType === "Agency Registration") {
                         data.agencyRegAppFee["Agency"] = (data.agencyRegAppFee["Agency"] || 0) + amount;
-                        data.agencyRegAppFeeData.push(feeData);
+                        if(amount > 0) data.agencyRegAppFeeData.push(feeData);
                     } else if (fee.applicationFeeType === "Rig Registration") {
                          data.rigRegAppFee["Agency"] = (data.rigRegAppFee["Agency"] || 0) + amount;
-                         data.rigRegAppFeeData.push(feeData);
+                         if(amount > 0) data.rigRegAppFeeData.push(feeData);
                     }
                 }
             });
@@ -304,7 +305,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         onCellClick(processedData, title, columns);
     };
 
-    const handleTotalClick = (dataType: keyof SummaryData, title: string) => {
+    const handleTotalClick = (dataType: keyof Omit<SummaryData, 'totals' | 'grandTotalOfFees'>, title: string) => {
         const dataSet = summaryData[dataType];
         if (!dataSet) return;
     
@@ -316,10 +317,35 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         }
         
         if (allRecords.length === 0) return;
+    
+        let columns: any[] = [];
+        if (dataType === 'agencyRegData') columns = [{ key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'regDate', label: 'Reg Date'}];
+        else if (dataType === 'rigRegData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regDate', label: 'Reg Date'}];
+        else if (dataType === 'renewalData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'renewalDate', label: 'Renewal Date'}];
+        else if (dataType.includes('AppFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'feeType', label: 'Fee Type'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'amount', label: 'Amount', isNumeric: true}];
+        else if (dataType.includes('RegFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}, {key: 'type', label: 'Fee Type'}];
+        else if (dataType === 'renewalFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'renewalFee', label: 'Fee', isNumeric: true}];
+    
+        const sortKey = (dataType.includes('renewal') && !dataType.includes('Fee')) ? 'renewalDate' : (dataType.includes('Fee') || dataType.includes('AppFee')) ? 'paymentDate' : 'regDate';
+        allRecords.sort((a, b) => {
+            const dateA = safeParseDate(a[sortKey]);
+            const dateB = safeParseDate(b[sortKey]);
+            if (!dateA) return 1; if (!dateB) return -1;
+            return dateA.getTime() - dateB.getTime();
+        });
+        
+        const processedData = allRecords.map((row, index) => {
+            const newRow: any = { slNo: index + 1 };
+            columns.slice(1).forEach(col => {
+                const value = row[col.key];
+                if (col.key.toLowerCase().includes('date')) { newRow[col.key] = formatDateSafe(value); } 
+                else if (col.isNumeric) { newRow[col.key] = (Number(value) || 0).toLocaleString('en-IN'); }
+                else { newRow[col.key] = value || 'N/A'; }
+            });
+            return newRow;
+        });
 
-        // Since we are combining data from multiple rig types, we can't just pass one rigType.
-        // We'll pass a generic title and handle the column/data creation within this function.
-        handleCellClick(dataType, 'Agency', title);
+        onCellClick(processedData, title, columns);
     };
 
 
@@ -345,15 +371,15 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <FinancialRow label="No. of Agency Registrations" data={summaryData.agencyRegCount} total={summaryData.totals.agencyRegCount} onCellClick={(rt) => handleCellClick('agencyRegData', rt, 'Agency Registrations')} onTotalClick={() => handleCellClick('agencyRegData', 'Agency', 'Total Agency Registrations')} />
+                            <FinancialRow label="No. of Agency Registrations" data={summaryData.agencyRegCount} total={summaryData.totals.agencyRegCount} onCellClick={(rt) => handleCellClick('agencyRegData', rt, 'Agency Registrations')} onTotalClick={() => handleTotalClick('agencyRegData', 'Total Agency Registrations')} />
                             <FinancialRow label="No. of Rig Registrations" data={summaryData.rigRegCount} total={summaryData.totals.rigRegCount} onCellClick={(rt) => handleCellClick('rigRegData', rt, `${rt} Registrations`)} onTotalClick={() => handleTotalClick('rigRegData', 'Total Rig Registrations')}/>
                             <FinancialRow label="No. of Renewals" data={summaryData.renewalCount} total={summaryData.totals.renewalCount} onCellClick={(rt) => handleCellClick('renewalData', rt, `${rt} Renewals`)} onTotalClick={() => handleTotalClick('renewalData', 'Total Rig Renewals')}/>
                             
                             <TableRow className="bg-secondary/50 font-semibold"><TableCell colSpan={8} className="p-2">fees details (₹)</TableCell></TableRow>
                             
-                            <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} onCellClick={(rt) => handleCellClick('agencyRegAppFeeData', rt, 'Agency Application Fees')} onTotalClick={() => handleCellClick('agencyRegAppFeeData', 'Agency', 'Total Agency Application Fees')} />
-                            <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} onCellClick={(rt) => handleCellClick('rigRegAppFeeData', rt, 'Rig Application Fees')} onTotalClick={() => handleCellClick('rigRegAppFeeData', 'Agency', 'Total Rig Application Fees')} />
-                            <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} onCellClick={(rt) => handleCellClick('agencyRegFeeData', rt, 'Agency Registration Fees')} onTotalClick={() => handleCellClick('agencyRegFeeData', 'Agency', 'Total Agency Registration Fees')} />
+                            <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} onCellClick={(rt) => handleCellClick('agencyRegAppFeeData', rt, 'Agency Application Fees')} onTotalClick={() => handleTotalClick('agencyRegAppFeeData', 'Total Agency Application Fees')} />
+                            <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} onCellClick={(rt) => handleCellClick('rigRegAppFeeData', rt, 'Rig Application Fees')} onTotalClick={() => handleTotalClick('rigRegAppFeeData', 'Total Rig Application Fees')} />
+                            <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} onCellClick={(rt) => handleCellClick('agencyRegFeeData', rt, 'Agency Registration Fees')} onTotalClick={() => handleTotalClick('agencyRegFeeData', 'Total Agency Registration Fees')} />
                             <FinancialAmountRow label="Rig Registration Fee" data={summaryData.rigRegFee} total={summaryData.totals.rigRegFee} onCellClick={(rt) => handleCellClick('rigRegFeeData', rt, `${rt} Registration Fees`)} onTotalClick={() => handleTotalClick('rigRegFeeData', 'Total Rig Registration Fees')} />
                             <FinancialAmountRow label="Rig Registration Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} onCellClick={(rt) => handleCellClick('renewalFeeData', rt, `${rt} Renewal Fees`)} onTotalClick={() => handleTotalClick('renewalFeeData', 'Total Rig Renewal Fees')} />
                         </TableBody>
