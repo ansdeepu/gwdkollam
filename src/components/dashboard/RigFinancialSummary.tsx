@@ -213,9 +213,9 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             const dateA = safeParseDate(a.paymentDate || a.agencyPaymentDate || a.applicationFeePaymentDate);
             const dateB = safeParseDate(b.paymentDate || b.agencyPaymentDate || b.applicationFeePaymentDate);
             if (!dateA && !dateB) return 0;
-            if (!dateA) return -1; // Keep records with dates first
+            if (!dateA) return -1;
             if (!dateB) return 1;
-            return dateA.getTime() - dateB.getTime(); // Ascending order
+            return dateA.getTime() - dateB.getTime();
         });
 
         let columns: { key: string; label: string; isNumeric?: boolean; }[];
