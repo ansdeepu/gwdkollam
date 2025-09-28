@@ -201,32 +201,43 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
         { key: 'ownerName', label: 'Owner' },
         { key: 'regNo', label: 'Rig Reg. No.' },
         { key: 'typeOfRig', label: 'Type of Rig' },
-        { key: 'validity', label: 'Validity Upto' },
+        { key: 'dateOfExpiry', label: 'Date of Expiry' },
     ];
     
     const dialogData = data.map((item, index) => {
-        let validity = 'N/A';
-        if (item.status === 'Active') {
-            const lastDate = item.renewals?.length > 0 ? [...item.renewals].sort((a: any, b: any) => (safeParseDate(b.renewalDate)?.getTime() ?? 0) - (safeParseDate(a.renewalDate)?.getTime() ?? 0))[0].renewalDate : item.registrationDate;
-            if(lastDate) {
-                const validityDate = new Date(addYears(new Date(lastDate), 1).getTime() - 24 * 60 * 60 * 1000);
-                if (isValid(validityDate)) validity = format(validityDate, 'dd/MM/yyyy');
+        let dateOfExpiry = 'N/A';
+        const lastDate = item.renewals?.length > 0 ? [...item.renewals].sort((a: any, b: any) => (safeParseDate(b.renewalDate)?.getTime() ?? 0) - (safeParseDate(a.renewalDate)?.getTime() ?? 0))[0].renewalDate : item.registrationDate;
+        
+        if (lastDate) {
+            const expiryDate = new Date(addYears(new Date(lastDate), 1).getTime() - 24 * 60 * 60 * 1000);
+            if (isValid(expiryDate)) {
+                dateOfExpiry = format(expiryDate, 'dd/MM/yyyy');
             }
-        } else if (item.status === 'Cancelled') {
-            validity = 'Cancelled';
         }
+        
+        if (item.status === 'Cancelled') {
+            dateOfExpiry = `Cancelled on ${formatDateSafe(item.cancellationDate)}`;
+        }
+
         return {
             slNo: index + 1,
             agencyName: item.agencyName,
             ownerName: item.ownerName,
             regNo: item.rigRegistrationNo || 'N/A',
             typeOfRig: item.typeOfRig || 'N/A',
-            validity,
+            dateOfExpiry: dateOfExpiry,
         };
     });
 
     onOpenDialog(dialogData, title, columns);
   };
+  
+    const formatDateSafe = (d: any): string => {
+        if (!d) return 'N/A';
+        const date = safeParseDate(d);
+        return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+    }
+
 
   const handleAgencyClick = () => {
     const columns = [
