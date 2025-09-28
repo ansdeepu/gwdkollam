@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -82,8 +83,8 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
     const completedApplications = agencyApplications.filter(app => app.status === 'Active');
     
-    agencyReg.records = completedApplications.map(app => ({...app, fee: (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0), paymentDate: safeParseDate(app.agencyPaymentDate) || safeParseDate(app.agencyAdditionalPaymentDate) }));
-    agencyReg.count = agencyReg.records.length;
+    agencyReg.records = completedApplications;
+    agencyReg.count = completedApplications.length;
 
 
     agencyApplications.forEach(app => {
@@ -379,3 +380,4 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     </Card>
   );
 }
+
