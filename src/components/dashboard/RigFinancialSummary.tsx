@@ -164,34 +164,39 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
     let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
     let dialogData: Record<string, any>[] = [];
+
+    const baseCols = [
+        { key: 'slNo', label: 'Sl. No.' },
+        { key: 'agencyName', label: 'Agency Name' },
+    ];
     
     if (title.includes("Agency Registration Application")) {
       columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
-      dialogData = records.map(d => ({ ...d, amount: d.amount }));
+      dialogData = records.map(d => ({ ...d, amount: d.amount, paymentDate: safeParseDate(d.applicationFeePaymentDate) }));
     } else if (title.includes("Total Rig Registration Application")) {
       columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
-      dialogData = records.map(d => ({ ...d, amount: d.amount }));
+      dialogData = records.map(d => ({ ...d, amount: d.amount, paymentDate: safeParseDate(d.applicationFeePaymentDate) }));
     } else if (title.includes("Agency Registration Fee")) {
       columns = [...baseCols, { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, regNo: d.agencyRegistrationNo }));
     } else if (title.startsWith("Total - No. of Rig Registration Applications")) {
       columns = [
-          { key: 'slNo', label: 'Sl. No.' },
-          { key: 'agencyName', label: 'Name of Agency' },
-          { key: 'typeOfRig', label: 'Type of Rig' },
-          { key: 'paymentDate', label: 'Payment Date' },
-          { key: 'fee', label: 'Fee (₹)', isNumeric: true },
-      ];
-      dialogData = records.map((record) => {
-          const paymentDate = record.paymentDate || record.additionalPaymentDate;
-          const fee = (Number(record.registrationFee) || 0) + (Number(record.additionalRegistrationFee) || 0);
-          return {
-              agencyName: record.agencyName,
-              typeOfRig: record.typeOfRig || 'N/A',
-              paymentDate: safeParseDate(paymentDate),
-              fee: fee,
-          };
-      });
+        { key: 'slNo', label: 'Sl. No.' },
+        { key: 'agencyName', label: 'Name of Agency' },
+        { key: 'typeOfRig', label: 'Type of Rig' },
+        { key: 'paymentDate', label: 'Payment Date' },
+        { key: 'fee', label: 'Fee (₹)', isNumeric: true },
+    ];
+    dialogData = records.map((record) => {
+        const paymentDate = record.paymentDate || record.additionalPaymentDate;
+        const fee = (Number(record.registrationFee) || 0) + (Number(record.additionalRegistrationFee) || 0);
+        return {
+            agencyName: record.agencyName,
+            typeOfRig: record.typeOfRig || 'N/A',
+            paymentDate: safeParseDate(paymentDate),
+            fee: fee,
+        };
+    });
     } else if (title.includes("Rig Registration Fee")) {
       columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, fee: (Number(d.registrationFee) || 0) + (Number(d.additionalRegistrationFee) || 0), paymentDate: d.paymentDate || d.additionalPaymentDate }));
@@ -213,11 +218,6 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
       columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0) }));
     }
-    
-    const baseCols = [
-        { key: 'slNo', label: 'Sl. No.' },
-        { key: 'agencyName', label: 'Agency Name' },
-    ];
     
     const formattedAndSortedData = dialogData
         .sort((a, b) => (safeParseDate(a.paymentDate)?.getTime() || 0) - (safeParseDate(b.paymentDate)?.getTime() || 0))
@@ -338,9 +338,9 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
                         {rigColumns.map(type => (
                             <TableCell key={`grand-total-${type}`} className="text-center p-2 font-bold text-primary">
                                 {(
-                                    financialData.rigAppFee[type].amount +
-                                    financialData.rigReg[type].amount +
-                                    financialData.rigRenewal[type].amount
+                                    (financialData.rigAppFee[type]?.amount || 0) +
+                                    (financialData.rigReg[type]?.amount || 0) +
+                                    (financialData.rigRenewal[type]?.amount || 0)
                                 ).toLocaleString('en-IN')}
                             </TableCell>
                         ))}
