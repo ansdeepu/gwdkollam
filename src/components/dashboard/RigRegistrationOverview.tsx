@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigRegistrationOverview.tsx
 "use client";
 
@@ -244,14 +245,22 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
         { key: 'slNo', label: 'Sl. No.' },
         { key: 'agencyName', label: 'Agency Name' },
         { key: 'ownerName', label: 'Owner' },
-        { key: 'fileNo', label: 'File No.' },
+        { key: 'registrationDate', label: 'Date of Registration' },
         { key: 'status', label: 'Status' },
     ];
-    const dialogData = summaryData.allAgencies.map((app, index) => ({
+    const sortedAgencies = [...summaryData.allAgencies].sort((a,b) => {
+        const dateA = safeParseDate(a.agencyRegistrationDate);
+        const dateB = safeParseDate(b.agencyRegistrationDate);
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateA.getTime() - dateB.getTime();
+    });
+
+    const dialogData = sortedAgencies.map((app, index) => ({
       slNo: index + 1,
       agencyName: app.agencyName,
       ownerName: app.owner.name,
-      fileNo: app.fileNo || 'N/A',
+      registrationDate: app.agencyRegistrationDate ? formatDateSafe(app.agencyRegistrationDate) : 'N/A',
       status: app.status,
     }));
     onOpenDialog(dialogData, 'Total Agencies', columns);
