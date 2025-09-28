@@ -47,7 +47,7 @@ type FinancialBreakdown = Record<RigType, FinancialMetric> & { Total: FinancialM
 
 interface RigFinancialSummaryProps {
   agencyApplications: AgencyApplication[];
-  onOpenDialog: (data: any[], title: string, columns: any[]) => void;
+  onOpenDialog: (data: any[], title: string, columns: any[], type: 'rig') => void;
 }
 
 export default function RigFinancialSummary({ agencyApplications, onOpenDialog }: RigFinancialSummaryProps) {
@@ -179,10 +179,10 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
     let dialogData: Record<string, any>[] = [];
     
-    if (title.includes("Agency Registration Application")) {
+    if (title.includes("Agency Registration Application Fee")) {
       columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Amount (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, amount: d.amount, paymentDate: safeParseDate(d.applicationFeePaymentDate) }));
-    } else if (title.includes("Total Rig Registration Application")) {
+    } else if (title.includes("Total Rig Registration Application Fee")) {
       columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Amount (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, amount: d.amount, paymentDate: safeParseDate(d.applicationFeePaymentDate) }));
     } else if (title.includes("Agency Registration Fee")) {
@@ -241,7 +241,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     }
     
     const formattedAndSortedData = dialogData
-        .sort((a, b) => (safeParseDate(b.paymentDate)?.getTime() || 0) - (safeParseDate(a.paymentDate)?.getTime() || 0))
+        .sort((a, b) => (safeParseDate(a.paymentDate)?.getTime() || 0) - (safeParseDate(b.paymentDate)?.getTime() || 0))
         .map((d, i) => ({
             ...d,
             slNo: i + 1,
@@ -250,7 +250,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
             amount: d.amount !== undefined ? d.amount.toLocaleString('en-IN') : undefined
         }));
 
-    onOpenDialog(formattedAndSortedData, title, columns);
+    onOpenDialog(formattedAndSortedData, title, columns, 'rig');
   };
 
   const renderTableCell = (metric: FinancialMetric, title: string) => (
