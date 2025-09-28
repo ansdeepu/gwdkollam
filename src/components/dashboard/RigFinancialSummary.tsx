@@ -84,8 +84,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     const completedApplications = agencyApplications.filter(app => app.status === 'Active');
 
     agencyReg.count = completedApplications.length;
-    agencyReg.records = completedApplications.map(app => ({...app, fee: 0, paymentDate: null}));
-
+    agencyReg.records = completedApplications.map(app => ({...app, fee: (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0), paymentDate: safeParseDate(app.agencyPaymentDate) || safeParseDate(app.agencyAdditionalPaymentDate) }));
 
     agencyApplications.forEach(app => {
         // --- Application Fees (from ALL applications, including pending) ---
@@ -310,6 +309,18 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
                     </TableRow>
                 </TableHeader>
                 <TableBody>
+                    <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">Application Fee Received (₹)</TableCell></TableRow>
+                     <TableRow>
+                        <TableCell className="p-2 pl-6">Agency Registration</TableCell>
+                        {renderAgencyAmountTableCell(financialData.agencyAppFee, "Agency Registration Application Fee")}
+                        {renderAmountTableCell(financialData.agencyAppFee, "Agency Registration Application Fee")}
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="p-2 pl-6">Rig Registration</TableCell>
+                        {rigColumns.map(type => <TableCell key={type} className="text-center p-2">0</TableCell>)}
+                        {renderAmountTableCell(financialData.rigAppFee.Total, "Total Rig Registration Application Fee")}
+                    </TableRow>
+                    
                     <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">No. of Applications</TableCell></TableRow>
                     <TableRow>
                         <TableCell className="p-2 pl-6">Agency Registration</TableCell>
@@ -325,18 +336,6 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
                         <TableCell className="p-2 pl-6">Rig Registration Renewal</TableCell>
                          {rigColumns.map(type => renderTableCell(financialData.rigRenewal[type], `Rig Registration Renewal - ${type}`))}
                         {renderTableCell(financialData.rigRenewal.Total, "Total - No. of Rig Registration Renewal Applications")}
-                    </TableRow>
-
-                    <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">Application Fee Received (₹)</TableCell></TableRow>
-                     <TableRow>
-                        <TableCell className="p-2 pl-6">Agency Registration</TableCell>
-                        {renderAgencyAmountTableCell(financialData.agencyAppFee, "Agency Registration Application Fee")}
-                        {renderAmountTableCell(financialData.agencyAppFee, "Agency Registration Application Fee")}
-                    </TableRow>
-                    <TableRow>
-                        <TableCell className="p-2 pl-6">Rig Registration</TableCell>
-                        {rigColumns.map(type => <TableCell key={type} className="text-center p-2">0</TableCell>)}
-                        {renderAmountTableCell(financialData.rigAppFee.Total, "Total Rig Registration Application Fee")}
                     </TableRow>
 
                     <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">Registration/Renewal Fee Received (₹)</TableCell></TableRow>
