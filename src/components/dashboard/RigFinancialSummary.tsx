@@ -1,3 +1,4 @@
+
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -247,7 +248,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
         let columns: { key: string; label: string; isNumeric?: boolean; }[];
         let dialogData: Record<string, any>[];
         
-        if (title.includes("No. of Agency Registration Applications")) {
+        if (title.startsWith("No. of Agency Registration Applications")) {
             columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true }, ];
             dialogData = records.map(record => ({
                 agencyName: record.agencyName,
@@ -256,8 +257,15 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                 paymentDate: safeParseDate(record.agencyPaymentDate || record.agencyAdditionalPaymentDate)
             }));
         } else if (title.startsWith("Total - No. of Rig Registration Applications")) {
-             columns = [ { key: 'slNo', label: 'Sl. No.' }, { key: 'agencyName', label: 'Name of Agency' }, { key: 'typeOfRig', label: 'Type of Rig'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }, ];
-             dialogData = records.map((record) => {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.' },
+                { key: 'agencyName', label: 'Name of Agency' },
+                { key: 'typeOfRig', label: 'Type of Rig' },
+                { key: 'paymentDate', label: 'Payment Date' },
+                { key: 'fee', label: 'Fee (₹)', isNumeric: true },
+            ];
+        
+            dialogData = records.map((record) => {
                 const paymentDate = record.paymentDate || record.additionalPaymentDate;
                 const fee = (Number(record.registrationFee) || 0) + (Number(record.additionalRegistrationFee) || 0);
                 return {
