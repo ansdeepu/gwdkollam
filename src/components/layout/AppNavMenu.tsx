@@ -33,6 +33,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
   { href: '/dashboard/report-format-suggestion', label: 'Report Builders', icon: Settings2 },
+  { href: '/dashboard/office-details', label: 'Office & Constituency', icon: Landmark, roles: ['editor', 'viewer'] },
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase },
   { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
