@@ -82,8 +82,9 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
     const completedApplications = agencyApplications.filter(app => app.status === 'Active');
 
-    agencyReg.count = completedApplications.length;
     agencyReg.records = completedApplications.map(app => ({...app, fee: (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0), paymentDate: safeParseDate(app.agencyPaymentDate) || safeParseDate(app.agencyAdditionalPaymentDate) }));
+    agencyReg.count = agencyReg.records.length;
+
 
     agencyApplications.forEach(app => {
         // --- Application Fees (from ALL applications, including pending) ---
@@ -303,7 +304,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">Application Fee Received (₹)</TableCell></TableRow>
+                     <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">Application Fee Received (₹)</TableCell></TableRow>
                      <TableRow>
                         <TableCell className="p-2 pl-6">Agency Registration</TableCell>
                         {renderAgencyAmountTableCell(financialData.agencyAppFee, "Agency Registration Application Fee")}
