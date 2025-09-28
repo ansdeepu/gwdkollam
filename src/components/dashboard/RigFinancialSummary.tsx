@@ -136,18 +136,18 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             grandTotalOfFees: 0,
             
             agencyRegData: [], 
-            rigRegData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<RigType, any[]>), 
-            renewalData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<RigType, any[]>),
+            rigRegData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<string, any[]>), 
+            renewalData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<string, any[]>),
             agencyRegAppFeeData: [], 
             rigRegAppFeeData: [], 
             agencyRegFeeData: [],
-            rigRegFeeData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<RigType, any[]>), 
-            renewalFeeData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<RigType, any[]>),
+            rigRegFeeData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<string, any[]>), 
+            renewalFeeData: rigTypeColumns.reduce((acc, rt) => ({...acc, [rt]: []}), {} as Record<string, any[]>),
         };
 
         const completedApps = applications.filter(app => app.status === 'Active');
 
-        // Calculate Application fees from ALL applications (pending + completed)
+        // Application fees from ALL applications
         applications.forEach(app => {
             app.applicationFees?.forEach(fee => {
                 if(checkDate(fee.applicationFeePaymentDate)) {
@@ -165,7 +165,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             });
         });
 
-        // Calculate Registration Fees, Counts, and Renewal fees from COMPLETED applications only
+        // Registration and Renewal fees/counts from COMPLETED applications only
         completedApps.forEach(app => {
             if (checkDate(app.agencyRegistrationDate)) {
                 data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
@@ -229,70 +229,72 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
     }, [applications, startDate, endDate]);
 
     const handleCellClick = (dataType: keyof SummaryData, rigType: RigType | 'Agency', title: string) => {
-        let records: any[] = [];
-        const data = (summaryData as any)[dataType];
-
-        if (rigType === 'Agency') {
-            if (Array.isArray(data)) records = data;
-            else if (data && data['Agency']) records = [data['Agency']];
-        } else if (data && data[rigType]) {
-            records = data[rigType];
-        }
-        
-        if (records && records.length > 0) {
-            let columns: any[] = [];
-            
-            const getSortDateKey = (type: keyof SummaryData): string => {
-              if (type.includes('renewal')) return type.includes('Fee') ? 'paymentDate' : 'renewalDate';
-              if (type.includes('FeeData')) return 'paymentDate';
-              return 'regDate';
-            };
-            const sortKey = getSortDateKey(dataType);
-            
-            records.sort((a, b) => {
-                const dateA = safeParseDate(a[sortKey]);
-                const dateB = safeParseDate(b[sortKey]);
-                if (!dateA) return 1; if (!dateB) return -1;
-                return dateA.getTime() - dateB.getTime();
-            });
-
-            const dataWithSlNo = records.map((r, i) => ({ ...r, slNo: i + 1 }));
-
-            if (dataType === 'agencyRegData') columns = [{ key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'regDate', label: 'Reg Date'}];
-            else if (dataType === 'rigRegData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regDate', label: 'Reg Date'}];
-            else if (dataType === 'renewalData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'renewalDate', label: 'Renewal Date'}];
-            else if (dataType.includes('AppFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'feeType', label: 'Fee Type'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'amount', label: 'Amount', isNumeric: true}];
-            else if (dataType.includes('RegFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
-            else if (dataType === 'renewalFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'renewalFee', label: 'Fee', isNumeric: true}];
-            
-            const processedData = dataWithSlNo.map(row => {
-                const newRow: any = { slNo: row.slNo };
-                columns.slice(1).forEach(col => {
-                    const value = row[col.key];
-                     if (col.key.toLowerCase().includes('date')) {
-                        newRow[col.key] = formatDateSafe(value);
-                    } else if (col.isNumeric) {
-                        newRow[col.key] = (Number(value) || 0).toLocaleString('en-IN');
-                    } else {
-                        newRow[col.key] = value || 'N/A';
-                    }
-                });
-                return newRow;
-            });
-
-            onCellClick(processedData, title, columns);
-        }
-    };
+        const dataSet = summaryData[dataType];
+        if (!dataSet) return;
     
-    const handleTotalClick = (dataType: keyof SummaryData, title: string) => {
-        const data = (summaryData as any)[dataType];
-        let allRecords: any[] = [];
-        if(Array.isArray(data)) {
-            allRecords = data;
-        } else if (typeof data === 'object') {
-            allRecords = Object.values(data).flat();
+        let records: any[] = [];
+        if (rigType === 'Agency') {
+            records = Array.isArray(dataSet) ? dataSet : [];
+        } else {
+            records = (dataSet as Record<string, any[]>)[rigType] ?? [];
         }
+    
+        if (!records || records.length === 0) return;
+    
+        const getSortDateKey = (type: keyof SummaryData): string => {
+            if (type.includes('renewal')) return type.includes('Fee') ? 'paymentDate' : 'renewalDate';
+            if (type.includes('FeeData')) return 'paymentDate';
+            return 'regDate';
+        };
+        const sortKey = getSortDateKey(dataType);
+    
+        records.sort((a, b) => {
+            const dateA = safeParseDate(a[sortKey]);
+            const dateB = safeParseDate(b[sortKey]);
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateA.getTime() - dateB.getTime();
+        });
+    
+        let columns: any[] = [];
+        if (dataType === 'agencyRegData') columns = [{ key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'regDate', label: 'Reg Date'}];
+        else if (dataType === 'rigRegData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regDate', label: 'Reg Date'}];
+        else if (dataType === 'renewalData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'renewalDate', label: 'Renewal Date'}];
+        else if (dataType.includes('AppFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'feeType', label: 'Fee Type'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'amount', label: 'Amount', isNumeric: true}];
+        else if (dataType.includes('RegFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
+        else if (dataType === 'renewalFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'renewalFee', label: 'Fee', isNumeric: true}];
+    
+        const processedData = records.map((row, index) => {
+            const newRow: any = { slNo: index + 1 };
+            columns.slice(1).forEach(col => {
+                const value = row[col.key];
+                if (col.key.toLowerCase().includes('date')) {
+                    newRow[col.key] = formatDateSafe(value);
+                } else if (col.isNumeric) {
+                    newRow[col.key] = (Number(value) || 0).toLocaleString('en-IN');
+                } else {
+                    newRow[col.key] = value || 'N/A';
+                }
+            });
+            return newRow;
+        });
+    
+        onCellClick(processedData, title, columns);
+    };
+
+    const handleTotalClick = (dataType: keyof SummaryData, title: string) => {
+        const dataSet = summaryData[dataType];
+        if (!dataSet) return;
+    
+        let allRecords: any[] = [];
+        if (Array.isArray(dataSet)) {
+            allRecords = dataSet;
+        } else if (typeof dataSet === 'object') {
+            allRecords = Object.values(dataSet).flat();
+        }
+    
         if (allRecords.length > 0) {
+            // Re-use the detailed click handler, passing a dummy 'Agency' type as it will be ignored for totals.
             handleCellClick(dataType, 'Agency', title);
         }
     };
