@@ -173,7 +173,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
    const handleCellClick = (records: any[], title: string) => {
     if (!records || records.length === 0) return;
-
+    
     const baseCols = [
         { key: 'slNo', label: 'Sl. No.' },
         { key: 'agencyName', label: 'Name of Agency' },
