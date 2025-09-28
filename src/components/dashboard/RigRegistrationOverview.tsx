@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertTriangle, Ban, FileStack, Building } from "lucide-react";
 import type { AgencyApplication, RigType } from '@/lib/schemas';
 import { rigTypeOptions } from '@/lib/schemas';
-import { addYears, isValid, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { addYears, isValid, isWithinInterval, startOfMonth, endOfMonth, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface RigRegistrationOverviewProps {
@@ -210,7 +210,7 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
             const lastDate = item.renewals?.length > 0 ? [...item.renewals].sort((a: any, b: any) => (safeParseDate(b.renewalDate)?.getTime() ?? 0) - (safeParseDate(a.renewalDate)?.getTime() ?? 0))[0].renewalDate : item.registrationDate;
             if(lastDate) {
                 const validityDate = new Date(addYears(new Date(lastDate), 1).getTime() - 24 * 60 * 60 * 1000);
-                if (isValid(validityDate)) validity = validityDate.toLocaleDateString('en-IN');
+                if (isValid(validityDate)) validity = format(validityDate, 'dd/MM/yyyy');
             }
         } else if (item.status === 'Cancelled') {
             validity = 'Cancelled';
@@ -252,7 +252,7 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
             <CardTitle className="flex items-center gap-2"><FileStack className="h-5 w-5 text-primary" />Rig Registration Overview</CardTitle>
             <CardDescription>A summary of all registered rigs by type and current status.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
            <StatusCard
               title="Total Agencies"
               icon={Building}
@@ -272,16 +272,6 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
                 iconClassName="text-green-600"
             />
             <RigStatusCard
-                title="Expired Rigs (Total)"
-                icon={AlertTriangle}
-                totalCount={summaryData.totals.expired}
-                rigData={summaryData.byStatus.expired}
-                onTotalClick={() => handleCellClick(summaryData.totalData.expired, "All Expired Rigs")}
-                onTypeClick={(type) => handleCellClick(summaryData.byStatus.expired[type].data, `Expired - ${type}`)}
-                className="border-amber-500/50 bg-amber-500/5"
-                iconClassName="text-amber-600"
-            />
-            <RigStatusCard
                 title="Expired This Month"
                 icon={AlertTriangle}
                 totalCount={summaryData.totals.expiredThisMonth}
@@ -290,6 +280,16 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
                 onTypeClick={(type) => handleCellClick(summaryData.byStatus.expiredThisMonth[type].data, `Expired This Month - ${type}`)}
                 className="border-orange-500/50 bg-orange-500/5"
                 iconClassName="text-orange-600"
+            />
+            <RigStatusCard
+                title="Expired Rigs (Total)"
+                icon={AlertTriangle}
+                totalCount={summaryData.totals.expired}
+                rigData={summaryData.byStatus.expired}
+                onTotalClick={() => handleCellClick(summaryData.totalData.expired, "All Expired Rigs")}
+                onTypeClick={(type) => handleCellClick(summaryData.byStatus.expired[type].data, `Expired - ${type}`)}
+                className="border-amber-500/50 bg-amber-500/5"
+                iconClassName="text-amber-600"
             />
             <RigStatusCard
                 title="Cancelled Rigs"
