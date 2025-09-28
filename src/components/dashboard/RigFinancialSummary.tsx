@@ -81,7 +81,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     const rigAppFee = initialBreakdown();
 
     const completedApplications = agencyApplications.filter(app => app.status === 'Active');
-
+    
     agencyReg.records = completedApplications.map(app => ({...app, fee: (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0), paymentDate: safeParseDate(app.agencyPaymentDate) || safeParseDate(app.agencyAdditionalPaymentDate) }));
     agencyReg.count = agencyReg.records.length;
 
@@ -238,7 +238,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     }
     
     const formattedAndSortedData = dialogData
-        .sort((a, b) => (safeParseDate(b.paymentDate)?.getTime() || 0) - (safeParseDate(a.paymentDate)?.getTime() || 0))
+        .sort((a, b) => (safeParseDate(a.paymentDate)?.getTime() || 0) - (safeParseDate(b.paymentDate)?.getTime() || 0))
         .map((d, i) => ({
             ...d,
             slNo: i + 1,
