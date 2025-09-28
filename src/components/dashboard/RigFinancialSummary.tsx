@@ -117,10 +117,20 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         const isDateFilterActive = sDate && eDate;
 
         const checkDate = (date: Date | string | null | undefined): boolean => {
-            if (!isDateFilterActive || !date) return true;
+            if (!date) return false;
             const d = safeParseDate(date);
-            return d ? isWithinInterval(d, { start: sDate!, end: eDate! }) : false;
+            if (!d || !isValid(d)) return false;
+            if (!isDateFilterActive) return true;
+            return isWithinInterval(d, { start: sDate!, end: eDate! });
         };
+        
+        const checkRegDate = (date: Date | string | null | undefined): boolean => {
+          if(!isDateFilterActive) return true;
+          if (!date) return false;
+          const d = safeParseDate(date);
+          if (!d || !isValid(d)) return false;
+          return isWithinInterval(d, { start: sDate!, end: eDate! });
+        }
         
         const initialCounts: Record<string, number> = rigTypeColumns.reduce((acc, r) => ({...acc, [r]: 0}), {});
 
@@ -156,10 +166,10 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                     const feeData = { agencyName: app.agencyName, feeType: fee.applicationFeeType, paymentDate: fee.applicationFeePaymentDate, amount };
 
                     if (fee.applicationFeeType === "Agency Registration") {
-                        data.agencyRegAppFee["Agency"] = (data.agencyRegAppFee["Agency"] || 0) + amount;
+                        data.agencyRegAppFee["Agency"] += amount;
                         data.agencyRegAppFeeData.push(feeData);
                     } else if (fee.applicationFeeType === "Rig Registration") {
-                         data.rigRegAppFee["Agency"] = (data.rigRegAppFee["Agency"] || 0) + amount;
+                         data.rigRegAppFee["Agency"] += amount;
                          data.rigRegAppFeeData.push(feeData);
                     }
                 }
@@ -167,7 +177,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         });
 
         completedApps.forEach(app => {
-            const hasRegDateInRange = checkDate(app.agencyRegistrationDate);
+            const hasRegDateInRange = checkRegDate(app.agencyRegistrationDate);
             if (hasRegDateInRange) {
               data.agencyRegCount["Agency"]++;
               data.agencyRegData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, regDate: app.agencyRegistrationDate });
@@ -187,21 +197,24 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             app.rigs?.forEach(rig => {
                 const rigType = rig.typeOfRig;
                 if (!rigType || !rigTypeColumns.includes(rigType)) return;
-
-                if (checkDate(rig.registrationDate)) {
-                  data.rigRegCount[rigType]++;
-                  data.rigRegData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, regDate: rig.registrationDate });
-                }
                 
+                let rigHasFeePaymentInDate = false;
                 if (checkDate(rig.paymentDate)) {
                     const feeAmount = Number(rig.registrationFee) || 0;
                     data.rigRegFee[rigType] += feeAmount;
                     data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.paymentDate, fee: feeAmount });
+                    rigHasFeePaymentInDate = true;
                 }
                  if (checkDate(rig.additionalPaymentDate)) {
                     const feeAmount = Number(rig.additionalRegistrationFee) || 0;
                     data.rigRegFee[rigType] += feeAmount;
                     data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, paymentDate: rig.additionalPaymentDate, fee: feeAmount });
+                    rigHasFeePaymentInDate = true;
+                }
+                
+                if (rigHasFeePaymentInDate || checkRegDate(rig.registrationDate)) {
+                  data.rigRegCount[rigType]++;
+                  data.rigRegData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regNo: rig.rigRegistrationNo, regDate: rig.registrationDate });
                 }
 
                 rig.renewals?.forEach(renewal => {
@@ -297,12 +310,31 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
     const handleTotalClick = (dataType: keyof Omit<SummaryData, 'totals' | 'grandTotalOfFees'>, title: string) => {
         let allRecords: any[] = [];
     
-        if (dataType === 'agencyRegFeeData' || dataType === 'agencyRegAppFeeData' || dataType === 'rigRegAppFeeData' || dataType === 'agencyRegData') {
-            allRecords = (summaryData as any)[dataType] || [];
+        const gatherFeeData = (sourceData: any) => {
+            if (Array.isArray(sourceData)) {
+                allRecords.push(...sourceData.filter(item => item.paymentDate));
+            } else if (typeof sourceData === 'object' && sourceData !== null) {
+                Object.values(sourceData).forEach(value => {
+                    if (Array.isArray(value)) {
+                        allRecords.push(...value.filter(item => item.paymentDate));
+                    }
+                });
+            }
+        };
+
+        if (dataType === 'agencyRegFeeData') {
+            gatherFeeData(summaryData.agencyRegFeeData);
+        } else if (dataType === 'rigRegFeeData') {
+            gatherFeeData(summaryData.rigRegFeeData);
         } else {
-            const dataSet = summaryData[dataType];
-            if (dataSet && typeof dataSet === 'object' && !Array.isArray(dataSet)) {
-                allRecords = Object.values(dataSet).flat();
+            // Existing logic for non-fee data
+            if (dataType === 'agencyRegData' || dataType === 'agencyRegAppFeeData' || dataType === 'rigRegAppFeeData') {
+                allRecords = (summaryData as any)[dataType] || [];
+            } else {
+                const dataSet = summaryData[dataType];
+                if (dataSet && typeof dataSet === 'object' && !Array.isArray(dataSet)) {
+                    allRecords = Object.values(dataSet).flat();
+                }
             }
         }
         
