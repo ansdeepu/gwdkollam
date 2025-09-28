@@ -213,15 +213,15 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             const dateA = safeParseDate(a.paymentDate || a.agencyPaymentDate || a.applicationFeePaymentDate);
             const dateB = safeParseDate(b.paymentDate || b.agencyPaymentDate || b.applicationFeePaymentDate);
             if (!dateA && !dateB) return 0;
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-            return dateA.getTime() - dateB.getTime();
+            if (!dateA) return -1; // Keep records with dates first
+            if (!dateB) return 1;
+            return dateA.getTime() - dateB.getTime(); // Ascending order
         });
 
         let columns: { key: string; label: string; isNumeric?: boolean; }[];
         let dialogData: Record<string, any>[];
 
-        if (title.includes("Agency Registration Fee") || title.includes("No. of Agency Registration")) {
+        if (title.includes("Agency Registration Fee") || title.includes("No. of Agency Registration Applications")) {
              columns = [
                 { key: 'slNo', label: 'Sl. No.' },
                 { key: 'agencyName', label: 'Name of Agency' },
@@ -238,6 +238,23 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
                     fee: totalFee.toLocaleString('en-IN'),
                 };
             });
+        } else if (title.includes("Rig Registration Fee") || title.includes("No. of Rig Registration Applications")) {
+            columns = [
+                { key: 'slNo', label: 'Sl. No.' },
+                { key: 'agencyName', label: 'Name of Agency' },
+                { key: 'paymentDate', label: 'Payment Date' },
+                { key: 'amount', label: 'Amount (₹)', isNumeric: true },
+            ];
+             dialogData = sortedRecords.map((record, index) => {
+                const paymentDate = record.paymentDate || record.additionalPaymentDate;
+                const amount = (Number(record.registrationFee) || 0) + (Number(record.additionalRegistrationFee) || 0);
+                return {
+                    slNo: index + 1,
+                    agencyName: record.agencyName,
+                    paymentDate: paymentDate ? format(safeParseDate(paymentDate)!, 'dd/MM/yyyy') : 'N/A',
+                    amount: (Number(amount) || 0).toLocaleString('en-IN'),
+                };
+            });
         } else {
              columns = [
                 { key: 'slNo', label: 'Sl. No.' },
@@ -247,7 +264,7 @@ export default function RigFinancialSummary({ applications, onOpenDialog }: RigF
             ];
              dialogData = sortedRecords.map((record, index) => {
                 const paymentDate = record.paymentDate || record.applicationFeePaymentDate;
-                const amount = record.renewalFee || record.registrationFee || record.applicationFeeAmount || record.additionalRegistrationFee || 0;
+                const amount = record.renewalFee || record.applicationFeeAmount || 0;
                 return {
                     slNo: index + 1,
                     agencyName: record.agencyName,
