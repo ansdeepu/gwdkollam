@@ -1,3 +1,4 @@
+
 // src/components/dashboard/DashboardDialogs.tsx
 "use client";
 
@@ -112,42 +113,7 @@ export default function DashboardDialogs({ dialogState, setDialogState, allFileE
   };
   
     const getColumnsForType = (type: DialogState['type'], title: string) => {
-        if (type === 'rig') {
-            if (title === 'Total Agencies') {
-                return [
-                    { key: 'slNo', label: 'Sl. No.' },
-                    { key: 'agencyName', label: 'Agency Name' },
-                    { key: 'ownerName', label: 'Owner Name' },
-                    { key: 'fileNo', label: 'File No.' },
-                    { key: 'status', label: 'Status' },
-                ];
-            } else if (title.toLowerCase().includes('renewal')) {
-                return [
-                    { key: 'slNo', label: 'Sl. No.'},
-                    { key: 'agencyName', label: 'Agency Name'},
-                    { key: 'renewalNo', label: 'Rig Reg. No.' },
-                    { key: 'paymentDate', label: 'Payment Date'},
-                    { key: 'renewalFee', label: 'Fee (₹)', isNumeric: true },
-                ];
-            } else if (title.toLowerCase().includes('application fee')) {
-               return [
-                    { key: 'slNo', label: 'Sl. No.'},
-                    { key: 'agencyName', label: 'Agency Name'},
-                    { key: 'feeType', label: 'Fee Type'},
-                    { key: 'paymentDate', label: 'Payment Date'},
-                    { key: 'amount', label: 'Amount (₹)', isNumeric: true },
-                ];
-            } else { // Agency and Rig Registrations
-                return [
-                    { key: 'slNo', label: 'Sl. No.'},
-                    { key: 'agencyName', label: 'Agency Name'},
-                    { key: 'regNo', label: 'Registration No'},
-                    { key: 'paymentDate', label: 'Payment Date'},
-                    { key: 'fee', label: 'Reg. Fee (₹)', isNumeric: true },
-                ];
-            }
-        }
-        return columns; // Fallback to original columns
+        return columns; // Always use the columns passed in the dialog state
     };
 
   return (
