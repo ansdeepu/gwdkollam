@@ -4,10 +4,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, AlertTriangle, Ban, FileStack } from "lucide-react";
+import { CheckCircle, AlertTriangle, Ban, FileStack, Building } from "lucide-react";
 import type { AgencyApplication, RigType } from '@/lib/schemas';
 import { rigTypeOptions } from '@/lib/schemas';
-import { addYears, isValid } from 'date-fns';
+import { addYears, isValid, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface RigRegistrationOverviewProps {
@@ -29,6 +29,39 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 const StatusCard = ({
+  title,
+  icon: Icon,
+  totalCount,
+  onTotalClick,
+  className,
+  iconClassName
+}: {
+  title: string;
+  icon: React.ElementType;
+  totalCount: number;
+  onTotalClick?: () => void;
+  className?: string;
+  iconClassName?: string;
+}) => (
+    <Card className={cn("flex flex-col", className)}>
+      <CardHeader className="flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className={cn("h-4 w-4 text-muted-foreground", iconClassName)} />
+      </CardHeader>
+      <CardContent>
+        <Button
+          variant="link"
+          className="text-4xl font-bold p-0 h-auto"
+          onClick={onTotalClick}
+          disabled={!onTotalClick || totalCount === 0}
+        >
+          {totalCount}
+        </Button>
+      </CardContent>
+    </Card>
+);
+
+const RigStatusCard = ({
   title,
   icon: Icon,
   totalCount,
@@ -90,12 +123,17 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
     const initialCounts = () => ({
         active: { count: 0, data: [] as any[] },
         expired: { count: 0, data: [] as any[] },
+        expiredThisMonth: { count: 0, data: [] as any[] },
         cancelled: { count: 0, data: [] as any[] },
     });
     
     const rigData = rigTypeOptions.reduce((acc, type) => ({ ...acc, [type]: initialCounts() }), {} as Record<RigType, ReturnType<typeof initialCounts>>);
 
     const completedApps = agencyApplications.filter(app => app.status === 'Active');
+    
+    const today = new Date();
+    const startOfCurrentMonth = startOfMonth(today);
+    const endOfCurrentMonth = endOfMonth(today);
 
     completedApps.forEach(app => {
         (app.rigs || []).forEach(rig => {
@@ -110,9 +148,13 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
 
                 if (lastEffectiveDate) {
                     const validityDate = new Date(addYears(new Date(lastEffectiveDate), 1).getTime() - 24 * 60 * 60 * 1000);
-                    if (isValid(validityDate) && new Date() > validityDate) {
-                        rigData[rigType].expired.count++;
-                        rigData[rigType].expired.data.push(rigWithContext);
+                    if (isValid(validityDate) && today > validityDate) {
+                         rigData[rigType].expired.count++;
+                         rigData[rigType].expired.data.push(rigWithContext);
+                         if (isWithinInterval(validityDate, { start: startOfCurrentMonth, end: endOfCurrentMonth })) {
+                            rigData[rigType].expiredThisMonth.count++;
+                            rigData[rigType].expiredThisMonth.data.push(rigWithContext);
+                         }
                     } else {
                         rigData[rigType].active.count++;
                         rigData[rigType].active.data.push(rigWithContext);
@@ -131,22 +173,25 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
     const totals = {
       active: rigTypeOptions.reduce((sum, type) => sum + rigData[type].active.count, 0),
       expired: rigTypeOptions.reduce((sum, type) => sum + rigData[type].expired.count, 0),
+      expiredThisMonth: rigTypeOptions.reduce((sum, type) => sum + rigData[type].expiredThisMonth.count, 0),
       cancelled: rigTypeOptions.reduce((sum, type) => sum + rigData[type].cancelled.count, 0),
     };
 
     const totalData = {
         active: rigTypeOptions.flatMap(type => rigData[type].active.data),
         expired: rigTypeOptions.flatMap(type => rigData[type].expired.data),
+        expiredThisMonth: rigTypeOptions.flatMap(type => rigData[type].expiredThisMonth.data),
         cancelled: rigTypeOptions.flatMap(type => rigData[type].cancelled.data),
     };
     
     const byStatus = {
         active: rigTypeOptions.reduce((acc, type) => ({...acc, [type]: {count: rigData[type].active.count, data: rigData[type].active.data}}), {} as Record<RigType, { count: number; data: any[] }>),
         expired: rigTypeOptions.reduce((acc, type) => ({...acc, [type]: {count: rigData[type].expired.count, data: rigData[type].expired.data}}), {} as Record<RigType, { count: number; data: any[] }>),
+        expiredThisMonth: rigTypeOptions.reduce((acc, type) => ({...acc, [type]: {count: rigData[type].expiredThisMonth.count, data: rigData[type].expiredThisMonth.data}}), {} as Record<RigType, { count: number; data: any[] }>),
         cancelled: rigTypeOptions.reduce((acc, type) => ({...acc, [type]: {count: rigData[type].cancelled.count, data: rigData[type].cancelled.data}}), {} as Record<RigType, { count: number; data: any[] }>),
     };
 
-    return { totals, totalData, byStatus };
+    return { totals, totalData, byStatus, totalAgencies: completedApps.length, allAgencies: completedApps };
   }, [agencyApplications]);
   
   const handleCellClick = (data: any[], title: string) => {
@@ -183,14 +228,40 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
     onOpenDialog(dialogData, title, columns);
   };
 
+  const handleAgencyClick = () => {
+    const columns = [
+        { key: 'slNo', label: 'Sl. No.' },
+        { key: 'agencyName', label: 'Agency Name' },
+        { key: 'ownerName', label: 'Owner' },
+        { key: 'fileNo', label: 'File No.' },
+        { key: 'status', label: 'Status' },
+    ];
+    const dialogData = summaryData.allAgencies.map((app, index) => ({
+      slNo: index + 1,
+      agencyName: app.agencyName,
+      ownerName: app.owner.name,
+      fileNo: app.fileNo || 'N/A',
+      status: app.status,
+    }));
+    onOpenDialog(dialogData, 'Total Agencies', columns);
+  };
+
   return (
      <Card>
         <CardHeader>
             <CardTitle className="flex items-center gap-2"><FileStack className="h-5 w-5 text-primary" />Rig Registration Overview</CardTitle>
             <CardDescription>A summary of all registered rigs by type and current status.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
+        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
            <StatusCard
+              title="Total Agencies"
+              icon={Building}
+              totalCount={summaryData.totalAgencies}
+              onTotalClick={handleAgencyClick}
+              className="border-blue-500/50 bg-blue-500/5"
+              iconClassName="text-blue-600"
+           />
+           <RigStatusCard
                 title="Active Rigs"
                 icon={CheckCircle}
                 totalCount={summaryData.totals.active}
@@ -200,8 +271,8 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
                 className="border-green-500/50 bg-green-500/5"
                 iconClassName="text-green-600"
             />
-            <StatusCard
-                title="Expired Rigs"
+            <RigStatusCard
+                title="Expired Rigs (Total)"
                 icon={AlertTriangle}
                 totalCount={summaryData.totals.expired}
                 rigData={summaryData.byStatus.expired}
@@ -210,7 +281,17 @@ export default function RigRegistrationOverview({ agencyApplications, onOpenDial
                 className="border-amber-500/50 bg-amber-500/5"
                 iconClassName="text-amber-600"
             />
-            <StatusCard
+            <RigStatusCard
+                title="Expired This Month"
+                icon={AlertTriangle}
+                totalCount={summaryData.totals.expiredThisMonth}
+                rigData={summaryData.byStatus.expiredThisMonth}
+                onTotalClick={() => handleCellClick(summaryData.totalData.expiredThisMonth, "Rigs Expired This Month")}
+                onTypeClick={(type) => handleCellClick(summaryData.byStatus.expiredThisMonth[type].data, `Expired This Month - ${type}`)}
+                className="border-orange-500/50 bg-orange-500/5"
+                iconClassName="text-orange-600"
+            />
+            <RigStatusCard
                 title="Cancelled Rigs"
                 icon={Ban}
                 totalCount={summaryData.totals.cancelled}
