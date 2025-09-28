@@ -115,19 +115,11 @@ export default function DashboardPage() {
     data: any[],
     title: string,
     columns: { key: string; label: string; isNumeric?: boolean; }[],
-    type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance'
+    type: 'detail' | 'rig' | 'age' | 'month' | 'fileStatus' | 'finance' = 'detail'
   ) => {
     setDialogState({ isOpen: true, data, title, columns, type });
   }, []);
-
-  const handleOpenRigDialog = useCallback((
-    data: any[], 
-    title: string,
-    columns: { key: string; label: string; isNumeric?: boolean; }[],
-  ) => {
-    setDialogState({ isOpen: true, data, title, columns, type: 'rig' });
-  }, []);
-
+  
   const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || !dashboardData;
   
   if (isPageLoading) {
@@ -174,12 +166,12 @@ export default function DashboardPage() {
           
           <RigRegistrationOverview 
             agencyApplications={agencyApplications}
-            onOpenDialog={handleOpenRigDialog}
+            onOpenDialog={handleOpenDialog}
           />
            
            <RigFinancialSummary 
             applications={agencyApplications}
-            onCellClick={(data, title) => handleOpenDialog(data, title, [], 'detail')}
+            onOpenDialog={handleOpenDialog}
           />
         </>
       )}
