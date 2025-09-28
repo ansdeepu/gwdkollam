@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -176,7 +175,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
 
     const baseCols = [
         { key: 'slNo', label: 'Sl. No.' },
-        { key: 'agencyName', label: 'Agency Name' },
+        { key: 'agencyName', label: 'Name of Agency' },
     ];
     let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
     let dialogData: Record<string, any>[] = [];
@@ -188,7 +187,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
       columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
       dialogData = records.map(d => ({ ...d, amount: d.amount, paymentDate: safeParseDate(d.applicationFeePaymentDate) }));
     } else if (title.includes("Agency Registration Fee")) {
-        columns = [...baseCols, { key: 'regNo', label: 'Registration No' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
+        columns = [...baseCols, { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
         dialogData = records.map(d => {
             const fee = (Number(d.agencyRegistrationFee) || 0) + (Number(d.agencyAdditionalRegFee) || 0);
             const paymentDate = safeParseDate(d.agencyPaymentDate) || safeParseDate(d.agencyAdditionalPaymentDate);
