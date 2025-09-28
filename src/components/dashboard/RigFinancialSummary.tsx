@@ -25,18 +25,20 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-interface RigFinancialSummaryProps {
-  agencyApplications: AgencyApplication[];
-  onOpenDialog: (data: any[], title: string) => void;
+const rigColumns: RigType[] = ["Hand Bore", "Filter Point Rig", "Calyx Rig", "Rotary Rig", "DTH Rig", "Rotary cum DTH Rig"];
+
+interface FinancialMetric {
+  count: number;
+  amount: number;
+  records: any[];
 }
 
-const FinancialStatCard = ({ title, count, amount, onClick }: { title: string; count: number; amount: number; onClick: () => void }) => (
-  <button onClick={onClick} disabled={count === 0} className="p-3 border rounded-lg bg-secondary/30 text-center hover:bg-secondary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-    <p className="text-sm font-medium text-muted-foreground">{title}</p>
-    <p className="text-2xl font-bold text-primary">{count}</p>
-    <p className="text-sm font-semibold text-primary">₹{amount.toLocaleString('en-IN')}</p>
-  </button>
-);
+type FinancialBreakdown = Record<RigType, FinancialMetric> & { Total: FinancialMetric };
+
+interface RigFinancialSummaryProps {
+  agencyApplications: AgencyApplication[];
+  onOpenDialog: (data: any[], title: string, columns: any[]) => void;
+}
 
 export default function RigFinancialSummary({ agencyApplications, onOpenDialog }: RigFinancialSummaryProps) {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -47,165 +49,171 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     const toDate = endDate ? endOfDay(endDate) : null;
 
     const checkDate = (date: Date | null) => {
-      if (!date) return false;
+      if (!date) return true; // Include if no date filter applied
       if (fromDate && toDate) return isWithinInterval(date, { start: fromDate, end: toDate });
       if (fromDate) return date >= fromDate;
       if (toDate) return date <= toDate;
-      return true; // No date filter applied
+      return true;
     };
-
-    let agencyRegApps = 0;
-    let rigRegApps = 0;
-    let rigRenewalApps = 0;
-
-    let agencyAppFee = 0;
-    let rigAppFee = 0;
     
-    let agencyRegFee = 0;
-    let rigRegFee = 0;
-    let rigRenewalFee = 0;
+    const initialMetric = (): FinancialMetric => ({ count: 0, amount: 0, records: [] });
+    const initialBreakdown = (): FinancialBreakdown => ({
+      "Hand Bore": initialMetric(), "Filter Point Rig": initialMetric(), "Calyx Rig": initialMetric(),
+      "Rotary Rig": initialMetric(), "DTH Rig": initialMetric(), "Rotary cum DTH Rig": initialMetric(),
+      Total: initialMetric(),
+    });
     
-    const records = {
-        agencyRegs: [] as AgencyApplication[],
-        rigRegs: [] as (RigRegistration & { agencyName: string })[],
-        rigRenewals: [] as (RigRenewal & { agencyName: string, typeOfRig?: RigType })[],
-        agencyAppFees: [] as (ApplicationFee & { agencyName: string})[],
-        rigAppFees: [] as (ApplicationFee & { agencyName: string})[],
-    };
+    const agencyReg = { count: 0, amount: 0, records: [] as AgencyApplication[] };
+    const agencyAppFee = { count: 0, amount: 0, records: [] as (ApplicationFee & { agencyName: string})[] };
+    
+    const rigReg = initialBreakdown();
+    const rigRenewal = initialBreakdown();
+    const rigAppFee = initialBreakdown();
 
     for (const app of agencyApplications) {
-      // Application Fees (Completed & Pending)
-      (app.applicationFees || []).forEach(fee => {
-        const paymentDate = safeParseDate(fee.applicationFeePaymentDate);
-        if (checkDate(paymentDate)) {
-          if (fee.applicationFeeType === 'Agency Registration') {
-            agencyAppFee += Number(fee.applicationFeeAmount) || 0;
-            records.agencyAppFees.push({ ...fee, agencyName: app.agencyName });
-          } else if (fee.applicationFeeType === 'Rig Registration') {
-            rigAppFee += Number(fee.applicationFeeAmount) || 0;
-            records.rigAppFees.push({ ...fee, agencyName: app.agencyName });
-          }
-        }
-      });
-      
-      // Only process completed applications for main fees and counts
-      if (app.status !== 'Active') continue;
-
-      // Agency Registration Fee & Count
-      const agencyPaymentDate = safeParseDate(app.agencyPaymentDate);
-      if (checkDate(agencyPaymentDate)) {
-        agencyRegApps++;
-        agencyRegFee += (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
-        records.agencyRegs.push(app);
-      }
-
-      // Rig Registrations & Renewals
-      (app.rigs || []).forEach(rig => {
-        const rigWithAgency = { ...rig, agencyName: app.agencyName };
-        const rigPaymentDate = safeParseDate(rig.paymentDate);
-        if (checkDate(rigPaymentDate)) {
-          rigRegApps++;
-          rigRegFee += (Number(rig.registrationFee) || 0) + (Number(rig.additionalRegistrationFee) || 0);
-          records.rigRegs.push(rigWithAgency);
-        }
-
-        (rig.renewals || []).forEach(renewal => {
-          const renewalPaymentDate = safeParseDate(renewal.paymentDate);
-          if (checkDate(renewalPaymentDate)) {
-            rigRenewalApps++;
-            rigRenewalFee += Number(renewal.renewalFee) || 0;
-            records.rigRenewals.push({ ...renewal, agencyName: app.agencyName, typeOfRig: rig.typeOfRig });
-          }
+        // --- Application Fees (from ALL applications, including pending) ---
+        (app.applicationFees || []).forEach(fee => {
+            const paymentDate = safeParseDate(fee.applicationFeePaymentDate);
+            if (checkDate(paymentDate)) {
+                if (fee.applicationFeeType === 'Agency Registration') {
+                    agencyAppFee.count++;
+                    agencyAppFee.amount += Number(fee.applicationFeeAmount) || 0;
+                    agencyAppFee.records.push({ ...fee, agencyName: app.agencyName });
+                } else if (fee.applicationFeeType === 'Rig Registration') {
+                    // This fee is not associated with a specific rig type, so it goes to Total
+                    rigAppFee.Total.count++;
+                    const feeAmount = Number(fee.applicationFeeAmount) || 0;
+                    rigAppFee.Total.amount += feeAmount;
+                    rigAppFee.Total.records.push({ ...fee, agencyName: app.agencyName, amount: feeAmount });
+                }
+            }
         });
-      });
+
+        // --- Main Fees (ONLY from 'Active' applications) ---
+        if (app.status !== 'Active') continue;
+        
+        // Agency Registration Fee
+        const agencyPaymentDate = safeParseDate(app.agencyPaymentDate);
+        if (checkDate(agencyPaymentDate)) {
+            agencyReg.count++;
+            agencyReg.amount += (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
+            agencyReg.records.push(app);
+        }
+
+        // Rig Registrations & Renewals
+        (app.rigs || []).forEach(rig => {
+            const rigType = rig.typeOfRig;
+            const rigPaymentDate = safeParseDate(rig.paymentDate);
+            if (checkDate(rigPaymentDate)) {
+                const regFee = (Number(rig.registrationFee) || 0) + (Number(rig.additionalRegistrationFee) || 0);
+                if (rigType && rigColumns.includes(rigType)) {
+                    rigReg[rigType].count++;
+                    rigReg[rigType].amount += regFee;
+                    rigReg[rigType].records.push({ ...rig, agencyName: app.agencyName });
+                }
+                rigReg.Total.count++;
+                rigReg.Total.amount += regFee;
+                rigReg.Total.records.push({ ...rig, agencyName: app.agencyName });
+            }
+
+            (rig.renewals || []).forEach(renewal => {
+                const renewalPaymentDate = safeParseDate(renewal.paymentDate);
+                if (checkDate(renewalPaymentDate)) {
+                    const renewalFee = Number(renewal.renewalFee) || 0;
+                    if (rigType && rigColumns.includes(rigType)) {
+                        rigRenewal[rigType].count++;
+                        rigRenewal[rigType].amount += renewalFee;
+                        rigRenewal[rigType].records.push({ ...renewal, agencyName: app.agencyName, typeOfRig: rigType });
+                    }
+                    rigRenewal.Total.count++;
+                    rigRenewal.Total.amount += renewalFee;
+                    rigRenewal.Total.records.push({ ...renewal, agencyName: app.agencyName, typeOfRig: rigType });
+                }
+            });
+        });
     }
 
-    return {
-      agencyRegApps, rigRegApps, rigRenewalApps,
-      agencyAppFee, rigAppFee, agencyRegFee, rigRegFee, rigRenewalFee,
-      records
-    };
+    return { agencyReg, rigReg, rigRenewal, agencyAppFee, rigAppFee };
+
   }, [agencyApplications, startDate, endDate]);
 
-  const handleCellClick = (title: string, records: any[]) => {
-    let columns: { key: string; label: string; isNumeric?: boolean; }[] = [];
+   const handleCellClick = (data: any[], title: string) => {
+    if (!data || data.length === 0) return;
+
+    let columns: { key: string; label: string; isNumeric?: boolean }[] = [];
     let dialogData: Record<string, any>[] = [];
 
-    if (title.startsWith("No. of Agency Registration Applications")) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'agencyName', label: 'Name of Agency' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
-        ];
-        dialogData = records.map((record: AgencyApplication) => ({
-            agencyName: record.agencyName,
-            paymentDate: safeParseDate(record.agencyPaymentDate),
-            fee: (Number(record.agencyRegistrationFee) || 0) + (Number(record.agencyAdditionalRegFee) || 0),
-        }));
-    } else if (title.startsWith("No. of Rig Registration Applications")) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'agencyName', label: 'Name of Agency' },
-            { key: 'typeOfRig', label: 'Type of Rig' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
-        ];
-        dialogData = records.map((record) => ({
-            agencyName: record.agencyName,
-            typeOfRig: record.typeOfRig || 'N/A',
-            paymentDate: safeParseDate(record.paymentDate || record.additionalPaymentDate),
-            fee: (Number(record.registrationFee) || 0) + (Number(record.additionalRegistrationFee) || 0),
-        }));
-    } else if (title.startsWith("No. of Rig Registration Renewal Applications")) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'agencyName', label: 'Name of Agency' },
-            { key: 'typeOfRig', label: 'Type of Rig' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
-        ];
-        dialogData = records.map((record: RigRenewal & { agencyName: string, typeOfRig?: RigType }) => ({
-            agencyName: record.agencyName,
-            typeOfRig: record.typeOfRig || 'N/A',
-            paymentDate: safeParseDate(record.paymentDate),
-            fee: Number(record.renewalFee) || 0,
-        }));
-    } else if (title.startsWith("Agency Registration Application Fee") || title.startsWith("Rig Registration Application Fee")) {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.'},
-            { key: 'agencyName', label: 'Name of Agency' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'amount', label: 'Fee (₹)', isNumeric: true },
-        ];
-        dialogData = records.map((record: ApplicationFee & { agencyName: string }) => ({
-            agencyName: record.agencyName,
-            paymentDate: safeParseDate(record.applicationFeePaymentDate),
-            amount: Number(record.applicationFeeAmount) || 0,
-        }));
+    const baseCols = [
+        { key: 'slNo', label: 'Sl. No.' },
+        { key: 'agencyName', label: 'Agency Name' },
+    ];
+    
+    if (title.includes("Agency Registration Application")) {
+      columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({ ...d, amount: (Number(d.applicationFeeAmount) || 0) }));
+    } else if (title.includes("Rig Registration Application")) {
+      columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({ ...d, amount: (Number(d.applicationFeeAmount) || 0) }));
+    } else if (title.includes("Agency Registration Fee")) {
+      columns = [...baseCols, { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({ ...d, regNo: d.agencyRegistrationNo, amount: (Number(d.agencyRegistrationFee) || 0) + (Number(d.agencyAdditionalRegFee) || 0) }));
+    } else if (title.includes("Rig Registration Fee")) {
+      columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({ ...d, amount: (Number(d.registrationFee) || 0) + (Number(d.additionalRegistrationFee) || 0) }));
+    } else if (title.includes("Rig Registration Renewal")) {
+      columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({ ...d, amount: (Number(d.renewalFee) || 0) }));
     }
     
-    // Format and sort the data before sending to dialog
-    const formattedAndSortedData = dialogData.sort((a,b) => {
-        if (!a.paymentDate && !b.paymentDate) return 0;
-        if (!a.paymentDate) return 1;
-        if (!b.paymentDate) return -1;
-        return a.paymentDate.getTime() - b.paymentDate.getTime();
-    }).map((d, i) => ({
-        ...d,
-        slNo: i + 1,
-        paymentDate: d.paymentDate ? format(d.paymentDate, 'dd/MM/yyyy') : 'N/A',
-        fee: d.fee !== undefined ? d.fee.toLocaleString('en-IN') : d.amount !== undefined ? d.amount.toLocaleString('en-IN') : 'N/A',
-    }));
+    const formattedAndSortedData = dialogData
+        .sort((a, b) => (safeParseDate(a.paymentDate)?.getTime() || 0) - (safeParseDate(b.paymentDate)?.getTime() || 0))
+        .map((d, i) => ({
+            ...d,
+            slNo: i + 1,
+            paymentDate: d.paymentDate ? format(safeParseDate(d.paymentDate)!, 'dd/MM/yyyy') : 'N/A',
+            amount: d.amount.toLocaleString('en-IN')
+        }));
 
-    onOpenDialog(formattedAndSortedData, title);
+    onOpenDialog(formattedAndSortedData, title, columns);
   };
+
+  const renderTableCell = (metric: FinancialMetric, title: string) => (
+    <TableCell className="text-center p-2">
+      <Button variant="link" className="p-0 h-auto font-semibold" disabled={metric.count === 0} onClick={() => handleCellClick(metric.records, title)}>
+        {metric.count}
+      </Button>
+    </TableCell>
+  );
+
+  const renderAmountTableCell = (metric: FinancialMetric, title: string) => (
+    <TableCell className="text-center p-2">
+      <Button variant="link" className="p-0 h-auto font-semibold" disabled={metric.amount === 0} onClick={() => handleCellClick(metric.records, title)}>
+        {metric.amount.toLocaleString('en-IN')}
+      </Button>
+    </TableCell>
+  );
+  
+  const renderAgencyTableCell = (metric: { count: number, amount: number, records: any[] }, title: string) => (
+     <TableCell colSpan={rigColumns.length} className="text-left p-2">
+      <Button variant="link" className="p-0 h-auto font-semibold" disabled={metric.count === 0} onClick={() => handleCellClick(metric.records, title)}>
+        {metric.count}
+      </Button>
+    </TableCell>
+  );
+  
+   const renderAgencyAmountTableCell = (metric: { count: number, amount: number, records: any[] }, title: string) => (
+     <TableCell colSpan={rigColumns.length} className="text-left p-2">
+      <Button variant="link" className="p-0 h-auto font-semibold" disabled={metric.amount === 0} onClick={() => handleCellClick(metric.records, title)}>
+        {metric.amount.toLocaleString('en-IN')}
+      </Button>
+    </TableCell>
+  );
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5 text-primary" />Rig Registration Financials</CardTitle>
-        <CardDescription>Financial summary of rig registration and renewal fees.</CardDescription>
+        <CardDescription>Financial summary of rig registration and renewal fees by rig type.</CardDescription>
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
           <Input type="date" className="w-[240px]" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} />
           <Input type="date" className="w-[240px]" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} />
@@ -213,25 +221,64 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Section 1 */}
-          <div className="space-y-4">
-            <h4 className="text-base font-semibold text-primary">Application Counts (Completed)</h4>
-            <div className="grid grid-cols-1 gap-3">
-              <FinancialStatCard title="No. of Agency Registration Applications" count={financialData.agencyRegApps} amount={financialData.agencyRegFee} onClick={() => handleCellClick("No. of Agency Registration Applications", financialData.records.agencyRegs)} />
-              <FinancialStatCard title="No. of Rig Registration Applications" count={financialData.rigRegApps} amount={financialData.rigRegFee} onClick={() => handleCellClick("No. of Rig Registration Applications", financialData.records.rigRegs)} />
-              <FinancialStatCard title="No. of Rig Registration Renewal Applications" count={financialData.rigRenewalApps} amount={financialData.rigRenewalFee} onClick={() => handleCellClick("No. of Rig Registration Renewal Applications", financialData.records.rigRenewals)} />
-            </div>
-          </div>
-          {/* Section 2 */}
-          <div className="space-y-4 md:col-span-2">
-            <h4 className="text-base font-semibold text-primary">Fee Collections</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <FinancialStatCard title="Agency Registration Application Fee" count={financialData.records.agencyAppFees.length} amount={financialData.agencyAppFee} onClick={() => handleCellClick("Agency Registration Application Fee", financialData.records.agencyAppFees)} />
-                <FinancialStatCard title="Rig Registration Application Fee" count={financialData.records.rigAppFees.length} amount={financialData.rigAppFee} onClick={() => handleCellClick("Rig Registration Application Fee", financialData.records.rigAppFees)} />
-            </div>
-          </div>
-        </div>
+        <ScrollArea className="max-w-full">
+            <Table className="min-w-max border">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[300px] font-bold p-2">Description</TableHead>
+                        {rigColumns.map(type => <TableHead key={type} className="text-center font-bold p-2">{type}</TableHead>)}
+                        <TableHead className="text-center font-bold p-2">Total</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">No. of Applications</TableCell></TableRow>
+                    <TableRow>
+                        <TableCell className="p-2 pl-6">Agency Registration</TableCell>
+                        {renderAgencyTableCell(financialData.agencyReg, "Agency Registration Fee")}
+                        {renderTableCell(financialData.agencyReg, "Agency Registration Fee")}
+                    </TableRow>
+                     <TableRow>
+                        <TableCell className="p-2 pl-6">Rig Registration</TableCell>
+                        {rigColumns.map(type => renderTableCell(financialData.rigReg[type], `Rig Registration Fee - ${type}`))}
+                        {renderTableCell(financialData.rigReg.Total, "Total Rig Registration Fee")}
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="p-2 pl-6">Rig Registration Renewal</TableCell>
+                         {rigColumns.map(type => renderTableCell(financialData.rigRenewal[type], `Rig Registration Renewal - ${type}`))}
+                        {renderTableCell(financialData.rigRenewal.Total, "Total Rig Registration Renewal")}
+                    </TableRow>
+
+                    <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">Application Fee Received (₹)</TableCell></TableRow>
+                     <TableRow>
+                        <TableCell className="p-2 pl-6">Agency Registration</TableCell>
+                        {renderAgencyAmountTableCell(financialData.agencyAppFee, "Agency Registration Application Fee")}
+                        {renderAmountTableCell(financialData.agencyAppFee, "Agency Registration Application Fee")}
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="p-2 pl-6">Rig Registration</TableCell>
+                        {rigColumns.map(type => <TableCell key={type} className="text-center p-2">0</TableCell>)}
+                        {renderAmountTableCell(financialData.rigAppFee.Total, "Total Rig Registration Application Fee")}
+                    </TableRow>
+
+                    <TableRow className="bg-secondary/30"><TableCell colSpan={rigColumns.length + 2} className="p-2 font-bold text-primary">Registration/Renewal Fee Received (₹)</TableCell></TableRow>
+                    <TableRow>
+                        <TableCell className="p-2 pl-6">Agency Registration</TableCell>
+                         {renderAgencyAmountTableCell(financialData.agencyReg, "Agency Registration Fee")}
+                        {renderAmountTableCell(financialData.agencyReg, "Agency Registration Fee")}
+                    </TableRow>
+                     <TableRow>
+                        <TableCell className="p-2 pl-6">Rig Registration</TableCell>
+                        {rigColumns.map(type => renderAmountTableCell(financialData.rigReg[type], `Rig Registration Fee - ${type}`))}
+                        {renderAmountTableCell(financialData.rigReg.Total, "Total Rig Registration Fee")}
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="p-2 pl-6">Rig Registration Renewal</TableCell>
+                         {rigColumns.map(type => renderAmountTableCell(financialData.rigRenewal[type], `Rig Registration Renewal - ${type}`))}
+                        {renderAmountTableCell(financialData.rigRenewal.Total, "Total Rig Registration Renewal")}
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

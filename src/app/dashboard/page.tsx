@@ -186,80 +186,11 @@ export default function DashboardPage() {
   }, []);
 
   const handleOpenRigDialog = useCallback((
-    data: (AgencyApplication | (RigRegistration & {agencyName: string, ownerName: string}))[], 
-    title: string
+    data: any[], 
+    title: string,
+    columns: { key: string; label: string; isNumeric?: boolean; }[],
   ) => {
-    if (data.length === 0) return;
-
-    let columns: { key: string; label: string; isNumeric?: boolean; }[] = [];
-    let dialogData: Record<string, any>[] = [];
-
-    if (title === 'Total Agencies') {
-        columns = [
-            { key: 'slNo', label: 'Sl. No.' },
-            { key: 'agencyName', label: 'Agency Name' },
-            { key: 'registrationNo', label: 'Registration No' },
-            { key: 'paymentDate', label: 'Payment Date' },
-            { key: 'fee', label: 'Fee (₹)', isNumeric: true },
-        ];
-        
-        const sortedData = [...(data as AgencyApplication[])].sort((a,b) => {
-            const dateA = safeParseDate(a.agencyPaymentDate);
-            const dateB = safeParseDate(b.agencyPaymentDate);
-            if (!dateA && !dateB) return 0;
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-            return dateB.getTime() - dateA.getTime();
-        });
-
-        dialogData = sortedData.map((app, index) => {
-            const totalFee = (Number(app.agencyRegistrationFee) || 0) + (Number(app.agencyAdditionalRegFee) || 0);
-            const payDate = safeParseDate(app.agencyPaymentDate);
-            return {
-                slNo: index + 1,
-                agencyName: app.agencyName,
-                registrationNo: app.agencyRegistrationNo || 'N/A',
-                paymentDate: payDate ? format(payDate, 'dd/MM/yyyy') : 'N/A',
-                fee: totalFee.toLocaleString('en-IN')
-            };
-        });
-    } else {
-        columns = [
-          { key: 'slNo', label: 'Sl. No.' },
-          { key: 'rigRegistrationNo', label: 'Rig Reg. No.' },
-          { key: 'agencyName', label: 'Agency Name' },
-          { key: 'ownerName', label: 'Owner' },
-          { key: 'typeOfRig', label: 'Type' },
-          { key: 'status', label: 'Status' },
-          { key: 'registrationDate', label: 'Registration Date' },
-          { key: 'validity', label: 'Validity Date' },
-        ];
-        dialogData = (data as (RigRegistration & {agencyName: string, ownerName: string})[]).map((rig, index) => {
-          const lastEffectiveDate = rig.renewals && rig.renewals.length > 0
-              ? [...rig.renewals].sort((a, b) => {
-                  const dateA = safeParseDate(a.renewalDate)?.getTime() ?? 0;
-                  const dateB = safeParseDate(b.renewalDate)?.getTime() ?? 0;
-                  return dateB - dateA;
-                })[0].renewalDate
-              : rig.registrationDate;
-
-          const regDate = safeParseDate(rig.registrationDate);
-          const validityDate = lastEffectiveDate ? addYears(safeParseDate(lastEffectiveDate)!, 1) : null;
-
-          return {
-            slNo: index + 1,
-            rigRegistrationNo: rig.rigRegistrationNo || 'N/A',
-            agencyName: rig.agencyName,
-            ownerName: rig.ownerName,
-            typeOfRig: rig.typeOfRig || 'N/A',
-            status: rig.status,
-            registrationDate: regDate ? format(regDate, 'dd/MM/yyyy') : 'N/A',
-            validity: validityDate ? format(new Date(validityDate.getTime() - 24*60*60*1000), 'dd/MM/yyyy') : 'N/A',
-          };
-        });
-    }
-
-    setDialogState({ isOpen: true, data: dialogData, title, columns, type: 'rig' });
+    setDialogState({ isOpen: true, data, title, columns, type: 'rig' });
   }, []);
 
   const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || !dashboardData;
@@ -309,15 +240,14 @@ export default function DashboardPage() {
           {rigRegistrationData && (
             <RigRegistrationOverview 
               data={rigRegistrationData}
-              onCardClick={handleOpenRigDialog}
+              onCardClick={(data, title) => handleOpenRigDialog(data, title, [])}
             />
           )}
-
+           
            <RigFinancialSummary 
             agencyApplications={agencyApplications}
             onOpenDialog={handleOpenRigDialog}
           />
-
         </>
       )}
       
