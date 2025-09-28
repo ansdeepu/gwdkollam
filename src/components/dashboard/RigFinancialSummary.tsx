@@ -83,6 +83,12 @@ const FinancialAmountRow = ({ label, data, total, onCellClick, onTotalClick }: {
     </TableRow>
 );
 
+const formatDateSafe = (d: any): string => {
+    if (!d) return 'N/A';
+    const date = safeParseDate(d);
+    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+}
+
 
 export default function RigFinancialSummary({ applications, onCellClick }: RigFinancialSummaryProps) {
     const [startDate, setStartDate] = useState<Date | undefined>();
@@ -116,14 +122,14 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             data.rigRegFeeData[rt] = []; data.renewalFeeData[rt] = [];
         })
         
-        applications.forEach(app => {
-            if (checkDate(app.agencyRegistrationDate)) {
-                data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
-                data.agencyRegData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, regDate: formatDateSafe(app.agencyRegistrationDate), fee: app.agencyRegistrationFee });
-            }
-            
-            if (app.applicationFees) {
-                app.applicationFees.forEach(fee => {
+        if(applications){
+            applications.forEach(app => {
+                if (checkDate(app.agencyRegistrationDate)) {
+                    data.agencyRegCount["Agency"] = (data.agencyRegCount["Agency"] || 0) + 1;
+                    data.agencyRegData.push({ agencyName: app.agencyName, regNo: app.agencyRegistrationNo, regDate: formatDateSafe(app.agencyRegistrationDate), fee: app.agencyRegistrationFee });
+                }
+                
+                app.applicationFees?.forEach(fee => {
                     if(checkDate(fee.applicationFeePaymentDate)) {
                         const feeData = { agencyName: app.agencyName, feeType: fee.applicationFeeType, paymentDate: formatDateSafe(fee.applicationFeePaymentDate), amount: fee.applicationFeeAmount };
                         if (fee.applicationFeeType === "Agency Registration") {
@@ -135,19 +141,17 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                         }
                     }
                 });
-            }
 
-            if (checkDate(app.agencyPaymentDate)) {
-                 data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyRegistrationFee) || 0);
-                 data.agencyRegFeeData.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyPaymentDate), fee: app.agencyRegistrationFee });
-            }
-            if (checkDate(app.agencyAdditionalPaymentDate)) {
-                 data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyAdditionalRegFee) || 0);
-                 data.agencyRegFeeData.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyAdditionalPaymentDate), fee: app.agencyAdditionalRegFee });
-            }
+                if (checkDate(app.agencyPaymentDate)) {
+                     data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyRegistrationFee) || 0);
+                     data.agencyRegFeeData.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyPaymentDate), fee: app.agencyRegistrationFee });
+                }
+                if (checkDate(app.agencyAdditionalPaymentDate)) {
+                     data.agencyRegFee["Agency"] = (data.agencyRegFee["Agency"] || 0) + (Number(app.agencyAdditionalRegFee) || 0);
+                     data.agencyRegFeeData.push({ agencyName: app.agencyName, regDate: formatDateSafe(app.agencyAdditionalPaymentDate), fee: app.agencyAdditionalRegFee });
+                }
 
-            if (app.rigs) {
-                app.rigs.forEach(rig => {
+                app.rigs?.forEach(rig => {
                     const rigType = rig.typeOfRig;
                     if (!rigType || !rigTypeColumns.includes(rigType)) return;
 
@@ -162,19 +166,17 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                         data.rigRegFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, regDate: formatDateSafe(rig.additionalPaymentDate), fee: rig.additionalRegistrationFee });
                     }
                     
-                    if (rig.renewals) {
-                        rig.renewals.forEach(renewal => {
-                            if (checkDate(renewal.renewalDate)) {
-                                data.renewalCount[rigType] = (data.renewalCount[rigType] || 0) + 1;
-                                data.renewalFee[rigType] = (data.renewalFee[rigType] || 0) + (Number(renewal.renewalFee) || 0);
-                                data.renewalData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: formatDateSafe(renewal.renewalDate) });
-                                data.renewalFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: formatDateSafe(renewal.paymentDate), renewalFee: renewal.renewalFee });
-                            }
-                        });
-                    }
+                    rig.renewals?.forEach(renewal => {
+                        if (checkDate(renewal.renewalDate)) {
+                            data.renewalCount[rigType] = (data.renewalCount[rigType] || 0) + 1;
+                            data.renewalFee[rigType] = (data.renewalFee[rigType] || 0) + (Number(renewal.renewalFee) || 0);
+                            data.renewalData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: formatDateSafe(renewal.renewalDate) });
+                            data.renewalFeeData[rigType].push({ agencyName: app.agencyName, rigType: rigType, renewalDate: formatDateSafe(renewal.paymentDate), renewalFee: renewal.renewalFee });
+                        }
+                    });
                 });
-            }
-        });
+            });
+        }
         
         const totals: Record<string, number> = {};
         Object.keys(data).forEach(key => {
@@ -225,7 +227,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         }
 
         if (dialogData.length > 0) {
-            onCellClick(dialogData, title);
+            onCellClick(dialogData, title, columns);
         }
     };
     
@@ -241,12 +243,6 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
             handleCellClick(dataType, 'Agency', title);
         }
     };
-
-    const formatDateSafe = (d: any): string => {
-        if (!d) return 'N/A';
-        const date = safeParseDate(d);
-        return date ? format(date, 'dd/MM/yyyy') : 'N/A';
-    }
 
 
     return (
@@ -277,9 +273,9 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
                             
                             <TableRow className="bg-secondary/50 font-semibold"><TableCell colSpan={8} className="p-2">fees details (₹)</TableCell></TableRow>
                             
-                            <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} onCellClick={(rt) => handleCellClick('agencyRegAppFeeData', 'Agency', 'Agency Application Fees')} onTotalClick={() => handleTotalClick('agencyRegAppFeeData', 'Total Agency Application Fees')} />
-                            <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} onCellClick={(rt) => handleCellClick('rigRegAppFeeData', 'Agency', 'Rig Application Fees')} onTotalClick={() => handleTotalClick('rigRegAppFeeData', 'Total Rig Application Fees')} />
-                            <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} onCellClick={(rt) => handleCellClick('agencyRegFeeData', 'Agency', 'Agency Registration Fees')} onTotalClick={() => handleTotalClick('agencyRegFeeData', 'Total Agency Registration Fees')} />
+                            <FinancialAmountRow label="Agency Registration Application Fee" data={summaryData.agencyRegAppFee} total={summaryData.totals.agencyRegAppFee} onCellClick={() => handleCellClick('agencyRegAppFeeData', 'Agency', 'Agency Application Fees')} onTotalClick={() => handleTotalClick('agencyRegAppFeeData', 'Total Agency Application Fees')} />
+                            <FinancialAmountRow label="Rig Registration Application Fee" data={summaryData.rigRegAppFee} total={summaryData.totals.rigRegAppFee} onCellClick={() => handleCellClick('rigRegAppFeeData', 'Agency', 'Rig Application Fees')} onTotalClick={() => handleTotalClick('rigRegAppFeeData', 'Total Rig Application Fees')} />
+                            <FinancialAmountRow label="Agency Registration Fee" data={summaryData.agencyRegFee} total={summaryData.totals.agencyRegFee} onCellClick={() => handleCellClick('agencyRegFeeData', 'Agency', 'Agency Registration Fees')} onTotalClick={() => handleTotalClick('agencyRegFeeData', 'Total Agency Registration Fees')} />
                             <FinancialAmountRow label="Rig Registration Fee" data={summaryData.rigRegFee} total={summaryData.totals.rigRegFee} onCellClick={(rt) => handleCellClick('rigRegFeeData', rt, `${rt} Registration Fees`)} onTotalClick={() => handleTotalClick('rigRegFeeData', 'Total Rig Registration Fees')} />
                             <FinancialAmountRow label="Rig Registration Renewal Fee" data={summaryData.renewalFee} total={summaryData.totals.renewalFee} onCellClick={(rt) => handleCellClick('renewalFeeData', rt, `${rt} Renewal Fees`)} onTotalClick={() => handleTotalClick('renewalFeeData', 'Total Rig Renewal Fees')} />
                         </TableBody>

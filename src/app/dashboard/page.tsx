@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -178,8 +179,8 @@ export default function DashboardPage() {
           />
            
            <RigFinancialSummary 
-            agencyApplications={agencyApplications}
-            onOpenDialog={handleOpenRigDialog}
+            applications={agencyApplications}
+            onCellClick={handleOpenDialog}
           />
         </>
       )}
