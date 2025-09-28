@@ -1,4 +1,3 @@
-
 // src/components/dashboard/RigFinancialSummary.tsx
 "use client";
 
@@ -162,7 +161,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     } else if (title.includes("Agency Registration Fee")) {
       columns = [...baseCols, { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
       dialogData = data.map(d => ({ ...d, regNo: d.agencyRegistrationNo, amount: (Number(d.agencyRegistrationFee) || 0) + (Number(d.agencyAdditionalRegFee) || 0) }));
-    } else if (title.includes("Total - No. of Rig Registration Applications")) {
+    } else if (title.startsWith("Total - No. of Rig Registration Applications")) {
         columns = [
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'agencyName', label: 'Name of Agency' },
@@ -183,7 +182,7 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
     } else if (title.includes("Rig Registration Fee")) {
       columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
       dialogData = data.map(d => ({ ...d, amount: (Number(d.registrationFee) || 0) + (Number(d.additionalRegistrationFee) || 0) }));
-    } else if (title.includes("Total - No. of Rig Registration Renewal Applications")) {
+    } else if (title.startsWith("Total - No. of Rig Registration Renewal Applications")) {
         columns = [
             { key: 'slNo', label: 'Sl. No.' },
             { key: 'agencyName', label: 'Name of Agency' },
