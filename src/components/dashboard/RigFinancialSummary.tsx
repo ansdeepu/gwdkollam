@@ -169,8 +169,13 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
       columns = [...baseCols, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
       dialogData = data.map(d => ({ ...d, amount: (Number(d.applicationFeeAmount) || 0) }));
     } else if (title.includes("Agency Registration Fee")) {
-      columns = [...baseCols, { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
-      dialogData = data.map(d => ({ ...d, regNo: d.agencyRegistrationNo, amount: (Number(d.agencyRegistrationFee) || 0) + (Number(d.agencyAdditionalRegFee) || 0) }));
+      columns = [...baseCols, { key: 'regNo', label: 'Registration No'}, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({
+        ...d,
+        regNo: d.agencyRegistrationNo,
+        paymentDate: d.agencyPaymentDate || d.agencyAdditionalPaymentDate,
+        fee: (Number(d.agencyRegistrationFee) || 0) + (Number(d.agencyAdditionalRegFee) || 0)
+      }));
     } else if (title.startsWith("Total - No. of Rig Registration Applications")) {
         columns = [
             { key: 'slNo', label: 'Sl. No.' },
@@ -190,8 +195,8 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
             };
         });
     } else if (title.includes("Rig Registration Fee")) {
-      columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
-      dialogData = data.map(d => ({ ...d, amount: (Number(d.registrationFee) || 0) + (Number(d.additionalRegistrationFee) || 0) }));
+      columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({ ...d, fee: (Number(d.registrationFee) || 0) + (Number(d.additionalRegistrationFee) || 0), paymentDate: d.paymentDate || d.additionalPaymentDate }));
     } else if (title.startsWith("Total - No. of Rig Registration Renewal Applications")) {
         columns = [
             { key: 'slNo', label: 'Sl. No.' },
@@ -207,8 +212,8 @@ export default function RigFinancialSummary({ agencyApplications, onOpenDialog }
             fee: Number(record.renewalFee) || 0,
         }));
     } else if (title.includes("Rig Registration Renewal")) {
-      columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'amount', label: 'Fee (₹)', isNumeric: true }];
-      dialogData = data.map(d => ({ ...d, amount: (Number(d.renewalFee) || 0) }));
+      columns = [...baseCols, { key: 'typeOfRig', label: 'Type of Rig' }, { key: 'paymentDate', label: 'Payment Date' }, { key: 'fee', label: 'Fee (₹)', isNumeric: true }];
+      dialogData = data.map(d => ({ ...d, fee: (Number(d.renewalFee) || 0) }));
     }
     
     const formattedAndSortedData = dialogData
