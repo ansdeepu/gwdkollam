@@ -27,9 +27,6 @@ import RigFinancialSummary from '@/components/dashboard/RigFinancialSummary';
 import ConstituencyWiseOverview from '@/components/dashboard/ConstituencyWiseOverview';
 import { useArsEntries } from '@/hooks/useArsEntries';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,26 +45,6 @@ const safeParseDate = (dateValue: any): Date | null => {
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
 
-const sections = [
-  { id: 'updates', title: 'Updates' },
-  { id: 'file-status', title: 'File Status' },
-  { id: 'work-status', title: 'Work Status' },
-  { id: 'constituency', title: 'Constituency' },
-  { id: 'finance', title: 'Finance' },
-  { id: 'ars', title: 'ARS' },
-  { id: 'rig-registration', title: 'Rig Registration' },
-  { id: 'rig-financials', title: 'Rig Financials' },
-  { id: 'work-progress', title: 'Work Progress' },
-  { id: 'supervisor-work', title: 'Supervisor Work' },
-];
-
-const sectionColors = [
-    "text-sky-600", "text-blue-600", "text-indigo-600", "text-violet-600",
-    "text-purple-600", "text-fuchsia-600", "text-pink-600", "text-rose-600",
-    "text-red-600", "text-orange-600", "text-amber-600", "text-yellow-600",
-    "text-lime-600", "text-green-600", "text-emerald-600", "text-teal-600", "text-cyan-600"
-];
-
 export default function DashboardPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
@@ -84,8 +61,6 @@ export default function DashboardPage() {
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [usersLoading, setUsersLoading] = useState<boolean>(true);
   
-  const [activeSection, setActiveSection] = useState<string>(sections[0].id);
-
   const [dialogState, setDialogState] = useState({
     isOpen: false,
     title: "",
@@ -98,32 +73,6 @@ export default function DashboardPage() {
   const [constituencyDates, setConstituencyDates] = useState<{ start?: Date, end?: Date }>({});
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { rootMargin: '-20% 0px -80% 0px', threshold: 0 }
-    );
-
-    Object.values(sectionRefs.current).forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => observer.disconnect();
-  }, [sectionRefs]);
-  
-  const handleNavClick = (id: string) => {
-    sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setActiveSection(id);
-  };
-  
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {
@@ -236,49 +185,22 @@ export default function DashboardPage() {
     );
   }
   
-  const navSections = sections.filter(section => {
-    if (currentUser?.role === 'supervisor') {
-      return !['finance', 'ars', 'rig-registration', 'rig-financials', 'supervisor-work'].includes(section.id);
-    }
-    return true;
-  });
-
   return (
     <>
-      <div className="sticky top-0 z-40 -mx-6 -mt-6 mb-6 bg-background/80 backdrop-blur-lg">
-        <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex items-center border-b px-4">
-            {navSections.map((section, index) => (
-                <button
-                    key={section.id}
-                    onClick={() => handleNavClick(section.id)}
-                    className={cn(
-                        "flex-shrink-0 px-3 py-2.5 text-xs font-semibold transition-all duration-200 ease-in-out border-b-2",
-                        activeSection === section.id
-                        ? `border-primary ${sectionColors[index % sectionColors.length]}`
-                        : "border-transparent text-muted-foreground hover:text-primary"
-                    )}
-                >
-                {section.title}
-                </button>
-            ))}
-            </div>
-        </ScrollArea>
-      </div>
       <div className="space-y-6">
-        <div id="updates" ref={el => sectionRefs.current['updates'] = el} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id="updates" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ImportantUpdates allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries} />
           <NoticeBoard staffMembers={dashboardData.staffMembers} />
         </div>
 
-        <div id="file-status" ref={el => sectionRefs.current['file-status'] = el}>
+        <div id="file-status">
           <FileStatusOverview 
               nonArsEntries={dashboardData.nonArsEntries}
               onOpenDialog={handleOpenDialog}
           />
         </div>
         
-        <div id="work-status" ref={el => sectionRefs.current['work-status'] = el}>
+        <div id="work-status">
           <WorkStatusByService 
             allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
             onOpenDialog={handleOpenDialog}
@@ -286,7 +208,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div id="constituency" ref={el => sectionRefs.current['constituency'] = el}>
+        <div id="constituency">
           <ConstituencyWiseOverview
             allWorks={constituencyWorks}
             onOpenDialog={handleOpenDialog}
@@ -297,7 +219,7 @@ export default function DashboardPage() {
         
         {currentUser?.role !== 'supervisor' && (
           <>
-            <div id="finance" ref={el => sectionRefs.current['finance'] = el}>
+            <div id="finance">
               <FinanceOverview 
                 allFileEntries={dashboardData.allFileEntries}
                 onOpenDialog={handleOpenDialog}
@@ -306,7 +228,7 @@ export default function DashboardPage() {
               />
             </div>
             
-            <div id="ars" ref={el => sectionRefs.current['ars'] = el}>
+            <div id="ars">
               <ArsStatusOverview 
                 onOpenDialog={handleOpenDialog}
                 dates={arsDates}
@@ -314,14 +236,14 @@ export default function DashboardPage() {
               />
             </div>
             
-            <div id="rig-registration" ref={el => sectionRefs.current['rig-registration'] = el}>
+            <div id="rig-registration">
               <RigRegistrationOverview 
                 agencyApplications={agencyApplications}
                 onOpenDialog={handleOpenDialog}
               />
             </div>
             
-            <div id="rig-financials" ref={el => sectionRefs.current['rig-financials'] = el}>
+            <div id="rig-financials">
               <RigFinancialSummary
                   applications={agencyApplications}
                   onCellClick={handleOpenDialog}
@@ -330,7 +252,7 @@ export default function DashboardPage() {
           </>
         )}
         
-        <div id="work-progress" ref={el => sectionRefs.current['work-progress'] = el}>
+        <div id="work-progress">
           <WorkProgress
             allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
             onOpenDialog={handleOpenDialog}
@@ -339,7 +261,7 @@ export default function DashboardPage() {
         </div>
 
         {currentUser?.role !== 'supervisor' && (
-          <div id="supervisor-work" ref={el => sectionRefs.current['supervisor-work'] = el} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div id="supervisor-work" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <SupervisorWork 
               allFileEntries={dashboardData.allFileEntries}
               allUsers={allUsers}
