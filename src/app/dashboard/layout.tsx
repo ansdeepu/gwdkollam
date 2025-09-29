@@ -128,9 +128,10 @@ function HeaderContent() {
                       onClick={() => handleNavClick(section.id)}
                       className={cn(
                           "flex-shrink-0 px-3 py-2.5 text-xs font-semibold transition-all duration-200 ease-in-out border-b-2",
-                          activeSection === section.id
-                          ? `border-primary ${sectionColors[index % sectionColors.length]}`
-                          : "border-transparent text-muted-foreground hover:text-primary"
+                           sectionColors[index % sectionColors.length],
+                           activeSection === section.id
+                           ? "border-primary opacity-100"
+                           : "border-transparent opacity-60 hover:opacity-100"
                       )}
                   >
                   {section.title}
