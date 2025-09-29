@@ -234,7 +234,7 @@ export default function DashboardPage() {
                         return null;
                     }
                     return (
-                        <TabsTrigger key={section.id} value={section.id} className="text-sm px-3 py-1.5 h-auto" onClick={() => handleNavClick(section.id)}>
+                        <TabsTrigger key={section.id} value={section.id} className="text-base px-3 py-1.5 h-auto">
                             {section.title}
                         </TabsTrigger>
                     );
