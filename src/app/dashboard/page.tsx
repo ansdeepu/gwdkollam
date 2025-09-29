@@ -24,6 +24,7 @@ import SupervisorWork from '@/components/dashboard/SupervisorWork';
 import DashboardDialogs from '@/components/dashboard/DashboardDialogs';
 import FinanceOverview from '@/components/dashboard/FinanceOverview';
 import RigFinancialSummary from '@/components/dashboard/RigFinancialSummary';
+import ConstituencyWiseOverview from '@/components/dashboard/ConstituencyWiseOverview';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,6 +149,11 @@ export default function DashboardPage() {
         allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
         onOpenDialog={handleOpenDialog}
         currentUserRole={currentUser?.role}
+      />
+
+      <ConstituencyWiseOverview
+        allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
+        onOpenDialog={handleOpenDialog}
       />
       
       {currentUser?.role !== 'supervisor' && (
