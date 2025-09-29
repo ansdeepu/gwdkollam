@@ -253,7 +253,7 @@ export default function DashboardPage() {
                     key={section.id}
                     onClick={() => handleNavClick(section.id)}
                     className={cn(
-                        "flex-shrink-0 px-4 py-3 text-sm font-semibold transition-all duration-200 ease-in-out border-b-2",
+                        "flex-shrink-0 px-3 py-2.5 text-xs font-semibold transition-all duration-200 ease-in-out border-b-2",
                         activeSection === section.id
                         ? `border-primary ${sectionColors[index % sectionColors.length]}`
                         : "border-transparent text-muted-foreground hover:text-primary"
