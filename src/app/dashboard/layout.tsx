@@ -131,7 +131,7 @@ function HeaderContent() {
                            sectionColors[index % sectionColors.length],
                            activeSection === section.id
                            ? "border-primary opacity-100"
-                           : "border-transparent opacity-60 hover:opacity-100"
+                           : "border-transparent opacity-70 hover:opacity-100"
                       )}
                   >
                   {section.title}
