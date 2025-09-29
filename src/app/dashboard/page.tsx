@@ -120,7 +120,7 @@ export default function DashboardPage() {
     const constituencyWorks = useMemo(() => {
         const publicDepositWorks = allFileEntries
             .filter(entry => entry.applicationType && !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
-            .flatMap(entry => (entry.siteDetails || []).map(site => ({...site, fileNo: entry.fileNo, applicantName: entry.applicantName})));
+            .flatMap(entry => (entry.siteDetails || []).map(site => ({...site, fileNo: entry.fileNo, applicantName: entry.applicantName, constituency: site.constituency || entry.constituency})));
 
         const arsWorks = arsEntries.map(entry => ({
             nameOfSite: entry.nameOfSite,

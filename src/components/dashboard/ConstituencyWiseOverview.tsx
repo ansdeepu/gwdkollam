@@ -130,7 +130,8 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
     let totalWorks = 0;
 
     allWorks.forEach(work => {
-        const constituency = work.constituency as Constituency;
+        // A work can have a constituency at the site level, or at the file level (for ARS)
+        const constituency = work.constituency as Constituency | undefined;
         const purpose = (work.purpose || 'N/A') as string;
         
         if (constituency && constituencyOptions.includes(constituency)) {
@@ -140,9 +141,12 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
           currentData.allWorks.push(work);
           totalWorks++;
           
-          if (purpose && currentData.byPurpose[purpose]) {
-            currentData.byPurpose[purpose].count++;
-            currentData.byPurpose[purpose].data.push(work);
+          if (purpose) {
+            const purposeKey = Object.keys(currentData.byPurpose).find(p => p === purpose);
+            if (purposeKey) {
+                currentData.byPurpose[purposeKey].count++;
+                currentData.byPurpose[purposeKey].data.push(work);
+            }
           }
         }
     });
