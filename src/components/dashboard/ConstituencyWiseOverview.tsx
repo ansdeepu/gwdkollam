@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ConstituencyWiseOverview.tsx
 "use client";
 
@@ -11,6 +10,7 @@ import type { DataEntryFormData, SitePurpose, Constituency, SiteDetailFormData }
 import { constituencyOptions, sitePurposeOptions } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
 import { format, parse, startOfDay, endOfDay, isWithinInterval, isValid } from 'date-fns';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface CombinedWork {
     nameOfSite?: string | null;
@@ -54,86 +54,29 @@ const hashCode = (str: string): number => {
 };
 
 const colorClasses = [
-    "bg-sky-500/5 border-sky-500/50",
-    "bg-blue-500/5 border-blue-500/50",
-    "bg-indigo-500/5 border-indigo-500/50",
-    "bg-violet-500/5 border-violet-500/50",
-    "bg-purple-500/5 border-purple-500/50",
-    "bg-fuchsia-500/5 border-fuchsia-500/50",
-    "bg-pink-500/5 border-pink-500/50",
-    "bg-rose-500/5 border-rose-500/50",
-    "bg-red-500/5 border-red-500/50",
-    "bg-orange-500/5 border-orange-500/50",
-    "bg-amber-500/5 border-amber-500/50",
-    "bg-yellow-500/5 border-yellow-500/50",
-    "bg-lime-500/5 border-lime-500/50",
-    "bg-green-500/5 border-green-500/50",
-    "bg-emerald-500/5 border-emerald-500/50",
-    "bg-teal-500/5 border-teal-500/50",
-    "bg-cyan-500/5 border-cyan-500/50",
+    "bg-sky-500/10 border-sky-500/20",
+    "bg-blue-500/10 border-blue-500/20",
+    "bg-indigo-500/10 border-indigo-500/20",
+    "bg-violet-500/10 border-violet-500/20",
+    "bg-purple-500/10 border-purple-500/20",
+    "bg-fuchsia-500/10 border-fuchsia-500/20",
+    "bg-pink-500/10 border-pink-500/20",
+    "bg-rose-500/10 border-rose-500/20",
+    "bg-red-500/10 border-red-500/20",
+    "bg-orange-500/10 border-orange-500/20",
+    "bg-amber-500/10 border-amber-500/20",
+    "bg-yellow-500/10 border-yellow-500/20",
+    "bg-lime-500/10 border-lime-500/20",
+    "bg-green-500/10 border-green-500/20",
+    "bg-emerald-500/10 border-emerald-500/20",
+    "bg-teal-500/10 border-teal-500/20",
+    "bg-cyan-500/10 border-cyan-500/20",
 ];
 
 const getColorClass = (name: string): string => {
     const hash = hashCode(name);
     const index = Math.abs(hash) % colorClasses.length;
     return colorClasses[index];
-};
-
-
-const StatusCard = ({
-  title,
-  totalCount,
-  totalExpenditure,
-  onTotalClick,
-  className,
-  purposeData,
-  onPurposeClick,
-}: {
-  title: string;
-  totalCount: number;
-  totalExpenditure: number;
-  onTotalClick?: () => void;
-  className?: string;
-  purposeData: Record<string, { count: number; data: any[] }>;
-  onPurposeClick: (purpose: string) => void;
-}) => {
-    const hasData = Object.values(purposeData).some(p => p.count > 0);
-
-    return (
-        <Card className={cn("flex flex-col", className)}>
-        <CardHeader className="flex-row items-center justify-between pb-2 text-center">
-            <CardTitle className="text-sm font-medium w-full">{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-            <Button
-              variant="link"
-              className="text-4xl font-bold p-0 h-auto"
-              onClick={onTotalClick}
-              disabled={!onTotalClick || totalCount === 0}
-            >
-              {totalCount}
-            </Button>
-            <p className="text-xs text-muted-foreground">Total Works</p>
-            
-            <p className="text-xl font-bold mt-2 text-primary">₹{totalExpenditure.toLocaleString('en-IN')}</p>
-            <p className="text-xs text-muted-foreground">Total Expenditure</p>
-            
-            <div className="mt-4 space-y-2">
-                {hasData ? Object.entries(purposeData).map(([purpose, { count }]) => {
-                    if (count === 0) return null;
-                    return (
-                        <div key={purpose} className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">{purpose}</span>
-                            <Button variant="link" className="p-0 h-auto text-xs font-semibold" onClick={() => onPurposeClick(purpose)} disabled={count === 0}>
-                                {count}
-                            </Button>
-                        </div>
-                    )
-                }) : <p className="text-xs text-muted-foreground italic text-center pt-4">No works found for the selected period.</p>}
-            </div>
-        </CardContent>
-        </Card>
-    );
 };
 
 export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates, onSetDates }: ConstituencyWiseOverviewProps) {
@@ -237,39 +180,63 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
             <Input
                 type="date"
-                className="w-[240px]"
+                className="w-auto"
                 value={dates.start ? format(dates.start, 'yyyy-MM-dd') : ''}
                 onChange={(e) => onSetDates({ ...dates, start: e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined })}
             />
             <Input
                 type="date"
-                className="w-[240px]"
+                className="w-auto"
                 value={dates.end ? format(dates.end, 'yyyy-MM-dd') : ''}
                 onChange={(e) => onSetDates({ ...dates, end: e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined })}
             />
             <Button onClick={() => onSetDates({ start: undefined, end: undefined })} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4" />Clear Dates</Button>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-        {sortedConstituencies.map(constituency => {
-            const data = summaryData.constituencyData[constituency];
-            if (!data) return null;
-            return (
-              <StatusCard
-                key={constituency}
-                title={constituency}
-                totalCount={data.totalCount}
-                totalExpenditure={data.totalExpenditure}
-                purposeData={data.byPurpose}
-                className={getColorClass(constituency)}
-                onTotalClick={() => handleCellClick(data.allWorks, `All Works in ${constituency}`)}
-                onPurposeClick={(purpose) => handleCellClick(data.byPurpose[purpose].data, `Works for '${purpose}' in ${constituency}`)}
-              />
-            )
-        })}
-        {summaryData.totalWorks === 0 && (
-            <div className="col-span-full text-center text-muted-foreground py-10">
-                No works found for the selected filters.
+      <CardContent>
+        {summaryData.totalWorks > 0 ? (
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-4">
+              {sortedConstituencies.map(constituency => {
+                  const data = summaryData.constituencyData[constituency];
+                  if (!data || data.totalCount === 0) return null;
+                  const hasPurposeData = Object.values(data.byPurpose).some(p => p.count > 0);
+
+                  return (
+                    <div key={constituency} className={cn("p-4 border rounded-lg", getColorClass(constituency))}>
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-base font-semibold text-primary">{constituency}</h3>
+                        <div className="text-right">
+                          <Button variant="link" className="text-xl font-bold p-0 h-auto" onClick={() => handleCellClick(data.allWorks, `All Works in ${constituency}`)} disabled={data.totalCount === 0}>
+                            {data.totalCount} <span className="text-sm font-normal text-muted-foreground ml-1">Works</span>
+                          </Button>
+                          <p className="text-sm font-semibold text-primary/80">₹{data.totalExpenditure.toLocaleString('en-IN')}</p>
+                        </div>
+                      </div>
+
+                      {hasPurposeData && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2 pt-3 border-t border-border/50">
+                          {Object.entries(data.byPurpose).map(([purpose, { count }]) => {
+                              if (count === 0) return null;
+                              return (
+                                <div key={purpose} className="flex items-center justify-between text-xs">
+                                  <span className="text-muted-foreground">{purpose}</span>
+                                  <Button variant="link" className="p-0 h-auto text-xs font-semibold" onClick={() => handleCellClick(data.byPurpose[purpose].data, `Works for '${purpose}' in ${constituency}`)} disabled={count === 0}>
+                                    {count}
+                                  </Button>
+                                </div>
+                              )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+              })}
+            </div>
+          </ScrollArea>
+        ) : (
+           <div className="col-span-full text-center text-muted-foreground py-10 h-[400px] flex items-center justify-center border-2 border-dashed rounded-lg">
+                <p>No works found for the selected filters.</p>
             </div>
         )}
       </CardContent>
