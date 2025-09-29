@@ -176,12 +176,8 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
   };
   
   const sortedConstituencies = useMemo(() => {
-      return [...constituencyOptions].sort((a,b) => {
-          const countA = summaryData.constituencyData[a]?.totalCount ?? 0;
-          const countB = summaryData.constituencyData[b]?.totalCount ?? 0;
-          return countB - countA;
-      });
-  }, [summaryData]);
+      return [...constituencyOptions].sort((a,b) => a.localeCompare(b));
+  }, []);
   
   return (
     <Card>
