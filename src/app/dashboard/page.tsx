@@ -48,19 +48,6 @@ const safeParseDate = (dateValue: any): Date | null => {
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
 
-const dashboardSections = [
-  { id: 'updates', title: 'Updates' },
-  { id: 'file-status', title: 'File Status' },
-  { id: 'work-status', title: 'Work Status' },
-  { id: 'constituency-works', title: 'Constituency' },
-  { id: 'finance-overview', title: 'Finance' },
-  { id: 'ars-overview', title: 'ARS' },
-  { id: 'rig-overview', title: 'Rig Registration' },
-  { id: 'rig-financials', title: 'Rig Financials' },
-  { id: 'work-progress', title: 'Work Progress' },
-  { id: 'supervisor-work', title: 'Supervisor Work' },
-];
-
 
 export default function DashboardPage() {
   const { setHeader } = usePageHeader();
@@ -90,9 +77,6 @@ export default function DashboardPage() {
   const [constituencyDates, setConstituencyDates] = useState<{ start?: Date, end?: Date }>({});
   const [showScrollTop, setShowScrollTop] = useState(false);
   
-  const [activeTab, setActiveTab] = useState('updates');
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {
@@ -100,17 +84,6 @@ export default function DashboardPage() {
       } else {
         setShowScrollTop(false);
       }
-
-      const scrollPosition = window.scrollY + window.innerHeight / 3;
-      let currentSectionId = 'updates';
-
-      dashboardSections.forEach(section => {
-        const el = sectionRefs.current[section.id];
-        if (el && el.offsetTop <= scrollPosition) {
-          currentSectionId = section.id;
-        }
-      });
-      setActiveTab(currentSectionId);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -216,107 +189,66 @@ export default function DashboardPage() {
     );
   }
 
-  const handleNavClick = (id: string) => {
-    const element = sectionRefs.current[id];
-    if (element) {
-      const topPos = element.offsetTop - 80; // Adjusted for sticky header
-      window.scrollTo({ top: topPos, behavior: 'smooth' });
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm -mx-6 -mt-6 mb-2 px-6 py-2 border-b">
-        <Tabs value={activeTab} onValueChange={handleNavClick}>
-            <TabsList className="h-auto p-1.5 flex flex-wrap justify-start">
-                {dashboardSections.map(section => {
-                    if ((section.id === 'finance-overview' || section.id === 'ars-overview' || section.id === 'rig-overview' || section.id === 'rig-financials' || section.id === 'supervisor-work') && currentUser?.role === 'supervisor') {
-                        return null;
-                    }
-                    return (
-                        <TabsTrigger key={section.id} value={section.id} className="text-base px-3 py-1.5 h-auto">
-                            {section.title}
-                        </TabsTrigger>
-                    );
-                })}
-            </TabsList>
-        </Tabs>
-      </div>
-
-      <div ref={(el) => sectionRefs.current['updates'] = el} id="updates" className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-24">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ImportantUpdates allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries} />
         <NoticeBoard staffMembers={dashboardData.staffMembers} />
       </div>
 
-      <div ref={(el) => sectionRefs.current['file-status'] = el} id="file-status" className="scroll-mt-24">
-        <FileStatusOverview 
-            nonArsEntries={dashboardData.nonArsEntries}
-            onOpenDialog={handleOpenDialog}
-        />
-      </div>
+      <FileStatusOverview 
+          nonArsEntries={dashboardData.nonArsEntries}
+          onOpenDialog={handleOpenDialog}
+      />
       
-      <div ref={(el) => sectionRefs.current['work-status'] = el} id="work-status" className="scroll-mt-24">
-        <WorkStatusByService 
-          allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
-          onOpenDialog={handleOpenDialog}
-          currentUserRole={currentUser?.role}
-        />
-      </div>
+      <WorkStatusByService 
+        allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        currentUserRole={currentUser?.role}
+      />
 
-      <div ref={(el) => sectionRefs.current['constituency-works'] = el} id="constituency-works" className="scroll-mt-24">
-        <ConstituencyWiseOverview
-          allWorks={constituencyWorks}
-          onOpenDialog={handleOpenDialog}
-          dates={constituencyDates}
-          onSetDates={setConstituencyDates}
-        />
-      </div>
+      <ConstituencyWiseOverview
+        allWorks={constituencyWorks}
+        onOpenDialog={handleOpenDialog}
+        dates={constituencyDates}
+        onSetDates={setConstituencyDates}
+      />
       
       {currentUser?.role !== 'supervisor' && (
         <>
-          <div ref={(el) => sectionRefs.current['finance-overview'] = el} id="finance-overview" className="scroll-mt-24">
-            <FinanceOverview 
-              allFileEntries={dashboardData.allFileEntries}
-              onOpenDialog={handleOpenDialog}
-              dates={financeDates}
-              onSetDates={setFinanceDates}
-            />
-          </div>
+          <FinanceOverview 
+            allFileEntries={dashboardData.allFileEntries}
+            onOpenDialog={handleOpenDialog}
+            dates={financeDates}
+            onSetDates={setFinanceDates}
+          />
           
-          <div ref={(el) => sectionRefs.current['ars-overview'] = el} id="ars-overview" className="scroll-mt-24">
-            <ArsStatusOverview 
-              onOpenDialog={handleOpenDialog}
-              dates={arsDates}
-              onSetDates={setArsDates}
-            />
-          </div>
+          <ArsStatusOverview 
+            onOpenDialog={handleOpenDialog}
+            dates={arsDates}
+            onSetDates={setArsDates}
+          />
           
-          <div ref={(el) => sectionRefs.current['rig-overview'] = el} id="rig-overview" className="scroll-mt-24">
-            <RigRegistrationOverview 
-              agencyApplications={agencyApplications}
-              onOpenDialog={handleOpenDialog}
-            />
-          </div>
+          <RigRegistrationOverview 
+            agencyApplications={agencyApplications}
+            onOpenDialog={handleOpenDialog}
+          />
            
-           <div ref={(el) => sectionRefs.current['rig-financials'] = el} id="rig-financials" className="scroll-mt-24">
-             <RigFinancialSummary
-                applications={agencyApplications}
-                onCellClick={handleOpenDialog}
-              />
-            </div>
+           <RigFinancialSummary
+              applications={agencyApplications}
+              onCellClick={handleOpenDialog}
+            />
         </>
       )}
       
-      <div ref={(el) => sectionRefs.current['work-progress'] = el} id="work-progress" className="scroll-mt-24">
-        <WorkProgress
-          allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
-          onOpenDialog={handleOpenDialog}
-          currentUser={currentUser}
-        />
-      </div>
+      <WorkProgress
+        allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
+        onOpenDialog={handleOpenDialog}
+        currentUser={currentUser}
+      />
 
       {currentUser?.role !== 'supervisor' && (
-        <div ref={(el) => sectionRefs.current['supervisor-work'] = el} id="supervisor-work" className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SupervisorWork 
             allFileEntries={dashboardData.allFileEntries}
             allUsers={allUsers}
