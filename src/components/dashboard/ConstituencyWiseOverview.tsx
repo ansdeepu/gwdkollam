@@ -2,13 +2,15 @@
 // src/components/dashboard/ConstituencyWiseOverview.tsx
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MapPin, XCircle } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, Constituency, SiteDetailFormData } from '@/lib/schemas';
 import { constituencyOptions, sitePurposeOptions } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
+import { format, parse, startOfDay, endOfDay, isWithinInterval, isValid } from 'date-fns';
 
 interface CombinedWork {
     nameOfSite?: string | null;
@@ -17,12 +19,29 @@ interface CombinedWork {
     fileNo?: string;
     applicantName?: string;
     workStatus?: string | null;
+    dateOfCompletion?: Date | string | null;
+    totalExpenditure?: number;
 }
 
 interface ConstituencyWiseOverviewProps {
   allWorks: CombinedWork[];
   onOpenDialog: (data: any[], title: string, columns: any[]) => void;
+  dates: { start?: Date, end?: Date };
+  onSetDates: (dates: { start?: Date, end?: Date }) => void;
 }
+
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
+    return new Date((dateValue as any).seconds * 1000);
+  }
+  if (typeof dateValue === 'string') {
+    const parsed = new Date(dateValue);
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
 
 const hashCode = (str: string): number => {
     let hash = 0;
@@ -64,6 +83,7 @@ const getColorClass = (name: string): string => {
 const StatusCard = ({
   title,
   totalCount,
+  totalExpenditure,
   onTotalClick,
   className,
   purposeData,
@@ -71,6 +91,7 @@ const StatusCard = ({
 }: {
   title: string;
   totalCount: number;
+  totalExpenditure: number;
   onTotalClick?: () => void;
   className?: string;
   purposeData: Record<string, { count: number; data: any[] }>;
@@ -80,18 +101,23 @@ const StatusCard = ({
 
     return (
         <Card className={cn("flex flex-col", className)}>
-        <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardHeader className="flex-row items-center justify-between pb-2 text-center">
+            <CardTitle className="text-sm font-medium w-full">{title}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="text-center">
             <Button
-            variant="link"
-            className="text-4xl font-bold p-0 h-auto"
-            onClick={onTotalClick}
-            disabled={!onTotalClick || totalCount === 0}
+              variant="link"
+              className="text-4xl font-bold p-0 h-auto"
+              onClick={onTotalClick}
+              disabled={!onTotalClick || totalCount === 0}
             >
-            {totalCount}
+              {totalCount}
             </Button>
+            <p className="text-xs text-muted-foreground">Total Works</p>
+            
+            <p className="text-xl font-bold mt-2 text-primary">₹{totalExpenditure.toLocaleString('en-IN')}</p>
+            <p className="text-xs text-muted-foreground">Total Expenditure</p>
+            
             <div className="mt-4 space-y-2">
                 {hasData ? Object.entries(purposeData).map(([purpose, { count }]) => {
                     if (count === 0) return null;
@@ -103,40 +129,56 @@ const StatusCard = ({
                             </Button>
                         </div>
                     )
-                }) : <p className="text-xs text-muted-foreground italic text-center pt-4">No works in this constituency.</p>}
+                }) : <p className="text-xs text-muted-foreground italic text-center pt-4">No works found for the selected period.</p>}
             </div>
         </CardContent>
         </Card>
     );
 };
 
-export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: ConstituencyWiseOverviewProps) {
+export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates, onSetDates }: ConstituencyWiseOverviewProps) {
 
   const summaryData = React.useMemo(() => {
+    const sDate = dates.start ? startOfDay(dates.start) : null;
+    const eDate = dates.end ? endOfDay(dates.end) : null;
+    const isDateFilterActive = sDate && eDate;
+
+    let filteredWorks = allWorks;
+
+    if (isDateFilterActive) {
+      filteredWorks = allWorks.filter(work => {
+        const completionDate = safeParseDate(work.dateOfCompletion);
+        return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
+      });
+    }
+
     const allPurposes = [...sitePurposeOptions, "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds", "ARS"];
     const initialCounts = () => allPurposes.reduce((acc, purpose) => ({
-      ...acc, [purpose]: { count: 0, data: [] }
-    }), {} as Record<string, { count: number; data: any[] }>);
+      ...acc, [purpose]: { count: 0, data: [], expenditure: 0 }
+    }), {} as Record<string, { count: number; data: any[]; expenditure: number }>);
 
     const constituencyData = constituencyOptions.reduce((acc, constituency) => ({
       ...acc,
       [constituency]: {
         totalCount: 0,
+        totalExpenditure: 0,
         allWorks: [] as any[],
         byPurpose: initialCounts(),
       }
-    }), {} as Record<Constituency, { totalCount: number, allWorks: any[], byPurpose: ReturnType<typeof initialCounts> }>);
+    }), {} as Record<Constituency, { totalCount: number, totalExpenditure: number, allWorks: any[], byPurpose: ReturnType<typeof initialCounts> }>);
     
     let totalWorks = 0;
 
-    allWorks.forEach(work => {
+    filteredWorks.forEach(work => {
         const constituency = work.constituency as Constituency | undefined;
         const purpose = (work.purpose || 'N/A') as string;
         
         if (constituency && constituencyOptions.includes(constituency)) {
           const currentData = constituencyData[constituency];
+          const expenditure = Number(work.totalExpenditure) || 0;
           
           currentData.totalCount++;
+          currentData.totalExpenditure += expenditure;
           currentData.allWorks.push(work);
           totalWorks++;
           
@@ -144,6 +186,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
             const purposeKey = Object.keys(currentData.byPurpose).find(p => p === purpose);
             if (purposeKey) {
                 currentData.byPurpose[purposeKey].count++;
+                currentData.byPurpose[purposeKey].expenditure += expenditure;
                 currentData.byPurpose[purposeKey].data.push(work);
             }
           }
@@ -151,7 +194,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
     });
 
     return { constituencyData, totalWorks };
-  }, [allWorks]);
+  }, [allWorks, dates]);
 
   const handleCellClick = (data: any[], title: string) => {
     const columns = [
@@ -161,6 +204,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
         { key: 'siteName', label: 'Site Name' },
         { key: 'purpose', label: 'Purpose' },
         { key: 'workStatus', label: 'Work Status' },
+        { key: 'totalExpenditure', label: 'Expenditure (₹)', isNumeric: true },
     ];
     
     const dialogData = data.map((item, index) => ({
@@ -170,6 +214,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
         siteName: item.nameOfSite || 'N/A',
         purpose: item.purpose || 'N/A',
         workStatus: item.workStatus || 'N/A',
+        totalExpenditure: (Number(item.totalExpenditure) || 0).toLocaleString('en-IN'),
     }));
 
     onOpenDialog(dialogData, title, columns);
@@ -187,8 +232,23 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
           Constituency-wise Works ({summaryData.totalWorks})
         </CardTitle>
         <CardDescription>
-          A summary of all public deposit works and ARS projects, categorized by constituency.
+          Summary of public deposit works and ARS projects by constituency. Filter by completion date.
         </CardDescription>
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
+            <Input
+                type="date"
+                className="w-[240px]"
+                value={dates.start ? format(dates.start, 'yyyy-MM-dd') : ''}
+                onChange={(e) => onSetDates({ ...dates, start: e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined })}
+            />
+            <Input
+                type="date"
+                className="w-[240px]"
+                value={dates.end ? format(dates.end, 'yyyy-MM-dd') : ''}
+                onChange={(e) => onSetDates({ ...dates, end: e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined })}
+            />
+            <Button onClick={() => onSetDates({ start: undefined, end: undefined })} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4" />Clear Dates</Button>
+        </div>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
         {sortedConstituencies.map(constituency => {
@@ -199,6 +259,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
                 key={constituency}
                 title={constituency}
                 totalCount={data.totalCount}
+                totalExpenditure={data.totalExpenditure}
                 purposeData={data.byPurpose}
                 className={getColorClass(constituency)}
                 onTotalClick={() => handleCellClick(data.allWorks, `All Works in ${constituency}`)}
@@ -208,7 +269,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
         })}
         {summaryData.totalWorks === 0 && (
             <div className="col-span-full text-center text-muted-foreground py-10">
-                No works found for any constituency.
+                No works found for the selected filters.
             </div>
         )}
       </CardContent>

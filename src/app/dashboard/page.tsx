@@ -69,6 +69,7 @@ export default function DashboardPage() {
   });
   const [financeDates, setFinanceDates] = useState<{ start?: Date, end?: Date }>({});
   const [arsDates, setArsDates] = useState<{ start?: Date, end?: Date }>({});
+  const [constituencyDates, setConstituencyDates] = useState<{ start?: Date, end?: Date }>({});
 
   useEffect(() => {
     if (!authLoading && currentUser) {
@@ -125,7 +126,9 @@ export default function DashboardPage() {
                 fileNo: entry.fileNo,
                 applicantName: entry.applicantName,
                 constituency: site.constituency || entry.constituency,
-                purpose: site.purpose || 'N/A'
+                purpose: site.purpose || 'N/A',
+                dateOfCompletion: site.dateOfCompletion,
+                totalExpenditure: site.totalExpenditure || 0,
             })));
 
         const arsWorks = arsEntries.map(entry => ({
@@ -134,7 +137,9 @@ export default function DashboardPage() {
             purpose: entry.arsTypeOfScheme || 'ARS', // Normalize purpose for the card
             fileNo: entry.fileNo,
             applicantName: 'ARS Scheme',
-            workStatus: entry.workStatus
+            workStatus: entry.workStatus,
+            dateOfCompletion: entry.dateOfCompletion,
+            totalExpenditure: entry.totalExpenditure || 0,
         }));
 
         return [...publicDepositWorks, ...arsWorks];
@@ -182,6 +187,8 @@ export default function DashboardPage() {
       <ConstituencyWiseOverview
         allWorks={constituencyWorks}
         onOpenDialog={handleOpenDialog}
+        dates={constituencyDates}
+        onSetDates={setConstituencyDates}
       />
       
       {currentUser?.role !== 'supervisor' && (
