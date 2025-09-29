@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -233,7 +234,7 @@ export default function DashboardPage() {
                         return null;
                     }
                     return (
-                        <TabsTrigger key={section.id} value={section.id} className="text-xs px-2.5 py-1 h-auto">
+                        <TabsTrigger key={section.id} value={section.id} className="text-sm px-3 py-1.5 h-auto" onClick={() => handleNavClick(section.id)}>
                             {section.title}
                         </TabsTrigger>
                     );
