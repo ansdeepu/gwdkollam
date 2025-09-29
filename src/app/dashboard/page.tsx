@@ -120,14 +120,21 @@ export default function DashboardPage() {
     const constituencyWorks = useMemo(() => {
         const publicDepositWorks = allFileEntries
             .filter(entry => entry.applicationType && !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
-            .flatMap(entry => (entry.siteDetails || []).map(site => ({...site, fileNo: entry.fileNo, applicantName: entry.applicantName, constituency: site.constituency || entry.constituency})));
+            .flatMap(entry => (entry.siteDetails || []).map(site => ({
+                ...site,
+                fileNo: entry.fileNo,
+                applicantName: entry.applicantName,
+                constituency: site.constituency || entry.constituency,
+                purpose: site.purpose || 'N/A'
+            })));
 
         const arsWorks = arsEntries.map(entry => ({
             nameOfSite: entry.nameOfSite,
             constituency: entry.constituency,
             purpose: entry.arsTypeOfScheme || 'ARS', // Normalize purpose for the card
             fileNo: entry.fileNo,
-            applicantName: 'ARS Scheme'
+            applicantName: 'ARS Scheme',
+            workStatus: entry.workStatus
         }));
 
         return [...publicDepositWorks, ...arsWorks];

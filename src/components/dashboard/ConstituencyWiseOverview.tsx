@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ConstituencyWiseOverview.tsx
 "use client";
 
@@ -65,7 +66,6 @@ const StatusCard = ({
   totalCount,
   onTotalClick,
   className,
-  iconClassName,
   purposeData,
   onPurposeClick,
 }: {
@@ -73,7 +73,6 @@ const StatusCard = ({
   totalCount: number;
   onTotalClick?: () => void;
   className?: string;
-  iconClassName?: string;
   purposeData: Record<string, { count: number; data: any[] }>;
   onPurposeClick: (purpose: string) => void;
 }) => {
@@ -114,7 +113,8 @@ const StatusCard = ({
 export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: ConstituencyWiseOverviewProps) {
 
   const summaryData = React.useMemo(() => {
-    const initialCounts = () => [...sitePurposeOptions, 'ARS'].reduce((acc, purpose) => ({
+    const allPurposes = [...sitePurposeOptions, "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds", "ARS"];
+    const initialCounts = () => allPurposes.reduce((acc, purpose) => ({
       ...acc, [purpose]: { count: 0, data: [] }
     }), {} as Record<string, { count: number; data: any[] }>);
 
@@ -130,7 +130,6 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
     let totalWorks = 0;
 
     allWorks.forEach(work => {
-        // A work can have a constituency at the site level, or at the file level (for ARS)
         const constituency = work.constituency as Constituency | undefined;
         const purpose = (work.purpose || 'N/A') as string;
         
@@ -198,7 +197,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
       <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
         {sortedConstituencies.map(constituency => {
             const data = summaryData.constituencyData[constituency];
-            if (!data || data.totalCount === 0) return null;
+            if (!data) return null;
             return (
               <StatusCard
                 key={constituency}
