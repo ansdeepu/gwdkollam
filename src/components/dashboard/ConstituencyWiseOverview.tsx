@@ -196,7 +196,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates
       <CardContent>
         {summaryData.totalWorks > 0 ? (
           <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sortedConstituencies.map(constituency => {
                   const data = summaryData.constituencyData[constituency];
                   if (!data || data.totalCount === 0) return null;
@@ -215,7 +215,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates
                       </div>
 
                       {hasPurposeData && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2 pt-3 border-t border-border/50">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-x-4 gap-y-2 pt-3 border-t border-border/50">
                           {Object.entries(data.byPurpose).map(([purpose, { count }]) => {
                               if (count === 0) return null;
                               return (
