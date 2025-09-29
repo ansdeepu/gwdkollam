@@ -1,7 +1,7 @@
 // src/app/dashboard/page.tsx
 "use client"; 
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers"; 
 import { useAgencyApplications } from '@/hooks/useAgencyApplications';
@@ -28,6 +28,7 @@ import { useArsEntries } from '@/hooks/useArsEntries';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,6 +88,9 @@ export default function DashboardPage() {
   const [arsDates, setArsDates] = useState<{ start?: Date, end?: Date }>({});
   const [constituencyDates, setConstituencyDates] = useState<{ start?: Date, end?: Date }>({});
   const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState('updates');
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,8 +99,20 @@ export default function DashboardPage() {
       } else {
         setShowScrollTop(false);
       }
+
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      let currentSectionId = 'updates';
+
+      dashboardSections.forEach(section => {
+        const el = sectionRefs.current[section.id];
+        if (el && el.offsetTop <= scrollPosition) {
+          currentSectionId = section.id;
+        }
+      });
+      setActiveTab(currentSectionId);
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -200,48 +216,45 @@ export default function DashboardPage() {
   }
 
   const handleNavClick = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const element = sectionRefs.current[id];
+    if (element) {
+      const topPos = element.offsetTop - 80; // Adjusted for sticky header
+      window.scrollTo({ top: topPos, behavior: 'smooth' });
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm -mx-6 -mt-6 mb-2 px-6 py-3 border-b">
-        <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex items-center gap-2">
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm -mx-6 -mt-6 mb-2 px-6 py-2 border-b">
+        <Tabs value={activeTab} onValueChange={handleNavClick}>
+            <TabsList className="h-auto p-1.5 flex flex-wrap justify-start">
                 {dashboardSections.map(section => {
-                    // Conditionally render based on user role
                     if ((section.id === 'finance-overview' || section.id === 'ars-overview' || section.id === 'rig-overview' || section.id === 'rig-financials' || section.id === 'supervisor-work') && currentUser?.role === 'supervisor') {
                         return null;
                     }
                     return (
-                        <Button
-                            key={section.id}
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-3"
-                            onClick={() => handleNavClick(section.id)}
-                        >
+                        <TabsTrigger key={section.id} value={section.id} className="text-xs px-2.5 py-1 h-auto">
                             {section.title}
-                        </Button>
+                        </TabsTrigger>
                     );
                 })}
-            </div>
-        </ScrollArea>
+            </TabsList>
+        </Tabs>
       </div>
 
-      <div id="updates" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div ref={(el) => sectionRefs.current['updates'] = el} id="updates" className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-24">
         <ImportantUpdates allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries} />
         <NoticeBoard staffMembers={dashboardData.staffMembers} />
       </div>
 
-      <div id="file-status">
+      <div ref={(el) => sectionRefs.current['file-status'] = el} id="file-status" className="scroll-mt-24">
         <FileStatusOverview 
             nonArsEntries={dashboardData.nonArsEntries}
             onOpenDialog={handleOpenDialog}
         />
       </div>
       
-      <div id="work-status">
+      <div ref={(el) => sectionRefs.current['work-status'] = el} id="work-status" className="scroll-mt-24">
         <WorkStatusByService 
           allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
           onOpenDialog={handleOpenDialog}
@@ -249,7 +262,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div id="constituency-works">
+      <div ref={(el) => sectionRefs.current['constituency-works'] = el} id="constituency-works" className="scroll-mt-24">
         <ConstituencyWiseOverview
           allWorks={constituencyWorks}
           onOpenDialog={handleOpenDialog}
@@ -260,7 +273,7 @@ export default function DashboardPage() {
       
       {currentUser?.role !== 'supervisor' && (
         <>
-          <div id="finance-overview">
+          <div ref={(el) => sectionRefs.current['finance-overview'] = el} id="finance-overview" className="scroll-mt-24">
             <FinanceOverview 
               allFileEntries={dashboardData.allFileEntries}
               onOpenDialog={handleOpenDialog}
@@ -269,7 +282,7 @@ export default function DashboardPage() {
             />
           </div>
           
-          <div id="ars-overview">
+          <div ref={(el) => sectionRefs.current['ars-overview'] = el} id="ars-overview" className="scroll-mt-24">
             <ArsStatusOverview 
               onOpenDialog={handleOpenDialog}
               dates={arsDates}
@@ -277,14 +290,14 @@ export default function DashboardPage() {
             />
           </div>
           
-          <div id="rig-overview">
+          <div ref={(el) => sectionRefs.current['rig-overview'] = el} id="rig-overview" className="scroll-mt-24">
             <RigRegistrationOverview 
               agencyApplications={agencyApplications}
               onOpenDialog={handleOpenDialog}
             />
           </div>
            
-           <div id="rig-financials">
+           <div ref={(el) => sectionRefs.current['rig-financials'] = el} id="rig-financials" className="scroll-mt-24">
              <RigFinancialSummary
                 applications={agencyApplications}
                 onCellClick={handleOpenDialog}
@@ -293,7 +306,7 @@ export default function DashboardPage() {
         </>
       )}
       
-      <div id="work-progress">
+      <div ref={(el) => sectionRefs.current['work-progress'] = el} id="work-progress" className="scroll-mt-24">
         <WorkProgress
           allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
           onOpenDialog={handleOpenDialog}
@@ -302,7 +315,7 @@ export default function DashboardPage() {
       </div>
 
       {currentUser?.role !== 'supervisor' && (
-        <div id="supervisor-work" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div ref={(el) => sectionRefs.current['supervisor-work'] = el} id="supervisor-work" className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-24">
           <SupervisorWork 
             allFileEntries={dashboardData.allFileEntries}
             allUsers={allUsers}
