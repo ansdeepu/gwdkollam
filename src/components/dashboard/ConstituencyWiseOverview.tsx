@@ -24,6 +24,43 @@ interface ConstituencyWiseOverviewProps {
   onOpenDialog: (data: any[], title: string, columns: any[]) => void;
 }
 
+const hashCode = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; 
+    }
+    return hash;
+};
+
+const colorClasses = [
+    "bg-sky-500/5 border-sky-500/50",
+    "bg-blue-500/5 border-blue-500/50",
+    "bg-indigo-500/5 border-indigo-500/50",
+    "bg-violet-500/5 border-violet-500/50",
+    "bg-purple-500/5 border-purple-500/50",
+    "bg-fuchsia-500/5 border-fuchsia-500/50",
+    "bg-pink-500/5 border-pink-500/50",
+    "bg-rose-500/5 border-rose-500/50",
+    "bg-red-500/5 border-red-500/50",
+    "bg-orange-500/5 border-orange-500/50",
+    "bg-amber-500/5 border-amber-500/50",
+    "bg-yellow-500/5 border-yellow-500/50",
+    "bg-lime-500/5 border-lime-500/50",
+    "bg-green-500/5 border-green-500/50",
+    "bg-emerald-500/5 border-emerald-500/50",
+    "bg-teal-500/5 border-teal-500/50",
+    "bg-cyan-500/5 border-cyan-500/50",
+];
+
+const getColorClass = (name: string): string => {
+    const hash = hashCode(name);
+    const index = Math.abs(hash) % colorClasses.length;
+    return colorClasses[index];
+};
+
+
 const StatusCard = ({
   title,
   totalCount,
@@ -136,6 +173,14 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
     onOpenDialog(dialogData, title, columns);
   };
   
+  const sortedConstituencies = useMemo(() => {
+      return [...constituencyOptions].sort((a,b) => {
+          const countA = summaryData.constituencyData[a]?.totalCount ?? 0;
+          const countB = summaryData.constituencyData[b]?.totalCount ?? 0;
+          return countB - countA;
+      });
+  }, [summaryData]);
+  
   return (
     <Card>
       <CardHeader>
@@ -148,7 +193,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-        {constituencyOptions.map(constituency => {
+        {sortedConstituencies.map(constituency => {
             const data = summaryData.constituencyData[constituency];
             if (!data || data.totalCount === 0) return null;
             return (
@@ -157,6 +202,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: Con
                 title={constituency}
                 totalCount={data.totalCount}
                 purposeData={data.byPurpose}
+                className={getColorClass(constituency)}
                 onTotalClick={() => handleCellClick(data.allWorks, `All Works in ${constituency}`)}
                 onPurposeClick={(purpose) => handleCellClick(data.byPurpose[purpose].data, `Works for '${purpose}' in ${constituency}`)}
               />
