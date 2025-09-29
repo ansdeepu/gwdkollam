@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -6,7 +5,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers"; 
 import { useAgencyApplications } from '@/hooks/useAgencyApplications';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowUp } from 'lucide-react';
 import { useAuth, type UserProfile } from '@/hooks/useAuth';
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import { usePageHeader } from '@/hooks/usePageHeader';
@@ -26,6 +25,9 @@ import FinanceOverview from '@/components/dashboard/FinanceOverview';
 import RigFinancialSummary from '@/components/dashboard/RigFinancialSummary';
 import ConstituencyWiseOverview from '@/components/dashboard/ConstituencyWiseOverview';
 import { useArsEntries } from '@/hooks/useArsEntries';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +45,20 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
+
+const dashboardSections = [
+  { id: 'updates', title: 'Updates' },
+  { id: 'file-status', title: 'File Status' },
+  { id: 'work-status', title: 'Work Status' },
+  { id: 'constituency-works', title: 'Constituency' },
+  { id: 'finance-overview', title: 'Finance' },
+  { id: 'ars-overview', title: 'ARS' },
+  { id: 'rig-overview', title: 'Rig Registration' },
+  { id: 'rig-financials', title: 'Rig Financials' },
+  { id: 'work-progress', title: 'Work Progress' },
+  { id: 'supervisor-work', title: 'Supervisor Work' },
+];
+
 
 export default function DashboardPage() {
   const { setHeader } = usePageHeader();
@@ -70,6 +86,23 @@ export default function DashboardPage() {
   const [financeDates, setFinanceDates] = useState<{ start?: Date, end?: Date }>({});
   const [arsDates, setArsDates] = useState<{ start?: Date, end?: Date }>({});
   const [constituencyDates, setConstituencyDates] = useState<{ start?: Date, end?: Date }>({});
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (!authLoading && currentUser) {
@@ -166,66 +199,110 @@ export default function DashboardPage() {
     );
   }
 
+  const handleNavClick = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm -mx-6 -mt-6 mb-2 px-6 py-3 border-b">
+        <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex items-center gap-2">
+                {dashboardSections.map(section => {
+                    // Conditionally render based on user role
+                    if ((section.id === 'finance-overview' || section.id === 'ars-overview' || section.id === 'rig-overview' || section.id === 'rig-financials' || section.id === 'supervisor-work') && currentUser?.role === 'supervisor') {
+                        return null;
+                    }
+                    return (
+                        <Button
+                            key={section.id}
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-3"
+                            onClick={() => handleNavClick(section.id)}
+                        >
+                            {section.title}
+                        </Button>
+                    );
+                })}
+            </div>
+        </ScrollArea>
+      </div>
+
+      <div id="updates" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ImportantUpdates allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries} />
         <NoticeBoard staffMembers={dashboardData.staffMembers} />
       </div>
 
-      <FileStatusOverview 
-          nonArsEntries={dashboardData.nonArsEntries}
-          onOpenDialog={handleOpenDialog}
-      />
+      <div id="file-status">
+        <FileStatusOverview 
+            nonArsEntries={dashboardData.nonArsEntries}
+            onOpenDialog={handleOpenDialog}
+        />
+      </div>
       
-      <WorkStatusByService 
-        allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
-        onOpenDialog={handleOpenDialog}
-        currentUserRole={currentUser?.role}
-      />
+      <div id="work-status">
+        <WorkStatusByService 
+          allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
+          onOpenDialog={handleOpenDialog}
+          currentUserRole={currentUser?.role}
+        />
+      </div>
 
-      <ConstituencyWiseOverview
-        allWorks={constituencyWorks}
-        onOpenDialog={handleOpenDialog}
-        dates={constituencyDates}
-        onSetDates={setConstituencyDates}
-      />
+      <div id="constituency-works">
+        <ConstituencyWiseOverview
+          allWorks={constituencyWorks}
+          onOpenDialog={handleOpenDialog}
+          dates={constituencyDates}
+          onSetDates={setConstituencyDates}
+        />
+      </div>
       
       {currentUser?.role !== 'supervisor' && (
         <>
-          <FinanceOverview 
-            allFileEntries={dashboardData.allFileEntries}
-            onOpenDialog={handleOpenDialog}
-            dates={financeDates}
-            onSetDates={setFinanceDates}
-          />
-          
-          <ArsStatusOverview 
-            onOpenDialog={handleOpenDialog}
-            dates={arsDates}
-            onSetDates={setArsDates}
-          />
-          
-          <RigRegistrationOverview 
-            agencyApplications={agencyApplications}
-            onOpenDialog={handleOpenDialog}
-          />
-           
-           <RigFinancialSummary
-              applications={agencyApplications}
-              onCellClick={handleOpenDialog}
+          <div id="finance-overview">
+            <FinanceOverview 
+              allFileEntries={dashboardData.allFileEntries}
+              onOpenDialog={handleOpenDialog}
+              dates={financeDates}
+              onSetDates={setFinanceDates}
             />
+          </div>
+          
+          <div id="ars-overview">
+            <ArsStatusOverview 
+              onOpenDialog={handleOpenDialog}
+              dates={arsDates}
+              onSetDates={setArsDates}
+            />
+          </div>
+          
+          <div id="rig-overview">
+            <RigRegistrationOverview 
+              agencyApplications={agencyApplications}
+              onOpenDialog={handleOpenDialog}
+            />
+          </div>
+           
+           <div id="rig-financials">
+             <RigFinancialSummary
+                applications={agencyApplications}
+                onCellClick={handleOpenDialog}
+              />
+            </div>
         </>
       )}
       
-      <WorkProgress
-        allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
-        onOpenDialog={handleOpenDialog}
-        currentUser={currentUser}
-      />
+      <div id="work-progress">
+        <WorkProgress
+          allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
+          onOpenDialog={handleOpenDialog}
+          currentUser={currentUser}
+        />
+      </div>
 
       {currentUser?.role !== 'supervisor' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id="supervisor-work" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SupervisorWork 
             allFileEntries={dashboardData.allFileEntries}
             allUsers={allUsers}
@@ -245,6 +322,18 @@ export default function DashboardPage() {
         allFileEntries={dashboardData.allFileEntries}
         financeDates={financeDates}
       />
+
+       {showScrollTop && (
+        <Button
+          variant="default"
+          size="icon"
+          className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg"
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 }
