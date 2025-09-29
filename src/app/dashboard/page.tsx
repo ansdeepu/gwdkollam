@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth, type UserProfile } from '@/hooks/useAuth';
 import { useAllFileEntriesForReports } from '@/hooks/useAllFileEntriesForReports';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import type { SiteDetailFormData, SiteWorkStatus, SitePurpose, AgencyApplication, RigRegistration, DataEntryFormData, RigType } from '@/lib/schemas';
+import type { SiteDetailFormData, SiteWorkStatus, SitePurpose, AgencyApplication, RigRegistration, DataEntryFormData, RigType, ApplicationType } from '@/lib/schemas';
 import { format, addYears, isValid, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import FileStatusOverview from '@/components/dashboard/FileStatusOverview';
 import NoticeBoard from '@/components/dashboard/NoticeBoard';
@@ -25,6 +25,7 @@ import DashboardDialogs from '@/components/dashboard/DashboardDialogs';
 import FinanceOverview from '@/components/dashboard/FinanceOverview';
 import RigFinancialSummary from '@/components/dashboard/RigFinancialSummary';
 import ConstituencyWiseOverview from '@/components/dashboard/ConstituencyWiseOverview';
+import { useArsEntries } from '@/hooks/useArsEntries';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,8 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
+const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
+
 export default function DashboardPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
@@ -52,6 +55,7 @@ export default function DashboardPage() {
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { user: currentUser, isLoading: authLoading, fetchAllUsers } = useAuth();
   const { applications: agencyApplications, isLoading: agenciesLoading } = useAgencyApplications();
+  const { arsEntries, isLoading: arsLoading } = useArsEntries();
   
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [usersLoading, setUsersLoading] = useState<boolean>(true);
@@ -113,6 +117,23 @@ export default function DashboardPage() {
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
+    const constituencyWorks = useMemo(() => {
+        const publicDepositWorks = allFileEntries
+            .filter(entry => entry.applicationType && !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
+            .flatMap(entry => (entry.siteDetails || []).map(site => ({...site, fileNo: entry.fileNo, applicantName: entry.applicantName})));
+
+        const arsWorks = arsEntries.map(entry => ({
+            nameOfSite: entry.nameOfSite,
+            constituency: entry.constituency,
+            purpose: entry.arsTypeOfScheme || 'ARS', // Normalize purpose for the card
+            fileNo: entry.fileNo,
+            applicantName: 'ARS Scheme'
+        }));
+
+        return [...publicDepositWorks, ...arsWorks];
+  }, [allFileEntries, arsEntries]);
+
+
   const handleOpenDialog = useCallback((
     data: any[],
     title: string,
@@ -122,7 +143,7 @@ export default function DashboardPage() {
     setDialogState({ isOpen: true, data, title, columns, type });
   }, []);
   
-  const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || !dashboardData;
+  const isPageLoading = authLoading || usersLoading || isReportLoading || agenciesLoading || filteredEntriesLoading || arsLoading || !dashboardData;
   
   if (isPageLoading) {
     return (
@@ -152,7 +173,7 @@ export default function DashboardPage() {
       />
 
       <ConstituencyWiseOverview
-        allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
+        allWorks={constituencyWorks}
         onOpenDialog={handleOpenDialog}
       />
       

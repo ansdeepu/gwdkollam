@@ -6,12 +6,21 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
-import type { DataEntryFormData, SitePurpose, Constituency } from '@/lib/schemas';
+import type { DataEntryFormData, SitePurpose, Constituency, SiteDetailFormData } from '@/lib/schemas';
 import { constituencyOptions, sitePurposeOptions } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
 
+interface CombinedWork {
+    nameOfSite?: string | null;
+    constituency?: string | null;
+    purpose?: string | null;
+    fileNo?: string;
+    applicantName?: string;
+    workStatus?: string | null;
+}
+
 interface ConstituencyWiseOverviewProps {
-  allFileEntries: DataEntryFormData[];
+  allWorks: CombinedWork[];
   onOpenDialog: (data: any[], title: string, columns: any[]) => void;
 }
 
@@ -29,10 +38,10 @@ const StatusCard = ({
   onTotalClick?: () => void;
   className?: string;
   iconClassName?: string;
-  purposeData: Record<SitePurpose, { count: number; data: any[] }>;
-  onPurposeClick: (purpose: SitePurpose) => void;
+  purposeData: Record<string, { count: number; data: any[] }>;
+  onPurposeClick: (purpose: string) => void;
 }) => {
-    const hasData = sitePurposeOptions.some(purpose => purposeData[purpose]?.count > 0);
+    const hasData = Object.values(purposeData).some(p => p.count > 0);
 
     return (
         <Card className={cn("flex flex-col", className)}>
@@ -49,8 +58,7 @@ const StatusCard = ({
             {totalCount}
             </Button>
             <div className="mt-4 space-y-2">
-                {hasData ? sitePurposeOptions.map(purpose => {
-                    const count = purposeData[purpose]?.count || 0;
+                {hasData ? Object.entries(purposeData).map(([purpose, { count }]) => {
                     if (count === 0) return null;
                     return (
                         <div key={purpose} className="flex items-center justify-between text-xs">
@@ -67,12 +75,12 @@ const StatusCard = ({
     );
 };
 
-export default function ConstituencyWiseOverview({ allFileEntries, onOpenDialog }: ConstituencyWiseOverviewProps) {
+export default function ConstituencyWiseOverview({ allWorks, onOpenDialog }: ConstituencyWiseOverviewProps) {
 
   const summaryData = React.useMemo(() => {
-    const initialCounts = () => sitePurposeOptions.reduce((acc, purpose) => ({
+    const initialCounts = () => [...sitePurposeOptions, 'ARS'].reduce((acc, purpose) => ({
       ...acc, [purpose]: { count: 0, data: [] }
-    }), {} as Record<SitePurpose, { count: number; data: any[] }>);
+    }), {} as Record<string, { count: number; data: any[] }>);
 
     const constituencyData = constituencyOptions.reduce((acc, constituency) => ({
       ...acc,
@@ -85,29 +93,26 @@ export default function ConstituencyWiseOverview({ allFileEntries, onOpenDialog 
     
     let totalWorks = 0;
 
-    allFileEntries.forEach(entry => {
-      (entry.siteDetails || []).forEach(site => {
-        const constituency = site.constituency as Constituency;
-        const purpose = site.purpose as SitePurpose;
-
+    allWorks.forEach(work => {
+        const constituency = work.constituency as Constituency;
+        const purpose = (work.purpose || 'N/A') as string;
+        
         if (constituency && constituencyOptions.includes(constituency)) {
-          const siteWithContext = { ...site, fileNo: entry.fileNo, applicantName: entry.applicantName };
           const currentData = constituencyData[constituency];
           
           currentData.totalCount++;
-          currentData.allWorks.push(siteWithContext);
+          currentData.allWorks.push(work);
           totalWorks++;
           
-          if (purpose && sitePurposeOptions.includes(purpose)) {
+          if (purpose && currentData.byPurpose[purpose]) {
             currentData.byPurpose[purpose].count++;
-            currentData.byPurpose[purpose].data.push(siteWithContext);
+            currentData.byPurpose[purpose].data.push(work);
           }
         }
-      });
     });
 
     return { constituencyData, totalWorks };
-  }, [allFileEntries]);
+  }, [allWorks]);
 
   const handleCellClick = (data: any[], title: string) => {
     const columns = [
@@ -139,7 +144,7 @@ export default function ConstituencyWiseOverview({ allFileEntries, onOpenDialog 
           Constituency-wise Works ({summaryData.totalWorks})
         </CardTitle>
         <CardDescription>
-          A summary of all recorded works categorized by constituency.
+          A summary of all public deposit works and ARS projects, categorized by constituency.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
