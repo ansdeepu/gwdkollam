@@ -1,3 +1,4 @@
+
 // src/components/layout/AppNavMenu.tsx
 "use client";
 
@@ -46,6 +47,7 @@ export const allNavItems: NavItem[] = [
       { href: '/dashboard/report-format-suggestion', label: 'Report Builders', icon: Settings, roles: ['editor', 'viewer'] },
       { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase, roles: ['editor', 'viewer'] },
       { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
+      { href: '/dashboard/settings', label: 'General Settings', icon: MapPin, roles: ['editor', 'viewer'] },
     ],
   },
   { href: '/dashboard/help', label: 'Help & About', icon: HelpCircle },
@@ -87,7 +89,7 @@ export default function AppNavMenu() {
     <SidebarMenu>
       {accessibleNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <Link href={item.href} passHref onClick={() => handleNavigation(item.href)}>
+          <Link href={item.subItems ? item.subItems[0].href : item.href} passHref onClick={() => handleNavigation(item.href)}>
             <SidebarMenuButton
               asChild
               isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href) && !item.subItems)}
