@@ -420,18 +420,20 @@ export default function DataEntryFormComponent({
     }
   }
 
-  const handleLsgChange = (lsgName: string, siteIndex: number) => {
+  const handleLsgChange = useCallback((lsgName: string, siteIndex: number) => {
     formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
     const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
     const constituencies = map?.constituencies || [];
     
+    // Always reset constituency when LSG changes
+    formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+    
     if (constituencies.length === 1) {
       formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
-    } else {
-      formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
     }
+    // Re-trigger validation to update UI state
     form.trigger(`siteDetails.${siteIndex}.constituency`);
-  };
+  }, [formSetValue, allLsgConstituencyMaps, form]);
 
   useEffect(() => {
     (watchedSiteDetails ?? []).forEach((site, index) => {
@@ -441,6 +443,9 @@ export default function DataEntryFormComponent({
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
         const constituencies = map?.constituencies || [];
         
+        // This effect ensures that if the list of constituencies changes
+        // (e.g., due to some other async data load) and there's only one option,
+        // it gets auto-selected.
         if (constituencies.length === 1 && site.constituency !== constituencies[0]) {
             formSetValue(`siteDetails.${index}.constituency`, constituencies[0] as Constituency);
         }
