@@ -353,9 +353,32 @@ export default function ArsEntryPage() {
                           <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} readOnly={isFieldReadOnly('fileNo')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} readOnly={isFieldReadOnly('nameOfSite')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Scheme</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('arsTypeOfScheme')}><FormControl><SelectTrigger><SelectValue placeholder="Select Type of Scheme" /></SelectTrigger></FormControl><SelectContent>{arsTypeOfSchemeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                          <FormField name="localSelfGovt" render={({ field }) => ( <FormItem> <FormLabel>Local Self Govt.</FormLabel> <Select onValueChange={(value) => handleLsgChange(value)} value={field.value ?? ""} disabled={isFieldReadOnly('localSelfGovt')}> <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl> <SelectContent> {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)} </SelectContent> </Select> <FormMessage/> </FormItem> )}/>
+                          <FormField name="localSelfGovt" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Local Self Govt.</FormLabel>
+                                <Select
+                                onValueChange={(value) => {
+                                    const normalized = value === '_clear_' ? '' : value;
+                                    field.onChange(normalized);
+                                    handleLsgChange(normalized);
+                                }}
+                                value={field.value ?? ""}
+                                disabled={isFieldReadOnly('localSelfGovt')}
+                                >
+                                <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); handleLsgChange(''); }}>
+                                    -- Clear Selection --
+                                    </SelectItem>
+                                    {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}
+                                </SelectContent>
+                                </Select>
+                                <FormMessage/>
+                            </FormItem>
+                          )}/>
                           <FormField name="constituency" control={form.control} render={({ field }) => {
-                                const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForLsg.length <= 1;
                                 return (
                                     <FormItem>
                                         <FormLabel>Constituency (LAC)</FormLabel>

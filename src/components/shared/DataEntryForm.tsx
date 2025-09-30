@@ -423,17 +423,17 @@ export default function DataEntryFormComponent({
   };
 
   const handleLsgChange = useCallback((lsgName: string, siteIndex: number) => {
-      formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
-      const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-      const constituencies = map?.constituencies || [];
-
-      // Always reset constituency when LSG changes to ensure re-validation
-      formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
-
-      if (constituencies.length === 1) {
-          formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
-      }
-      form.trigger(`siteDetails.${siteIndex}.constituency`);
+    formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
+    const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+    const constituencies = map?.constituencies || [];
+    
+    // Always reset constituency when LSG changes to ensure re-validation
+    formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+    
+    if (constituencies.length === 1) {
+      formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
+    }
+    form.trigger(`siteDetails.${siteIndex}.constituency`);
   }, [formSetValue, allLsgConstituencyMaps, form]);
 
   // This effect ensures that if the constituency options change for a selected LSG (e.g., due to data refresh),
@@ -452,17 +452,6 @@ export default function DataEntryFormComponent({
         }
     });
   }, [watchedSiteDetails, allLsgConstituencyMaps, formSetValue]);
-
-
-  const getConstituencyOptionsForSite = (siteIndex: number): string[] => {
-      const selectedLsg = watchedSiteDetails[siteIndex]?.localSelfGovt;
-      if (!selectedLsg) return [...constituencyOptions].sort();
-      
-      const map = allLsgConstituencyMaps.find(m => m.name === selectedLsg);
-      if (!map || !map.constituencies) return [];
-      
-      return [...map.constituencies].sort((a,b) => a.localeCompare(b));
-  };
 
   const sortedLsgMaps = useMemo(() => {
     return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name));
@@ -565,8 +554,16 @@ export default function DataEntryFormComponent({
                             const isRigAccessibilityRequired = purpose && PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(purpose as SitePurpose);
                             
                             const isCompletionDateRequired = workStatus && ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'].includes(workStatus);
-                             const constituencyOptionsForSite = getConstituencyOptionsForSite(index);
-                             const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForSite.length <= 1;
+                             
+                            const constituencyOptionsForSite = (() => {
+                                const selectedLsg = site?.localSelfGovt;
+                                if (!selectedLsg) return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
+                                const map = allLsgConstituencyMaps.find(m => m.name === selectedLsg);
+                                if (!map || !map.constituencies) return [];
+                                return [...map.constituencies].sort((a, b) => a.localeCompare(b));
+                            })();
+
+                            const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForSite.length <= 1;
 
                             const workImplementationFields = (
                               <>
@@ -674,20 +671,53 @@ export default function DataEntryFormComponent({
                                                 <FormField control={form.control} name={`siteDetails.${index}.longitude`} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage/></FormItem>)}/>
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
-                                                <FormField name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => ( <FormItem> <FormLabel>Local Self Govt.</FormLabel> <Select onValueChange={(value) => handleLsgChange(value, index)} value={field.value ?? ""} disabled={isFieldReadOnly('localSelfGovt')}> <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl> <SelectContent> {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)} </SelectContent> </Select> <FormMessage/> </FormItem> )}/>
-                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => {
-                                                    const isConstituencyDisabled = isFieldReadOnly('constituency') || getConstituencyOptionsForSite(index).length <= 1;
-                                                    return (
-                                                        <FormItem>
-                                                            <FormLabel>Constituency (LAC)</FormLabel>
-                                                            <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isConstituencyDisabled}>
-                                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl>
-                                                                <SelectContent>{getConstituencyOptionsForSite(index).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    );
-                                                }}/>
+                                                <FormField control={form.control} name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => (
+                                                  <FormItem>
+                                                    <FormLabel>Local Self Govt.</FormLabel>
+                                                    <Select
+                                                      onValueChange={(value) => {
+                                                        const normalized = value === '_clear_' ? '' : value;
+                                                        field.onChange(normalized);
+                                                        handleLsgChange(normalized, index);
+                                                      }}
+                                                      value={field.value ?? ""}
+                                                      disabled={isFieldReadOnly('localSelfGovt')}
+                                                    >
+                                                      <FormControl>
+                                                        <SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger>
+                                                      </FormControl>
+                                                      <SelectContent>
+                                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); handleLsgChange('', index); }}>
+                                                          -- Clear Selection --
+                                                        </SelectItem>
+                                                        {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}
+                                                      </SelectContent>
+                                                    </Select>
+                                                    <FormMessage/>
+                                                  </FormItem>
+                                                )}/>
+                                                
+                                                <FormField control={form.control} name={`siteDetails.${index}.constituency`} render={({ field }) => (
+                                                  <FormItem>
+                                                    <FormLabel>Constituency (LAC)</FormLabel>
+                                                    <Select
+                                                      onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)}
+                                                      value={field.value ?? undefined}
+                                                      disabled={isConstituencyDisabled}
+                                                    >
+                                                      <FormControl>
+                                                        <SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger>
+                                                      </FormControl>
+                                                      <SelectContent>
+                                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>
+                                                          -- Clear Selection --
+                                                        </SelectItem>
+                                                        {constituencyOptionsForSite.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                                                      </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}/>
                                             </div>
                                             
                                             {isWellPurpose && (
