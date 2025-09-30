@@ -1,9 +1,8 @@
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray, type FieldErrors, FormProvider, useWatch } from "react-hook-form";
+import { useForm, useFieldArray, type FieldErrors, FormProvider, useWatch, useFormContext } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,13 +13,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Loader2, Trash2, PlusCircle, X, Save, Clock } from "lucide-react";
+import { Loader2, Trash2, PlusCircle, X, Save, Clock, Edit } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   DataEntrySchema,
@@ -55,13 +57,18 @@ import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import type { StaffMember } from "@/lib/schemas";
 import type { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../ui/card";
 import { getFirestore, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import { useDataStore } from "@/hooks/use-data-store";
+import { ScrollArea } from "../ui/scroll-area";
 
 const db = getFirestore(app);
 
+// Helper function to create default form values, ensuring consistency.
+const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({
+  amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined
+});
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
   dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
   contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined,
@@ -83,8 +90,7 @@ const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   workStatus: undefined, workRemarks: "",
   surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "",
   surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
-  surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
-  surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
+  surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
   arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined,
   arsTenderedAmount: undefined, arsAwardedAmount: undefined,
   arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false,
@@ -148,6 +154,19 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
   return Array.from(messages);
 };
 
+const DetailRow = ({ label, value }: { label: string; value: any }) => {
+    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+        return null;
+    }
+    let displayValue = String(value);
+    // Add any specific formatting if needed, e.g., for dates or numbers
+    return (
+        <div className="text-sm">
+            <span className="font-medium text-muted-foreground">{label}:</span> {displayValue}
+        </div>
+    );
+};
+
 interface DataEntryFormProps {
   fileNoToEdit?: string;
   initialData: DataEntryFormData;
@@ -178,6 +197,9 @@ export default function DataEntryFormComponent({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { allLsgConstituencyMaps } = useDataStore();
+
+  const [dialogState, setDialogState] = useState<{ type: string | null; data: any; index?: number }>({ type: null, data: null });
+  const [itemToDelete, setItemToDelete] = useState<{ type: string; index: number } | null>(null);
   
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
@@ -258,9 +280,9 @@ export default function DataEntryFormComponent({
   }, [userRole, supervisorList, watchedSiteDetails, formGetValues, formSetValue, toast]);
 
 
-  const { fields: siteFields, append: appendSite, remove: removeSite } = useFieldArray({ control: form.control, name: "siteDetails" });
-  const { fields: remittanceFields, append: appendRemittance, remove: removeRemittance } = useFieldArray({ control: form.control, name: "remittanceDetails" });
-  const { fields: paymentFields, append: appendPayment, remove: removePayment } = useFieldArray({ control: form.control, name: "paymentDetails" });
+  const { fields: siteFields, append: appendSite, remove: removeSite, update: updateSite } = useFieldArray({ control: form.control, name: "siteDetails" });
+  const { fields: remittanceFields, append: appendRemittance, remove: removeRemittance, update: updateRemittance } = useFieldArray({ control: form.control, name: "remittanceDetails" });
+  const { fields: paymentFields, append: appendPayment, remove: removePayment, update: updatePayment } = useFieldArray({ control: form.control, name: "paymentDetails" });
 
   const watchedRemittanceDetails = useWatch({ control: form.control, name: "remittanceDetails", defaultValue: [] });
   const watchedPaymentDetails = useWatch({ control: form.control, name: "paymentDetails", defaultValue: [] });
@@ -398,47 +420,16 @@ export default function DataEntryFormComponent({
     }
   }
 
-  const isFieldReadOnly = (fieldName: keyof SiteDetailFormData): boolean => {
-    if (isEditor) return false;
-    if (isViewer) return true;
-    if (isSupervisor) {
-      if (!fileNoToEdit) return true;
-      const supervisorEditableFields: (keyof SiteDetailFormData)[] = [
-        'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure',
-        'diameter', 'pilotDrillingDepth', 'totalDepth', 'casingPipeUsed', 'outerCasingPipe', 'innerCasingPipe',
-        'yieldDischarge', 'zoneDetails', 'waterLevel', 'typeOfRig', 'surveyOB', 'surveyPlainPipe', 'surveySlottedPipe',
-        'pumpDetails', 'pumpingLineLength', 'deliveryLineLength', 'waterTankCapacity', 'noOfTapConnections', 'noOfBeneficiary',
-        'localSelfGovt', 'constituency'
-      ];
-      return !supervisorEditableFields.includes(fieldName);
-    }
-    return true; // Default to read-only
-  };
-  
-  const isMainFieldReadOnly = (fieldName: keyof DataEntryFormData): boolean => {
-    if (isEditor) return false;
-    if (isViewer) return true;
-    if (isSupervisor) return true; // Supervisors cannot edit any main file fields.
-    return true; // Default to read-only
-  };
-
   const handleLsgChange = (lsgName: string, siteIndex: number) => {
-    // Update the selected Local Self Government
     formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
-  
-    // Find matching constituencies for the LSG
     const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
     const constituencies = map?.constituencies || [];
-  
-    // Reset constituency first
-    formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
-  
-    // If there is exactly one option, auto-select it
+    
     if (constituencies.length === 1) {
       formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
+    } else {
+      formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
     }
-  
-    // Re-validate the constituency field
     form.trigger(`siteDetails.${siteIndex}.constituency`);
   };
 
@@ -450,524 +441,222 @@ export default function DataEntryFormComponent({
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
         const constituencies = map?.constituencies || [];
         
-        // If only one constituency is valid, enforce auto-selection
         if (constituencies.length === 1 && site.constituency !== constituencies[0]) {
             formSetValue(`siteDetails.${index}.constituency`, constituencies[0] as Constituency);
         }
     });
   }, [watchedSiteDetails, allLsgConstituencyMaps, formSetValue]);
-
+  
   const sortedLsgMaps = useMemo(() => {
     return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name));
   }, [allLsgConstituencyMaps]);
 
-  return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
-        <Accordion
-          type="multiple"
-          defaultValue={['application-details', 'remittance-details', 'site-details', 'payment-details', 'final-status']}
-          className="w-full space-y-2"
-        >
-            <AccordionItem value="application-details" className="border bg-card rounded-lg shadow-sm">
-                <AccordionTrigger className="p-4 hover:no-underline text-primary">
-                    <span className="text-xl font-semibold">Application Details</span>
-                </AccordionTrigger>
-                <AccordionContent className="p-6 pt-0">
-                    <div className="border-t pt-6 space-y-6">
-                        <div className="grid md:grid-cols-3 gap-6">
-                           <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                           <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Name &amp; Address of Institution/Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                        </div>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <FormField control={form.control} name="phoneNo" render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="secondaryMobileNo" render={({ field }) => ( <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="applicationType" render={({ field }) => ( <FormItem><FormLabel>Type of Application <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o as ApplicationType]}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                        </div>
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
-            
-            <AccordionItem value="remittance-details" className="border bg-card rounded-lg shadow-sm">
-                <AccordionTrigger className="p-4 hover:no-underline text-primary">
-                    <span className="text-xl font-semibold">Remittance Details</span>
-                </AccordionTrigger>
-                <AccordionContent className="p-6 pt-0">
-                    <div className="border-t pt-6 space-y-4">
-                        <Accordion type="multiple" defaultValue={remittanceFields.map((_, i) => `remittance-${i}`)} className="w-full space-y-2">
-                            {remittanceFields.map((item, index) => {
-                            const amountRemitted = watchedRemittanceDetails?.[index]?.amountRemitted;
-                            const isDateAndAccountRequired = amountRemitted && Number(amountRemitted) > 0;
-                            return (
-                                <AccordionItem value={`remittance-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
-                                    <AccordionTrigger className="p-4 hover:no-underline">
-                                        <div className="flex flex-1 items-center justify-between">
-                                            <span className="text-base font-semibold text-primary">Remittance #{index + 1}</span>
-                                             {isEditor && remittanceFields.length > 1 && 
-                                                <div role="button" aria-label={`Remove Remittance #${index + 1}`} className="p-2 rounded-full hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); removeRemittance(index); }}>
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </div>
-                                            }
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-4 pt-0">
-                                        <div className="p-4 grid md:grid-cols-3 gap-6 border-t">
-                                            <FormField control={form.control} name={`remittanceDetails.${index}.dateOfRemittance`} render={({ field }) => ( <FormItem><FormLabel>Date{isDateAndAccountRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField control={form.control} name={`remittanceDetails.${index}.amountRemitted`} render={({ field }) => ( <FormItem><FormLabel>Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" placeholder="0.00" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField control={form.control} name={`remittanceDetails.${index}.remittedAccount`} render={({ field }) => ( <FormItem><FormLabel>Account{isDateAndAccountRequired && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )})}
-                        </Accordion>
-                        {isEditor && remittanceFields.length < 10 && <Button className="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-sm" type="button" variant="secondary" onClick={() => appendRemittance({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined })}><PlusCircle className="mr-2 h-4 w-4" />Add Remittance</Button>}
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
-            
-            <AccordionItem value="site-details" className="border bg-card rounded-lg shadow-sm">
-                <AccordionTrigger className="p-4 hover:no-underline text-primary">
-                    <span className="text-xl font-semibold">Site Details</span>
-                </AccordionTrigger>
-                <AccordionContent className="p-6 pt-0">
-                    <div className="border-t pt-6 space-y-4">
-                        <Accordion type="multiple" className="w-full space-y-2">
-                            {siteFields.map((item, index) => {
-                            const site = watchedSiteDetails?.[index];
-                            const isAssignedToCurrentUser = !!user?.uid && site?.supervisorUid === user.uid;
 
-                            // Supervisor role specific filtering
-                            if (isSupervisor && !isAssignedToCurrentUser) {
-                                return null;
-                            }
-                            const isSitePendingForSupervisor = isSupervisor && !!initialData.siteDetails?.[index]?.isPending;
-                            
-                            const siteIsEditable = isEditor || (isSupervisor && isAssignedToCurrentUser && !isSitePendingForSupervisor);
-                            
-                            const purpose = site?.purpose;
-                            const workStatus = site?.workStatus;
-                            const isFinalStatus = workStatus && FINAL_WORK_STATUSES.includes(workStatus as SiteWorkStatus);
-                            
-                            const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose as string);
-                            const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose as string);
-                            const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose as string);
-                            const isHPSPurpose = ['HPS', 'HPR'].includes(purpose as string);
-                            const isARSPurpose = ['ARS'].includes(purpose as string);
+  // Dialog management functions
+  const openDialog = (type: string, index?: number) => {
+    let data;
+    if (index !== undefined) {
+      if (type === 'remittance') data = form.getValues(`remittanceDetails.${index}`);
+      else if (type === 'site') data = form.getValues(`siteDetails.${index}`);
+      else if (type === 'payment') data = form.getValues(`paymentDetails.${index}`);
+    } else {
+      if (type === 'remittance') data = createDefaultRemittanceDetail();
+      else if (type === 'site') data = createDefaultSiteDetail();
+      else if (type === 'payment') data = createDefaultPaymentDetail();
+    }
+    setDialogState({ type, data, index });
+  };
+  const closeDialog = () => setDialogState({ type: null, data: null });
 
-                            const isDiameterRequired = purpose && PURPOSES_REQUIRING_DIAMETER.includes(purpose as SitePurpose);
-                            const isRigAccessibilityRequired = purpose && PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(purpose as SitePurpose);
-                            
-                            const isCompletionDateRequired = workStatus && ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'].includes(workStatus);
-                             
-                            const constituencyOptionsForSite = (() => {
-                                const selectedLsg = site?.localSelfGovt;
-                                if (!selectedLsg) return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
-                                const map = allLsgConstituencyMaps.find(m => m.name === selectedLsg);
-                                if (!map || !map.constituencies) return [];
-                                return [...map.constituencies].sort((a, b) => a.localeCompare(b));
-                            })();
+  const handleDialogSave = (formData: any) => {
+    const { type, index } = dialogState;
+    if (type === 'application') {
+      form.setValue('fileNo', formData.fileNo);
+      form.setValue('applicantName', formData.applicantName);
+      form.setValue('phoneNo', formData.phoneNo);
+      form.setValue('secondaryMobileNo', formData.secondaryMobileNo);
+      form.setValue('applicationType', formData.applicationType);
+    } else if (type === 'remittance') {
+      if (index !== undefined) updateRemittance(index, formData);
+      else appendRemittance(formData);
+    } else if (type === 'site') {
+      if (index !== undefined) updateSite(index, formData);
+      else appendSite(formData);
+    } else if (type === 'payment') {
+      if (index !== undefined) updatePayment(index, formData);
+      else appendPayment(formData);
+    } else if (type === 'finalStatus') {
+      form.setValue('fileStatus', formData.fileStatus);
+      form.setValue('remarks', formData.remarks);
+    }
+    closeDialog();
+  };
 
-                            const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForSite.length <= 1;
+  const handleDeleteClick = (type: string, index: number) => {
+    setItemToDelete({ type, index });
+  };
 
-                            const workImplementationFields = (
-                              <>
-                                <Separator className="my-4" />
-                                <h4 className="text-md font-medium text-primary mb-2">Work Implementation</h4>
-                                <div className="grid md:grid-cols-3 gap-6">
-                                    {isRigAccessibilityRequired && (
-                                        <FormField control={form.control} name={`siteDetails.${index}.accessibleRig`} render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Rig Accessibility</FormLabel>
-                                                <Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}>
-                                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
-                                                        {rigAccessibilityOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}/>
-                                    )}
-                                    <FormField control={form.control} name={`siteDetails.${index}.estimateAmount`} render={({ field }) => (<FormItem><FormLabel>Estimate (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.remittedAmount`} render={({ field }) => (<FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                    <FormField control={form.control} name={`siteDetails.${index}.tsAmount`} render={({ field }) => (<FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                    {!isPrivateApplication && (
-                                      <>
-                                        <FormField control={form.control} name={`siteDetails.${index}.tenderNo`} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                        <FormField control={form.control} name={`siteDetails.${index}.contractorName`} render={({ field }) => (<FormItem><FormLabel>Contractor Name</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                      </>
-                                    )}
-                                    <FormField
-                                        key={item.id}
-                                        control={form.control}
-                                        name={`siteDetails.${index}.supervisorUid`}
-                                        render={({ field }) => (
-                                        <FormItem>
-                                        <FormLabel>Supervisor</FormLabel>
-                                        {isEditor ? (
-                                            <Select
-                                            disabled={!isEditor}
-                                            onValueChange={(value) => {
-                                                if (value === '_unassign_') {
-                                                field.onChange(null);
-                                                formSetValue(`siteDetails.${index}.supervisorName`, null);
-                                                } else {
-                                                field.onChange(value);
-                                                const selectedStaff = supervisorList.find(s => s.uid === value);
-                                                formSetValue(`siteDetails.${index}.supervisorName`, selectedStaff?.name || null);
-                                                }
-                                            }}
-                                            value={field.value ?? undefined}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); field.onChange(null); formSetValue(`siteDetails.${index}.supervisorName`, null); }}>-- Unassign Supervisor --</SelectItem>
-                                                {supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>)}
-                                            </SelectContent>
-                                            </Select>
-                                        ) : (
-                                            <Input
-                                            readOnly
-                                            value={formGetValues(`siteDetails.${index}.supervisorName`) || "Not Assigned"}
-                                            className="bg-muted/50"
-                                            />
-                                        )}
-                                        <FormMessage />
-                                        </FormItem>
-                                    )}/>
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      const { type, index } = itemToDelete;
+      if (type === 'remittance') removeRemittance(index);
+      else if (type === 'site') removeSite(index);
+      else if (type === 'payment') removePayment(index);
+      setItemToDelete(null);
+      toast({ title: 'Entry Removed' });
+    }
+  };
+  
+    return (
+        <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Application Details</CardTitle>
+                        {!isReadOnly && (
+                            <Button type="button" variant="outline" size="sm" onClick={() => openDialog('application')}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                            </Button>
+                        )}
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <DetailRow label="File No" value={watch('fileNo')} />
+                        <DetailRow label="Applicant" value={watch('applicantName')} />
+                        <DetailRow label="Phone No" value={watch('phoneNo')} />
+                        <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
+                        <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Remittance Details</CardTitle>
+                        {!isReadOnly && (
+                            <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add
+                            </Button>
+                        )}
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {remittanceFields.map((field, index) => (
+                            <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                <div className="grid grid-cols-3 gap-x-4 w-full">
+                                    <DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
+                                    <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
+                                    <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
                                 </div>
-                              </>
-                            );
+                                {!isReadOnly && (
+                                    <div className="flex items-center gap-1 pl-4">
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
 
-                            return (
-                                <AccordionItem value={`site-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
-                                    <AccordionTrigger className="p-4 hover:no-underline">
-                                        <div className="flex flex-1 items-center justify-between">
-                                            <span className={cn(
-                                                "text-lg font-semibold text-left",
-                                                isFinalStatus ? "text-red-600" : "text-green-600"
-                                            )}>
-                                                Site #{index + 1}
-                                                {site?.nameOfSite ? `: ${site.nameOfSite}` : ''}
-                                                {site?.purpose ? ` (${site.purpose})` : ''}
-                                            </span>
-                                            {isEditor && siteFields.length > 1 && 
-                                                <div role="button" aria-label={`Remove Site #${index + 1}`} className="p-2 rounded-full hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); removeSite(index); }}>
-                                                    <Trash2 className="h-5 w-5 text-destructive" />
-                                                </div>
-                                            }
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-6 pt-0">
-                                        {isSitePendingForSupervisor && (
-                                          <div className="mb-4 flex items-center gap-2 rounded-md border border-orange-500/50 bg-orange-500/10 p-3 text-sm text-orange-700">
-                                            <Clock className="h-5 w-5" />
-                                            <span>This site has an update pending admin approval. You cannot make further changes until it is reviewed.</span>
-                                          </div>
-                                        )}
-                                        <div className="border-t pt-6 space-y-6">
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
-                                                <FormField control={form.control} name={`siteDetails.${index}.purpose`} render={({ field }) => (<FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/>
-                                            </div>
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                <FormField control={form.control} name={`siteDetails.${index}.latitude`} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('latitude')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                <FormField control={form.control} name={`siteDetails.${index}.longitude`} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage/></FormItem>)}/>
-                                            </div>
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                <FormField control={form.control} name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => (
-                                                  <FormItem>
-                                                    <FormLabel>Local Self Govt.</FormLabel>
-                                                    <Select
-                                                      onValueChange={(value) => {
-                                                        const normalized = value === '_clear_' ? '' : value;
-                                                        field.onChange(normalized);
-                                                        handleLsgChange(normalized, index);
-                                                      }}
-                                                      value={field.value ?? ""}
-                                                      disabled={isFieldReadOnly('localSelfGovt')}
-                                                    >
-                                                      <FormControl>
-                                                        <SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger>
-                                                      </FormControl>
-                                                      <SelectContent>
-                                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); handleLsgChange('', index); }}>
-                                                          -- Clear Selection --
-                                                        </SelectItem>
-                                                        {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}
-                                                      </SelectContent>
-                                                    </Select>
-                                                    <FormMessage/>
-                                                  </FormItem>
-                                                )}/>
-                                                
-                                                <FormField control={form.control} name={`siteDetails.${index}.constituency`} render={({ field }) => (
-                                                  <FormItem>
-                                                    <FormLabel>Constituency (LAC)</FormLabel>
-                                                    <Select
-                                                      onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)}
-                                                      value={field.value ?? undefined}
-                                                      disabled={isConstituencyDisabled}
-                                                    >
-                                                      <FormControl>
-                                                        <SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger>
-                                                      </FormControl>
-                                                      <SelectContent>
-                                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>
-                                                          -- Clear Selection --
-                                                        </SelectItem>
-                                                        {constituencyOptionsForSite.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                                                      </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                  </FormItem>
-                                                )}/>
-                                            </div>
-                                            
-                                            {isWellPurpose && (
-                                                <>
-                                                    <Separator className="my-4" />
-                                                    <h4 className="text-md font-medium text-primary mb-2">Survey Details (Recommended)</h4>
-                                                    {purpose === 'BWC' && ( <div className="grid md:grid-cols-3 gap-6"> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedDiameter`} render={({ field }) => (<FormItem><FormLabel>Diameter (mm)</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedTD`} render={({ field }) => (<FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedOB`} render={({ field }) => (<FormItem><FormLabel>OB (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedCasingPipe`} render={({ field }) => (<FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyLocation`} render={({ field }) => (<FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRemarks`} render={({ field }) => (<FormItem><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> </div> )}
-                                                    {purpose === 'TWC' && ( <div className="grid md:grid-cols-3 gap-6"> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedDiameter`} render={({ field }) => (<FormItem><FormLabel>Diameter (mm)</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedTD`} render={({ field }) => (<FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedPlainPipe`} render={({ field }) => (<FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedSlottedPipe`} render={({ field }) => (<FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedMsCasingPipe`} render={({ field }) => (<FormItem><FormLabel>MS Casing (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyLocation`} render={({ field }) => (<FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRemarks`} render={({ field }) => (<FormItem><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> </div> )}
-                                                    {purpose === 'FPW' && ( <div className="grid md:grid-cols-3 gap-6"> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedDiameter`} render={({ field }) => (<FormItem><FormLabel>Diameter (mm)</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedTD`} render={({ field }) => (<FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRecommendedCasingPipe`} render={({ field }) => (<FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyLocation`} render={({ field }) => (<FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyRemarks`} render={({ field }) => (<FormItem><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/> </div> )}
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Site Details</CardTitle>
+                        {!isReadOnly && (
+                            <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add Site
+                            </Button>
+                        )}
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                         {siteFields.map((field, index) => (
+                            <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                <div>
+                                    <p className="font-semibold">{watch(`siteDetails.${index}.nameOfSite`)}</p>
+                                    <p className="text-sm text-muted-foreground">{watch(`siteDetails.${index}.purpose`)} - {watch(`siteDetails.${index}.workStatus`)}</p>
+                                </div>
+                                {!isReadOnly && (
+                                    <div className="flex items-center gap-1 pl-4">
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('site', index)}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('site', index)}><Trash2 className="h-4 w-4"/></Button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
 
-                                                    {workImplementationFields}
-                                                    
-                                                    <Separator className="my-4" />
-                                                    <h4 className="text-md font-medium text-primary mb-2">Drilling Details (Actuals)</h4>
-                                                    
-                                                    {purpose === 'BWC' && ( <div className="grid md:grid-cols-3 gap-6"> <FormField control={form.control} name={`siteDetails.${index}.diameter`} render={({ field }) => (<FormItem><FormLabel>Diameter (mm){isDiameterRequired && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isFieldReadOnly('diameter')}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.totalDepth`} render={({ field }) => (<FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('totalDepth')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyOB`} render={({ field }) => (<FormItem><FormLabel>OB (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('surveyOB')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.casingPipeUsed`} render={({ field }) => (<FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('casingPipeUsed')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.innerCasingPipe`} render={({ field }) => (<FormItem><FormLabel>Inner Casing (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('innerCasingPipe')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.outerCasingPipe`} render={({ field }) => (<FormItem><FormLabel>Outer Casing (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('outerCasingPipe')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.yieldDischarge`} render={({ field }) => (<FormItem><FormLabel>Discharge (LPH)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('yieldDischarge')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.zoneDetails`} render={({ field }) => (<FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('zoneDetails')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.waterLevel`} render={({ field }) => (<FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('waterLevel')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.typeOfRig`} render={({ field }) => (<FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isFieldReadOnly('typeOfRig')}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/> </div> )}
-                                                    {purpose === 'TWC' && ( <div className="grid md:grid-cols-3 gap-6"><FormField control={form.control} name={`siteDetails.${index}.diameter`} render={({ field }) => (<FormItem><FormLabel>Diameter (mm){isDiameterRequired && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isFieldReadOnly('diameter')}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.pilotDrillingDepth`} render={({ field }) => (<FormItem><FormLabel>Pilot Drilling Depth (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('pilotDrillingDepth')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.totalDepth`} render={({ field }) => (<FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('totalDepth')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveyPlainPipe`} render={({ field }) => (<FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('surveyPlainPipe')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.surveySlottedPipe`} render={({ field }) => (<FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('surveySlottedPipe')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.outerCasingPipe`} render={({ field }) => (<FormItem><FormLabel>MS Casing (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('outerCasingPipe')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.yieldDischarge`} render={({ field }) => (<FormItem><FormLabel>Discharge (LPH)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('yieldDischarge')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.zoneDetails`} render={({ field }) => (<FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('zoneDetails')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.waterLevel`} render={({ field }) => (<FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('waterLevel')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.typeOfRig`} render={({ field }) => (<FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isFieldReadOnly('typeOfRig')}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/> </div> )}
-                                                    {purpose === 'FPW' && ( <div className="grid md:grid-cols-3 gap-6"> <FormField control={form.control} name={`siteDetails.${index}.diameter`} render={({ field }) => (<FormItem><FormLabel>Diameter (mm){isDiameterRequired && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isFieldReadOnly('diameter')}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.totalDepth`} render={({ field }) => (<FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('totalDepth')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.casingPipeUsed`} render={({ field }) => (<FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('casingPipeUsed')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.yieldDischarge`} render={({ field }) => (<FormItem><FormLabel>Discharge (LPH)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('yieldDischarge')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.zoneDetails`} render={({ field }) => (<FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('zoneDetails')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.waterLevel`} render={({ field }) => (<FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('waterLevel')} /></FormControl><FormMessage/></FormItem>)}/> <FormField control={form.control} name={`siteDetails.${index}.typeOfRig`} render={({ field }) => (<FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isFieldReadOnly('typeOfRig')}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/> </div> )}
-                                                    <FormField control={form.control} name={`siteDetails.${index}.drillingRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('drillingRemarks')} /></FormControl><FormMessage /></FormItem>)}/>
-                                                    
-                                                </>
-                                            )}
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Payment Details</CardTitle>
+                         {!isReadOnly && (
+                            <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add
+                            </Button>
+                        )}
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                         {paymentFields.map((field, index) => (
+                            <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                <div className="grid grid-cols-2 gap-x-4 w-full">
+                                    <DetailRow label={`Date #${index + 1}`} value={watch(`paymentDetails.${index}.dateOfPayment`)} />
+                                    <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} />
+                                </div>
+                                {!isReadOnly && (
+                                    <div className="flex items-center gap-1 pl-4">
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Final Status & Summary</CardTitle>
+                        {!isReadOnly && (
+                            <Button type="button" variant="outline" size="sm" onClick={() => openDialog('finalStatus')}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                            </Button>
+                        )}
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <DetailRow label="File Status" value={watch('fileStatus')} />
+                        <DetailRow label="Remarks" value={watch('remarks')} />
+                        <DetailRow label="Total Remittance (₹)" value={(watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} />
+                        <DetailRow label="Total Payment (₹)" value={(watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} />
+                        <DetailRow label="Balance (₹)" value={((watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - (watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} />
+                    </CardContent>
+                </Card>
 
-                                            {isDevPurpose && (
-                                                <>
-                                                    {workImplementationFields}
-                                                    <Separator className="my-4" />
-                                                    <h4 className="text-md font-medium text-primary mb-2">Developing Details</h4>
-                                                    <div className="grid md:grid-cols-3 gap-6">
-                                                        <FormField control={form.control} name={`siteDetails.${index}.diameter`} render={({ field }) => (<FormItem><FormLabel>Diameter (mm){isDiameterRequired && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isFieldReadOnly('diameter')}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.totalDepth`} render={({ field }) => (<FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('totalDepth')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.yieldDischarge`} render={({ field }) => (<FormItem><FormLabel>Discharge (LPH)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('yieldDischarge')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.waterLevel`} render={({ field }) => (<FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('waterLevel')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.drillingRemarks`} render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Developing Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('drillingRemarks')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                    </div>
-                                                </>
-                                            )}
 
-                                            {isMWSSSchemePurpose && (
-                                                <>
-                                                    {workImplementationFields}
-                                                    <Separator className="my-4" />
-                                                    <h4 className="text-md font-medium text-primary mb-2">Scheme Details</h4>
-                                                    <div className="grid md:grid-cols-3 gap-6">
-                                                        <FormField control={form.control} name={`siteDetails.${index}.yieldDischarge`} render={({ field }) => (<FormItem><FormLabel>Well Discharge (LPH)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('yieldDischarge')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.pumpingLineLength`} render={({ field }) => (<FormItem><FormLabel>Pumping Line Length (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('pumpingLineLength')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.deliveryLineLength`} render={({ field }) => (<FormItem><FormLabel>Delivery Line Length (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('deliveryLineLength')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.waterTankCapacity`} render={({ field }) => (<FormItem><FormLabel>Water Tank (L)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('waterTankCapacity')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.noOfTapConnections`} render={({ field }) => (<FormItem><FormLabel>Tap Connections</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('noOfTapConnections')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.noOfBeneficiary`} render={({ field }) => (<FormItem><FormLabel>Beneficiaries</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('noOfBeneficiary')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.pumpDetails`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Pump Details</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('pumpDetails')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('workRemarks')} /></FormControl><FormMessage /></FormItem>)}/>
-                                                    </div>
-                                                </>
-                                            )}
-                                            
-                                            {isHPSPurpose && (
-                                                <>
-                                                    {workImplementationFields}
-                                                    <Separator className="my-4" />
-                                                    <h4 className="text-md font-medium text-primary mb-2">Scheme Details</h4>
-                                                    <div className="grid md:grid-cols-3 gap-6">
-                                                        <FormField control={form.control} name={`siteDetails.${index}.totalDepth`} render={({ field }) => (<FormItem><FormLabel>Depth Erected (m)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('totalDepth')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.waterLevel`} render={({ field }) => (<FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('waterLevel')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                      <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('workRemarks')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            {isARSPurpose && (
-                                                <>
-                                                    {workImplementationFields}
-                                                    <Separator className="my-4" />
-                                                    <h4 className="text-md font-medium text-primary mb-2">Scheme Details</h4>
-                                                    <div className="grid md:grid-cols-3 gap-6">
-                                                        <FormField control={form.control} name={`siteDetails.${index}.arsNumberOfStructures`} render={({ field }) => (<FormItem><FormLabel>Number of Structures</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsNumberOfStructures')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.arsStorageCapacity`} render={({ field }) => (<FormItem><FormLabel>Storage Capacity (m3)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsStorageCapacity')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.arsNumberOfFillings`} render={({ field }) => (<FormItem><FormLabel>No. of Fillings</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsNumberOfFillings')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.noOfBeneficiary`} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('noOfBeneficiary')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                        <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('workRemarks')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            <Separator className="my-4" />
-                                            <h4 className="text-md font-medium text-primary mb-2">Work Status</h4>
-                                            <div className="grid md:grid-cols-3 gap-6">
-                                                <FormField
-                                                  control={form.control}
-                                                  name={`siteDetails.${index}.dateOfCompletion`}
-                                                  render={({ field }) => (
-                                                    <FormItem>
-                                                      <FormLabel>Date of Completion{isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel>
-                                                      <FormControl>
-                                                        <Input
-                                                          type="date"
-                                                          {...field}
-                                                          value={field.value ?? ""}
-                                                          readOnly={isFieldReadOnly('dateOfCompletion')}
-                                                        />
-                                                      </FormControl>
-                                                      <FormMessage/>
-                                                    </FormItem>
-                                                  )}
-                                                />
-                                                <FormField control={form.control} name={`siteDetails.${index}.totalExpenditure`} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('totalExpenditure')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                <FormField
-                                                    control={form.control}
-                                                    name={`siteDetails.${index}.workStatus`}
-                                                    render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Work Status <span className="text-destructive">*</span></FormLabel>
-                                                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('workStatus')}>
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                            <SelectValue placeholder="Select Status" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map((o) => (
-                                                              <SelectItem key={o} value={o}>{o}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                        </Select>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                    )}
-                                                />
-                                                <FormField control={form.control} name={`siteDetails.${index}.workRemarks`} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('workRemarks')} /></FormControl><FormMessage/></FormItem>)}/>
-                                            </div>
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )})}
-                        </Accordion>
-                        {isEditor && <Button className="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-sm" type="button" variant="secondary" onClick={() => appendSite(createDefaultSiteDetail())}><PlusCircle className="mr-2 h-4 w-4" />Add Site</Button>}
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
+                <div className="flex space-x-4 pt-4">
+                    {!isViewer && (
+                        <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Save className="mr-2 h-4 w-4" />
+                        )}
+                        {isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}
+                        </Button>
+                    )}
+                    <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
+                </div>
+            </form>
             
-            <AccordionItem value="payment-details" className="border bg-card rounded-lg shadow-sm">
-                <AccordionTrigger className="p-4 hover:no-underline text-primary">
-                    <span className="text-xl font-semibold">Payment Details</span>
-                </AccordionTrigger>
-                <AccordionContent className="p-6 pt-0">
-                    <div className="border-t pt-6 space-y-4">
-                        <Accordion type="multiple" className="w-full space-y-2">
-                            {paymentFields.map((item, index) => {
-                                const payment = watchedPaymentDetails?.[index];
-                                const hasAnyAmount = payment && (
-                                    (Number(payment.revenueHead) || 0) > 0 ||
-                                    (Number(payment.contractorsPayment) || 0) > 0 ||
-                                    (Number(payment.gst) || 0) > 0 ||
-                                    (Number(payment.incomeTax) || 0) > 0 ||
-                                    (Number(payment.kbcwb) || 0) > 0 ||
-                                    (Number(payment.refundToParty) || 0) > 0
-                                );
-                                const paymentTotal = calculatePaymentEntryTotalGlobal(watchedPaymentDetails?.[index]);
-                                return (
-                                <AccordionItem value={`payment-${index}`} key={item.id} className="border bg-card rounded-lg shadow-sm">
-                                    <AccordionTrigger className="p-4 hover:no-underline">
-                                    <div className="flex flex-1 items-center justify-between">
-                                        <span className="text-base font-semibold text-primary">Payment #{index + 1}</span>
-                                        {isEditor && paymentFields.length > 1 &&
-                                        <div role="button" aria-label={`Remove Payment #${index + 1}`} className="p-2 rounded-full hover:bg-destructive/10" onClick={(e) => { e.stopPropagation(); removePayment(index); }}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </div>
-                                        }
-                                    </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-6 pt-0">
-                                    <div className="border-t pt-6 space-y-6">
-                                        <div className="grid md:grid-cols-3 gap-6">
-                                        <FormField control={form.control} name={`paymentDetails.${index}.dateOfPayment`} render={({ field }) => ( <FormItem><FormLabel>Date{hasAnyAmount && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.paymentAccount`} render={({ field }) => ( <FormItem><FormLabel>Account{hasAnyAmount && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={(value) => field.onChange(value === '_clear_' ? undefined : value)} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.revenueHead`} render={({ field }) => ( <FormItem><FormLabel>Revenue Head (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.contractorsPayment`} render={({ field }) => ( <FormItem><FormLabel>Contractor's Pay (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.gst`} render={({ field }) => ( <FormItem><FormLabel>GST (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.incomeTax`} render={({ field }) => ( <FormItem><FormLabel>Income Tax (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.kbcwb`} render={({ field }) => ( <FormItem><FormLabel>KBCWB (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.refundToParty`} render={({ field }) => ( <FormItem><FormLabel>Refund to Party (₹)</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <div className="space-y-2">
-                                            <Label htmlFor={`paymentTotalCalculated-${index}`} className="text-muted-foreground">Total (This Entry)</Label>
-                                            <Input id={`paymentTotalCalculated-${index}`} name={`paymentTotalCalculated-${index}`} value={paymentTotal.toFixed(2)} readOnly className="bg-muted/50" />
-                                        </div>
-                                        <FormField control={form.control} name={`paymentDetails.${index}.paymentRemarks`} render={({ field }) => ( <FormItem className="md:col-span-3"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                                        </div>
-                                    </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                                );
-                            })}
-                        </Accordion>
-                        {isEditor && paymentFields.length < 10 && <Button className="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-sm" type="button" variant="secondary" onClick={() => appendPayment(createDefaultPaymentDetail())}><PlusCircle className="mr-2 h-4 w-4" />Add Payment</Button>}
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
-        
-            <AccordionItem value="final-status" className="border bg-card rounded-lg shadow-sm">
-                <AccordionTrigger className="p-4 hover:no-underline text-primary">
-                    <span className="text-xl font-semibold">Final Status &amp; Summary</span>
-                </AccordionTrigger>
-                <AccordionContent className="p-6 pt-0">
-                    <div className="space-y-6 border-t pt-6">
-                        <div className="grid md:grid-cols-4 gap-6">
-                           <div className="space-y-2">
-                                <Label htmlFor="totalEstimateCalculated" className="text-muted-foreground">Total Estimate Amount (₹)</Label>
-                                <Input id="totalEstimateCalculated" name="totalEstimateCalculated" value={watchedTotalEstimate.toFixed(2)} readOnly className="bg-muted/50"/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="totalRemittanceCalculated" className="text-muted-foreground">Total Remittance (₹)</Label>
-                                <Input id="totalRemittanceCalculated" name="totalRemittanceCalculated" value={(form.watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} readOnly className="bg-muted/50"/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="totalPaymentCalculated" className="text-muted-foreground">Total Payment (₹)</Label>
-                                <Input id="totalPaymentCalculated" name="totalPaymentCalculated" value={(form.watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} readOnly className="bg-muted/50"/>
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="balanceCalculated" className="text-muted-foreground">Balance (₹)</Label>
-                                <Input id="balanceCalculated" name="balanceCalculated" value={((form.watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - (form.watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} readOnly className="bg-muted/50"/>
-                            </div>
-                        </div>
-                        <Separator />
-                         <div className="grid md:grid-cols-3 gap-6">
-                            <FormField control={form.control} name="fileStatus" render={({ field }) => ( <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isMainFieldReadOnly('fileStatus')}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="remarks" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Final remarks" {...field} value={field.value ?? ""} readOnly={isMainFieldReadOnly('remarks')} /></FormControl><FormMessage /></FormItem> )}/>
-                        </div>
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
-        </Accordion>
-        
-        <div className="flex space-x-4 pt-4">
-          {!isViewer && (
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                  <Save className="mr-2 h-4 w-4" />
-              )}
-              {isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}
-            </Button>
-          )}
-          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
-        </div>
-      </form>
-    </FormProvider>
-  );
+            {/* All Dialogs */}
+             <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This will permanently delete this entry. This action cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </FormProvider>
+    );
 }
