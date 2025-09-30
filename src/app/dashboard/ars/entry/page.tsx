@@ -30,7 +30,7 @@ export const dynamic = 'force-dynamic';
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
-const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Failed", "Work Completed", "Work Initiated"];
+const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed"];
 const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
 
 
@@ -214,10 +214,12 @@ export default function ArsEntryPage() {
     const handleLsgChange = (lsgName: string) => {
         form.setValue('localSelfGovt', lsgName);
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-        // Always clear constituency when LSG changes.
+        
+        // Always reset constituency
         form.setValue('constituency', undefined);
+        
         if (map?.constituencies?.length === 1) {
-            form.setValue('constituency', map.constituencies[0]);
+          form.setValue('constituency', map.constituencies[0] as any);
         }
         form.trigger('constituency');
     };

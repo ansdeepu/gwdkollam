@@ -425,8 +425,10 @@ export default function DataEntryFormComponent({
   const handleLsgChange = (lsgName: string, siteIndex: number) => {
     formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
     const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-    // Always clear constituency when LSG changes.
+    
+    // Always reset constituency
     formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+    
     if (map?.constituencies?.length === 1) {
       formSetValue(`siteDetails.${siteIndex}.constituency`, map.constituencies[0] as Constituency);
     }
@@ -905,5 +907,3 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
-
-    
