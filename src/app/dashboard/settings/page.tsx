@@ -1,3 +1,4 @@
+
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -476,11 +477,22 @@ export default function SettingsPage() {
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-96 pr-4">
-            <ul className="space-y-1 text-sm">
-                {listDialogContent.items.map((item, index) => (
-                    <li key={index} className="p-1 border-b">{item}</li>
-                ))}
-            </ul>
+            <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">Sl. No.</TableHead>
+                    <TableHead>{listDialogContent.title}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {listDialogContent.items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{item}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+            </Table>
           </ScrollArea>
            <DialogFooter>
             <DialogClose asChild>
@@ -492,3 +504,4 @@ export default function SettingsPage() {
     </>
   );
 }
+
