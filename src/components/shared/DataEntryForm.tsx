@@ -606,8 +606,10 @@ export default function DataEntryFormComponent({
                                             <div className="grid md:grid-cols-3 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.latitude`} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('latitude')} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField control={form.control} name={`siteDetails.${index}.longitude`} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                <FormField control={form.control} name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => (<FormItem><FormLabel>Local Self Govt.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('localSelfGovt')} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('constituency')}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                                            </div>
+                                            <div className="grid md:grid-cols-1 gap-6">
+                                                <FormField control={form.control} name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => (<FormItem><FormLabel>Local Self Govt.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('localSelfGovt')} /></FormControl><FormMessage/></FormItem>)}/>
                                             </div>
                                             
                                             {isWellPurpose && (
@@ -857,7 +859,3 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
-
-    
-
-    
