@@ -62,6 +62,7 @@ import { getFirestore, doc, updateDoc, serverTimestamp } from "firebase/firestor
 import { app } from "@/lib/firebase";
 import { useDataStore } from "@/hooks/use-data-store";
 import { ScrollArea } from "../ui/scroll-area";
+import { format } from "date-fns";
 
 const db = getFirestore(app);
 
@@ -159,7 +160,17 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
         return null;
     }
     let displayValue = String(value);
-    // Add any specific formatting if needed, e.g., for dates or numbers
+    
+    if (label.toLowerCase().includes('date') && value) {
+        try {
+            displayValue = format(new Date(value), "dd/MM/yyyy");
+        } catch (e) {
+            // Keep original string if formatting fails
+        }
+    } else if (typeof value === 'number') {
+        displayValue = value.toLocaleString('en-IN');
+    }
+
     return (
         <div className="text-sm">
             <span className="font-medium text-muted-foreground">{label}:</span> {displayValue}
@@ -650,7 +661,7 @@ export default function DataEntryFormComponent({
             </form>
             
             {/* All Dialogs */}
-             <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
+            <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -662,6 +673,51 @@ export default function DataEntryFormComponent({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={!!dialogState.type} onOpenChange={(open) => !open && closeDialog()}>
+              <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                      <DialogTitle>
+                        {dialogState.type === 'application' && "Application Details"}
+                        {dialogState.type === 'remittance' && (dialogState.index !== undefined ? "Edit Remittance" : "Add Remittance")}
+                        {dialogState.type === 'site' && (dialogState.index !== undefined ? "Edit Site" : "Add Site")}
+                        {dialogState.type === 'payment' && (dialogState.index !== undefined ? "Edit Payment" : "Add Payment")}
+                        {dialogState.type === 'finalStatus' && "Final Status & Summary"}
+                      </DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription>
+                    {dialogState.type === 'application' && "Edit the main details of the file application."}
+                    {dialogState.type === 'remittance' && "Enter the amount, date, and account for the remittance."}
+                    {dialogState.type === 'site' && "Enter all details related to a specific work site."}
+                    {dialogState.type === 'payment' && "Record a payment made from the file's balance."}
+                    {dialogState.type === 'finalStatus' && "Set the final status of the file and add any closing remarks."}
+                  </DialogDescription>
+
+                  {/* You would have separate components for each form, but for simplicity, we'll use conditional rendering here. */}
+                  
+                  {/* Example for Application Details */}
+                  {dialogState.type === 'application' && (
+                      <div className="space-y-4 py-4">
+                        {/* Form fields for Application Details would go here */}
+                         <p>Form for Application Details...</p>
+                      </div>
+                  )}
+
+                  {/* Example for Site Details */}
+                   {dialogState.type === 'site' && (
+                      <div className="space-y-4 py-4">
+                        {/* A more complex form for Site Details */}
+                        <p>Form for Site Details...</p>
+                      </div>
+                  )}
+
+                  <DialogFooter>
+                      <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+                      <Button onClick={() => handleDialogSave(dialogState.data)}>Save</Button>
+                  </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
         </FormProvider>
     );
 }
