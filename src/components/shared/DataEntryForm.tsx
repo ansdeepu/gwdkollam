@@ -422,22 +422,26 @@ export default function DataEntryFormComponent({
     return true; // Default to read-only
   };
 
-  const handleLsgChange = useCallback((lsgName: string, siteIndex: number) => {
+  const handleLsgChange = (lsgName: string, siteIndex: number) => {
+    // Update the selected Local Self Government
     formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
+  
+    // Find matching constituencies for the LSG
     const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
     const constituencies = map?.constituencies || [];
-    
-    // Always reset constituency when LSG changes to ensure re-validation
+  
+    // Reset constituency first
     formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
-    
+  
+    // If there is exactly one option, auto-select it
     if (constituencies.length === 1) {
       formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
     }
+  
+    // Re-validate the constituency field
     form.trigger(`siteDetails.${siteIndex}.constituency`);
-  }, [formSetValue, allLsgConstituencyMaps, form]);
+  };
 
-  // This effect ensures that if the constituency options change for a selected LSG (e.g., due to data refresh),
-  // the form's state remains valid.
   useEffect(() => {
     (watchedSiteDetails ?? []).forEach((site, index) => {
         const lsgName = site?.localSelfGovt;
@@ -446,7 +450,7 @@ export default function DataEntryFormComponent({
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
         const constituencies = map?.constituencies || [];
         
-        // If there's only one valid constituency, enforce it.
+        // If only one constituency is valid, enforce auto-selection
         if (constituencies.length === 1 && site.constituency !== constituencies[0]) {
             formSetValue(`siteDetails.${index}.constituency`, constituencies[0] as Constituency);
         }
