@@ -68,6 +68,7 @@ const createDefaultPaymentDetail = (): PaymentDetailFormData => ({
 
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({
   nameOfSite: "",
+  localSelfGovt: "",
   constituency: undefined,
   latitude: undefined, longitude: undefined, purpose: undefined,
   estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
@@ -151,6 +152,10 @@ interface DataEntryFormProps {
   supervisorList: (StaffMember & { uid: string; name: string })[];
   userRole?: UserRole;
 }
+
+const PUBLIC_APPLICATION_TYPES = applicationTypeOptions.filter(
+  (type) => !type.startsWith("Private_")
+);
 
 export default function DataEntryFormComponent({ 
   fileNoToEdit,
@@ -340,7 +345,8 @@ export default function DataEntryFormComponent({
                       'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure',
                       'diameter', 'pilotDrillingDepth', 'totalDepth', 'casingPipeUsed', 'outerCasingPipe', 'innerCasingPipe',
                       'yieldDischarge', 'zoneDetails', 'waterLevel', 'typeOfRig', 'surveyOB', 'surveyPlainPipe', 'surveySlottedPipe',
-                      'pumpDetails', 'pumpingLineLength', 'deliveryLineLength', 'waterTankCapacity', 'noOfTapConnections', 'noOfBeneficiary'
+                      'pumpDetails', 'pumpingLineLength', 'deliveryLineLength', 'waterTankCapacity', 'noOfTapConnections', 'noOfBeneficiary',
+                      'localSelfGovt', 'constituency'
                     ];
                     if (supervisorEditableFields.includes(typedKey)) {
                         const currentValue = currentSite[typedKey] ?? "";
@@ -383,7 +389,8 @@ export default function DataEntryFormComponent({
         'latitude', 'longitude', 'drillingRemarks', 'workRemarks', 'workStatus', 'dateOfCompletion', 'totalExpenditure',
         'diameter', 'pilotDrillingDepth', 'totalDepth', 'casingPipeUsed', 'outerCasingPipe', 'innerCasingPipe',
         'yieldDischarge', 'zoneDetails', 'waterLevel', 'typeOfRig', 'surveyOB', 'surveyPlainPipe', 'surveySlottedPipe',
-        'pumpDetails', 'pumpingLineLength', 'deliveryLineLength', 'waterTankCapacity', 'noOfTapConnections', 'noOfBeneficiary'
+        'pumpDetails', 'pumpingLineLength', 'deliveryLineLength', 'waterTankCapacity', 'noOfTapConnections', 'noOfBeneficiary',
+        'localSelfGovt', 'constituency'
       ];
       return !supervisorEditableFields.includes(fieldName);
     }
@@ -413,13 +420,12 @@ export default function DataEntryFormComponent({
                     <div className="border-t pt-6 space-y-6">
                         <div className="grid md:grid-cols-3 gap-6">
                            <FormField control={form.control} name="fileNo" render={({ field }) => ( <FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="Enter File Number" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                           <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem><FormLabel>Name &amp; Address of Institution/Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                           <FormField control={form.control} name="applicantName" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Name &amp; Address of Institution/Applicant <span className="text-destructive">*</span></FormLabel><FormControl><Textarea placeholder="Enter Name and Address" className="min-h-[80px]" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                         <div className="grid md:grid-cols-3 gap-6">
                             <FormField control={form.control} name="phoneNo" render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="secondaryMobileNo" render={({ field }) => ( <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="applicationType" render={({ field }) => ( <FormItem><FormLabel>Type of Application <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{applicationTypeOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o as ApplicationType]}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="applicationType" render={({ field }) => ( <FormItem><FormLabel>Type of Application <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{PUBLIC_APPLICATION_TYPES.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o as ApplicationType]}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                         </div>
                     </div>
                 </AccordionContent>
@@ -593,13 +599,15 @@ export default function DataEntryFormComponent({
                                           </div>
                                         )}
                                         <div className="border-t pt-6 space-y-6">
-                                            <div className="grid md:grid-cols-3 gap-6">
-                                                <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
+                                            <div className="grid md:grid-cols-2 gap-6">
+                                                <FormField control={form.control} name={`siteDetails.${index}.nameOfSite`} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField control={form.control} name={`siteDetails.${index}.purpose`} render={({ field }) => (<FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)}/>
                                             </div>
-                                            <div className="grid md:grid-cols-2 gap-6">
+                                            <div className="grid md:grid-cols-3 gap-6">
                                                 <FormField control={form.control} name={`siteDetails.${index}.latitude`} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('latitude')} /></FormControl><FormMessage/></FormItem>)}/>
                                                 <FormField control={form.control} name={`siteDetails.${index}.longitude`} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage/></FormItem>)}/>
+                                                <FormField control={form.control} name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => (<FormItem><FormLabel>Local Self Govt.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('localSelfGovt')} /></FormControl><FormMessage/></FormItem>)}/>
+                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('constituency')}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                                             </div>
                                             
                                             {isWellPurpose && (

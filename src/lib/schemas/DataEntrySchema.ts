@@ -234,6 +234,7 @@ const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev
 
 export const SiteDetailSchema = z.object({
   nameOfSite: z.string().min(1, "Name of Site is required."),
+  localSelfGovt: z.string().optional(),
   constituency: z.enum(constituencyOptions).optional(),
   latitude: optionalNumber("Latitude must be a valid number."),
   longitude: optionalNumber("Longitude must be a valid number."),
@@ -333,7 +334,6 @@ export const DataEntrySchema = z.object({
   applicantName: z.string().min(1, "Name & Address of Institution / Applicant is required."),
   phoneNo: z.string().optional(),
   secondaryMobileNo: z.string().optional(),
-  constituency: z.enum(constituencyOptions).optional(),
   applicationType: z.enum(applicationTypeOptions).optional(),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   assignedSupervisorUids: z.array(z.string()).optional(),
