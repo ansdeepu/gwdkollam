@@ -95,5 +95,11 @@ service cloud.firestore {
       allow read: if isApproved();
       allow write: if isEditor();
     }
+
+    // === Application Settings (Office Addresses, LSGs, Constituencies) ===
+    match /(officeAddresses|localSelfGovernments|constituencies)/{docId=**} {
+      allow read: if isApproved();
+      allow write: if isEditor();
+    }
   }
 }
