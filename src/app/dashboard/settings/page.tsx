@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, PlusCircle, Building, MapPin, University, Loader2, ShieldAlert, Edit, FileUp, XCircle } from 'lucide-react';
+import { Trash2, PlusCircle, Building, MapPin, University, Loader2, ShieldAlert, Edit, FileUp, XCircle, ArrowLeft, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, writeBatch, updateDoc, getDocs } from 'firebase/firestore';
@@ -23,8 +23,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import ExcelJS from 'exceljs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import type { LsgConstituencyMap } from '@/lib/schemas';
+import type { LsgConstituencyMap, StaffMember, Designation } from '@/lib/schemas';
 import { useDataStore } from '@/hooks/use-data-store';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 
 
 export const dynamic = 'force-dynamic';
@@ -36,8 +38,8 @@ const OfficeAddressSchema = z.object({
   officeName: z.string().min(1, "Office Name is required."),
   address: z.string().optional(),
   phoneNo: z.string().optional(),
+  districtOfficerStaffId: z.string().optional(),
   districtOfficer: z.string().optional(),
-  districtOfficerPhotoUrl: z.string().url().optional().or(z.literal('')),
   gstNo: z.string().optional(),
   panNo: z.string().optional(),
   otherDetails: z.string().optional(),
@@ -45,17 +47,18 @@ const OfficeAddressSchema = z.object({
 type OfficeAddressFormData = z.infer<typeof OfficeAddressSchema>;
 interface OfficeAddress extends OfficeAddressFormData {
   id: string;
-}
-
-interface SettingItem {
-  id: string;
-  name: string;
+  districtOfficerPhotoUrl?: string;
 }
 
 const getInitials = (name?: string) => {
   if (!name) return 'DO';
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
 };
+
+const officerDesignations: Designation[] = [
+    "Executive Engineer", "Senior Hydrogeologist", "Assistant Executive Engineer", "Hydrogeologist"
+];
+
 
 // Office Address Form Dialog
 const OfficeAddressDialog = ({
@@ -64,23 +67,33 @@ const OfficeAddressDialog = ({
   onSubmit,
   isSubmitting,
   initialData,
+  staffMembers
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: OfficeAddressFormData) => void;
   isSubmitting: boolean;
   initialData?: OfficeAddress | null;
+  staffMembers: StaffMember[];
 }) => {
-  const form = useForm<OfficeAddressFormData>({
-    resolver: zodResolver(OfficeAddressSchema),
-    defaultValues: initialData || {
-      officeName: '', address: '', phoneNo: '', districtOfficer: '', districtOfficerPhotoUrl: '', gstNo: '', panNo: '', otherDetails: '',
-    },
-  });
+    const officerList = staffMembers.filter(s => officerDesignations.includes(s.designation as Designation));
+    
+    const form = useForm<OfficeAddressFormData>({
+        resolver: zodResolver(OfficeAddressSchema),
+        defaultValues: initialData || {
+        officeName: '', address: '', phoneNo: '', districtOfficerStaffId: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '',
+        },
+    });
 
-  useEffect(() => {
-    form.reset(initialData || { officeName: '', address: '', phoneNo: '', districtOfficer: '', districtOfficerPhotoUrl: '', gstNo: '', panNo: '', otherDetails: '' });
-  }, [initialData, form]);
+    useEffect(() => {
+        form.reset(initialData || { officeName: '', address: '', phoneNo: '', districtOfficerStaffId: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '' });
+    }, [initialData, form]);
+
+    const handleOfficerChange = (staffId: string) => {
+        const selectedStaff = officerList.find(s => s.id === staffId);
+        form.setValue('districtOfficerStaffId', staffId);
+        form.setValue('districtOfficer', selectedStaff?.name || '');
+    };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -92,10 +105,22 @@ const OfficeAddressDialog = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
             <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField name="districtOfficer" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of District Officer</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-               <FormField name="districtOfficerPhotoUrl" control={form.control} render={({ field }) => ( <FormItem><FormLabel>District Officer Photo URL</FormLabel><FormControl><Input {...field} placeholder="https://example.com/photo.jpg" /></FormControl><FormMessage /></FormItem> )}/>
-            </div>
+             <FormField
+                name="districtOfficerStaffId"
+                control={form.control}
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Name of District Officer</FormLabel>
+                    <Select onValueChange={(value) => handleOfficerChange(value)} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select an Officer" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            {officerList.map(officer => <SelectItem key={officer.id} value={officer.id}>{officer.name} ({officer.designation})</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
             <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
@@ -123,7 +148,7 @@ export default function SettingsPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { allLsgConstituencyMaps, refetchLsgConstituencyMaps } = useDataStore();
+  const { allLsgConstituencyMaps, allStaffMembers, refetchLsgConstituencyMaps } = useDataStore();
   const canManage = user?.role === 'editor';
 
   const [officeAddress, setOfficeAddress] = useState<OfficeAddress | null>(null);
@@ -133,6 +158,8 @@ export default function SettingsPage() {
   const [isClearingData, setIsClearingData] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
 
   useEffect(() => {
     setHeader('Application Settings', 'Manage dropdown options and other application-wide settings.');
@@ -141,8 +168,17 @@ export default function SettingsPage() {
   useEffect(() => {
     const q = query(collection(db, 'officeAddresses'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfficeAddress));
-      setOfficeAddress(fetchedItems[0] || null);
+        if (snapshot.empty) {
+            setOfficeAddress(null);
+            setIsLoadingOffices(false);
+            return;
+        }
+      const fetchedItem = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as OfficeAddress;
+      const staffInfo = allStaffMembers.find(s => s.id === fetchedItem.districtOfficerStaffId);
+      if(staffInfo) {
+          fetchedItem.districtOfficerPhotoUrl = staffInfo.photoUrl;
+      }
+      setOfficeAddress(fetchedItem);
       setIsLoadingOffices(false);
     }, (error) => {
       console.error('Error fetching office addresses:', error);
@@ -150,17 +186,17 @@ export default function SettingsPage() {
       setIsLoadingOffices(false);
     });
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, allStaffMembers]);
 
   const handleOfficeSubmit = async (data: OfficeAddressFormData) => {
     if (!canManage) return;
     setIsSubmitting(true);
     try {
       if (officeAddress) {
-        await updateDoc(doc(db, 'officeAddresses', officeAddress.id), data);
+        await updateDoc(doc(db, 'officeAddresses', officeAddress.id), { ...data });
         toast({ title: 'Office Address Updated' });
       } else {
-        await addDoc(collection(db, 'officeAddresses'), data);
+        await addDoc(collection(db, 'officeAddresses'), { ...data });
         toast({ title: 'Office Address Added' });
       }
       setIsOfficeDialogOpen(false);
@@ -239,13 +275,35 @@ export default function SettingsPage() {
     };
     reader.readAsArrayBuffer(file);
   };
+
+  const handleDownloadTemplate = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("LSG_Constituency_Template");
+
+    worksheet.columns = [
+        { header: 'Local Self Government', key: 'lsg', width: 40 },
+        { header: 'Constituency (LAC)', key: 'constituency', width: 40 },
+    ];
+    worksheet.addRow(["Chavara Grama Panchayath", "Chavara"]);
+    worksheet.addRow(["Neendakara Grama Panchayath", "Chavara"]);
+    worksheet.addRow(["Thekkumbhagom Grama Panchayath", "Chavara"]);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "GWD_LSG_Constituency_Template.xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({ title: "Template Downloaded", description: "The Excel template has been downloaded." });
+  };
   
   const handleClearAllData = async () => {
     setIsClearingData(true);
     try {
         const lsgQuery = query(collection(db, 'localSelfGovernments'));
-        const conQuery = query(collection(db, 'constituencies'));
-
         const [lsgSnapshot] = await Promise.all([getDocs(lsgQuery)]);
 
         const batch = writeBatch(db);
@@ -280,6 +338,12 @@ export default function SettingsPage() {
 
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <Button variant="destructive" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+        </Button>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="lg:col-span-2">
             <CardHeader>
@@ -333,6 +397,7 @@ export default function SettingsPage() {
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileUp className="mr-2 h-4 w-4" />}
                                 Import Excel
                            </Button>
+                           <Button variant="outline" onClick={handleDownloadTemplate}><Download className="mr-2 h-4 w-4"/>Template</Button>
                            <Button variant="destructive" onClick={() => setIsClearConfirmOpen(true)} disabled={isClearingData}>
                                 <Trash2 className="mr-2 h-4 w-4"/>
                                 {isClearingData ? "Clearing..." : "Clear All Data"}
@@ -351,6 +416,7 @@ export default function SettingsPage() {
         onSubmit={handleOfficeSubmit}
         isSubmitting={isSubmitting}
         initialData={officeAddress}
+        staffMembers={allStaffMembers}
       />
       
       <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
