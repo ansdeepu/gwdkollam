@@ -443,7 +443,10 @@ export default function DataEntryFormComponent({
         return constituencyOptions.slice().sort((a,b) => a.localeCompare(b));
     }
     const map = allLsgConstituencyMaps.find(m => m.name === selectedLsg);
-    return map?.constituencies.sort((a,b) => a.localeCompare(b)) || [];
+    if (!map || !Array.isArray(map.constituencies)) {
+      return [];
+    }
+    return map.constituencies.sort((a,b) => a.localeCompare(b));
   };
 
   return (
