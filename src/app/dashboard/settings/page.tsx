@@ -1,20 +1,19 @@
-
 // src/app/dashboard/settings/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, PlusCircle, Building, MapPin, University, Loader2, ShieldAlert, Edit, FileUp, XCircle, ArrowLeft, Download } from 'lucide-react';
+import { Trash2, PlusCircle, Building, MapPin, University, Loader2, ShieldAlert, Edit, FileUp, XCircle, ArrowLeft, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, writeBatch, updateDoc, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
@@ -27,6 +26,7 @@ import type { LsgConstituencyMap, StaffMember, Designation } from '@/lib/schemas
 import { useDataStore } from '@/hooks/use-data-store';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 export const dynamic = 'force-dynamic';
@@ -97,37 +97,43 @@ const OfficeAddressDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{initialData ? 'Edit Office Address' : 'Add New Office Address'}</DialogTitle>
           <DialogDescription>Fill in the details for the office location.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-            <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-             <FormField
-                name="districtOfficerStaffId"
-                control={form.control}
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Name of District Officer</FormLabel>
-                    <Select onValueChange={(value) => handleOfficerChange(value)} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select an Officer" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            {officerList.map(officer => <SelectItem key={officer.id} value={officer.id}>{officer.name} ({officer.designation})</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-            <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    name="districtOfficerStaffId"
+                    control={form.control}
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Name of District Officer</FormLabel>
+                        <Select onValueChange={(value) => handleOfficerChange(value)} value={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select an Officer" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                {officerList.map(officer => <SelectItem key={officer.id} value={officer.id}>{officer.name} ({officer.designation})</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
                 <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField name="gstNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>GST No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                 <FormField name="panNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>PAN No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
             </div>
+
             <FormField name="otherDetails" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Other Details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+            
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -160,9 +166,11 @@ export default function SettingsPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  const [isListDialogOpen, setIsListDialogOpen] = useState(false);
+  const [listDialogContent, setListDialogContent] = useState<{ title: string; items: string[] }>({ title: '', items: [] });
 
   useEffect(() => {
-    setHeader('Application Settings', 'Manage dropdown options and other application-wide settings.');
+    setHeader('General Settings', 'Manage dropdown options and other application-wide settings.');
   }, [setHeader]);
   
   useEffect(() => {
@@ -319,6 +327,29 @@ export default function SettingsPage() {
         setIsClearConfirmOpen(false);
     }
   };
+
+  const allConstituencies = useMemo(() => {
+    const constituencySet = new Set<string>();
+    allLsgConstituencyMaps.forEach(map => {
+        map.constituencies.forEach(con => constituencySet.add(con));
+    });
+    return Array.from(constituencySet).sort();
+  }, [allLsgConstituencyMaps]);
+  
+  const handleCountClick = (type: 'lsg' | 'constituency') => {
+    if (type === 'lsg') {
+        setListDialogContent({
+            title: 'Local Self Governments',
+            items: allLsgConstituencyMaps.map(m => m.name).sort(),
+        });
+    } else {
+        setListDialogContent({
+            title: 'Constituencies (LAC)',
+            items: allConstituencies,
+        });
+    }
+    setIsListDialogOpen(true);
+  };
   
   if (user?.role !== 'editor' && user?.role !== 'viewer') {
     return (
@@ -338,12 +369,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button variant="destructive" size="sm" onClick={() => router.back()}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-        </Button>
-      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="lg:col-span-2">
             <CardHeader>
@@ -368,7 +393,7 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-3">
                                 {officeAddress.districtOfficerPhotoUrl && (
                                     <Avatar>
-                                        <AvatarImage src={officeAddress.districtOfficerPhotoUrl} alt={officeAddress.districtOfficer} data-ai-hint="person face" />
+                                        <AvatarImage src={officeAddress.districtOfficerPhotoUrl} alt={officeAddress.districtOfficer || 'District Officer'} data-ai-hint="person face" />
                                         <AvatarFallback>{getInitials(officeAddress.districtOfficer)}</AvatarFallback>
                                     </Avatar>
                                 )}
@@ -407,6 +432,16 @@ export default function SettingsPage() {
                 </div>
                 <CardDescription>Import or clear Local Self Governments and their associated Constituencies from a single Excel file.</CardDescription>
             </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onClick={() => handleCountClick('lsg')} disabled={allLsgConstituencyMaps.length === 0} className="p-4 border rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <h4 className="text-sm font-medium text-muted-foreground">Local Self Governments</h4>
+                    <p className="text-4xl font-bold text-blue-600">{allLsgConstituencyMaps.length}</p>
+                </button>
+                <button onClick={() => handleCountClick('constituency')} disabled={allConstituencies.length === 0} className="p-4 border rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <h4 className="text-sm font-medium text-muted-foreground">Constituencies (LAC)</h4>
+                    <p className="text-4xl font-bold text-purple-600">{allConstituencies.length}</p>
+                </button>
+            </CardContent>
         </Card>
       </div>
 
@@ -433,6 +468,27 @@ export default function SettingsPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isListDialogOpen} onOpenChange={setIsListDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{listDialogContent.title}</DialogTitle>
+            <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-96 pr-4">
+            <ul className="space-y-1 text-sm">
+                {listDialogContent.items.map((item, index) => (
+                    <li key={index} className="p-1 border-b">{item}</li>
+                ))}
+            </ul>
+          </ScrollArea>
+           <DialogFooter>
+            <DialogClose asChild>
+                <Button variant="outline">Close</Button>
+            </DialogClose>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
