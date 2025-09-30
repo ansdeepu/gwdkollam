@@ -12,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  Form,
 } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -199,52 +200,100 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
 };
 
 const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, isReadOnly, isSupervisor, allLsgConstituencyMaps }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, supervisorList: any[], isReadOnly: boolean, isSupervisor: boolean, allLsgConstituencyMaps: any[] }) => {
-    const [data, setData] = useState({ ...initialData, dateOfCompletion: formatDateForInput(initialData.dateOfCompletion) });
-    const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
+    const form = useForm<SiteDetailFormData>({
+      resolver: zodResolver(SiteDetailSchema),
+      defaultValues: { ...initialData, dateOfCompletion: formatDateForInput(initialData.dateOfCompletion) },
+    });
+    
+    const { control, setValue, trigger, watch } = form;
+    const watchedLsg = watch('localSelfGovt');
+
+    const handleLsgChange = useCallback((lsgName: string) => {
+        setValue('localSelfGovt', lsgName);
+        const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+        const constituencies = map?.constituencies || [];
+        
+        setValue('constituency', undefined);
+        if (constituencies.length === 1) {
+          setValue('constituency', constituencies[0] as Constituency);
+        }
+        trigger('constituency');
+    }, [setValue, trigger, allLsgConstituencyMaps]);
+    
+    const sortedLsgMaps = useMemo(() => {
+        return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name));
+    }, [allLsgConstituencyMaps]);
     
     const constituencyOptionsForSite = useMemo(() => {
-        if (!data.localSelfGovt) return [...constituencyOptions].sort((a,b) => a.localeCompare(b));
-        const map = allLsgConstituencyMaps.find(m => m.name === data.localSelfGovt);
+        if (!watchedLsg) return [...constituencyOptions].sort((a,b) => a.localeCompare(b));
+        const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
         return map?.constituencies.sort((a: string, b: string) => a.localeCompare(b)) || [];
-    }, [data.localSelfGovt, allLsgConstituencyMaps]);
+    }, [watchedLsg, allLsgConstituencyMaps]);
     
     const isConstituencyDisabled = isReadOnly || constituencyOptionsForSite.length <= 1;
 
     return (
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(onConfirm)}>
         <ScrollArea className="max-h-[70vh] p-1">
           <div className="space-y-4 py-4 pr-4">
-            <div className="space-y-2"><Label>Name of Site</Label><Input value={data.nameOfSite} onChange={e => handleChange('nameOfSite', e.target.value)} readOnly={isReadOnly} /></div>
+            <FormField name="nameOfSite" control={control} render={({field}) => <FormItem><FormLabel>Name of Site</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
              <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Local Self Govt.</Label><Input value={data.localSelfGovt} onChange={e => handleChange('localSelfGovt', e.target.value)} readOnly={isReadOnly} /></div>
-              <div className="space-y-2">
-                <Label>Constituency</Label>
-                <Select onValueChange={(value) => handleChange('constituency', value)} value={data.constituency} disabled={isConstituencyDisabled}>
-                  <SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger>
-                  <SelectContent>{constituencyOptionsForSite.map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+               <FormField name="localSelfGovt" control={control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Local Self Govt.</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        const normalized = value === '_clear_' ? '' : value;
+                        field.onChange(normalized);
+                        handleLsgChange(normalized);
+                      }}
+                      value={field.value ?? ""}
+                      disabled={isReadOnly}
+                    >
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); handleLsgChange(''); }}>-- Clear --</SelectItem>
+                        {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage/>
+                  </FormItem>
+                )}/>
+                <FormField name="constituency" control={control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Constituency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isConstituencyDisabled}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger></FormControl>
+                      <SelectContent>{constituencyOptionsForSite.map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <FormMessage/>
+                  </FormItem>
+                )}/>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Latitude</Label><Input type="number" value={data.latitude} onChange={e => handleChange('latitude', e.target.value)} readOnly={isReadOnly || (isSupervisor && initialData.latitude)} /></div>
-              <div className="space-y-2"><Label>Longitude</Label><Input type="number" value={data.longitude} onChange={e => handleChange('longitude', e.target.value)} readOnly={isReadOnly || (isSupervisor && initialData.longitude)} /></div>
+               <FormField name="latitude" control={control} render={({field}) => <FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly || (isSupervisor && !!initialData.latitude)} /></FormControl><FormMessage/></FormItem>} />
+               <FormField name="longitude" control={control} render={({field}) => <FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly || (isSupervisor && !!initialData.longitude)} /></FormControl><FormMessage/></FormItem>} />
             </div>
              <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Purpose</Label><Select onValueChange={v => handleChange('purpose', v)} value={data.purpose}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-2"><Label>Work Status</Label><Select onValueChange={v => handleChange('workStatus', v)} value={data.workStatus}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+              <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+              <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
             </div>
-            <div className="space-y-2"><Label>Work Remarks</Label><Textarea value={data.workRemarks} onChange={e => handleChange('workRemarks', e.target.value)} readOnly={isReadOnly} /></div>
+            <FormField name="workRemarks" control={control} render={({field}) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Assigned Supervisor</Label>
-                <Select onValueChange={v => handleChange('supervisorUid', v)} value={data.supervisorUid} disabled={isReadOnly}>
-                  <SelectTrigger><SelectValue placeholder="Select Supervisor"/></SelectTrigger>
+              <FormField name="supervisorUid" control={control} render={({field}) => <FormItem><FormLabel>Assigned Supervisor</FormLabel>
+                <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor"/></SelectTrigger></FormControl>
                   <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2"><Label>Date of Completion</Label><Input type="date" value={data.dateOfCompletion} onChange={e => handleChange('dateOfCompletion', e.target.value)} readOnly={isReadOnly} /></div>
+              <FormMessage/></FormItem>} />
+              <FormField name="dateOfCompletion" control={control} render={({field}) => <FormItem><FormLabel>Date of Completion</FormLabel><FormControl><Input type="date" {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
             </div>
           </div>
-           <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+           <DialogFooter><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
         </ScrollArea>
+        </form>
+        </Form>
     );
 };
 
