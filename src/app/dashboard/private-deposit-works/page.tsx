@@ -63,7 +63,7 @@ export default function PrivateDepositWorksPage() {
     if (user?.role === 'supervisor') {
       // For supervisors, show all files where they are assigned to at least one site and the application type is private.
       entries = fileEntries
-        .filter(entry => entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
+        .filter(entry => !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
           return { ...entry, siteDetails: assignedSites };
@@ -72,7 +72,7 @@ export default function PrivateDepositWorksPage() {
     } else {
       // For other roles, filter for private application types and exclude ARS-only files.
       entries = fileEntries
-        .filter(entry => entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
+        .filter(entry => !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
           return { ...entry, siteDetails: nonArsSites };

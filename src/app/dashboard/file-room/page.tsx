@@ -74,7 +74,7 @@ export default function FileManagerPage() {
     } else {
       // For other roles, filter out ARS-only files and Private works.
       entries = fileEntries
-        .filter(entry => entry.applicationType && !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
+        .filter(entry => !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
           return { ...entry, siteDetails: nonArsSites };
