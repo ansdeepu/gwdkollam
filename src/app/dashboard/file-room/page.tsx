@@ -106,7 +106,7 @@ export default function FileManagerPage() {
 
   const handleAddNewClick = () => {
     setIsNavigating(true);
-    router.push('/dashboard/data-entry');
+    router.push('/dashboard/data-entry?workType=public');
   };
 
   return (

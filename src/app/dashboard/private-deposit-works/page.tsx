@@ -103,7 +103,7 @@ export default function PrivateDepositWorksPage() {
 
   const handleAddNewClick = () => {
     setIsNavigating(true);
-    router.push('/dashboard/data-entry');
+    router.push('/dashboard/data-entry?workType=private');
   };
 
   return (

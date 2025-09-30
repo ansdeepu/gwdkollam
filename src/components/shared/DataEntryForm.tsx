@@ -150,10 +150,14 @@ interface DataEntryFormProps {
   initialData: DataEntryFormData;
   supervisorList: (StaffMember & { uid: string; name: string })[];
   userRole?: UserRole;
+  workTypeContext: 'public' | 'private' | null;
 }
 
 const PUBLIC_APPLICATION_TYPES = applicationTypeOptions.filter(
   (type) => !type.startsWith("Private_")
+);
+const PRIVATE_APPLICATION_TYPES = applicationTypeOptions.filter(
+  (type) => type.startsWith("Private_")
 );
 
 export default function DataEntryFormComponent({ 
@@ -161,6 +165,7 @@ export default function DataEntryFormComponent({
   initialData,
   supervisorList,
   userRole,
+  workTypeContext,
 }: DataEntryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -178,6 +183,16 @@ export default function DataEntryFormComponent({
   const isApprovingUpdate = isEditor && !!approveUpdateId;
   const isReadOnly = isViewer || (isSupervisor && !fileNoToEdit);
 
+  const formOptions = useMemo(() => {
+    if (workTypeContext === 'private') {
+      return PRIVATE_APPLICATION_TYPES;
+    }
+    if (workTypeContext === 'public') {
+      return PUBLIC_APPLICATION_TYPES;
+    }
+    // If no context or editing, show all
+    return applicationTypeOptions;
+  }, [workTypeContext]);
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
@@ -424,7 +439,7 @@ export default function DataEntryFormComponent({
                         <div className="grid md:grid-cols-3 gap-6">
                             <FormField control={form.control} name="phoneNo" render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="secondaryMobileNo" render={({ field }) => ( <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isReadOnly || !isEditor} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="applicationType" render={({ field }) => ( <FormItem><FormLabel>Type of Application <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{applicationTypeOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o as ApplicationType]}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="applicationType" render={({ field }) => ( <FormItem><FormLabel>Type of Application <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isReadOnly || !isEditor}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent>{formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o as ApplicationType]}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                         </div>
                     </div>
                 </AccordionContent>

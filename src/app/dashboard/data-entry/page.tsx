@@ -79,7 +79,7 @@ const getFormDefaults = (): DataEntryFormData => ({
   remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
   totalRemittance: 0, 
   siteDetails: [{
-    nameOfSite: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
+    nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
     estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
     additionalAS: 'No',
     tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
@@ -117,6 +117,7 @@ export default function DataEntryPage() {
   const router = useRouter();
   const fileIdToEdit = searchParams.get("id");
   const approveUpdateId = searchParams.get("approveUpdateId");
+  const workType = searchParams.get("workType") as 'public' | 'private' | null;
   
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
@@ -321,6 +322,7 @@ export default function DataEntryPage() {
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}
+                workTypeContext={workType}
              />
           ) : (
             <div className="flex h-64 items-center justify-center">
