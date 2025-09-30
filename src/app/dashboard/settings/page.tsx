@@ -122,7 +122,6 @@ const SettingsCollectionCard: React.FC<SettingsCollectionCardProps> = ({ collect
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<SettingItem | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const q = query(collection(db, collectionName), orderBy('name', 'asc'));
@@ -164,61 +163,6 @@ const SettingsCollectionCard: React.FC<SettingsCollectionCardProps> = ({ collect
     }
   };
 
-  const handleExcelImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsSubmitting(true);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const buffer = e.target?.result;
-            if (!buffer) throw new Error("Failed to read file.");
-            const workbook = new ExcelJS.Workbook();
-            await workbook.xlsx.load(buffer as ArrayBuffer);
-            
-            const lsgWorksheet = workbook.getWorksheet('Sheet1');
-            const constituencyWorksheet = workbook.getWorksheet('Sheet1');
-
-            const batch = writeBatch(db);
-            const lsgSet = new Set<string>();
-            const constituencySet = new Set<string>();
-            
-            if (collectionName === 'localSelfGovernments' && lsgWorksheet) {
-              lsgWorksheet.eachRow((row, rowNumber) => {
-                  if (rowNumber > 1) { // Skip header
-                      const cellValue = row.getCell(1).value;
-                      if (cellValue) lsgSet.add(String(cellValue).trim());
-                  }
-              });
-              lsgSet.forEach(name => { if (name) batch.set(doc(collection(db, 'localSelfGovernments')), { name }); });
-            }
-
-            if (collectionName === 'constituencies' && constituencyWorksheet) {
-                constituencyWorksheet.eachRow((row, rowNumber) => {
-                    if (rowNumber > 1) {
-                        const cellValue = row.getCell(2).value;
-                        if (cellValue) constituencySet.add(String(cellValue).trim());
-                    }
-                });
-                const extraConstituencies = ['Kollam', 'Eravipuram'];
-                extraConstituencies.forEach(c => constituencySet.add(c));
-                constituencySet.forEach(name => { if (name) batch.set(doc(collection(db, 'constituencies')), { name }); });
-            }
-
-            await batch.commit();
-            toast({ title: 'Import Successful', description: `Data from Excel has been imported.` });
-
-        } catch (error: any) {
-            toast({ title: 'Import Failed', description: error.message, variant: 'destructive' });
-        } finally {
-            setIsSubmitting(false);
-            if(fileInputRef.current) fileInputRef.current.value = "";
-        }
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -239,14 +183,6 @@ const SettingsCollectionCard: React.FC<SettingsCollectionCardProps> = ({ collect
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
               <span className="ml-2">Add</span>
             </Button>
-            {(collectionName === 'localSelfGovernments' || collectionName === 'constituencies') && (
-              <>
-                <input type="file" ref={fileInputRef} onChange={handleExcelImport} className="hidden" accept=".xlsx, .xls" />
-                <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
-                    <FileUp className="mr-2 h-4 w-4" /> Import Excel
-                </Button>
-              </>
-            )}
           </div>
         )}
         <ScrollArea className="h-60 w-full rounded-md border">
@@ -300,26 +236,26 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const canManage = user?.role === 'editor';
 
-  const [officeAddresses, setOfficeAddresses] = useState<OfficeAddress[]>([]);
+  const [officeAddress, setOfficeAddress] = useState<OfficeAddress | null>(null);
   const [isLoadingOffices, setIsLoadingOffices] = useState(true);
-  const [isSubmittingOffice, setIsSubmittingOffice] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOfficeDialogOpen, setIsOfficeDialogOpen] = useState(false);
-  const [editingOffice, setEditingOffice] = useState<OfficeAddress | null>(null);
   const [officeToDelete, setOfficeToDelete] = useState<OfficeAddress | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setHeader('Application Settings', 'Manage dropdown options and other application-wide settings.');
   }, [setHeader]);
   
   useEffect(() => {
-    const q = query(collection(db, 'officeAddresses'), orderBy('officeName', 'asc'));
+    const q = query(collection(db, 'officeAddresses'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfficeAddress));
-      setOfficeAddresses(fetchedItems);
+      setOfficeAddress(fetchedItems[0] || null);
       setIsLoadingOffices(false);
     }, (error) => {
       console.error('Error fetching office addresses:', error);
-      toast({ title: 'Error Loading Office Addresses', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error Loading Office Address', description: error.message, variant: 'destructive' });
       setIsLoadingOffices(false);
     });
     return () => unsubscribe();
@@ -327,21 +263,20 @@ export default function SettingsPage() {
 
   const handleOfficeSubmit = async (data: OfficeAddressFormData) => {
     if (!canManage) return;
-    setIsSubmittingOffice(true);
+    setIsSubmitting(true);
     try {
-      if (editingOffice) {
-        await updateDoc(doc(db, 'officeAddresses', editingOffice.id), data);
+      if (officeAddress) {
+        await updateDoc(doc(db, 'officeAddresses', officeAddress.id), data);
         toast({ title: 'Office Address Updated' });
       } else {
         await addDoc(collection(db, 'officeAddresses'), data);
         toast({ title: 'Office Address Added' });
       }
       setIsOfficeDialogOpen(false);
-      setEditingOffice(null);
     } catch (error: any) {
       toast({ title: 'Error Saving Office', description: error.message, variant: 'destructive' });
     } finally {
-      setIsSubmittingOffice(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -356,6 +291,51 @@ export default function SettingsPage() {
       setOfficeToDelete(null);
     }
   };
+
+  const handleExcelImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsSubmitting(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const buffer = e.target?.result;
+            if (!buffer) throw new Error("Failed to read file.");
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(buffer as ArrayBuffer);
+            
+            const worksheet = workbook.getWorksheet(1); // Get the first sheet
+            if (!worksheet) throw new Error("No worksheet found in the Excel file.");
+
+            const batch = writeBatch(db);
+            const lsgSet = new Set<string>();
+            const constituencySet = new Set<string>();
+            
+            worksheet.eachRow((row, rowNumber) => {
+                if (rowNumber > 1) { // Skip header
+                    const lsgValue = row.getCell(1).value;
+                    const constituencyValue = row.getCell(2).value;
+                    if (lsgValue) lsgSet.add(String(lsgValue).trim());
+                    if (constituencyValue) constituencySet.add(String(constituencyValue).trim());
+                }
+            });
+
+            lsgSet.forEach(name => { if (name) batch.set(doc(collection(db, 'localSelfGovernments')), { name }); });
+            constituencySet.forEach(name => { if (name) batch.set(doc(collection(db, 'constituencies')), { name }); });
+            
+            await batch.commit();
+            toast({ title: 'Import Successful', description: `Data for LSGs and Constituencies has been imported.` });
+
+        } catch (error: any) {
+            toast({ title: 'Import Failed', description: error.message, variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+            if(fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+    reader.readAsArrayBuffer(file);
+  };
   
   if (user?.role !== 'editor' && user?.role !== 'viewer') {
     return (
@@ -369,53 +349,62 @@ export default function SettingsPage() {
     );
   }
 
+  const DetailRow = ({ label, value }: { label: string, value?: string }) => (
+    value ? <div className="text-sm"><span className="font-medium text-muted-foreground">{label}:</span> {value}</div> : null
+  );
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="lg:col-span-2">
             <CardHeader>
-                <div className="flex justify-between items-center">
-                    <CardTitle className="flex items-center gap-2"><Building className="h-5 w-5 text-primary" />Office Addresses</CardTitle>
+                <div className="flex justify-between items-start">
+                    <CardTitle className="flex items-center gap-2"><Building className="h-5 w-5 text-primary" />Office Address</CardTitle>
                     {canManage && (
-                        <Button onClick={() => { setEditingOffice(null); setIsOfficeDialogOpen(true); }}>
-                        <PlusCircle className="h-4 w-4 mr-2" /> Add Office
+                        <Button variant="outline" size="sm" onClick={() => { setIsOfficeDialogOpen(true); }}>
+                           <Edit className="h-4 w-4 mr-2" /> {officeAddress ? 'Edit Details' : 'Add Details'}
                         </Button>
                     )}
                 </div>
-                <CardDescription>Manage the list of office addresses and their details.</CardDescription>
+                <CardDescription>Manage the contact and official details for the department office.</CardDescription>
             </CardHeader>
             <CardContent>
-                 <ScrollArea className="h-72 w-full rounded-md border">
-                    <div className="p-4">
-                        {isLoadingOffices ? (
-                        <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-                        ) : officeAddresses.length > 0 ? (
-                        <ul className="space-y-2">
-                            {officeAddresses.map((office) => (
-                            <li key={office.id} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
-                                <div>
-                                    <p className="text-sm font-semibold">{office.officeName}</p>
-                                    <p className="text-xs text-muted-foreground">{office.districtOfficer || 'N/A'}</p>
-                                </div>
-                                {canManage && (
-                                <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingOffice(office); setIsOfficeDialogOpen(true); }}>
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setOfficeToDelete(office)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                )}
-                            </li>
-                            ))}
-                        </ul>
-                        ) : (
-                        <p className="text-sm text-center text-muted-foreground py-4">No office addresses added yet.</p>
-                        )}
+                {isLoadingOffices ? (
+                     <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : officeAddress ? (
+                    <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
+                        <h3 className="font-bold text-lg text-foreground">{officeAddress.officeName}</h3>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{officeAddress.address}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 pt-3 border-t">
+                          <DetailRow label="District Officer" value={officeAddress.districtOfficer} />
+                          <DetailRow label="Phone No." value={officeAddress.phoneNo} />
+                          <DetailRow label="GST No." value={officeAddress.gstNo} />
+                          <DetailRow label="PAN No." value={officeAddress.panNo} />
+                        </div>
+                        {officeAddress.otherDetails && <div className="pt-3 border-t"><p className="text-sm text-muted-foreground whitespace-pre-wrap">{officeAddress.otherDetails}</p></div>}
                     </div>
-                </ScrollArea>
+                ) : (
+                    <div className="text-center py-8 text-muted-foreground">No office details have been added yet.</div>
+                )}
             </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <CardTitle className="flex items-center gap-2"><FileUp className="h-5 w-5 text-primary" />Bulk Data Management</CardTitle>
+                    {canManage && (
+                        <>
+                           <input type="file" ref={fileInputRef} onChange={handleExcelImport} className="hidden" accept=".xlsx, .xls" />
+                           <Button onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileUp className="mr-2 h-4 w-4" />}
+                                Import Excel
+                           </Button>
+                        </>
+                    )}
+                </div>
+                <CardDescription>Import Local Self Governments and Constituencies from a single Excel file.</CardDescription>
+            </CardHeader>
         </Card>
         
         <SettingsCollectionCard 
@@ -436,8 +425,8 @@ export default function SettingsPage() {
         isOpen={isOfficeDialogOpen}
         onClose={() => setIsOfficeDialogOpen(false)}
         onSubmit={handleOfficeSubmit}
-        isSubmitting={isSubmittingOffice}
-        initialData={editingOffice}
+        isSubmitting={isSubmitting}
+        initialData={officeAddress}
       />
       
       <AlertDialog open={!!officeToDelete} onOpenChange={(open) => !open && setOfficeToDelete(null)}>
