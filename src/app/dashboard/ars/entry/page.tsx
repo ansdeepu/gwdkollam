@@ -2,7 +2,7 @@
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useArsEntries } from "@/hooks/useArsEntries"; // Updated hook
 import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency } from "@/lib/schemas";
@@ -207,7 +207,6 @@ export default function ArsEntryPage() {
     });
     
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
-    const watchedConstituency = useWatch({ control: form.control, name: "constituency" });
 
     const constituencyOptionsForLsg = useMemo(() => {
         if (!watchedLsg) return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
@@ -216,15 +215,7 @@ export default function ArsEntryPage() {
         return [...map.constituencies].sort((a,b) => a.localeCompare(b));
     }, [watchedLsg, allLsgConstituencyMaps]);
     
-    useEffect(() => {
-        const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
-        const constituencies = map?.constituencies || [];
-        if (constituencies.length === 1 && watchedConstituency !== constituencies[0]) {
-            form.setValue('constituency', constituencies[0] as Constituency);
-        }
-    }, [watchedLsg, watchedConstituency, allLsgConstituencyMaps, form]);
-
-    const handleLsgChange = (lsgName: string) => {
+    const handleLsgChange = useCallback((lsgName: string) => {
         form.setValue('localSelfGovt', lsgName);
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
         const constituencies = map?.constituencies || [];
@@ -235,7 +226,19 @@ export default function ArsEntryPage() {
           form.setValue('constituency', constituencies[0] as Constituency);
         }
         form.trigger('constituency');
-    };
+    }, [form, allLsgConstituencyMaps]);
+
+    useEffect(() => {
+        const lsgName = form.watch("localSelfGovt");
+        if (!lsgName) return;
+
+        const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+        const constituencies = map?.constituencies || [];
+        
+        if (constituencies.length === 1 && form.getValues("constituency") !== constituencies[0]) {
+            form.setValue('constituency', constituencies[0] as Constituency);
+        }
+    }, [watchedLsg, allLsgConstituencyMaps, form]);
 
     const sortedLsgMaps = useMemo(() => {
         return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name));
@@ -351,7 +354,19 @@ export default function ArsEntryPage() {
                           <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} readOnly={isFieldReadOnly('nameOfSite')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Scheme</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('arsTypeOfScheme')}><FormControl><SelectTrigger><SelectValue placeholder="Select Type of Scheme" /></SelectTrigger></FormControl><SelectContent>{arsTypeOfSchemeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                           <FormField name="localSelfGovt" render={({ field }) => ( <FormItem> <FormLabel>Local Self Govt.</FormLabel> <Select onValueChange={(value) => handleLsgChange(value)} value={field.value ?? ""} disabled={isFieldReadOnly('localSelfGovt')}> <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl> <SelectContent> {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)} </SelectContent> </Select> <FormMessage/> </FormItem> )}/>
-                          <FormField name="constituency" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isConstituencyDisabled}> <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForLsg.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                          <FormField name="constituency" control={form.control} render={({ field }) => {
+                                const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForLsg.length <= 1;
+                                return (
+                                    <FormItem>
+                                        <FormLabel>Constituency (LAC)</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isConstituencyDisabled}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl>
+                                            <SelectContent>{constituencyOptionsForLsg.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                );
+                          }}/>
                           <FormField name="arsBlock" control={form.control} render={({ field }) => (<FormItem><FormLabel>Block</FormLabel><FormControl><Input placeholder="Block Name" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsBlock')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="latitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 8.8932" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('latitude')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="longitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 76.6141" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage /></FormItem>)} />
@@ -448,5 +463,3 @@ export default function ArsEntryPage() {
         </div>
     );
 }
-
-    

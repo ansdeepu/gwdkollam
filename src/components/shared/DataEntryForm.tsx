@@ -422,21 +422,19 @@ export default function DataEntryFormComponent({
     return true; // Default to read-only
   };
 
-  const handleLsgChange = (lsgName: string, siteIndex: number) => {
-    formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
-    const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-    const constituencies = map?.constituencies || [];
-    
-    // Always reset constituency when LSG changes
-    formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+  const handleLsgChange = useCallback((lsgName: string, siteIndex: number) => {
+      formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
+      const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+      const constituencies = map?.constituencies || [];
 
-    if (constituencies.length === 1) {
-      formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
-    }
-    
-    // Trigger validation to update the UI
-    form.trigger(`siteDetails.${siteIndex}.constituency`);
-  };
+      // Always reset constituency when LSG changes to ensure re-validation
+      formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+
+      if (constituencies.length === 1) {
+          formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
+      }
+      form.trigger(`siteDetails.${siteIndex}.constituency`);
+  }, [formSetValue, allLsgConstituencyMaps, form]);
 
   // This effect ensures that if the constituency options change for a selected LSG (e.g., due to data refresh),
   // the form's state remains valid.
@@ -451,10 +449,6 @@ export default function DataEntryFormComponent({
         // If there's only one valid constituency, enforce it.
         if (constituencies.length === 1 && site.constituency !== constituencies[0]) {
             formSetValue(`siteDetails.${index}.constituency`, constituencies[0] as Constituency);
-        }
-        // If the currently selected constituency is no longer valid for the selected LSG, clear it.
-        else if (site.constituency && !constituencies.includes(site.constituency)) {
-             formSetValue(`siteDetails.${index}.constituency`, undefined);
         }
     });
   }, [watchedSiteDetails, allLsgConstituencyMaps, formSetValue]);
@@ -681,7 +675,19 @@ export default function DataEntryFormComponent({
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
                                                 <FormField name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => ( <FormItem> <FormLabel>Local Self Govt.</FormLabel> <Select onValueChange={(value) => handleLsgChange(value, index)} value={field.value ?? ""} disabled={isFieldReadOnly('localSelfGovt')}> <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl> <SelectContent> {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)} </SelectContent> </Select> <FormMessage/> </FormItem> )}/>
-                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isConstituencyDisabled}> <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForSite.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => {
+                                                    const isConstituencyDisabled = isFieldReadOnly('constituency') || getConstituencyOptionsForSite(index).length <= 1;
+                                                    return (
+                                                        <FormItem>
+                                                            <FormLabel>Constituency (LAC)</FormLabel>
+                                                            <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isConstituencyDisabled}>
+                                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl>
+                                                                <SelectContent>{getConstituencyOptionsForSite(index).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    );
+                                                }}/>
                                             </div>
                                             
                                             {isWellPurpose && (
@@ -931,5 +937,3 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
-
-    
