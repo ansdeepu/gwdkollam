@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -96,8 +95,18 @@ service cloud.firestore {
       allow write: if isEditor();
     }
 
-    // === Application Settings (Office Addresses, LSGs, Constituencies) ===
-    match /(officeAddresses|localSelfGovernments|constituencies)/{docId=**} {
+    // === App Settings (Dropdowns, etc.) ===
+    match /officeAddresses/{docId} {
+      allow read: if isApproved();
+      allow write: if isEditor();
+    }
+    
+    match /localSelfGovernments/{docId} {
+      allow read: if isApproved();
+      allow write: if isEditor();
+    }
+
+    match /constituencies/{docId} {
       allow read: if isApproved();
       allow write: if isEditor();
     }
