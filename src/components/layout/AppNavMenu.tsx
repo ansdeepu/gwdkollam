@@ -39,7 +39,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   {
-    href: '/dashboard/settings',
+    href: '/dashboard/report-format-suggestion', // Changed to first sub-item
     label: 'Settings',
     icon: Settings,
     roles: ['editor', 'viewer'],
@@ -89,7 +89,7 @@ export default function AppNavMenu() {
     <SidebarMenu>
       {accessibleNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <Link href={item.subItems ? item.subItems[0].href : item.href} passHref onClick={() => handleNavigation(item.href)}>
+          <Link href={item.href} passHref onClick={() => handleNavigation(item.href)}>
             <SidebarMenuButton
               asChild
               isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href) && !item.subItems)}
