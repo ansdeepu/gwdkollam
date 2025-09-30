@@ -38,15 +38,15 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
+  { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase, roles: ['editor', 'viewer'] },
+  { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
   {
-    href: '/dashboard/report-format-suggestion', // Changed to first sub-item
+    href: '/dashboard/report-format-suggestion',
     label: 'Settings',
     icon: Settings,
     roles: ['editor', 'viewer'],
     subItems: [
       { href: '/dashboard/report-format-suggestion', label: 'Report Builders', icon: Settings, roles: ['editor', 'viewer'] },
-      { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase, roles: ['editor', 'viewer'] },
-      { href: '/dashboard/user-management', label: 'User Management', icon: Users, roles: ['editor', 'viewer'] },
       { href: '/dashboard/settings', label: 'General Settings', icon: MapPin, roles: ['editor', 'viewer'] },
     ],
   },
