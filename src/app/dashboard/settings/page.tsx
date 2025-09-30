@@ -233,17 +233,20 @@ export default function SettingsPage() {
             if (!worksheet) throw new Error("No worksheet found in the Excel file.");
 
             const lsgDataMap = new Map<string, Set<string>>();
+            const maxConstituencyColumns = 5; // Read up to 5 constituency columns
 
             worksheet.eachRow((row, rowNumber) => {
                 if (rowNumber > 1) { // Skip header
                     const lsgValue = row.getCell(1).value?.toString().trim();
-                    const constituencyValue = row.getCell(2).value?.toString().trim();
                     if (lsgValue) {
                         if (!lsgDataMap.has(lsgValue)) {
                             lsgDataMap.set(lsgValue, new Set());
                         }
-                        if (constituencyValue) {
-                            lsgDataMap.get(lsgValue)!.add(constituencyValue);
+                        for (let i = 2; i <= 1 + maxConstituencyColumns; i++) {
+                            const constituencyValue = row.getCell(i).value?.toString().trim();
+                            if (constituencyValue) {
+                                lsgDataMap.get(lsgValue)!.add(constituencyValue);
+                            }
                         }
                     }
                 }
@@ -289,14 +292,26 @@ export default function SettingsPage() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("LSG_Constituency_Template");
 
-    worksheet.columns = [
-        { header: 'Local Self Government', key: 'lsg', width: 40 },
-        { header: 'Constituency (LAC)', key: 'constituency', width: 40 },
-    ];
+    const headers = ['Local Self Government'];
+    for (let i = 1; i <= 5; i++) {
+        headers.push('Constituency (LAC)');
+    }
+    worksheet.getRow(1).values = headers;
+    worksheet.getRow(1).font = { bold: true };
+    
     worksheet.addRow(["Chavara Grama Panchayath", "Chavara"]);
     worksheet.addRow(["Neendakara Grama Panchayath", "Chavara"]);
-    worksheet.addRow(["Thekkumbhagom Grama Panchayath", "Chavara"]);
+    worksheet.addRow(["Kollam Corporation", "Chavara", "Kollam", "Eravipuram"]);
 
+    worksheet.columns = [
+        { header: headers[0], key: 'lsg', width: 40 },
+        { header: headers[1], key: 'c1', width: 30 },
+        { header: headers[2], key: 'c2', width: 30 },
+        { header: headers[3], key: 'c3', width: 30 },
+        { header: headers[4], key: 'c4', width: 30 },
+        { header: headers[5], key: 'c5', width: 30 },
+    ];
+    
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
@@ -370,6 +385,12 @@ export default function SettingsPage() {
 
   return (
     <>
+    <div className="flex justify-end mb-4">
+        <Button variant="destructive" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+        </Button>
+    </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="lg:col-span-2">
             <CardHeader>
@@ -504,4 +525,3 @@ export default function SettingsPage() {
     </>
   );
 }
-

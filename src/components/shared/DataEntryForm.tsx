@@ -425,7 +425,7 @@ export default function DataEntryFormComponent({
   const handleLsgChange = (lsgName: string, siteIndex: number) => {
     formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
     const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-    if (map && map.constituencies) {
+    if (map && map.constituencies && map.constituencies.length > 0) {
       if (map.constituencies.length === 1) {
         formSetValue(`siteDetails.${siteIndex}.constituency`, map.constituencies[0] as Constituency);
       } else {
@@ -435,9 +435,10 @@ export default function DataEntryFormComponent({
     } else {
       formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
     }
+    form.trigger(`siteDetails.${siteIndex}.constituency`);
   };
 
-  const getConstituencyOptionsForSite = (siteIndex: number) => {
+  const getConstituencyOptionsForSite = (siteIndex: number): string[] => {
     const selectedLsg = watchedSiteDetails[siteIndex]?.localSelfGovt;
     if (!selectedLsg) {
         return constituencyOptions.slice().sort((a,b) => a.localeCompare(b));
@@ -550,6 +551,7 @@ export default function DataEntryFormComponent({
                             const isRigAccessibilityRequired = purpose && PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(purpose as SitePurpose);
                             
                             const isCompletionDateRequired = workStatus && ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'].includes(workStatus);
+                             const constituencyOptionsForSite = getConstituencyOptionsForSite(index);
 
                             const workImplementationFields = (
                               <>
@@ -658,7 +660,7 @@ export default function DataEntryFormComponent({
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
                                                 <FormField name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => ( <FormItem> <FormLabel>Local Self Govt.</FormLabel> <Select onValueChange={(value) => handleLsgChange(value, index)} value={field.value ?? ""} disabled={isFieldReadOnly('localSelfGovt')}> <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl> <SelectContent> {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)} </SelectContent> </Select> <FormMessage/> </FormItem> )}/>
-                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => { const constituencyOptionsForSite = getConstituencyOptionsForSite(index); return ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('constituency')}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForSite.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}}/>
+                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('constituency') || constituencyOptionsForSite.length <= 1}> <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForSite.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                                             </div>
                                             
                                             {isWellPurpose && (
