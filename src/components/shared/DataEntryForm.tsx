@@ -425,15 +425,10 @@ export default function DataEntryFormComponent({
   const handleLsgChange = (lsgName: string, siteIndex: number) => {
     formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
     const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-    if (map && map.constituencies && map.constituencies.length > 0) {
-      if (map.constituencies.length === 1) {
-        formSetValue(`siteDetails.${siteIndex}.constituency`, map.constituencies[0] as Constituency);
-      } else {
-        // If there are multiple, clear the selection so the user has to choose.
-        formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
-      }
-    } else {
-      formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+    // Always clear constituency when LSG changes.
+    formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+    if (map?.constituencies?.length === 1) {
+      formSetValue(`siteDetails.${siteIndex}.constituency`, map.constituencies[0] as Constituency);
     }
     form.trigger(`siteDetails.${siteIndex}.constituency`);
   };

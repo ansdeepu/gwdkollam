@@ -211,19 +211,13 @@ export default function ArsEntryPage() {
         return map?.constituencies.sort((a,b) => a.localeCompare(b)) || [];
     }, [watchedLsg, allLsgConstituencyMaps]);
     
-    useEffect(() => {
-        if (constituencyOptionsForLsg.length === 1) {
-            form.setValue('constituency', constituencyOptionsForLsg[0]);
-        }
-    }, [constituencyOptionsForLsg, form]);
-
     const handleLsgChange = (lsgName: string) => {
         form.setValue('localSelfGovt', lsgName);
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+        // Always clear constituency when LSG changes.
+        form.setValue('constituency', undefined);
         if (map?.constituencies?.length === 1) {
             form.setValue('constituency', map.constituencies[0]);
-        } else {
-            form.setValue('constituency', undefined); // Clear if multiple options or none
         }
         form.trigger('constituency');
     };
