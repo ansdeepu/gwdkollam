@@ -8,7 +8,7 @@ import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
 import type { ArsEntry } from './useArsEntries';
-import type { StaffMember } from '@/lib/schemas';
+import type { StaffMember, LsgConstituencyMap } from '@/lib/schemas';
 import type { AgencyApplication } from './useAgencyApplications';
 import { toast } from './use-toast';
 import { designationOptions } from '@/lib/schemas';
@@ -44,11 +44,13 @@ interface DataStoreContextType {
     allArsEntries: ArsEntry[];
     allStaffMembers: StaffMember[];
     allAgencyApplications: AgencyApplication[];
+    allLsgConstituencyMaps: LsgConstituencyMap[];
     isLoading: boolean;
     refetchFileEntries: () => void;
     refetchArsEntries: () => void;
     refetchStaffMembers: () => void;
     refetchAgencyApplications: () => void;
+    refetchLsgConstituencyMaps: () => void;
 }
 
 const DataStoreContext = createContext<DataStoreContextType | undefined>(undefined);
@@ -59,11 +61,13 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const [allArsEntries, setAllArsEntries] = useState<ArsEntry[]>([]);
     const [allStaffMembers, setAllStaffMembers] = useState<StaffMember[]>([]);
     const [allAgencyApplications, setAllAgencyApplications] = useState<AgencyApplication[]>([]);
+    const [allLsgConstituencyMaps, setAllLsgConstituencyMaps] = useState<LsgConstituencyMap[]>([]);
     const [loadingStates, setLoadingStates] = useState({
         files: true,
         ars: true,
         staff: true,
         agencies: true,
+        lsg: true,
     });
     
     const [refetchCounters, setRefetchCounters] = useState({
@@ -71,12 +75,14 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         ars: 0,
         staff: 0,
         agencies: 0,
+        lsg: 0,
     });
 
     const refetchFileEntries = useCallback(() => setRefetchCounters(c => ({...c, files: c.files + 1})), []);
     const refetchArsEntries = useCallback(() => setRefetchCounters(c => ({...c, ars: c.ars + 1})), []);
     const refetchStaffMembers = useCallback(() => setRefetchCounters(c => ({...c, staff: c.staff + 1})), []);
     const refetchAgencyApplications = useCallback(() => setRefetchCounters(c => ({...c, agencies: c.agencies + 1})), []);
+    const refetchLsgConstituencyMaps = useCallback(() => setRefetchCounters(c => ({ ...c, lsg: c.lsg + 1 })), []);
 
 
     useEffect(() => {
@@ -85,7 +91,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             setAllArsEntries([]);
             setAllStaffMembers([]);
             setAllAgencyApplications([]);
-            setLoadingStates({ files: false, ars: false, staff: false, agencies: false });
+            setAllLsgConstituencyMaps([]);
+            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false });
             return;
         }
 
@@ -94,6 +101,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             arsEntries: { setter: setAllArsEntries, loaderKey: 'ars' },
             staffMembers: { setter: setAllStaffMembers, loaderKey: 'staff' },
             agencyApplications: { setter: setAllAgencyApplications, loaderKey: 'agencies' },
+            localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg' },
         };
 
         const unsubscribes = Object.entries(collections).map(([collectionName, { setter, loaderKey }]) => {
@@ -134,11 +142,13 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             allArsEntries,
             allStaffMembers,
             allAgencyApplications,
+            allLsgConstituencyMaps,
             isLoading,
             refetchFileEntries,
             refetchArsEntries,
             refetchStaffMembers,
-            refetchAgencyApplications
+            refetchAgencyApplications,
+            refetchLsgConstituencyMaps,
         }}>
             {children}
         </DataStoreContext.Provider>

@@ -23,6 +23,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import ExcelJS from 'exceljs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import type { LsgConstituencyMap } from '@/lib/schemas';
+import { useDataStore } from '@/hooks/use-data-store';
 
 
 export const dynamic = 'force-dynamic';
@@ -116,135 +118,12 @@ const OfficeAddressDialog = ({
 };
 
 
-// Main Settings Component for a single collection
-interface SettingsCollectionCardProps {
-  collectionName: string;
-  title: string;
-  description: string;
-  icon: React.ElementType;
-}
-
-const SettingsCollectionCard: React.FC<SettingsCollectionCardProps> = ({ collectionName, title, description, icon: Icon }) => {
-  const { user } = useAuth();
-  const canManage = user?.role === 'editor';
-  const { toast } = useToast();
-  const [items, setItems] = useState<SettingItem[]>([]);
-  const [newItemName, setNewItemName] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<SettingItem | null>(null);
-
-  useEffect(() => {
-    const q = query(collection(db, collectionName), orderBy('name', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
-      setItems(fetchedItems);
-      setIsLoading(false);
-    }, (error) => {
-      console.error(`Error fetching ${collectionName}:`, error);
-      toast({ title: `Error loading ${title}`, description: error.message, variant: 'destructive' });
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, [collectionName, toast, title]);
-
-  const handleAddItem = async () => {
-    if (!newItemName.trim() || !canManage) return;
-    setIsSubmitting(true);
-    try {
-      await addDoc(collection(db, collectionName), { name: newItemName.trim() });
-      toast({ title: `${title} Added`, description: `"${newItemName.trim()}" has been added.` });
-      setNewItemName('');
-    } catch (error: any) {
-      toast({ title: `Error adding ${title}`, description: error.message, variant: 'destructive' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const confirmDelete = async () => {
-    if (!itemToDelete || !canManage) return;
-    try {
-        await deleteDoc(doc(db, collectionName, itemToDelete.id));
-        toast({ title: `${title} Deleted`, description: `"${itemToDelete.name}" has been removed.` });
-    } catch (error: any) {
-        toast({ title: `Error deleting ${title}`, description: error.message, variant: 'destructive' });
-    } finally {
-        setItemToDelete(null);
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2"><Icon className="h-5 w-5 text-primary" />{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {canManage && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Input
-              placeholder={`New ${title}...`}
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              disabled={isSubmitting}
-              className="flex-grow min-w-[200px]"
-            />
-            <Button onClick={handleAddItem} disabled={isSubmitting || !newItemName.trim()}>
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
-              <span className="ml-2">Add</span>
-            </Button>
-          </div>
-        )}
-        <ScrollArea className="h-60 w-full rounded-md border">
-          <div className="p-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center p-4">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : items.length > 0 ? (
-              <ul className="space-y-2">
-                {items.map((item) => (
-                  <li key={item.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
-                    <span className="text-sm font-medium">{item.name}</span>
-                    {canManage && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setItemToDelete(item)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-center text-muted-foreground py-4">No items added yet.</p>
-            )}
-          </div>
-        </ScrollArea>
-        
-        <AlertDialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This will permanently delete the item "<strong>{itemToDelete?.name}</strong>". This action cannot be undone.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-      </CardContent>
-    </Card>
-  );
-};
-
 // Main Page Component
 export default function SettingsPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { allLsgConstituencyMaps, refetchLsgConstituencyMaps } = useDataStore();
   const canManage = user?.role === 'editor';
 
   const [officeAddress, setOfficeAddress] = useState<OfficeAddress | null>(null);
@@ -305,27 +184,51 @@ export default function SettingsPage() {
             const workbook = new ExcelJS.Workbook();
             await workbook.xlsx.load(buffer as ArrayBuffer);
             
-            const worksheet = workbook.getWorksheet(1); // Get the first sheet
+            const worksheet = workbook.getWorksheet(1);
             if (!worksheet) throw new Error("No worksheet found in the Excel file.");
 
-            const batch = writeBatch(db);
-            const lsgSet = new Set<string>();
-            const constituencySet = new Set<string>();
-            
+            const lsgDataMap = new Map<string, Set<string>>();
+
             worksheet.eachRow((row, rowNumber) => {
                 if (rowNumber > 1) { // Skip header
-                    const lsgValue = row.getCell(1).value;
-                    const constituencyValue = row.getCell(2).value;
-                    if (lsgValue) lsgSet.add(String(lsgValue).trim());
-                    if (constituencyValue) constituencySet.add(String(constituencyValue).trim());
+                    const lsgValue = row.getCell(1).value?.toString().trim();
+                    const constituencyValue = row.getCell(2).value?.toString().trim();
+                    if (lsgValue) {
+                        if (!lsgDataMap.has(lsgValue)) {
+                            lsgDataMap.set(lsgValue, new Set());
+                        }
+                        if (constituencyValue) {
+                            lsgDataMap.get(lsgValue)!.add(constituencyValue);
+                        }
+                    }
                 }
             });
 
-            lsgSet.forEach(name => { if (name) batch.set(doc(collection(db, 'localSelfGovernments')), { name }); });
-            constituencySet.forEach(name => { if (name) batch.set(doc(collection(db, 'constituencies')), { name }); });
+            if (lsgDataMap.size === 0) {
+              throw new Error("No valid data found in the Excel file.");
+            }
             
+            const batch = writeBatch(db);
+            const existingLsgDocs = await getDocs(query(collection(db, 'localSelfGovernments')));
+            const existingLsgMap = new Map(existingLsgDocs.docs.map(d => [d.data().name, d.id]));
+
+            lsgDataMap.forEach((constituenciesSet, lsgName) => {
+              const constituenciesArray = Array.from(constituenciesSet);
+              const data = { name: lsgName, constituencies: constituenciesArray };
+              
+              const existingId = existingLsgMap.get(lsgName);
+              if (existingId) {
+                // Update existing document
+                batch.set(doc(db, 'localSelfGovernments', existingId), data, { merge: true });
+              } else {
+                // Add new document
+                batch.set(doc(collection(db, 'localSelfGovernments')), data);
+              }
+            });
+
             await batch.commit();
-            toast({ title: 'Import Successful', description: `Data for LSGs and Constituencies has been imported.` });
+            refetchLsgConstituencyMaps(); // Trigger data refresh
+            toast({ title: 'Import Successful', description: `Data for ${lsgDataMap.size} Local Self Governments has been imported/updated.` });
 
         } catch (error: any) {
             toast({ title: 'Import Failed', description: error.message, variant: 'destructive' });
@@ -343,14 +246,14 @@ export default function SettingsPage() {
         const lsgQuery = query(collection(db, 'localSelfGovernments'));
         const conQuery = query(collection(db, 'constituencies'));
 
-        const [lsgSnapshot, conSnapshot] = await Promise.all([getDocs(lsgQuery), getDocs(conQuery)]);
+        const [lsgSnapshot] = await Promise.all([getDocs(lsgQuery)]);
 
         const batch = writeBatch(db);
         lsgSnapshot.forEach(doc => batch.delete(doc.ref));
-        conSnapshot.forEach(doc => batch.delete(doc.ref));
         
         await batch.commit();
-        toast({ title: 'Data Cleared', description: 'All Local Self Governments and Constituencies have been deleted.' });
+        refetchLsgConstituencyMaps();
+        toast({ title: 'Data Cleared', description: 'All Local Self Governments have been deleted.' });
     } catch (error: any) {
         toast({ title: 'Error Clearing Data', description: error.message, variant: 'destructive' });
     } finally {
@@ -437,22 +340,9 @@ export default function SettingsPage() {
                         </div>
                     )}
                 </div>
-                <CardDescription>Import or clear Local Self Governments and Constituencies from a single Excel file.</CardDescription>
+                <CardDescription>Import or clear Local Self Governments and their associated Constituencies from a single Excel file.</CardDescription>
             </CardHeader>
         </Card>
-        
-        <SettingsCollectionCard 
-          collectionName="localSelfGovernments" 
-          title="Local Self Governments" 
-          description="Manage the list of local self governments."
-          icon={University} 
-        />
-        <SettingsCollectionCard 
-          collectionName="constituencies" 
-          title="Constituencies (LAC)" 
-          description="Manage the list of legislative assembly constituencies."
-          icon={MapPin} 
-        />
       </div>
 
       <OfficeAddressDialog
@@ -467,7 +357,7 @@ export default function SettingsPage() {
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>This will permanently delete ALL Local Self Governments and Constituencies from the database. This action cannot be undone and may affect existing records.</AlertDialogDescription>
+                <AlertDialogDescription>This will permanently delete ALL Local Self Governments from the database. This action cannot be undone and may affect existing records.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel disabled={isClearingData}>Cancel</AlertDialogCancel>
@@ -480,5 +370,3 @@ export default function SettingsPage() {
     </>
   );
 }
-
-    

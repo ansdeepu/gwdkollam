@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -45,6 +46,7 @@ import {
   type SiteWorkStatus,
   constituencyOptions,
   type Constituency,
+  type LsgConstituencyMap,
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -56,6 +58,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getFirestore, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { app } from "@/lib/firebase";
+import { useDataStore } from "@/hooks/use-data-store";
 
 const db = getFirestore(app);
 
@@ -174,6 +177,7 @@ export default function DataEntryFormComponent({
   const { createPendingUpdate, getPendingUpdateById } = usePendingUpdates();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const { allLsgConstituencyMaps } = useDataStore();
   
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
@@ -418,6 +422,30 @@ export default function DataEntryFormComponent({
     return true; // Default to read-only
   };
 
+  const handleLsgChange = (lsgName: string, siteIndex: number) => {
+    formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
+    const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+    if (map && map.constituencies) {
+      if (map.constituencies.length === 1) {
+        formSetValue(`siteDetails.${siteIndex}.constituency`, map.constituencies[0] as Constituency);
+      } else {
+        // If there are multiple, clear the selection so the user has to choose.
+        formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+      }
+    } else {
+      formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+    }
+  };
+
+  const getConstituencyOptionsForSite = (siteIndex: number) => {
+    const selectedLsg = watchedSiteDetails[siteIndex]?.localSelfGovt;
+    if (!selectedLsg) {
+        return constituencyOptions.slice().sort((a,b) => a.localeCompare(b));
+    }
+    const map = allLsgConstituencyMaps.find(m => m.name === selectedLsg);
+    return map?.constituencies.sort((a,b) => a.localeCompare(b)) || [];
+  };
+
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
@@ -622,8 +650,8 @@ export default function DataEntryFormComponent({
                                                 <FormField control={form.control} name={`siteDetails.${index}.longitude`} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="text" inputMode="numeric" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage/></FormItem>)}/>
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
-                                                <FormField control={form.control} name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => (<FormItem><FormLabel>Local Self Govt.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('localSelfGovt')} /></FormControl><FormMessage/></FormItem>)}/>
-                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('constituency')}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{[...constituencyOptions].sort((a, b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                                                <FormField name={`siteDetails.${index}.localSelfGovt`} render={({ field }) => ( <FormItem> <FormLabel>Local Self Govt.</FormLabel> <Select onValueChange={(value) => handleLsgChange(value, index)} value={field.value ?? ""} disabled={isFieldReadOnly('localSelfGovt')}> <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl> <SelectContent> {allLsgConstituencyMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)} </SelectContent> </Select> <FormMessage/> </FormItem> )}/>
+                                                <FormField name={`siteDetails.${index}.constituency`} control={form.control} render={({ field }) => { const constituencyOptionsForSite = getConstituencyOptionsForSite(index); return ( <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('constituency')}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForSite.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}}/>
                                             </div>
                                             
                                             {isWellPurpose && (

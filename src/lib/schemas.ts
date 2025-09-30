@@ -478,3 +478,10 @@ export const AgencyApplicationSchema = z.object({
   remarks: z.string().optional(),
 });
 export type AgencyApplication = z.infer<typeof AgencyApplicationSchema>;
+
+// Settings Schemas
+export interface LsgConstituencyMap {
+  id: string;
+  name: string; // Name of the Local Self Government
+  constituencies: string[]; // Array of associated constituencies
+}
