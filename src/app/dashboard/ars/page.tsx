@@ -163,7 +163,7 @@ export default function ArsPage() {
           site.nameOfSite,
           site.constituency,
           site.arsTypeOfScheme,
-          site.arsPanchayath,
+          site.localSelfGovt,
           site.arsBlock,
           site.workStatus,
           site.supervisorName,
@@ -240,7 +240,7 @@ export default function ArsPage() {
     
     const headers = [
       "Sl. No.", "File No", "Name of Site", "Constituency (LAC)", "Type of Scheme", 
-      "Panchayath", "Block", "Latitude", "Longitude", "Number of Structures", 
+      "Local Self Govt.", "Block", "Latitude", "Longitude", "Number of Structures", 
       "Storage Capacity (m3)", "No. of Fillings", "AS/TS Accorded Details", 
       "AS/TS Amount (₹)", "Sanctioned Date", "Tendered Amount (₹)", "Awarded Amount (₹)", 
       "Present Status", "Completion Date", "No. of Beneficiaries", "Remarks"
@@ -252,7 +252,7 @@ export default function ArsPage() {
       "Name of Site": site.nameOfSite || 'N/A',
       "Constituency (LAC)": site.constituency || 'N/A',
       "Type of Scheme": site.arsTypeOfScheme || 'N/A',
-      "Panchayath": site.arsPanchayath || 'N/A',
+      "Local Self Govt.": site.localSelfGovt || 'N/A',
       "Block": site.arsBlock || 'N/A',
       "Latitude": site.latitude ?? 'N/A',
       "Longitude": site.longitude ?? 'N/A',
@@ -331,7 +331,7 @@ export default function ArsPage() {
   }, [filteredSites, toast]);
 
   const handleDownloadTemplate = async () => {
-    const templateData = [ { "File No": "Example/123", "Name of Site": "Sample ARS Site", "Constituency": "Kollam", "Type of Scheme": "Check Dam", "Panchayath": "Sample Panchayath", "Block": "Sample Block", "Latitude": 8.8932, "Longitude": 76.6141, "Number of Structures": 1, "Storage Capacity (m3)": 500, "No. of Fillings": 2, "Estimate Amount": 500000, "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD", "AS/TS Amount": 450000, "Sanctioned Date": "15/01/2023", "Tendered Amount": 445000, "Awarded Amount": 440000, "Present Status": "Work in Progress", "Completion Date": "", "Expenditure (₹)": 200000, "No. of Beneficiaries": "50 families", "Remarks": "Work ongoing", } ];
+    const templateData = [ { "File No": "Example/123", "Name of Site": "Sample ARS Site", "Constituency": "Kollam", "Type of Scheme": "Check Dam", "Local Self Govt.": "Sample Panchayath", "Block": "Sample Block", "Latitude": 8.8932, "Longitude": 76.6141, "Number of Structures": 1, "Storage Capacity (m3)": 500, "No. of Fillings": 2, "Estimate Amount": 500000, "AS/TS Accorded Details": "GO(Rt) No.123/2023/WRD", "AS/TS Amount": 450000, "Sanctioned Date": "15/01/2023", "Tendered Amount": 445000, "Awarded Amount": 440000, "Present Status": "Work in Progress", "Completion Date": "", "Expenditure (₹)": 200000, "No. of Beneficiaries": "50 families", "Remarks": "Work ongoing", } ];
     const headers = Object.keys(templateData[0]);
 
     const workbook = new ExcelJS.Workbook();
@@ -418,7 +418,7 @@ export default function ArsPage() {
               nameOfSite: String((rowData as any)['Name of Site'] || `Imported Site ${Date.now()}`),
               constituency: (rowData as any)['Constituency'] || undefined,
               arsTypeOfScheme: (rowData as any)['Type of Scheme'] || undefined,
-              arsPanchayath: String((rowData as any)['Panchayath'] || ''),
+              localSelfGovt: String((rowData as any)['Local Self Govt.'] || ''),
               arsBlock: String((rowData as any)['Block'] || ''),
               latitude: Number((rowData as any)['Latitude']) || undefined,
               longitude: Number((rowData as any)['Longitude']) || undefined,
@@ -565,7 +565,7 @@ export default function ArsPage() {
                                 <TableHead>File No</TableHead>
                                 <TableHead>Name of Site</TableHead>
                                 <TableHead>Type of Scheme</TableHead>
-                                <TableHead>Panchayath</TableHead>
+                                <TableHead>Local Self Govt.</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Completion Date</TableHead>
                                 <TableHead className="text-center w-[120px]">Actions</TableHead>
@@ -583,7 +583,7 @@ export default function ArsPage() {
                                             <TableCell className="w-[150px]">{site.fileNo}</TableCell>
                                             <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
-                                            <TableCell className="whitespace-normal break-words">{site.arsPanchayath || 'N/A'}</TableCell>
+                                            <TableCell className="whitespace-normal break-words">{site.localSelfGovt || 'N/A'}</TableCell>
                                             <TableCell>{site.workStatus ?? 'N/A'}</TableCell>
                                             <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
                                             <TableCell className="text-center w-[120px]">
@@ -653,7 +653,7 @@ export default function ArsPage() {
                     <DetailRow label="File No" value={viewingSite.fileNo} />
                     <DetailRow label="Name of Site" value={viewingSite.nameOfSite} />
                     <DetailRow label="Constituency (LAC)" value={viewingSite.constituency} />
-                    <DetailRow label="Panchayath" value={viewingSite.arsPanchayath} />
+                    <DetailRow label="Local Self Govt" value={viewingSite.localSelfGovt} />
                     <DetailRow label="Block" value={viewingSite.arsBlock} />
                     <DetailRow label="Latitude" value={viewingSite.latitude} />
                     <DetailRow label="Longitude" value={viewingSite.longitude} />
@@ -719,5 +719,3 @@ export default function ArsPage() {
     </div>
   );
 }
-
-

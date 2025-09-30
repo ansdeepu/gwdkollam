@@ -144,9 +144,9 @@ import { SiteDetailSchema, fileStatusOptions, constituencyOptions } from './sche
 export const ArsEntrySchema = z.object({
   fileNo: z.string().min(1, 'File No. is required.'),
   nameOfSite: z.string().min(1, 'Name of Site is required.'),
+  localSelfGovt: z.string().optional(),
   constituency: z.enum(constituencyOptions).optional(),
   arsTypeOfScheme: z.enum(arsTypeOfSchemeOptions).optional(),
-  arsPanchayath: z.string().optional(),
   arsBlock: z.string().optional(),
   latitude: optionalNumber(),
   longitude: optionalNumber(),
