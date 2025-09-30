@@ -423,26 +423,51 @@ export default function DataEntryFormComponent({
   };
 
   const handleLsgChange = (lsgName: string, siteIndex: number) => {
-      formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
-      const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-      const constituencies = map?.constituencies;
-      
-      formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
-      
-      if (constituencies && constituencies.length === 1) {
-        formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
-      }
-      form.trigger(`siteDetails.${siteIndex}.constituency`);
+    formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
+    const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+    const constituencies = map?.constituencies || [];
+    
+    // Always reset constituency when LSG changes
+    formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+
+    if (constituencies.length === 1) {
+      formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
+    }
+    
+    // Trigger validation to update the UI
+    form.trigger(`siteDetails.${siteIndex}.constituency`);
   };
+
+  // This effect ensures that if the constituency options change for a selected LSG (e.g., due to data refresh),
+  // the form's state remains valid.
+  useEffect(() => {
+    (watchedSiteDetails ?? []).forEach((site, index) => {
+        const lsgName = site?.localSelfGovt;
+        if (!lsgName) return;
+
+        const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+        const constituencies = map?.constituencies || [];
+        
+        // If there's only one valid constituency, enforce it.
+        if (constituencies.length === 1 && site.constituency !== constituencies[0]) {
+            formSetValue(`siteDetails.${index}.constituency`, constituencies[0] as Constituency);
+        }
+        // If the currently selected constituency is no longer valid for the selected LSG, clear it.
+        else if (site.constituency && !constituencies.includes(site.constituency)) {
+             formSetValue(`siteDetails.${index}.constituency`, undefined);
+        }
+    });
+  }, [watchedSiteDetails, allLsgConstituencyMaps, formSetValue]);
+
 
   const getConstituencyOptionsForSite = (siteIndex: number): string[] => {
       const selectedLsg = watchedSiteDetails[siteIndex]?.localSelfGovt;
       if (!selectedLsg) return [...constituencyOptions].sort();
       
       const map = allLsgConstituencyMaps.find(m => m.name === selectedLsg);
-      if (!map || !map.constituencies || map.constituencies.length === 0) return [];
+      if (!map || !map.constituencies) return [];
       
-      return [...map.constituencies].sort();
+      return [...map.constituencies].sort((a,b) => a.localeCompare(b));
   };
 
   const sortedLsgMaps = useMemo(() => {

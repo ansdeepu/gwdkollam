@@ -207,22 +207,31 @@ export default function ArsEntryPage() {
     });
     
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
+    const watchedConstituency = useWatch({ control: form.control, name: "constituency" });
 
     const constituencyOptionsForLsg = useMemo(() => {
-        if (!watchedLsg) return [...constituencyOptions].sort();
+        if (!watchedLsg) return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
         const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
-        if (!map || !map.constituencies || map.constituencies.length === 0) return [];
-        return [...map.constituencies].sort();
+        if (!map || !map.constituencies) return [];
+        return [...map.constituencies].sort((a,b) => a.localeCompare(b));
     }, [watchedLsg, allLsgConstituencyMaps]);
+    
+    useEffect(() => {
+        const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
+        const constituencies = map?.constituencies || [];
+        if (constituencies.length === 1 && watchedConstituency !== constituencies[0]) {
+            form.setValue('constituency', constituencies[0] as Constituency);
+        }
+    }, [watchedLsg, watchedConstituency, allLsgConstituencyMaps, form]);
 
     const handleLsgChange = (lsgName: string) => {
         form.setValue('localSelfGovt', lsgName);
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
-        const constituencies = map?.constituencies;
+        const constituencies = map?.constituencies || [];
         
         form.setValue('constituency', undefined);
         
-        if (constituencies && constituencies.length === 1) {
+        if (constituencies.length === 1) {
           form.setValue('constituency', constituencies[0] as Constituency);
         }
         form.trigger('constituency');
