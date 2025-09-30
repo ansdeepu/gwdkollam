@@ -425,26 +425,30 @@ export default function DataEntryFormComponent({
   const handleLsgChange = (lsgName: string, siteIndex: number) => {
     formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
     const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+    const constituencies = map?.constituencies;
     
-    // Always reset constituency
+    // Always reset constituency when LSG changes
     formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
     
-    if (map?.constituencies?.length === 1) {
-      formSetValue(`siteDetails.${siteIndex}.constituency`, map.constituencies[0] as Constituency);
+    // If there's only one option, auto-select it
+    if (constituencies && constituencies.length === 1) {
+      formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
     }
+    // Trigger validation to update UI state if needed
     form.trigger(`siteDetails.${siteIndex}.constituency`);
   };
 
   const getConstituencyOptionsForSite = (siteIndex: number): string[] => {
     const selectedLsg = watchedSiteDetails[siteIndex]?.localSelfGovt;
     if (!selectedLsg) {
-        return constituencyOptions.slice().sort((a,b) => a.localeCompare(b));
+        // Return all constituencies sorted if no LSG is selected
+        return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
     }
     const map = allLsgConstituencyMaps.find(m => m.name === selectedLsg);
     if (!map || !Array.isArray(map.constituencies)) {
       return [];
     }
-    return map.constituencies.slice().sort((a,b) => a.localeCompare(b));
+    return [...map.constituencies].sort((a,b) => a.localeCompare(b));
   };
 
   const sortedLsgMaps = useMemo(() => {
@@ -907,3 +911,5 @@ export default function DataEntryFormComponent({
     </FormProvider>
   );
 }
+
+    

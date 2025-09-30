@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useArsEntries } from "@/hooks/useArsEntries"; // Updated hook
-import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus } from "@/lib/schemas";
+import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency } from "@/lib/schemas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X, ArrowLeft, ShieldAlert } from "lucide-react";
@@ -142,7 +142,10 @@ export default function ArsEntryPage() {
       if (isViewer) return true;
       if (isSupervisor) {
         if (!isEditing || isFormDisabledForSupervisor) return true;
-        return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
+        const supervisorEditableFields: (keyof ArsEntryFormData)[] = [
+          'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks', 'localSelfGovt', 'constituency'
+        ];
+        return !supervisorEditableFields.includes(fieldName);
       }
       return true;
     };
@@ -206,20 +209,23 @@ export default function ArsEntryPage() {
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
 
     const constituencyOptionsForLsg = useMemo(() => {
-        if (!watchedLsg) return [];
+        if (!watchedLsg) return [...constituencyOptions].sort((a,b)=>a.localeCompare(b));
         const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
-        return map?.constituencies.sort((a,b) => a.localeCompare(b)) || [];
+        if (!map || !Array.isArray(map.constituencies)) {
+          return [];
+        }
+        return [...map.constituencies].sort((a,b)=>a.localeCompare(b));
     }, [watchedLsg, allLsgConstituencyMaps]);
     
     const handleLsgChange = (lsgName: string) => {
         form.setValue('localSelfGovt', lsgName);
         const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+        const constituencies = map?.constituencies;
         
-        // Always reset constituency
         form.setValue('constituency', undefined);
         
-        if (map?.constituencies?.length === 1) {
-          form.setValue('constituency', map.constituencies[0] as any);
+        if (constituencies && constituencies.length === 1) {
+          form.setValue('constituency', constituencies[0] as Constituency);
         }
         form.trigger('constituency');
     };
@@ -433,3 +439,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
