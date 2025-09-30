@@ -65,7 +65,7 @@ import { format, isValid } from "date-fns";
 
 const db = getFirestore(app);
 
-const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined });
+const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
@@ -154,24 +154,22 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
         <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>File No</Label><Input value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} /></div>
-                <div className="space-y-2"><Label>Applicant Name & Address</Label><Textarea value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} /></div>
+            <div className="space-y-2"><Label>File No *</Label><Input value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} /></div>
+            <div className="space-y-2"><Label>Name & Address of Institution/Applicant *</Label><Textarea value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} /></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2"><Label>Phone No.</Label><Input value={data.phoneNo} onChange={(e) => handleChange('phoneNo', e.target.value)} /></div>
+                <div className="space-y-2"><Label>Secondary Mobile No.</Label><Input value={data.secondaryMobileNo} onChange={(e) => handleChange('secondaryMobileNo', e.target.value)} /></div>
+                <div className="space-y-2">
+                    <Label>Type of Application *</Label>
+                    <Select onValueChange={(value) => handleChange('applicationType', value)} value={data.applicationType}>
+                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                        <SelectContent>
+                            {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Phone No</Label><Input value={data.phoneNo} onChange={(e) => handleChange('phoneNo', e.target.value)} /></div>
-                <div className="space-y-2"><Label>Secondary Mobile No</Label><Input value={data.secondaryMobileNo} onChange={(e) => handleChange('secondaryMobileNo', e.target.value)} /></div>
-            </div>
-             <div className="space-y-2">
-                <Label>Application Type</Label>
-                <Select onValueChange={(value) => handleChange('applicationType', value)} value={data.applicationType}>
-                    <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                    <SelectContent>
-                        {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            </div>
-             <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
     );
 };
@@ -181,18 +179,22 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
         <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Amount Remitted</Label><Input type="number" value={data.amountRemitted} onChange={(e) => handleChange('amountRemitted', e.target.valueAsNumber)} /></div>
-                <div className="space-y-2"><Label>Date of Remittance</Label><Input type="date" value={data.dateOfRemittance} onChange={(e) => handleChange('dateOfRemittance', e.target.value)} /></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2"><Label>Date</Label><Input type="date" value={data.dateOfRemittance} onChange={(e) => handleChange('dateOfRemittance', e.target.value)} /></div>
+                <div className="space-y-2"><Label>Amount (₹)</Label><Input type="number" value={data.amountRemitted} onChange={(e) => handleChange('amountRemitted', e.target.valueAsNumber)} /></div>
+                <div className="space-y-2">
+                    <Label>Account</Label>
+                    <Select onValueChange={(value) => handleChange('remittedAccount', value)} value={data.remittedAccount}>
+                        <SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger>
+                        <SelectContent>
+                            {remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <div className="space-y-2">
-                <Label>Remitted Account</Label>
-                <Select onValueChange={(value) => handleChange('remittedAccount', value)} value={data.remittedAccount}>
-                    <SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger>
-                    <SelectContent>
-                        {remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+             <div className="space-y-2">
+                <Label>Remarks</Label>
+                <Textarea value={data.remittanceRemarks} onChange={(e) => handleChange('remittanceRemarks', e.target.value)} placeholder="Add any remarks for this remittance entry..." />
             </div>
             <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
@@ -440,7 +442,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
                 <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Application Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('application')}><Edit className="mr-2 h-4 w-4" /> Edit</Button>)}</CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><DetailRow label="File No" value={watch('fileNo')} /><DetailRow label="Applicant" value={watch('applicantName')} /><DetailRow label="Phone No" value={watch('phoneNo')} /><DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} /><DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} /></CardContent></Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Remittance Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}</CardHeader><CardContent className="space-y-2">{remittanceFields.map((field, index) => (<div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20"><div className="grid grid-cols-3 gap-x-4 w-full"><DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} /><DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} /><DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} /></div>{!isReadOnly && (<div className="flex items-center gap-1 pl-4"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button></div>)}</div>))}</CardContent></Card>
+                <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Remittance Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}</CardHeader><CardContent className="space-y-2">{remittanceFields.map((field, index) => (<div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20"><div><div className="grid grid-cols-1 md:grid-cols-3 gap-x-4"><DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} /><DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} /><DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} /></div><DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} /></div>{!isReadOnly && (<div className="flex items-center gap-1 pl-4"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button></div>)}</div>))}</CardContent></Card>
                 <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Site Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}</CardHeader><CardContent className="space-y-2">{siteFields.map((field, index) => (<div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20"><div><p className="font-semibold">{watch(`siteDetails.${index}.nameOfSite`)}</p><p className="text-sm text-muted-foreground">{watch(`siteDetails.${index}.purpose`)} - {watch(`siteDetails.${index}.workStatus`)}</p></div>{!isReadOnly && (<div className="flex items-center gap-1 pl-4"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('site', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('site', index)}><Trash2 className="h-4 w-4"/></Button></div>)}</div>))}</CardContent></Card>
                 <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Payment Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}</CardHeader><CardContent className="space-y-2">{paymentFields.map((field, index) => (<div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20"><div className="grid grid-cols-2 gap-x-4 w-full"><DetailRow label={`Date #${index + 1}`} value={watch(`paymentDetails.${index}.dateOfPayment`)} /><DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} /></div>{!isReadOnly && (<div className="flex items-center gap-1 pl-4"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button></div>)}</div>))}</CardContent></Card>
                 <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Final Status & Summary</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('finalStatus')}><Edit className="mr-2 h-4 w-4" /> Edit</Button>)}</CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4"><DetailRow label="File Status" value={watch('fileStatus')} /><DetailRow label="Remarks" value={watch('remarks')} /><DetailRow label="Total Remittance (₹)" value={(watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} /><DetailRow label="Total Payment (₹)" value={(watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} /><DetailRow label="Balance (₹)" value={((watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - (watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} /></CardContent></Card>

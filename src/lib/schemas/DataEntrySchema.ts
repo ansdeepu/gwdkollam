@@ -71,6 +71,7 @@ export const RemittanceDetailSchema = z.object({
   amountRemitted: optionalNumber("Amount Remitted must be a valid number."),
   dateOfRemittance: nativeDateSchema,
   remittedAccount: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(remittedAccountOptions).optional()),
+  remittanceRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
     if (data.amountRemitted && data.amountRemitted > 0) {
         if (!data.dateOfRemittance) {
