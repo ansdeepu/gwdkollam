@@ -1,3 +1,4 @@
+
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -6,10 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, PlusCircle, Building, MapPin, University, Loader2, ShieldAlert, Edit, FileUp } from 'lucide-react';
+import { Trash2, PlusCircle, Building, MapPin, University, Loader2, ShieldAlert, Edit, FileUp, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, writeBatch, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, writeBatch, updateDoc, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -20,6 +21,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import ExcelJS from 'exceljs';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +35,7 @@ const OfficeAddressSchema = z.object({
   address: z.string().optional(),
   phoneNo: z.string().optional(),
   districtOfficer: z.string().optional(),
+  districtOfficerPhotoUrl: z.string().url().optional().or(z.literal('')),
   gstNo: z.string().optional(),
   panNo: z.string().optional(),
   otherDetails: z.string().optional(),
@@ -44,6 +49,11 @@ interface SettingItem {
   id: string;
   name: string;
 }
+
+const getInitials = (name?: string) => {
+  if (!name) return 'DO';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+};
 
 // Office Address Form Dialog
 const OfficeAddressDialog = ({
@@ -62,12 +72,12 @@ const OfficeAddressDialog = ({
   const form = useForm<OfficeAddressFormData>({
     resolver: zodResolver(OfficeAddressSchema),
     defaultValues: initialData || {
-      officeName: '', address: '', phoneNo: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '',
+      officeName: '', address: '', phoneNo: '', districtOfficer: '', districtOfficerPhotoUrl: '', gstNo: '', panNo: '', otherDetails: '',
     },
   });
 
   useEffect(() => {
-    form.reset(initialData || { officeName: '', address: '', phoneNo: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '' });
+    form.reset(initialData || { officeName: '', address: '', phoneNo: '', districtOfficer: '', districtOfficerPhotoUrl: '', gstNo: '', panNo: '', otherDetails: '' });
   }, [initialData, form]);
 
   return (
@@ -79,9 +89,10 @@ const OfficeAddressDialog = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
               <FormField name="districtOfficer" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of District Officer</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+               <FormField name="districtOfficerPhotoUrl" control={form.control} render={({ field }) => ( <FormItem><FormLabel>District Officer Photo URL</FormLabel><FormControl><Input {...field} placeholder="https://example.com/photo.jpg" /></FormControl><FormMessage /></FormItem> )}/>
             </div>
             <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -240,7 +251,8 @@ export default function SettingsPage() {
   const [isLoadingOffices, setIsLoadingOffices] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOfficeDialogOpen, setIsOfficeDialogOpen] = useState(false);
-  const [officeToDelete, setOfficeToDelete] = useState<OfficeAddress | null>(null);
+  const [isClearingData, setIsClearingData] = useState(false);
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -277,18 +289,6 @@ export default function SettingsPage() {
       toast({ title: 'Error Saving Office', description: error.message, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const confirmDeleteOffice = async () => {
-    if (!officeToDelete || !canManage) return;
-    try {
-      await deleteDoc(doc(db, 'officeAddresses', officeToDelete.id));
-      toast({ title: 'Office Deleted', description: `"${officeToDelete.officeName}" has been removed.` });
-    } catch (error: any) {
-      toast({ title: 'Error Deleting Office', description: error.message, variant: 'destructive' });
-    } finally {
-      setOfficeToDelete(null);
     }
   };
 
@@ -337,6 +337,28 @@ export default function SettingsPage() {
     reader.readAsArrayBuffer(file);
   };
   
+  const handleClearAllData = async () => {
+    setIsClearingData(true);
+    try {
+        const lsgQuery = query(collection(db, 'localSelfGovernments'));
+        const conQuery = query(collection(db, 'constituencies'));
+
+        const [lsgSnapshot, conSnapshot] = await Promise.all([getDocs(lsgQuery), getDocs(conQuery)]);
+
+        const batch = writeBatch(db);
+        lsgSnapshot.forEach(doc => batch.delete(doc.ref));
+        conSnapshot.forEach(doc => batch.delete(doc.ref));
+        
+        await batch.commit();
+        toast({ title: 'Data Cleared', description: 'All Local Self Governments and Constituencies have been deleted.' });
+    } catch (error: any) {
+        toast({ title: 'Error Clearing Data', description: error.message, variant: 'destructive' });
+    } finally {
+        setIsClearingData(false);
+        setIsClearConfirmOpen(false);
+    }
+  };
+  
   if (user?.role !== 'editor' && user?.role !== 'viewer') {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
@@ -375,11 +397,19 @@ export default function SettingsPage() {
                     <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                         <h3 className="font-bold text-lg text-foreground">{officeAddress.officeName}</h3>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{officeAddress.address}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 pt-3 border-t">
-                          <DetailRow label="District Officer" value={officeAddress.districtOfficer} />
-                          <DetailRow label="Phone No." value={officeAddress.phoneNo} />
-                          <DetailRow label="GST No." value={officeAddress.gstNo} />
-                          <DetailRow label="PAN No." value={officeAddress.panNo} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 pt-3 border-t">
+                            <div className="flex items-center gap-3">
+                                {officeAddress.districtOfficerPhotoUrl && (
+                                    <Avatar>
+                                        <AvatarImage src={officeAddress.districtOfficerPhotoUrl} alt={officeAddress.districtOfficer} data-ai-hint="person face" />
+                                        <AvatarFallback>{getInitials(officeAddress.districtOfficer)}</AvatarFallback>
+                                    </Avatar>
+                                )}
+                                <DetailRow label="District Officer" value={officeAddress.districtOfficer} />
+                            </div>
+                            <DetailRow label="Phone No." value={officeAddress.phoneNo} />
+                            <DetailRow label="GST No." value={officeAddress.gstNo} />
+                            <DetailRow label="PAN No." value={officeAddress.panNo} />
                         </div>
                         {officeAddress.otherDetails && <div className="pt-3 border-t"><p className="text-sm text-muted-foreground whitespace-pre-wrap">{officeAddress.otherDetails}</p></div>}
                     </div>
@@ -394,16 +424,20 @@ export default function SettingsPage() {
                 <div className="flex justify-between items-center">
                     <CardTitle className="flex items-center gap-2"><FileUp className="h-5 w-5 text-primary" />Bulk Data Management</CardTitle>
                     {canManage && (
-                        <>
+                        <div className="flex items-center gap-2">
                            <input type="file" ref={fileInputRef} onChange={handleExcelImport} className="hidden" accept=".xlsx, .xls" />
                            <Button onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileUp className="mr-2 h-4 w-4" />}
                                 Import Excel
                            </Button>
-                        </>
+                           <Button variant="destructive" onClick={() => setIsClearConfirmOpen(true)} disabled={isClearingData}>
+                                <Trash2 className="mr-2 h-4 w-4"/>
+                                {isClearingData ? "Clearing..." : "Clear All Data"}
+                           </Button>
+                        </div>
                     )}
                 </div>
-                <CardDescription>Import Local Self Governments and Constituencies from a single Excel file.</CardDescription>
+                <CardDescription>Import or clear Local Self Governments and Constituencies from a single Excel file.</CardDescription>
             </CardHeader>
         </Card>
         
@@ -429,18 +463,22 @@ export default function SettingsPage() {
         initialData={officeAddress}
       />
       
-      <AlertDialog open={!!officeToDelete} onOpenChange={(open) => !open && setOfficeToDelete(null)}>
+      <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>This will permanently delete the office "<strong>{officeToDelete?.officeName}</strong>". This action cannot be undone.</AlertDialogDescription>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>This will permanently delete ALL Local Self Governments and Constituencies from the database. This action cannot be undone and may affect existing records.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDeleteOffice} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                <AlertDialogCancel disabled={isClearingData}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearAllData} disabled={isClearingData} className="bg-destructive hover:bg-destructive/90">
+                    {isClearingData ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Yes, Delete All"}
+                </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
   );
 }
+
+    
