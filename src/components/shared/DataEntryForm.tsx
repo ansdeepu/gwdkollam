@@ -64,6 +64,7 @@ import { useDataStore } from "@/hooks/use-data-store";
 import { ScrollArea } from "../ui/scroll-area";
 import { format, isValid } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 const db = getFirestore(app);
@@ -138,7 +139,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
             displayValue = format(new Date(value), "dd/MM/yyyy");
         } catch (e) { /* Keep original string if formatting fails */ }
     } else if (typeof value === 'number') {
-        displayValue = value.toLocaleString('en-IN');
+        displayValue = value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     return (
@@ -166,7 +167,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-auto">
-        <DialogHeader className="p-6">
+        <DialogHeader>
           <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
@@ -188,7 +189,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 </div>
             </div>
         </div>
-        <DialogFooter className="p-6"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -198,7 +199,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-auto">
-        <DialogHeader className="p-6">
+        <DialogHeader>
             <DialogTitle>Remittance Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
@@ -220,7 +221,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
                 <Textarea value={data.remittanceRemarks} onChange={(e) => handleChange('remittanceRemarks', e.target.value)} placeholder="Add any remarks for this remittance entry..." />
             </div>
         </div>
-        <DialogFooter className="p-6"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -282,7 +283,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     return (
       <Form {...form}>
         <form onSubmit={handleSubmit(onConfirm)} className="flex flex-col h-full overflow-hidden">
-          <DialogHeader className="p-6">
+          <DialogHeader>
                 <DialogTitle>{initialData.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
             </DialogHeader>
           <div className="flex-1 min-h-0">
@@ -398,7 +399,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 </div>
               </ScrollArea>
             </div>
-          <DialogFooter className="p-6 !mt-auto"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
         </form>
       </Form>
     );
@@ -409,7 +410,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
         <div className="flex flex-col h-auto">
-            <DialogHeader className="p-6">
+            <DialogHeader>
                 <DialogTitle>Payment Details</DialogTitle>
             </DialogHeader>
             <div className="p-6 flex-1">
@@ -432,7 +433,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
                     </div>
                 </ScrollArea>
             </div>
-            <DialogFooter className="p-6"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
     );
 };
@@ -473,7 +474,7 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
               </div>
           </ScrollArea>
         </div>
-        <DialogFooter className="p-6"><Button onClick={onCancel} type="button">Close</Button></DialogFooter>
+        <DialogFooter><Button onClick={onCancel} type="button">Close</Button></DialogFooter>
     </DialogContent>
   )
 };
@@ -676,12 +677,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
                 <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3", "item-4", "item-5"]} className="w-full space-y-4">
                     <AccordionItem value="item-1">
-                        <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                           <div className="flex justify-between items-center w-full">
-                                <span>1. Application Details</span>
-                                {!isReadOnly && (<Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }} className="mr-4"><Edit className="mr-2 h-4 w-4"/>Edit</Button>)}
-                           </div>
-                        </AccordionTrigger>
+                      <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
+                          <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
+                              1. Application Details
+                          </AccordionTrigger>
+                          {!isReadOnly && (
+                              <Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }} className="mr-4"><Edit className="mr-2 h-4 w-4"/>Edit</Button>
+                          )}
+                      </AccordionPrimitive.Header>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg">
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <DetailRow label="File No" value={watch('fileNo')} />
@@ -693,12 +696,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-2">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        <div className="flex justify-between items-center w-full">
-                           <span>2. Remittance Details</span>
-                           {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
-                        </div>
-                      </AccordionTrigger>
+                      <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
+                        <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
+                           2. Remittance Details
+                        </AccordionTrigger>
+                        {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
+                      </AccordionPrimitive.Header>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
                            {remittanceFields.map((field, index) => (
                                 <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
@@ -723,12 +726,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-3">
-                        <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                           <div className="flex justify-between items-center w-full">
-                                <span>3. Site Details</span>
-                                {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
-                           </div>
-                        </AccordionTrigger>
+                        <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
+                           <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
+                               3. Site Details
+                           </AccordionTrigger>
+                           {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
+                        </AccordionPrimitive.Header>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
                             {siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
@@ -770,12 +773,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-4">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        <div className="flex justify-between items-center w-full">
-                            <span>4. Payment Details</span>
-                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
-                        </div>
-                      </AccordionTrigger>
+                      <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
+                        <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
+                            4. Payment Details
+                        </AccordionTrigger>
+                        {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
+                      </AccordionPrimitive.Header>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
                            {paymentFields.map((field, index) => {
                                 const paymentData = watch(`paymentDetails.${index}`);
@@ -825,8 +828,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this entry. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
 
             <Dialog open={!!dialogState.type} onOpenChange={(open) => !open && closeDialog()}>
-                {dialogState.type === 'application' && <ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} formOptions={formOptions} />}
-                {dialogState.type === 'remittance' && <RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} />}
+                {dialogState.type === 'application' && <DialogContent className="max-w-4xl"><ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} formOptions={formOptions} /></DialogContent>}
+                {dialogState.type === 'remittance' && <DialogContent><RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} /></DialogContent>}
                 {dialogState.type === 'site' && <DialogContent className="max-w-4xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={isReadOnly} isSupervisor={!!isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps} /></DialogContent>}
                 {dialogState.type === 'viewSite' && <SiteViewDialogContent siteData={dialogState.data} onCancel={closeDialog} />}
                 {dialogState.type === 'payment' && <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} /></DialogContent>}
