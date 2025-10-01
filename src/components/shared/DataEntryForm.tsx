@@ -296,7 +296,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
               <ScrollArea className="max-h-[60vh] h-full pr-4">
                 <div className="space-y-4 py-4 pr-1">
                   
-                  {activeSection === 'main' && !isSupervisor && (
+                  {!isSupervisor && activeSection === 'main' && (
                       <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                           <FormField name="nameOfSite" control={control} render={({field}) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
                           <div className="grid grid-cols-2 gap-4">
@@ -311,7 +311,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       </CardContent></Card>
                   )}
                   
-                  {activeSection === 'survey' && !isSupervisor && (
+                  {!isSupervisor && activeSection === 'survey' && (
                       <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               <FormField name="surveyRecommendedDiameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
@@ -394,7 +394,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       </CardContent></Card>
                   )}
 
-                  {activeSection === 'financials' && !isSupervisor && (
+                  {!isSupervisor && activeSection === 'financials' && (
                     <Card><CardHeader><CardTitle>Financials</CardTitle></CardHeader><CardContent className="space-y-4">
                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>} />
@@ -646,7 +646,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Site Details</CardTitle>
-                        {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}
+                        {!isReadOnly && isEditor && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}
                     </CardHeader>
                     <CardContent>
                         <Accordion type="multiple" className="w-full space-y-2">
@@ -657,6 +657,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
                                 const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
                                 const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
+                                const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
+                                const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
+
 
                                 return (
                                     <AccordionItem key={field.id} value={`site-${index}`} className="border bg-background rounded-lg">
@@ -666,12 +669,19 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                                     <p className="font-semibold">{siteData.nameOfSite}</p>
                                                     <p className="text-sm text-muted-foreground">{siteData.purpose} - {siteData.workStatus}</p>
                                                 </div>
-                                                {!isReadOnly && (
-                                                    <div className="flex items-center gap-1 pr-2">
+                                                <div className="flex items-center gap-1 pr-2">
+                                                    {isEditor && !isReadOnly && (
+                                                      <>
                                                         <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}><Edit className="h-4 w-4" /></Button>
                                                         <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick('site', index); }}><Trash2 className="h-4 w-4" /></Button>
-                                                    </div>
-                                                )}
+                                                      </>
+                                                    )}
+                                                     {isSiteEditableForSupervisor && (
+                                                        <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}>
+                                                            <Edit className="mr-2 h-4 w-4" /> Edit Site
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </AccordionTrigger>
                                         <AccordionContent className="p-6 pt-0">
@@ -758,5 +768,3 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
-
-    
