@@ -143,7 +143,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 
     return (
         <div>
-            <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+            <dt className="text-sm font-medium text-primary">{label}</dt>
             <dd className="text-lg text-foreground">{displayValue}</dd>
         </div>
     );
