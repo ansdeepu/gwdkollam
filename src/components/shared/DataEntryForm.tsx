@@ -145,7 +145,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
     return (
         <div>
             <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
-            <dd className="text-sm">{displayValue}</dd>
+            <dd className="text-base">{displayValue}</dd>
         </div>
     );
 };
@@ -312,7 +312,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                 {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                                 {watchedPurpose === 'FPW' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                                 <FormField name="surveyLocation" control={control} render={({ field }) => <FormItem><FormLabel>Survey Location</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             </div>
                         </CardContent></Card>
                     )}
@@ -675,17 +675,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
-                <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3", "item-4", "item-5"]} className="w-full space-y-4">
-                    <AccordionItem value="item-1">
-                      <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
-                          <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
-                              1. Application Details
-                          </AccordionTrigger>
-                          {!isReadOnly && (
-                              <Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }} className="mr-4"><Edit className="mr-2 h-4 w-4"/>Edit</Button>
-                          )}
-                      </AccordionPrimitive.Header>
-                        <AccordionContent className="p-4 border border-t-0 rounded-b-lg">
+                <div className="space-y-4">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-xl font-semibold text-primary">1. Application Details</CardTitle>
+                            {!isReadOnly && (
+                                <Button type="button" variant="link" onClick={() => openDialog('application')}><Edit className="mr-2 h-4 w-4"/>Edit</Button>
+                            )}
+                        </CardHeader>
+                        <CardContent>
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <DetailRow label="File No" value={watch('fileNo')} />
                                 <DetailRow label="Applicant" value={watch('applicantName')} />
@@ -693,16 +691,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
                                 <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
                              </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-2">
-                      <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
-                        <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
-                           2. Remittance Details
-                        </AccordionTrigger>
-                        {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
-                      </AccordionPrimitive.Header>
-                        <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-xl font-semibold text-primary">2. Remittance Details</CardTitle>
+                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
+                        </CardHeader>
+                        <CardContent className="space-y-2">
                            {remittanceFields.map((field, index) => (
                                 <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
                                     <div>
@@ -723,16 +719,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 </div>
                             ))}
                             {remittanceFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No remittance entries have been added yet.</p>}
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-3">
-                        <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
-                           <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
-                               3. Site Details
-                           </AccordionTrigger>
-                           {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
-                        </AccordionPrimitive.Header>
-                        <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                           <CardTitle className="text-xl font-semibold text-primary">3. Site Details</CardTitle>
+                           {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
+                        </CardHeader>
+                        <CardContent className="space-y-2">
                             {siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
@@ -770,16 +764,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 )
                             })}
                            {siteFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No sites have been added yet.</p>}
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-4">
-                      <AccordionPrimitive.Header className="flex items-center rounded-t-lg bg-secondary/30 p-4">
-                        <AccordionTrigger className="text-xl font-semibold text-primary flex-1 text-left">
-                            4. Payment Details
-                        </AccordionTrigger>
-                        {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
-                      </AccordionPrimitive.Header>
-                        <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-xl font-semibold text-primary">4. Payment Details</CardTitle>
+                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
+                        </CardHeader>
+                        <CardContent className="space-y-2">
                            {paymentFields.map((field, index) => {
                                 const paymentData = watch(`paymentDetails.${index}`);
                                 if (!paymentData) return null;
@@ -802,11 +794,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 </div>
                             )})}
                             {paymentFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-5">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">5. Final Status & Summary</AccordionTrigger>
-                        <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-4">
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-xl font-semibold text-primary">5. Final Status & Summary</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                <DetailRow label="Total Estimate Amount (₹)" value={totalSiteEstimate} />
                                <DetailRow label="Total Remittance (₹)" value={totalRemittance} />
@@ -818,9 +810,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 <FormField name="fileStatus" control={control} render={({ field }) => <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                 <FormField name="remarks" control={control} render={({ field }) => <FormItem><FormLabel>Final Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
+                        </CardContent>
+                    </Card>
+                </div>
                 
                 <div className="flex space-x-4 pt-4">{!isViewer && (<Button type="submit" disabled={isSubmitting}>{isSubmitting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : (<Save className="mr-2 h-4 w-4" />)}{isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}</Button>)}<Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button></div>
             </form>
