@@ -127,9 +127,9 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
   return Array.from(messages);
 };
 
-const DetailRow = ({ label, value, className }: { label: string; value: any; className?: string }) => {
+const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-        return <div className={className}></div>; // Return an empty div to maintain grid structure
+        return null;
     }
 
     let displayValue = String(value);
@@ -143,7 +143,7 @@ const DetailRow = ({ label, value, className }: { label: string; value: any; cla
     }
 
     return (
-        <div className={className}>
+        <div>
             <dt className="text-sm font-medium text-primary">{label}</dt>
             <dd className="text-lg text-foreground whitespace-pre-wrap break-words">{displayValue}</dd>
         </div>
@@ -443,6 +443,7 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
   const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(siteData.purpose as SitePurpose);
   const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(siteData.purpose as SitePurpose);
   const isHPSPurpose = ['HPS', 'HPR'].includes(siteData.purpose as SitePurpose);
+  const isSchemePurpose = isMWSSSchemePurpose || isHPSPurpose;
 
   return (
     <DialogContent className="max-w-3xl flex flex-col h-[90vh]">
@@ -454,21 +455,81 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
           <ScrollArea className="h-full px-6 py-4">
               <div className="space-y-6">
                   <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Main Details</h3><DetailRow label="Purpose" value={siteData.purpose} /><DetailRow label="Local Self Govt" value={siteData.localSelfGovt} /><DetailRow label="Constituency" value={siteData.constituency} /><DetailRow label="Latitude" value={siteData.latitude} /><DetailRow label="Longitude" value={siteData.longitude} /></div>
-
-                  {isWellPurpose && (
-                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Survey & Drilling Details</h3>
-                        <DetailRow label="Recommended Diameter" value={siteData.surveyRecommendedDiameter} /><DetailRow label="Recommended TD (m)" value={siteData.surveyRecommendedTD} />
-                        <DetailRow label="Actual Diameter" value={siteData.diameter} /><DetailRow label="Actual TD (m)" value={siteData.totalDepth} />
-                        <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} /><DetailRow label="Static Water Level (m)" value={siteData.waterLevel} />
-                        <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} />
+                  
+                  {!isSupervisor && isWellPurpose && (
+                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Survey Details (Recommended)</h3>
+                        <DetailRow label="Diameter (mm)" value={siteData.surveyRecommendedDiameter} /><DetailRow label="Total Depth (m)" value={siteData.surveyRecommendedTD} />
+                        {siteData.purpose === 'BWC' && <DetailRow label="OB (m)" value={siteData.surveyRecommendedOB} />}
+                        {siteData.purpose === 'BWC' && <DetailRow label="Casing Pipe (m)" value={siteData.surveyRecommendedCasingPipe} />}
+                        {siteData.purpose === 'TWC' && <DetailRow label="Plain Pipe (m)" value={siteData.surveyRecommendedPlainPipe} />}
+                        {siteData.purpose === 'TWC' && <DetailRow label="Slotted Pipe (m)" value={siteData.surveyRecommendedSlottedPipe} />}
+                        {siteData.purpose === 'TWC' && <DetailRow label="MS Casing Pipe (m)" value={siteData.surveyRecommendedMsCasingPipe} />}
+                        {siteData.purpose === 'FPW' && <DetailRow label="Casing Pipe (m)" value={siteData.surveyRecommendedCasingPipe} />}
+                        <DetailRow label="Survey Location" value={siteData.surveyLocation} /><DetailRow label="Survey Remarks" value={siteData.surveyRemarks} />
                       </div>
                   )}
 
-                  <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Work & Financials</h3>
-                    <DetailRow label="Work Status" value={siteData.workStatus} /><DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
-                    <DetailRow label="Contractor" value={siteData.contractorName} /><DetailRow label="Supervisor" value={siteData.supervisorName} />
-                    <DetailRow label="Estimate Amount (₹)" value={siteData.estimateAmount} /><DetailRow label="TS Amount (₹)" value={siteData.tsAmount} />
-                    <DetailRow label="Remitted Amount (₹)" value={siteData.remittedAmount} /><DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
+                  <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Work Implementation</h3>
+                      {!['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(siteData.purpose as SitePurpose) && <DetailRow label="Rig Accessibility" value={siteData.accessibleRig} />}
+                      <DetailRow label="Estimate Amount (₹)" value={siteData.estimateAmount} />
+                      {!isSupervisor && <DetailRow label="TS Amount (₹)" value={siteData.tsAmount} />}
+                      <DetailRow label="Remitted Amount (₹)" value={siteData.remittedAmount} />
+                      {!isSupervisor && <DetailRow label="Tender No." value={siteData.tenderNo} />}
+                      {!isSupervisor && <DetailRow label="Contractor" value={siteData.contractorName} />}
+                      {!isSupervisor && <DetailRow label="Supervisor" value={siteData.supervisorName} />}
+                  </div>
+
+                  {isWellPurpose && (
+                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Drilling Details (Actuals)</h3>
+                          <DetailRow label="Actual Diameter" value={siteData.diameter} />
+                          {siteData.purpose === 'TWC' && <DetailRow label="Pilot Drilling (m)" value={siteData.pilotDrillingDepth} />}
+                          <DetailRow label="Actual TD (m)" value={siteData.totalDepth} />
+                          {siteData.purpose === 'BWC' && <DetailRow label="Actual OB (m)" value={siteData.surveyOB} />}
+                          {siteData.purpose !== 'TWC' && <DetailRow label="Casing Pipe (m)" value={siteData.casingPipeUsed} />}
+                          {siteData.purpose === 'BWC' && <DetailRow label="Outer Casing (m)" value={siteData.outerCasingPipe} />}
+                          {siteData.purpose === 'BWC' && <DetailRow label="Inner Casing (m)" value={siteData.innerCasingPipe} />}
+                          {siteData.purpose === 'TWC' && <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} />}
+                          {siteData.purpose === 'TWC' && <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} />}
+                          {siteData.purpose === 'TWC' && <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} />}
+                          <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
+                          <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
+                          <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
+                          <DetailRow label="Type of Rig" value={siteData.typeOfRig} />
+                          <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} />
+                      </div>
+                  )}
+
+                  {isDevPurpose && (
+                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Developing Details</h3>
+                        <DetailRow label="Diameter (mm)" value={siteData.diameter} />
+                        <DetailRow label="TD (m)" value={siteData.totalDepth} />
+                        <DetailRow label="Discharge (LPH)" value={siteData.yieldDischarge} />
+                        <DetailRow label="Water Level (m)" value={siteData.waterLevel} />
+                      </div>
+                  )}
+
+                  {isSchemePurpose && (
+                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Scheme Details</h3>
+                        {isMWSSSchemePurpose && <>
+                          <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} />
+                          <DetailRow label="Pump Details" value={siteData.pumpDetails} />
+                          <DetailRow label="Pumping Line (m)" value={siteData.pumpingLineLength} />
+                          <DetailRow label="Delivery Line (m)" value={siteData.deliveryLineLength} />
+                          <DetailRow label="Tank Capacity (L)" value={siteData.waterTankCapacity} />
+                          <DetailRow label="# Taps" value={siteData.noOfTapConnections} />
+                        </>}
+                        {isHPSPurpose && <>
+                          <DetailRow label="Depth Erected (m)" value={siteData.totalDepth} />
+                          <DetailRow label="Water Level (m)" value={siteData.waterLevel} />
+                        </>}
+                        <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />
+                      </div>
+                  )}
+
+                  <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Final Status</h3>
+                    <DetailRow label="Work Status" value={siteData.workStatus} />
+                    <DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
+                    <DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
                     <DetailRow label="Work Remarks" value={siteData.workRemarks} />
                   </div>
               </div>
