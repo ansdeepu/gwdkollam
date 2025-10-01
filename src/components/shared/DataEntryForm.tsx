@@ -509,7 +509,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
-    defaultValues: { ...initialData, remittanceDetails: [], siteDetails: initialData.siteDetails?.length ? initialData.siteDetails : [] },
+    defaultValues: { ...initialData, remittanceDetails: initialData.remittanceDetails?.length ? initialData.remittanceDetails : [], siteDetails: initialData.siteDetails?.length ? initialData.siteDetails : [] },
   });
   const { reset: formReset, trigger: formTrigger, getValues: formGetValues, setValue: formSetValue, control, watch } = form;
 
@@ -790,23 +790,33 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                             </div>
                          </AccordionTrigger>
                          <AccordionContent className="p-6">
-                           {paymentFields.map((field, index) => {
-                                const paymentData = watch(`paymentDetails.${index}`);
-                                if (!paymentData) return null;
-                                return (
-                                <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg mb-2">
-                                    <div>
-                                        <p className="font-semibold text-sm mb-1">Payment #{index + 1}</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-                                            <DetailRow label="Date" value={watch(`paymentDetails.${index}.dateOfPayment`)} />
-                                            <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} />
-                                            <DetailRow label="Account" value={watch(`paymentDetails.${index}.paymentAccount`)} />
-                                        </div>
-                                    </div>
-                                    {!isReadOnly && (<div className="flex items-center gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button></div>)}
-                                </div>
-                            )})}
-                            {paymentFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
+                           <Table>
+                               <TableHeader>
+                                   <TableRow>
+                                       <TableHead className="w-[80px]">Sl. No.</TableHead>
+                                       <TableHead>Date</TableHead>
+                                       <TableHead>Total Paid (₹)</TableHead>
+                                       <TableHead>Account</TableHead>
+                                       {!isReadOnly && <TableHead className="text-right">Actions</TableHead>}
+                                   </TableRow>
+                               </TableHeader>
+                               <TableBody>
+                                   {paymentFields.map((field, index) => {
+                                       const paymentData = watch(`paymentDetails.${index}`);
+                                       return (
+                                           <TableRow key={field.id}>
+                                               <TableCell>{index + 1}</TableCell>
+                                               <TableCell>{paymentData.dateOfPayment ? format(new Date(paymentData.dateOfPayment), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                               <TableCell>{calculatePaymentEntryTotalGlobal(paymentData).toLocaleString('en-IN')}</TableCell>
+                                               <TableCell>{paymentData.paymentAccount}</TableCell>
+                                               {!isReadOnly && <TableCell className="text-right"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button></TableCell>}
+                                           </TableRow>
+                                       );
+                                   })}
+                                   {paymentFields.length === 0 && <TableRow><TableCell colSpan={isReadOnly ? 4 : 5} className="text-center h-24">No payment entries have been added yet.</TableCell></TableRow>}
+                               </TableBody>
+                               {paymentFields.length > 0 && <TableFooterComponent><TableRow><TableCell colSpan={isReadOnly ? 2 : 3} className="text-right font-bold">Grand Total</TableCell><TableCell className="font-bold">{totalPayment.toLocaleString('en-IN')}</TableCell><TableCell colSpan={isReadOnly ? 1 : 2}></TableCell></TableRow></TableFooterComponent>}
+                           </Table>
                          </AccordionContent>
                       </AccordionItem>
                     </Accordion>
