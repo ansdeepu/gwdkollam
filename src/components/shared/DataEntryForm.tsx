@@ -1,4 +1,3 @@
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -509,7 +508,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
-    defaultValues: { ...initialData, remittanceDetails: initialData.remittanceDetails?.length ? initialData.remittanceDetails : [], siteDetails: initialData.siteDetails?.length ? initialData.siteDetails : [] },
+    defaultValues: { ...initialData, remittanceDetails: initialData.remittanceDetails?.length ? initialData.remittanceDetails : [], siteDetails: initialData.siteDetails?.length ? initialData.siteDetails : [], paymentDetails: initialData.paymentDetails?.length ? initialData.paymentDetails : [] },
   });
   const { reset: formReset, trigger: formTrigger, getValues: formGetValues, setValue: formSetValue, control, watch } = form;
 
@@ -698,8 +697,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <AccordionItem value="item-1">
                             <AccordionTrigger className="text-xl font-semibold text-primary px-6">
                                 <div className="flex justify-between items-center w-full">
-                                <span>2. Remittance Details</span>
-                                {!isReadOnly && <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
+                                    <span>2. Remittance Details</span>
+                                    <div className="flex items-center gap-4 mr-4">
+                                        <span className="text-sm font-semibold text-muted-foreground">Total: <span className="font-bold text-foreground">₹{totalRemittance.toLocaleString('en-IN')}</span></span>
+                                        {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add</Button>}
+                                    </div>
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent className="p-6">
@@ -727,7 +729,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         ))}
                                         {remittanceFields.length === 0 && <TableRow><TableCell colSpan={isReadOnly ? 5 : 6} className="text-center h-24">No remittance entries have been added yet.</TableCell></TableRow>}
                                     </TableBody>
-                                    {remittanceFields.length > 0 && <TableFooterComponent><TableRow><TableCell colSpan={isReadOnly ? 2 : 3} className="text-right font-bold">Grand Total</TableCell><TableCell className="font-bold">{totalRemittance.toLocaleString('en-IN')}</TableCell><TableCell colSpan={isReadOnly ? 2 : 3}></TableCell></TableRow></TableFooterComponent>}
                                 </Table>
                             </AccordionContent>
                         </AccordionItem>
@@ -786,7 +787,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                          <AccordionTrigger className="text-xl font-semibold text-primary px-6">
                             <div className="flex justify-between items-center w-full">
                                 <span>4. Payment Details</span>
-                                {!isReadOnly && <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
+                                <div className="flex items-center gap-4 mr-4">
+                                    <span className="text-sm font-semibold text-muted-foreground">Total: <span className="font-bold text-foreground">₹{totalPayment.toLocaleString('en-IN')}</span></span>
+                                    {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add</Button>}
+                                </div>
                             </div>
                          </AccordionTrigger>
                          <AccordionContent className="p-6">
@@ -815,7 +819,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                    })}
                                    {paymentFields.length === 0 && <TableRow><TableCell colSpan={isReadOnly ? 4 : 5} className="text-center h-24">No payment entries have been added yet.</TableCell></TableRow>}
                                </TableBody>
-                               {paymentFields.length > 0 && <TableFooterComponent><TableRow><TableCell colSpan={isReadOnly ? 2 : 3} className="text-right font-bold">Grand Total</TableCell><TableCell className="font-bold">{totalPayment.toLocaleString('en-IN')}</TableCell><TableCell colSpan={isReadOnly ? 1 : 2}></TableCell></TableRow></TableFooterComponent>}
                            </Table>
                          </AccordionContent>
                       </AccordionItem>

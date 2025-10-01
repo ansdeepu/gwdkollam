@@ -76,32 +76,10 @@ const getFormDefaults = (): DataEntryFormData => ({
   applicationType: undefined,
   constituency: undefined,
   estimateAmount: undefined, assignedSupervisorUids: [],
-  remittanceDetails: [{ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined }],
+  remittanceDetails: [], // Starts empty
   totalRemittance: 0, 
-  siteDetails: [{
-    nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined,
-    estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined,
-    additionalAS: 'No',
-    tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "",
-    outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "",
-    waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined,
-    noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined,
-    contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined,
-    workStatus: undefined, workRemarks: "",
-    surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "",
-    surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "",
-    surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "",
-    surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "",
-    arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined,
-    arsTenderedAmount: undefined, arsAwardedAmount: undefined,
-    arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false,
-    pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "",
-  }],
-  paymentDetails: [{ 
-    dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined,
-    contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined,
-    refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "",
-   }], 
+  siteDetails: [], // Starts empty
+  paymentDetails: [], // Starts empty
   totalPaymentAllEntries: 0, overallBalance: 0,
   fileStatus: undefined, remarks: "",
 });
