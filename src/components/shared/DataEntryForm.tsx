@@ -278,7 +278,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                         <FormField name="surveyLocation" control={control} render={({field})=> <FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                         <FormField name="surveyRemarks" control={control} render={({field})=> <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                     </CardContent></Card>
-                  </>
+                </>
               )}
 
               {isWellPurpose && (
@@ -334,31 +334,32 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                    )}
                 </CardContent></Card>
               )}
-
-              <Card><CardHeader><CardTitle>Work & Financials</CardTitle></CardHeader><CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <FormField name="siteConditions" control={control} render={({field})=> <FormItem><FormLabel>Site Conditions</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition"/></SelectTrigger></FormControl><SelectContent>{siteConditionsOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                      <FormField name="accessibleRig" control={control} render={({field})=> <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility"/></SelectTrigger></FormControl><SelectContent>{rigAccessibilityOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                      <FormField name="tsAmount" control={control} render={({field})=> <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                      <FormField name="additionalAS" control={control} render={({field})=> <FormItem><FormLabel>Addl. AS</FormLabel><Select onValueChange={field.onChange} value={field.value ?? 'No'} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent></Select></FormItem>} />
-                      <FormField name="tenderNo" control={control} render={({field})=> <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                      <FormField name="contractorName" control={control} render={({field})=> <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                       <FormField name="supervisorUid" control={form.control} render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Supervisor</FormLabel>
-                          <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
-                            <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </FormItem>
-                      )} />
-                      <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status"/></SelectTrigger></FormControl><SelectContent>{siteWorkStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                      <FormField name="dateOfCompletion" control={control} render={({field})=> <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                      <FormField name="totalExpenditure" control={control} render={({field})=> <FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    </div>
-                    <FormField name="workRemarks" control={control} render={({field})=> <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                </CardContent></Card>
               
+              {!isSupervisor && (
+                <Card><CardHeader><CardTitle>Work &amp; Financials</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <FormField name="siteConditions" control={control} render={({field})=> <FormItem><FormLabel>Site Conditions</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition"/></SelectTrigger></FormControl><SelectContent>{siteConditionsOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                        <FormField name="accessibleRig" control={control} render={({field})=> <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility"/></SelectTrigger></FormControl><SelectContent>{rigAccessibilityOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                        <FormField name="tsAmount" control={control} render={({field})=> <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                        <FormField name="additionalAS" control={control} render={({field})=> <FormItem><FormLabel>Addl. AS</FormLabel><Select onValueChange={field.onChange} value={field.value ?? 'No'} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent></Select></FormItem>} />
+                        <FormField name="tenderNo" control={control} render={({field})=> <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                        <FormField name="contractorName" control={control} render={({field})=> <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                        <FormField name="supervisorUid" control={form.control} render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Supervisor</FormLabel>
+                            <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
+                              <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status"/></SelectTrigger></FormControl><SelectContent>{siteWorkStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                        <FormField name="dateOfCompletion" control={control} render={({field})=> <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                        <FormField name="totalExpenditure" control={control} render={({field})=> <FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      </div>
+                      <FormField name="workRemarks" control={control} render={({field})=> <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                  </CardContent></Card>
+              )}
             </div>
           </ScrollArea>
           <DialogFooter className="mt-6 pt-4 border-t">
@@ -544,3 +545,5 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
+
+    
