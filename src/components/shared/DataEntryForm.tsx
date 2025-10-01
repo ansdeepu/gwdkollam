@@ -794,10 +794,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <DetailRow label="File Status" value={watch('fileStatus')} />
                         <DetailRow label="Final Remarks" value={watch('remarks')} />
-                        <DetailRow label="Total Estimate Amount (₹)" value={totalSiteEstimate.toFixed(2)} />
-                        <DetailRow label="Total Remittance (₹)" value={totalRemittance.toFixed(2)} />
-                        <DetailRow label="Total Payment (₹)" value={totalPayment.toFixed(2)} />
-                        <DetailRow label="Balance (₹)" value={overallBalance.toFixed(2)} />
+                        <DetailRow label="Total Estimate Amount (₹)" value={totalSiteEstimate} />
+                        <DetailRow label="Total Remittance (₹)" value={totalRemittance} />
+                        <DetailRow label="Total Payment (₹)" value={totalPayment} />
+                        <DetailRow label="Balance (₹)" value={overallBalance} />
                     </CardContent>
                 </Card>
                 
