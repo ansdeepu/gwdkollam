@@ -675,44 +675,55 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-3">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">3. Site Details</AccordionTrigger>
+                        <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">3. Site Details</AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                           {siteFields.map((field, index) => {
+                            {siteFields.length > 0 ? siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
                                 const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
-
+                                const isReadOnlyForSite = isViewer || (isSupervisor && !isSiteEditableForSupervisor);
                                 return (
                                     <div key={field.id} className="p-4 border rounded-lg">
-                                        <div className="flex justify-between items-center mb-2">
+                                        <div className="flex justify-between items-start mb-2">
                                             <p className="font-semibold text-base">Site #{index + 1}: {siteData.nameOfSite}</p>
                                             <div className="flex items-center gap-1">
-                                                {isEditor && !isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site', index)}>Edit</Button>)}
-                                                {isSiteEditableForSupervisor && !isReadOnly && (<Button type="button" variant="default" size="sm" onClick={() => openDialog('site', index)}><Edit className="mr-2 h-4 w-4"/> Edit Site</Button>)}
+                                                {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={() => openDialog('site', index)}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
                                                 {isEditor && !isReadOnly && (<Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('site', index)}><Trash2 className="h-4 w-4"/></Button>)}
                                             </div>
                                         </div>
-                                        <div className="pt-2 border-t grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                                        <div className="pt-2 border-t grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
                                             <DetailRow label="Purpose" value={siteData.purpose} />
                                             <DetailRow label="Work Status" value={siteData.workStatus} />
                                             <DetailRow label="Supervisor" value={siteData.supervisorName} />
+                                            <DetailRow label="Latitude" value={siteData.latitude} />
+                                            <DetailRow label="Longitude" value={siteData.longitude} />
+                                            <DetailRow label="Contractor" value={siteData.contractorName} />
+                                            <DetailRow label="Site Estimate (₹)" value={siteData.estimateAmount} />
+                                            <DetailRow label="TS Amount (₹)" value={siteData.tsAmount} />
+                                            <DetailRow label="Remitted (₹)" value={siteData.remittedAmount} />
+                                            <DetailRow label="Expenditure (₹)" value={siteData.totalExpenditure} />
+                                            <DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
+                                            <div className="md:col-span-3">
+                                                <DetailRow label="Work Remarks" value={siteData.workRemarks} />
+                                            </div>
                                         </div>
                                     </div>
                                 )
-                           })}
-                           {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Site</Button>}
+                            }) : <p className="text-sm text-muted-foreground text-center py-4">No sites have been added yet.</p>}
+                            {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Site</Button>}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-4">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">4. Payment Details</AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                            {paymentFields.map((field, index) => (
+                           {paymentFields.length > 0 ? paymentFields.map((field, index) => (
                                 <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
                                     <div>
                                         <p className="font-semibold text-sm mb-1">Payment #{index + 1}</p>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
                                             <DetailRow label="Date" value={watch(`paymentDetails.${index}.dateOfPayment`)} />
                                             <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} />
+                                            <DetailRow label="Account" value={watch(`paymentDetails.${index}.paymentAccount`)} />
                                         </div>
                                     </div>
                                     {!isReadOnly && (
@@ -722,7 +733,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         </div>
                                     )}
                                 </div>
-                            ))}
+                            )) : <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
                             {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Payment</Button>}
                         </AccordionContent>
                     </AccordionItem>
