@@ -164,7 +164,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 <div className="space-y-2">
                     <Label>Type of Application *</Label>
                     <Select onValueChange={(value) => handleChange('applicationType', value)} value={data.applicationType}>
-                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                        <SelectTrigger className="bg-white border-gray-300"><SelectValue placeholder="Select Type" /></SelectTrigger>
                         <SelectContent>
                             {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
                         </SelectContent>
@@ -187,7 +187,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
                 <div className="space-y-2">
                     <Label>Account</Label>
                     <Select onValueChange={(value) => handleChange('remittedAccount', value)} value={data.remittedAccount}>
-                        <SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger>
+                        <SelectTrigger className="bg-white border-gray-300"><SelectValue placeholder="Select Account" /></SelectTrigger>
                         <SelectContent>
                             {remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                         </SelectContent>
@@ -261,7 +261,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       value={field.value ?? ""}
                       disabled={isReadOnly}
                     >
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="bg-white border-gray-300"><SelectValue placeholder="Select Local Self Govt."/></SelectTrigger></FormControl>
                       <SelectContent>
                         <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); handleLsgChange(''); }}>-- Clear --</SelectItem>
                         {sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}
@@ -274,7 +274,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                   <FormItem>
                     <FormLabel>Constituency</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} disabled={isConstituencyDisabled}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="bg-white border-gray-300"><SelectValue placeholder="Select Constituency"/></SelectTrigger></FormControl>
                       <SelectContent>{constituencyOptionsForSite.map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                     </Select>
                     <FormMessage/>
@@ -286,15 +286,15 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                <FormField name="longitude" control={control} render={({field}) => <FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" {...field} readOnly={isReadOnly || (isSupervisor && !!initialData.longitude)} /></FormControl><FormMessage/></FormItem>} />
             </div>
              <div className="grid grid-cols-2 gap-4">
-              <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
-              <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+              <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="bg-white border-gray-300"><SelectValue/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+              <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="bg-white border-gray-300"><SelectValue/></SelectTrigger></FormControl><SelectContent>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
             </div>
 
             {isWellPurpose && (
               <div className="space-y-4 pt-4 mt-4 border-t">
                 <h4 className="font-semibold text-primary">Drilling Details</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+                  <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="bg-white border-gray-300"><SelectValue/></SelectTrigger></FormControl><SelectContent>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
                   <FormField name="totalDepth" control={control} render={({field}) => <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage/></FormItem>} />
                   <FormField name="yieldDischarge" control={control} render={({field}) => <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>} />
                   <FormField name="waterLevel" control={control} render={({field}) => <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>} />
@@ -318,7 +318,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <FormField name="supervisorUid" control={control} render={({field}) => <FormItem><FormLabel>Assigned Supervisor</FormLabel>
                 <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor"/></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger className="bg-white border-gray-300"><SelectValue placeholder="Select Supervisor"/></SelectTrigger></FormControl>
                   <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               <FormMessage/></FormItem>} />
@@ -343,7 +343,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
           <div className="space-y-4 py-4 pr-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Date of Payment</Label><Input type="date" value={data.dateOfPayment} onChange={e => handleChange('dateOfPayment', e.target.value)} /></div>
-              <div className="space-y-2"><Label>Payment Account</Label><Select onValueChange={v => handleChange('paymentAccount', v)} value={data.paymentAccount}><SelectTrigger><SelectValue placeholder="Select Account"/></SelectTrigger><SelectContent>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label>Payment Account</Label><Select onValueChange={v => handleChange('paymentAccount', v)} value={data.paymentAccount}><SelectTrigger className="bg-white border-gray-300"><SelectValue placeholder="Select Account"/></SelectTrigger><SelectContent>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
             </div>
             <Separator />
             <div className="grid grid-cols-3 gap-4">
@@ -366,7 +366,7 @@ const FinalStatusDialogContent = ({ initialData, onConfirm, onCancel }: { initia
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
         <div className="space-y-4 py-4">
-            <div className="space-y-2"><Label>File Status</Label><Select onValueChange={v => handleChange('fileStatus', v)} value={data.fileStatus}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-2"><Label>File Status</Label><Select onValueChange={v => handleChange('fileStatus', v)} value={data.fileStatus}><SelectTrigger className="bg-white border-gray-300"><SelectValue/></SelectTrigger><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-2"><Label>Final Remarks</Label><Textarea value={data.remarks} onChange={e => handleChange('remarks', e.target.value)} /></div>
             <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
