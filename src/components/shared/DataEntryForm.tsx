@@ -71,7 +71,7 @@ const db = getFirestore(app);
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
-const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
+const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: optionalNumber(), arsAwardedAmount: optionalNumber(), arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
   if (!payment) return 0;
@@ -127,7 +127,7 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
   return Array.from(messages);
 };
 
-const DetailRow = ({ label, value }: { label: string; value: any }) => {
+const DetailRow = ({ label, value, className }: { label: string; value: any, className?: string }) => {
     if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
         return null;
     }
@@ -143,7 +143,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
     }
 
     return (
-        <div>
+        <div className={className}>
             <dt className="text-sm font-medium text-primary">{label}</dt>
             <dd className="text-lg text-foreground whitespace-pre-wrap break-words">{displayValue}</dd>
         </div>
@@ -438,7 +438,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     );
 };
 
-const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFormData, onCancel: () => void }) => {
+const SiteViewDialogContent = ({ siteData, onCancel, isSupervisor }: { siteData: SiteDetailFormData, onCancel: () => void, isSupervisor: boolean }) => {
   const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(siteData.purpose as SitePurpose);
   const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(siteData.purpose as SitePurpose);
   const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(siteData.purpose as SitePurpose);
@@ -738,11 +738,13 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
                 <div className="space-y-4">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-xl font-semibold text-primary">1. Application Details</CardTitle>
-                            {!isReadOnly && (
-                                <Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }}><Edit className="mr-2 h-4 w-4"/>Edit</Button>
-                            )}
+                        <CardHeader>
+                            <div className="flex justify-between items-center">
+                                <CardTitle className="text-xl font-semibold text-primary">1. Application Details</CardTitle>
+                                {!isReadOnly && (
+                                    <Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }}><Edit className="mr-2 h-4 w-4"/>Edit</Button>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent>
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -911,7 +913,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 {dialogState.type === 'application' && <DialogContent className="max-w-4xl"><ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} formOptions={formOptions} /></DialogContent>}
                 {dialogState.type === 'remittance' && <DialogContent><RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} /></DialogContent>}
                 {dialogState.type === 'site' && <DialogContent className="max-w-4xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={isReadOnly} isSupervisor={!!isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps} /></DialogContent>}
-                {dialogState.type === 'viewSite' && <SiteViewDialogContent siteData={dialogState.data} onCancel={closeDialog} />}
+                {dialogState.type === 'viewSite' && <SiteViewDialogContent siteData={dialogState.data} onCancel={closeDialog} isSupervisor={!!isSupervisor} />}
                 {dialogState.type === 'payment' && <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} /></DialogContent>}
             </Dialog>
 
