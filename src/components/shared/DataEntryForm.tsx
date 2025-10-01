@@ -244,129 +244,129 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     const isHPSPurpose = ['HPS', 'HPR'].includes(watchedPurpose as SitePurpose);
 
     return (
-        <Form {...form}>
-        <ScrollArea className="max-h-[70vh] p-1">
-          <div className="space-y-4 py-4 pr-4">
-            {/* --- Main Details --- */}
-            {!isSupervisor && (
-              <Card>
-                <CardHeader><CardTitle>Main Details</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                    <FormField name="nameOfSite" control={control} render={({field}) => <FormItem><FormLabel>Name of Site</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField name="localSelfGovt" control={control} render={({ field }) => ( <FormItem><FormLabel>Local Self Govt.</FormLabel><Select onValueChange={(value) => { const norm = value === '_clear_' ? '' : value; field.onChange(norm); handleLsgChange(norm); }} value={field.value ?? ""} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select LSG"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_">-- Clear --</SelectItem>{sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem> )}/>
-                      <FormField name="constituency" control={control} render={({ field }) => ( <FormItem><FormLabel>Constituency</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isConstituencyDisabled}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForSite.map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem> )}/>
+      <Form {...form}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(onConfirm)(); }}>
+          <ScrollArea className="max-h-[70vh] pr-4">
+            <div className="space-y-4 py-4">
+              {!isSupervisor && (
+                <>
+                  <Card>
+                    <CardHeader><CardTitle>Main Details</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField name="nameOfSite" control={control} render={({field}) => <FormItem><FormLabel>Name of Site</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField name="localSelfGovt" control={control} render={({ field }) => ( <FormItem><FormLabel>Local Self Govt.</FormLabel><Select onValueChange={(value) => { const norm = value === '_clear_' ? '' : value; field.onChange(norm); handleLsgChange(norm); }} value={field.value ?? ""} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select LSG"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_">-- Clear --</SelectItem>{sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem> )}/>
+                        <FormField name="constituency" control={control} render={({ field }) => ( <FormItem><FormLabel>Constituency</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isConstituencyDisabled}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForSite.map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem> )}/>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField name="latitude" control={control} render={({field}) => <FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
+                        <FormField name="longitude" control={control} render={({field}) => <FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
+                      </div>
+                      <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+                    </CardContent>
+                  </Card>
+                  <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <FormField name="surveyRecommendedDiameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                          <FormField name="surveyRecommendedTD" control={control} render={({field})=> <FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                          {isWellPurpose && <FormField name="surveyRecommendedOB" control={control} render={({field})=> <FormItem><FormLabel>OB (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                          {isWellPurpose && <FormField name="surveyRecommendedCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                          {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedPlainPipe" control={control} render={({field})=> <FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                          {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedSlottedPipe" control={control} render={({field})=> <FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                          {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                        </div>
+                        <FormField name="surveyLocation" control={control} render={({field})=> <FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                        <FormField name="surveyRemarks" control={control} render={({field})=> <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    </CardContent></Card>
+                  </>
+              )}
+
+              {isWellPurpose && (
+                <Card><CardHeader><CardTitle>Drilling Details (Actuals)</CardTitle></CardHeader><CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
+                      {watchedPurpose === 'TWC' && <FormField name="pilotDrillingDepth" control={control} render={({field})=> <FormItem><FormLabel>Pilot Drilling (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                      <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Actual TD (m)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="casingPipeUsed" control={control} render={({field})=> <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      {watchedPurpose === 'BWC' && <FormField name="outerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Outer Casing (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                      {watchedPurpose === 'BWC' && <FormField name="innerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Inner Casing (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                      {watchedPurpose === 'TWC' && <FormField name="surveyPlainPipe" control={control} render={({field})=> <FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                      {watchedPurpose === 'TWC' && <FormField name="surveySlottedPipe" control={control} render={({field})=> <FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                      {watchedPurpose === 'TWC' && <FormField name="outerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
+                      <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="typeOfRig" control={control} render={({field})=> <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField name="latitude" control={control} render={({field}) => <FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly || (isSupervisor && !!initialData.latitude)} /></FormControl><FormMessage/></FormItem>} />
-                      <FormField name="longitude" control={control} render={({field}) => <FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly || (isSupervisor && !!initialData.longitude)} /></FormControl><FormMessage/></FormItem>} />
-                    </div>
-                    <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
-                </CardContent>
-              </Card>
-            )}
+                     <FormField name="zoneDetails" control={control} render={({field})=> <FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                     <FormField name="drillingRemarks" control={control} render={({field})=> <FormItem><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                </CardContent></Card>
+              )}
 
-            {!isSupervisor && (
-            <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
+              {isDevPurpose && (
+                <Card><CardHeader><CardTitle>Developing Details</CardTitle></CardHeader><CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <FormField name="surveyRecommendedDiameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="surveyRecommendedTD" control={control} render={({field})=> <FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    {isWellPurpose && <FormField name="surveyRecommendedOB" control={control} render={({field})=> <FormItem><FormLabel>OB (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {isWellPurpose && <FormField name="surveyRecommendedCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedPlainPipe" control={control} render={({field})=> <FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedSlottedPipe" control={control} render={({field})=> <FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                  </div>
-                  <FormField name="surveyLocation" control={control} render={({field})=> <FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                  <FormField name="surveyRemarks" control={control} render={({field})=> <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-              </CardContent></Card>
-            )}
-
-            {isWellPurpose && (
-              <Card><CardHeader><CardTitle>Drilling Details (Actuals)</CardTitle></CardHeader><CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
-                    {watchedPurpose === 'TWC' && <FormField name="pilotDrillingDepth" control={control} render={({field})=> <FormItem><FormLabel>Pilot Drilling (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Actual TD (m)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="casingPipeUsed" control={control} render={({field})=> <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    {watchedPurpose === 'BWC' && <FormField name="outerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Outer Casing (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {watchedPurpose === 'BWC' && <FormField name="innerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Inner Casing (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {watchedPurpose === 'TWC' && <FormField name="surveyPlainPipe" control={control} render={({field})=> <FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {watchedPurpose === 'TWC' && <FormField name="surveySlottedPipe" control={control} render={({field})=> <FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    {watchedPurpose === 'TWC' && <FormField name="outerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />}
-                    <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="typeOfRig" control={control} render={({field})=> <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                  </div>
-                   <FormField name="zoneDetails" control={control} render={({field})=> <FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                   <FormField name="drillingRemarks" control={control} render={({field})=> <FormItem><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-              </CardContent></Card>
-            )}
-
-            {isDevPurpose && (
-              <Card><CardHeader><CardTitle>Developing Details</CardTitle></CardHeader><CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <FormField name="diameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                  <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                  <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Discharge (LPH)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                  <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                </div>
-              </CardContent></Card>
-            )}
-
-            {(isMWSSSchemePurpose || isHPSPurpose) && (
-              <Card><CardHeader><CardTitle>Scheme Details</CardTitle></CardHeader><CardContent className="space-y-4">
-                {isMWSSSchemePurpose && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Well Discharge (LPH)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="pumpDetails" control={control} render={({field})=> <FormItem><FormLabel>Pump Details</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="pumpingLineLength" control={control} render={({field})=> <FormItem><FormLabel>Pumping Line (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="deliveryLineLength" control={control} render={({field})=> <FormItem><FormLabel>Delivery Line (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="waterTankCapacity" control={control} render={({field})=> <FormItem><FormLabel>Tank Capacity (L)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="noOfTapConnections" control={control} render={({field})=> <FormItem><FormLabel># Taps</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="noOfBeneficiary" control={control} render={({field})=> <FormItem><FormLabel># Beneficiaries</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                  </div>
-                )}
-                 {isHPSPurpose && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Depth Erected (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    <FormField name="diameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Discharge (LPH)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                     <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                   </div>
-                 )}
-              </CardContent></Card>
-            )}
+                </CardContent></Card>
+              )}
 
-            <Card><CardHeader><CardTitle>Work & Financials</CardTitle></CardHeader><CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <FormField name="siteConditions" control={control} render={({field})=> <FormItem><FormLabel>Site Conditions</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition"/></SelectTrigger></FormControl><SelectContent>{siteConditionsOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                    <FormField name="accessibleRig" control={control} render={({field})=> <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility"/></SelectTrigger></FormControl><SelectContent>{rigAccessibilityOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                    <FormField name="tsAmount" control={control} render={({field})=> <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="additionalAS" control={control} render={({field})=> <FormItem><FormLabel>Addl. AS</FormLabel><Select onValueChange={field.onChange} value={field.value ?? 'No'} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent></Select></FormItem>} />
-                    <FormField name="tenderNo" control={control} render={({field})=> <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="contractorName" control={control} render={({field})=> <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                     <FormField name="supervisorUid" control={form.control} render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Supervisor</FormLabel>
-                        <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly}>
-                          <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
-                          <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </FormItem>
-                    )} />
-                    <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status"/></SelectTrigger></FormControl><SelectContent>{siteWorkStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                    <FormField name="dateOfCompletion" control={control} render={({field})=> <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                    <FormField name="totalExpenditure" control={control} render={({field})=> <FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                  </div>
-                  <FormField name="workRemarks" control={control} render={({field})=> <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-              </CardContent></Card>
-            
-          </div>
-        </ScrollArea>
-        <DialogFooter className="mt-4">
-            <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={handleSubmit(onConfirm)}>Save</Button>
-        </DialogFooter>
-        </Form>
+              {(isMWSSSchemePurpose || isHPSPurpose) && (
+                <Card><CardHeader><CardTitle>Scheme Details</CardTitle></CardHeader><CardContent className="space-y-4">
+                  {isMWSSSchemePurpose && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Well Discharge (LPH)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="pumpDetails" control={control} render={({field})=> <FormItem><FormLabel>Pump Details</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="pumpingLineLength" control={control} render={({field})=> <FormItem><FormLabel>Pumping Line (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="deliveryLineLength" control={control} render={({field})=> <FormItem><FormLabel>Delivery Line (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="waterTankCapacity" control={control} render={({field})=> <FormItem><FormLabel>Tank Capacity (L)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="noOfTapConnections" control={control} render={({field})=> <FormItem><FormLabel># Taps</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="noOfBeneficiary" control={control} render={({field})=> <FormItem><FormLabel># Beneficiaries</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    </div>
+                  )}
+                   {isHPSPurpose && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Depth Erected (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    </div>
+                   )}
+                </CardContent></Card>
+              )}
+
+              <Card><CardHeader><CardTitle>Work & Financials</CardTitle></CardHeader><CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <FormField name="siteConditions" control={control} render={({field})=> <FormItem><FormLabel>Site Conditions</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition"/></SelectTrigger></FormControl><SelectContent>{siteConditionsOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                      <FormField name="accessibleRig" control={control} render={({field})=> <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility"/></SelectTrigger></FormControl><SelectContent>{rigAccessibilityOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                      <FormField name="tsAmount" control={control} render={({field})=> <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="additionalAS" control={control} render={({field})=> <FormItem><FormLabel>Addl. AS</FormLabel><Select onValueChange={field.onChange} value={field.value ?? 'No'} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent></Select></FormItem>} />
+                      <FormField name="tenderNo" control={control} render={({field})=> <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="contractorName" control={control} render={({field})=> <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                       <FormField name="supervisorUid" control={form.control} render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Supervisor</FormLabel>
+                          <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
+                            <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </FormItem>
+                      )} />
+                      <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status"/></SelectTrigger></FormControl><SelectContent>{siteWorkStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                      <FormField name="dateOfCompletion" control={control} render={({field})=> <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                      <FormField name="totalExpenditure" control={control} render={({field})=> <FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    </div>
+                    <FormField name="workRemarks" control={control} render={({field})=> <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                </CardContent></Card>
+              
+            </div>
+          </ScrollArea>
+          <DialogFooter className="mt-6 pt-4 border-t">
+              <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+              <Button type="submit">Save</Button>
+          </DialogFooter>
+        </form>
+      </Form>
     );
 };
 
@@ -544,3 +544,4 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
+
