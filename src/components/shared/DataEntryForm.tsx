@@ -675,7 +675,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <CardContent className={cn("space-y-2", remittanceFields.length === 0 && "p-0")}>
                         {remittanceFields.map((field, index) => {
                              const remittanceData = watch(`remittanceDetails.${index}`);
-                             const hasData = remittanceData.dateOfRemittance || remittanceData.amountRemitted || remittanceData.remittedAccount || remittanceData.remittanceRemarks;
+                             const hasData = remittanceData && (remittanceData.dateOfRemittance || remittanceData.amountRemitted || remittanceData.remittedAccount || remittanceData.remittanceRemarks);
 
                              return hasData ? (
                                 <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
@@ -708,7 +708,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                        <Accordion type="multiple" className="w-full space-y-2">
                            {siteFields.map((field, index) => {
                                const siteData = watch(`siteDetails.${index}`);
-                               const hasData = !!siteData?.nameOfSite; // Only render if there's a site name
+                               const hasData = siteData && (siteData.nameOfSite);
                                
                                if (!hasData) return null;
                                
@@ -766,7 +766,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <CardContent className={cn("space-y-2", paymentFields.length === 0 && "p-0")}>
                         {paymentFields.map((field, index) => {
                             const paymentData = watch(`paymentDetails.${index}`);
-                            const hasData = paymentData.dateOfPayment || calculatePaymentEntryTotalGlobal(paymentData) > 0 || paymentData.paymentAccount || paymentData.paymentRemarks;
+                            const hasData = paymentData && (paymentData.dateOfPayment || calculatePaymentEntryTotalGlobal(paymentData) > 0 || paymentData.paymentAccount || paymentData.paymentRemarks);
                             
                             return hasData ? (
                                 <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">

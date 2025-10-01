@@ -345,7 +345,7 @@ export const DataEntrySchema = z.object({
     .optional(),
   totalRemittance: z.coerce.number().optional(),
 
-  siteDetails: z.array(SiteDetailSchema).min(1, "At least one site detail is required."),
+  siteDetails: z.array(SiteDetailSchema).optional(),
 
   paymentDetails: z.array(PaymentDetailSchema)
     .max(10, "You can add a maximum of 10 payment entries.")
