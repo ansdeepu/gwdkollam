@@ -253,12 +253,11 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     return (
         <Form {...form}>
-          <form onSubmit={handleSubmit(onConfirm)}>
+          <form onSubmit={form.handleSubmit(onConfirm)}>
             <ScrollArea className="max-h-[70vh] pr-4">
               <div className="space-y-4 py-4">
                 
                 {!isSupervisor && (
-                    <>
                     <Card>
                         <CardHeader><CardTitle>Main Details</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
@@ -274,6 +273,9 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                         <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
                         </CardContent>
                     </Card>
+                )}
+                
+                {!isSupervisor && (
                     <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <FormField name="surveyRecommendedDiameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
@@ -287,8 +289,8 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             <FormField name="surveyLocation" control={control} render={({field})=> <FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                             <FormField name="surveyRemarks" control={control} render={({field})=> <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                         </CardContent></Card>
-                    </>
                 )}
+
 
                 {isWellPurpose && (
                 <Card><CardHeader><CardTitle>Drilling Details (Actuals)</CardTitle></CardHeader><CardContent className="space-y-4">
@@ -345,7 +347,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 </CardContent></Card>
               )}
               
-              <Card>
+                <Card>
                   <CardHeader><CardTitle>Work &amp; Financials</CardTitle></CardHeader>
                   <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
