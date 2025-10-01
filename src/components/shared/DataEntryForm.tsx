@@ -226,6 +226,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(watchedPurpose as SitePurpose);
     const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(watchedPurpose as SitePurpose);
     const isHPSPurpose = ['HPS', 'HPR'].includes(watchedPurpose as SitePurpose);
+    const surveyPurposes: SitePurpose[] = ['BWC', 'TWC', 'FPW'];
 
     const watchedLsg = watch("localSelfGovt");
     
@@ -288,7 +289,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     </div>
                 </CardContent></Card>
 
-                {!isSupervisor && (
+                {!isSupervisor && surveyPurposes.includes(watchedPurpose as SitePurpose) && (
                       <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               <FormField name="surveyRecommendedDiameter" control={control} render={({ field }) => <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -660,10 +661,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                                        <p className="text-sm text-muted-foreground">{siteData.purpose} - {siteData.workStatus}</p>
                                                    </div>
                                                    <div className="flex items-center gap-1 pr-2">
-                                                        {(isEditor || isSiteEditableForSupervisor) && !isReadOnly && (
+                                                        {isEditor && !isReadOnly && (
                                                           <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}>
-                                                            {isSupervisor ? (<><Edit className="mr-2 h-4 w-4" /> Edit Site</> ) : 'Edit'}
+                                                             Edit
                                                           </Button>
+                                                        )}
+                                                        {isSiteEditableForSupervisor && !isReadOnly && (
+                                                            <Button type="button" variant="default" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}>
+                                                                <Edit className="mr-2 h-4 w-4" /> Edit Site
+                                                            </Button>
                                                         )}
                                                         {isEditor && !isReadOnly && (
                                                           <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick('site', index); }}><Trash2 className="h-4 w-4" /></Button>
