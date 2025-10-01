@@ -715,7 +715,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                     {remittanceFields.map((field, index) => (
                                         <TableRow key={field.id}>
                                             <TableCell>{index + 1}</TableCell>
-                                            <TableCell>{formatDateForInput(watch(`remittanceDetails.${index}.dateOfRemittance`))}</TableCell>
+                                            <TableCell>
+                                                {watch(`remittanceDetails.${index}.dateOfRemittance`) ? format(new Date(watch(`remittanceDetails.${index}.dateOfRemittance`) as string), 'dd/MM/yyyy') : 'N/A'}
+                                            </TableCell>
                                             <TableCell>{(watch(`remittanceDetails.${index}.amountRemitted`) || 0).toLocaleString('en-IN')}</TableCell>
                                             <TableCell>{watch(`remittanceDetails.${index}.remittedAccount`)}</TableCell>
                                             <TableCell>{watch(`remittanceDetails.${index}.remittanceRemarks`)}</TableCell>
@@ -856,3 +858,5 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
+
+    
