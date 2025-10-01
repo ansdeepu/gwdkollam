@@ -127,7 +127,10 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
 };
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
-    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) return null;
+    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+        return null;
+    }
+
     let displayValue = String(value);
     
     if (label.toLowerCase().includes('date') && value) {
@@ -139,10 +142,9 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
     }
 
     return (
-        <div className="text-sm">
-            <span className="font-medium text-muted-foreground">{label}:</span>
-            {' '}
-            {displayValue}
+        <div>
+            <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+            <dd className="text-sm">{displayValue}</dd>
         </div>
     );
 };
@@ -674,13 +676,13 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
                 <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3", "item-4", "item-5"]} className="w-full space-y-4">
                     <AccordionItem value="item-1">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        1. Application Details
-                      </AccordionTrigger>
+                        <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
+                           <div className="flex justify-between items-center w-full">
+                                <span>1. Application Details</span>
+                                {!isReadOnly && (<Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }} className="mr-4"><Edit className="mr-2 h-4 w-4"/>Edit</Button>)}
+                           </div>
+                        </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg">
-                             <div className="flex justify-end mb-4">
-                                {!isReadOnly && (<Button type="button" variant="link" onClick={() => openDialog('application')}><Edit className="mr-2 h-4 w-4"/>Edit Application Details</Button>)}
-                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <DetailRow label="File No" value={watch('fileNo')} />
                                 <DetailRow label="Applicant" value={watch('applicantName')} />
@@ -692,12 +694,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     </AccordionItem>
                     <AccordionItem value="item-2">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        2. Remittance Details
+                        <div className="flex justify-between items-center w-full">
+                           <span>2. Remittance Details</span>
+                           {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
+                        </div>
                       </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                          <div className="flex justify-end mb-2">
-                             {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4"/> Add Remittance</Button>}
-                           </div>
                            {remittanceFields.map((field, index) => (
                                 <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
                                     <div>
@@ -722,12 +724,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     </AccordionItem>
                     <AccordionItem value="item-3">
                         <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                            3. Site Details
+                           <div className="flex justify-between items-center w-full">
+                                <span>3. Site Details</span>
+                                {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
+                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                           <div className="flex justify-end mb-2">
-                             {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4"/> Add Site</Button>}
-                           </div>
                             {siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
@@ -769,12 +771,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     </AccordionItem>
                     <AccordionItem value="item-4">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        4. Payment Details
+                        <div className="flex justify-between items-center w-full">
+                            <span>4. Payment Details</span>
+                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
+                        </div>
                       </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                           <div className="flex justify-end mb-2">
-                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4"/> Add Payment</Button>}
-                           </div>
                            {paymentFields.map((field, index) => {
                                 const paymentData = watch(`paymentDetails.${index}`);
                                 if (!paymentData) return null;
