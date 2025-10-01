@@ -245,7 +245,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     return (
       <Form {...form}>
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(onConfirm)(); }}>
+        <form onSubmit={handleSubmit(onConfirm)}>
           <ScrollArea className="max-h-[70vh] pr-4">
             <div className="space-y-4 py-4">
               {!isSupervisor && (
@@ -544,4 +544,3 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
-
