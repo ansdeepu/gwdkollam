@@ -244,12 +244,12 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     const isHPSPurpose = ['HPS', 'HPR'].includes(watchedPurpose as SitePurpose);
 
     return (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onConfirm)}>
-          <ScrollArea className="max-h-[70vh] pr-4">
-            <div className="space-y-4 py-4">
-               {!isSupervisor && (
-                 <>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onConfirm)}>
+            <ScrollArea className="max-h-[70vh] pr-4">
+              <div className="space-y-4 py-4">
+                {!isSupervisor && (
+                    <>
                     <Card>
                         <CardHeader><CardTitle>Main Details</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
@@ -278,10 +278,10 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             <FormField name="surveyLocation" control={control} render={({field})=> <FormItem><FormLabel>Location</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                             <FormField name="surveyRemarks" control={control} render={({field})=> <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                         </CardContent></Card>
-                 </>
-               )}
+                    </>
+                )}
 
-              {isWellPurpose && (
+                {isWellPurpose && (
                 <Card><CardHeader><CardTitle>Drilling Details (Actuals)</CardTitle></CardHeader><CardContent className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
@@ -313,9 +313,8 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 </CardContent></Card>
               )}
 
-              {(isMWSSSchemePurpose || isHPSPurpose) && (
+              {isMWSSSchemePurpose && (
                 <Card><CardHeader><CardTitle>Scheme Details</CardTitle></CardHeader><CardContent className="space-y-4">
-                  {isMWSSSchemePurpose && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Well Discharge (LPH)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                       <FormField name="pumpDetails" control={control} render={({field})=> <FormItem><FormLabel>Pump Details</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
@@ -325,39 +324,41 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       <FormField name="noOfTapConnections" control={control} render={({field})=> <FormItem><FormLabel># Taps</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl></FormItem>} />
                       <FormField name="noOfBeneficiary" control={control} render={({field})=> <FormItem><FormLabel># Beneficiaries</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                     </div>
-                  )}
-                   {isHPSPurpose && (
+                </CardContent></Card>
+              )}
+
+              {isHPSPurpose && (
+                <Card><CardHeader><CardTitle>Scheme Details</CardTitle></CardHeader><CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Depth Erected (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                       <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                     </div>
-                   )}
                 </CardContent></Card>
               )}
               
-                <Card><CardHeader><CardTitle>Work &amp; Financials</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <FormField name="siteConditions" control={control} render={({field})=> <FormItem><FormLabel>Site Conditions</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition"/></SelectTrigger></FormControl><SelectContent>{siteConditionsOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                        <FormField name="accessibleRig" control={control} render={({field})=> <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility"/></SelectTrigger></FormControl><SelectContent>{rigAccessibilityOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                        <FormField name="tsAmount" control={control} render={({field})=> <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
-                        <FormField name="additionalAS" control={control} render={({field})=> <FormItem><FormLabel>Addl. AS</FormLabel><Select onValueChange={field.onChange} value={field.value ?? 'No'} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent></Select></FormItem>} />
-                        <FormField name="tenderNo" control={control} render={({field})=> <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
-                        <FormField name="contractorName" control={control} render={({field})=> <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
-                        <FormField name="supervisorUid" control={form.control} render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Supervisor</FormLabel>
-                            <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly || isSupervisor}>
-                              <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
-                              <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
-                            </Select>
-                          </FormItem>
-                        )} />
-                        <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Status"/></SelectTrigger></FormControl><SelectContent>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                        <FormField name="dateOfCompletion" control={control} render={({field})=> <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                        <FormField name="totalExpenditure" control={control} render={({field})=> <FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
-                      </div>
-                      <FormField name="workRemarks" control={control} render={({field})=> <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
-                  </CardContent></Card>
+              <Card><CardHeader><CardTitle>Work &amp; Financials</CardTitle></CardHeader><CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <FormField name="siteConditions" control={control} render={({field})=> <FormItem><FormLabel>Site Conditions</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition"/></SelectTrigger></FormControl><SelectContent>{siteConditionsOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                    <FormField name="accessibleRig" control={control} render={({field})=> <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility"/></SelectTrigger></FormControl><SelectContent>{rigAccessibilityOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                    <FormField name="tsAmount" control={control} render={({field})=> <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
+                    <FormField name="additionalAS" control={control} render={({field})=> <FormItem><FormLabel>Addl. AS</FormLabel><Select onValueChange={field.onChange} value={field.value ?? 'No'} disabled={isReadOnly || isSupervisor}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent></Select></FormItem>} />
+                    <FormField name="tenderNo" control={control} render={({field})=> <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
+                    <FormField name="contractorName" control={control} render={({field})=> <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
+                    <FormField name="supervisorUid" control={form.control} render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Supervisor</FormLabel>
+                        <Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s=>s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly || isSupervisor}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
+                          <SelectContent>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </FormItem>
+                    )} />
+                    <FormField name="workStatus" control={control} render={({field}) => <FormItem><FormLabel>Work Status</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Status"/></SelectTrigger></FormControl><SelectContent>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
+                    <FormField name="dateOfCompletion" control={control} render={({field})=> <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+                    <FormField name="totalExpenditure" control={control} render={({field})=> <FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value==='' ? undefined : +e.target.value)} readOnly={isReadOnly || isSupervisor}/></FormControl></FormItem>} />
+                  </div>
+                  <FormField name="workRemarks" control={control} render={({field})=> <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
+              </CardContent></Card>
             </div>
           </ScrollArea>
           <DialogFooter className="mt-6 pt-4 border-t">
@@ -472,11 +473,97 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const { fields: remittanceFields, append: appendRemittance, remove: removeRemittance, update: updateRemittance } = useFieldArray({ control: form.control, name: "remittanceDetails" });
   const { fields: paymentFields, append: appendPayment, remove: removePayment, update: updatePayment } = useFieldArray({ control: form.control, name: "paymentDetails" });
 
-  const onInvalid = (errors: FieldErrors<DataEntryFormData>) => { /* ... existing onInvalid ... */ };
-  async function onValidSubmit(data: DataEntryFormData) { /* ... existing onValidSubmit ... */ };
-  const handleLsgChange = useCallback((lsgName: string, siteIndex: number) => { /* ... existing handleLsgChange ... */ }, [formSetValue, allLsgConstituencyMaps, form]);
-  useEffect(() => { /* ... existing useEffect ... */ }, [watchedSiteDetails, allLsgConstituencyMaps, formSetValue]);
-  const sortedLsgMaps = useMemo(() => { return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name)); }, [allLsgConstituencyMaps]);
+  const onInvalid = (errors: FieldErrors<DataEntryFormData>) => {
+    const errorMessages = getFormattedErrorMessages(errors);
+    toast({
+      title: "Validation Error",
+      description: (
+        <ul className="list-disc pl-5">
+          {errorMessages.slice(0, 5).map((msg, i) => <li key={i}>{msg}</li>)}
+          {errorMessages.length > 5 && <li>...and {errorMessages.length - 5} more issues.</li>}
+        </ul>
+      ),
+      variant: "destructive",
+      duration: 10000,
+    });
+    console.debug("Form validation errors:", errors);
+  };
+
+  async function onValidSubmit(data: DataEntryFormData) {
+    if (!user) {
+      toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      if (fileNoToEdit && user.role === 'editor') {
+        const payload = {
+          ...data,
+          assignedSupervisorUids: [...new Set(data.siteDetails?.map(s => s.supervisorUid).filter(Boolean) as string[])],
+        };
+        await addFileEntry(payload, fileNoToEdit);
+        if (isApprovingUpdate) {
+            const pendingUpdateDocRef = doc(db, 'pendingUpdates', approveUpdateId);
+            await updateDoc(pendingUpdateDocRef, {
+                status: 'approved',
+                reviewedByUid: user.uid,
+                reviewedAt: serverTimestamp(),
+            });
+            toast({ title: "Update Approved", description: `Changes for file ${fileNoToEdit} have been saved.` });
+        } else {
+          toast({ title: "File Updated", description: `File No: ${fileNoToEdit} has been successfully updated.` });
+        }
+        router.push(isApprovingUpdate ? '/dashboard/pending-updates' : '/dashboard/file-room');
+      } else if (fileNoToEdit && user.role === 'supervisor') {
+        const originalFile = initialData;
+        const supervisorSites = data.siteDetails.filter(s => s.supervisorUid === user.uid);
+        const fileLevelUpdates: Partial<Pick<DataEntryFormData, 'fileStatus' | 'remarks'>> = {};
+        if (data.fileStatus !== originalFile.fileStatus) fileLevelUpdates.fileStatus = data.fileStatus;
+        if (data.remarks !== originalFile.remarks) fileLevelUpdates.remarks = data.remarks;
+        await createPendingUpdate(fileNoToEdit, supervisorSites, user, fileLevelUpdates);
+        toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
+        router.push('/dashboard');
+      } else {
+        await addFileEntry(data);
+        toast({ title: "File Created", description: `File No: ${data.fileNo} has been saved.` });
+        router.push('/dashboard/file-room');
+      }
+    } catch (error: any) {
+      console.error("Submission failed:", error);
+      toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const handleLsgChange = useCallback((lsgName: string, siteIndex: number) => {
+    formSetValue(`siteDetails.${siteIndex}.localSelfGovt`, lsgName);
+    const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+    const constituencies = map?.constituencies || [];
+    
+    formSetValue(`siteDetails.${siteIndex}.constituency`, undefined);
+    if (constituencies.length === 1) {
+      formSetValue(`siteDetails.${siteIndex}.constituency`, constituencies[0] as Constituency);
+    }
+    form.trigger(`siteDetails.${siteIndex}.constituency`);
+  }, [formSetValue, allLsgConstituencyMaps, form]);
+
+  useEffect(() => {
+    const subscription = watch((value, { name, type }) => {
+      if (name && name.startsWith('siteDetails') && name.endsWith('localSelfGovt')) {
+        const siteIndex = parseInt(name.split('.')[1], 10);
+        const newLsgName = value.siteDetails?.[siteIndex]?.localSelfGovt;
+        if (newLsgName !== undefined) {
+          handleLsgChange(newLsgName, siteIndex);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, handleLsgChange]);
+  
+  const sortedLsgMaps = useMemo(() => {
+    return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allLsgConstituencyMaps]);
 
   const openDialog = (type: string, index?: number) => {
     let data;
@@ -543,6 +630,3 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
-
-    
-
