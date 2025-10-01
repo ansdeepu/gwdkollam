@@ -165,7 +165,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     return (
       <div className="flex flex-col h-auto">
         <DialogHeader className="p-6">
-          <DialogTitle>1. Application Details</DialogTitle>
+          <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
             <div className="grid grid-cols-3 gap-4 items-start">
@@ -316,7 +316,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
                     <Card><CardHeader><CardTitle>Work Implementation</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             {PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(watchedPurpose as SitePurpose) && !['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(watchedPurpose as SitePurpose) && <FormField name="accessibleRig" control={control} render={({ field }) => <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{rigAccessibilityOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />}
+                             {!['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(watchedPurpose as SitePurpose) && <FormField name="accessibleRig" control={control} render={({ field }) => <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{rigAccessibilityOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />}
                             <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             {!isSupervisor && <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                             <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -675,16 +675,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3", "item-4", "item-5"]} className="w-full space-y-4">
                     <AccordionItem value="item-1">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        <div className="flex justify-between items-center w-full">
-                          <span>1. Application Details</span>
-                          {!isReadOnly && (
-                            <Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }} className="p-0 h-auto mr-4">
-                              <Edit className="mr-2 h-4 w-4" /> Edit
-                            </Button>
-                          )}
-                        </div>
+                        1. Application Details
                       </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg">
+                             <div className="flex justify-end mb-4">
+                                {!isReadOnly && (<Button type="button" variant="link" onClick={() => openDialog('application')}><Edit className="mr-2 h-4 w-4"/>Edit Application Details</Button>)}
+                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <DetailRow label="File No" value={watch('fileNo')} />
                                 <DetailRow label="Applicant" value={watch('applicantName')} />
@@ -696,16 +692,13 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     </AccordionItem>
                     <AccordionItem value="item-2">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        <div className="flex justify-between items-center w-full">
-                          <span>2. Remittance Details</span>
-                           {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance')}} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/> Add Remittance</Button>}
-                        </div>
+                        2. Remittance Details
                       </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                           {remittanceFields.length > 0 && remittanceFields.map((field, index) => {
-                            const hasData = watch(`remittanceDetails.${index}.dateOfRemittance`) || watch(`remittanceDetails.${index}.amountRemitted`) || watch(`remittanceDetails.${index}.remittedAccount`) || watch(`remittanceDetails.${index}.remittanceRemarks`);
-                            if (!hasData && isReadOnly) return null;
-                            return (
+                          <div className="flex justify-end mb-2">
+                             {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4"/> Add Remittance</Button>}
+                           </div>
+                           {remittanceFields.map((field, index) => (
                                 <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
                                     <div>
                                         <p className="font-semibold text-sm mb-1">Remittance #{index + 1}</p>
@@ -723,27 +716,23 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         </div>
                                     )}
                                 </div>
-                            )
-                           })}
+                            ))}
+                            {remittanceFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No remittance entries have been added yet.</p>}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-3">
                         <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                          <div className="flex justify-between items-center w-full">
-                            <span>3. Site Details</span>
-                            {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site')}} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/> Add Site</Button>}
-                          </div>
+                            3. Site Details
                         </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                            {siteFields.length > 0 ? siteFields.map((field, index) => {
+                           <div className="flex justify-end mb-2">
+                             {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4"/> Add Site</Button>}
+                           </div>
+                            {siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
                                 const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
                                 const isReadOnlyForSite = isViewer || (isSupervisor && !isSiteEditableForSupervisor);
-                                
-                                const hasData = siteData && Object.values(siteData).some(value => value !== null && value !== undefined && value !== '');
-                                if (!hasData && isReadOnly) return null;
-
                                 const isFinalStatus = ['Work Completed', 'Work Failed'].includes(siteData.workStatus as SiteWorkStatus);
 
                                 return (
@@ -774,21 +763,21 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         </div>
                                     </div>
                                 )
-                            }) : <p className="text-sm text-muted-foreground text-center py-4">No sites have been added yet.</p>}
+                            })}
+                           {siteFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No sites have been added yet.</p>}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-4">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
-                        <div className="flex justify-between items-center w-full">
-                          <span>4. Payment Details</span>
-                          {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment')}} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/> Add Payment</Button>}
-                        </div>
+                        4. Payment Details
                       </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                           {paymentFields.length > 0 ? paymentFields.map((field, index) => {
+                           <div className="flex justify-end mb-2">
+                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4"/> Add Payment</Button>}
+                           </div>
+                           {paymentFields.map((field, index) => {
                                 const paymentData = watch(`paymentDetails.${index}`);
-                                const hasData = paymentData && Object.values(paymentData).some(v => v !== null && v !== undefined && v !== '' && v !== 0);
-                                if (!hasData && isReadOnly) return null;
+                                if (!paymentData) return null;
                                 return (
                                 <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
                                     <div>
@@ -806,7 +795,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         </div>
                                     )}
                                 </div>
-                            )}) : <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
+                            )})}
+                            {paymentFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-5">
