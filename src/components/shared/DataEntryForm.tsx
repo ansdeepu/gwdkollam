@@ -205,9 +205,6 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
 };
 
 const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, isReadOnly, isSupervisor, allLsgConstituencyMaps }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, supervisorList: any[], isReadOnly: boolean, isSupervisor: boolean, allLsgConstituencyMaps: any[] }) => {
-    type Section = 'survey' | 'drilling' | 'developing' | 'scheme' | 'work';
-    const [activeSection, setActiveSection] = useState<Section>('survey');
-    
     const form = useForm<SiteDetailFormData>({
       resolver: zodResolver(SiteDetailSchema),
       defaultValues: { ...initialData, dateOfCompletion: formatDateForInput(initialData.dateOfCompletion), arsSanctionedDate: formatDateForInput(initialData.arsSanctionedDate) },
@@ -246,10 +243,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(watchedPurpose as SitePurpose);
     const isHPSPurpose = ['HPS', 'HPR'].includes(watchedPurpose as SitePurpose);
 
-    const SectionButton = ({ section, label }: { section: Section, label: string }) => (
-        <Button type="button" variant={activeSection === section ? 'default' : 'outline'} size="sm" onClick={() => setActiveSection(section)}>{label}</Button>
-    );
-
     return (
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onConfirm)}>
@@ -267,22 +260,12 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       <FormField name="latitude" control={control} render={({field}) => <FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly || (isSupervisor && !!initialData.latitude)} /></FormControl><FormMessage/></FormItem>} />
                       <FormField name="longitude" control={control} render={({field}) => <FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly || (isSupervisor && !!initialData.longitude)} /></FormControl><FormMessage/></FormItem>} />
                     </div>
-                    <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={(val) => { field.onChange(val); setActiveSection('survey'); }} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+                    <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
                 </CardContent>
             </Card>
 
-            {/* --- Section Navigation --- */}
-            <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md">
-                <SectionButton section="survey" label="Survey Details" />
-                {isWellPurpose && <SectionButton section="drilling" label="Drilling Details" />}
-                {isDevPurpose && <SectionButton section="developing" label="Developing Details" />}
-                {(isMWSSSchemePurpose || isHPSPurpose) && <SectionButton section="scheme" label="Scheme Details" />}
-                <SectionButton section="work" label="Work & Financials" />
-            </div>
-
-            {/* --- Form Sections --- */}
-            {activeSection === 'survey' && (
-              <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
+            {!isSupervisor && (
+            <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <FormField name="surveyRecommendedDiameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
                     <FormField name="surveyRecommendedTD" control={control} render={({field})=> <FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
@@ -297,7 +280,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
               </CardContent></Card>
             )}
 
-             {activeSection === 'drilling' && isWellPurpose && (
+            {isWellPurpose && (
               <Card><CardHeader><CardTitle>Drilling Details (Actuals)</CardTitle></CardHeader><CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
@@ -318,7 +301,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
               </CardContent></Card>
             )}
 
-            {activeSection === 'developing' && isDevPurpose && (
+            {isDevPurpose && (
               <Card><CardHeader><CardTitle>Developing Details</CardTitle></CardHeader><CardContent className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <FormField name="diameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
@@ -329,7 +312,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
               </CardContent></Card>
             )}
 
-            {activeSection === 'scheme' && (isMWSSSchemePurpose || isHPSPurpose) && (
+            {(isMWSSSchemePurpose || isHPSPurpose) && (
               <Card><CardHeader><CardTitle>Scheme Details</CardTitle></CardHeader><CardContent className="space-y-4">
                 {isMWSSSchemePurpose && (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -351,8 +334,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
               </CardContent></Card>
             )}
 
-            {activeSection === 'work' && (
-              <Card><CardHeader><CardTitle>Work & Financials</CardTitle></CardHeader><CardContent className="space-y-4">
+            <Card><CardHeader><CardTitle>Work & Financials</CardTitle></CardHeader><CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <FormField name="siteConditions" control={control} render={({field})=> <FormItem><FormLabel>Site Conditions</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition"/></SelectTrigger></FormControl><SelectContent>{siteConditionsOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
                     <FormField name="accessibleRig" control={control} render={({field})=> <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility"/></SelectTrigger></FormControl><SelectContent>{rigAccessibilityOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></FormItem>} />
@@ -375,8 +357,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                   </div>
                   <FormField name="workRemarks" control={control} render={({field})=> <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
               </CardContent></Card>
-            )}
-
+            
           </div>
         </ScrollArea>
         <DialogFooter className="mt-4"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
@@ -384,7 +365,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         </Form>
     );
 };
-
 
 const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
     const [data, setData] = useState({ ...initialData, dateOfPayment: formatDateForInput(initialData.dateOfPayment) });
