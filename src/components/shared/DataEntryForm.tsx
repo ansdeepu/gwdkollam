@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -377,8 +378,8 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             )}
 
           </div>
-           <DialogFooter><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
         </ScrollArea>
+        <DialogFooter className="mt-4"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
         </form>
         </Form>
     );
