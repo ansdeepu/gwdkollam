@@ -164,7 +164,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-full">
-        <DialogHeader className="flex-shrink-0">
+        <DialogHeader>
           <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
@@ -186,7 +186,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 </div>
             </div>
         </div>
-        <DialogFooter className="flex-shrink-0"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -196,7 +196,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-full">
-        <DialogHeader className="flex-shrink-0">
+        <DialogHeader>
             <DialogTitle>Remittance Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
@@ -218,7 +218,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
                 <Textarea value={data.remittanceRemarks} onChange={(e) => handleChange('remittanceRemarks', e.target.value)} placeholder="Add any remarks for this remittance entry..." />
             </div>
         </div>
-        <DialogFooter className="flex-shrink-0"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -315,7 +315,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     <Card><CardHeader><CardTitle>Work Implementation</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="accessibleRig" control={control} render={({ field }) => <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{rigAccessibilityOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
-                            <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                             <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             {!isSupervisor && <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                             {!isSupervisor && <FormField name="tenderNo" control={control} render={({ field }) => <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />}
@@ -384,7 +384,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                 <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly && !isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
                                 <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage/></FormItem>} />
                                 {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage/></FormItem>} />
+                                <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage/></FormItem>} />
                             </div>
                         </CardContent>
                     </Card>
@@ -403,7 +403,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
         <div className="flex flex-col h-full">
-            <DialogHeader className="flex-shrink-0">
+            <DialogHeader>
                 <DialogTitle>Payment Details</DialogTitle>
             </DialogHeader>
             <div className="p-6 flex-1">
@@ -426,7 +426,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
                     </div>
                 </ScrollArea>
             </div>
-            <DialogFooter className="flex-shrink-0"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
     );
 };
@@ -436,14 +436,14 @@ const FinalStatusDialogContent = ({ initialData, onConfirm, onCancel }: { initia
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
        <div className="flex flex-col h-full">
-            <DialogHeader className="flex-shrink-0">
+            <DialogHeader>
                 <DialogTitle>Final Status</DialogTitle>
             </DialogHeader>
             <div className="p-6 space-y-4 flex-1">
                 <div className="space-y-2"><Label>File Status</Label><Select onValueChange={v => handleChange('fileStatus', v)} value={data.fileStatus}><SelectTrigger><SelectValue placeholder="Select Status"/></SelectTrigger><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-2"><Label>Final Remarks</Label><Textarea value={data.remarks} onChange={e => handleChange('remarks', e.target.value)} /></div>
             </div>
-            <DialogFooter className="flex-shrink-0"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
     );
 };
@@ -701,6 +701,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                        <Accordion type="multiple" className="w-full space-y-2">
                            {siteFields.map((field, index) => {
                                const siteData = watch(`siteDetails.${index}`);
+                               if (!siteData?.nameOfSite) return null; // Don't render empty accordion items
                                const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
                                const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
                                
@@ -753,20 +754,25 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
                     </CardHeader>
                     <CardContent className={cn("space-y-2", paymentFields.length > 0 ? "pt-6" : "p-0")}>
-                        {paymentFields.map((field, index) => (
-                            <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
-                                <div className="grid grid-cols-2 gap-x-4 w-full">
-                                    <DetailRow label={`Date #${index + 1}`} value={watch(`paymentDetails.${index}.dateOfPayment`)} />
-                                    <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} />
-                                </div>
-                                {!isReadOnly && (
-                                    <div className="flex items-center gap-1 pl-4">
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button>
+                        {paymentFields.map((field, index) => {
+                            const paymentData = watch(`paymentDetails.${index}`);
+                            const hasData = paymentData.dateOfPayment || calculatePaymentEntryTotalGlobal(paymentData) > 0 || paymentData.paymentAccount || paymentData.paymentRemarks;
+                            
+                            return hasData ? (
+                                <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                    <div className="grid grid-cols-2 gap-x-4 w-full">
+                                        <DetailRow label={`Date #${index + 1}`} value={paymentData.dateOfPayment} />
+                                        <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(paymentData)} />
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                    {!isReadOnly && (
+                                        <div className="flex items-center gap-1 pl-4">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null;
+                        })}
                     </CardContent>
                 </Card>
                 
@@ -804,4 +810,3 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
-
