@@ -126,9 +126,9 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
   return Array.from(messages);
 };
 
-const DetailRow = ({ label, value }: { label: string; value: any }) => {
+const DetailRow = ({ label, value, className }: { label: string; value: any; className?: string }) => {
     if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-        return null;
+        return <div className={className}></div>; // Return an empty div to maintain grid structure
     }
 
     let displayValue = String(value);
@@ -142,9 +142,9 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
     }
 
     return (
-        <div>
+        <div className={className}>
             <dt className="text-sm font-medium text-primary">{label}</dt>
-            <dd className="text-lg text-foreground">{displayValue}</dd>
+            <dd className="text-lg text-foreground whitespace-pre-wrap break-words">{displayValue}</dd>
         </div>
     );
 };
@@ -685,7 +685,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardContent>
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <DetailRow label="File No" value={watch('fileNo')} />
-                                <DetailRow label="Applicant" value={watch('applicantName')} />
+                                <DetailRow label="Applicant" value={watch('applicantName')} className="lg:col-span-2" />
                                 <DetailRow label="Phone No" value={watch('phoneNo')} />
                                 <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
                                 <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
