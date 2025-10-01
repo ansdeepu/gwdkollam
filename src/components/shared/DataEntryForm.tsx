@@ -163,7 +163,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     const [data, setData] = useState(initialData);
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col h-full">
         <DialogHeader>
           <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
@@ -195,7 +195,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     const [data, setData] = useState({ ...initialData, dateOfRemittance: formatDateForInput(initialData.dateOfRemittance) });
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col h-full">
         <DialogHeader>
             <DialogTitle>Remittance Details</DialogTitle>
         </DialogHeader>
@@ -402,7 +402,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     const [data, setData] = useState({ ...initialData, dateOfPayment: formatDateForInput(initialData.dateOfPayment) });
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col h-full">
             <DialogHeader>
                 <DialogTitle>Payment Details</DialogTitle>
             </DialogHeader>
@@ -435,7 +435,7 @@ const FinalStatusDialogContent = ({ initialData, onConfirm, onCancel }: { initia
     const [data, setData] = useState(initialData);
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
-       <div className="flex flex-col">
+       <div className="flex flex-col h-full">
             <DialogHeader>
                 <DialogTitle>Final Status</DialogTitle>
             </DialogHeader>
@@ -657,42 +657,56 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         </CardContent>
                     </Card>
                 )}
+                
+                {!fileNoToEdit && (
+                    <Card>
+                        <CardHeader><CardTitle>Actions</CardTitle></CardHeader>
+                        <CardContent className="flex flex-wrap gap-2">
+                           <Button type="button" variant="default" size="sm" onClick={() => openDialog('application')}><Edit className="mr-2 h-4 w-4" /> Application Details</Button>
+                           <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add Remittance</Button>
+                           {isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>}
+                           <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add Payment</Button>
+                           <Button type="button" variant="default" size="sm" onClick={() => openDialog('finalStatus')}><Edit className="mr-2 h-4 w-4" /> Final Status</Button>
+                        </CardContent>
+                    </Card>
+                )}
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Remittance Details</CardTitle>
-                        {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        {remittanceFields.length > 0 ? remittanceFields.map((field, index) => (
-                            <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
-                                <div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-                                        <DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
-                                        <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
-                                        <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
+                {remittanceFields.length > 0 && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Remittance Details</CardTitle>
+                            {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            {remittanceFields.map((field, index) => (
+                                <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                    <div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                                            <DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
+                                            <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
+                                            <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
+                                        </div>
+                                        <DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} />
                                     </div>
-                                    <DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} />
+                                    {!isReadOnly && (
+                                        <div className="flex items-center gap-1 pl-4">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
+                                        </div>
+                                    )}
                                 </div>
-                                {!isReadOnly && (
-                                    <div className="flex items-center gap-1 pl-4">
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
-                                    </div>
-                                )}
-                            </div>
-                        )) : (
-                           <div className="text-center py-4"><p className="text-sm text-muted-foreground">No remittance details added.</p></div>
-                        )}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Site Details</CardTitle>
-                        {!isReadOnly && isEditor && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                       {siteFields.length > 0 ? (
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
+                
+                {siteFields.length > 0 && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Site Details</CardTitle>
+                            {!isReadOnly && isEditor && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}
+                        </CardHeader>
+                        <CardContent className="space-y-2">
                            <Accordion type="multiple" className="w-full space-y-2">
                                {siteFields.map((field, index) => {
                                    const siteData = watch(`siteDetails.${index}`);
@@ -739,35 +753,35 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                    )
                                })}
                            </Accordion>
-                        ) : (
-                           <div className="text-center py-4"><p className="text-sm text-muted-foreground">No sites added for this file.</p></div>
-                        )}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Payment Details</CardTitle>
-                        {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        {paymentFields.length > 0 ? paymentFields.map((field, index) => (
-                            <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
-                                <div className="grid grid-cols-2 gap-x-4 w-full">
-                                    <DetailRow label={`Date #${index + 1}`} value={watch(`paymentDetails.${index}.dateOfPayment`)} />
-                                    <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} />
-                                </div>
-                                {!isReadOnly && (
-                                    <div className="flex items-center gap-1 pl-4">
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {paymentFields.length > 0 && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Payment Details</CardTitle>
+                            {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            {paymentFields.map((field, index) => (
+                                <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                    <div className="grid grid-cols-2 gap-x-4 w-full">
+                                        <DetailRow label={`Date #${index + 1}`} value={watch(`paymentDetails.${index}.dateOfPayment`)} />
+                                        <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} />
                                     </div>
-                                )}
-                            </div>
-                        )) : (
-                           <div className="text-center py-4"><p className="text-sm text-muted-foreground">No payment details added.</p></div>
-                        )}
-                    </CardContent>
-                </Card>
+                                    {!isReadOnly && (
+                                        <div className="flex items-center gap-1 pl-4">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
+
                  {showFinalStatus && (
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
@@ -783,20 +797,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         </CardContent>
                     </Card>
                  )}
-                 {!fileNoToEdit && (
-                 <div className="flex space-x-4 pt-4">
-                    {!isReadOnly && (
-                      <Button type="button" variant="default" size="sm" onClick={() => openDialog('application')}>
-                        <Edit className="mr-2 h-4 w-4" /> Add Application Details
-                      </Button>
-                    )}
-                    {!isReadOnly && (
-                       <Button type="button" variant="default" size="sm" onClick={() => openDialog('finalStatus')}>
-                        <Edit className="mr-2 h-4 w-4" /> Add Final Status
-                      </Button>
-                    )}
-                </div>
-                )}
+                
                 <div className="flex space-x-4 pt-4">{!isViewer && (<Button type="submit" disabled={isSubmitting}>{isSubmitting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : (<Save className="mr-2 h-4 w-4" />)}{isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}</Button>)}<Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button></div>
             </form>
             
@@ -815,5 +816,3 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
-
-    
