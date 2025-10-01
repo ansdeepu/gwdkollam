@@ -509,7 +509,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
-    defaultValues: { ...initialData, siteDetails: initialData.siteDetails?.length ? initialData.siteDetails : [] },
+    defaultValues: { ...initialData, remittanceDetails: [], siteDetails: initialData.siteDetails?.length ? initialData.siteDetails : [] },
   });
   const { reset: formReset, trigger: formTrigger, getValues: formGetValues, setValue: formSetValue, control, watch } = form;
 
@@ -694,67 +694,53 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                              </div>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-xl font-semibold text-primary">2. Remittance Details</CardTitle>
-                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-[80px]">Sl. No.</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Amount (₹)</TableHead>
-                                        <TableHead>Account</TableHead>
-                                        <TableHead>Remarks</TableHead>
-                                        {!isReadOnly && <TableHead className="text-right">Actions</TableHead>}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {remittanceFields.map((field, index) => (
-                                        <TableRow key={field.id}>
-                                            <TableCell>{index + 1}</TableCell>
-                                            <TableCell>
-                                                {watch(`remittanceDetails.${index}.dateOfRemittance`) ? format(new Date(watch(`remittanceDetails.${index}.dateOfRemittance`) as string), 'dd/MM/yyyy') : 'N/A'}
-                                            </TableCell>
-                                            <TableCell>{(watch(`remittanceDetails.${index}.amountRemitted`) || 0).toLocaleString('en-IN')}</TableCell>
-                                            <TableCell>{watch(`remittanceDetails.${index}.remittedAccount`)}</TableCell>
-                                            <TableCell>{watch(`remittanceDetails.${index}.remittanceRemarks`)}</TableCell>
-                                            {!isReadOnly && (
-                                                <TableCell className="text-right">
-                                                    <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
-                                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
-                                                </TableCell>
-                                            )}
-                                        </TableRow>
-                                    ))}
-                                    {remittanceFields.length === 0 && (
+                    <Accordion type="single" collapsible defaultValue="item-1">
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger className="text-xl font-semibold text-primary px-6">
+                                <div className="flex justify-between items-center w-full">
+                                <span>2. Remittance Details</span>
+                                {!isReadOnly && <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-6">
+                                <Table>
+                                    <TableHeader>
                                         <TableRow>
-                                            <TableCell colSpan={isReadOnly ? 5 : 6} className="text-center h-24">
-                                                No remittance entries have been added yet.
-                                            </TableCell>
+                                            <TableHead className="w-[80px]">Sl. No.</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Amount (₹)</TableHead>
+                                            <TableHead>Account</TableHead>
+                                            <TableHead>Remarks</TableHead>
+                                            {!isReadOnly && <TableHead className="text-right">Actions</TableHead>}
                                         </TableRow>
-                                    )}
-                                </TableBody>
-                                {remittanceFields.length > 0 && (
-                                  <TableFooterComponent>
-                                      <TableRow>
-                                          <TableCell colSpan={isReadOnly ? 2 : 3} className="text-right font-bold">Grand Total</TableCell>
-                                          <TableCell className="font-bold">{totalRemittance.toLocaleString('en-IN')}</TableCell>
-                                          <TableCell colSpan={isReadOnly ? 2 : 3}></TableCell>
-                                      </TableRow>
-                                  </TableFooterComponent>
-                                )}
-                            </Table>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                           <CardTitle className="text-xl font-semibold text-primary">3. Site Details</CardTitle>
-                           {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
-                        </CardHeader>
-                        <CardContent className="space-y-2">
+                                    </TableHeader>
+                                    <TableBody>
+                                        {remittanceFields.map((field, index) => (
+                                            <TableRow key={field.id}>
+                                                <TableCell>{index + 1}</TableCell>
+                                                <TableCell>{watch(`remittanceDetails.${index}.dateOfRemittance`) ? format(new Date(watch(`remittanceDetails.${index}.dateOfRemittance`) as string), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                                <TableCell>{(watch(`remittanceDetails.${index}.amountRemitted`) || 0).toLocaleString('en-IN')}</TableCell>
+                                                <TableCell>{watch(`remittanceDetails.${index}.remittedAccount`)}</TableCell>
+                                                <TableCell>{watch(`remittanceDetails.${index}.remittanceRemarks`)}</TableCell>
+                                                {!isReadOnly && <TableCell className="text-right"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button></TableCell>}
+                                            </TableRow>
+                                        ))}
+                                        {remittanceFields.length === 0 && <TableRow><TableCell colSpan={isReadOnly ? 5 : 6} className="text-center h-24">No remittance entries have been added yet.</TableCell></TableRow>}
+                                    </TableBody>
+                                    {remittanceFields.length > 0 && <TableFooterComponent><TableRow><TableCell colSpan={isReadOnly ? 2 : 3} className="text-right font-bold">Grand Total</TableCell><TableCell className="font-bold">{totalRemittance.toLocaleString('en-IN')}</TableCell><TableCell colSpan={isReadOnly ? 2 : 3}></TableCell></TableRow></TableFooterComponent>}
+                                </Table>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                     <Accordion type="single" collapsible defaultValue="item-1">
+                        <AccordionItem value="item-1">
+                           <AccordionTrigger className="text-xl font-semibold text-primary px-6">
+                             <div className="flex justify-between items-center w-full">
+                                <span>3. Site Details</span>
+                                {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('site'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
+                             </div>
+                           </AccordionTrigger>
+                           <AccordionContent className="p-6">
                             {siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
@@ -763,7 +749,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 const isFinalStatus = ['Work Completed', 'Work Failed'].includes(siteData.workStatus as SiteWorkStatus);
 
                                 return (
-                                    <div key={field.id} className="p-4 border rounded-lg">
+                                    <div key={field.id} className="p-4 border rounded-lg mb-2">
                                         <div className="flex justify-between items-start mb-2">
                                             <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>Site #{index + 1}: {siteData.nameOfSite}</p>
                                             <div className="flex items-center gap-1">
@@ -792,19 +778,23 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 )
                             })}
                            {siteFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No sites have been added yet.</p>}
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-xl font-semibold text-primary">4. Payment Details</CardTitle>
-                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
-                        </CardHeader>
-                        <CardContent className="space-y-2">
+                           </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                    <Accordion type="single" collapsible defaultValue="item-1">
+                      <AccordionItem value="item-1">
+                         <AccordionTrigger className="text-xl font-semibold text-primary px-6">
+                            <div className="flex justify-between items-center w-full">
+                                <span>4. Payment Details</span>
+                                {!isReadOnly && <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
+                            </div>
+                         </AccordionTrigger>
+                         <AccordionContent className="p-6">
                            {paymentFields.map((field, index) => {
                                 const paymentData = watch(`paymentDetails.${index}`);
                                 if (!paymentData) return null;
                                 return (
-                                <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
+                                <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg mb-2">
                                     <div>
                                         <p className="font-semibold text-sm mb-1">Payment #{index + 1}</p>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
@@ -813,17 +803,13 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <DetailRow label="Account" value={watch(`paymentDetails.${index}.paymentAccount`)} />
                                         </div>
                                     </div>
-                                    {!isReadOnly && (
-                                        <div className="flex items-center gap-1">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button>
-                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button>
-                                        </div>
-                                    )}
+                                    {!isReadOnly && (<div className="flex items-center gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button></div>)}
                                 </div>
                             )})}
                             {paymentFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
-                        </CardContent>
-                    </Card>
+                         </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                     <Card>
                         <CardHeader><CardTitle className="text-xl font-semibold text-primary">5. Final Status & Summary</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
@@ -858,5 +844,3 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
-
-    
