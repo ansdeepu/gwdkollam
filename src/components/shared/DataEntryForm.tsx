@@ -309,7 +309,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                 {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                                 {watchedPurpose === 'FPW' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                                 <FormField name="surveyLocation" control={control} render={({ field }) => <FormItem><FormLabel>Survey Location</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             </div>
                         </CardContent></Card>
                     )}
@@ -355,7 +355,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>TD (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
                             <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Discharge (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
                             <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
-                             <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
+                             <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                         </div>
                         </CardContent></Card>
                     )}
@@ -376,7 +376,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                 <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
                             </>}
                             <FormField name="noOfBeneficiary" control={control} render={({field})=> <FormItem><FormLabel># Beneficiaries</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
-                            <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
+                            <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                         </div>
                     </CardContent></Card>
                     )}
@@ -388,7 +388,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                 <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly && !isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
                                 <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage/></FormItem>} />
                                 {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                             </div>
                         </CardContent>
                     </Card>
@@ -639,6 +639,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const handleDeleteClick = (type: string, index: number) => setItemToDelete({ type, index });
   const confirmDelete = () => { if (itemToDelete) { const { type, index } = itemToDelete; if (type === 'remittance') removeRemittance(index); else if (type === 'site') removeSite(index); else if (type === 'payment') removePayment(index); setItemToDelete(null); toast({ title: 'Entry Removed' }); } };
   
+    const totalSiteEstimate = (watch('siteDetails') ?? []).reduce((acc, site) => acc + (Number(site.estimateAmount) || 0), 0);
+    const totalRemittance = (watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0);
+    const totalPayment = (watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0);
+    const overallBalance = totalRemittance - totalPayment;
+
 
     return (
         <FormProvider {...form}>
@@ -649,19 +654,17 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Application Details</CardTitle>
                         {!isReadOnly && (
                           <Button type="button" variant="outline" size="sm" onClick={() => openDialog('application')}>
-                            {watch('fileNo') || watch('applicantName') ? <><Edit className="mr-2 h-4 w-4" /> Edit</> : <><PlusCircle className="mr-2 h-4 w-4" /> Add</>}
+                            <Edit className="mr-2 h-4 w-4" /> Edit
                           </Button>
                         )}
                     </CardHeader>
-                    {(watch('fileNo') || watch('applicantName')) && (
-                        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <DetailRow label="File No" value={watch('fileNo')} />
-                            <DetailRow label="Applicant" value={watch('applicantName')} />
-                            <DetailRow label="Phone No" value={watch('phoneNo')} />
-                            <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
-                            <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
-                        </CardContent>
-                    )}
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <DetailRow label="File No" value={watch('fileNo')} />
+                        <DetailRow label="Applicant" value={watch('applicantName')} />
+                        <DetailRow label="Phone No" value={watch('phoneNo')} />
+                        <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
+                        <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
+                    </CardContent>
                 </Card>
                 
                 <Card>
@@ -669,7 +672,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Remittance Details</CardTitle>
                         {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
                     </CardHeader>
-                    <CardContent className={cn("space-y-2", remittanceFields.length > 0 ? "pt-6" : "p-0")}>
+                    <CardContent className={cn("space-y-2", remittanceFields.length === 0 && "p-0")}>
                         {remittanceFields.map((field, index) => {
                              const remittanceData = watch(`remittanceDetails.${index}`);
                              const hasData = remittanceData.dateOfRemittance || remittanceData.amountRemitted || remittanceData.remittedAccount || remittanceData.remittanceRemarks;
@@ -701,7 +704,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Site Details</CardTitle>
                         {!isReadOnly && isEditor && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}
                     </CardHeader>
-                    <CardContent className={cn("space-y-2", siteFields.length > 0 ? "pt-6" : "p-0")}>
+                    <CardContent className={cn("space-y-2", siteFields.length === 0 && "p-0")}>
                        <Accordion type="multiple" className="w-full space-y-2">
                            {siteFields.map((field, index) => {
                                const siteData = watch(`siteDetails.${index}`);
@@ -757,7 +760,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Payment Details</CardTitle>
                         {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
                     </CardHeader>
-                    <CardContent className={cn("space-y-2", paymentFields.length > 0 ? "pt-6" : "p-0")}>
+                    <CardContent className={cn("space-y-2", paymentFields.length === 0 && "p-0")}>
                         {paymentFields.map((field, index) => {
                             const paymentData = watch(`paymentDetails.${index}`);
                             const hasData = paymentData.dateOfPayment || calculatePaymentEntryTotalGlobal(paymentData) > 0 || paymentData.paymentAccount || paymentData.paymentRemarks;
@@ -785,15 +788,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Final Status & Summary</CardTitle>
                         {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('finalStatus')}><Edit className="mr-2 h-4 w-4" /> Edit</Button>)}
                     </CardHeader>
-                    {(watch('fileStatus') || watch('remarks')) && (
-                        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <DetailRow label="File Status" value={watch('fileStatus')} />
-                            <DetailRow label="Remarks" value={watch('remarks')} />
-                            <DetailRow label="Total Remittance (₹)" value={(watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} />
-                            <DetailRow label="Total Payment (₹)" value={(watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} />
-                            <DetailRow label="Balance (₹)" value={((watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - (watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} />
-                        </CardContent>
-                    )}
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <DetailRow label="File Status" value={watch('fileStatus')} />
+                        <DetailRow label="Final Remarks" value={watch('remarks')} />
+                        <DetailRow label="Total Estimate Amount (₹)" value={totalSiteEstimate.toFixed(2)} />
+                        <DetailRow label="Total Remittance (₹)" value={totalRemittance.toFixed(2)} />
+                        <DetailRow label="Total Payment (₹)" value={totalPayment.toFixed(2)} />
+                        <DetailRow label="Balance (₹)" value={overallBalance.toFixed(2)} />
+                    </CardContent>
                 </Card>
                 
                 <div className="flex space-x-4 pt-4">{!isViewer && (<Button type="submit" disabled={isSubmitting}>{isSubmitting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : (<Save className="mr-2 h-4 w-4" />)}{isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}</Button>)}<Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button></div>
