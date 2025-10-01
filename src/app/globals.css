@@ -348,8 +348,7 @@
 
 @layer base {
   input,
-  textarea,
-  select {
+  textarea {
     background-color: hsl(0 0% 100%) !important;
     border: 1px solid hsl(var(--border)) !important;
     color: hsl(var(--foreground)) !important;
