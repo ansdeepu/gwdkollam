@@ -164,7 +164,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-auto">
-        <DialogHeader>
+        <DialogHeader className="p-6">
           <DialogTitle>1. Application Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
@@ -186,7 +186,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 </div>
             </div>
         </div>
-        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter className="p-6"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -196,7 +196,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-auto">
-        <DialogHeader>
+        <DialogHeader className="p-6">
             <DialogTitle>Remittance Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
@@ -218,7 +218,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
                 <Textarea value={data.remittanceRemarks} onChange={(e) => handleChange('remittanceRemarks', e.target.value)} placeholder="Add any remarks for this remittance entry..." />
             </div>
         </div>
-        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter className="p-6"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -280,7 +280,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     return (
       <Form {...form}>
         <form onSubmit={handleSubmit(onConfirm)} className="flex flex-col h-full overflow-hidden">
-          <DialogHeader>
+          <DialogHeader className="p-6">
                 <DialogTitle>{initialData.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
             </DialogHeader>
           <div className="flex-1 min-h-0">
@@ -329,11 +329,11 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     {isWellPurpose && (
                         <Card><CardHeader><CardTitle>Drilling Details (Actuals)</CardTitle></CardHeader><CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
+                                <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter {PURPOSES_REQUIRING_DIAMETER.includes(watchedPurpose as SitePurpose) && <span className="text-destructive">*</span>}</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
                                 {watchedPurpose === 'TWC' && <FormField name="pilotDrillingDepth" control={control} render={({field})=> <FormItem><FormLabel>Pilot Drilling (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />}
                                 <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Actual TD (m)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
                                 {watchedPurpose === 'BWC' && <FormField name="surveyOB" control={control} render={({field})=> <FormItem><FormLabel>Actual OB (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />}
-                                {watchedPurpose === 'TWC' ? null : <FormField name="casingPipeUsed" control={control} render={({field})=> <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />}
+                                {watchedPurpose !== 'TWC' && <FormField name="casingPipeUsed" control={control} render={({field})=> <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />}
                                 {watchedPurpose === 'BWC' && <FormField name="outerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Outer Casing (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />}
                                 {watchedPurpose === 'BWC' && <FormField name="innerCasingPipe" control={control} render={({field})=> <FormItem><FormLabel>Inner Casing (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />}
                                 {watchedPurpose === 'TWC' && <FormField name="surveyPlainPipe" control={control} render={({field})=> <FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />}
@@ -396,7 +396,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 </div>
               </ScrollArea>
             </div>
-          <DialogFooter className="!mt-auto"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
+          <DialogFooter className="p-6 !mt-auto"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
         </form>
       </Form>
     );
@@ -407,7 +407,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
         <div className="flex flex-col h-auto">
-            <DialogHeader>
+            <DialogHeader className="p-6">
                 <DialogTitle>Payment Details</DialogTitle>
             </DialogHeader>
             <div className="p-6 flex-1">
@@ -430,7 +430,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
                     </div>
                 </ScrollArea>
             </div>
-            <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+            <DialogFooter className="p-6"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
     );
 };
@@ -471,7 +471,7 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
               </div>
           </ScrollArea>
         </div>
-        <DialogFooter><Button onClick={onCancel} type="button">Close</Button></DialogFooter>
+        <DialogFooter className="p-6"><Button onClick={onCancel} type="button">Close</Button></DialogFooter>
     </DialogContent>
   )
 };
@@ -674,7 +674,16 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
                 <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3", "item-4", "item-5"]} className="w-full space-y-4">
                     <AccordionItem value="item-1">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">1. Application Details</AccordionTrigger>
+                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
+                        <div className="flex justify-between items-center w-full">
+                          <span>1. Application Details</span>
+                          {!isReadOnly && (
+                            <Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }} className="p-0 h-auto mr-4">
+                              <Edit className="mr-2 h-4 w-4" /> Edit
+                            </Button>
+                          )}
+                        </div>
+                      </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg">
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <DetailRow label="File No" value={watch('fileNo')} />
@@ -683,15 +692,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
                                 <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
                              </div>
-                              {!isReadOnly && (
-                                <Button type="button" variant="link" onClick={() => openDialog('application')} className="p-0 h-auto mt-2">
-                                  <Edit className="mr-2 h-4 w-4" /> Edit Application Details
-                                </Button>
-                              )}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-2">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">2. Remittance Details</AccordionTrigger>
+                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
+                        <div className="flex justify-between items-center w-full">
+                          <span>2. Remittance Details</span>
+                           {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance')}} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/> Add Remittance</Button>}
+                        </div>
+                      </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
                            {remittanceFields.length > 0 && remittanceFields.map((field, index) => {
                             const hasData = watch(`remittanceDetails.${index}.dateOfRemittance`) || watch(`remittanceDetails.${index}.amountRemitted`) || watch(`remittanceDetails.${index}.remittedAccount`) || watch(`remittanceDetails.${index}.remittanceRemarks`);
@@ -716,11 +725,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 </div>
                             )
                            })}
-                           {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Remittance</Button>}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-3">
-                        <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">3. Site Details</AccordionTrigger>
+                        <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
+                          <div className="flex justify-between items-center w-full">
+                            <span>3. Site Details</span>
+                            {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site')}} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/> Add Site</Button>}
+                          </div>
+                        </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
                             {siteFields.length > 0 ? siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
@@ -762,11 +775,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                     </div>
                                 )
                             }) : <p className="text-sm text-muted-foreground text-center py-4">No sites have been added yet.</p>}
-                            {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Site</Button>}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-4">
-                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">4. Payment Details</AccordionTrigger>
+                      <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">
+                        <div className="flex justify-between items-center w-full">
+                          <span>4. Payment Details</span>
+                          {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment')}} className="mr-4"><PlusCircle className="mr-2 h-4 w-4"/> Add Payment</Button>}
+                        </div>
+                      </AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
                            {paymentFields.length > 0 ? paymentFields.map((field, index) => {
                                 const paymentData = watch(`paymentDetails.${index}`);
@@ -790,7 +807,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                     )}
                                 </div>
                             )}) : <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
-                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Payment</Button>}
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-5">
