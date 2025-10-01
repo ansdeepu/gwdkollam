@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -454,7 +455,7 @@ const SiteViewDialogContent = ({ siteData, onCancel, isSupervisor }: { siteData:
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full px-6 py-4">
               <div className="space-y-6">
-                  <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Main Details</h3><DetailRow label="Purpose" value={siteData.purpose} /><DetailRow label="Local Self Govt" value={siteData.localSelfGovt} /><DetailRow label="Constituency" value={siteData.constituency} /><DetailRow label="Latitude" value={siteData.latitude} /><DetailRow label="Longitude" value={siteData.longitude} /></div>
+                  <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Main Details</h3><DetailRow label="Purpose" value={siteData.purpose} /><DetailRow label="Local Self Govt" value={siteData.localSelfGovt} /><DetailRow label="Constituency" value={siteData.constituency} /><DetailRow label="Latitude" value={siteData.latitude !== undefined ? Number(siteData.latitude).toFixed(6) : undefined} /><DetailRow label="Longitude" value={siteData.longitude !== undefined ? Number(siteData.longitude).toFixed(6) : undefined} /></div>
                   
                   {!isSupervisor && isWellPurpose && (
                       <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Survey Details (Recommended)</h3>
