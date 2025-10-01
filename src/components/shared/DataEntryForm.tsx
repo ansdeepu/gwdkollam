@@ -645,18 +645,18 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Application Details</CardTitle>
                         {!isReadOnly && (
                           <Button type="button" variant="outline" size="sm" onClick={() => openDialog('application')}>
-                            {watch('fileNo') ? <><Edit className="mr-2 h-4 w-4" /> Edit</> : <><PlusCircle className="mr-2 h-4 w-4" /> Add</>}
+                            {watch('fileNo') || watch('applicantName') ? <><Edit className="mr-2 h-4 w-4" /> Edit</> : <><PlusCircle className="mr-2 h-4 w-4" /> Add</>}
                           </Button>
                         )}
                     </CardHeader>
-                    {watch('fileNo') && (
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <DetailRow label="File No" value={watch('fileNo')} />
-                        <DetailRow label="Applicant" value={watch('applicantName')} />
-                        <DetailRow label="Phone No" value={watch('phoneNo')} />
-                        <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
-                        <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
-                    </CardContent>
+                    {(watch('fileNo') || watch('applicantName')) && (
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <DetailRow label="File No" value={watch('fileNo')} />
+                            <DetailRow label="Applicant" value={watch('applicantName')} />
+                            <DetailRow label="Phone No" value={watch('phoneNo')} />
+                            <DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} />
+                            <DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} />
+                        </CardContent>
                     )}
                 </Card>
                 
@@ -665,25 +665,30 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Remittance Details</CardTitle>
                         {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
                     </CardHeader>
-                    <CardContent className={cn("space-y-2", remittanceFields.length > 0 && "pt-6")}>
-                        {remittanceFields.map((field, index) => (
-                            <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
-                                <div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-                                        <DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
-                                        <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
-                                        <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
+                    <CardContent className={cn("space-y-2", remittanceFields.length > 0 ? "pt-6" : "p-0")}>
+                        {remittanceFields.map((field, index) => {
+                             const remittanceData = watch(`remittanceDetails.${index}`);
+                             const hasData = remittanceData.dateOfRemittance || remittanceData.amountRemitted || remittanceData.remittedAccount || remittanceData.remittanceRemarks;
+
+                             return hasData ? (
+                                <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                    <div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                                            <DetailRow label={`Date #${index + 1}`} value={remittanceData.dateOfRemittance} />
+                                            <DetailRow label="Amount" value={remittanceData.amountRemitted} />
+                                            <DetailRow label="Account" value={remittanceData.remittedAccount} />
+                                        </div>
+                                        <DetailRow label="Remarks" value={remittanceData.remittanceRemarks} />
                                     </div>
-                                    <DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} />
+                                    {!isReadOnly && (
+                                        <div className="flex items-center gap-1 pl-4">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
+                                        </div>
+                                    )}
                                 </div>
-                                {!isReadOnly && (
-                                    <div className="flex items-center gap-1 pl-4">
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                             ) : null;
+                        })}
                     </CardContent>
                 </Card>
                 
@@ -692,7 +697,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Site Details</CardTitle>
                         {!isReadOnly && isEditor && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}
                     </CardHeader>
-                    <CardContent className={cn("space-y-2", siteFields.length > 0 && "pt-6")}>
+                    <CardContent className={cn("space-y-2", siteFields.length > 0 ? "pt-6" : "p-0")}>
                        <Accordion type="multiple" className="w-full space-y-2">
                            {siteFields.map((field, index) => {
                                const siteData = watch(`siteDetails.${index}`);
@@ -747,7 +752,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Payment Details</CardTitle>
                         {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
                     </CardHeader>
-                    <CardContent className={cn("space-y-2", paymentFields.length > 0 && "pt-6")}>
+                    <CardContent className={cn("space-y-2", paymentFields.length > 0 ? "pt-6" : "p-0")}>
                         {paymentFields.map((field, index) => (
                             <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
                                 <div className="grid grid-cols-2 gap-x-4 w-full">
@@ -770,7 +775,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardTitle>Final Status & Summary</CardTitle>
                         {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('finalStatus')}><Edit className="mr-2 h-4 w-4" /> Edit</Button>)}
                     </CardHeader>
-                    {(watch('fileStatus') || fileNoToEdit) && (
+                    {(watch('fileStatus') || watch('remarks')) && (
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <DetailRow label="File Status" value={watch('fileStatus')} />
                             <DetailRow label="Remarks" value={watch('remarks')} />
@@ -799,3 +804,4 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
+
