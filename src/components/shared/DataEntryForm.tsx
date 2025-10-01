@@ -812,11 +812,16 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
                                 const isReadOnlyForSite = isViewer || (isSupervisor && !isSiteEditableForSupervisor);
                                 const isFinalStatus = ['Work Completed', 'Work Failed'].includes(siteData.workStatus as SiteWorkStatus);
+                                const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(siteData.purpose as SitePurpose);
+                                const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(siteData.purpose as SitePurpose);
+                                const isSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(siteData.purpose as SitePurpose);
 
                                 return (
                                     <div key={field.id} className="p-4 border rounded-lg mb-2">
                                         <div className="flex justify-between items-start mb-2">
-                                            <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>Site #{index + 1}: {siteData.nameOfSite}</p>
+                                            <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>
+                                                Site #{index + 1}: {siteData.nameOfSite} {siteData.purpose && `(${siteData.purpose})`}
+                                            </p>
                                             <div className="flex items-center gap-1">
                                                 <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('viewSite', index); }}><Eye className="mr-2 h-4 w-4"/> View</Button>
                                                 {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
@@ -824,20 +829,24 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             </div>
                                         </div>
                                         <div className="pt-2 border-t grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
-                                            <DetailRow label="Purpose" value={siteData.purpose} />
-                                            <DetailRow label="Work Status" value={siteData.workStatus} />
-                                            <DetailRow label="Supervisor" value={siteData.supervisorName} />
-                                            <DetailRow label="Latitude" value={siteData.latitude} />
-                                            <DetailRow label="Longitude" value={siteData.longitude} />
                                             <DetailRow label="Contractor" value={siteData.contractorName} />
-                                            <DetailRow label="Site Estimate (₹)" value={siteData.estimateAmount} />
-                                            <DetailRow label="TS Amount (₹)" value={siteData.tsAmount} />
-                                            <DetailRow label="Remitted (₹)" value={siteData.remittedAmount} />
-                                            <DetailRow label="Expenditure (₹)" value={siteData.totalExpenditure} />
+                                            <DetailRow label="Supervisor" value={siteData.supervisorName} />
+                                            
+                                            {isWellPurpose && <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Drilling Details (Actuals)</h4></div>}
+                                            {isWellPurpose && <DetailRow label="Actual Diameter" value={siteData.diameter} />}
+                                            {isWellPurpose && <DetailRow label="Actual TD (m)" value={siteData.totalDepth} />}
+                                            
+                                            {isDevPurpose && <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Developing Details</h4></div>}
+                                            {isDevPurpose && <DetailRow label="Diameter (mm)" value={siteData.diameter} />}
+                                            {isDevPurpose && <DetailRow label="Discharge (LPH)" value={siteData.yieldDischarge} />}
+
+                                            {isSchemePurpose && <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Scheme Details</h4></div>}
+                                            {isSchemePurpose && <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />}
+
+                                            <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Final Status</h4></div>
+                                            <DetailRow label="Work Status" value={siteData.workStatus} />
                                             <DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
-                                            <div className="md:col-span-3">
-                                                <DetailRow label="Work Remarks" value={siteData.workRemarks} />
-                                            </div>
+                                            <DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
                                         </div>
                                     </div>
                                 )
