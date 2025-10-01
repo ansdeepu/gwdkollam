@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Loader2, Trash2, PlusCircle, X, Save, Clock, Edit } from "lucide-react";
+import { Loader2, Trash2, PlusCircle, X, Save, Clock, Edit, Eye } from "lucide-react";
 import {
   DataEntrySchema,
   type DataEntryFormData,
@@ -435,6 +435,47 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     );
 };
 
+const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFormData, onCancel: () => void }) => {
+  const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(siteData.purpose as SitePurpose);
+  const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(siteData.purpose as SitePurpose);
+  const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(siteData.purpose as SitePurpose);
+  const isHPSPurpose = ['HPS', 'HPR'].includes(siteData.purpose as SitePurpose);
+
+  return (
+    <DialogContent className="max-w-3xl flex flex-col h-[90vh]">
+        <DialogHeader>
+            <DialogTitle>View Site: {siteData.nameOfSite}</DialogTitle>
+            <DialogDescription>A read-only view of the site's details.</DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full px-6 py-4">
+              <div className="space-y-6">
+                  <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Main Details</h3><DetailRow label="Purpose" value={siteData.purpose} /><DetailRow label="Local Self Govt" value={siteData.localSelfGovt} /><DetailRow label="Constituency" value={siteData.constituency} /><DetailRow label="Latitude" value={siteData.latitude} /><DetailRow label="Longitude" value={siteData.longitude} /></div>
+
+                  {isWellPurpose && (
+                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Survey & Drilling Details</h3>
+                        <DetailRow label="Recommended Diameter" value={siteData.surveyRecommendedDiameter} /><DetailRow label="Recommended TD (m)" value={siteData.surveyRecommendedTD} />
+                        <DetailRow label="Actual Diameter" value={siteData.diameter} /><DetailRow label="Actual TD (m)" value={siteData.totalDepth} />
+                        <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} /><DetailRow label="Static Water Level (m)" value={siteData.waterLevel} />
+                        <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} />
+                      </div>
+                  )}
+
+                  <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Work & Financials</h3>
+                    <DetailRow label="Work Status" value={siteData.workStatus} /><DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
+                    <DetailRow label="Contractor" value={siteData.contractorName} /><DetailRow label="Supervisor" value={siteData.supervisorName} />
+                    <DetailRow label="Estimate Amount (₹)" value={siteData.estimateAmount} /><DetailRow label="TS Amount (₹)" value={siteData.tsAmount} />
+                    <DetailRow label="Remitted Amount (₹)" value={siteData.remittedAmount} /><DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
+                    <DetailRow label="Work Remarks" value={siteData.workRemarks} />
+                  </div>
+              </div>
+          </ScrollArea>
+        </div>
+        <DialogFooter><Button onClick={onCancel} type="button">Close</Button></DialogFooter>
+    </DialogContent>
+  )
+};
+
 export default function DataEntryFormComponent({ fileNoToEdit, initialData, supervisorList, userRole, workTypeContext }: DataEntryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -599,7 +640,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     if (type === 'application') data = { fileNo: form.getValues('fileNo'), applicantName: form.getValues('applicantName'), phoneNo: form.getValues('phoneNo'), secondaryMobileNo: form.getValues('secondaryMobileNo'), applicationType: form.getValues('applicationType') };
     else if (index !== undefined) {
       if (type === 'remittance') data = form.getValues(`remittanceDetails.${index}`);
-      else if (type === 'site') data = form.getValues(`siteDetails.${index}`);
+      else if (type === 'site' || type === 'viewSite') data = form.getValues(`siteDetails.${index}`);
       else if (type === 'payment') data = form.getValues(`paymentDetails.${index}`);
     } else {
       if (type === 'remittance') data = createDefaultRemittanceDetail();
@@ -652,25 +693,29 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <AccordionItem value="item-2">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">2. Remittance Details</AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                           {remittanceFields.map((field, index) => (
-                            <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
-                                <div>
-                                    <p className="font-semibold text-sm mb-1">Remittance #{index + 1}</p>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-                                        <DetailRow label="Date" value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
-                                        <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
-                                        <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
+                           {remittanceFields.length > 0 && remittanceFields.map((field, index) => {
+                            const hasData = watch(`remittanceDetails.${index}.dateOfRemittance`) || watch(`remittanceDetails.${index}.amountRemitted`) || watch(`remittanceDetails.${index}.remittedAccount`) || watch(`remittanceDetails.${index}.remittanceRemarks`);
+                            if (!hasData && isReadOnly) return null;
+                            return (
+                                <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
+                                    <div>
+                                        <p className="font-semibold text-sm mb-1">Remittance #{index + 1}</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                                            <DetailRow label="Date" value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
+                                            <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
+                                            <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
+                                        </div>
+                                        <DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} />
                                     </div>
-                                    <DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} />
+                                    {!isReadOnly && (
+                                        <div className="flex items-center gap-1">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
+                                        </div>
+                                    )}
                                 </div>
-                                {!isReadOnly && (
-                                    <div className="flex items-center gap-1">
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
-                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
-                                    </div>
-                                )}
-                            </div>
-                           ))}
+                            )
+                           })}
                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Remittance</Button>}
                         </AccordionContent>
                     </AccordionItem>
@@ -682,11 +727,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
                                 const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
                                 const isReadOnlyForSite = isViewer || (isSupervisor && !isSiteEditableForSupervisor);
+                                
+                                const hasData = siteData && Object.values(siteData).some(value => value !== null && value !== undefined && value !== '');
+                                if (!hasData && isReadOnly) return null;
                                 return (
                                     <div key={field.id} className="p-4 border rounded-lg">
                                         <div className="flex justify-between items-start mb-2">
                                             <p className="font-semibold text-base">Site #{index + 1}: {siteData.nameOfSite}</p>
                                             <div className="flex items-center gap-1">
+                                                <Button type="button" variant="outline" size="sm" onClick={() => openDialog('viewSite', index)}><Eye className="mr-2 h-4 w-4"/> View</Button>
                                                 {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={() => openDialog('site', index)}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
                                                 {isEditor && !isReadOnly && (<Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('site', index)}><Trash2 className="h-4 w-4"/></Button>)}
                                             </div>
@@ -716,7 +765,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <AccordionItem value="item-4">
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">4. Payment Details</AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-2">
-                           {paymentFields.length > 0 ? paymentFields.map((field, index) => (
+                           {paymentFields.length > 0 ? paymentFields.map((field, index) => {
+                                const paymentData = watch(`paymentDetails.${index}`);
+                                const hasData = paymentData && Object.values(paymentData).some(v => v !== null && v !== undefined && v !== '' && v !== 0);
+                                if (!hasData && isReadOnly) return null;
+                                return (
                                 <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
                                     <div>
                                         <p className="font-semibold text-sm mb-1">Payment #{index + 1}</p>
@@ -733,7 +786,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         </div>
                                     )}
                                 </div>
-                            )) : <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
+                            )}) : <p className="text-sm text-muted-foreground text-center py-4">No payment entries have been added yet.</p>}
                             {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')} className="mt-2"><PlusCircle className="mr-2 h-4 w-4"/> Add Payment</Button>}
                         </AccordionContent>
                     </AccordionItem>
@@ -741,10 +794,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                       <AccordionTrigger className="text-xl font-semibold text-primary p-4 bg-secondary/30 rounded-t-lg">5. Final Status & Summary</AccordionTrigger>
                         <AccordionContent className="p-4 border border-t-0 rounded-b-lg space-y-4">
                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                               <div className="space-y-1"><p className="text-sm font-medium text-muted-foreground">Total Estimate Amount (₹)</p><p className="font-semibold">{totalSiteEstimate.toLocaleString('en-IN')}</p></div>
-                               <div className="space-y-1"><p className="text-sm font-medium text-muted-foreground">Total Remittance (₹)</p><p className="font-semibold">{totalRemittance.toLocaleString('en-IN')}</p></div>
-                               <div className="space-y-1"><p className="text-sm font-medium text-muted-foreground">Total Payment (₹)</p><p className="font-semibold">{totalPayment.toLocaleString('en-IN')}</p></div>
-                               <div className="space-y-1"><p className="text-sm font-medium text-muted-foreground">Balance (₹)</p><p className="font-semibold">{overallBalance.toLocaleString('en-IN')}</p></div>
+                               <DetailRow label="Total Estimate Amount (₹)" value={totalSiteEstimate} />
+                               <DetailRow label="Total Remittance (₹)" value={totalRemittance} />
+                               <DetailRow label="Total Payment (₹)" value={totalPayment} />
+                               <DetailRow label="Balance (₹)" value={overallBalance} />
                             </div>
                             <Separator/>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -761,12 +814,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this entry. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
 
             <Dialog open={!!dialogState.type} onOpenChange={(open) => !open && closeDialog()}>
-              <DialogContent className={cn("max-w-4xl", dialogState.type !== 'site' && 'h-auto', dialogState.type === 'site' && 'h-[90vh]')}>
-                  {dialogState.type === 'application' && <ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} formOptions={formOptions} />}
-                  {dialogState.type === 'remittance' && <RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} />}
-                  {dialogState.type === 'site' && <SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={isReadOnly} isSupervisor={!!isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps} />}
-                  {dialogState.type === 'payment' && <PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} />}
-              </DialogContent>
+                {dialogState.type === 'application' && <ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} formOptions={formOptions} />}
+                {dialogState.type === 'remittance' && <RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} />}
+                {dialogState.type === 'site' && <DialogContent className="max-w-4xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={isReadOnly} isSupervisor={!!isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps} /></DialogContent>}
+                {dialogState.type === 'viewSite' && <SiteViewDialogContent siteData={dialogState.data} onCancel={closeDialog} />}
+                {dialogState.type === 'payment' && <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} /></DialogContent>}
             </Dialog>
 
         </FormProvider>
