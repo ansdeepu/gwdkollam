@@ -210,7 +210,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
       defaultValues: { ...initialData, dateOfCompletion: formatDateForInput(initialData.dateOfCompletion), arsSanctionedDate: formatDateForInput(initialData.arsSanctionedDate) },
     });
     
-    const { control, setValue, trigger, watch } = form;
+    const { control, setValue, trigger, watch, handleSubmit } = form;
     const watchedLsg = watch('localSelfGovt');
     const watchedPurpose = watch('purpose');
 
@@ -245,11 +245,12 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     return (
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onConfirm)}>
         <ScrollArea className="max-h-[70vh] p-1">
           <div className="space-y-4 py-4 pr-4">
             {/* --- Main Details --- */}
-            <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader>
+            {!isSupervisor && (
+              <Card>
+                <CardHeader><CardTitle>Main Details</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <FormField name="nameOfSite" control={control} render={({field}) => <FormItem><FormLabel>Name of Site</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
                     <div className="grid grid-cols-2 gap-4">
@@ -262,7 +263,8 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     </div>
                     <FormField name="purpose" control={control} render={({field}) => <FormItem><FormLabel>Purpose</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
                 </CardContent>
-            </Card>
+              </Card>
+            )}
 
             {!isSupervisor && (
             <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
@@ -360,8 +362,10 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             
           </div>
         </ScrollArea>
-        <DialogFooter className="mt-4"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
-        </form>
+        <DialogFooter className="mt-4">
+            <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleSubmit(onConfirm)}>Save</Button>
+        </DialogFooter>
         </Form>
     );
 };
