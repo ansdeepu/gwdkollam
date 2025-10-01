@@ -63,8 +63,10 @@ import { app } from "@/lib/firebase";
 import { useDataStore } from "@/hooks/use-data-store";
 import { ScrollArea } from "../ui/scroll-area";
 import { format, isValid } from "date-fns";
-import * as AccordionPrimitive from "@radix-ui/react-accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as TableFooterComponent } from "@/components/ui/table";
+
 
 const db = getFirestore(app);
 
@@ -697,27 +699,52 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                             <CardTitle className="text-xl font-semibold text-primary">2. Remittance Details</CardTitle>
                             {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                           {remittanceFields.map((field, index) => (
-                                <div key={field.id} className="flex items-start justify-between p-3 border rounded-lg">
-                                    <div>
-                                        <p className="font-semibold text-sm mb-1">Remittance #{index + 1}</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-                                            <DetailRow label="Date" value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
-                                            <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
-                                            <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
-                                        </div>
-                                        <DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} />
-                                    </div>
-                                    {!isReadOnly && (
-                                        <div className="flex items-center gap-1">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
-                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
-                                        </div>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[80px]">Sl. No.</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Amount (₹)</TableHead>
+                                        <TableHead>Account</TableHead>
+                                        <TableHead>Remarks</TableHead>
+                                        {!isReadOnly && <TableHead className="text-right">Actions</TableHead>}
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {remittanceFields.map((field, index) => (
+                                        <TableRow key={field.id}>
+                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell>{formatDateForInput(watch(`remittanceDetails.${index}.dateOfRemittance`))}</TableCell>
+                                            <TableCell>{(watch(`remittanceDetails.${index}.amountRemitted`) || 0).toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{watch(`remittanceDetails.${index}.remittedAccount`)}</TableCell>
+                                            <TableCell>{watch(`remittanceDetails.${index}.remittanceRemarks`)}</TableCell>
+                                            {!isReadOnly && (
+                                                <TableCell className="text-right">
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
+                                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    ))}
+                                    {remittanceFields.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={isReadOnly ? 5 : 6} className="text-center h-24">
+                                                No remittance entries have been added yet.
+                                            </TableCell>
+                                        </TableRow>
                                     )}
-                                </div>
-                            ))}
-                            {remittanceFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No remittance entries have been added yet.</p>}
+                                </TableBody>
+                                {remittanceFields.length > 0 && (
+                                  <TableFooterComponent>
+                                      <TableRow>
+                                          <TableCell colSpan={isReadOnly ? 2 : 3} className="text-right font-bold">Grand Total</TableCell>
+                                          <TableCell className="font-bold">{totalRemittance.toLocaleString('en-IN')}</TableCell>
+                                          <TableCell colSpan={isReadOnly ? 2 : 3}></TableCell>
+                                      </TableRow>
+                                  </TableFooterComponent>
+                                )}
+                            </Table>
                         </CardContent>
                     </Card>
                     <Card>
