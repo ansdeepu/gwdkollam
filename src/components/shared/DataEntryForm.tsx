@@ -63,7 +63,6 @@ import { app } from "@/lib/firebase";
 import { useDataStore } from "@/hooks/use-data-store";
 import { ScrollArea } from "../ui/scroll-area";
 import { format, isValid } from "date-fns";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
@@ -139,13 +138,13 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
             displayValue = format(new Date(value), "dd/MM/yyyy");
         } catch (e) { /* Keep original string if formatting fails */ }
     } else if (typeof value === 'number') {
-        displayValue = value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        displayValue = value.toLocaleString('en-IN');
     }
 
     return (
         <div>
-            <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
-            <dd className="text-base">{displayValue}</dd>
+            <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+            <dd className="text-lg text-foreground">{displayValue}</dd>
         </div>
     );
 };
@@ -680,7 +679,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="text-xl font-semibold text-primary">1. Application Details</CardTitle>
                             {!isReadOnly && (
-                                <Button type="button" variant="link" onClick={() => openDialog('application')}><Edit className="mr-2 h-4 w-4"/>Edit</Button>
+                                <Button type="button" variant="link" onClick={(e) => { e.stopPropagation(); openDialog('application'); }}><Edit className="mr-2 h-4 w-4"/>Edit</Button>
                             )}
                         </CardHeader>
                         <CardContent>
@@ -696,7 +695,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="text-xl font-semibold text-primary">2. Remittance Details</CardTitle>
-                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
+                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('remittance'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Remittance</Button>}
                         </CardHeader>
                         <CardContent className="space-y-2">
                            {remittanceFields.map((field, index) => (
@@ -724,7 +723,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                            <CardTitle className="text-xl font-semibold text-primary">3. Site Details</CardTitle>
-                           {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
+                           {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
                         </CardHeader>
                         <CardContent className="space-y-2">
                             {siteFields.map((field, index) => {
@@ -739,9 +738,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         <div className="flex justify-between items-start mb-2">
                                             <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>Site #{index + 1}: {siteData.nameOfSite}</p>
                                             <div className="flex items-center gap-1">
-                                                <Button type="button" variant="outline" size="sm" onClick={() => openDialog('viewSite', index)}><Eye className="mr-2 h-4 w-4"/> View</Button>
-                                                {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={() => openDialog('site', index)}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
-                                                {isEditor && !isReadOnly && (<Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('site', index)}><Trash2 className="h-4 w-4"/></Button>)}
+                                                <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('viewSite', index); }}><Eye className="mr-2 h-4 w-4"/> View</Button>
+                                                {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
+                                                {isEditor && !isReadOnly && (<Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick('site', index); }}><Trash2 className="h-4 w-4"/></Button>)}
                                             </div>
                                         </div>
                                         <div className="pt-2 border-t grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
@@ -769,7 +768,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="text-xl font-semibold text-primary">4. Payment Details</CardTitle>
-                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
+                            {!isReadOnly && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('payment'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Payment</Button>}
                         </CardHeader>
                         <CardContent className="space-y-2">
                            {paymentFields.map((field, index) => {
