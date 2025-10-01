@@ -221,7 +221,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
       defaultValues: { ...initialData, dateOfCompletion: formatDateForInput(initialData.dateOfCompletion), arsSanctionedDate: formatDateForInput(initialData.arsSanctionedDate) },
     });
     
-    const { control, setValue, trigger, watch } = form;
+    const { control, setValue, trigger, watch, handleSubmit } = form;
     const [activeSection, setActiveSection] = useState<SiteDialogSection>(isSupervisor ? 'work' : 'main');
 
     const watchedLsg = watch('localSelfGovt');
@@ -268,7 +268,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     return (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onConfirm)}>
+          <form onSubmit={handleSubmit(onConfirm)}>
             <div className="border-b mb-4 shrink-0">
                 <ScrollArea className="w-full whitespace-nowrap">
                     <div className="flex items-center px-1">
@@ -296,7 +296,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
               <ScrollArea className="max-h-[60vh] h-full pr-4">
                 <div className="space-y-4 py-4 pr-1">
                   
-                  {!isSupervisor && activeSection === 'main' && (
+                  {activeSection === 'main' && !isSupervisor && (
                       <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                           <FormField name="nameOfSite" control={control} render={({field}) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
                           <div className="grid grid-cols-2 gap-4">
@@ -311,7 +311,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       </CardContent></Card>
                   )}
                   
-                  {!isSupervisor && activeSection === 'survey' && (
+                  {activeSection === 'survey' && !isSupervisor && (
                       <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               <FormField name="surveyRecommendedDiameter" control={control} render={({field})=> <FormItem><FormLabel>Diameter (mm)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly}/></FormControl></FormItem>} />
@@ -394,7 +394,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       </CardContent></Card>
                   )}
 
-                  {!isSupervisor && activeSection === 'financials' && (
+                  {activeSection === 'financials' && !isSupervisor && (
                     <Card><CardHeader><CardTitle>Financials</CardTitle></CardHeader><CardContent className="space-y-4">
                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl></FormItem>} />
@@ -642,104 +642,118 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onValidSubmit, onInvalid)} className="space-y-4">
                 <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Application Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('application')}><Edit className="mr-2 h-4 w-4" /> Edit</Button>)}</CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><DetailRow label="File No" value={watch('fileNo')} /><DetailRow label="Applicant" value={watch('applicantName')} /><DetailRow label="Phone No" value={watch('phoneNo')} /><DetailRow label="Secondary Mobile" value={watch('secondaryMobileNo')} /><DetailRow label="Application Type" value={applicationTypeDisplayMap[watch('applicationType') as ApplicationType]} /></CardContent></Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Remittance Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}</CardHeader><CardContent className="space-y-2">{remittanceFields.map((field, index) => (<div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20"><div><div className="grid grid-cols-1 md:grid-cols-3 gap-x-4"><DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} /><DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} /><DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} /></div><DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} /></div>{!isReadOnly && (<div className="flex items-center gap-1 pl-4"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button></div>)}</div>))}</CardContent></Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Remittance Details</CardTitle>
+                        {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('remittance')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {remittanceFields.length > 0 ? (
+                            remittanceFields.map((field, index) => (
+                                <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                    <div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                                            <DetailRow label={`Date #${index + 1}`} value={watch(`remittanceDetails.${index}.dateOfRemittance`)} />
+                                            <DetailRow label="Amount" value={watch(`remittanceDetails.${index}.amountRemitted`)} />
+                                            <DetailRow label="Account" value={watch(`remittanceDetails.${index}.remittedAccount`)} />
+                                        </div>
+                                        <DetailRow label="Remarks" value={watch(`remittanceDetails.${index}.remittanceRemarks`)} />
+                                    </div>
+                                    {!isReadOnly && (
+                                        <div className="flex items-center gap-1 pl-4">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', index)}><Edit className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('remittance', index)}><Trash2 className="h-4 w-4"/></Button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No remittance details added.</p>
+                        )}
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Site Details</CardTitle>
                         {!isReadOnly && isEditor && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('site')}><PlusCircle className="mr-2 h-4 w-4" /> Add Site</Button>)}
                     </CardHeader>
                     <CardContent>
-                        <Accordion type="multiple" className="w-full space-y-2">
-                            {siteFields.map((field, index) => {
-                                const siteData = watch(`siteDetails.${index}`);
-                                const purpose = siteData.purpose as SitePurpose;
-                                const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
-                                const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
-                                const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
-                                const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
-                                const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
-                                const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
-
-
-                                return (
-                                    <AccordionItem key={field.id} value={`site-${index}`} className="border bg-background rounded-lg">
-                                        <AccordionTrigger className="p-4">
-                                            <div className="flex justify-between items-center w-full">
-                                                <div>
-                                                    <p className="font-semibold">{siteData.nameOfSite}</p>
-                                                    <p className="text-sm text-muted-foreground">{siteData.purpose} - {siteData.workStatus}</p>
+                        {siteFields.length > 0 ? (
+                            <Accordion type="multiple" className="w-full space-y-2">
+                                {siteFields.map((field, index) => {
+                                    const siteData = watch(`siteDetails.${index}`);
+                                    const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
+                                    const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
+                                    
+                                    return (
+                                        <AccordionItem key={field.id} value={`site-${index}`} className="border bg-background rounded-lg">
+                                            <AccordionTrigger className="p-4">
+                                                <div className="flex justify-between items-center w-full">
+                                                    <div>
+                                                        <p className="font-semibold">{siteData.nameOfSite}</p>
+                                                        <p className="text-sm text-muted-foreground">{siteData.purpose} - {siteData.workStatus}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 pr-2">
+                                                        {isEditor && !isReadOnly && (
+                                                            <>
+                                                                <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}><Edit className="h-4 w-4" /></Button>
+                                                                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick('site', index); }}><Trash2 className="h-4 w-4" /></Button>
+                                                            </>
+                                                        )}
+                                                        {isSiteEditableForSupervisor && (
+                                                            <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}>
+                                                                <Edit className="mr-2 h-4 w-4" /> Edit Site
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 pr-2">
-                                                    {isEditor && !isReadOnly && (
-                                                      <>
-                                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}><Edit className="h-4 w-4" /></Button>
-                                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick('site', index); }}><Trash2 className="h-4 w-4" /></Button>
-                                                      </>
-                                                    )}
-                                                     {isSiteEditableForSupervisor && (
-                                                        <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}>
-                                                            <Edit className="mr-2 h-4 w-4" /> Edit Site
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="p-6 pt-0">
-                                            <div className="border-t pt-4 space-y-4">
-                                                <div className="space-y-1">
-                                                    <h4 className="font-semibold">Main Details</h4>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="p-6 pt-0">
+                                                <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2">
                                                     <DetailRow label="Purpose" value={siteData.purpose} />
                                                     <DetailRow label="Latitude" value={siteData.latitude} />
                                                     <DetailRow label="Longitude" value={siteData.longitude} />
-                                                </div>
-                                                {!isSupervisor && (
-                                                    <div className="space-y-1">
-                                                        <h4 className="font-semibold pt-2 border-t">Survey Details (Recommended)</h4>
-                                                        <DetailRow label="Recommended Diameter (mm)" value={siteData.surveyRecommendedDiameter} />
-                                                        <DetailRow label="Recommended TD (m)" value={siteData.surveyRecommendedTD} />
-                                                        {isWellPurpose && <DetailRow label="Recommended OB (m)" value={siteData.surveyRecommendedOB} />}
-                                                    </div>
-                                                )}
-                                                {isWellPurpose && (
-                                                    <div className="space-y-1">
-                                                        <h4 className="font-semibold pt-2 border-t">Drilling Details (Actuals)</h4>
-                                                        <DetailRow label="Actual Diameter" value={siteData.diameter} />
-                                                        <DetailRow label="Actual TD (m)" value={siteData.totalDepth} />
-                                                        <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
-                                                    </div>
-                                                )}
-                                                 {isDevPurpose && (
-                                                    <div className="space-y-1">
-                                                        <h4 className="font-semibold pt-2 border-t">Developing Details</h4>
-                                                        <DetailRow label="Diameter (mm)" value={siteData.diameter} />
-                                                        <DetailRow label="TD (m)" value={siteData.totalDepth} />
-                                                        <DetailRow label="Discharge (LPH)" value={siteData.yieldDischarge} />
-                                                    </div>
-                                                )}
-                                                {(isMWSSSchemePurpose || isHPSPurpose) && (
-                                                    <div className="space-y-1">
-                                                        <h4 className="font-semibold pt-2 border-t">Scheme Details</h4>
-                                                        <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} />
-                                                        <DetailRow label="Pump Details" value={siteData.pumpDetails} />
-                                                        <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />
-                                                    </div>
-                                                )}
-                                                <div className="space-y-1">
-                                                    <h4 className="font-semibold pt-2 border-t">Work & Financials</h4>
                                                     <DetailRow label="Work Status" value={siteData.workStatus} />
                                                     <DetailRow label="Contractor" value={siteData.contractorName} />
                                                     <DetailRow label="Supervisor" value={siteData.supervisorName} />
                                                     <DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
                                                 </div>
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                )
-                            })}
-                        </Accordion>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    )
+                                })}
+                            </Accordion>
+                        ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No sites added for this file.</p>
+                        )}
                     </CardContent>
                 </Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Payment Details</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}</CardHeader><CardContent className="space-y-2">{paymentFields.map((field, index) => (<div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20"><div className="grid grid-cols-2 gap-x-4 w-full"><DetailRow label={`Date #${index + 1}`} value={watch(`paymentDetails.${index}.dateOfPayment`)} /><DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} /></div>{!isReadOnly && (<div className="flex items-center gap-1 pl-4"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button></div>)}</div>))}</CardContent></Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Payment Details</CardTitle>
+                        {!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('payment')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>)}
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {paymentFields.length > 0 ? (
+                            paymentFields.map((field, index) => (
+                                <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/20">
+                                    <div className="grid grid-cols-2 gap-x-4 w-full">
+                                        <DetailRow label={`Date #${index + 1}`} value={watch(`paymentDetails.${index}.dateOfPayment`)} />
+                                        <DetailRow label="Total Paid" value={calculatePaymentEntryTotalGlobal(watch(`paymentDetails.${index}`))} />
+                                    </div>
+                                    {!isReadOnly && (
+                                        <div className="flex items-center gap-1 pl-4">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', index)}><Edit className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('payment', index)}><Trash2 className="h-4 w-4"/></Button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No payment details added.</p>
+                        )}
+                    </CardContent>
+                </Card>
                 <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Final Status &amp; Summary</CardTitle>{!isReadOnly && (<Button type="button" variant="outline" size="sm" onClick={() => openDialog('finalStatus')}><Edit className="mr-2 h-4 w-4" /> Edit</Button>)}</CardHeader><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4"><DetailRow label="File Status" value={watch('fileStatus')} /><DetailRow label="Remarks" value={watch('remarks')} /><DetailRow label="Total Remittance (₹)" value={(watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0).toFixed(2)} /><DetailRow label="Total Payment (₹)" value={(watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0).toFixed(2)} /><DetailRow label="Balance (₹)" value={((watch('remittanceDetails') ?? []).reduce((acc, curr) => acc + (Number(curr.amountRemitted) || 0), 0) - (watch('paymentDetails') ?? []).reduce((acc, payment) => acc + calculatePaymentEntryTotalGlobal(payment), 0)).toFixed(2)} /></CardContent></Card>
                 <div className="flex space-x-4 pt-4">{!isViewer && (<Button type="submit" disabled={isSubmitting}>{isSubmitting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : (<Save className="mr-2 h-4 w-4" />)}{isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}</Button>)}<Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button></div>
             </form>
