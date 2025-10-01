@@ -267,7 +267,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     return (
         <Form {...form}>
-          <form onSubmit={handleSubmit(onConfirm)}>
+          <form onSubmit={form.handleSubmit(onConfirm)}>
             <div className="border-b mb-4">
                 <ScrollArea className="w-full whitespace-nowrap">
                     <div className="flex items-center px-1">
@@ -292,7 +292,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             </div>
             
             <ScrollArea className="max-h-[60vh] pr-4">
-              <div className="space-y-4 py-4">
+              <div className="space-y-4 py-4 pr-1">
                 
                 {activeSection === 'main' && !isSupervisor && (
                     <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
