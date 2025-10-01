@@ -219,25 +219,70 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
       defaultValues: { ...initialData, dateOfCompletion: formatDateForInput(initialData.dateOfCompletion), arsSanctionedDate: formatDateForInput(initialData.arsSanctionedDate) },
     });
     
-    const { control, setValue, trigger, watch } = form;
+    const { control, setValue, trigger, watch, handleSubmit } = form;
     
     const watchedPurpose = watch('purpose');
     const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(watchedPurpose as SitePurpose);
     const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(watchedPurpose as SitePurpose);
     const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(watchedPurpose as SitePurpose);
     const isHPSPurpose = ['HPS', 'HPR'].includes(watchedPurpose as SitePurpose);
+
+    const watchedLsg = watch("localSelfGovt");
+    
+    const sortedLsgMaps = useMemo(() => {
+        return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name));
+    }, [allLsgConstituencyMaps]);
+
+    const constituencyOptionsForLsg = useMemo(() => {
+        if (!watchedLsg) return [];
+        const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
+        if (!map || !map.constituencies) return [];
+        return [...map.constituencies].sort((a,b) => a.localeCompare(b));
+    }, [watchedLsg, allLsgConstituencyMaps]);
+
+    const handleLsgChange = useCallback((lsgName: string) => {
+        setValue('localSelfGovt', lsgName);
+        const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+        const constituencies = map?.constituencies || [];
+        
+        setValue('constituency', undefined, { shouldValidate: true });
+        if (constituencies.length === 1) {
+            setValue('constituency', constituencies[0] as Constituency, { shouldValidate: true });
+        }
+        trigger('constituency');
+    }, [setValue, allLsgConstituencyMaps, trigger]);
+
+    useEffect(() => {
+        const lsgName = watch("localSelfGovt");
+        if (!lsgName) return;
+
+        const map = allLsgConstituencyMaps.find(m => m.name === lsgName);
+        const constituencies = map?.constituencies || [];
+        
+        if (constituencies.length === 1 && form.getValues("constituency") !== constituencies[0]) {
+            setValue('constituency', constituencies[0] as Constituency);
+        }
+    }, [watchedLsg, allLsgConstituencyMaps, setValue, watch, form]);
     
     return (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onConfirm)}>
-             <ScrollArea className="h-[70vh] p-1">
+          <form onSubmit={handleSubmit(onConfirm)}>
+             <div className="h-full overflow-y-auto pr-4">
                 <div className="p-4 space-y-4">
                     <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <FormField name="nameOfSite" control={control} render={({ field }) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             <FormField name="purpose" control={control} render={({ field }) => <FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose" /></SelectTrigger></FormControl><SelectContent>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
-                            <FormField name="localSelfGovt" control={control} render={({ field }) => <FormItem><FormLabel>Local Self Govt.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                            <FormField name="constituency" control={control} render={({ field }) => <FormItem><FormLabel>Constituency (LAC)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                            {isReadOnly ? (
+                                <FormField name="localSelfGovt" control={control} render={({ field }) => <FormItem><FormLabel>Local Self Govt.</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                            ) : (
+                                <FormField name="localSelfGovt" control={control} render={({ field }) => <FormItem><FormLabel>Local Self Govt.</FormLabel><Select onValueChange={(value) => handleLsgChange(value)} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select LSG"/></SelectTrigger></FormControl><SelectContent>{sortedLsgMaps.map(map => <SelectItem key={map.id} value={map.name}>{map.name}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+                            )}
+                            {isReadOnly ? (
+                                <FormField name="constituency" control={control} render={({ field }) => <FormItem><FormLabel>Constituency (LAC)</FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                            ) : (
+                                <FormField name="constituency" control={control} render={({ field }) => <FormItem><FormLabel>Constituency (LAC)</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={constituencyOptionsForLsg.length <= 1}><FormControl><SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger></FormControl><SelectContent>{constituencyOptionsForLsg.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+                            )}
                             <FormField name="latitude" control={control} render={({ field }) => <FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             <FormField name="longitude" control={control} render={({ field }) => <FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                         </div>
@@ -329,7 +374,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                       </CardContent></Card>
                     )}
                 </div>
-            </ScrollArea>
+            </div>
             <DialogFooter><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
           </form>
         </Form>
@@ -616,9 +661,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                                    </div>
                                                    <div className="flex items-center gap-1 pr-2">
                                                         {(isEditor || isSiteEditableForSupervisor) && !isReadOnly && (
-                                                            <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}>
-                                                                <Edit className="mr-2 h-4 w-4" /> Edit Site
-                                                            </Button>
+                                                          <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}>
+                                                            {isSupervisor ? (<><Edit className="mr-2 h-4 w-4" /> Edit Site</> ) : 'Edit'}
+                                                          </Button>
                                                         )}
                                                         {isEditor && !isReadOnly && (
                                                           <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick('site', index); }}><Trash2 className="h-4 w-4" /></Button>
@@ -677,7 +722,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this entry. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
 
             <Dialog open={!!dialogState.type} onOpenChange={(open) => !open && closeDialog()}>
-              <DialogContent className="max-w-4xl flex flex-col h-[90vh]">
+              <DialogContent className="flex flex-col h-[90vh] max-w-4xl">
                   <DialogHeader className="p-6 pb-4 border-b shrink-0">
                       <DialogTitle>
                         {dialogState.type === 'application' && "Application Details"}
@@ -700,3 +745,4 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </FormProvider>
     );
 }
+
