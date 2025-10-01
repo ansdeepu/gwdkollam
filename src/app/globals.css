@@ -30,7 +30,7 @@
     --destructive-foreground: 0 0% 98%;
 
     --border: 210 30% 88%;           /* Light blue-gray border */
-    --input: 210 30% 96%;
+    --input: 210 20% 92%;
     --ring: 180 65% 55%;             /* Accent for focus rings */
 
     --radius: 0.5rem;
@@ -345,3 +345,5 @@
     display: block !important;
   }
 }
+
+    
