@@ -316,7 +316,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
                     <Card><CardHeader><CardTitle>Work Implementation</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             {PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(watchedPurpose as SitePurpose) && <FormField name="accessibleRig" control={control} render={({ field }) => <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{rigAccessibilityOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />}
+                             {PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(watchedPurpose as SitePurpose) && !['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(watchedPurpose as SitePurpose) && <FormField name="accessibleRig" control={control} render={({ field }) => <FormItem><FormLabel>Rig Accessibility</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Accessibility" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{rigAccessibilityOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />}
                             <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             {!isSupervisor && <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                             <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -730,10 +730,13 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 
                                 const hasData = siteData && Object.values(siteData).some(value => value !== null && value !== undefined && value !== '');
                                 if (!hasData && isReadOnly) return null;
+
+                                const isFinalStatus = ['Work Completed', 'Work Failed'].includes(siteData.workStatus as SiteWorkStatus);
+
                                 return (
                                     <div key={field.id} className="p-4 border rounded-lg">
                                         <div className="flex justify-between items-start mb-2">
-                                            <p className="font-semibold text-base">Site #{index + 1}: {siteData.nameOfSite}</p>
+                                            <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>Site #{index + 1}: {siteData.nameOfSite}</p>
                                             <div className="flex items-center gap-1">
                                                 <Button type="button" variant="outline" size="sm" onClick={() => openDialog('viewSite', index)}><Eye className="mr-2 h-4 w-4"/> View</Button>
                                                 {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={() => openDialog('site', index)}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
