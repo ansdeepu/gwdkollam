@@ -757,7 +757,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                              </div>
                         </CardContent>
                     </Card>
-                    <Accordion type="single" collapsible defaultValue="item-1">
+                    <Accordion type="single" collapsible>
                         <AccordionItem value="item-1">
                             <AccordionTrigger className="text-xl font-semibold text-primary px-6">
                                 <div className="flex justify-between items-center w-full">
@@ -797,15 +797,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
-                     <Accordion type="single" collapsible defaultValue="item-1">
-                        <AccordionItem value="item-1">
-                           <AccordionTrigger className="text-xl font-semibold text-primary px-6">
-                             <div className="flex justify-between items-center w-full">
-                                <span>3. Site Details</span>
-                                {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('site'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
+                     <Card>
+                        <CardHeader>
+                            <div className="flex justify-between items-center">
+                                <CardTitle className="text-xl font-semibold text-primary">3. Site Details</CardTitle>
+                                {!isReadOnly && isEditor && <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site'); }}><PlusCircle className="mr-2 h-4 w-4"/>Add Site</Button>}
                              </div>
-                           </AccordionTrigger>
-                           <AccordionContent className="p-6">
+                        </CardHeader>
+                        <CardContent>
+                           <Accordion type="multiple" className="space-y-2">
                             {siteFields.map((field, index) => {
                                 const siteData = watch(`siteDetails.${index}`);
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
@@ -817,18 +817,21 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 const isSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(siteData.purpose as SitePurpose);
 
                                 return (
-                                    <div key={field.id} className="p-4 border rounded-lg mb-2">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>
-                                                Site #{index + 1}: {siteData.nameOfSite} {siteData.purpose && `(${siteData.purpose})`}
-                                            </p>
-                                            <div className="flex items-center gap-1">
-                                                <Button type="button" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('viewSite', index); }}><Eye className="mr-2 h-4 w-4"/> View</Button>
-                                                {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={(e) => { e.stopPropagation(); openDialog('site', index); }}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
-                                                {isEditor && !isReadOnly && (<Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick('site', index); }}><Trash2 className="h-4 w-4"/></Button>)}
+                                    <AccordionItem value={`site-${index}`} key={field.id}>
+                                       <AccordionTrigger className="p-4 border rounded-lg data-[state=open]:bg-secondary/50">
+                                            <div className="flex justify-between items-center w-full">
+                                                <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>
+                                                    Site #{index + 1}: {siteData.nameOfSite} {siteData.purpose && `(${siteData.purpose})`}
+                                                </p>
+                                                <div className="flex items-center gap-1 mr-2" onClick={(e) => e.stopPropagation()}>
+                                                    <Button type="button" variant="outline" size="sm" onClick={() => openDialog('viewSite', index)}><Eye className="mr-2 h-4 w-4"/> View</Button>
+                                                    {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={() => openDialog('site', index)}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
+                                                    {isEditor && !isReadOnly && (<Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('site', index)}><Trash2 className="h-4 w-4"/></Button>)}
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="pt-2 border-t grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
+                                       </AccordionTrigger>
+                                       <AccordionContent className="p-4 border rounded-lg border-t-0">
+                                        <div className="pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
                                             <DetailRow label="Contractor" value={siteData.contractorName} />
                                             <DetailRow label="Supervisor" value={siteData.supervisorName} />
                                             
@@ -848,14 +851,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
                                             <DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
                                         </div>
-                                    </div>
+                                       </AccordionContent>
+                                    </AccordionItem>
                                 )
                             })}
+                           </Accordion>
                            {siteFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No sites have been added yet.</p>}
-                           </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                    <Accordion type="single" collapsible defaultValue="item-1">
+                           </CardContent>
+                    </Card>
+                    <Accordion type="single" collapsible>
                       <AccordionItem value="item-1">
                          <AccordionTrigger className="text-xl font-semibold text-primary px-6">
                             <div className="flex justify-between items-center w-full">
