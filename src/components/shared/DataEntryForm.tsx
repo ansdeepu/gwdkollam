@@ -155,8 +155,12 @@ const DetailRow = ({ label, value, className }: { label: string; value: any, cla
 
 interface DataEntryFormProps { fileNoToEdit?: string; initialData: DataEntryFormData; supervisorList: (StaffMember & { uid: string; name: string })[]; userRole?: UserRole; workTypeContext: 'public' | 'private' | null; }
 
-const PUBLIC_APPLICATION_TYPES = applicationTypeOptions.filter( (type) => !type.startsWith("Private_") );
-const PRIVATE_APPLICATION_TYPES = applicationTypeOptions.filter( (type) => type.startsWith("Private_") );
+const PUBLIC_APPLICATION_TYPES = applicationTypeOptions.filter(
+  (type) => !type.startsWith("Private_")
+) as ApplicationType[];
+const PRIVATE_APPLICATION_TYPES = applicationTypeOptions.filter(
+  (type) => type.startsWith("Private_")
+) as ApplicationType[];
 
 const formatDateForInput = (date: Date | string | null | undefined): string => {
     if (!date) return "";
@@ -164,7 +168,7 @@ const formatDateForInput = (date: Date | string | null | undefined): string => {
 };
 
 // Dialog Content Components
-const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOptions }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, formOptions: typeof applicationTypeOptions }) => {
+const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOptions }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, formOptions: readonly ApplicationType[] | ApplicationType[] }) => {
     const [data, setData] = useState(initialData);
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
@@ -474,31 +478,20 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
                   )}
 
                   <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Work Implementation</h3>
-                      {!['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(siteData.purpose as SitePurpose) && <DetailRow label="Rig Accessibility" value={siteData.accessibleRig} />}
-                      <DetailRow label="Estimate Amount (₹)" value={siteData.estimateAmount} />
-                      {!isSupervisor && <DetailRow label="TS Amount (₹)" value={siteData.tsAmount} />}
-                      <DetailRow label="Remitted Amount (₹)" value={siteData.remittedAmount} />
-                      {!isSupervisor && <DetailRow label="Tender No." value={siteData.tenderNo} />}
-                      {!isSupervisor && <DetailRow label="Contractor" value={siteData.contractorName} />}
-                      {!isSupervisor && <DetailRow label="Supervisor" value={siteData.supervisorName} />}
+                      <DetailRow label="Contractor" value={siteData.contractorName} />
+                      <DetailRow label="Supervisor" value={siteData.supervisorName} />
                   </div>
 
                   {isWellPurpose && (
-                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Drilling Details (Actuals)</h3>
-                          <DetailRow label="Actual Diameter" value={siteData.diameter} />
-                          {siteData.purpose === 'TWC' && <DetailRow label="Pilot Drilling (m)" value={siteData.pilotDrillingDepth} />}
-                          <DetailRow label="Actual TD (m)" value={siteData.totalDepth} />
-                          {siteData.purpose === 'BWC' && <DetailRow label="Actual OB (m)" value={siteData.surveyOB} />}
+                      <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Drilling Details</h3>
+                          <DetailRow label="Diameter" value={siteData.diameter} />
+                          {siteData.purpose === 'BWC' && <DetailRow label="OB (m)" value={siteData.surveyOB} />}
                           {siteData.purpose !== 'TWC' && <DetailRow label="Casing Pipe (m)" value={siteData.casingPipeUsed} />}
                           {siteData.purpose === 'BWC' && <DetailRow label="Outer Casing (m)" value={siteData.outerCasingPipe} />}
                           {siteData.purpose === 'BWC' && <DetailRow label="Inner Casing (m)" value={siteData.innerCasingPipe} />}
                           {siteData.purpose === 'TWC' && <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} />}
                           {siteData.purpose === 'TWC' && <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} />}
                           {siteData.purpose === 'TWC' && <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} />}
-                          <DetailRow label="Yield Discharge (LPH)" value={siteData.yieldDischarge} />
-                          <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
-                          <DetailRow label="Static Water Level (m)" value={siteData.waterLevel} />
-                          <DetailRow label="Type of Rig" value={siteData.typeOfRig} />
                           <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} />
                       </div>
                   )}
@@ -506,27 +499,18 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
                   {isDevPurpose && (
                       <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Developing Details</h3>
                         <DetailRow label="Diameter (mm)" value={siteData.diameter} />
-                        <DetailRow label="TD (m)" value={siteData.totalDepth} />
-                        <DetailRow label="Discharge (LPH)" value={siteData.yieldDischarge} />
-                        <DetailRow label="Water Level (m)" value={siteData.waterLevel} />
                       </div>
                   )}
 
                   {isSchemePurpose && (
                       <div className="space-y-2"><h3 className="text-lg font-semibold text-primary border-b pb-2 mb-3">Scheme Details</h3>
                         {isMWSSSchemePurpose && <>
-                          <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} />
                           <DetailRow label="Pump Details" value={siteData.pumpDetails} />
                           <DetailRow label="Pumping Line (m)" value={siteData.pumpingLineLength} />
                           <DetailRow label="Delivery Line (m)" value={siteData.deliveryLineLength} />
                           <DetailRow label="Tank Capacity (L)" value={siteData.waterTankCapacity} />
                           <DetailRow label="# Taps" value={siteData.noOfTapConnections} />
                         </>}
-                        {isHPSPurpose && <>
-                          <DetailRow label="Depth Erected (m)" value={siteData.totalDepth} />
-                          <DetailRow label="Water Level (m)" value={siteData.waterLevel} />
-                        </>}
-                        <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />
                       </div>
                   )}
 
@@ -1030,3 +1014,4 @@ const ReorderDialogContent = ({ siteCount, currentIndex, onMove, onCancel }: { s
         </div>
     );
 };
+
