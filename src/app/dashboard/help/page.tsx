@@ -2,7 +2,7 @@
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText } from "lucide-react";
+import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
 
@@ -72,6 +72,17 @@ export default function HelpPage() {
                   <li><strong>Viewer:</strong> Has read-only access across the entire application. Viewers can see all data, reports, and user lists but cannot make any changes. This role is for observation and monitoring purposes.</li>
                 </ul>
               </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-10">
+                <AccordionTrigger>How does the Local Self Govt (LSG) and Constituency mapping work?</AccordionTrigger>
+                <AccordionContent>
+                    The relationship between Local Self Governments (Panchayaths, Municipalities, Corporations) and Legislative Assembly Constituencies (LACs) is managed in the **Settings** page.
+                    <ul className="list-disc pl-6 mt-2 space-y-2 text-sm">
+                        <li>An Editor can bulk-import an Excel file to define which constituencies belong to each LSG. An LSG can be associated with one or more constituencies.</li>
+                        <li>When editing a Site in the Data Entry forms, selecting an LSG will automatically filter the "Constituency" dropdown to show only relevant options.</li>
+                        <li>If an LSG is associated with only **one** constituency, the "Constituency" field will be automatically selected and disabled to ensure data accuracy.</li>
+                    </ul>
+                </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-5">
               <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>

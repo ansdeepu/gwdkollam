@@ -248,6 +248,8 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
 
   // === Site Details (Aggregated) ===
   { id: 'allSiteNames', label: 'Site Names', accessor: (entry) => join(entry.siteDetails, 'nameOfSite') },
+  { id: 'allLocalSelfGovt', label: 'Local Self Govt (Site)', accessor: (entry) => join(entry.siteDetails, 'localSelfGovt') },
+  { id: 'allConstituencies', label: 'Constituency (Site)', accessor: (entry) => join(entry.siteDetails, 'constituency') },
   { id: 'allSitePurposes', label: 'Site Purposes', accessor: (entry) => join(entry.siteDetails, 'purpose') },
   { id: 'allSiteWorkStatuses', label: 'Site Work Statuses', accessor: (entry) => join(entry.siteDetails, 'workStatus') },
   { id: 'allSiteSupervisors', label: 'Site Supervisors', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.supervisorName).filter(Boolean))].join('; ') || 'N/A' },
