@@ -655,7 +655,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         router.push(isApprovingUpdate ? '/dashboard/pending-updates' : '/dashboard/file-room');
       } else if (fileNoToEdit && user.role === 'supervisor') {
         const originalFile = initialData;
-        const supervisorSites = data.siteDetails.filter(s => s.supervisorUid === user.uid);
+        const supervisorSites = data.siteDetails?.filter(s => s.supervisorUid === user.uid) ?? [];
         const fileLevelUpdates: Partial<Pick<DataEntryFormData, 'fileStatus' | 'remarks'>> = {};
         if (data.fileStatus !== originalFile.fileStatus) fileLevelUpdates.fileStatus = data.fileStatus;
         if (data.remarks !== originalFile.remarks) fileLevelUpdates.remarks = data.remarks;
