@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Loader2, Trash2, PlusCircle, X, Save, Clock, Edit, Eye, ArrowUpDown } from "lucide-react";
+import { Loader2, Trash2, PlusCircle, X, Save, Clock, Edit, Eye, ArrowUpDown, Copy } from "lucide-react";
 import {
   DataEntrySchema,
   type DataEntryFormData,
@@ -66,13 +66,14 @@ import { format, isValid } from "date-fns";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as TableFooterComponent } from "@/components/ui/table";
+import { v4 as uuidv4 } from 'uuid';
 
 
 const db = getFirestore(app);
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
-const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: null, supervisorName: null, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
+const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
   if (!payment) return 0;
@@ -304,7 +305,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     {!isSupervisor && isWellPurpose && (
                         <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="surveyRecommendedDiameter" control={control} render={({ field }) => <FormItem><FormLabel>Diameter (mm)</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                                <FormField name="surveyRecommendedDiameter" control={control} render={({ field }) => <FormItem><FormLabel>Diameter (mm)</FormLabel><Select onValueChange={field.onChange} value={field.value || ""} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                 <FormField name="surveyRecommendedTD" control={control} render={({ field }) => <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 {watchedPurpose === 'BWC' && <FormField name="surveyRecommendedOB" control={control} render={({ field }) => <FormItem><FormLabel>OB (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                                 {watchedPurpose === 'BWC' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
@@ -326,7 +327,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             {!isSupervisor && <FormField name="tenderNo" control={control} render={({ field }) => <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />}
                             {!isSupervisor && <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />}
-                            {!isSupervisor && <FormField name="supervisorUid" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s => s.uid === uid)?.name || null; setValue('supervisorName', name) }} value={field.value || ''} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(null); setValue('supervisorName', null); }}>-- Clear Selection --</SelectItem>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)} />}
+                            {!isSupervisor && <FormField name="supervisorUid" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><Select onValueChange={(uid) => { field.onChange(uid); const name = supervisorList.find(s => s.uid === uid)?.name; setValue('supervisorName', name || undefined) }} value={field.value || ''} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue('supervisorName', undefined); }}>-- Clear Selection --</SelectItem>{supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>)} />}
                         </div>
                     </CardContent></Card>
                     
@@ -596,8 +597,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             const existingRemarks = formGetValues(`siteDetails.${index}.workRemarks`) || "";
             const note = `[System Note: Previous supervisor '${supervisorName}' is now inactive and has been unassigned.]`;
             
-            formSetValue(`siteDetails.${index}.supervisorUid`, null);
-            formSetValue(`siteDetails.${index}.supervisorName`, null);
+            formSetValue(`siteDetails.${index}.supervisorUid`, undefined);
+            formSetValue(`siteDetails.${index}.supervisorName`, undefined);
             formSetValue(`siteDetails.${index}.workRemarks`, `${existingRemarks}\n${note}`.trim());
             
             toast({ title: "Supervisor Unassigned", description: `Supervisor '${supervisorName}' for Site #${index+1} is inactive and has been automatically unassigned. Please review.`, variant: "default", duration: 7000 });
@@ -857,20 +858,50 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             </div>
                                        </AccordionTrigger>
                                        <AccordionContent className="p-4 border rounded-lg border-t-0">
-                                        <div className="pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
-                                            <DetailRow label="Contractor" value={siteData.contractorName} />
-                                            <DetailRow label="Supervisor" value={siteData.supervisorName} />
-                                            
-                                            {(isBWC || isFPW) && ( <> <DetailRow label="Diameter" value={siteData.diameter} /> <DetailRow label="TD (m)" value={siteData.totalDepth} /> <DetailRow label="Casing Pipe (m)" value={siteData.casingPipeUsed} /> <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} /> <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} /> <DetailRow label="Static Water (m)" value={siteData.waterLevel} /> <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" /> </> )}
-                                            {isTWC && ( <> <DetailRow label="Diameter" value={siteData.diameter} /> <DetailRow label="Pilot Drilling (m)" value={siteData.pilotDrillingDepth} /> <DetailRow label="TD (m)" value={siteData.totalDepth} /> <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} /> <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} /> <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} /> <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} /> <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} /> <DetailRow label="Static Water (m)" value={siteData.waterLevel} /> <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" /> </> )}
-                                            {isSchemePurpose && ( <> <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} /> <DetailRow label="Pump Details" value={siteData.pumpDetails} /> <DetailRow label="Pumping Line (m)" value={siteData.pumpingLineLength} /> <DetailRow label="Delivery Line (m)" value={siteData.deliveryLineLength} /> <DetailRow label="Tank Capacity (L)" value={siteData.waterTankCapacity} /> <DetailRow label="# Taps" value={siteData.noOfTapConnections} /> <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} /> </> )}
-                                            
-                                            <Separator className="col-span-full my-2"/>
-                                            
-                                            <DetailRow label="Work Status" value={siteData.workStatus} />
-                                            <DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
-                                            <DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
-                                        </div>
+                                            <div className="pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
+                                                <DetailRow label="Contractor" value={siteData.contractorName} />
+                                                <DetailRow label="Supervisor" value={siteData.supervisorName} />
+                                                <Separator className="col-span-full my-2"/>
+
+                                                {(isBWC || isFPW) && ( <>
+                                                    <DetailRow label="Diameter" value={siteData.diameter} />
+                                                    <DetailRow label="TD (m)" value={siteData.totalDepth} />
+                                                    <DetailRow label="Casing Pipe (m)" value={siteData.casingPipeUsed} />
+                                                    <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
+                                                    <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
+                                                    <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
+                                                    <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" />
+                                                </> )}
+                                                
+                                                {isTWC && ( <>
+                                                    <DetailRow label="Diameter" value={siteData.diameter} />
+                                                    <DetailRow label="Pilot Drilling (m)" value={siteData.pilotDrillingDepth} />
+                                                    <DetailRow label="TD (m)" value={siteData.totalDepth} />
+                                                    <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} />
+                                                    <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} />
+                                                    <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} />
+                                                    <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
+                                                    <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
+                                                    <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
+                                                    <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" />
+                                                </> )}
+                                                
+                                                {isSchemePurpose && ( <>
+                                                    <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} />
+                                                    <DetailRow label="Pump Details" value={siteData.pumpDetails} />
+                                                    <DetailRow label="Pumping Line (m)" value={siteData.pumpingLineLength} />
+                                                    <DetailRow label="Delivery Line (m)" value={siteData.deliveryLineLength} />
+                                                    <DetailRow label="Tank Capacity (L)" value={siteData.waterTankCapacity} />
+                                                    <DetailRow label="# Taps" value={siteData.noOfTapConnections} />
+                                                    <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />
+                                                </> )}
+
+                                                <Separator className="col-span-full my-2"/>
+                                                
+                                                <DetailRow label="Work Status" value={siteData.workStatus} />
+                                                <DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
+                                                <DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
+                                            </div>
                                        </AccordionContent>
                                     </AccordionItem>
                                 )
