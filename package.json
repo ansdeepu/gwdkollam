@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf .next node_modules yarn.lock"
+    "clean": "rimraf .next"
   },
   "dependencies": {
     "@genkit-ai/firebase": "^1.0.1",
