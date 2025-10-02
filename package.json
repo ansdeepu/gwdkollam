@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "yarn clean && next dev",
-    "build": "yarn clean && next build",
+    "dev": "npm run clean && next dev",
+    "build": "npm run clean && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
