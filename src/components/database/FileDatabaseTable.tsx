@@ -462,7 +462,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
                   {renderDetail("Phone No", viewItem?.phoneNo)}
                   {renderDetail("Secondary Mobile No", viewItem?.secondaryMobileNo)}
-                  {renderDetail("Constituency (LAC)", viewItem?.constituency)}
                   {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
                 </div>
 
@@ -497,6 +496,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                             <h4 className="text-md font-semibold text-primary">Site #{index + 1}: {site.nameOfSite}</h4>
                             <div className="space-y-1 pt-2 border-t">
                               {renderDetail("Purpose", site.purpose)}
+                              {renderDetail("Local Self Govt.", site.localSelfGovt)}
+                              {renderDetail("Constituency (LAC)", site.constituency)}
                               {renderDetail("Latitude", site.latitude)}
                               {renderDetail("Longitude", site.longitude)}
 
@@ -539,21 +540,21 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                                 {renderDetail("Water Level (m)", site.waterLevel)}
                               </>}
                               
-                              {isMWSSSchemePurpose && <>
+                              {(isMWSSSchemePurpose || isHPSPurpose) && <>
                                 <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Scheme Details</h5>
-                                {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
-                                {renderDetail("Pump Details", site.pumpDetails)}
-                                {renderDetail("Pumping Line Length (m)", site.pumpingLineLength)}
-                                {renderDetail("Delivery Line Length (m)", site.deliveryLineLength)}
-                                {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
-                                {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
+                                {isMWSSSchemePurpose && <>
+                                  {renderDetail("Well Discharge (LPH)", site.yieldDischarge)}
+                                  {renderDetail("Pump Details", site.pumpDetails)}
+                                  {renderDetail("Pumping Line Length (m)", site.pumpingLineLength)}
+                                  {renderDetail("Delivery Line Length (m)", site.deliveryLineLength)}
+                                  {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
+                                  {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
+                                </>}
+                                {isHPSPurpose && <>
+                                  {renderDetail("Depth Erected (m)", site.totalDepth)}
+                                  {renderDetail("Water Level (m)", site.waterLevel)}
+                                </>}
                                 {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
-                              </>}
-
-                              {isHPSPurpose && <>
-                                <h5 className="text-sm font-semibold text-foreground mt-3 pt-2 border-t">Scheme Details</h5>
-                                {renderDetail("Depth Erected (m)", site.totalDepth)}
-                                {renderDetail("Water Level (m)", site.waterLevel)}
                               </>}
 
                                {isARSPurpose && <>
@@ -657,3 +658,4 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     </TooltipProvider>
   );
 }
+

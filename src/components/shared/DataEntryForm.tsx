@@ -553,7 +553,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const formOptions = useMemo(() => {
     if (workTypeContext === 'private') return PRIVATE_APPLICATION_TYPES;
     if (workTypeContext === 'public') return PUBLIC_APPLICATION_TYPES;
-    return applicationTypeOptions;
+    return applicationTypeOptions as unknown as ApplicationType[];
   }, [workTypeContext]);
 
   const form = useForm<DataEntryFormData>({
@@ -1014,4 +1014,5 @@ const ReorderDialogContent = ({ siteCount, currentIndex, onMove, onCancel }: { s
         </div>
     );
 };
+
 
