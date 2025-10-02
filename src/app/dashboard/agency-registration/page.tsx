@@ -1,5 +1,3 @@
-
-
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -1982,8 +1980,8 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                     <DialogTitle>View Registration: {application.agencyName}</DialogTitle>
                     <DialogDescription>A summary of the registration details.</DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="max-h-[70vh] pr-4">
-                    <div className="space-y-6 py-4">
+                <ScrollArea className="max-h-[70vh]">
+                    <div className="space-y-6 py-4 px-6">
                         {detailSections.map((section, idx) => (
                             <div key={idx}>
                                 <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>

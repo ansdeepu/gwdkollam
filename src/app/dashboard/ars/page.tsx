@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -644,8 +643,8 @@ export default function ArsPage() {
                 Viewing details for {viewingSite?.nameOfSite}.
               </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-4 py-4">
+            <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-4 py-4 px-6">
               {viewingSite && (
                 <>
                   <div>
@@ -719,3 +718,4 @@ export default function ArsPage() {
     </div>
   );
 }
+
