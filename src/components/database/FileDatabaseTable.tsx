@@ -79,17 +79,20 @@ function renderDetail(label: string, value: any) {
   }
   let displayValue = String(value);
 
-  // Check if the value is a date-like string or object and format it
-  const date = safeParseDate(value);
-  if (date) {
-    displayValue = format(date, "dd/MM/yyyy");
-  } else if (typeof value === 'boolean') {
-    displayValue = value ? "Yes" : "No";
+  const isDateLabel = label.toLowerCase().includes("date");
+
+  if (isDateLabel) {
+    const date = safeParseDate(value);
+    if (date) {
+      displayValue = format(date, "dd/MM/yyyy");
+    }
   } else if (typeof value === 'number') {
     displayValue = value.toLocaleString('en-IN');
-     if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
+    if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
         displayValue = `₹ ${displayValue}`;
     }
+  } else if (typeof value === 'boolean') {
+    displayValue = value ? "Yes" : "No";
   }
   
   return (
