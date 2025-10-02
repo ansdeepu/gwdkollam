@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit3, Trash2, Loader2, Clock } from "lucide-react";
+import { Eye, Edit3, Trash2, Loader2, Clock, Copy } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus, PendingUpdate } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
 import { format, isValid, parseISO } from "date-fns";
@@ -51,6 +51,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
+import { v4 as uuidv4 } from 'uuid';
+
 
 const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
@@ -81,14 +83,21 @@ function renderDetail(label: string, value: any) {
 
   const isDateLabel = label.toLowerCase().includes("date");
 
-  if (isDateLabel) {
-    const date = safeParseDate(value);
-    if (date) {
-      displayValue = format(date, "dd/MM/yyyy");
-    }
+  if (isDateLabel && typeof value === 'string' && !isNaN(Date.parse(value))) {
+      try {
+          displayValue = format(new Date(value), "dd/MM/yyyy");
+      } catch (e) {
+          // keep original string if formatting fails
+      }
+  } else if (value instanceof Date) {
+      try {
+          displayValue = format(value, "dd/MM/yyyy");
+      } catch (e) {
+          // keep original string if formatting fails
+      }
   } else if (typeof value === 'number') {
     displayValue = value.toLocaleString('en-IN');
-    if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
+     if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
         displayValue = `₹ ${displayValue}`;
     }
   } else if (typeof value === 'boolean') {
@@ -111,7 +120,7 @@ interface FileDatabaseTableProps {
 export default function FileDatabaseTable({ searchTerm = "", fileEntries }: FileDatabaseTableProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { isLoading: entriesLoadingHook, deleteFileEntry } = useFileEntries(); 
+  const { isLoading: entriesLoadingHook, deleteFileEntry, addFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth(); 
   const { getPendingUpdatesForFile } = usePendingUpdates();
 
@@ -119,11 +128,13 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pendingFileNos, setPendingFileNos] = useState<Set<string>>(new Set());
 
   const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
   const canDelete = user?.role === 'editor';
+  const canCopy = user?.role === 'editor';
 
   useEffect(() => {
     async function checkPendingStatus() {
@@ -242,6 +253,36 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     setDeleteItem(null);
   };
 
+  const handleCopyClick = async (item: DataEntryFormData) => {
+      if (!canCopy || !item.id) return;
+      setIsCopying(true);
+      try {
+          const newId = uuidv4();
+          const newFileEntry: DataEntryFormData = {
+              ...JSON.parse(JSON.stringify(item)), // Deep copy
+              id: newId,
+              fileNo: `${item.fileNo}-COPY`,
+          };
+          
+          // Remove Firestore-specific fields before adding
+          delete (newFileEntry as any).createdAt;
+          delete (newFileEntry as any).updatedAt;
+
+          await addFileEntry(newFileEntry);
+          toast({ title: 'File Copied', description: `A copy of ${item.fileNo} was created. You can now edit it.` });
+          
+          // Find the newly created document to get its Firestore ID for redirection
+          const createdFile = fileEntries.find(entry => entry.fileNo === newFileEntry.fileNo);
+          const newDocId = createdFile?.id || newId; // Fallback, though a fresh fetch would be better
+          router.push(`/dashboard/data-entry?id=${newDocId}`);
+
+      } catch (error: any) {
+          toast({ title: 'Copy Failed', description: error.message || 'Could not copy the file.', variant: 'destructive' });
+      } finally {
+          setIsCopying(false);
+      }
+  };
+
   if (entriesLoadingHook || authIsLoading) {
     return (
       <div className="flex items-center justify-center py-10">
@@ -352,6 +393,17 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                             <p>View Details</p>
                           </TooltipContent>
                         </Tooltip>
+                        {canCopy && (
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => handleCopyClick(entry)} disabled={isCopying}>
+                                      {isCopying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
+                                      <span className="sr-only">Make a Copy</span>
+                                  </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Make a Copy</p></TooltipContent>
+                          </Tooltip>
+                        )}
                         {canEdit && (
                           <Tooltip>
                             <TooltipTrigger asChild>

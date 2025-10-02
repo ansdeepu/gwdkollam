@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Loader2, Trash2, PlusCircle, X, Save, Clock, Edit, Eye } from "lucide-react";
+import { Loader2, Trash2, PlusCircle, X, Save, Clock, Edit, Eye, ArrowUpDown } from "lucide-react";
 import {
   DataEntrySchema,
   type DataEntryFormData,
@@ -439,12 +439,14 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     );
 };
 
-const SiteViewDialogContent = ({ siteData, onCancel, isSupervisor }: { siteData: SiteDetailFormData, onCancel: () => void, isSupervisor: boolean }) => {
+const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFormData, onCancel: () => void }) => {
   const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(siteData.purpose as SitePurpose);
   const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(siteData.purpose as SitePurpose);
   const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(siteData.purpose as SitePurpose);
   const isHPSPurpose = ['HPS', 'HPR'].includes(siteData.purpose as SitePurpose);
   const isSchemePurpose = isMWSSSchemePurpose || isHPSPurpose;
+  const { user } = useAuth();
+  const isSupervisor = user?.role === 'supervisor';
 
   return (
     <DialogContent className="max-w-3xl flex flex-col h-[90vh]">
@@ -492,9 +494,9 @@ const SiteViewDialogContent = ({ siteData, onCancel, isSupervisor }: { siteData:
                           {siteData.purpose === 'TWC' && <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} />}
                           {siteData.purpose === 'TWC' && <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} />}
                           {siteData.purpose === 'TWC' && <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} />}
-                          <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
+                          <DetailRow label="Yield Discharge (LPH)" value={siteData.yieldDischarge} />
                           <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
-                          <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
+                          <DetailRow label="Static Water Level (m)" value={siteData.waterLevel} />
                           <DetailRow label="Type of Rig" value={siteData.typeOfRig} />
                           <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} />
                       </div>
@@ -553,6 +555,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const [dialogState, setDialogState] = useState<{ type: string | null; data: any; index?: number }>({ type: null, data: null });
   const [itemToDelete, setItemToDelete] = useState<{ type: string; index: number } | null>(null);
+  const [siteToReorder, setSiteToReorder] = useState<{ currentIndex: number } | null>(null);
   
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
@@ -604,7 +607,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     }
   }, [userRole, supervisorList, watchedSiteDetails, formGetValues, formSetValue, toast]);
 
-  const { fields: siteFields, append: appendSite, remove: removeSite, update: updateSite } = useFieldArray({ control: form.control, name: "siteDetails" });
+  const { fields: siteFields, append: appendSite, remove: removeSite, update: updateSite, move: moveSite } = useFieldArray({ control: form.control, name: "siteDetails" });
   const { fields: remittanceFields, append: appendRemittance, remove: removeRemittance, update: updateRemittance } = useFieldArray({ control: form.control, name: "remittanceDetails" });
   const { fields: paymentFields, append: appendPayment, remove: removePayment, update: updatePayment } = useFieldArray({ control: form.control, name: "paymentDetails" });
 
@@ -724,6 +727,23 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     else if (type === 'payment') { if (index !== undefined) updatePayment(index, formData); else appendPayment(formData); }
     closeDialog();
   };
+  
+  const handleOpenReorderDialog = (index: number) => setSiteToReorder({ currentIndex: index });
+
+  const handleReorderSite = (newPosition: number) => {
+    if (siteToReorder === null) return;
+    const { currentIndex } = siteToReorder;
+    const newIndex = newPosition - 1; // Convert to 0-based index
+
+    if (newIndex >= 0 && newIndex < siteFields.length) {
+        moveSite(currentIndex, newIndex);
+        toast({ title: 'Site Moved', description: `Site #${currentIndex + 1} moved to position #${newPosition}.` });
+    } else {
+        toast({ title: 'Invalid Position', description: `Position must be between 1 and ${siteFields.length}.`, variant: 'destructive' });
+    }
+    setSiteToReorder(null);
+  };
+
 
   const handleDeleteClick = (type: string, index: number) => setItemToDelete({ type, index });
   const confirmDelete = () => { if (itemToDelete) { const { type, index } = itemToDelete; if (type === 'remittance') removeRemittance(index); else if (type === 'site') removeSite(index); else if (type === 'payment') removePayment(index); setItemToDelete(null); toast({ title: 'Entry Removed' }); } };
@@ -831,6 +851,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                                 <div className="flex items-center gap-1 mr-2" onClick={(e) => e.stopPropagation()}>
                                                     <Button type="button" variant="outline" size="sm" onClick={() => openDialog('viewSite', index)}><Eye className="mr-2 h-4 w-4"/> View</Button>
                                                     {!isReadOnlyForSite && <Button type="button" variant="default" size="sm" onClick={() => openDialog('site', index)}><Edit className="mr-2 h-4 w-4"/> Edit</Button>}
+                                                    {!isReadOnlyForSite && <Button type="button" variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(index)}><ArrowUpDown className="h-4 w-4"/></Button>}
                                                     {isEditor && !isReadOnly && (<Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteClick('site', index)}><Trash2 className="h-4 w-4"/></Button>)}
                                                 </div>
                                             </div>
@@ -840,44 +861,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <DetailRow label="Contractor" value={siteData.contractorName} />
                                             <DetailRow label="Supervisor" value={siteData.supervisorName} />
                                             
-                                            {(isBWC || isFPW) && (
-                                                <>
-                                                    <DetailRow label="Diameter" value={siteData.diameter} />
-                                                    <DetailRow label="TD (m)" value={siteData.totalDepth} />
-                                                    <DetailRow label="Casing Pipe (m)" value={siteData.casingPipeUsed} />
-                                                    <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
-                                                    <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
-                                                    <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
-                                                    <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" />
-                                                </>
-                                            )}
-                                            
-                                            {isTWC && (
-                                                <>
-                                                    <DetailRow label="Diameter" value={siteData.diameter} />
-                                                    <DetailRow label="Pilot Drilling (m)" value={siteData.pilotDrillingDepth} />
-                                                    <DetailRow label="TD (m)" value={siteData.totalDepth} />
-                                                    <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} />
-                                                    <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} />
-                                                    <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} />
-                                                    <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
-                                                    <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
-                                                    <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
-                                                    <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" />
-                                                </>
-                                            )}
-
-                                            {isSchemePurpose && (
-                                                <>
-                                                    <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} />
-                                                    <DetailRow label="Pump Details" value={siteData.pumpDetails} />
-                                                    <DetailRow label="Pumping Line (m)" value={siteData.pumpingLineLength} />
-                                                    <DetailRow label="Delivery Line (m)" value={siteData.deliveryLineLength} />
-                                                    <DetailRow label="Tank Capacity (L)" value={siteData.waterTankCapacity} />
-                                                    <DetailRow label="# Taps" value={siteData.noOfTapConnections} />
-                                                    <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />
-                                                </>
-                                            )}
+                                            {(isBWC || isFPW) && ( <> <DetailRow label="Diameter" value={siteData.diameter} /> <DetailRow label="TD (m)" value={siteData.totalDepth} /> <DetailRow label="Casing Pipe (m)" value={siteData.casingPipeUsed} /> <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} /> <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} /> <DetailRow label="Static Water (m)" value={siteData.waterLevel} /> <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" /> </> )}
+                                            {isTWC && ( <> <DetailRow label="Diameter" value={siteData.diameter} /> <DetailRow label="Pilot Drilling (m)" value={siteData.pilotDrillingDepth} /> <DetailRow label="TD (m)" value={siteData.totalDepth} /> <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} /> <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} /> <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} /> <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} /> <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} /> <DetailRow label="Static Water (m)" value={siteData.waterLevel} /> <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" /> </> )}
+                                            {isSchemePurpose && ( <> <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} /> <DetailRow label="Pump Details" value={siteData.pumpDetails} /> <DetailRow label="Pumping Line (m)" value={siteData.pumpingLineLength} /> <DetailRow label="Delivery Line (m)" value={siteData.deliveryLineLength} /> <DetailRow label="Tank Capacity (L)" value={siteData.waterTankCapacity} /> <DetailRow label="# Taps" value={siteData.noOfTapConnections} /> <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} /> </> )}
                                             
                                             <Separator className="col-span-full my-2"/>
                                             
@@ -956,15 +942,60 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             </form>
             
             <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this entry. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+            <Dialog open={!!siteToReorder} onOpenChange={() => setSiteToReorder(null)}>
+                <DialogContent>
+                    <DialogHeader><DialogTitle>Move Site</DialogTitle></DialogHeader>
+                    <ReorderDialogContent 
+                        siteCount={siteFields.length} 
+                        currentIndex={siteToReorder?.currentIndex ?? 0}
+                        onMove={handleReorderSite}
+                        onCancel={() => setSiteToReorder(null)}
+                    />
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={!!dialogState.type} onOpenChange={(open) => !open && closeDialog()}>
                 {dialogState.type === 'application' && <DialogContent className="max-w-4xl"><ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} formOptions={formOptions} /></DialogContent>}
                 {dialogState.type === 'remittance' && <DialogContent><RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} /></DialogContent>}
                 {dialogState.type === 'site' && <DialogContent className="max-w-4xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={isReadOnly} isSupervisor={!!isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps} /></DialogContent>}
-                {dialogState.type === 'viewSite' && <SiteViewDialogContent siteData={dialogState.data} onCancel={closeDialog} isSupervisor={!!isSupervisor} />}
+                {dialogState.type === 'viewSite' && <SiteViewDialogContent siteData={dialogState.data} onCancel={closeDialog} />}
                 {dialogState.type === 'payment' && <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogSave} onCancel={closeDialog} /></DialogContent>}
             </Dialog>
 
         </FormProvider>
     );
 }
+
+// Reorder Dialog Component
+const ReorderDialogContent = ({ siteCount, currentIndex, onMove, onCancel }: { siteCount: number; currentIndex: number; onMove: (newPosition: number) => void; onCancel: () => void; }) => {
+    const [newPosition, setNewPosition] = useState(currentIndex + 1);
+
+    const handleMove = () => {
+        const pos = Number(newPosition);
+        if (pos >= 1 && pos <= siteCount) {
+            onMove(pos);
+        }
+    };
+
+    return (
+        <div className="p-6 space-y-4">
+            <p>Move Site #{currentIndex + 1} to a new position.</p>
+            <div className="flex items-center gap-2">
+                <Label htmlFor="new-position">New Position (1 - {siteCount})</Label>
+                <Input
+                    id="new-position"
+                    type="number"
+                    min="1"
+                    max={siteCount}
+                    value={newPosition}
+                    onChange={(e) => setNewPosition(Number(e.target.value))}
+                    className="w-24"
+                />
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button onClick={handleMove}>Move</Button>
+            </DialogFooter>
+        </div>
+    );
+};
