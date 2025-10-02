@@ -812,9 +812,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
                                 const isReadOnlyForSite = isViewer || (isSupervisor && !isSiteEditableForSupervisor);
                                 const isFinalStatus = ['Work Completed', 'Work Failed'].includes(siteData.workStatus as SiteWorkStatus);
-                                const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(siteData.purpose as SitePurpose);
+                                const isBWC = siteData.purpose === 'BWC';
+                                const isFPW = siteData.purpose === 'FPW';
+                                const isTWC = siteData.purpose === 'TWC';
                                 const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(siteData.purpose as SitePurpose);
-                                const isSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno', 'HPS', 'HPR'].includes(siteData.purpose as SitePurpose);
+                                const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(siteData.purpose as SitePurpose);
+                                const isHPSPurpose = ['HPS', 'HPR'].includes(siteData.purpose as SitePurpose);
+                                const isSchemePurpose = isMWSSSchemePurpose || isHPSPurpose;
+
 
                                 return (
                                     <AccordionItem value={`site-${index}`} key={field.id}>
@@ -835,18 +840,47 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <DetailRow label="Contractor" value={siteData.contractorName} />
                                             <DetailRow label="Supervisor" value={siteData.supervisorName} />
                                             
-                                            {isWellPurpose && <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Drilling Details (Actuals)</h4></div>}
-                                            {isWellPurpose && <DetailRow label="Actual Diameter" value={siteData.diameter} />}
-                                            {isWellPurpose && <DetailRow label="Actual TD (m)" value={siteData.totalDepth} />}
+                                            {(isBWC || isFPW) && (
+                                                <>
+                                                    <DetailRow label="Diameter" value={siteData.diameter} />
+                                                    <DetailRow label="TD (m)" value={siteData.totalDepth} />
+                                                    <DetailRow label="Casing Pipe (m)" value={siteData.casingPipeUsed} />
+                                                    <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
+                                                    <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
+                                                    <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
+                                                    <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" />
+                                                </>
+                                            )}
                                             
-                                            {isDevPurpose && <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Developing Details</h4></div>}
-                                            {isDevPurpose && <DetailRow label="Diameter (mm)" value={siteData.diameter} />}
-                                            {isDevPurpose && <DetailRow label="Discharge (LPH)" value={siteData.yieldDischarge} />}
+                                            {isTWC && (
+                                                <>
+                                                    <DetailRow label="Diameter" value={siteData.diameter} />
+                                                    <DetailRow label="Pilot Drilling (m)" value={siteData.pilotDrillingDepth} />
+                                                    <DetailRow label="TD (m)" value={siteData.totalDepth} />
+                                                    <DetailRow label="Plain Pipe (m)" value={siteData.surveyPlainPipe} />
+                                                    <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} />
+                                                    <DetailRow label="MS Casing Pipe (m)" value={siteData.outerCasingPipe} />
+                                                    <DetailRow label="Yield (LPH)" value={siteData.yieldDischarge} />
+                                                    <DetailRow label="Zone Details (m)" value={siteData.zoneDetails} />
+                                                    <DetailRow label="Static Water (m)" value={siteData.waterLevel} />
+                                                    <DetailRow label="Drilling Remarks" value={siteData.drillingRemarks} className="col-span-full" />
+                                                </>
+                                            )}
 
-                                            {isSchemePurpose && <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Scheme Details</h4></div>}
-                                            {isSchemePurpose && <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />}
-
-                                            <div className="md:col-span-3 lg:col-span-full"><Separator className="my-2" /><h4 className="font-medium text-muted-foreground text-sm">Final Status</h4></div>
+                                            {isSchemePurpose && (
+                                                <>
+                                                    <DetailRow label="Well Discharge (LPH)" value={siteData.yieldDischarge} />
+                                                    <DetailRow label="Pump Details" value={siteData.pumpDetails} />
+                                                    <DetailRow label="Pumping Line (m)" value={siteData.pumpingLineLength} />
+                                                    <DetailRow label="Delivery Line (m)" value={siteData.deliveryLineLength} />
+                                                    <DetailRow label="Tank Capacity (L)" value={siteData.waterTankCapacity} />
+                                                    <DetailRow label="# Taps" value={siteData.noOfTapConnections} />
+                                                    <DetailRow label="# Beneficiaries" value={siteData.noOfBeneficiary} />
+                                                </>
+                                            )}
+                                            
+                                            <Separator className="col-span-full my-2"/>
+                                            
                                             <DetailRow label="Work Status" value={siteData.workStatus} />
                                             <DetailRow label="Completion Date" value={siteData.dateOfCompletion} />
                                             <DetailRow label="Total Expenditure (₹)" value={siteData.totalExpenditure} />
