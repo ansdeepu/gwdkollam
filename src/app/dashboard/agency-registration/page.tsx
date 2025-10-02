@@ -1975,13 +1975,14 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl">
-                <DialogHeader>
+            <DialogContent className="max-w-3xl p-0 flex flex-col h-[90vh]">
+                <DialogHeader className="p-6 pb-4 border-b">
                     <DialogTitle>View Registration: {application.agencyName}</DialogTitle>
                     <DialogDescription>A summary of the registration details.</DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="max-h-[70vh]">
-                    <div className="space-y-6 py-4 px-6">
+                <div className="flex-1 min-h-0">
+                  <ScrollArea className="h-full">
+                      <div className="space-y-6 px-6 py-4">
                         {detailSections.map((section, idx) => (
                             <div key={idx}>
                                 <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>
@@ -2026,8 +2027,9 @@ function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose
                             </div>
                          )}
                     </div>
-                </ScrollArea>
-                <DialogFooter>
+                  </ScrollArea>
+                </div>
+                <DialogFooter className="p-6 pt-4 border-t">
                     <DialogClose asChild>
                         <Button>Close</Button>
                     </DialogClose>
@@ -2181,3 +2183,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
