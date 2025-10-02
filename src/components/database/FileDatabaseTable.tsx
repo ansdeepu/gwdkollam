@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Edit3, Trash2, Loader2, Clock } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus, PendingUpdate } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
@@ -55,13 +55,34 @@ import { cn } from "@/lib/utils";
 const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
 
+// Helper function to safely parse dates, whether they are strings or Date objects
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date && isValid(dateValue)) {
+    return dateValue;
+  }
+  if (typeof dateValue === 'string') {
+    const parsed = parseISO(dateValue);
+    if (isValid(parsed)) return parsed;
+  }
+  // Fallback for other potential date-like objects from Firestore
+  if (typeof dateValue === 'object' && dateValue.toDate) {
+    const parsed = dateValue.toDate();
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
+
 function renderDetail(label: string, value: any) {
   if (value === undefined || value === null || value === '') {
     return null;
   }
-  let displayValue = value;
-  if (value instanceof Date) {
-    displayValue = format(value, "dd/MM/yyyy");
+  let displayValue = String(value);
+
+  // Check if the value is a date-like string or object and format it
+  const date = safeParseDate(value);
+  if (date) {
+    displayValue = format(date, "dd/MM/yyyy");
   } else if (typeof value === 'boolean') {
     displayValue = value ? "Yes" : "No";
   } else if (typeof value === 'number') {
@@ -69,11 +90,8 @@ function renderDetail(label: string, value: any) {
      if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
         displayValue = `₹ ${displayValue}`;
     }
-  } else {
-    displayValue = String(value);
   }
   
-
   return (
     <div className="grid grid-cols-2 gap-2 py-1.5 border-b border-muted/50 last:border-b-0">
       <p className="font-medium text-sm text-muted-foreground">{label}:</p>
@@ -426,6 +444,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                         const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
                         const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
                         const isARSPurpose = ['ARS'].includes(purpose);
+
                         return (
                           <div key={`site-${index}`} className="mb-4 p-4 border rounded-lg bg-secondary/30 space-y-2">
                             <h4 className="text-md font-semibold text-primary">Site #{index + 1}: {site.nameOfSite}</h4>
