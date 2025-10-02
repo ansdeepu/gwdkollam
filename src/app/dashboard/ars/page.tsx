@@ -1,3 +1,4 @@
+
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -651,8 +652,8 @@ export default function ArsPage() {
                     <h4 className="text-base font-semibold text-primary mb-2 border-b pb-1">Site Identification</h4>
                     <DetailRow label="File No" value={viewingSite.fileNo} />
                     <DetailRow label="Name of Site" value={viewingSite.nameOfSite} />
-                    <DetailRow label="Constituency (LAC)" value={viewingSite.constituency} />
                     <DetailRow label="Local Self Govt" value={viewingSite.localSelfGovt} />
+                    <DetailRow label="Constituency (LAC)" value={viewingSite.constituency} />
                     <DetailRow label="Block" value={viewingSite.arsBlock} />
                     <DetailRow label="Latitude" value={viewingSite.latitude} />
                     <DetailRow label="Longitude" value={viewingSite.longitude} />
@@ -718,4 +719,3 @@ export default function ArsPage() {
     </div>
   );
 }
-
