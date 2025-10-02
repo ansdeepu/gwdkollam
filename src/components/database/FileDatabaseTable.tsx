@@ -76,40 +76,34 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 function renderDetail(label: string, value: any) {
-  if (value === undefined || value === null || value === '') {
-    return null;
-  }
-  let displayValue = String(value);
-
-  const isDateLabel = label.toLowerCase().includes("date");
-
-  if (isDateLabel && typeof value === 'string' && !isNaN(Date.parse(value))) {
-      try {
-          displayValue = format(new Date(value), "dd/MM/yyyy");
-      } catch (e) {
-          // keep original string if formatting fails
-      }
-  } else if (value instanceof Date) {
-      try {
-          displayValue = format(value, "dd/MM/yyyy");
-      } catch (e) {
-          // keep original string if formatting fails
-      }
-  } else if (typeof value === 'number') {
-    displayValue = value.toLocaleString('en-IN');
-     if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
-        displayValue = `₹ ${displayValue}`;
+    if (value === undefined || value === null || value === '') {
+        return null;
     }
-  } else if (typeof value === 'boolean') {
-    displayValue = value ? "Yes" : "No";
-  }
-  
-  return (
-    <div className="grid grid-cols-2 gap-2 py-1.5 border-b border-muted/50 last:border-b-0">
-      <p className="font-medium text-sm text-muted-foreground">{label}:</p>
-      <p className="text-sm text-foreground break-words">{String(displayValue)}</p>
-    </div>
-  );
+    let displayValue = String(value);
+
+    // Only format as date if the label explicitly suggests it
+    const isDateLabel = label.toLowerCase().includes("date");
+
+    if (isDateLabel) {
+        const parsedDate = safeParseDate(value);
+        if (parsedDate && isValid(parsedDate)) {
+            displayValue = format(parsedDate, "dd/MM/yyyy");
+        }
+    } else if (typeof value === 'number') {
+        displayValue = value.toLocaleString('en-IN');
+        if (label.toLowerCase().includes("(₹)") && !displayValue.startsWith("₹")) {
+            displayValue = `₹ ${displayValue}`;
+        }
+    } else if (typeof value === 'boolean') {
+        displayValue = value ? "Yes" : "No";
+    }
+
+    return (
+        <div className="grid grid-cols-2 gap-2 py-1.5 border-b border-muted/50 last:border-b-0">
+            <p className="font-medium text-sm text-muted-foreground">{label}:</p>
+            <p className="text-sm text-foreground break-words">{String(displayValue)}</p>
+        </div>
+    );
 }
 
 interface FileDatabaseTableProps {
@@ -257,23 +251,21 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
       if (!canCopy || !item.id) return;
       setIsCopying(true);
       try {
-          const newId = uuidv4();
           const newFileEntry: DataEntryFormData = {
               ...JSON.parse(JSON.stringify(item)), // Deep copy
-              id: newId,
+              id: uuidv4(), // Give it a temporary client-side ID
               fileNo: `${item.fileNo}-COPY`,
           };
           
-          // Remove Firestore-specific fields before adding
           delete (newFileEntry as any).createdAt;
           delete (newFileEntry as any).updatedAt;
 
-          await addFileEntry(newFileEntry);
-          toast({ title: 'File Copied', description: `A copy of ${item.fileNo} was created. You can now edit it.` });
+          const newDocId = await addFileEntry(newFileEntry);
+          if (!newDocId) {
+            throw new Error("Failed to get ID for new copied file.");
+          }
           
-          // Find the newly created document to get its Firestore ID for redirection
-          const createdFile = fileEntries.find(entry => entry.fileNo === newFileEntry.fileNo);
-          const newDocId = createdFile?.id || newId; // Fallback, though a fresh fetch would be better
+          toast({ title: 'File Copied', description: `A copy of ${item.fileNo} was created. You can now edit it.` });
           router.push(`/dashboard/data-entry?id=${newDocId}`);
 
       } catch (error: any) {
@@ -525,13 +517,13 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                                 {renderDetail("Actual Diameter (mm)", site.diameter)}
                                 {purpose === 'TWC' && renderDetail("Pilot Drilling Depth (m)", site.pilotDrillingDepth)}
                                 {renderDetail("Actual TD (m)", site.totalDepth)}
-                                {purpose === 'BWC' && renderDetail("Actual OB (m)", site.surveyOB)}
+                                {renderDetail("Actual OB (m)", site.surveyOB)}
                                 {renderDetail("Actual Casing Pipe (m)", site.casingPipeUsed)}
                                 {purpose === 'BWC' && renderDetail("Actual Inner Casing Pipe (m)", site.innerCasingPipe)}
                                 {purpose === 'BWC' && renderDetail("Actual Outer Casing Pipe (m)", site.outerCasingPipe)}
-                                {purpose === 'TWC' && renderDetail("Actual Plain Pipe (m)", site.surveyPlainPipe)}
-                                {purpose === 'TWC' && renderDetail("Actual Slotted Pipe (m)", site.surveySlottedPipe)}
-                                {purpose === 'TWC' && renderDetail("Actual MS Casing Pipe (m)", site.outerCasingPipe)}
+                                {renderDetail("Actual Plain Pipe (m)", site.surveyPlainPipe)}
+                                {renderDetail("Actual Slotted Pipe (m)", site.surveySlottedPipe)}
+                                {renderDetail("Actual MS Casing Pipe (m)", site.outerCasingPipe)}
                                 {renderDetail("Yield Discharge (LPH)", site.yieldDischarge)}
                                 {renderDetail("Zone Details (m)", site.zoneDetails)}
                                 {renderDetail("Static Water Level (m)", site.waterLevel)}

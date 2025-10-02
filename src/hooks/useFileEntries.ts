@@ -90,27 +90,32 @@ export function useFileEntries() {
     }
   }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
 
-  const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null) => {
+  const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null): Promise<string> => {
     if (!user) throw new Error("User must be logged in to add an entry.");
 
     const payload = { ...entryData };
     if (payload.id) delete payload.id; 
+
+    let docId: string;
 
     if (existingFileNo) {
         const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", existingFileNo));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-            const docId = querySnapshot.docs[0].id;
+            docId = querySnapshot.docs[0].id;
             const docRef = doc(db, FILE_ENTRIES_COLLECTION, docId);
             await updateDoc(docRef, { ...payload, updatedAt: serverTimestamp() });
         } else {
-            await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+            const docRef = await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+            docId = docRef.id;
         }
     } else {
-        await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        const docRef = await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        docId = docRef.id;
     }
     refetchFileEntries(); // Trigger a refetch in the central store
+    return docId;
   }, [user, refetchFileEntries]);
 
   const deleteFileEntry = useCallback(async (fileNo: string): Promise<void> => {
