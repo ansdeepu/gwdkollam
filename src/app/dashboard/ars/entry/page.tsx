@@ -123,6 +123,7 @@ export default function ArsEntryPage() {
     
     const entryIdToEdit = searchParams.get('id');
     const approveUpdateId = searchParams.get("approveUpdateId");
+    const pageToReturnTo = searchParams.get('page');
     
     const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry } = useArsEntries();
     const { createArsPendingUpdate, getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
@@ -143,7 +144,7 @@ export default function ArsEntryPage() {
       if (isSupervisor) {
         if (!isEditing || isFormDisabledForSupervisor) return true;
         const supervisorEditableFields: (keyof ArsEntryFormData)[] = [
-          'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks', 'localSelfGovt', 'constituency'
+          'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
         ];
         return !supervisorEditableFields.includes(fieldName);
       }
@@ -243,6 +244,12 @@ export default function ArsEntryPage() {
     const sortedLsgMaps = useMemo(() => {
         return [...allLsgConstituencyMaps].sort((a, b) => a.name.localeCompare(b.name));
     }, [allLsgConstituencyMaps]);
+    
+    const returnPath = useMemo(() => {
+        const base = isApprovingUpdate ? '/dashboard/pending-updates' : '/dashboard/ars';
+        return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
+    }, [isApprovingUpdate, pageToReturnTo]);
+
 
     useEffect(() => {
         const loadArsEntry = async () => {
@@ -311,7 +318,7 @@ export default function ArsEntryPage() {
                 await createArsPendingUpdate(entryIdToEdit, payload, user);
                  toast({ title: "Update Submitted", description: `Your changes for site "${data.nameOfSite}" have been submitted for approval.` });
             }
-            router.push('/dashboard/ars');
+            router.push(returnPath);
         } catch (error: any) {
              toast({ title: "Error Processing Site", description: error.message, variant: "destructive" });
         } finally {
@@ -342,7 +349,7 @@ export default function ArsEntryPage() {
             <Card className="shadow-lg">
                 <CardContent className="pt-6">
                    <div className="flex justify-end mb-4">
-                      <Button variant="destructive" size="sm" onClick={() => router.push(isApprovingUpdate ? '/dashboard/pending-updates' : '/dashboard/ars')}>
+                      <Button variant="destructive" size="sm" onClick={() => router.push(returnPath)}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
                           Back
                       </Button>
@@ -353,6 +360,7 @@ export default function ArsEntryPage() {
                           <FormField name="fileNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>File No. <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="File No." {...field} readOnly={isFieldReadOnly('fileNo')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="nameOfSite" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g., Anchal ARS" {...field} readOnly={isFieldReadOnly('nameOfSite')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsTypeOfScheme" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Scheme</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isFieldReadOnly('arsTypeOfScheme')}><FormControl><SelectTrigger><SelectValue placeholder="Select Type of Scheme" /></SelectTrigger></FormControl><SelectContent>{arsTypeOfSchemeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                          <FormField name="arsBlock" control={form.control} render={({ field }) => (<FormItem><FormLabel>Block</FormLabel><FormControl><Input placeholder="Block Name" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsBlock')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="localSelfGovt" control={form.control} render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Local Self Govt.</FormLabel>
@@ -390,7 +398,6 @@ export default function ArsEntryPage() {
                                     </FormItem>
                                 );
                           }}/>
-                          <FormField name="arsBlock" control={form.control} render={({ field }) => (<FormItem><FormLabel>Block</FormLabel><FormControl><Input placeholder="Block Name" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsBlock')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="latitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 8.8932" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('latitude')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="longitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 76.6141" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsNumberOfStructures" control={form.control} render={({ field }) => (<FormItem><FormLabel>Number of Structures</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsNumberOfStructures')}/></FormControl><FormMessage /></FormItem>)} />
@@ -476,7 +483,7 @@ export default function ArsEntryPage() {
                           <FormField name="workRemarks" control={form.control} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Additional remarks..." {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('workRemarks')} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         <div className="flex justify-end pt-8 space-x-3">
-                           <Button type="button" variant="outline" onClick={() => router.push('/dashboard/ars')} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
+                           <Button type="button" variant="outline" onClick={() => router.push(returnPath)} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
                            {!(isViewer || (isSupervisor && !isEditing) || isFormDisabledForSupervisor) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
                         </div>
                       </form>

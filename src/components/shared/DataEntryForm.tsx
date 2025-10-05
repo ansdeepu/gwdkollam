@@ -537,6 +537,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { allLsgConstituencyMaps } = useDataStore();
+  
+  const pageToReturnTo = searchParams.get('page');
 
   const [dialogState, setDialogState] = useState<{ type: string | null; data: any; index?: number }>({ type: null, data: null });
   const [itemToDelete, setItemToDelete] = useState<{ type: string; index: number } | null>(null);
@@ -611,6 +613,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     });
     console.debug("Form validation errors:", errors);
   };
+  
+    const returnPath = useMemo(() => {
+        let base = '/dashboard/file-room';
+        if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
+        if (isApprovingUpdate) base = '/dashboard/pending-updates';
+        
+        return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
+    }, [workTypeContext, isApprovingUpdate, pageToReturnTo]);
+
 
   async function onValidSubmit(data: DataEntryFormData) {
     if (!user) {
@@ -636,7 +647,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         } else {
           toast({ title: "File Updated", description: `File No: ${fileNoToEdit} has been successfully updated.` });
         }
-        router.push(isApprovingUpdate ? '/dashboard/pending-updates' : '/dashboard/file-room');
+        router.push(returnPath);
       } else if (fileNoToEdit && user.role === 'supervisor') {
         const originalFile = initialData;
         const supervisorSites = data.siteDetails?.filter(s => s.supervisorUid === user.uid) ?? [];
@@ -645,11 +656,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         if (data.remarks !== originalFile.remarks) fileLevelUpdates.remarks = data.remarks;
         await createPendingUpdate(fileNoToEdit, supervisorSites, user, fileLevelUpdates);
         toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
-        router.push('/dashboard');
+        router.push(returnPath);
       } else {
         await addFileEntry(data);
         toast({ title: "File Created", description: `File No: ${data.fileNo} has been saved.` });
-        router.push('/dashboard/file-room');
+        router.push(returnPath);
       }
     } catch (error: any) {
       console.error("Submission failed:", error);
@@ -953,7 +964,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     </Card>
                 </div>
                 
-                <div className="flex space-x-4 pt-4">{!isViewer && (<Button type="submit" disabled={isSubmitting}>{isSubmitting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : (<Save className="mr-2 h-4 w-4" />)}{isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}</Button>)}<Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button></div>
+                <div className="flex space-x-4 pt-4">{!isViewer && (<Button type="submit" disabled={isSubmitting}>{isSubmitting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : (<Save className="mr-2 h-4 w-4" />)}{isSubmitting ? "Saving..." : (fileNoToEdit ? (isApprovingUpdate ? "Approve &amp; Save" : "Save Changes") : "Create File")}</Button>)}<Button type="button" variant="outline" onClick={() => router.push(returnPath)} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button></div>
             </form>
             
             <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this entry. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
@@ -1014,5 +1025,3 @@ const ReorderDialogContent = ({ siteCount, currentIndex, onMove, onCancel }: { s
         </div>
     );
 };
-
-
