@@ -220,7 +220,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   };
 
   const handleEditClick = (item: DataEntryFormData) => {
-    if (!canEdit || !item.id) return; 
+    if (!canEdit || !item.id) return;
     const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
     router.push(`/dashboard/data-entry?id=${item.id}${pageParam}`);
   };
@@ -668,4 +668,3 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     </TooltipProvider>
   );
 }
-
