@@ -544,12 +544,16 @@ export default function AgencyRegistrationPage() {
 
   const ITEMS_PER_PAGE = 50;
   const [currentPage, setCurrentPage] = useState(1);
+  const pageFromUrl = searchParams.get('page');
+
   useEffect(() => {
-    const page = searchParams.get('page');
-    if (page && !isNaN(parseInt(page))) {
-      setCurrentPage(parseInt(page));
+    if (pageFromUrl) {
+      const pageNum = parseInt(pageFromUrl, 10);
+      if (!isNaN(pageNum)) {
+        setCurrentPage(pageNum);
+      }
     }
-  }, [searchParams]);
+  }, [pageFromUrl]);
 
   const isEditor = user?.role === 'editor';
   const isSupervisor = user?.role === 'supervisor';
@@ -590,6 +594,12 @@ export default function AgencyRegistrationPage() {
   const { fields: rigFields, append: appendRig, remove: removeRig, update: updateRig } = useFieldArray({ control: form.control, name: "rigs" });
   
   const activeRigCount = useMemo(() => rigFields.filter(rig => rig.status === 'Active').length, [rigFields]);
+  
+  const returnPath = useMemo(() => {
+      const page = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
+      const base = '/dashboard/agency-registration';
+      return page > 1 ? `${base}?page=${page}` : base;
+  }, [pageFromUrl]);
 
   useEffect(() => {
     if (selectedApplicationId) {
@@ -734,6 +744,7 @@ export default function AgencyRegistrationPage() {
             toast({ title: "Application Created", description: "The new agency registration has been saved." });
         }
         setSelectedApplicationId(null);
+        router.push(returnPath);
     } catch (error: any) {
         console.error("Submission failed:", error);
         toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
@@ -750,7 +761,7 @@ export default function AgencyRegistrationPage() {
 
   const handleEdit = (id: string) => {
     const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
-    router.push(`?id=${id}${pageParam}`);
+    router.push(`/dashboard/agency-registration?id=${id}${pageParam}`);
     setSelectedApplicationId(id);
   }
   
@@ -763,8 +774,7 @@ export default function AgencyRegistrationPage() {
 
   const handleCancelForm = () => {
     setSelectedApplicationId(null);
-    const newPath = '/dashboard/agency-registration' + (currentPage > 1 ? `?page=${currentPage}` : '');
-    router.push(newPath);
+    router.push(returnPath);
   }
 
   const handleAddRig = () => {
@@ -2197,5 +2207,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
 
 
