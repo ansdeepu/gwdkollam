@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -113,6 +113,7 @@ interface FileDatabaseTableProps {
 
 export default function FileDatabaseTable({ searchTerm = "", fileEntries }: FileDatabaseTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { isLoading: entriesLoadingHook, deleteFileEntry, addFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth(); 
@@ -129,6 +130,13 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
   const canDelete = user?.role === 'editor';
   const canCopy = user?.role === 'editor';
+  
+  useEffect(() => {
+    const page = searchParams.get('page');
+    if (page && !isNaN(parseInt(page))) {
+      setCurrentPage(parseInt(page));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function checkPendingStatus() {
@@ -213,7 +221,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
   const handleEditClick = (item: DataEntryFormData) => {
     if (!canEdit || !item.id) return; 
-    router.push(`/dashboard/data-entry?id=${item.id}`);
+    const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
+    router.push(`/dashboard/data-entry?id=${item.id}${pageParam}`);
   };
 
   const handleDeleteClick = (item: DataEntryFormData) => {
@@ -413,7 +422,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(entry)} disabled={isDeleting && deleteItem?.fileNo === entry.fileNo}>
-                                {isDeleting && deleteItem?.fileNo === entry.fileNo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                {isDeleting && deleteItem?.fileNo === entry.fileNo ? <Loader2 className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                                 <span className="sr-only">Delete Entry</span>
                               </Button>
                             </TooltipTrigger>
@@ -462,6 +471,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
                   {renderDetail("Phone No", viewItem?.phoneNo)}
                   {renderDetail("Secondary Mobile No", viewItem?.secondaryMobileNo)}
+                  {renderDetail("Constituency (LAC)", viewItem?.constituency)}
                   {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
                 </div>
 

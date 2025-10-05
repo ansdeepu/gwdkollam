@@ -24,7 +24,7 @@ import { usePageHeader } from "@/hooks/usePageHeader";
 import type { ArsEntryFormData } from "@/lib/schemas";
 import { arsTypeOfSchemeOptions, constituencyOptions } from "@/lib/schemas";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
@@ -73,14 +73,22 @@ export default function ArsPage() {
 
   const { arsEntries, isLoading: entriesLoading, refreshArsEntries, deleteArsEntry, clearAllArsData, addArsEntry } = useArsEntries();
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const canEdit = user?.role === 'editor';
   const isSupervisor = user?.role === 'supervisor';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setIsNavigating } = usePageNavigation();
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => {
+    const page = searchParams.get('page');
+    if (page && !isNaN(parseInt(page))) {
+      setCurrentPage(parseInt(page));
+    }
+  }, [searchParams]);
 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -109,7 +117,8 @@ export default function ArsPage() {
   
   const handleEditClick = (siteId: string) => {
     setIsNavigating(true);
-    router.push(`/dashboard/ars/entry?id=${siteId}`);
+    const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
+    router.push(`/dashboard/ars/entry?id=${siteId}${pageParam}`);
   };
 
   const filteredSites = useMemo(() => {
@@ -191,8 +200,23 @@ export default function ArsPage() {
   }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter, constituencyFilter]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter]);
+    const pageFromUrl = searchParams.get('page');
+    const pageNum = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
+    if (!isNaN(pageNum) && pageNum > 0) {
+      setCurrentPage(pageNum);
+    } else {
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const newTotalPages = Math.ceil(filteredSites.length / ITEMS_PER_PAGE);
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      setCurrentPage(newTotalPages);
+    } else if (currentPage === 0 && newTotalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredSites.length, currentPage]);
 
   const paginatedSites = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -719,3 +743,4 @@ export default function ArsPage() {
     </div>
   );
 }
+

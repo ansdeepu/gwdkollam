@@ -1,3 +1,4 @@
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -33,6 +34,7 @@ import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
 import ExcelJS from "exceljs";
+import { useRouter, useSearchParams } from 'next/navigation';
 
 
 export const dynamic = 'force-dynamic';
@@ -525,6 +527,8 @@ export default function AgencyRegistrationPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { setIsNavigating } = usePageNavigation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -538,8 +542,14 @@ export default function AgencyRegistrationPage() {
   const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);
   const [deletingPartnerIndex, setDeletingPartnerIndex] = useState<number | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => {
+    const page = searchParams.get('page');
+    if (page && !isNaN(parseInt(page))) {
+      setCurrentPage(parseInt(page));
+    }
+  }, [searchParams]);
 
   const isEditor = user?.role === 'editor';
   const isSupervisor = user?.role === 'supervisor';
@@ -739,6 +749,8 @@ export default function AgencyRegistrationPage() {
   }
 
   const handleEdit = (id: string) => {
+    const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
+    router.push(`?id=${id}${pageParam}`);
     setSelectedApplicationId(id);
   }
   
@@ -751,6 +763,8 @@ export default function AgencyRegistrationPage() {
 
   const handleCancelForm = () => {
     setSelectedApplicationId(null);
+    const newPath = '/dashboard/agency-registration' + (currentPage > 1 ? `?page=${currentPage}` : '');
+    router.push(newPath);
   }
 
   const handleAddRig = () => {
@@ -2183,4 +2197,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
 

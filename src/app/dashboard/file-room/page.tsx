@@ -1,3 +1,4 @@
+
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
@@ -58,8 +59,6 @@ export default function FileManagerPage() {
   
   const canCreate = user?.role === 'editor';
   
-  const currentlyEditingFileId = searchParams.get('id');
-
   const depositWorkEntries = useMemo(() => {
     let entries: DataEntryFormData[];
 
@@ -145,3 +144,4 @@ export default function FileManagerPage() {
     </div>
   );
 }
+
