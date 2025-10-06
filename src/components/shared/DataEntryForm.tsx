@@ -204,7 +204,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     );
 };
 
-const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
+const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initialData?: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
     const [data, setData] = useState({ ...initialData, dateOfRemittance: formatDateForInput(initialData?.dateOfRemittance) });
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
@@ -595,11 +595,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         }
         break;
       case 'payment':
-        const total = calculatePaymentEntryTotalGlobal(data);
         if (originalData.index !== undefined) {
-          updatePayment(originalData.index, { ...data, totalPaymentPerEntry: total });
+          updatePayment(originalData.index, data);
         } else {
-          appendPayment({ ...data, totalPaymentPerEntry: total });
+          appendPayment(data);
         }
         break;
       case 'site':
@@ -644,7 +643,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <DetailRow label="File No." value={watch('fileNo')} />
                     <DetailRow label="Applicant Name & Address" value={watch('applicantName')} className="md:col-span-2" />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 md:col-span-2">
-                        <DetailRow label="Phone No." value={watch('phoneNo')} />
+                         <DetailRow label="Phone No." value={watch('phoneNo')} />
                         <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
                         <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
                     </div>
@@ -660,7 +659,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <CardContent>
                 <div className="relative max-h-[400px] overflow-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                        <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                         <TableBody>
                             {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
                                 <TableRow key={item.id}>
@@ -692,7 +691,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         
                         return (
                             <AccordionItem key={site.id} value={`site-${index}`} className="border bg-background rounded-lg shadow-sm">
-                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : isFinalStatus ? "text-red-600" : "text-green-600", site.isPending && "text-amber-600")}>
+                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) ? "text-red-600" : "text-green-600", site.isPending && "text-amber-600")}>
                                     <div className="flex justify-between items-center w-full">
                                         <div className="flex items-center gap-2">
                                             {hasError && <Info className="h-4 w-4" />}
@@ -733,12 +732,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">4. Payment Details</CardTitle></div>
-                {!isViewer && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
+                {!isViewer && <Button type="button" onClick={() => openDialog('payment', {})}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
                 <div className="relative max-h-[400px] overflow-auto">
                  <Table>
-                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Account</TableHead><TableHead>Revenue Head</TableHead><TableHead>Contractor Payment</TableHead><TableHead>GST</TableHead><TableHead>Income Tax</TableHead><TableHead>KBCWB</TableHead><TableHead>Refund</TableHead><TableHead>Total Payment</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                    <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Account</TableHead><TableHead>Revenue Head</TableHead><TableHead>Contractor Payment</TableHead><TableHead>GST</TableHead><TableHead>Income Tax</TableHead><TableHead>KBCWB</TableHead><TableHead>Refund</TableHead><TableHead>Total Payment</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                     <TableBody>
                          {paymentFields.length > 0 ? paymentFields.map((item, index) => (
                             <TableRow key={item.id}>
@@ -801,7 +800,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
         </Dialog>
         <Dialog open={dialogState.type === 'reorderSite'} onOpenChange={closeDialog}>
-            <ReorderSiteDialog fromIndex={dialogState.data.from} siteCount={siteFields.length} onConfirm={handleDialogConfirm} onCancel={closeDialog} />
+            {dialogState.data && <ReorderSiteDialog fromIndex={dialogState.data.from} siteCount={siteFields.length} onConfirm={handleDialogConfirm} onCancel={closeDialog} />}
         </Dialog>
 
         <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
