@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
-import type { ArsEntryFormData } from "@/lib/schemas";
+import type { ArsEntryFormData, SiteWorkStatus } from "@/lib/schemas";
 import { arsTypeOfSchemeOptions, constituencyOptions } from "@/lib/schemas";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,6 +31,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 50;
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+
 
 const formatDateSafe = (dateInput: any): string => {
   if (!dateInput) return 'N/A';
@@ -600,12 +602,15 @@ export default function ArsPage() {
                                 paginatedSites.map((site, index) => {
                                     const isSitePendingForSupervisor = isSupervisor && site.isPending;
                                     const isEditDisabled = isSitePendingForSupervisor || (isSupervisor && site.supervisorUid !== user?.uid);
+                                    const isFinalStatus = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
                                     
                                     return (
                                         <TableRow key={site.id}>
                                             <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                             <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                            <TableCell className="font-medium whitespace-normal break-words">{site.nameOfSite}</TableCell>
+                                            <TableCell className={cn("font-medium whitespace-normal break-words", isFinalStatus ? "text-red-600" : "text-green-600")}>
+                                              {site.nameOfSite}
+                                            </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.localSelfGovt || 'N/A'}</TableCell>
                                             <TableCell>{site.workStatus ?? 'N/A'}</TableCell>

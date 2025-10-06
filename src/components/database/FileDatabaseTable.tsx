@@ -365,9 +365,9 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     <TableCell>
                        {entry.siteDetails && entry.siteDetails.length > 0
                         ? entry.siteDetails.map((site, idx) => {
-                            const hasError = FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) && !site.dateOfCompletion;
+                            const isFinal = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
                             return (
-                                <span key={idx} className={cn("font-semibold", hasError ? 'text-red-600' : 'text-green-600')}>
+                                <span key={idx} className={cn("font-semibold", isFinal ? 'text-red-600' : 'text-green-600')}>
                                 {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
                                 </span>
                             );
