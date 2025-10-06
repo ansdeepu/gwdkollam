@@ -35,14 +35,14 @@ const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 
 
 
 const formatDateSafe = (dateInput: any): string => {
-  if (!dateInput) return 'N/A';
+  if (!dateInput) return '';
   // Handle pre-formatted strings
   if (typeof dateInput === 'string') {
       const parsed = parse(dateInput, 'dd/MM/yyyy', new Date());
       if (isValid(parsed)) return dateInput;
   }
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  return date instanceof Date && !isNaN(date.getTime()) ? format(date, 'dd/MM/yyyy') : 'N/A';
+  return date instanceof Date && !isNaN(date.getTime()) ? format(date, 'dd/MM/yyyy') : '';
 };
 
 
@@ -748,3 +748,5 @@ export default function ArsPage() {
     </div>
   );
 }
+
+    
