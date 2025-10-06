@@ -214,7 +214,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
         </DialogHeader>
         <div className="p-6 space-y-4 flex-1">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2"><Label>Date</Label><Input type="date" value={data.dateOfRemittance} onChange={(e) => handleChange('dateOfRemittance', e.target.value)} /></div>
+                <div className="space-y-2"><Label>Date</Label><Input type="date" value={data.dateOfRemittance || ""} onChange={(e) => handleChange('dateOfRemittance', e.target.value)} /></div>
                 <div className="space-y-2"><Label>Amount (₹)</Label><Input type="number" value={data.amountRemitted} onChange={(e) => handleChange('amountRemitted', e.target.valueAsNumber)} /></div>
                 <div className="space-y-2">
                     <Label>Account</Label>
@@ -473,7 +473,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | null>(null);
-  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
+  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
   const [itemToDelete, setItemToDelete] = useState<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
 
   const isEditor = userRole === 'editor';
@@ -571,7 +571,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     }
   };
 
-  const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite', data: any, isView: boolean = false) => {
+  const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite', data: any, isView: boolean = false) => {
     setDialogState({ type, data, isView });
   };
 
@@ -595,10 +595,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         }
         break;
       case 'payment':
+        const totalPayment = calculatePaymentEntryTotalGlobal(data);
         if (originalData.index !== undefined) {
-          updatePayment(originalData.index, data);
+          updatePayment(originalData.index, { ...data, totalPaymentPerEntry: totalPayment });
         } else {
-          appendPayment(data);
+          appendPayment({ ...data, totalPaymentPerEntry: totalPayment });
         }
         break;
       case 'site':
@@ -639,14 +640,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 {!isViewer && <Button type="button" onClick={() => openDialog('application', getValues())}><Edit className="h-4 w-4 mr-2" />Edit</Button>}
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
                     <DetailRow label="File No." value={watch('fileNo')} />
                     <DetailRow label="Applicant Name & Address" value={watch('applicantName')} className="md:col-span-2" />
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 md:col-span-2">
-                         <DetailRow label="Phone No." value={watch('phoneNo')} />
-                        <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
-                        <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
-                    </div>
+                    <DetailRow label="Phone No." value={watch('phoneNo')} />
+                    <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
+                    <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
                 </div>
             </CardContent>
         </Card>
@@ -659,7 +658,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <CardContent>
                 <div className="relative max-h-[400px] overflow-auto">
                     <Table>
-                        <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                         <TableBody>
                             {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
                                 <TableRow key={item.id}>
@@ -691,7 +690,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         
                         return (
                             <AccordionItem key={site.id} value={`site-${index}`} className="border bg-background rounded-lg shadow-sm">
-                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) ? "text-red-600" : "text-green-600", site.isPending && "text-amber-600")}>
+                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : isFinalStatus ? "text-red-600" : "text-green-600", site.isPending && "text-amber-600")}>
                                     <div className="flex justify-between items-center w-full">
                                         <div className="flex items-center gap-2">
                                             {hasError && <Info className="h-4 w-4" />}
@@ -700,7 +699,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         </div>
                                         {!isViewer && (
                                             <div className="flex items-center space-x-1 mr-2">
-                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }, true); }}><Eye className="h-4 w-4" /></Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }, true); }}><Eye className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}><Edit className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('reorderSite', { from: index }); }}><ArrowUpDown className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
@@ -766,11 +765,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
                      <h3 className="font-semibold text-lg text-primary">Financial Summary</h3>
                      <dl className="space-y-2">
-                        <div className="flex justify-between items-baseline"><dt>Total Estimate (Sites)</dt><dd className="font-mono">₹{totalEstimate.toLocaleString('en-IN') || '0'}</dd></div>
-                        <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{getValues('totalRemittance')?.toLocaleString('en-IN') || '0'}</dd></div>
-                        <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN') || '0'}</dd></div>
+                        <div className="flex justify-between items-baseline"><dt>Total Estimate (Sites)</dt><dd className="font-mono">₹{totalEstimate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
+                        <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
+                        <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                         <Separator />
-                        <div className="flex justify-between items-baseline font-bold"><dt>Overall Balance</dt><dd className="font-mono text-xl">₹{getValues('overallBalance')?.toLocaleString('en-IN') || '0'}</dd></div>
+                        <div className="flex justify-between items-baseline font-bold"><dt>Overall Balance</dt><dd className="font-mono text-xl">₹{getValues('overallBalance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                      </dl>
                 </div>
                  <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
@@ -799,9 +798,16 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
             <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
         </Dialog>
-        <Dialog open={dialogState.type === 'reorderSite'} onOpenChange={closeDialog}>
-            {dialogState.data && <ReorderSiteDialog fromIndex={dialogState.data.from} siteCount={siteFields.length} onConfirm={handleDialogConfirm} onCancel={closeDialog} />}
-        </Dialog>
+        {dialogState.type === 'reorderSite' && dialogState.data && (
+            <Dialog open={true} onOpenChange={closeDialog}>
+                <ReorderSiteDialog fromIndex={dialogState.data.from} siteCount={siteFields.length} onConfirm={handleDialogConfirm} onCancel={closeDialog} />
+            </Dialog>
+        )}
+        {dialogState.type === 'viewSite' && dialogState.data && (
+            <Dialog open={true} onOpenChange={closeDialog}>
+                <ViewSiteDialog site={dialogState.data} onCancel={closeDialog}/>
+            </Dialog>
+        )}
 
         <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
             <AlertDialogContent>
@@ -836,6 +842,89 @@ const ReorderSiteDialog = ({ fromIndex, siteCount, onConfirm, onCancel }: { from
             <DialogFooter>
                 <Button variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button onClick={handleConfirm}>Move</Button>
+            </DialogFooter>
+        </DialogContent>
+    );
+};
+
+const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel: () => void }) => {
+    const purpose = site.purpose as SitePurpose;
+    const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
+    const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
+    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
+    const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
+
+    const allDetails = {
+        "Main Details": {
+            "Name of Site": site.nameOfSite, "Purpose": site.purpose, "Local Self Govt.": site.localSelfGovt,
+            "Constituency (LAC)": site.constituency, "Latitude": site.latitude, "Longitude": site.longitude,
+        },
+        "Work Implementation": {
+            "Site Conditions": site.siteConditions, "Rig Accessibility": site.accessibleRig,
+            "Estimate Amount (₹)": site.estimateAmount, "Remitted for Site (₹)": site.remittedAmount,
+            "TS Amount (₹)": site.tsAmount, "Tender No.": site.tenderNo, "Contractor Name": site.contractorName,
+            "Assigned Supervisor": site.supervisorName,
+        },
+        "Survey Details": isWellPurpose && {
+            "Recommended Diameter (mm)": site.surveyRecommendedDiameter, "Recommended TD (m)": site.surveyRecommendedTD,
+            ...(purpose === 'BWC' && { "Recommended OB (m)": site.surveyRecommendedOB, "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
+            ...(purpose === 'TWC' && { "Recommended Plain Pipe (m)": site.surveyRecommendedPlainPipe, "Recommended Slotted Pipe (m)": site.surveyRecommendedSlottedPipe, "MS Casing Pipe (m)": site.surveyRecommendedMsCasingPipe }),
+            ...(purpose === 'FPW' && { "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
+            "Survey Location": site.surveyLocation, "Survey Remarks": site.surveyRemarks,
+        },
+        "Drilling Details": isWellPurpose && {
+            "Actual Diameter (mm)": site.diameter, ...(purpose === 'TWC' && { "Pilot Drilling Depth (m)": site.pilotDrillingDepth }),
+            "Actual TD (m)": site.totalDepth, ...(purpose === 'BWC' && { "Actual OB (m)": site.surveyOB }),
+            "Actual Casing Pipe (m)": site.casingPipeUsed, ...(purpose === 'BWC' && { "Outer Casing (m)": site.outerCasingPipe, "Inner Casing (m)": site.innerCasingPipe }),
+            ...(purpose === 'TWC' && { "Plain Pipe (m)": site.surveyPlainPipe, "Slotted Pipe (m)": site.surveySlottedPipe, "MS Casing Pipe (m)": site.outerCasingPipe }),
+            "Yield (LPH)": site.yieldDischarge, "Zone Details (m)": site.zoneDetails, "Static Water (m)": site.waterLevel,
+            "Type of Rig": site.typeOfRig, "Drilling Remarks": site.drillingRemarks,
+        },
+        "Developing Details": isDevPurpose && {
+            "Diameter (mm)": site.diameter, "TD (m)": site.totalDepth, "Discharge (LPH)": site.yieldDischarge,
+            "Water Level (m)": site.waterLevel, "Remarks": site.workRemarks,
+        },
+        "Scheme Details": (isMWSSSchemePurpose || isHPSPurpose) && {
+            ...(isMWSSSchemePurpose && { "Well Discharge (LPH)": site.yieldDischarge, "Pump Details": site.pumpDetails, "Pumping Line (m)": site.pumpingLineLength, "Delivery Line (m)": site.deliveryLineLength, "Tank Capacity (L)": site.waterTankCapacity, "# Taps": site.noOfTapConnections }),
+            ...(isHPSPurpose && { "Depth Erected (m)": site.totalDepth, "Water Level (m)": site.waterLevel }),
+            "# Beneficiaries": site.noOfBeneficiary, "Remarks": site.workRemarks,
+        },
+        "Work Status": {
+            "Status": site.workStatus, "Completion Date": site.dateOfCompletion,
+            "Total Expenditure (₹)": site.totalExpenditure, "Work Remarks": site.workRemarks,
+        }
+    };
+    
+    return (
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>View Site: {site.nameOfSite}</DialogTitle>
+                <DialogDescription>A read-only summary of all available details for this site.</DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 min-h-0">
+                <ScrollArea className="h-full pr-4">
+                    <div className="space-y-6">
+                        {Object.entries(allDetails).map(([sectionTitle, details]) => {
+                            if (!details || Object.values(details).every(v => v === null || v === undefined || v === '')) return null;
+                            return (
+                                <Card key={sectionTitle}>
+                                    <CardHeader className="p-4"><CardTitle className="text-base">{sectionTitle}</CardTitle></CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+                                            {Object.entries(details).map(([key, value]) => {
+                                                if (value === null || value === undefined || value === '') return null;
+                                                return <DetailRow key={key} label={key} value={value} />;
+                                            })}
+                                        </dl>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                </ScrollArea>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" type="button" onClick={onCancel}>Close</Button>
             </DialogFooter>
         </DialogContent>
     );
