@@ -145,7 +145,7 @@ export const ArsEntrySchema = z.object({
   fileNo: z.string().min(1, 'File No. is required.'),
   nameOfSite: z.string().min(1, 'Name of Site is required.'),
   localSelfGovt: z.string().optional(),
-  constituency: z.enum(constituencyOptions).optional(),
+  constituency: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(constituencyOptions).optional()),
   arsTypeOfScheme: z.enum(arsTypeOfSchemeOptions).optional(),
   arsBlock: z.string().optional(),
   latitude: optionalNumber(),
