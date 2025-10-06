@@ -109,6 +109,15 @@ export default function DataEntryPage() {
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [fileNoForHeader, setFileNoForHeader] = useState<string | null>(null);
+  
+  const returnPath = useMemo(() => {
+    let base = '/dashboard/file-room';
+    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
+    if (isApprovingUpdate) base = '/dashboard/pending-updates';
+    
+    return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
+  }, [workType, isApprovingUpdate, pageToReturnTo]);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -261,6 +270,11 @@ export default function DataEntryPage() {
   }, [pageData, staffMembers, user]);
   
   const isLoading = authIsLoading || staffIsLoading || dataLoading;
+  
+  const workTypeContext = searchParams.get('workType') as 'public' | 'private' | null;
+  const isApprovingUpdate = !!(user?.role === 'editor' && approveUpdateId);
+  const isDeniedAccess = (user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit);
+
 
   if (isLoading) {
     return (
@@ -271,8 +285,6 @@ export default function DataEntryPage() {
     );
   }
   
-  const isDeniedAccess = (user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit);
-
   if (isDeniedAccess) {
      return (
       <div className="space-y-6 p-6 text-center">
@@ -287,6 +299,14 @@ export default function DataEntryPage() {
 
   return (
     <div className="space-y-6">
+       {fileIdToEdit && (
+        <div className="flex justify-end mb-4">
+            <Button variant="destructive" size="sm" onClick={() => router.push(returnPath)}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+            </Button>
+        </div>
+       )}
       <Card className="shadow-lg">
         <CardContent className="p-6">
           {pageData && pageData.initialData ? (

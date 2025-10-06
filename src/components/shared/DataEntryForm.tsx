@@ -153,7 +153,7 @@ const DetailRow = ({ label, value, className }: { label: string; value: any, cla
 };
 
 
-interface DataEntryFormProps { fileNoToEdit?: string; initialData: DataEntryFormData; supervisorList: (StaffMember & { uid: string; name: string })[]; userRole?: UserRole; workTypeContext: 'public' | 'private' | null; }
+interface DataEntryFormProps { fileNoToEdit?: string; initialData: DataEntryFormData; supervisorList: (StaffMember & { uid: string; name: string })[]; userRole?: UserRole; workTypeContext: 'public' | 'private' | null; pageToReturnTo: string | null;}
 
 const PUBLIC_APPLICATION_TYPES = applicationTypeOptions.filter(
   (type) => !type.startsWith("Private_")
@@ -528,7 +528,7 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
   )
 };
 
-export default function DataEntryFormComponent({ fileNoToEdit, initialData, supervisorList, userRole, workTypeContext }: DataEntryFormProps) {
+export default function DataEntryFormComponent({ fileNoToEdit, initialData, supervisorList, userRole, workTypeContext, pageToReturnTo }: DataEntryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -538,8 +538,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const { user } = useAuth();
   const { allLsgConstituencyMaps } = useDataStore();
   
-  const pageToReturnTo = searchParams.get('page');
-
   const [dialogState, setDialogState] = useState<{ type: string | null; data: any; index?: number }>({ type: null, data: null });
   const [itemToDelete, setItemToDelete] = useState<{ type: string; index: number } | null>(null);
   const [siteToReorder, setSiteToReorder] = useState<{ currentIndex: number } | null>(null);
