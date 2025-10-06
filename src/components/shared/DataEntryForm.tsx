@@ -109,12 +109,10 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
         const newPath = parentPath ? `${parentPath}.${key}` : key;
         
         if (value?.message && typeof value.message === 'string') {
-          // This handles top-level errors like 'fileNo', 'applicantName'
           messages.add(`${formattedFieldName(key)}: ${value.message}`);
         } else if (Array.isArray(value)) {
           value.forEach((item, index) => {
             if (item && typeof item === 'object') {
-              // This handles errors inside array items (e.g., siteDetails[0].nameOfSite)
               for (const itemKey in item) {
                 if (item[itemKey]?.message) {
                   const pathPrefix = processPath(newPath, index);
@@ -124,7 +122,6 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
             }
           });
         } else if (value && typeof value === 'object' && key !== 'root') {
-          // This handles nested objects that are not arrays
           findMessages(value, newPath);
         }
       }
@@ -188,18 +185,18 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 <div className="space-y-2 col-span-1"><Label>File No *</Label><Input value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} /></div>
                 <div className="space-y-2 col-span-2"><Label>Name & Address of Institution/Applicant *</Label><Textarea value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} className="min-h-[40px]"/></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2"><Label>Phone No.</Label><Input value={data.phoneNo} onChange={(e) => handleChange('phoneNo', e.target.value)} /></div>
                 <div className="space-y-2"><Label>Secondary Mobile No.</Label><Input value={data.secondaryMobileNo} onChange={(e) => handleChange('secondaryMobileNo', e.target.value)} /></div>
-            </div>
-            <div className="space-y-2">
-                <Label>Type of Application *</Label>
-                <Select onValueChange={(value) => handleChange('applicationType', value)} value={data.applicationType}>
-                    <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                    <SelectContent>
-                        {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+                 <div className="space-y-2">
+                    <Label>Type of Application *</Label>
+                    <Select onValueChange={(value) => handleChange('applicationType', value)} value={data.applicationType}>
+                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                        <SelectContent>
+                            {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
         </div>
         <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
@@ -239,10 +236,46 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     );
 };
 
+const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
+    const [data, setData] = useState({ ...initialData, dateOfPayment: formatDateForInput(initialData?.dateOfPayment) });
+    const handleChange = (key: string, value: any) => setData(prev => ({ ...prev, [key]: value }));
+    const handleNumberChange = (key: string, value: string) => {
+        const num = value === '' ? undefined : parseFloat(value);
+        handleChange(key, num);
+    };
+
+    return (
+        <div className="flex flex-col h-auto">
+            <DialogHeader>
+                <DialogTitle>Payment Details</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="flex-1">
+                <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2"><Label>Date of Payment</Label><Input type="date" value={data.dateOfPayment} onChange={e => handleChange('dateOfPayment', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Payment Account</Label><Select onValueChange={value => handleChange('paymentAccount', value)} value={data.paymentAccount}><SelectTrigger><SelectValue placeholder="Select Account"/></SelectTrigger><SelectContent>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+                    </div>
+                    <Separator/>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="space-y-2"><Label>Revenue Head (₹)</Label><Input type="number" value={data.revenueHead ?? ''} onChange={e => handleNumberChange('revenueHead', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Contractor's Payment (₹)</Label><Input type="number" value={data.contractorsPayment ?? ''} onChange={e => handleNumberChange('contractorsPayment', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>GST (₹)</Label><Input type="number" value={data.gst ?? ''} onChange={e => handleNumberChange('gst', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Income Tax (₹)</Label><Input type="number" value={data.incomeTax ?? ''} onChange={e => handleNumberChange('incomeTax', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>KBCWB (₹)</Label><Input type="number" value={data.kbcwb ?? ''} onChange={e => handleNumberChange('kbcwb', e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Refund to Party (₹)</Label><Input type="number" value={data.refundToParty ?? ''} onChange={e => handleNumberChange('refundToParty', e.target.value)} /></div>
+                    </div>
+                    <Separator/>
+                    <div className="space-y-2"><Label>Remarks</Label><Textarea value={data.paymentRemarks} onChange={e => handleChange('paymentRemarks', e.target.value)} placeholder="Add any remarks for this payment entry..." /></div>
+                </div>
+            </ScrollArea>
+            <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        </div>
+    );
+};
+
 const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, isReadOnly, isSupervisor, allLsgConstituencyMaps }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, supervisorList: any[], isReadOnly: boolean, isSupervisor: boolean, allLsgConstituencyMaps: any[] }) => {
     const defaults = {
-        ...createDefaultSiteDetail(),
-        ...(initialData || {}),
+        ...(initialData?.nameOfSite ? initialData : createDefaultSiteDetail()),
     };
 
     const form = useForm<SiteDetailFormData>({
@@ -440,8 +473,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | null>(null);
-
-  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
+  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
   const [itemToDelete, setItemToDelete] = useState<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
 
   const isEditor = userRole === 'editor';
@@ -521,14 +553,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
       const fileId = fileIdToEdit || getValues("id");
 
       if (isSupervisor) {
-        // Supervisors can only submit updates, not save directly.
         await createPendingUpdate(data.fileNo, data.siteDetails!, user, {});
         toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
         router.push(returnPath);
         return;
       }
 
-      // Editors can save directly.
       await addFileEntry(data, fileId);
       toast({ title: fileId ? "File Updated" : "File Created", description: `File No. ${data.fileNo} has been successfully saved.` });
       router.push(returnPath);
@@ -541,7 +571,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     }
   };
 
-  const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site', data: any, isView: boolean = false) => {
+  const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite', data: any, isView: boolean = false) => {
     setDialogState({ type, data, isView });
   };
 
@@ -556,7 +586,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         setValue('phoneNo', data.phoneNo);
         setValue('secondaryMobileNo', data.secondaryMobileNo);
         setValue('applicationType', data.applicationType);
-        setValue('constituency', data.constituency === '_clear_' ? undefined : data.constituency);
         break;
       case 'remittance':
         if (originalData.index !== undefined) {
@@ -580,6 +609,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
           appendSite(data);
         }
         break;
+      case 'reorderSite':
+        moveSite(data.from, data.to);
+        toast({ title: "Site Moved", description: `Site moved to position ${data.to + 1}.` });
+        break;
     }
     closeDialog();
   };
@@ -601,51 +634,50 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
         
-        {/* Application Details */}
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
-                <div>
-                    <CardTitle className="text-xl">1. Application Details</CardTitle>
-                </div>
+                <div><CardTitle className="text-xl">1. Application Details</CardTitle></div>
                 {!isViewer && <Button type="button" onClick={() => openDialog('application', getValues())}><Edit className="h-4 w-4 mr-2" />Edit</Button>}
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <DetailRow label="File No." value={watch('fileNo')} />
                     <DetailRow label="Applicant Name & Address" value={watch('applicantName')} className="md:col-span-2" />
-                    <DetailRow label="Phone No." value={watch('phoneNo')} />
-                    <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
-                    <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 md:col-span-2">
+                        <DetailRow label="Phone No." value={watch('phoneNo')} />
+                        <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
+                        <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
+                    </div>
                 </div>
             </CardContent>
         </Card>
 
-        {/* Remittance Details */}
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">2. Remittance Details</CardTitle></div>
-                {!isViewer && <Button type="button" onClick={() => openDialog('remittance', {})}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
+                {!isViewer && <Button type="button" onClick={() => openDialog('remittance', createDefaultRemittanceDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
-                    <TableBody>
-                        {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
-                            <TableRow key={item.id}>
-                                <TableCell>{item.dateOfRemittance ? format(new Date(item.dateOfRemittance), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell>{(Number(item.amountRemitted) || 0).toLocaleString('en-IN')}</TableCell>
-                                <TableCell>{item.remittedAccount}</TableCell>
-                                <TableCell>{item.remittanceRemarks}</TableCell>
-                                {!isViewer && <TableCell><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', { index, ...item })}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'remittance', index})}><Trash2 className="h-4 w-4"/></Button></div></TableCell>}
-                            </TableRow>
-                        )) : <TableRow><TableCell colSpan={!isViewer ? 5 : 4} className="text-center h-24">No remittance details added.</TableCell></TableRow>}
-                    </TableBody>
-                    <TableFooterComponent><TableRow><TableCell colSpan={!isViewer ? 4 : 3} className="text-right font-bold">Total Remittance</TableCell><TableCell className="font-bold">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
-                </Table>
+                <div className="relative max-h-[400px] overflow-auto">
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                        <TableBody>
+                            {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>{item.dateOfRemittance ? format(new Date(item.dateOfRemittance), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                    <TableCell>{(Number(item.amountRemitted) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell>{item.remittedAccount}</TableCell>
+                                    <TableCell>{item.remittanceRemarks}</TableCell>
+                                    {!isViewer && <TableCell><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', { index, ...item })}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'remittance', index})}><Trash2 className="h-4 w-4"/></Button></div></TableCell>}
+                                </TableRow>
+                            )) : <TableRow><TableCell colSpan={!isViewer ? 5 : 4} className="text-center h-24">No remittance details added.</TableCell></TableRow>}
+                        </TableBody>
+                        <TableFooterComponent><TableRow><TableCell colSpan={!isViewer ? 4 : 3} className="text-right font-bold">Total Remittance</TableCell><TableCell className="font-bold">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
+                    </Table>
+                </div>
             </CardContent>
         </Card>
 
-        {/* Site Details */}
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">3. Site Details</CardTitle></div>
@@ -671,7 +703,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <div className="flex items-center space-x-1 mr-2">
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }, true); }}><Eye className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}><Edit className="h-4 w-4" /></Button>
-                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Move functionality coming soon!'); }}><ArrowUpDown className="h-4 w-4" /></Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('reorderSite', { from: index }); }}><ArrowUpDown className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
                                             </div>
                                         )}
@@ -698,15 +730,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             </CardContent>
         </Card>
 
-        {/* Payment Details */}
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">4. Payment Details</CardTitle></div>
-                {!isViewer && <Button type="button" onClick={() => openDialog('payment', {})}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
+                {!isViewer && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
+                <div className="relative max-h-[400px] overflow-auto">
                  <Table>
-                    <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Account</TableHead><TableHead>Revenue Head</TableHead><TableHead>Contractor Payment</TableHead><TableHead>GST</TableHead><TableHead>Income Tax</TableHead><TableHead>KBCWB</TableHead><TableHead>Refund</TableHead><TableHead>Total Payment</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Account</TableHead><TableHead>Revenue Head</TableHead><TableHead>Contractor Payment</TableHead><TableHead>GST</TableHead><TableHead>Income Tax</TableHead><TableHead>KBCWB</TableHead><TableHead>Refund</TableHead><TableHead>Total Payment</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                     <TableBody>
                          {paymentFields.length > 0 ? paymentFields.map((item, index) => (
                             <TableRow key={item.id}>
@@ -725,10 +757,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     </TableBody>
                      <TableFooterComponent><TableRow><TableCell colSpan={!isViewer ? 9 : 8} className="text-right font-bold">Total Payment</TableCell><TableCell className="font-bold">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
                 </Table>
+                </div>
             </CardContent>
         </Card>
 
-        {/* Final Details */}
         <Card>
             <CardHeader><CardTitle className="text-xl">5. Final Details</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -756,7 +788,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             </CardFooter>
         )}
         
-        {/* Dialogs */}
         <Dialog open={dialogState.type === 'application'} onOpenChange={closeDialog}>
             <DialogContent className="max-w-4xl"><ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} formOptions={applicationTypeOptionsForForm} /></DialogContent>
         </Dialog>
@@ -767,15 +798,16 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <DialogContent className="max-w-6xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={dialogState.isView || isReadOnly(dialogState.data?.fieldName)} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
         </Dialog>
         <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
-            <DialogContent className="max-w-3xl">
-                {/* PaymentDialogContent would be here */}
-            </DialogContent>
+            <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
+        </Dialog>
+        <Dialog open={dialogState.type === 'reorderSite'} onOpenChange={closeDialog}>
+            <ReorderSiteDialog fromIndex={dialogState.data.from} siteCount={siteFields.length} onConfirm={handleDialogConfirm} onCancel={closeDialog} />
         </Dialog>
 
         <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently remove the selected {itemToDelete?.type} entry from this file.</AlertDialogDescription></AlertDialogHeader>
-                <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteItem}>Delete</AlertDialogAction></AlertDialogFooter>
+                <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteItem} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
 
@@ -783,3 +815,29 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     </FormProvider>
   );
 }
+
+const ReorderSiteDialog = ({ fromIndex, siteCount, onConfirm, onCancel }: { fromIndex: number, siteCount: number, onConfirm: (data: any) => void, onCancel: () => void }) => {
+    const [toPosition, setToPosition] = useState(fromIndex + 1);
+
+    const handleConfirm = () => {
+        const toIndex = toPosition - 1;
+        if (toIndex >= 0 && toIndex < siteCount) {
+            onConfirm({ from: fromIndex, to: toIndex });
+        } else {
+            alert("Invalid position.");
+        }
+    };
+    return (
+        <DialogContent>
+            <DialogHeader><DialogTitle>Move Site</DialogTitle></DialogHeader>
+            <div className="p-6 space-y-4">
+                <Label>New Position (1 to {siteCount})</Label>
+                <Input type="number" min={1} max={siteCount} value={toPosition} onChange={(e) => setToPosition(parseInt(e.target.value))} />
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button onClick={handleConfirm}>Move</Button>
+            </DialogFooter>
+        </DialogContent>
+    );
+};
