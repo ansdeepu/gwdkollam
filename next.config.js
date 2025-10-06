@@ -50,6 +50,10 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // An empty webpack config can sometimes help resolve build cache issues.
+    return config;
+  },
 };
 
 module.exports = nextConfig;

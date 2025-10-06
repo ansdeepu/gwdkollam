@@ -238,7 +238,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
 
 const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
     const [data, setData] = useState({ ...initialData, dateOfPayment: formatDateForInput(initialData?.dateOfPayment) });
-    const handleChange = (key: string, value: any) => setData(prev => ({ ...prev, [key]: value }));
+    const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     const handleNumberChange = (key: string, value: string) => {
         const num = value === '' ? undefined : parseFloat(value);
         handleChange(key, num);
@@ -640,12 +640,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 {!isViewer && <Button type="button" onClick={() => openDialog('application', getValues())}><Edit className="h-4 w-4 mr-2" />Edit</Button>}
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-                    <DetailRow label="File No." value={watch('fileNo')} />
-                    <DetailRow label="Applicant Name & Address" value={watch('applicantName')} className="md:col-span-2" />
-                    <DetailRow label="Phone No." value={watch('phoneNo')} />
-                    <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
-                    <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <DetailRow label="File No." value={watch('fileNo')} />
+                  <DetailRow label="Applicant Name & Address" value={watch('applicantName')} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 mt-4 pt-4 border-t">
+                  <DetailRow label="Phone No." value={watch('phoneNo')} />
+                  <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
+                  <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
                 </div>
             </CardContent>
         </Card>
