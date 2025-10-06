@@ -85,15 +85,20 @@ const PURPOSES_REQUIRING_RIG_ACCESSIBILITY: SitePurpose[] = ["BWC", "TWC", "FPW"
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
 const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed"];
 
-
 const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): string[] => {
   const messages = new Set<string>();
 
-  const processPath = (path: string, index?: number): string => {
-    if (path.startsWith('remittanceDetails')) return `Remittance #${(index ?? 0) + 1}`;
-    if (path.startsWith('siteDetails')) return `Site #${(index ?? 0) + 1}`;
-    if (path.startsWith('paymentDetails')) return `Payment #${(index ?? 0) + 1}`;
+  const processPath = (path: string, index: number): string => {
+    if (path === 'siteDetails') return `Site #${index + 1}`;
+    if (path === 'remittanceDetails') return `Remittance #${index + 1}`;
+    if (path === 'paymentDetails') return `Payment #${index + 1}`;
     return path;
+  };
+
+  const formattedFieldName = (fieldName: string) => {
+    return fieldName
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
   };
 
   function findMessages(obj: any, parentPath: string = "") {
@@ -104,21 +109,22 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
         const newPath = parentPath ? `${parentPath}.${key}` : key;
         
         if (value?.message && typeof value.message === 'string') {
-          const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
-          messages.add(`${formattedKey}: ${value.message}`);
+          // This handles top-level errors like 'fileNo', 'applicantName'
+          messages.add(`${formattedFieldName(key)}: ${value.message}`);
         } else if (Array.isArray(value)) {
           value.forEach((item, index) => {
             if (item && typeof item === 'object') {
+              // This handles errors inside array items (e.g., siteDetails[0].nameOfSite)
               for (const itemKey in item) {
                 if (item[itemKey]?.message) {
                   const pathPrefix = processPath(newPath, index);
-                  const formattedItemKey = itemKey.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
-                  messages.add(`${pathPrefix} - ${formattedItemKey}: ${item[itemKey].message}`);
+                  messages.add(`${pathPrefix} - ${formattedFieldName(itemKey)}: ${item[itemKey].message}`);
                 }
               }
             }
           });
-        } else if (value && typeof value === 'object') {
+        } else if (value && typeof value === 'object' && key !== 'root') {
+          // This handles nested objects that are not arrays
           findMessages(value, newPath);
         }
       }
@@ -128,6 +134,7 @@ const getFormattedErrorMessages = (errors: FieldErrors<DataEntryFormData>): stri
   findMessages(errors);
   return Array.from(messages);
 };
+
 
 const DetailRow = ({ label, value, className }: { label: string; value: any, className?: string }) => {
     if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
