@@ -118,26 +118,28 @@ export default function DashboardDialogs({ dialogState, setDialogState, allFileE
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setDialogState({ ...dialogState, isOpen: open })}>
-      <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-4xl p-0 flex flex-col h-[90vh]">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Showing {data.length} records. {financeDates?.start && financeDates?.end ? `from ${format(financeDates.start, "dd/MM/yyyy")} to ${format(financeDates.end, "dd/MM/yyyy")}` : ""}.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] pr-4">
-          {data.length > 0 ? (
-            <Table>
-              <TableHeader><TableRow>{getColumnsForType(type, title).map(col => <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>)}</TableRow></TableHeader>
-              <TableBody>
-                {data.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>{getColumnsForType(type, title).map(col => <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>{row[col.key]}</TableCell>)}</TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (<p className="text-center text-muted-foreground py-8">No details found for the selected criteria.</p>)}
-        </ScrollArea>
-        <DialogFooter>
+        <div className="flex-1 min-h-0 px-6 py-4">
+            <ScrollArea className="h-full pr-4">
+              {data.length > 0 ? (
+                <Table>
+                  <TableHeader><TableRow>{getColumnsForType(type, title).map(col => <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>)}</TableRow></TableHeader>
+                  <TableBody>
+                    {data.map((row, rowIndex) => (
+                      <TableRow key={rowIndex}>{getColumnsForType(type, title).map(col => <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>{row[col.key]}</TableCell>)}</TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (<p className="text-center text-muted-foreground py-8">No details found for the selected criteria.</p>)}
+            </ScrollArea>
+        </div>
+        <DialogFooter className="p-6 pt-4 border-t">
           <Button variant="outline" onClick={exportDialogDataToExcel} disabled={data.length === 0}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
           <DialogClose asChild><Button type="button" variant="secondary">Close</Button></DialogClose>
         </DialogFooter>
