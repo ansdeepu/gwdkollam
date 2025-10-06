@@ -202,7 +202,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 </div>
                  <div className="space-y-2">
                     <Label>Constituency (LAC)</Label>
-                    <Select onValueChange={(value) => handleChange('constituency', value)} value={data.constituency}>
+                    <Select onValueChange={(value) => handleChange('constituency', value === '_clear_' ? undefined : value)} value={data.constituency}>
                         <SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
@@ -250,9 +250,14 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
 };
 
 const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, isReadOnly, isSupervisor, allLsgConstituencyMaps }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, supervisorList: any[], isReadOnly: boolean, isSupervisor: boolean, allLsgConstituencyMaps: any[] }) => {
+    const defaults = {
+        ...createDefaultSiteDetail(),
+        ...(initialData || {}),
+    };
+
     const form = useForm<SiteDetailFormData>({
       resolver: zodResolver(SiteDetailSchema),
-      defaultValues: { ...initialData, dateOfCompletion: formatDateForInput(initialData.dateOfCompletion), arsSanctionedDate: formatDateForInput(initialData.arsSanctionedDate) },
+      defaultValues: { ...defaults, dateOfCompletion: formatDateForInput(defaults.dateOfCompletion), arsSanctionedDate: formatDateForInput(defaults.arsSanctionedDate) },
     });
     
     const { control, setValue, trigger, watch, handleSubmit, getValues } = form;
@@ -310,7 +315,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
       <Form {...form}>
         <form onSubmit={handleSubmit(onConfirm)} className="flex flex-col h-full overflow-hidden">
           <DialogHeader>
-                <DialogTitle>{initialData.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
+                <DialogTitle>{initialData?.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
             </DialogHeader>
           <div className="flex-1 min-h-0">
             <ScrollArea className="h-full px-6 py-4">
