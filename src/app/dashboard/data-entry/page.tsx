@@ -110,9 +110,11 @@ export default function DataEntryPage() {
   const [dataLoading, setDataLoading] = useState(true);
   const [fileNoForHeader, setFileNoForHeader] = useState<string | null>(null);
   
+  const isApprovingUpdate = !!(user?.role === 'editor' && approveUpdateId);
+  
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
+    if (workType === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
@@ -272,7 +274,6 @@ export default function DataEntryPage() {
   const isLoading = authIsLoading || staffIsLoading || dataLoading;
   
   const workTypeContext = searchParams.get('workType') as 'public' | 'private' | null;
-  const isApprovingUpdate = !!(user?.role === 'editor' && approveUpdateId);
   const isDeniedAccess = (user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit);
 
 
