@@ -336,7 +336,7 @@ export const DataEntrySchema = z.object({
   phoneNo: z.string().optional(),
   secondaryMobileNo: z.string().optional(),
   applicationType: z.enum(applicationTypeOptions).optional(),
-  constituency: z.enum(constituencyOptions).optional(),
+  constituency: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(constituencyOptions).optional()),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   assignedSupervisorUids: z.array(z.string()).optional(),
 
