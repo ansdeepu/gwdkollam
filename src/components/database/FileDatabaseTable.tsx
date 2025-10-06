@@ -221,8 +221,10 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
   const handleEditClick = (item: DataEntryFormData) => {
     if (!canEdit || !item.id) return;
-    const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
-    router.push(`/dashboard/data-entry?id=${item.id}${pageParam}`);
+    const workTypeParam = item.applicationType?.startsWith("Private_") ? "private" : "public";
+    const pageParam = currentPage > 1 ? `page=${currentPage}` : '';
+    const queryParams = new URLSearchParams({ id: item.id, workType: workTypeParam, ...(pageParam && { page: String(currentPage) }) }).toString();
+    router.push(`/dashboard/data-entry?${queryParams}`);
   };
 
   const handleDeleteClick = (item: DataEntryFormData) => {
@@ -471,7 +473,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
                   {renderDetail("Phone No", viewItem?.phoneNo)}
                   {renderDetail("Secondary Mobile No", viewItem?.secondaryMobileNo)}
-                  {renderDetail("Constituency (LAC)", viewItem?.constituency)}
                   {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
                 </div>
 

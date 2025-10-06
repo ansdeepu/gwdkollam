@@ -109,17 +109,6 @@ export default function DataEntryPage() {
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [fileNoForHeader, setFileNoForHeader] = useState<string | null>(null);
-  
-  const returnPath = useMemo(() => {
-    let base = '/dashboard/file-room';
-    if (workType === 'private') {
-      base = '/dashboard/private-deposit-works';
-    } else if (approveUpdateId) {
-      base = '/dashboard/pending-updates';
-    }
-    return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workType, approveUpdateId, pageToReturnTo]);
-
 
   useEffect(() => {
     let isMounted = true;
@@ -300,12 +289,6 @@ export default function DataEntryPage() {
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardContent className="p-6">
-          <div className="flex justify-end mb-4">
-              <Button variant="destructive" size="sm" onClick={() => router.push(returnPath)}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-              </Button>
-          </div>
           {pageData && pageData.initialData ? (
              <DataEntryFormComponent
                 key={approveUpdateId || fileIdToEdit || 'new-entry'} 
@@ -314,6 +297,7 @@ export default function DataEntryPage() {
                 supervisorList={supervisorList}
                 userRole={user?.role}
                 workTypeContext={workType}
+                pageToReturnTo={pageToReturnTo}
              />
           ) : (
             <div className="flex h-64 items-center justify-center">
