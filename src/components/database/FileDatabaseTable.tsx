@@ -126,12 +126,21 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [isCopying, setIsCopying] = useState(false);
   
   const [pendingFileNos, setPendingFileNos] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
 
   const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
   const canDelete = user?.role === 'editor';
   const canCopy = user?.role === 'editor';
 
-  const currentPage = Number(searchParams.get('page')) || 1;
+  useEffect(() => {
+    const pageFromUrl = searchParams.get('page');
+    const pageNum = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
+    if (!isNaN(pageNum) && pageNum > 0) {
+      setCurrentPage(pageNum);
+    } else {
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function checkPendingStatus() {
@@ -203,6 +212,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const totalPages = Math.ceil(displayedEntries.length / ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
+    setCurrentPage(page);
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', String(page));
     router.push(`?${params.toString()}`);
@@ -216,7 +226,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const handleEditClick = (item: DataEntryFormData) => {
     if (!canEdit || !item.id) return;
     const workTypeParam = item.applicationType?.startsWith("Private_") ? "private" : "public";
-    const pageParam = currentPage > 1 ? `page=${currentPage}` : '';
+    const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
     const queryParams = new URLSearchParams({ id: item.id, workType: workTypeParam, ...(pageParam && { page: String(currentPage) }) }).toString();
     router.push(`/dashboard/data-entry?${queryParams}`);
   };
@@ -353,12 +363,15 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     <TableCell className="font-medium w-[150px]">{entry.fileNo}</TableCell>
                     <TableCell>{entry.applicantName}</TableCell>
                     <TableCell>
-                      {entry.siteDetails && entry.siteDetails.length > 0
-                        ? entry.siteDetails.map((site, idx) => (
-                            <span key={idx} className={cn("font-semibold", FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) ? 'text-red-600' : 'text-green-600')}>
-                              {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
-                            </span>
-                          ))
+                       {entry.siteDetails && entry.siteDetails.length > 0
+                        ? entry.siteDetails.map((site, idx) => {
+                            const hasError = FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus) && !site.dateOfCompletion;
+                            return (
+                                <span key={idx} className={cn("font-semibold", hasError ? 'text-red-600' : 'text-green-600')}>
+                                {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
+                                </span>
+                            );
+                            })
                         : "N/A"}
                     </TableCell>
                     <TableCell>

@@ -232,6 +232,7 @@ export const rigAccessibilityOptions = [
 export type RigAccessibility = typeof rigAccessibilityOptions[number];
 
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
 
 export const SiteDetailSchema = z.object({
   nameOfSite: z.string().min(1, "Name of Site is required."),
@@ -310,8 +311,7 @@ export const SiteDetailSchema = z.object({
             path: ["workStatus"],
         });
     }
-    const finalStatuses: SiteWorkStatus[] = ['Work Completed', 'Work Failed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
-    if (data.workStatus && finalStatuses.includes(data.workStatus as SiteWorkStatus) && !data.dateOfCompletion) {
+    if (data.workStatus && FINAL_WORK_STATUSES.includes(data.workStatus as SiteWorkStatus) && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: `is required when status is '${data.workStatus}'.`,
