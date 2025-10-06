@@ -144,7 +144,7 @@ export default function DashboardPage() {
                 ...site,
                 fileNo: entry.fileNo,
                 applicantName: entry.applicantName,
-                constituency: site.constituency || entry.constituency,
+                constituency: site.constituency,
                 purpose: site.purpose || 'N/A',
                 dateOfCompletion: site.dateOfCompletion,
                 totalExpenditure: site.totalExpenditure || 0,
