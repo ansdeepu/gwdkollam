@@ -248,6 +248,9 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     const { control, setValue, trigger, watch, handleSubmit, getValues } = form;
     
     const watchedPurpose = watch('purpose');
+    const watchedWorkStatus = watch('workStatus');
+    const isCompletionDateRequired = watchedWorkStatus && FINAL_WORK_STATUSES.includes(watchedWorkStatus as SiteWorkStatus);
+    
     const surveyPurposes: SitePurpose[] = ['BWC', 'TWC', 'FPW'];
     const isWellPurpose = surveyPurposes.includes(watchedPurpose as SitePurpose);
     const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(watchedPurpose as SitePurpose);
@@ -402,7 +405,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly && !isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
-                                <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date {isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                                 {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                                 <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                             </div>
@@ -477,7 +480,7 @@ const SiteViewDialogContent = ({ siteData, onCancel }: { siteData: SiteDetailFor
                         {siteData.purpose === 'BWC' && <DetailRow label="OB (m)" value={siteData.surveyRecommendedOB} />}
                         {siteData.purpose === 'BWC' && <DetailRow label="Casing Pipe (m)" value={siteData.surveyRecommendedCasingPipe} />}
                         {siteData.purpose === 'TWC' && <DetailRow label="Plain Pipe (m)" value={siteData.surveyRecommendedPlainPipe} />}
-                        {siteData.purpose === 'TWC' && <DetailRow label="Slotted Pipe (m)" value={siteData.surveyRecommendedSlottedPipe} />}
+                        {siteData.purpose === 'TWC' && <DetailRow label="Slotted Pipe (m)" value={siteData.surveySlottedPipe} />}
                         {siteData.purpose === 'TWC' && <DetailRow label="MS Casing Pipe (m)" value={siteData.surveyRecommendedMsCasingPipe} />}
                         {siteData.purpose === 'FPW' && <DetailRow label="Casing Pipe (m)" value={siteData.surveyRecommendedCasingPipe} />}
                         <DetailRow label="Survey Location" value={siteData.surveyLocation} /><DetailRow label="Survey Remarks" value={siteData.surveyRemarks} />
@@ -832,7 +835,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 const isSiteAssignedToCurrentUser = isSupervisor && siteData.supervisorUid === user?.uid;
                                 const isSiteEditableForSupervisor = isSiteAssignedToCurrentUser && !FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus);
                                 const isReadOnlyForSite = isViewer || (isSupervisor && !isSiteEditableForSupervisor);
-                                const isFinalStatus = ['Work Completed', 'Work Failed'].includes(siteData.workStatus as SiteWorkStatus);
+                                const isFinalStatusWithMissingDate = FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus) && !siteData.dateOfCompletion;
+                                
                                 const isBWC = siteData.purpose === 'BWC';
                                 const isFPW = siteData.purpose === 'FPW';
                                 const isTWC = siteData.purpose === 'TWC';
@@ -846,7 +850,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                     <AccordionItem value={`site-${index}`} key={field.id}>
                                        <AccordionTrigger className="p-4 border rounded-lg data-[state=open]:bg-secondary/50">
                                             <div className="flex justify-between items-center w-full">
-                                                <p className={cn("font-semibold text-base", isFinalStatus ? "text-red-600" : "text-green-600")}>
+                                                <p className={cn("font-semibold text-base text-left", isFinalStatusWithMissingDate ? "text-destructive" : (FINAL_WORK_STATUSES.includes(siteData.workStatus as SiteWorkStatus) ? "text-green-600" : "text-primary"))}>
                                                     Site #{index + 1}: {siteData.nameOfSite} {siteData.purpose && `(${siteData.purpose})`}
                                                 </p>
                                                 <div className="flex items-center gap-1 mr-2" onClick={(e) => e.stopPropagation()}>
