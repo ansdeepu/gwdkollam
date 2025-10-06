@@ -124,19 +124,14 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  
   const [pendingFileNos, setPendingFileNos] = useState<Set<string>>(new Set());
 
   const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
   const canDelete = user?.role === 'editor';
   const canCopy = user?.role === 'editor';
-  
-  useEffect(() => {
-    const page = searchParams.get('page');
-    if (page && !isNaN(parseInt(page))) {
-      setCurrentPage(parseInt(page));
-    }
-  }, [searchParams]);
+
+  const currentPage = Number(searchParams.get('page')) || 1;
 
   useEffect(() => {
     async function checkPendingStatus() {
@@ -195,9 +190,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     });
   }, [fileEntries, searchTerm]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, fileEntries]);
 
   const displayedEntries = filteredEntries;
 
@@ -211,7 +203,9 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const totalPages = Math.ceil(displayedEntries.length / ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(page));
+    router.push(`?${params.toString()}`);
   };
 
   const handleViewClick = (item: DataEntryFormData) => {
@@ -242,9 +236,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
           title: "File Entry Deleted",
           description: `File No: ${deleteItem.fileNo} has been deleted.`,
         });
-        if (paginatedEntries.length === 1 && currentPage > 1) {
-          setCurrentPage(currentPage - 1);
-        }
       } catch (error: any) {
          toast({
           title: "Error Deleting File",
@@ -561,11 +552,11 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                                   {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
                                   {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
                                 </>}
-                                {isHPSPurpose && <>
-                                  {renderDetail("Depth Erected (m)", site.totalDepth)}
-                                  {renderDetail("Water Level (m)", site.waterLevel)}
+                                {(isHPSPurpose || isMWSSSchemePurpose) && <>
+                                  {isHPSPurpose && renderDetail("Depth Erected (m)", site.totalDepth)}
+                                  {isHPSPurpose && renderDetail("Water Level (m)", site.waterLevel)}
+                                  {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
                                 </>}
-                                {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
                               </>}
 
                                {isARSPurpose && <>

@@ -1,4 +1,5 @@
 
+
 // src/components/dashboard/DashboardDialogs.tsx
 "use client";
 
@@ -118,7 +119,7 @@ export default function DashboardDialogs({ dialogState, setDialogState, allFileE
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setDialogState({ ...dialogState, isOpen: open })}>
-      <DialogContent className="sm:max-w-4xl p-0 flex flex-col h-[90vh]">
+      <DialogContent className="max-w-4xl p-0 flex flex-col h-[90vh]">
         <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>

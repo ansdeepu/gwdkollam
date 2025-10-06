@@ -1,4 +1,5 @@
 
+
 // src/components/dashboard/ConstituencyWiseOverview.tsx
 "use client";
 
@@ -196,45 +197,47 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates
       </CardHeader>
       <CardContent>
         {summaryData.totalWorks > 0 ? (
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sortedConstituencies.map(constituency => {
-                  const data = summaryData.constituencyData[constituency];
-                  if (!data || data.totalCount === 0) return null;
-                  const hasPurposeData = Object.values(data.byPurpose).some(p => p.count > 0);
+          <div className="max-h-[400px]">
+            <ScrollArea className="h-full pr-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sortedConstituencies.map(constituency => {
+                    const data = summaryData.constituencyData[constituency];
+                    if (!data || data.totalCount === 0) return null;
+                    const hasPurposeData = Object.values(data.byPurpose).some(p => p.count > 0);
 
-                  return (
-                    <div key={constituency} className={cn("p-4 border rounded-lg", getColorClass(constituency))}>
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-base font-semibold text-primary">{constituency}</h3>
-                        <div className="text-right">
-                          <Button variant="link" className="text-xl font-bold p-0 h-auto" onClick={() => handleCellClick(data.allWorks, `All Works in ${constituency}`)} disabled={data.totalCount === 0}>
-                            {data.totalCount} <span className="text-sm font-normal text-muted-foreground ml-1">Works</span>
-                          </Button>
-                          <p className="text-sm font-semibold text-primary/80">₹{data.totalExpenditure.toLocaleString('en-IN')}</p>
+                    return (
+                      <div key={constituency} className={cn("p-4 border rounded-lg", getColorClass(constituency))}>
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-base font-semibold text-primary">{constituency}</h3>
+                          <div className="text-right">
+                            <Button variant="link" className="text-xl font-bold p-0 h-auto" onClick={() => handleCellClick(data.allWorks, `All Works in ${constituency}`)} disabled={data.totalCount === 0}>
+                              {data.totalCount} <span className="text-sm font-normal text-muted-foreground ml-1">Works</span>
+                            </Button>
+                            <p className="text-sm font-semibold text-primary/80">₹{data.totalExpenditure.toLocaleString('en-IN')}</p>
+                          </div>
                         </div>
+
+                        {hasPurposeData && (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-x-4 gap-y-2 pt-3 border-t border-border/50">
+                            {Object.entries(data.byPurpose).map(([purpose, { count }]) => {
+                                if (count === 0) return null;
+                                return (
+                                  <div key={purpose} className="flex items-center justify-between text-xs">
+                                    <span className="text-muted-foreground">{purpose}</span>
+                                    <Button variant="link" className="p-0 h-auto text-xs font-semibold" onClick={() => handleCellClick(data.byPurpose[purpose].data, `Works for '${purpose}' in ${constituency}`)} disabled={count === 0}>
+                                      {count}
+                                    </Button>
+                                  </div>
+                                )
+                            })}
+                          </div>
+                        )}
                       </div>
-
-                      {hasPurposeData && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-x-4 gap-y-2 pt-3 border-t border-border/50">
-                          {Object.entries(data.byPurpose).map(([purpose, { count }]) => {
-                              if (count === 0) return null;
-                              return (
-                                <div key={purpose} className="flex items-center justify-between text-xs">
-                                  <span className="text-muted-foreground">{purpose}</span>
-                                  <Button variant="link" className="p-0 h-auto text-xs font-semibold" onClick={() => handleCellClick(data.byPurpose[purpose].data, `Works for '${purpose}' in ${constituency}`)} disabled={count === 0}>
-                                    {count}
-                                  </Button>
-                                </div>
-                              )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )
-              })}
-            </div>
-          </ScrollArea>
+                    )
+                })}
+              </div>
+            </ScrollArea>
+          </div>
         ) : (
            <div className="col-span-full text-center text-muted-foreground py-10 h-[400px] flex items-center justify-center border-2 border-dashed rounded-lg">
                 <p>No works found for the selected filters.</p>
