@@ -26,7 +26,7 @@ interface CombinedWork {
 
 interface ConstituencyWiseOverviewProps {
   allWorks: CombinedWork[];
-  onOpenDialog: (data: any[], title: string, columns: any[]) => void;
+  onOpenDialog: (data: any[], title: string, columns: any[], type: 'detail') => void;
   dates: { start?: Date, end?: Date };
   onSetDates: (dates: { start?: Date, end?: Date }) => void;
 }
@@ -161,7 +161,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates
         totalExpenditure: (Number(item.totalExpenditure) || 0).toLocaleString('en-IN'),
     }));
 
-    onOpenDialog(dialogData, title, columns);
+    onOpenDialog(dialogData, title, columns, 'detail');
   };
   
   const sortedConstituencies = useMemo(() => {
@@ -244,4 +244,3 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates
     </Card>
   );
 }
-
