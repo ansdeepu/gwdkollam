@@ -191,15 +191,15 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Phone No.</Label><Input value={data.phoneNo} onChange={(e) => handleChange('phoneNo', e.target.value)} /></div>
                 <div className="space-y-2"><Label>Secondary Mobile No.</Label><Input value={data.secondaryMobileNo} onChange={(e) => handleChange('secondaryMobileNo', e.target.value)} /></div>
-                <div className="space-y-2">
-                    <Label>Type of Application *</Label>
-                    <Select onValueChange={(value) => handleChange('applicationType', value)} value={data.applicationType}>
-                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                        <SelectContent>
-                            {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>Type of Application *</Label>
+                <Select onValueChange={(value) => handleChange('applicationType', value)} value={data.applicationType}>
+                    <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                    <SelectContent>
+                        {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
         </div>
         <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
@@ -208,7 +208,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
 };
 
 const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
-    const [data, setData] = useState({ ...initialData, dateOfRemittance: formatDateForInput(initialData.dateOfRemittance) });
+    const [data, setData] = useState({ ...initialData, dateOfRemittance: formatDateForInput(initialData?.dateOfRemittance) });
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-auto">
@@ -660,7 +660,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         
                         return (
                             <AccordionItem key={site.id} value={`site-${index}`} className="border bg-background rounded-lg shadow-sm">
-                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : isFinalStatus ? "text-destructive" : "text-primary", site.isPending && "text-amber-600")}>
+                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : isFinalStatus ? "text-red-600" : "text-green-600", site.isPending && "text-amber-600")}>
                                     <div className="flex justify-between items-center w-full">
                                         <div className="flex items-center gap-2">
                                             {hasError && <Info className="h-4 w-4" />}
