@@ -188,7 +188,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 <div className="space-y-2 col-span-1"><Label>File No *</Label><Input value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} /></div>
                 <div className="space-y-2 col-span-2"><Label>Name & Address of Institution/Applicant *</Label><Textarea value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} className="min-h-[40px]"/></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Phone No.</Label><Input value={data.phoneNo} onChange={(e) => handleChange('phoneNo', e.target.value)} /></div>
                 <div className="space-y-2"><Label>Secondary Mobile No.</Label><Input value={data.secondaryMobileNo} onChange={(e) => handleChange('secondaryMobileNo', e.target.value)} /></div>
                 <div className="space-y-2">
@@ -197,16 +197,6 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                         <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
                         <SelectContent>
                             {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                 <div className="space-y-2">
-                    <Label>Constituency (LAC)</Label>
-                    <Select onValueChange={(value) => handleChange('constituency', value === '_clear_' ? undefined : value)} value={data.constituency}>
-                        <SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
-                            {[...constituencyOptions].sort((a,b) => a.localeCompare(b)).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
@@ -451,7 +441,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | null>(null);
 
-  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site'; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
   const [itemToDelete, setItemToDelete] = useState<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
 
   const isEditor = userRole === 'editor';
@@ -466,17 +456,18 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const { control, handleSubmit, setValue, getValues, watch, trigger } = form;
 
   const { fields: remittanceFields, append: appendRemittance, remove: removeRemittance, update: updateRemittance } = useFieldArray({ control, name: "remittanceDetails" });
-  const { fields: siteFields, append: appendSite, remove: removeSite, update: updateSite } = useFieldArray({ control, name: "siteDetails" });
+  const { fields: siteFields, append: appendSite, remove: removeSite, update: updateSite, move: moveSite } = useFieldArray({ control, name: "siteDetails" });
   const { fields: paymentFields, append: appendPayment, remove: removePayment, update: updatePayment } = useFieldArray({ control, name: "paymentDetails" });
 
   const watchedPaymentDetails = useWatch({ control, name: "paymentDetails" });
   const watchedRemittanceDetails = useWatch({ control, name: "remittanceDetails" });
+  const watchedSiteDetails = useWatch({ control, name: "siteDetails" });
 
-  const isReadOnly = (fieldName: keyof SiteDetailFormData) => {
+  const isReadOnly = (fieldName?: keyof SiteDetailFormData) => {
     if (isEditor) return false;
     if (isViewer) return true;
     if (isSupervisor) {
-      // Supervisor can ONLY edit specific fields.
+      if (!fieldName) return true; // Readonly for file-level changes
       const supervisorEditableFields: (keyof SiteDetailFormData)[] = ['workStatus', 'dateOfCompletion', 'drillingRemarks', 'workRemarks', 'totalDepth', 'yieldDischarge', 'waterLevel', 'zoneDetails'];
       return !supervisorEditableFields.includes(fieldName);
     }
@@ -499,6 +490,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setValue("totalPaymentAllEntries", totalPayment);
     setValue("overallBalance", totalRemittance - totalPayment);
   }, [watchedRemittanceDetails, watchedPaymentDetails, setValue]);
+
+  const totalEstimate = useMemo(() => {
+    return watchedSiteDetails?.reduce((sum, site) => sum + (Number(site.estimateAmount) || 0), 0) || 0;
+  }, [watchedSiteDetails]);
 
   const onInvalid = (errors: FieldErrors<DataEntryFormData>) => {
     console.error("Form validation errors:", errors);
@@ -546,8 +541,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     }
   };
 
-  const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site', data: any) => {
-    setDialogState({ type, data });
+  const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site', data: any, isView: boolean = false) => {
+    setDialogState({ type, data, isView });
   };
 
   const handleDialogConfirm = (data: any) => {
@@ -599,7 +594,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setItemToDelete(null);
   };
   
-  const closeDialog = () => setDialogState({ type: null, data: null });
+  const closeDialog = () => setDialogState({ type: null, data: null, isView: false });
   const applicationTypeOptionsForForm = workTypeContext === 'private' ? PRIVATE_APPLICATION_TYPES : PUBLIC_APPLICATION_TYPES;
 
   return (
@@ -621,7 +616,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <DetailRow label="Phone No." value={watch('phoneNo')} />
                     <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
                     <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
-                    <DetailRow label="Constituency (LAC)" value={watch('constituency')} />
                 </div>
             </CardContent>
         </Card>
@@ -634,7 +628,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             </CardHeader>
             <CardContent>
                 <Table>
-                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                    <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                     <TableBody>
                         {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
                             <TableRow key={item.id}>
@@ -666,14 +660,21 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         
                         return (
                             <AccordionItem key={site.id} value={`site-${index}`} className="border bg-background rounded-lg shadow-sm">
-                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : isFinalStatus ? "text-destructive" : "text-green-600", site.isPending && "text-amber-600")}>
+                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : isFinalStatus ? "text-destructive" : "text-primary", site.isPending && "text-amber-600")}>
                                     <div className="flex justify-between items-center w-full">
                                         <div className="flex items-center gap-2">
                                             {hasError && <Info className="h-4 w-4" />}
                                             {site.isPending && <Clock className="h-4 w-4" />}
                                             Site #{index + 1}: {site.nameOfSite || "Unnamed Site"} ({site.workStatus || "No Status"})
                                         </div>
-                                        {!isViewer && <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('site', { index, ...site }); }}><Edit className="h-4 w-4 mr-2"/>Edit Site</Button>}
+                                        {!isViewer && (
+                                            <div className="flex items-center space-x-1 mr-2">
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }, true); }}><Eye className="h-4 w-4" /></Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}><Edit className="h-4 w-4" /></Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Move functionality coming soon!'); }}><ArrowUpDown className="h-4 w-4" /></Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
@@ -705,7 +706,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             </CardHeader>
             <CardContent>
                  <Table>
-                    <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Account</TableHead><TableHead>Revenue Head</TableHead><TableHead>Contractor Payment</TableHead><TableHead>GST</TableHead><TableHead>Income Tax</TableHead><TableHead>KBCWB</TableHead><TableHead>Refund</TableHead><TableHead>Total Payment</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                    <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Account</TableHead><TableHead>Revenue Head</TableHead><TableHead>Contractor Payment</TableHead><TableHead>GST</TableHead><TableHead>Income Tax</TableHead><TableHead>KBCWB</TableHead><TableHead>Refund</TableHead><TableHead>Total Payment</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                     <TableBody>
                          {paymentFields.length > 0 ? paymentFields.map((item, index) => (
                             <TableRow key={item.id}>
@@ -734,6 +735,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
                      <h3 className="font-semibold text-lg text-primary">Financial Summary</h3>
                      <dl className="space-y-2">
+                        <div className="flex justify-between items-baseline"><dt>Total Estimate (Sites)</dt><dd className="font-mono">₹{totalEstimate.toLocaleString('en-IN') || '0'}</dd></div>
                         <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{getValues('totalRemittance')?.toLocaleString('en-IN') || '0'}</dd></div>
                         <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN') || '0'}</dd></div>
                         <Separator />
@@ -762,7 +764,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <DialogContent className="max-w-3xl"><RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
         </Dialog>
          <Dialog open={dialogState.type === 'site'} onOpenChange={closeDialog}>
-            <DialogContent className="max-w-6xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={isReadOnly(dialogState.data?.fieldName)} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
+            <DialogContent className="max-w-6xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={dialogState.isView || isReadOnly(dialogState.data?.fieldName)} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
         </Dialog>
         <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
             <DialogContent className="max-w-3xl">
