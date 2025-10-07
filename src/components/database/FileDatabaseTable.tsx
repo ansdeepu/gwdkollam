@@ -342,14 +342,14 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="w-[80px]">Sl. No.</TableHead>
-                  <TableHead className="w-[150px]">File No.</TableHead>
-                  <TableHead>Institution / Applicant Name</TableHead>
-                  <TableHead>Site Name(s)</TableHead>
-                  <TableHead>Purpose(s)</TableHead>
-                  <TableHead>Date of Remittance</TableHead>
-                  <TableHead>File Status</TableHead>
-                  <TableHead className="text-center w-[180px]">Actions</TableHead>
+                  <TableHead className="w-[5%] px-2 py-3">Sl. No.</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3">File No.</TableHead>
+                  <TableHead className="w-[15%] px-2 py-3">Applicant Name</TableHead>
+                  <TableHead className="w-[15%] px-2 py-3">Site Name(s)</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3">Purpose(s)</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3">Date of Remittance</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3">File Status</TableHead>
+                  <TableHead className="text-center w-[15%] px-2 py-3">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -359,35 +359,36 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   
                   return (
                   <TableRow key={entry.id}>
-                    <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                    <TableCell className="font-medium w-[150px]">{entry.fileNo}</TableCell>
-                    <TableCell>{entry.applicantName}</TableCell>
-                    <TableCell>
+                    <TableCell className="w-[5%] px-2 py-2 text-sm text-center">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                    <TableCell className="font-medium w-[10%] px-2 py-2 text-sm">{entry.fileNo}</TableCell>
+                    <TableCell className="w-[15%] px-2 py-2 text-sm">{entry.applicantName}</TableCell>
+                    <TableCell className="w-[15%] px-2 py-2 text-sm">
                        {entry.siteDetails && entry.siteDetails.length > 0
                         ? entry.siteDetails.map((site, idx) => {
+                             const hasAccessibilityIssue = site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute';
                             const isFinal = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
                             return (
-                                <span key={idx} className={cn("font-semibold", isFinal ? 'text-red-600' : 'text-green-600')}>
+                                <span key={idx} className={cn("font-semibold", hasAccessibilityIssue ? 'text-amber-600' : (isFinal ? 'text-red-600' : 'text-green-600'))}>
                                 {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
                                 </span>
                             );
                             })
                         : "N/A"}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-[10%] px-2 py-2 text-sm">
                       {entry.siteDetails && entry.siteDetails.length > 0
                         ? entry.siteDetails.map(site => site.purpose).filter(Boolean).join(', ') || "N/A"
                         : "N/A"}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-[10%] px-2 py-2 text-sm">
                       {entry.remittanceDetails?.[0]?.dateOfRemittance 
                         ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") 
                         : "N/A"}
                     </TableCell>
-                    <TableCell className={cn("font-semibold", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
+                    <TableCell className={cn("font-semibold w-[10%] px-2 py-2 text-sm", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
                       {entry.fileStatus}
                     </TableCell>
-                    <TableCell className="text-right w-[180px]">
+                    <TableCell className="text-right w-[15%] px-2 py-2">
                       <div className="flex items-center justify-end space-x-1">
                         <Tooltip>
                           <TooltipTrigger asChild>
