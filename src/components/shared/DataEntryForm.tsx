@@ -181,7 +181,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
           <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 pt-0 space-y-4 flex-1">
-            <div className="grid grid-cols-3 gap-4 items-start">
+             <div className="grid grid-cols-3 gap-4 items-start">
                 <div className="space-y-2 col-span-1"><Label>File No *</Label><Input value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} /></div>
                 <div className="space-y-2 col-span-2"><Label>Name & Address of Institution/Applicant *</Label><Textarea value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} className="min-h-[40px]"/></div>
             </div>
@@ -751,7 +751,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                  {!isViewer && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
-                 <div className="relative overflow-x-auto">
+                 <div className="relative max-h-[400px] overflow-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
