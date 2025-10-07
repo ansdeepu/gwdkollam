@@ -49,7 +49,6 @@ import {
   type SiteWorkStatus,
   constituencyOptions,
   type Constituency,
-  optionalNumber,
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -489,6 +488,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | undefined>(undefined);
   const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
   const [itemToDelete, setItemToDelete] = useState<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
+  const [siteToCopy, setSiteToCopy] = useState<number | null>(null);
 
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
@@ -593,16 +593,22 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   };
   
   const handleCopySite = (index: number) => {
-    const siteToCopy = getValues(`siteDetails.${index}`);
-    if (siteToCopy) {
+    setSiteToCopy(index);
+  };
+
+  const confirmCopySite = () => {
+    if (siteToCopy === null) return;
+    const siteToCopyData = getValues(`siteDetails.${siteToCopy}`);
+    if (siteToCopyData) {
       const newSite = {
-        ...JSON.parse(JSON.stringify(siteToCopy)), // Deep copy
+        ...JSON.parse(JSON.stringify(siteToCopyData)), // Deep copy
         id: uuidv4(), // Assign a new unique ID for the key
-        nameOfSite: `${siteToCopy.nameOfSite} (Copy)`,
+        nameOfSite: `${siteToCopyData.nameOfSite} (Copy)`,
       };
       appendSite(newSite);
-      toast({ title: "Site Copied", description: `A copy of "${siteToCopy.nameOfSite}" has been added locally. Save the file to make it permanent.` });
+      toast({ title: "Site Copied", description: `A copy of "${siteToCopyData.nameOfSite}" has been added locally. Save the file to make it permanent.` });
     }
+    setSiteToCopy(null);
   };
 
   const handleDialogConfirm = (data: any) => {
@@ -811,7 +817,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                      <h3 className="font-semibold text-lg text-primary">Financial Summary</h3>
                      <dl className="space-y-2">
                         <div className="flex justify-between items-baseline"><dt>Total Estimate (Sites)</dt><dd className="font-mono">₹{totalEstimate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
-                        <Separator/>
+                        <Separator />
                         <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, minimumFractionDigits: 2}) || '0.00'}</dd></div>
                         <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                         <Separator />
@@ -860,6 +866,23 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently remove the selected {itemToDelete?.type} entry from this file.</AlertDialogDescription></AlertDialogHeader>
                 <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteItem} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
             </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={siteToCopy !== null} onOpenChange={() => setSiteToCopy(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Copy</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to create a copy of this site?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setSiteToCopy(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmCopySite}>
+                Yes, Copy
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
         </AlertDialog>
 
       </form>
