@@ -245,29 +245,31 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
     };
 
     return (
-        <div className="flex flex-col h-auto">
+        <div className="flex flex-col h-full overflow-hidden">
             <DialogHeader>
                 <DialogTitle>Payment Details</DialogTitle>
             </DialogHeader>
-            <ScrollArea className="flex-1">
-                <div className="p-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2"><Label>Date of Payment</Label><Input type="date" value={data.dateOfPayment} onChange={e => handleChange('dateOfPayment', e.target.value)} /></div>
-                        <div className="space-y-2"><Label>Payment Account</Label><Select onValueChange={value => handleChange('paymentAccount', value)} value={data.paymentAccount}><SelectTrigger><SelectValue placeholder="Select Account"/></SelectTrigger><SelectContent>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
-                    </div>
-                    <Separator/>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="space-y-2"><Label>Revenue Head (₹)</Label><Input type="number" value={data.revenueHead ?? ''} onChange={e => handleNumberChange('revenueHead', e.target.value)} /></div>
-                        <div className="space-y-2"><Label>Contractor's Payment (₹)</Label><Input type="number" value={data.contractorsPayment ?? ''} onChange={e => handleNumberChange('contractorsPayment', e.target.value)} /></div>
-                        <div className="space-y-2"><Label>GST (₹)</Label><Input type="number" value={data.gst ?? ''} onChange={e => handleNumberChange('gst', e.target.value)} /></div>
-                        <div className="space-y-2"><Label>Income Tax (₹)</Label><Input type="number" value={data.incomeTax ?? ''} onChange={e => handleNumberChange('incomeTax', e.target.value)} /></div>
-                        <div className="space-y-2"><Label>KBCWB (₹)</Label><Input type="number" value={data.kbcwb ?? ''} onChange={e => handleNumberChange('kbcwb', e.target.value)} /></div>
-                        <div className="space-y-2"><Label>Refund to Party (₹)</Label><Input type="number" value={data.refundToParty ?? ''} onChange={e => handleNumberChange('refundToParty', e.target.value)} /></div>
-                    </div>
-                    <Separator/>
-                    <div className="space-y-2"><Label>Remarks</Label><Textarea value={data.paymentRemarks} onChange={e => handleChange('paymentRemarks', e.target.value)} placeholder="Add any remarks for this payment entry..." /></div>
-                </div>
-            </ScrollArea>
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-full px-6 py-4">
+                  <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2"><Label>Date of Payment</Label><Input type="date" value={data.dateOfPayment} onChange={e => handleChange('dateOfPayment', e.target.value)} /></div>
+                          <div className="space-y-2"><Label>Payment Account</Label><Select onValueChange={value => handleChange('paymentAccount', value)} value={data.paymentAccount}><SelectTrigger><SelectValue placeholder="Select Account"/></SelectTrigger><SelectContent>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+                      </div>
+                      <Separator/>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          <div className="space-y-2"><Label>Revenue Head (₹)</Label><Input type="number" value={data.revenueHead ?? ''} onChange={e => handleNumberChange('revenueHead', e.target.value)} /></div>
+                          <div className="space-y-2"><Label>Contractor's Payment (₹)</Label><Input type="number" value={data.contractorsPayment ?? ''} onChange={e => handleNumberChange('contractorsPayment', e.target.value)} /></div>
+                          <div className="space-y-2"><Label>GST (₹)</Label><Input type="number" value={data.gst ?? ''} onChange={e => handleNumberChange('gst', e.target.value)} /></div>
+                          <div className="space-y-2"><Label>Income Tax (₹)</Label><Input type="number" value={data.incomeTax ?? ''} onChange={e => handleNumberChange('incomeTax', e.target.value)} /></div>
+                          <div className="space-y-2"><Label>KBCWB (₹)</Label><Input type="number" value={data.kbcwb ?? ''} onChange={e => handleNumberChange('kbcwb', e.target.value)} /></div>
+                          <div className="space-y-2"><Label>Refund to Party (₹)</Label><Input type="number" value={data.refundToParty ?? ''} onChange={e => handleNumberChange('refundToParty', e.target.value)} /></div>
+                      </div>
+                      <Separator/>
+                      <div className="space-y-2"><Label>Remarks</Label><Textarea value={data.paymentRemarks} onChange={e => handleChange('paymentRemarks', e.target.value)} placeholder="Add any remarks for this payment entry..." /></div>
+                  </div>
+              </ScrollArea>
+            </div>
             <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
     );
@@ -574,6 +576,19 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite', data: any, isView: boolean = false) => {
     setDialogState({ type, data, isView });
   };
+  
+  const handleCopySite = (index: number) => {
+    const siteToCopy = getValues(`siteDetails.${index}`);
+    if (siteToCopy) {
+      const newSite = {
+        ...JSON.parse(JSON.stringify(siteToCopy)), // Deep copy
+        id: uuidv4(),
+        nameOfSite: `${siteToCopy.nameOfSite} (Copy)`,
+      };
+      appendSite(newSite);
+      toast({ title: "Site Copied", description: `A copy of "${siteToCopy.nameOfSite}" has been added.` });
+    }
+  };
 
   const handleDialogConfirm = (data: any) => {
     const { type, data: originalData } = dialogState;
@@ -595,11 +610,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         }
         break;
       case 'payment':
-        const totalPayment = calculatePaymentEntryTotalGlobal(data);
         if (originalData.index !== undefined) {
-          updatePayment(originalData.index, { ...data, totalPaymentPerEntry: totalPayment });
+          updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
         } else {
-          appendPayment({ ...data, totalPaymentPerEntry: totalPayment });
+          appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
         }
         break;
       case 'site':
@@ -700,6 +714,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                         {!isViewer && (
                                             <div className="flex items-center space-x-1 mr-2">
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }, true); }}><Eye className="h-4 w-4" /></Button>
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopySite(index); }}><Copy className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}><Edit className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('reorderSite', { from: index }); }}><ArrowUpDown className="h-4 w-4" /></Button>
                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
@@ -731,7 +746,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">4. Payment Details</CardTitle></div>
-                {!isViewer && <Button type="button" onClick={() => openDialog('payment', {})}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
+                 {!isViewer && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
                 <div className="relative max-h-[400px] overflow-auto">
@@ -795,8 +810,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
          <Dialog open={dialogState.type === 'site'} onOpenChange={closeDialog}>
             <DialogContent className="max-w-6xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={dialogState.isView || isReadOnly(dialogState.data?.fieldName)} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
         </Dialog>
-        <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
-            <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
+         <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
+            <DialogContent className="max-w-4xl h-[90vh]"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
         </Dialog>
         {dialogState.type === 'reorderSite' && dialogState.data && (
             <Dialog open={true} onOpenChange={closeDialog}>
