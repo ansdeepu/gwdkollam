@@ -582,11 +582,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     if (siteToCopy) {
       const newSite = {
         ...JSON.parse(JSON.stringify(siteToCopy)), // Deep copy
-        id: uuidv4(),
+        id: uuidv4(), // Assign a new unique ID for the key
         nameOfSite: `${siteToCopy.nameOfSite} (Copy)`,
       };
       appendSite(newSite);
-      toast({ title: "Site Copied", description: `A copy of "${siteToCopy.nameOfSite}" has been added.` });
+      toast({ title: "Site Copied", description: `A copy of "${siteToCopy.nameOfSite}" has been added locally. Save the file to make it permanent.` });
     }
   };
 
@@ -750,40 +750,35 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <div><CardTitle className="text-xl">4. Payment Details</CardTitle></div>
                  {!isViewer && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
-            <CardContent>
-                 <div className="relative max-h-[400px] overflow-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="p-2 text-xs">Date</TableHead>
-                                <TableHead className="p-2 text-xs">Account</TableHead>
-                                <TableHead className="p-2 text-xs text-right">Revenue Head</TableHead>
-                                <TableHead className="p-2 text-xs text-right">Contractor</TableHead>
-                                <TableHead className="p-2 text-xs text-right">GST</TableHead>
-                                <TableHead className="p-2 text-xs text-right">Inc.Tax</TableHead>
-                                <TableHead className="p-2 text-xs text-right">KBCWB</TableHead>
-                                <TableHead className="p-2 text-xs text-right">Refund</TableHead>
-                                <TableHead className="p-2 text-xs text-right">Total</TableHead>
-                                {!isViewer && <TableHead className="p-2 text-xs">Actions</TableHead>}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                             {paymentFields.length > 0 ? paymentFields.map((item, index) => (
-                                <TableRow key={item.id}>
-                                    <TableCell className="p-2 text-xs whitespace-nowrap">{item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                    <TableCell className="p-2 text-xs">{item.paymentAccount}</TableCell>
-                                    <TableCell className="p-2 text-xs text-right">{(Number(item.revenueHead) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-xs text-right">{(Number(item.contractorsPayment) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-xs text-right">{(Number(item.gst) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-xs text-right">{(Number(item.incomeTax) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-xs text-right">{(Number(item.kbcwb) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-xs text-right">{(Number(item.refundToParty) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-xs text-right font-semibold">{(Number(item.totalPaymentPerEntry) || 0).toLocaleString('en-IN')}</TableCell>
-                                    {!isViewer && <TableCell className="p-2 text-xs"><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-3 w-3"/></Button><Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-3 w-3"/></Button></div></TableCell>}
-                                </TableRow>
-                            )) : <TableRow><TableCell colSpan={!isViewer ? 10 : 9} className="text-center h-24">No payment details added.</TableCell></TableRow>}
-                        </TableBody>
-                    </Table>
+             <CardContent>
+                <div className="space-y-3">
+                    {paymentFields.length > 0 ? paymentFields.map((item, index) => (
+                        <div key={item.id} className="border p-4 rounded-lg bg-secondary/30">
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 className="font-semibold text-primary">Payment #{index + 1}</h4>
+                                    <p className="text-sm text-muted-foreground">Date: {item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yyyy') : 'N/A'}</p>
+                                </div>
+                                {!isViewer && (
+                                    <div className="flex items-center gap-1">
+                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-4 w-4" /></Button>
+                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setItemToDelete({ type: 'payment', index })}><Trash2 className="h-4 w-4" /></Button>
+                                    </div>
+                                )}
+                            </div>
+                            <dl className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-2 border-t pt-3">
+                                <DetailRow label="Account" value={item.paymentAccount} />
+                                <DetailRow label="Revenue Head" value={`₹${(Number(item.revenueHead) || 0).toLocaleString('en-IN')}`} />
+                                <DetailRow label="Contractor" value={`₹${(Number(item.contractorsPayment) || 0).toLocaleString('en-IN')}`} />
+                                <DetailRow label="GST" value={`₹${(Number(item.gst) || 0).toLocaleString('en-IN')}`} />
+                                <DetailRow label="Income Tax" value={`₹${(Number(item.incomeTax) || 0).toLocaleString('en-IN')}`} />
+                                <DetailRow label="KBCWB" value={`₹${(Number(item.kbcwb) || 0).toLocaleString('en-IN')}`} />
+                                <DetailRow label="Refund" value={`₹${(Number(item.refundToParty) || 0).toLocaleString('en-IN')}`} />
+                                <DetailRow label="Total" value={`₹${(Number(item.totalPaymentPerEntry) || 0).toLocaleString('en-IN')}`} className="font-bold text-primary" />
+                                {item.paymentRemarks && <DetailRow label="Remarks" value={item.paymentRemarks} className="col-span-full mt-2" />}
+                            </dl>
+                        </div>
+                    )) : <div className="text-center py-8 text-muted-foreground">No payment details added yet.</div>}
                 </div>
                  <div className="flex justify-end font-bold text-lg pt-4 border-t mt-4">
                     <div className="flex items-baseline gap-4">
