@@ -90,33 +90,28 @@ export function useFileEntries() {
     }
   }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
 
-  const addFileEntry = useCallback(async (entryData: DataEntryFormData, existingFileNo?: string | null): Promise<string> => {
-    if (!user) throw new Error("User must be logged in to add an entry.");
+    const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
+        if (!user) throw new Error("User must be logged in to add an entry.");
 
-    const payload = { ...entryData };
-    if (payload.id) delete payload.id; 
+        const payload = { ...entryData };
+        if (payload.id) delete payload.id;
 
-    let docId: string;
-
-    if (existingFileNo) {
-        const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", existingFileNo));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            docId = querySnapshot.docs[0].id;
-            const docRef = doc(db, FILE_ENTRIES_COLLECTION, docId);
-            await updateDoc(docRef, { ...payload, updatedAt: serverTimestamp() });
-        } else {
-            const docRef = await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-            docId = docRef.id;
-        }
-    } else {
         const docRef = await addDoc(collection(db, FILE_ENTRIES_COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-        docId = docRef.id;
-    }
-    refetchFileEntries(); // Trigger a refetch in the central store
-    return docId;
-  }, [user, refetchFileEntries]);
+        refetchFileEntries();
+        return docRef.id;
+    }, [user, refetchFileEntries]);
+
+    const updateFileEntry = useCallback(async (fileId: string, entryData: DataEntryFormData): Promise<void> => {
+        if (!user) throw new Error("User must be logged in to update an entry.");
+        
+        const docRef = doc(db, FILE_ENTRIES_COLLECTION, fileId);
+        const payload = { ...entryData };
+        if (payload.id) delete payload.id;
+        
+        await updateDoc(docRef, { ...payload, updatedAt: serverTimestamp() });
+        refetchFileEntries();
+    }, [user, refetchFileEntries]);
+
 
   const deleteFileEntry = useCallback(async (fileNo: string): Promise<void> => {
     if (user?.role !== 'editor') {
@@ -201,7 +196,8 @@ export function useFileEntries() {
   return { 
       fileEntries, 
       isLoading, 
-      addFileEntry, 
+      addFileEntry,
+      updateFileEntry,
       deleteFileEntry, 
       batchDeleteFileEntries,
       getFileEntry,

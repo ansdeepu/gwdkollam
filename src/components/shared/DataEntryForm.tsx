@@ -467,7 +467,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const fileIdToEdit = searchParams.get("id");
   const approveUpdateId = searchParams.get("approveUpdateId");
 
-  const { addFileEntry } = useFileEntries();
+  const { addFileEntry, updateFileEntry } = useFileEntries();
   const { createPendingUpdate } = usePendingUpdates();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -550,26 +550,29 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const onSubmit = async (data: DataEntryFormData) => {
     setIsSubmitting(true);
     try {
-      if (!user) throw new Error("Authentication error. Please log in again.");
-      
-      const fileId = fileIdToEdit || getValues("id");
+        if (!user) throw new Error("Authentication error. Please log in again.");
 
-      if (isSupervisor) {
-        await createPendingUpdate(data.fileNo, data.siteDetails!, user, {});
-        toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
+        if (isSupervisor) {
+            await createPendingUpdate(data.fileNo, data.siteDetails!, user, {});
+            toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
+            router.push(returnPath);
+            return;
+        }
+
+        if (fileIdToEdit) {
+            await updateFileEntry(fileIdToEdit, data);
+            toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
+        } else {
+            await addFileEntry(data);
+            toast({ title: "File Created", description: `File No. ${data.fileNo} has been successfully created.` });
+        }
         router.push(returnPath);
-        return;
-      }
-
-      await addFileEntry(data, fileId);
-      toast({ title: fileId ? "File Updated" : "File Created", description: `File No. ${data.fileNo} has been successfully saved.` });
-      router.push(returnPath);
 
     } catch (error: any) {
-      console.error("Form submission error:", error);
-      toast({ title: "Submission Failed", description: error.message || "An unknown error occurred.", variant: "destructive" });
+        console.error("Form submission error:", error);
+        toast({ title: "Submission Failed", description: error.message || "An unknown error occurred.", variant: "destructive" });
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
 
