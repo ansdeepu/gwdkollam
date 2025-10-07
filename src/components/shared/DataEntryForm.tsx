@@ -721,11 +721,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         const hasError = (isFinalStatus && !site.dateOfCompletion) || !!siteErrors;
                         
                         let headerColor = 'text-green-600'; // Default for ongoing
-                        if (isFinalStatus) {
-                            headerColor = 'text-red-600'; // Completed or Failed
-                        }
                         if (site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute') {
-                            headerColor = 'text-amber-600'; // Accessibility issues
+                            headerColor = 'text-amber-600';
+                        } else if (isFinalStatus) {
+                            headerColor = 'text-red-600';
                         }
 
                         return (
