@@ -99,9 +99,9 @@ function renderDetail(label: string, value: any) {
     }
 
     return (
-        <div className="grid grid-cols-2 gap-2 py-1.5 border-b border-muted/50 last:border-b-0">
-            <p className="font-medium text-sm text-muted-foreground">{label}:</p>
-            <p className="text-sm text-foreground break-words">{String(displayValue)}</p>
+        <div className="grid grid-cols-2 gap-2 py-2 border-b border-muted/50 last:border-b-0">
+            <p className="font-semibold text-sm text-muted-foreground">{label}:</p>
+            <p className="text-base text-foreground break-words">{String(displayValue)}</p>
         </div>
     );
 }
@@ -342,14 +342,14 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="w-[5%] px-2 py-3 text-xs">Sl. No.</TableHead>
-                  <TableHead className="w-[10%] px-2 py-3 text-xs">File No.</TableHead>
-                  <TableHead className="w-[15%] px-2 py-3 text-xs">Applicant Name</TableHead>
-                  <TableHead className="w-[15%] px-2 py-3 text-xs">Site Name(s)</TableHead>
-                  <TableHead className="w-[10%] px-2 py-3 text-xs">Purpose(s)</TableHead>
-                  <TableHead className="w-[10%] px-2 py-3 text-xs">Date of Remittance</TableHead>
-                  <TableHead className="w-[10%] px-2 py-3 text-xs">File Status</TableHead>
-                  <TableHead className="text-center w-[15%] px-2 py-3 text-xs">Actions</TableHead>
+                  <TableHead className="w-[5%] px-2 py-3 text-sm">Sl. No.</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3 text-sm">File No.</TableHead>
+                  <TableHead className="w-[15%] px-2 py-3 text-sm">Applicant Name</TableHead>
+                  <TableHead className="w-[15%] px-2 py-3 text-sm">Site Name(s)</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3 text-sm">Purpose(s)</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3 text-sm">Date of Remittance</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3 text-sm">File Status</TableHead>
+                  <TableHead className="text-center w-[15%] px-2 py-3 text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -359,10 +359,10 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   
                   return (
                   <TableRow key={entry.id}>
-                    <TableCell className="w-[5%] px-2 py-2 text-xs text-center">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                    <TableCell className="font-medium w-[10%] px-2 py-2 text-xs">{entry.fileNo}</TableCell>
-                    <TableCell className="w-[15%] px-2 py-2 text-xs">{entry.applicantName}</TableCell>
-                    <TableCell className="w-[15%] px-2 py-2 text-xs">
+                    <TableCell className="w-[5%] px-2 py-2 text-sm text-center">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
+                    <TableCell className="font-medium w-[10%] px-2 py-2 text-sm">{entry.fileNo}</TableCell>
+                    <TableCell className="w-[15%] px-2 py-2 text-sm">{entry.applicantName}</TableCell>
+                    <TableCell className="w-[15%] px-2 py-2 text-sm">
                        {entry.siteDetails && entry.siteDetails.length > 0
                         ? entry.siteDetails.map((site, idx) => {
                              const hasAccessibilityIssue = site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute';
@@ -375,17 +375,17 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                             })
                         : "N/A"}
                     </TableCell>
-                    <TableCell className="w-[10%] px-2 py-2 text-xs">
+                    <TableCell className="w-[10%] px-2 py-2 text-sm">
                       {entry.siteDetails && entry.siteDetails.length > 0
                         ? entry.siteDetails.map(site => site.purpose).filter(Boolean).join(', ') || "N/A"
                         : "N/A"}
                     </TableCell>
-                    <TableCell className="w-[10%] px-2 py-2 text-xs">
+                    <TableCell className="w-[10%] px-2 py-2 text-sm">
                       {entry.remittanceDetails?.[0]?.dateOfRemittance 
                         ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") 
                         : "N/A"}
                     </TableCell>
-                    <TableCell className={cn("font-semibold w-[10%] px-2 py-2 text-xs", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
+                    <TableCell className={cn("font-semibold w-[10%] px-2 py-2 text-sm", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
                       {entry.fileStatus}
                     </TableCell>
                     <TableCell className="text-right w-[15%] px-2 py-2">
