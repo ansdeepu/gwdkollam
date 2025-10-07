@@ -74,7 +74,7 @@ const db = getFirestore(app);
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
-const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
+const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
   if (!payment) return 0;
@@ -337,6 +337,10 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         }
     }, [watchedLsg, allLsgConstituencyMaps, setValue, watch, getValues]);
     
+    const handleDialogSubmit = (data: SiteDetailFormData) => {
+        onConfirm(data);
+    };
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
           <DialogHeader className="p-6 pb-4">
@@ -462,7 +466,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             <Button type="button" onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleSubmit(onConfirm)();
+                handleSubmit(handleDialogSubmit)();
             }}>Save</Button>
           </DialogFooter>
         </div>
@@ -768,30 +772,30 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="p-2 text-xs">Date</TableHead>
-                                <TableHead className="p-2 text-xs">Acct.</TableHead>
-                                <TableHead className="p-2 text-right text-xs">Revenue</TableHead>
-                                <TableHead className="p-2 text-right text-xs">Contractor</TableHead>
-                                <TableHead className="p-2 text-right text-xs">GST</TableHead>
-                                <TableHead className="p-2 text-right text-xs">IT</TableHead>
-                                <TableHead className="p-2 text-right text-xs">KBCWB</TableHead>
-                                <TableHead className="p-2 text-right text-xs">Refund</TableHead>
-                                <TableHead className="p-2 text-right font-semibold text-xs">Total</TableHead>
+                                <TableHead className="p-2 text-sm">Date</TableHead>
+                                <TableHead className="p-2 text-sm">Acct.</TableHead>
+                                <TableHead className="p-2 text-right text-sm">Revenue</TableHead>
+                                <TableHead className="p-2 text-right text-sm">Contractor</TableHead>
+                                <TableHead className="p-2 text-right text-sm">GST</TableHead>
+                                <TableHead className="p-2 text-right text-sm">IT</TableHead>
+                                <TableHead className="p-2 text-right text-sm">KBCWB</TableHead>
+                                <TableHead className="p-2 text-right text-sm">Refund</TableHead>
+                                <TableHead className="p-2 text-right font-semibold text-sm">Total</TableHead>
                                 {!isViewer && <TableHead className="p-2">Actions</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {paymentFields.length > 0 ? paymentFields.map((item, index) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="p-2 text-xs">{item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yy') : 'N/A'}</TableCell>
-                                    <TableCell className="p-2 text-xs">{item.paymentAccount}</TableCell>
-                                    <TableCell className="p-2 text-right text-xs">{(Number(item.revenueHead) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-right text-xs">{(Number(item.contractorsPayment) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-right text-xs">{(Number(item.gst) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-right text-xs">{(Number(item.incomeTax) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-right text-xs">{(Number(item.kbcwb) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-right text-xs">{(Number(item.refundToParty) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell className="p-2 text-right text-xs font-semibold">{(Number(item.totalPaymentPerEntry) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-sm">{item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yy') : 'N/A'}</TableCell>
+                                    <TableCell className="p-2 text-sm">{item.paymentAccount}</TableCell>
+                                    <TableCell className="p-2 text-right text-sm">{(Number(item.revenueHead) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-right text-sm">{(Number(item.contractorsPayment) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-right text-sm">{(Number(item.gst) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-right text-sm">{(Number(item.incomeTax) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-right text-sm">{(Number(item.kbcwb) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-right text-sm">{(Number(item.refundToParty) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-right text-sm font-semibold">{(Number(item.totalPaymentPerEntry) || 0).toLocaleString('en-IN')}</TableCell>
                                     {!isViewer && <TableCell className="p-1"><div className="flex"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-3 w-3"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-3 w-3"/></Button></div></TableCell>}
                                 </TableRow>
                             )) : <TableRow><TableCell colSpan={!isViewer ? 10 : 9} className="text-center h-24">No payment details added yet.</TableCell></TableRow>}
@@ -814,7 +818,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                      <h3 className="font-semibold text-lg text-primary">Financial Summary</h3>
                      <dl className="space-y-2">
                         <div className="flex justify-between items-baseline"><dt>Total Estimate (Sites)</dt><dd className="font-mono">₹{totalEstimate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
-                        <Separator />
+                        <Separator/>
                         <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, minimumFractionDigits: 2}) || '0.00'}</dd></div>
                         <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                         <Separator />
