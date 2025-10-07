@@ -338,7 +338,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     
     return (
       <Form {...form}>
-        <form onSubmit={handleSubmit(onConfirm)} className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden">
           <DialogHeader className="p-6 pb-4">
                 <DialogTitle>{initialData?.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
             </DialogHeader>
@@ -455,8 +455,11 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 </div>
               </ScrollArea>
             </div>
-          <DialogFooter className="p-6 pt-4"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
-        </form>
+          <DialogFooter className="p-6 pt-4">
+            <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleSubmit(onConfirm)}>Save</Button>
+          </DialogFooter>
+        </div>
       </Form>
     );
 };
