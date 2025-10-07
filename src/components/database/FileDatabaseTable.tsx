@@ -477,6 +477,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   {renderDetail("Name & Address of Applicant", viewItem?.applicantName)}
                   {renderDetail("Phone No", viewItem?.phoneNo)}
                   {renderDetail("Secondary Mobile No", viewItem?.secondaryMobileNo)}
+                  {renderDetail("Constituency (LAC)", viewItem?.constituency)}
                   {renderDetail("Type of Application", viewItem?.applicationType ? applicationTypeDisplayMap[viewItem.applicationType as ApplicationType] : "N/A")}
                 </div>
 
