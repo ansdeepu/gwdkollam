@@ -622,6 +622,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
       case 'site':
         if (originalData.index !== undefined) {
           updateSite(originalData.index, data);
+          toast({ title: "Site details updated." });
         } else {
           appendSite(data);
         }
