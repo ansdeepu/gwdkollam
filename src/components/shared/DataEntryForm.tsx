@@ -49,7 +49,7 @@ import {
   type SiteWorkStatus,
   constituencyOptions,
   type Constituency,
-  optionalNumber, // Import the missing function
+  optionalNumber,
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -459,7 +459,11 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             </div>
           <DialogFooter className="p-6 pt-4">
             <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={handleSubmit(onConfirm)}>Save</Button>
+            <Button type="button" onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSubmit(onConfirm)();
+            }}>Save</Button>
           </DialogFooter>
         </div>
     );
@@ -714,7 +718,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         
                         return (
                             <AccordionItem key={site.id} value={`site-${index}`} className="border bg-background rounded-lg shadow-sm">
-                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : isFinalStatus ? "text-red-600" : "text-green-600", site.isPending && "text-amber-600")}>
+                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : site.isPending && "text-amber-600")}>
                                     <div className="flex justify-between items-center w-full">
                                         <div className="flex items-center gap-2">
                                             {hasError && <Info className="h-4 w-4" />}
@@ -763,22 +767,22 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="p-2">Date</TableHead>
-                                <TableHead className="p-2">Acct.</TableHead>
-                                <TableHead className="p-2 text-right">Revenue</TableHead>
-                                <TableHead className="p-2 text-right">Contractor</TableHead>
-                                <TableHead className="p-2 text-right">GST</TableHead>
-                                <TableHead className="p-2 text-right">IT</TableHead>
-                                <TableHead className="p-2 text-right">KBCWB</TableHead>
-                                <TableHead className="p-2 text-right">Refund</TableHead>
-                                <TableHead className="p-2 text-right font-semibold">Total</TableHead>
+                                <TableHead className="p-2 text-xs">Date</TableHead>
+                                <TableHead className="p-2 text-xs">Acct.</TableHead>
+                                <TableHead className="p-2 text-right text-xs">Revenue</TableHead>
+                                <TableHead className="p-2 text-right text-xs">Contractor</TableHead>
+                                <TableHead className="p-2 text-right text-xs">GST</TableHead>
+                                <TableHead className="p-2 text-right text-xs">IT</TableHead>
+                                <TableHead className="p-2 text-right text-xs">KBCWB</TableHead>
+                                <TableHead className="p-2 text-right text-xs">Refund</TableHead>
+                                <TableHead className="p-2 text-right font-semibold text-xs">Total</TableHead>
                                 {!isViewer && <TableHead className="p-2">Actions</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {paymentFields.length > 0 ? paymentFields.map((item, index) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="p-2 text-xs">{item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                    <TableCell className="p-2 text-xs">{item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yy') : 'N/A'}</TableCell>
                                     <TableCell className="p-2 text-xs">{item.paymentAccount}</TableCell>
                                     <TableCell className="p-2 text-right text-xs">{(Number(item.revenueHead) || 0).toLocaleString('en-IN')}</TableCell>
                                     <TableCell className="p-2 text-right text-xs">{(Number(item.contractorsPayment) || 0).toLocaleString('en-IN')}</TableCell>
@@ -809,6 +813,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                      <h3 className="font-semibold text-lg text-primary">Financial Summary</h3>
                      <dl className="space-y-2">
                         <div className="flex justify-between items-baseline"><dt>Total Estimate (Sites)</dt><dd className="font-mono">₹{totalEstimate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
+                        <Separator />
                         <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, minimumFractionDigits: 2}) || '0.00'}</dd></div>
                         <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                         <Separator />
@@ -972,5 +977,3 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
-
-    
