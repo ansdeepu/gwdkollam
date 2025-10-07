@@ -719,11 +719,18 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         const siteErrors = form.formState.errors.siteDetails?.[index];
                         const isFinalStatus = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
                         const hasError = (isFinalStatus && !site.dateOfCompletion) || !!siteErrors;
-                        const headerColor = isFinalStatus ? 'text-red-600' : 'text-green-600';
                         
+                        let headerColor = 'text-green-600'; // Default for ongoing
+                        if (isFinalStatus) {
+                            headerColor = 'text-red-600'; // Completed or Failed
+                        }
+                        if (site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute') {
+                            headerColor = 'text-amber-600'; // Accessibility issues
+                        }
+
                         return (
                             <AccordionItem key={site.id} value={`site-${index}`} className="border bg-background rounded-lg shadow-sm">
-                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError ? "text-destructive" : site.isPending && "text-amber-600")}>
+                                <AccordionTrigger className={cn("flex-1 text-base font-semibold px-4 group", hasError && "text-destructive", site.isPending && "text-amber-600")}>
                                     <div className="flex justify-between items-center w-full">
                                         <div className="flex items-center gap-2">
                                             {hasError && <Info className="h-4 w-4" />}
@@ -770,20 +777,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <CardContent>
                  <div className="relative max-h-[400px] overflow-auto">
                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="p-2 text-sm">Date</TableHead>
-                                <TableHead className="p-2 text-sm">Acct.</TableHead>
-                                <TableHead className="p-2 text-right text-sm">Revenue</TableHead>
-                                <TableHead className="p-2 text-right text-sm">Contractor</TableHead>
-                                <TableHead className="p-2 text-right text-sm">GST</TableHead>
-                                <TableHead className="p-2 text-right text-sm">IT</TableHead>
-                                <TableHead className="p-2 text-right text-sm">KBCWB</TableHead>
-                                <TableHead className="p-2 text-right text-sm">Refund</TableHead>
-                                <TableHead className="p-2 text-right font-semibold text-sm">Total</TableHead>
-                                {!isViewer && <TableHead className="p-2">Actions</TableHead>}
-                            </TableRow>
-                        </TableHeader>
+                        <TableHeader><TableRow><TableHead className="p-2 text-sm">Date</TableHead><TableHead className="p-2 text-sm">Acct.</TableHead><TableHead className="p-2 text-right text-sm">Revenue</TableHead><TableHead className="p-2 text-right text-sm">Contractor</TableHead><TableHead className="p-2 text-right text-sm">GST</TableHead><TableHead className="p-2 text-right text-sm">IT</TableHead><TableHead className="p-2 text-right text-sm">KBCWB</TableHead><TableHead className="p-2 text-right text-sm">Refund</TableHead><TableHead className="p-2 text-right font-semibold text-sm">Total</TableHead>{!isViewer && <TableHead className="p-2">Actions</TableHead>}</TableRow></TableHeader>
                         <TableBody>
                             {paymentFields.length > 0 ? paymentFields.map((item, index) => (
                                 <TableRow key={item.id}>
