@@ -31,7 +31,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https' ,
         hostname: 'lh3.googleusercontent.com',
         port: '',
         pathname: '/**',
@@ -49,6 +49,10 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  webpack: (config, { isServer }) => {
+    // An empty webpack config can sometimes help resolve build cache issues.
+    return config;
   },
 };
 
