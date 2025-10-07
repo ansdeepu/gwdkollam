@@ -720,9 +720,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         const isFinalStatus = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
                         const hasError = (isFinalStatus && !site.dateOfCompletion) || !!siteErrors;
                         
-                        let headerColor = 'text-green-600'; // Default for ongoing
+                        let headerColor = 'text-green-600';
                         if (site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute') {
-                            headerColor = 'text-amber-600';
+                            headerColor = 'text-yellow-600';
                         } else if (isFinalStatus) {
                             headerColor = 'text-red-600';
                         }
