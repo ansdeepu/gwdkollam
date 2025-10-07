@@ -650,20 +650,18 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
-                <div><CardTitle className="text-xl">1. Application Details</CardTitle></div>
+                 <div>
+                    <CardTitle className="text-xl">1. Application Details</CardTitle>
+                 </div>
                 {!isViewer && <Button type="button" onClick={() => openDialog('application', getValues())}><Edit className="h-4 w-4 mr-2" />Edit</Button>}
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-                  <div className="md:col-span-1 space-y-4">
-                     <DetailRow label="File No." value={watch('fileNo')} />
-                  </div>
-                  <div className="md:col-span-2 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <DetailRow label="File No." value={watch('fileNo')} />
                     <DetailRow label="Applicant Name & Address" value={watch('applicantName')} />
-                  </div>
-                  <DetailRow label="Phone No." value={watch('phoneNo')} />
-                  <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
-                  <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
+                    <DetailRow label="Phone No." value={watch('phoneNo')} />
+                    <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
+                    <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
                 </div>
             </CardContent>
         </Card>
@@ -752,32 +750,41 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <div><CardTitle className="text-xl">4. Payment Details</CardTitle></div>
                  {!isViewer && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
-            <CardContent className="space-y-4">
-                {paymentFields.length > 0 ? paymentFields.map((item, index) => (
-                    <div key={item.id} className="p-4 border rounded-lg bg-secondary/20">
-                      <div className="flex justify-between items-center mb-2">
-                         <h4 className="font-medium text-primary">Payment #{index + 1} - {item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yyyy') : 'Un-dated'}</h4>
-                        {!isViewer && (
-                            <div className="flex items-center gap-1">
-                                <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-4 w-4" /></Button>
-                                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                        )}
-                      </div>
-                      <dl className="grid md:grid-cols-4 gap-4 border-t pt-2">
-                        <DetailRow label="Payment Account" value={item.paymentAccount} />
-                        <DetailRow label="Total Paid (This Entry)" value={item.totalPaymentPerEntry} />
-                        <div className="md:col-span-2" />
-                        <DetailRow label="Contractor's Payment (₹)" value={item.contractorsPayment} />
-                        <DetailRow label="GST (₹)" value={item.gst} />
-                        <DetailRow label="Income Tax (₹)" value={item.incomeTax} />
-                        <DetailRow label="KBCWB (₹)" value={item.kbcwb} />
-                        <DetailRow label="Refund to Party (₹)" value={item.refundToParty} />
-                        <DetailRow label="Revenue Head (₹)" value={item.revenueHead} />
-                        <div className="md:col-span-4"><DetailRow label="Remarks" value={item.paymentRemarks} /></div>
-                      </dl>
-                    </div>
-                )) : <div className="text-center py-8 text-muted-foreground">No payment details added.</div>}
+            <CardContent>
+                 <div className="relative overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="p-2 text-xs">Date</TableHead>
+                                <TableHead className="p-2 text-xs">Account</TableHead>
+                                <TableHead className="p-2 text-xs text-right">Revenue Head</TableHead>
+                                <TableHead className="p-2 text-xs text-right">Contractor</TableHead>
+                                <TableHead className="p-2 text-xs text-right">GST</TableHead>
+                                <TableHead className="p-2 text-xs text-right">Inc.Tax</TableHead>
+                                <TableHead className="p-2 text-xs text-right">KBCWB</TableHead>
+                                <TableHead className="p-2 text-xs text-right">Refund</TableHead>
+                                <TableHead className="p-2 text-xs text-right">Total</TableHead>
+                                {!isViewer && <TableHead className="p-2 text-xs">Actions</TableHead>}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                             {paymentFields.length > 0 ? paymentFields.map((item, index) => (
+                                <TableRow key={item.id}>
+                                    <TableCell className="p-2 text-xs whitespace-nowrap">{item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                                    <TableCell className="p-2 text-xs">{item.paymentAccount}</TableCell>
+                                    <TableCell className="p-2 text-xs text-right">{(Number(item.revenueHead) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-xs text-right">{(Number(item.contractorsPayment) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-xs text-right">{(Number(item.gst) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-xs text-right">{(Number(item.incomeTax) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-xs text-right">{(Number(item.kbcwb) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-xs text-right">{(Number(item.refundToParty) || 0).toLocaleString('en-IN')}</TableCell>
+                                    <TableCell className="p-2 text-xs text-right font-semibold">{(Number(item.totalPaymentPerEntry) || 0).toLocaleString('en-IN')}</TableCell>
+                                    {!isViewer && <TableCell className="p-2 text-xs"><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-3 w-3"/></Button><Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-3 w-3"/></Button></div></TableCell>}
+                                </TableRow>
+                            )) : <TableRow><TableCell colSpan={!isViewer ? 10 : 9} className="text-center h-24">No payment details added.</TableCell></TableRow>}
+                        </TableBody>
+                    </Table>
+                </div>
                  <div className="flex justify-end font-bold text-lg pt-4 border-t mt-4">
                     <div className="flex items-baseline gap-4">
                         <span>Total Payment:</span>
