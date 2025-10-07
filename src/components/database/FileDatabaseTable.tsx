@@ -100,7 +100,7 @@ function renderDetail(label: string, value: any) {
 
     return (
         <div className="grid grid-cols-2 gap-2 py-2 border-b border-muted/50 last:border-b-0">
-            <p className="font-semibold text-sm text-muted-foreground">{label}:</p>
+            <p className="font-semibold text-base text-muted-foreground">{label}:</p>
             <p className="text-base text-foreground break-words">{String(displayValue)}</p>
         </div>
     );
@@ -121,6 +121,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
 
   const [viewItem, setViewItem] = useState<DataEntryFormData | null>(null);
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
+  const [itemToCopy, setItemToCopy] = useState<DataEntryFormData | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
@@ -259,14 +260,19 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     setDeleteItem(null);
   };
 
-  const handleCopyClick = async (item: DataEntryFormData) => {
-      if (!canCopy || !item.id) return;
+  const handleCopyClick = (item: DataEntryFormData) => {
+    if (!canCopy) return;
+    setItemToCopy(item);
+  };
+
+  const confirmCopy = async () => {
+      if (!canCopy || !itemToCopy || !itemToCopy.id) return;
       setIsCopying(true);
       try {
           const newFileEntry: DataEntryFormData = {
-              ...JSON.parse(JSON.stringify(item)), // Deep copy
+              ...JSON.parse(JSON.stringify(itemToCopy)), // Deep copy
               id: uuidv4(), // Give it a temporary client-side ID
-              fileNo: `${item.fileNo}-COPY`,
+              fileNo: `${itemToCopy.fileNo}-COPY`,
           };
           
           delete (newFileEntry as any).createdAt;
@@ -277,13 +283,14 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
             throw new Error("Failed to get ID for new copied file.");
           }
           
-          toast({ title: 'File Copied', description: `A copy of ${item.fileNo} was created. You can now edit it.` });
+          toast({ title: 'File Copied', description: `A copy of ${itemToCopy.fileNo} was created. You can now edit it.` });
           router.push(`/dashboard/data-entry?id=${newDocId}`);
 
       } catch (error: any) {
           toast({ title: 'Copy Failed', description: error.message || 'Could not copy the file.', variant: 'destructive' });
       } finally {
           setIsCopying(false);
+          setItemToCopy(null);
       }
   };
 
@@ -365,7 +372,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     <TableCell className="w-[15%] px-2 py-2 text-sm">
                        {entry.siteDetails && entry.siteDetails.length > 0
                         ? entry.siteDetails.map((site, idx) => {
-                             const hasAccessibilityIssue = site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute';
+                            const hasAccessibilityIssue = site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute';
                             const isFinal = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
                             return (
                                 <span key={idx} className={cn("font-semibold", hasAccessibilityIssue ? 'text-yellow-600' : (isFinal ? 'text-red-600' : 'text-green-600'))}>
@@ -405,7 +412,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                           <Tooltip>
                               <TooltipTrigger asChild>
                                   <Button variant="ghost" size="icon" onClick={() => handleCopyClick(entry)} disabled={isCopying}>
-                                      {isCopying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
+                                      <Copy className="h-4 w-4" />
                                       <span className="sr-only">Make a Copy</span>
                                   </Button>
                               </TooltipTrigger>
@@ -672,6 +679,29 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
             </AlertDialogContent>
         </AlertDialog>
       )}
+
+      {canCopy && (
+        <AlertDialog open={!!itemToCopy} onOpenChange={() => setItemToCopy(null)}>
+            <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Copy</AlertDialogTitle>
+                <AlertDialogDescription>
+                Are you sure you want to create a copy of file <strong>{itemToCopy?.fileNo}</strong>?
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setItemToCopy(null)} disabled={isCopying}>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={confirmCopy}
+                    disabled={isCopying}
+                >
+                {isCopying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Yes, Copy"}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      )}
+
     </TooltipProvider>
   );
 }
