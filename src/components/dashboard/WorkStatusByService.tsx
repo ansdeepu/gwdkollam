@@ -1,3 +1,4 @@
+
 // src/components/dashboard/WorkStatusByService.tsx
 "use client";
 
@@ -96,12 +97,19 @@ export default function WorkStatusByService({ allFileEntries, onOpenDialog, curr
 
   const handleWorkStatusCellClick = (data: any[], title: string) => {
     const dialogData = data.map((site, index) => ({
-      slNo: index + 1, fileNo: site.fileNo, siteName: site.nameOfSite, purpose: site.purpose,
+      slNo: index + 1,
+      fileNo: site.fileNo,
+      applicantName: site.applicantName,
+      siteName: site.nameOfSite,
+      purpose: site.purpose,
       workStatus: site.workStatus
     }));
     const columns = [
-      { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' },
-      { key: 'siteName', label: 'Site Name' }, { key: 'purpose', label: 'Purpose' },
+      { key: 'slNo', label: 'Sl. No.' },
+      { key: 'fileNo', label: 'File No.' },
+      { key: 'applicantName', label: 'Applicant Name' },
+      { key: 'siteName', label: 'Site Name' },
+      { key: 'purpose', label: 'Purpose' },
       { key: 'workStatus', label: 'Work Status' }
     ];
     onOpenDialog(dialogData, title, columns, 'detail');
