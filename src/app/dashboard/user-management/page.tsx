@@ -1,4 +1,3 @@
-
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -174,31 +173,33 @@ export default function UserManagementPage() {
 
       <Dialog open={isStaffFormOpen} onOpenChange={setIsStaffFormOpen}>
         <DialogContent>
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-4">
                 <DialogTitle>Create New User (from Staff)</DialogTitle>
                 <DialogDescription>
                     Select a staff member and provide their login details. They will be assigned the 'viewer' role and will need to be approved manually.
                 </DialogDescription>
             </DialogHeader>
-            <NewUserForm
-                staffMembers={staffMembers}
-                staffLoading={staffLoading}
-                onSubmit={handleStaffFormSubmit}
-                isSubmitting={isSubmitting}
-                onCancel={() => setIsStaffFormOpen(false)}
-            />
+            <div className="px-6 pb-6">
+              <NewUserForm
+                  staffMembers={staffMembers}
+                  staffLoading={staffLoading}
+                  onSubmit={handleStaffFormSubmit}
+                  isSubmitting={isSubmitting}
+                  onCancel={() => setIsStaffFormOpen(false)}
+              />
+            </div>
         </DialogContent>
       </Dialog>
       
       <Dialog open={isGuestFormOpen} onOpenChange={setIsGuestFormOpen}>
         <DialogContent>
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-4">
                 <DialogTitle>Create Guest User Account</DialogTitle>
                 <DialogDescription>
                     Provide a name, email, and password. The guest user will not be linked to the establishment list. They will need to be approved manually.
                 </DialogDescription>
             </DialogHeader>
-            <div className="pt-4">
+            <div className="px-6 pb-6">
               <RegisterForm />
             </div>
         </DialogContent>

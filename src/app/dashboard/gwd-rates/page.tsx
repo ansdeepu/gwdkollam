@@ -1,4 +1,3 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -601,40 +600,42 @@ export default function GwdRatesPage() {
 
       <Dialog open={isItemFormOpen} onOpenChange={setIsItemFormOpen}>
         <DialogContent>
-          <DialogHeader>
+          <DialogHeader className="p-6 pb-4">
             <DialogTitle>{editingItem ? 'Edit Item' : 'Add New Item'}</DialogTitle>
           </DialogHeader>
-          <Form {...itemForm}>
-            <form onSubmit={itemForm.handleSubmit(onItemFormSubmit)} className="space-y-4 py-4">
-              <FormField name="itemName" control={itemForm.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name of Item</FormLabel>
-                  <FormControl><Input placeholder="e.g., BWC 110mm" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField name="rate" control={itemForm.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rate (₹)</FormLabel>
-                  <FormControl><Input
-                    type="number"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
-                    value={field.value ?? ''}
-                  /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsItemFormOpen(false)} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Save
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <div className="px-6 pb-6">
+            <Form {...itemForm}>
+              <form onSubmit={itemForm.handleSubmit(onItemFormSubmit)} className="space-y-4">
+                <FormField name="itemName" control={itemForm.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name of Item</FormLabel>
+                    <FormControl><Input placeholder="e.g., BWC 110mm" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField name="rate" control={itemForm.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rate (₹)</FormLabel>
+                    <FormControl><Input
+                      type="number"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                      value={field.value ?? ''}
+                    /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <DialogFooter className="pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsItemFormOpen(false)} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </div>
         </DialogContent>
       </Dialog>
       

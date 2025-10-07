@@ -1,4 +1,3 @@
-
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -99,51 +98,53 @@ const OfficeAddressDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-3xl">
-        <DialogHeader>
+        <DialogHeader className="p-6 pb-4">
           <DialogTitle>{initialData ? 'Edit Office Address' : 'Add New Office Address'}</DialogTitle>
           <DialogDescription>Fill in the details for the office location.</DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                    name="districtOfficerStaffId"
-                    control={form.control}
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Name of District Officer</FormLabel>
-                        <Select onValueChange={(value) => handleOfficerChange(value)} value={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select an Officer" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                {officerList.map(officer => <SelectItem key={officer.id} value={officer.id}>{officer.name} ({officer.designation})</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField name="gstNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>GST No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                <FormField name="panNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>PAN No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-            </div>
+        <div className="px-6 pb-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                  <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
+              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                      name="districtOfficerStaffId"
+                      control={form.control}
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Name of District Officer</FormLabel>
+                          <Select onValueChange={(value) => handleOfficerChange(value)} value={field.value}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="Select an Officer" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                  {officerList.map(officer => <SelectItem key={officer.id} value={officer.id}>{officer.name} ({officer.designation})</SelectItem>)}
+                              </SelectContent>
+                          </Select>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField name="gstNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>GST No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                  <FormField name="panNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>PAN No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+              </div>
 
-            <FormField name="otherDetails" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Other Details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Save
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              <FormField name="otherDetails" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Other Details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+              
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Save
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -492,34 +493,31 @@ export default function SettingsPage() {
       </AlertDialog>
 
       <Dialog open={isListDialogOpen} onOpenChange={setIsListDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="p-6 pb-4">
             <DialogTitle>{listDialogContent.title}</DialogTitle>
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-96 pr-4">
-            <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[80px]">Sl. No.</TableHead>
-                    <TableHead>{listDialogContent.title}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {listDialogContent.items.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{item}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-            </Table>
-          </ScrollArea>
-           <DialogFooter>
-            <DialogClose asChild>
-                <Button variant="outline">Close</Button>
-            </DialogClose>
-           </DialogFooter>
+          <div className="px-6 pb-6">
+            <ScrollArea className="h-96 pr-4">
+                <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[80px]">Sl. No.</TableHead>
+                        <TableHead>{listDialogContent.title}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {listDialogContent.items.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{item}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                </Table>
+            </ScrollArea>
+           </div>
         </DialogContent>
       </Dialog>
     </>

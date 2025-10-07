@@ -351,14 +351,14 @@ export default function EstablishmentPage() {
           }
       }}>
         <DialogContent className="sm:max-w-3xl max-h-[90vh]">
-          <DialogHeader>
+          <DialogHeader className="p-6 pb-4">
             <DialogTitle>{editingStaff ? "Edit Staff Details" : "Add New Staff Member"}</DialogTitle>
             <DialogDescription>
               {editingStaff ? "Update the details for the staff member." : "Fill in the form to add a new staff member."}
               {" Direct photo upload is disabled; please use a public image URL."}
             </DialogDescription>
           </DialogHeader>
-          <div className="pr-2 py-2">
+          <div className="px-6 pb-6">
             <StaffForm
                 onSubmit={handleFormSubmit}
                 initialData={editingStaff}
