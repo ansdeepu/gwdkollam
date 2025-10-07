@@ -150,8 +150,8 @@ const DetailRow = ({ label, value, className }: { label: string; value: any, cla
 
     return (
         <div className={className}>
-            <dt className="text-sm font-medium text-primary">{label}</dt>
-            <dd className="text-lg text-foreground whitespace-pre-wrap break-words">{displayValue}</dd>
+            <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+            <dd className="text-sm font-semibold">{displayValue}</dd>
         </div>
     );
 };
@@ -177,10 +177,10 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-auto">
-        <DialogHeader>
+        <DialogHeader className="p-6 pb-4">
           <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
-        <div className="p-6 space-y-4 flex-1">
+        <div className="p-6 pt-0 space-y-4 flex-1">
             <div className="grid grid-cols-3 gap-4 items-start">
                 <div className="space-y-2 col-span-1"><Label>File No *</Label><Input value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} /></div>
                 <div className="space-y-2 col-span-2"><Label>Name & Address of Institution/Applicant *</Label><Textarea value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} className="min-h-[40px]"/></div>
@@ -199,7 +199,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 </div>
             </div>
         </div>
-        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -209,10 +209,10 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
     return (
       <div className="flex flex-col h-auto">
-        <DialogHeader>
+        <DialogHeader className="p-6 pb-4">
             <DialogTitle>Remittance Details</DialogTitle>
         </DialogHeader>
-        <div className="p-6 space-y-4 flex-1">
+        <div className="p-6 pt-0 space-y-4 flex-1">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2"><Label>Date</Label><Input type="date" value={data.dateOfRemittance || ""} onChange={(e) => handleChange('dateOfRemittance', e.target.value)} /></div>
                 <div className="space-y-2"><Label>Amount (₹)</Label><Input type="number" value={data.amountRemitted} onChange={(e) => handleChange('amountRemitted', e.target.valueAsNumber)} /></div>
@@ -231,7 +231,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
                 <Textarea value={data.remittanceRemarks} onChange={(e) => handleChange('remittanceRemarks', e.target.value)} placeholder="Add any remarks for this remittance entry..." />
             </div>
         </div>
-        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -246,7 +246,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-4">
                 <DialogTitle>Payment Details</DialogTitle>
             </DialogHeader>
             <div className="flex-1 min-h-0">
@@ -270,7 +270,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
                   </div>
               </ScrollArea>
             </div>
-            <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+            <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
         </div>
     );
 };
@@ -339,7 +339,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     return (
       <Form {...form}>
         <form onSubmit={handleSubmit(onConfirm)} className="flex flex-col h-full overflow-hidden">
-          <DialogHeader>
+          <DialogHeader className="p-6 pb-4">
                 <DialogTitle>{initialData?.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
             </DialogHeader>
           <div className="flex-1 min-h-0">
@@ -455,7 +455,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 </div>
               </ScrollArea>
             </div>
-          <DialogFooter><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
+          <DialogFooter className="p-6 pt-4"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
         </form>
       </Form>
     );
@@ -655,8 +655,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-                  <DetailRow label="File No." value={watch('fileNo')} className="md:col-span-1" />
-                  <DetailRow label="Applicant Name & Address" value={watch('applicantName')} className="md:col-span-2"/>
+                  <div className="md:col-span-1 space-y-4">
+                     <DetailRow label="File No." value={watch('fileNo')} />
+                  </div>
+                  <div className="md:col-span-2 space-y-4">
+                    <DetailRow label="Applicant Name & Address" value={watch('applicantName')} />
+                  </div>
                   <DetailRow label="Phone No." value={watch('phoneNo')} />
                   <DetailRow label="Secondary Mobile No." value={watch('secondaryMobileNo')} />
                   <DetailRow label="Type of Application" value={watch('applicationType') ? applicationTypeDisplayMap[watch('applicationType') as ApplicationType] : ''} />
@@ -748,28 +752,37 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <div><CardTitle className="text-xl">4. Payment Details</CardTitle></div>
                  {!isViewer && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
-            <CardContent>
-                <div className="relative max-h-[400px] overflow-auto">
-                 <Table>
-                    <TableHeader className="sticky top-0 bg-secondary"><TableRow><TableHead>Date</TableHead><TableHead>Account</TableHead><TableHead>Revenue Head</TableHead><TableHead>Contractor Payment</TableHead><TableHead>GST</TableHead><TableHead>Income Tax</TableHead><TableHead>KBCWB</TableHead><TableHead>Refund</TableHead><TableHead>Total Payment</TableHead>{!isViewer && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
-                    <TableBody>
-                         {paymentFields.length > 0 ? paymentFields.map((item, index) => (
-                            <TableRow key={item.id}>
-                                <TableCell>{item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                <TableCell>{item.paymentAccount}</TableCell>
-                                <TableCell>{(item.revenueHead || 0).toLocaleString('en-IN')}</TableCell>
-                                <TableCell>{(item.contractorsPayment || 0).toLocaleString('en-IN')}</TableCell>
-                                <TableCell>{(item.gst || 0).toLocaleString('en-IN')}</TableCell>
-                                <TableCell>{(item.incomeTax || 0).toLocaleString('en-IN')}</TableCell>
-                                <TableCell>{(item.kbcwb || 0).toLocaleString('en-IN')}</TableCell>
-                                <TableCell>{(item.refundToParty || 0).toLocaleString('en-IN')}</TableCell>
-                                <TableCell className="font-bold">{(item.totalPaymentPerEntry || 0).toLocaleString('en-IN')}</TableCell>
-                                {!isViewer && <TableCell><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-4 w-4"/></Button></div></TableCell>}
-                            </TableRow>
-                        )) : <TableRow><TableCell colSpan={!isViewer ? 10 : 9} className="text-center h-24">No payment details added.</TableCell></TableRow>}
-                    </TableBody>
-                     <TableFooterComponent><TableRow><TableCell colSpan={!isViewer ? 9 : 8} className="text-right font-bold">Total Payment</TableCell><TableCell className="font-bold">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
-                </Table>
+            <CardContent className="space-y-4">
+                {paymentFields.length > 0 ? paymentFields.map((item, index) => (
+                    <div key={item.id} className="p-4 border rounded-lg bg-secondary/20">
+                      <div className="flex justify-between items-center mb-2">
+                         <h4 className="font-medium text-primary">Payment #{index + 1} - {item.dateOfPayment ? format(new Date(item.dateOfPayment), 'dd/MM/yyyy') : 'Un-dated'}</h4>
+                        {!isViewer && (
+                            <div className="flex items-center gap-1">
+                                <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-4 w-4" /></Button>
+                                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                        )}
+                      </div>
+                      <dl className="grid md:grid-cols-4 gap-4 border-t pt-2">
+                        <DetailRow label="Payment Account" value={item.paymentAccount} />
+                        <DetailRow label="Total Paid (This Entry)" value={item.totalPaymentPerEntry} />
+                        <div className="md:col-span-2" />
+                        <DetailRow label="Contractor's Payment (₹)" value={item.contractorsPayment} />
+                        <DetailRow label="GST (₹)" value={item.gst} />
+                        <DetailRow label="Income Tax (₹)" value={item.incomeTax} />
+                        <DetailRow label="KBCWB (₹)" value={item.kbcwb} />
+                        <DetailRow label="Refund to Party (₹)" value={item.refundToParty} />
+                        <DetailRow label="Revenue Head (₹)" value={item.revenueHead} />
+                        <div className="md:col-span-4"><DetailRow label="Remarks" value={item.paymentRemarks} /></div>
+                      </dl>
+                    </div>
+                )) : <div className="text-center py-8 text-muted-foreground">No payment details added.</div>}
+                 <div className="flex justify-end font-bold text-lg pt-4 border-t mt-4">
+                    <div className="flex items-baseline gap-4">
+                        <span>Total Payment:</span>
+                        <span>₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</span>
+                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -849,12 +862,12 @@ const ReorderSiteDialog = ({ fromIndex, siteCount, onConfirm, onCancel }: { from
     };
     return (
         <DialogContent>
-            <DialogHeader><DialogTitle>Move Site</DialogTitle></DialogHeader>
-            <div className="p-6 space-y-4">
+            <DialogHeader className="p-6 pb-4"><DialogTitle>Move Site</DialogTitle></DialogHeader>
+            <div className="p-6 pt-0 space-y-4">
                 <Label>New Position (1 to {siteCount})</Label>
                 <Input type="number" min={1} max={siteCount} value={toPosition} onChange={(e) => setToPosition(parseInt(e.target.value))} />
             </div>
-            <DialogFooter>
+            <DialogFooter className="p-6 pt-4">
                 <Button variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button onClick={handleConfirm}>Move</Button>
             </DialogFooter>
@@ -912,12 +925,12 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
     
     return (
         <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-4">
                 <DialogTitle>View Site: {site.nameOfSite}</DialogTitle>
                 <DialogDescription>A read-only summary of all available details for this site.</DialogDescription>
             </DialogHeader>
             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full pr-4">
+                <ScrollArea className="h-full pr-4 px-6 py-4">
                     <div className="space-y-6">
                         {Object.entries(allDetails).map(([sectionTitle, details]) => {
                             if (!details || Object.values(details).every(v => v === null || v === undefined || v === '')) return null;
@@ -938,7 +951,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
                     </div>
                 </ScrollArea>
             </div>
-            <DialogFooter>
+            <DialogFooter className="p-6 pt-4">
                 <Button variant="outline" type="button" onClick={onCancel}>Close</Button>
             </DialogFooter>
         </DialogContent>
