@@ -119,7 +119,7 @@ export default function ArsEntryPage() {
     const { user, fetchAllUsers } = useAuth();
     const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
-    const { allLsgConstituencyMaps } = useDataStore();
+    const { allLsgConstituencyMaps, allArsEntries } = useDataStore();
     
     const entryIdToEdit = searchParams.get('id');
     const approveUpdateId = searchParams.get("approveUpdateId");
@@ -312,6 +312,16 @@ export default function ArsEntryPage() {
                 await updateArsEntry(entryIdToEdit, payload);
                 toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
             } else if (canEdit && !isEditing) {
+                const existingEntry = allArsEntries.find(entry => entry.fileNo === data.fileNo);
+                if (existingEntry) {
+                    toast({
+                        title: "Duplicate File Number",
+                        description: `An ARS entry with File No. "${data.fileNo}" already exists. Please use a unique file number.`,
+                        variant: "destructive",
+                    });
+                    setIsSubmitting(false);
+                    return;
+                }
                 await addArsEntry(payload);
                 toast({ title: "ARS Site Added", description: `Site "${data.nameOfSite}" has been created.` });
             } else if (isSupervisor && isEditing && entryIdToEdit) {

@@ -478,7 +478,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const fileIdToEdit = searchParams.get("id");
   const approveUpdateId = searchParams.get("approveUpdateId");
 
-  const { addFileEntry, updateFileEntry } = useFileEntries();
+  const { addFileEntry, updateFileEntry, getFileEntry } = useFileEntries();
   const { createPendingUpdate } = usePendingUpdates();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -570,11 +570,22 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             router.push(returnPath);
             return;
         }
-
+        
         if (fileIdToEdit) {
             await updateFileEntry(fileIdToEdit, data);
             toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
         } else {
+             // Check for duplicate file number before adding
+            const existingEntry = getFileEntry(data.fileNo);
+            if (existingEntry) {
+                toast({
+                    title: "Duplicate File Number",
+                    description: `File No. "${data.fileNo}" already exists. Please use a unique file number.`,
+                    variant: "destructive",
+                });
+                setIsSubmitting(false);
+                return;
+            }
             await addFileEntry(data);
             toast({ title: "File Created", description: `File No. ${data.fileNo} has been successfully created.` });
         }
