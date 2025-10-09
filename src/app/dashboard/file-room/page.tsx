@@ -63,8 +63,9 @@ export default function FileManagerPage() {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
-      // For supervisors, show all files where they are assigned to at least one site.
+      // For supervisors, show files assigned to them but EXCLUDE private works.
       entries = fileEntries
+        .filter(entry => !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
           return { ...entry, siteDetails: assignedSites };
@@ -144,4 +145,3 @@ export default function FileManagerPage() {
     </div>
   );
 }
-
