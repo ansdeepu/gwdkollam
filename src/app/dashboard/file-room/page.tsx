@@ -72,20 +72,22 @@ export default function FileManagerPage() {
         })
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     } else {
-      // For other roles, filter out ARS-only files and Private works.
+      // For other roles, filter out private works and files that are exclusively for ARS.
       entries = fileEntries
-        .filter(entry => !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
-        .map(entry => {
-            const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
-            // If there are sites, check if any are non-ARS. If no sites, keep the entry.
-            if ((entry.siteDetails?.length ?? 0) > 0) {
-                return { ...entry, siteDetails: nonArsSites };
-            }
-            return entry;
-        })
         .filter(entry => {
-            // Keep entries that have non-ARS sites OR have no sites at all (i.e., newly created files).
-            return (entry.siteDetails?.length ?? 0) > 0 || !entry.siteDetails;
+          // 1. Exclude all private application types
+          if (entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
+            return false;
+          }
+          // 2. Exclude files where EVERY site is an ARS site.
+          // This keeps files with no sites yet, or files with a mix of sites.
+          if (entry.siteDetails && entry.siteDetails.length > 0) {
+              const allSitesAreArs = entry.siteDetails.every(site => site.purpose === 'ARS' || site.isArsImport);
+              if (allSitesAreArs) {
+                  return false;
+              }
+          }
+          return true; // Keep the entry if it's not private and not exclusively ARS
         });
     }
 
