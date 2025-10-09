@@ -171,7 +171,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
         const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
         
         const searchableContent = [
-            entry.fileNo, entry.applicantName, entry.phoneNo, appTypeDisplay, entry.fileStatus, entry.remarks, entry.constituency,
+            entry.fileNo, entry.applicantName, entry.phoneNo, entry.secondaryMobileNo, appTypeDisplay, entry.fileStatus, entry.remarks, entry.constituency,
             entry.estimateAmount, entry.totalRemittance, entry.totalPaymentAllEntries, entry.overallBalance,
             ...(entry.siteDetails || []).flatMap(site => [
                 site.nameOfSite, site.purpose, site.workStatus, site.contractorName,
@@ -189,10 +189,11 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                 site.surveyRecommendedCasingPipe, site.surveyRecommendedPlainPipe,
                 site.surveyRecommendedSlottedPipe, site.surveyRecommendedMsCasingPipe,
                 site.arsNumberOfStructures, site.arsStorageCapacity, site.arsNumberOfFillings,
-                site.constituency, // Add site-level constituency
+                site.constituency, site.localSelfGovt, site.pumpingLineLength, site.deliveryLineLength,
+                site.pilotDrillingDepth,
             ]),
-            ...(entry.remittanceDetails || []).flatMap(rd => [ rd.amountRemitted, rd.remittedAccount, rd.remittanceRemarks ]),
-            ...(entry.paymentDetails || []).flatMap(pd => [ pd.paymentAccount, pd.revenueHead, pd.contractorsPayment, pd.gst, pd.incomeTax, pd.kbcwb, pd.refundToParty, pd.totalPaymentPerEntry, pd.paymentRemarks ]),
+            ...(entry.remittanceDetails || []).flatMap(rd => [ rd.amountRemitted, rd.remittedAccount, rd.remittanceRemarks, rd.dateOfRemittance ? format(new Date(rd.dateOfRemittance), "dd/MM/yyyy") : '']),
+            ...(entry.paymentDetails || []).flatMap(pd => [ pd.paymentAccount, pd.revenueHead, pd.contractorsPayment, pd.gst, pd.incomeTax, pd.kbcwb, pd.refundToParty, pd.totalPaymentPerEntry, pd.paymentRemarks, pd.dateOfPayment ? format(new Date(pd.dateOfPayment), "dd/MM/yyyy") : '' ]),
         ]
         .filter(val => val !== null && val !== undefined)
         .map(val => String(val).toLowerCase())
@@ -708,3 +709,5 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     </TooltipProvider>
   );
 }
+
+    
