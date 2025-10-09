@@ -76,9 +76,16 @@ export default function PrivateDepositWorksPage() {
         .filter(entry => !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const nonArsSites = entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport);
-          return { ...entry, siteDetails: nonArsSites };
+          // If there are sites, check if any are non-ARS. If no sites, keep the entry.
+          if ((entry.siteDetails?.length ?? 0) > 0) {
+            return { ...entry, siteDetails: nonArsSites };
+          }
+          return entry;
         })
-        .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+        .filter(entry => {
+            // Keep entries that have non-ARS sites OR have no sites at all (i.e., newly created files).
+            return (entry.siteDetails?.length ?? 0) > 0 || !entry.siteDetails;
+        });
     }
 
     const sortedEntries = [...entries];
