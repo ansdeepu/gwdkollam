@@ -47,16 +47,13 @@ export function useFileEntries() {
       let entries = allFileEntries;
 
       if (user.role === 'supervisor') {
-        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress", "Awaiting Dept. Rig"];
-        // For supervisors, only show files where they are assigned to at least one site with an ongoing status.
+        // For supervisors, show files where they are assigned to at least one site. The editability is then determined by the site status.
         entries = allFileEntries
             .map(entry => {
-                const assignedOngoingSites = entry.siteDetails?.filter(site => 
-                    site.supervisorUid === user.uid && 
-                    site.workStatus && 
-                    ongoingStatuses.includes(site.workStatus as SiteWorkStatus)
+                const assignedSites = entry.siteDetails?.filter(site => 
+                    site.supervisorUid === user.uid
                 );
-                return { ...entry, siteDetails: assignedOngoingSites };
+                return { ...entry, siteDetails: assignedSites };
             })
             .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
         

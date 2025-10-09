@@ -56,6 +56,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress", "Awaiting Dept. Rig"];
+
 
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
@@ -362,7 +364,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
               <TableBody>
                 {paginatedEntries.map((entry, index) => {
                   const isFilePendingForSupervisor = user?.role === 'supervisor' && pendingFileNos.has(entry.fileNo);
-                  const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !entry.siteDetails?.some(s => s.supervisorUid === user.uid));
+                  const canSupervisorEdit = user?.role === 'supervisor' && entry.siteDetails?.some(s => s.supervisorUid === user.uid && s.workStatus && ONGOING_WORK_STATUSES.includes(s.workStatus as SiteWorkStatus));
+                  const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !canSupervisorEdit);
                   
                   return (
                   <TableRow key={entry.id}>
