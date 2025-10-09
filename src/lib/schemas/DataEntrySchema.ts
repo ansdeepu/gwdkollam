@@ -341,8 +341,8 @@ export const DataEntrySchema = z.object({
   assignedSupervisorUids: z.array(z.string()).optional(),
 
   remittanceDetails: z.array(RemittanceDetailSchema)
-    .max(10, "You can add a maximum of 10 remittance details.")
-    .optional(),
+    .min(1, "At least one remittance detail is required.")
+    .max(10, "You can add a maximum of 10 remittance details."),
   totalRemittance: z.coerce.number().optional(),
 
   siteDetails: z.array(SiteDetailSchema).optional(),
