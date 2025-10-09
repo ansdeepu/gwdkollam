@@ -265,7 +265,7 @@ export const SiteDetailSchema = z.object({
   noOfTapConnections: optionalNumber("Tap Connections must be a valid number."),
   noOfBeneficiary: z.string().optional().nullable(),
   dateOfCompletion: nativeDateSchema.optional().nullable(),
-  typeOfRig: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteTypeOfRigOptions).optional()),
+  typeOfRig: z.preprocess((val) => (val === "" || val === null || val === '_clear_' ? undefined : val), z.enum(siteTypeOfRigOptions).optional()),
   contractorName: z.string().optional(),
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
