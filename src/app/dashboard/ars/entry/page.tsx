@@ -316,7 +316,8 @@ export default function ArsEntryPage() {
                 await updateArsEntry(entryIdToEdit, payload);
                 toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
             } else if (canEdit && !isEditing) {
-                const q = query(collection(db, "arsEntries"), where("fileNo", "==", data.fileNo));
+                const fileNoTrimmed = data.fileNo.trim().toUpperCase();
+                const q = query(collection(db, "arsEntries"), where("fileNo", "==", fileNoTrimmed));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     toast({
@@ -327,7 +328,7 @@ export default function ArsEntryPage() {
                     setIsSubmitting(false);
                     return;
                 }
-                await addArsEntry(payload);
+                await addArsEntry({ ...payload, fileNo: fileNoTrimmed });
                 toast({ title: "ARS Site Added", description: `Site "${data.nameOfSite}" has been created.` });
             } else if (isSupervisor && isEditing && entryIdToEdit) {
                 await createArsPendingUpdate(entryIdToEdit, payload, user);
@@ -508,3 +509,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
