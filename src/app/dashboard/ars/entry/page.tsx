@@ -23,9 +23,13 @@ import { cn } from "@/lib/utils";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { useDataStore } from "@/hooks/use-data-store";
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { app } from "@/lib/firebase";
 
 
 export const dynamic = 'force-dynamic';
+
+const db = getFirestore(app);
 
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
@@ -312,8 +316,9 @@ export default function ArsEntryPage() {
                 await updateArsEntry(entryIdToEdit, payload);
                 toast({ title: "ARS Site Updated", description: `Site "${data.nameOfSite}" has been updated.` });
             } else if (canEdit && !isEditing) {
-                const existingEntry = allArsEntries.find(entry => entry.fileNo === data.fileNo);
-                if (existingEntry) {
+                const q = query(collection(db, "arsEntries"), where("fileNo", "==", data.fileNo));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
                     toast({
                         title: "Duplicate File Number",
                         description: `An ARS entry with File No. "${data.fileNo}" already exists. Please use a unique file number.`,

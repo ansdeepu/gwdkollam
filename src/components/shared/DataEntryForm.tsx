@@ -58,7 +58,7 @@ import type { StaffMember } from "@/lib/schemas";
 import type { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../ui/card";
-import { getFirestore, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, updateDoc, serverTimestamp, query, collection, where, getDocs } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import { useDataStore } from "@/hooks/use-data-store";
 import { ScrollArea } from "../ui/scroll-area";
@@ -478,7 +478,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const fileIdToEdit = searchParams.get("id");
   const approveUpdateId = searchParams.get("approveUpdateId");
 
-  const { addFileEntry, updateFileEntry, getFileEntry } = useFileEntries();
+  const { addFileEntry, updateFileEntry } = useFileEntries();
   const { createPendingUpdate } = usePendingUpdates();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -575,9 +575,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             await updateFileEntry(fileIdToEdit, data);
             toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
         } else {
-             // Check for duplicate file number before adding
-            const existingEntry = getFileEntry(data.fileNo);
-            if (existingEntry) {
+             const q = query(collection(db, "fileEntries"), where("fileNo", "==", data.fileNo));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
                 toast({
                     title: "Duplicate File Number",
                     description: `File No. "${data.fileNo}" already exists. Please use a unique file number.`,
