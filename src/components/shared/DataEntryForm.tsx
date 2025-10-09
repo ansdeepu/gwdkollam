@@ -571,11 +571,28 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             return;
         }
         
+        const fileNoTrimmed = data.fileNo.trim().toUpperCase();
+
         if (fileIdToEdit) {
-            await updateFileEntry(fileIdToEdit, data);
+            // This is an edit operation. Check for fileNo collision only if it has changed.
+            if (fileNoToEdit?.trim().toUpperCase() !== fileNoTrimmed) {
+                const q = query(collection(db, "fileEntries"), where("fileNo", "==", fileNoTrimmed));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    toast({
+                        title: "Duplicate File Number",
+                        description: `File No. "${data.fileNo}" already exists. Please use a unique file number.`,
+                        variant: "destructive",
+                    });
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+            await updateFileEntry(fileIdToEdit, { ...data, fileNo: fileNoTrimmed });
             toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
         } else {
-             const q = query(collection(db, "fileEntries"), where("fileNo", "==", data.fileNo.trim().toUpperCase()));
+            // This is a create operation
+            const q = query(collection(db, "fileEntries"), where("fileNo", "==", fileNoTrimmed));
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
                 toast({
@@ -586,8 +603,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 setIsSubmitting(false);
                 return;
             }
-            const dataToSave = { ...data, fileNo: data.fileNo.trim().toUpperCase() };
-            await addFileEntry(dataToSave);
+            await addFileEntry({ ...data, fileNo: fileNoTrimmed });
             toast({ title: "File Created", description: `File No. ${data.fileNo} has been successfully created.` });
         }
         router.push(returnPath);
@@ -1010,6 +1026,8 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
+
+    
 
     
 
