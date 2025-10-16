@@ -110,7 +110,7 @@ export default function TenderDetails() {
             </Card>
 
             <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-3xl">
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
                    <BasicDetailsForm 
                         initialData={tender} 
                         onSubmit={(data) => handleSave(data, 'basic')}
