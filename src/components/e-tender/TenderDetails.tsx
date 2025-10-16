@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -120,15 +121,26 @@ export default function TenderDetails() {
                 </DialogContent>
             </Dialog>
 
-            {/* Placeholder Dialogs for other sections */}
             <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent><p>Corrigendum Details Form will go here.</p></DialogContent>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+                    <div className="flex-1 p-6">
+                        <p>Corrigendum Details Form will go here.</p>
+                    </div>
+                </DialogContent>
             </Dialog>
             <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent><p>Tender Opening Details Form will go here.</p></DialogContent>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+                     <div className="flex-1 p-6">
+                        <p>Tender Opening Details Form will go here.</p>
+                    </div>
+                </DialogContent>
             </Dialog>
             <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent><p>Work/Supply Order Details Form will go here.</p></DialogContent>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+                     <div className="flex-1 p-6">
+                        <p>Work/Supply Order Details Form will go here.</p>
+                    </div>
+                </DialogContent>
             </Dialog>
 
              <div className="flex justify-end pt-4">
