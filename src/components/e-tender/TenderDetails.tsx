@@ -112,34 +112,32 @@ export default function TenderDetails() {
             </Card>
 
             <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
-                    <ScrollArea>
-                        <BasicDetailsForm 
-                            initialData={tender} 
-                            onSubmit={(data) => handleSave(data, 'basic')}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
-                    </ScrollArea>
+                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
+                    <BasicDetailsForm 
+                        initialData={tender} 
+                        onSubmit={(data) => handleSave(data, 'basic')}
+                        onCancel={() => setActiveModal(null)}
+                        isSubmitting={isSubmitting}
+                    />
                 </DialogContent>
             </Dialog>
 
             <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
-                    <div className="flex-1 p-6">
+                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
+                     <div className="flex-1 p-6">
                         <p>Corrigendum Details Form will go here.</p>
                     </div>
                 </DialogContent>
             </Dialog>
             <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
                      <div className="flex-1 p-6">
                         <p>Tender Opening Details Form will go here.</p>
                     </div>
                 </DialogContent>
             </Dialog>
             <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
                      <div className="flex-1 p-6">
                         <p>Work/Supply Order Details Form will go here.</p>
                     </div>
