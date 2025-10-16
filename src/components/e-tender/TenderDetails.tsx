@@ -7,7 +7,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Building, GitBranch, FolderOpen, ScrollText, Loader2, Save } from 'lucide-react';
 import BasicDetailsForm from './BasicDetailsForm';
 // Other form imports will be added here
@@ -44,21 +44,23 @@ export default function TenderDetails() {
             setActiveModal(null);
         }
     };
-
-    const renderModalContent = () => {
-        switch (activeModal) {
-            case 'basic':
-                return <BasicDetailsForm 
-                            initialData={tender} 
-                            onSubmit={(data) => handleSave(data, 'basic')}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />;
-            // Add other cases for corrigendum, opening, workOrder here
-            default:
-                return null;
+    
+    const handleFinalSave = async () => {
+        if (tender.id === 'new') {
+            toast({ title: "Save Required", description: "Please fill out and save 'Basic Details' first to create the tender before saving all changes.", variant: "default" });
+            return;
         }
-    };
+        setIsSubmitting(true);
+        try {
+            await saveTenderToDb(tender.id, tender);
+            toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
+        } catch (error: any) {
+            toast({ title: "Error Saving Changes", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
 
     return (
         <div className="space-y-6">
@@ -107,14 +109,30 @@ export default function TenderDetails() {
                 </CardContent>
             </Card>
 
-            <Dialog open={activeModal !== null} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+            <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                 <DialogContent className="sm:max-w-3xl">
-                   {renderModalContent()}
+                   <BasicDetailsForm 
+                        initialData={tender} 
+                        onSubmit={(data) => handleSave(data, 'basic')}
+                        onCancel={() => setActiveModal(null)}
+                        isSubmitting={isSubmitting}
+                    />
                 </DialogContent>
             </Dialog>
 
+            {/* Placeholder Dialogs for other sections */}
+            <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                <DialogContent><p>Corrigendum Details Form will go here.</p></DialogContent>
+            </Dialog>
+            <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                <DialogContent><p>Tender Opening Details Form will go here.</p></DialogContent>
+            </Dialog>
+            <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                <DialogContent><p>Work/Supply Order Details Form will go here.</p></DialogContent>
+            </Dialog>
+
              <div className="flex justify-end pt-4">
-                <Button onClick={() => handleSave(tender, null)} disabled={isSubmitting || tender.id === 'new'}>
+                <Button onClick={handleFinalSave} disabled={isSubmitting || tender.id === 'new'}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Save All Changes
                 </Button>
