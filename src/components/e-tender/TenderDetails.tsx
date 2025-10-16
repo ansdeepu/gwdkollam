@@ -14,6 +14,7 @@ import BasicDetailsForm from './BasicDetailsForm';
 // Other form imports will be added here
 import { toast } from '@/hooks/use-toast';
 import { BasicDetailsFormData } from '@/lib/schemas/eTenderSchema';
+import { ScrollArea } from '../ui/scroll-area';
 
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
 
@@ -112,12 +113,14 @@ export default function TenderDetails() {
 
             <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
-                   <BasicDetailsForm 
-                        initialData={tender} 
-                        onSubmit={(data) => handleSave(data, 'basic')}
-                        onCancel={() => setActiveModal(null)}
-                        isSubmitting={isSubmitting}
-                    />
+                    <ScrollArea>
+                        <BasicDetailsForm 
+                            initialData={tender} 
+                            onSubmit={(data) => handleSave(data, 'basic')}
+                            onCancel={() => setActiveModal(null)}
+                            isSubmitting={isSubmitting}
+                        />
+                    </ScrollArea>
                 </DialogContent>
             </Dialog>
 
