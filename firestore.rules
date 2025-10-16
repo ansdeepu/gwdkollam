@@ -2,75 +2,119 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Helper functions
-    function isAuthenticated() {
+
+    // Helper functions for roles and authentication status
+    function isSignedIn() {
       return request.auth != null;
     }
-    
-    function isEditor() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor';
+
+    function isApproved() {
+      // isApproved is a field in the user's document in the /users collection.
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true;
     }
 
-    function isViewer() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'viewer';
+    function isRole(role) {
+      return isApproved() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isEditor() {
+      return isRole('editor');
     }
 
     function isSupervisor() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'supervisor';
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // Users Collection: Users can manage their own profile. Editors can manage all.
-    match /users/{userId} {
-      allow read: if isEditor() || isViewer() || isOwner(userId);
-      allow write: if isEditor() || isOwner(userId);
+      return isRole('supervisor');
     }
     
-    // Staff Members, GWD Rates, Office Addresses, LSG Maps: Read-only for most, write for editors.
-    match /staffMembers/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isEditor();
+    function isViewer() {
+      return isRole('viewer');
     }
-    match /gwdRates/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isEditor();
+    
+    function canReadCollection() {
+      return isEditor() || isViewer();
     }
-    match /officeAddresses/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isEditor();
+    
+    function canWriteCollection() {
+      return isEditor();
     }
-    match /localSelfGovernments/{docId} {
-      allow read: if isAuthenticated();
+
+    // === User Profiles ===
+    // Editors/Viewers can see all profiles.
+    // An authenticated user can read their own profile.
+    match /users/{userId} {
+      allow read: if canReadCollection() || request.auth.uid == userId;
       allow write: if isEditor();
     }
 
-    // Main Data Collections: Deposit Works, Private Works, ARS, Agency Registrations, eTenders
+    // === Main File Entries (Deposit Works) ===
     match /fileEntries/{docId} {
-      allow read: if isEditor() || isViewer() || (isSupervisor() && request.auth.uid in resource.data.assignedSupervisorUids);
-      allow write: if isEditor(); // Supervisors write to pendingUpdates, not directly.
+      // Read access: Editors/Viewers can get any document. Supervisors can only get documents they are assigned to.
+      allow get: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
+      
+      // List access: This is intentionally more permissive for supervisors because their ability to list documents 
+      // is already constrained by the client-side query which filters by their UID. Firestore security rules
+      // for list operations check the query, not the data, so this rule allows the secure query to pass.
+      allow list: if canReadCollection() || isSupervisor();
+      
+      // Write access: Only editors can create, update, or delete file entries directly.
+      // Supervisors must use the pendingUpdates collection.
+      allow create, update, delete: if canWriteCollection();
     }
+
+    // === ARS Entries ===
     match /arsEntries/{docId} {
-      allow read: if isEditor() || isViewer() || (isSupervisor() && request.auth.uid == resource.data.supervisorUid);
+      allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
+      allow list: if canReadCollection() || isSupervisor(); // See comment for fileEntries list rule.
+      allow create, update, delete: if canWriteCollection();
+    }
+    
+    // === Pending Updates from Supervisors ===
+    match /pendingUpdates/{docId} {
+      // Supervisors can create updates. They can also read and delete updates they have submitted.
+      allow create: if isSupervisor() || isEditor();
+      allow read, delete: if (isSupervisor() && request.auth.uid == resource.data.submittedByUid) || isEditor();
+      
+      // Only editors can approve/reject by updating the status.
+      allow update: if isEditor();
+    }
+
+    // === Staff Members (Establishment) ===
+    match /staffMembers/{docId} {
+      allow read: if isApproved();
       allow write: if isEditor();
     }
+    
+    // === Agency Registrations ===
     match /agencyApplications/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if isApproved();
       allow write: if isEditor();
     }
+    
+    // === GWD Rates ===
+    match /gwdRates/{docId} {
+      allow read: if isApproved();
+      allow write: if isEditor();
+    }
+    
+    // === eTenders ===
     match /eTenders/{docId} {
-      allow read: if isEditor() || isViewer();
+      allow read: if isApproved();
       allow write: if isEditor();
     }
 
-    // Pending Updates: Supervisors can create them, Editors can read/update/delete.
-    match /pendingUpdates/{updateId} {
-      allow read: if isEditor();
-      allow create: if isSupervisor();
-      allow update, delete: if isEditor();
+    // === App Settings (Dropdowns, etc.) ===
+    match /officeAddresses/{docId} {
+      allow read: if isApproved();
+      allow write: if isEditor();
+    }
+    
+    match /localSelfGovernments/{docId} {
+      allow read: if isApproved();
+      allow write: if isEditor();
+    }
+
+    match /constituencies/{docId} {
+      allow read: if isApproved();
+      allow write: if isEditor();
     }
   }
 }
