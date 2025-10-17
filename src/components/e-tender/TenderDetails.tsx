@@ -139,8 +139,10 @@ export default function TenderDetails() {
     }, [tender, form]);
 
     const handleSave = async (data: Partial<E_tenderFormData>) => {
-        updateTender(data);
-        form.reset({ ...form.getValues(), ...data }); // Re-sync the main form
+        const currentData = form.getValues();
+        const updatedData = { ...currentData, ...data };
+        updateTender(updatedData); // Update context
+        form.reset(updatedData); // Update main form state
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
@@ -383,6 +385,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
