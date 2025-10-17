@@ -75,9 +75,9 @@ export default function TenderPage() {
         <TenderDataProvider initialTender={tender}>
             <div className="space-y-6">
                 <div className="flex justify-end">
-                    <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                    <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Dashboard
+                        Back
                     </Button>
                 </div>
                 <TenderDetails />
