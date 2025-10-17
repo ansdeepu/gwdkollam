@@ -100,7 +100,7 @@ export default function TenderDetails() {
                 toast({ title: "Tender Created", description: "The new e-Tender has been saved." });
                 router.replace(`/dashboard/e-tender/${newTenderId}`);
             } else {
-                await saveTenderToDb(tender.id, data);
+                await saveTenderToDb(tender.id, updatedData);
                 toast({ title: "Tender Details Updated" });
             }
             updateTender(updatedData); // Update context after successful save
@@ -259,7 +259,7 @@ export default function TenderDetails() {
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm 
                             form={form} 
-                            onSubmit={(data) => handleSave(data)}
+                            onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
                         />
@@ -269,7 +269,7 @@ export default function TenderDetails() {
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <CorrigendumDetailsForm 
                             form={form}
-                            onSubmit={(data) => handleSave(data)}
+                            onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
                         />
@@ -279,7 +279,7 @@ export default function TenderDetails() {
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <TenderOpeningDetailsForm
                             form={form}
-                            onSubmit={(data) => handleSave(data)}
+                            onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
                         />
@@ -289,7 +289,7 @@ export default function TenderDetails() {
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <WorkOrderDetailsForm
                             form={form}
-                            onSubmit={(data) => handleSave(data)}
+                            onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
                         />
