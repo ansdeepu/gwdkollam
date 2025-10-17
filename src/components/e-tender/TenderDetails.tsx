@@ -1,7 +1,7 @@
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTenderData } from './TenderDataContext';
 import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
@@ -20,19 +20,29 @@ import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
-import { FormField } from '../ui/form';
-
 
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
-    if (value === null || value === undefined || value === '') {
+    // Check for null, undefined, empty string, or zero for numeric types that shouldn't display if 0
+    if (value === null || value === undefined || value === '' || (typeof value === 'number' && value === 0)) {
         return null;
     }
+
+    let displayValue = String(value);
+
+    if (label.toLowerCase().includes('date')) {
+        const formatted = formatDateSafe(value, label.toLowerCase().includes('time'));
+        if (formatted === 'N/A') return null; // Don't show invalid dates
+        displayValue = formatted;
+    } else if (typeof value === 'number') {
+        displayValue = value.toLocaleString('en-IN');
+    }
+
     return (
         <div>
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className="text-sm font-semibold">{String(value)}</dd>
+            <dd className="text-sm font-semibold">{displayValue}</dd>
         </div>
     );
 };
@@ -69,44 +79,45 @@ export default function TenderDetails() {
         name: "bidders"
     });
     
-     const handleFinalSave = async () => {
-        const isValid = await form.trigger();
-        if (!isValid) {
-            toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
-             const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
-            if (errorField) {
-                 const sectionMap: Record<string, string> = {
-                    eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', lastDateOfReceipt: 'basic-details', timeOfReceipt: 'basic-details', dateOfOpeningTender: 'basic-details', timeOfOpeningTender: 'basic-details', nameOfWorkMalayalam: 'basic-details',
-                    dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
-                    noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details', bidders: 'opening-details',
-                    agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
-                };
-                
-                const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'opening-details' : null);
-                if (section) {
-                    setActiveAccordion(section);
-                }
-            }
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const currentTenderData = form.getValues();
-            if (tender.id === 'new') {
-                const newTenderId = await addTender(currentTenderData);
-                toast({ title: "Tender Created", description: "The new e-Tender has been created and saved." });
-                router.replace(`/dashboard/e-tender/${newTenderId}`);
-            } else {
-                await saveTenderToDb(tender.id, currentTenderData);
-                toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
-                router.push('/dashboard/e-tender');
-            }
-        } catch (error: any) {
-            toast({ title: "Error Saving Changes", description: error.message, variant: "destructive" });
-        } finally {
-            setIsSubmitting(false);
-        }
+    const handleFinalSave = async () => {
+      const isValid = await form.trigger();
+      if (!isValid) {
+          toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
+          // Find the first error and open its accordion
+          const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
+          if (errorField) {
+              const sectionMap: Record<string, string> = {
+                  eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', lastDateOfReceipt: 'basic-details', timeOfReceipt: 'basic-details', dateOfOpeningTender: 'basic-details', timeOfOpeningTender: 'basic-details', nameOfWorkMalayalam: 'basic-details',
+                  dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
+                  noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details', bidders: 'opening-details',
+                  agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
+              };
+              
+              const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'opening-details' : null);
+              if (section) {
+                  setActiveAccordion(section);
+              }
+          }
+          return;
+      }
+  
+      setIsSubmitting(true);
+      try {
+          const currentTenderData = form.getValues();
+          if (tender.id === 'new') {
+              const newTenderId = await addTender(currentTenderData);
+              toast({ title: "Tender Created", description: "The new e-Tender has been created and saved." });
+              router.replace(`/dashboard/e-tender/${newTenderId}`);
+          } else {
+              await saveTenderToDb(tender.id, currentTenderData);
+              toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
+              router.push('/dashboard/e-tender');
+          }
+      } catch (error: any) {
+          toast({ title: "Error Saving Changes", description: error.message, variant: "destructive" });
+      } finally {
+          setIsSubmitting(false);
+      }
     };
 
 
@@ -128,6 +139,7 @@ export default function TenderDetails() {
 
     const handleSave = async (data: Partial<E_tenderFormData>) => {
         updateTender(data);
+        toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
     
@@ -137,6 +149,21 @@ export default function TenderDetails() {
         "Work Agreement", "Tender Status Summary"
     ];
     
+    const hasAnyCorrigendumData = useMemo(() => {
+        const values = form.watch(['dateTimeOfReceipt', 'dateTimeOfOpening', 'corrigendumDate', 'noOfBids']);
+        return values.some(v => v);
+    }, [form]);
+    
+    const hasAnyOpeningData = useMemo(() => {
+        const values = form.watch(['noOfTenderers', 'noOfSuccessfulTenderers', 'quotedPercentage', 'aboveBelow', 'dateOfOpeningBid', 'dateOfTechnicalAndFinancialBidOpening', 'technicalCommitteeMember1', 'technicalCommitteeMember2', 'technicalCommitteeMember3']);
+        return values.some(v => v) || bidderFields.length > 0;
+    }, [form, bidderFields]);
+
+    const hasAnyWorkOrderData = useMemo(() => {
+        const values = form.watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'nameOfSupervisor', 'supervisorPhoneNo']);
+        return values.some(v => v);
+    }, [form]);
+
     return (
         <FormProvider {...form}>
             <div className="space-y-6">
@@ -184,12 +211,16 @@ export default function TenderDetails() {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
-                                     <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                        <DetailRow label="New Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
-                                        <DetailRow label="New Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
-                                        <DetailRow label="Corrigendum Date" value={formatDateSafe(form.watch('corrigendumDate'))} />
-                                        <DetailRow label="No. of Bids Received" value={form.watch('noOfBids')} />
-                                     </dl>
+                                     {hasAnyCorrigendumData ? (
+                                        <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                            <DetailRow label="New Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
+                                            <DetailRow label="New Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
+                                            <DetailRow label="Corrigendum Date" value={formatDateSafe(form.watch('corrigendumDate'))} />
+                                            <DetailRow label="No. of Bids Received" value={form.watch('noOfBids')} />
+                                        </dl>
+                                     ) : (
+                                        <p className="text-sm text-muted-foreground text-center py-4">No corrigendum details have been added.</p>
+                                     )}
                                 </AccordionContent>
                             </AccordionItem>
                             
@@ -202,29 +233,37 @@ export default function TenderDetails() {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
-                                     <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
-                                        <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
-                                        <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
-                                        <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : 'N/A'} />
-                                        <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
-                                        <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
-                                        <div className="md:col-span-3 border-t pt-2 mt-2">
-                                            <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
-                                        </div>
-                                     </dl>
-                                     <div className="mt-4 pt-4 border-t">
-                                        <h4 className="font-semibold text-base mb-2">Bidders ({bidderFields.length})</h4>
-                                        {bidderFields.map((bidder, index) => (
-                                            <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30">
-                                                <h5 className="font-bold text-sm">{bidder.name}</h5>
-                                                <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
-                                                    <DetailRow label="Quoted Amount" value={bidder.quotedAmount?.toLocaleString('en-IN')} />
-                                                    <DetailRow label="Agreement Amount" value={bidder.agreementAmount?.toLocaleString('en-IN')} />
-                                                    <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
-                                                </dl>
-                                            </div>
-                                        ))}
-                                     </div>
+                                    {hasAnyOpeningData ? (
+                                        <>
+                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
+                                                <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
+                                                <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
+                                                <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : ''} />
+                                                <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
+                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
+                                                <div className="md:col-span-3 border-t pt-2 mt-2">
+                                                    <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
+                                                </div>
+                                             </dl>
+                                             {bidderFields.length > 0 && (
+                                                 <div className="mt-4 pt-4 border-t">
+                                                    <h4 className="font-semibold text-base mb-2">Bidders ({bidderFields.length})</h4>
+                                                    {bidderFields.map((bidder, index) => (
+                                                        <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30">
+                                                            <h5 className="font-bold text-sm">{bidder.name}</h5>
+                                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
+                                                                <DetailRow label="Quoted Amount" value={bidder.quotedAmount?.toLocaleString('en-IN')} />
+                                                                <DetailRow label="Agreement Amount" value={bidder.agreementAmount?.toLocaleString('en-IN')} />
+                                                                <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
+                                                            </dl>
+                                                        </div>
+                                                    ))}
+                                                 </div>
+                                             )}
+                                        </>
+                                    ) : (
+                                         <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
+                                    )}
                                 </AccordionContent>
                             </AccordionItem>
                             
@@ -237,13 +276,17 @@ export default function TenderDetails() {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
-                                     <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                         <DetailRow label="Agreement Date" value={formatDateSafe(form.watch('agreementDate'))} />
-                                         <DetailRow label="Date - Work / Supply Order" value={formatDateSafe(form.watch('dateWorkOrder'))} />
-                                         <DetailRow label="Assistant Engineer" value={form.watch('nameOfAssistantEngineer')} />
-                                         <DetailRow label="Supervisor" value={form.watch('nameOfSupervisor')} />
-                                         <DetailRow label="Supervisor Phone" value={form.watch('supervisorPhoneNo')} />
-                                     </dl>
+                                    {hasAnyWorkOrderData ? (
+                                         <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                             <DetailRow label="Agreement Date" value={formatDateSafe(form.watch('agreementDate'))} />
+                                             <DetailRow label="Date - Work / Supply Order" value={formatDateSafe(form.watch('dateWorkOrder'))} />
+                                             <DetailRow label="Assistant Engineer" value={form.watch('nameOfAssistantEngineer')} />
+                                             <DetailRow label="Supervisor" value={form.watch('nameOfSupervisor')} />
+                                             <DetailRow label="Supervisor Phone" value={form.watch('supervisorPhoneNo')} />
+                                         </dl>
+                                    ) : (
+                                         <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>
+                                    )}
                                 </AccordionContent>
                             </AccordionItem>
 
