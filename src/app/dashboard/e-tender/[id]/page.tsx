@@ -55,7 +55,7 @@ export default function TenderPage() {
                 } else {
                     toast({ title: "Tender Not Found", description: "The requested tender could not be found.", variant: "destructive" });
                     setHeader("Tender Not Found", "The requested tender could not be found.");
-                    router.push('/dashboard/e-tender');
+                    router.push('/dashboard');
                 }
             };
             fetchTender();
@@ -75,9 +75,9 @@ export default function TenderPage() {
         <TenderDataProvider initialTender={tender}>
             <div className="space-y-6">
                 <div className="flex justify-end">
-                    <Button variant="outline" onClick={() => router.push('/dashboard/e-tender')}>
+                    <Button variant="outline" onClick={() => router.push('/dashboard')}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Tenders List
+                        Back to Dashboard
                     </Button>
                 </div>
                 <TenderDetails />
