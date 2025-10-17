@@ -1,69 +1,51 @@
 // src/components/e-tender/CorrigendumDetailsForm.tsx
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CorrigendumDetailsSchema, type CorrigendumDetailsFormData } from "@/lib/schemas/eTenderSchema";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import React from 'react';
+import { useForm, type UseFormReturn } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader2, Save, X } from 'lucide-react';
+import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
 
 interface CorrigendumDetailsFormProps {
-    initialData: Partial<CorrigendumDetailsFormData>;
-    onSubmit: (data: CorrigendumDetailsFormData) => void;
+    form: UseFormReturn<E_tenderFormData>;
+    onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
 }
 
-const formatDateForInput = (date: any) => {
-    if (!date) return '';
-    try {
-        return new Date(date).toISOString().split('T')[0];
-    } catch (e) {
-        return '';
-    }
-};
+export default function CorrigendumDetailsForm({ form, onSubmit, onCancel, isSubmitting }: CorrigendumDetailsFormProps) {
 
-export default function CorrigendumDetailsForm({ initialData, onSubmit, onCancel, isSubmitting }: CorrigendumDetailsFormProps) {
-    const form = useForm<CorrigendumDetailsFormData>({
-        resolver: zodResolver(CorrigendumDetailsSchema),
-        defaultValues: {
-            ...initialData,
-            dateTimeOfReceipt: formatDateForInput(initialData.dateTimeOfReceipt),
-            dateTimeOfOpening: formatDateForInput(initialData.dateTimeOfOpening),
-            corrigendumDate: formatDateForInput(initialData.corrigendumDate),
-        }
-    });
-
+    const handleFormSubmit = (data: E_tenderFormData) => {
+        onSubmit(data);
+    };
+    
     return (
-        <>
+         <>
             <DialogHeader className="p-6 pb-4">
                 <DialogTitle>Corrigendum Details</DialogTitle>
-                <DialogDescription>
-                    Enter revised dates and bid information for the corrigendum notice.
-                </DialogDescription>
+                <DialogDescription>Enter details if there are any corrigendum updates.</DialogDescription>
             </DialogHeader>
-            <div className="flex-1 min-h-0">
+             <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4">
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            <FormField name="dateTimeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>New Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="dateTimeOfOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>New Date & Time of Opening</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="corrigendumDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Corrigendum Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="noOfBids" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Bids Received (in words)</FormLabel><FormControl><Input {...field} placeholder="e.g., Three Nos" /></FormControl><FormMessage /></FormItem> )}/>
-                            <Button type="submit" className="hidden" />
-                        </form>
-                    </Form>
+                    <div className="space-y-4">
+                        <FormField name="dateTimeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>New Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField name="dateTimeOfOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>New Date & Time of Opening</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField name="corrigendumDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Corrigendum Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField name="noOfBids" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Bids Received</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    </div>
                 </ScrollArea>
             </div>
-            <DialogFooter className="p-6 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancel</Button>
-                <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Corrigendum
+            <DialogFooter className="p-6 pt-4">
+                <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                </Button>
+                <Button type="button" onClick={form.handleSubmit(handleFormSubmit)} disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
                 </Button>
             </DialogFooter>
         </>

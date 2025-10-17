@@ -1,24 +1,40 @@
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTenderData } from './TenderDataContext';
 import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
+import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { E_tenderSchema, type E_tenderFormData, type Bidder } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Building, GitBranch, FolderOpen, ScrollText, Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { formatDateForInput, formatDateSafe } from './utils';
+
 import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 
-import { toast } from '@/hooks/use-toast';
-import { BasicDetailsFormData, CorrigendumDetailsFormData, TenderOpeningDetailsFormData, WorkOrderDetailsFormData } from '@/lib/schemas/eTenderSchema';
-import { ScrollArea } from '../ui/scroll-area';
-
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
+
+const DetailRow = ({ label, value }: { label: string; value: any }) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+    return (
+        <div>
+            <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+            <dd className="text-sm font-semibold">{String(value)}</dd>
+        </div>
+    );
+};
+
 
 export default function TenderDetails() {
     const router = useRouter();
@@ -27,33 +43,27 @@ export default function TenderDetails() {
     const [activeModal, setActiveModal] = useState<ModalType>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSave = async (data: any, type: ModalType) => {
-        setIsSubmitting(true);
-        try {
-            const updatedData = { ...tender, ...data };
-            updateTender(data); // Update local context state first for UI responsiveness
+    const form = useForm<E_tenderFormData>({
+        resolver: zodResolver(E_tenderSchema),
+        defaultValues: {
+            ...tender,
+            tenderDate: formatDateForInput(tender.tenderDate),
+            lastDateOfReceipt: formatDateForInput(tender.lastDateOfReceipt),
+            dateOfOpeningTender: formatDateForInput(tender.dateOfOpeningTender),
+            corrigendumDate: formatDateForInput(tender.corrigendumDate),
+            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
+            agreementDate: formatDateForInput(tender.agreementDate),
+            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
+            bidders: tender.bidders?.map(b => ({ ...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice) })) || [],
+        },
+    });
 
-            if (tender.id === 'new') {
-                const newTenderId = await addTender(updatedData);
-                toast({ title: "Tender Created", description: "The new e-Tender has been saved." });
-                router.replace(`/dashboard/e-tender/${newTenderId}`); // Replace URL to prevent re-creation on refresh
-            } else {
-                await saveTenderToDb(tender.id, data);
-                toast({ title: `Tender Details Updated`, description: `The ${type} details have been saved.` });
-            }
-        } catch (error: any) {
-            toast({ title: "Error Saving Tender", description: error.message, variant: "destructive" });
-        } finally {
-            setIsSubmitting(false);
-            setActiveModal(null);
-        }
-    };
+    const { fields: bidderFields, append: appendBidder, remove: removeBidder } = useFieldArray({
+        control: form.control,
+        name: "bidders"
+    });
     
     const handleFinalSave = async () => {
-        if (tender.id === 'new') {
-            toast({ title: "Save Required", description: "Please fill out and save 'Basic Details' first to create the tender before saving all changes.", variant: "default" });
-            return;
-        }
         setIsSubmitting(true);
         try {
             await saveTenderToDb(tender.id, tender);
@@ -63,103 +73,228 @@ export default function TenderDetails() {
         } finally {
             setIsSubmitting(false);
         }
-    }
+    };
 
+    useEffect(() => {
+        form.reset({
+            ...tender,
+            tenderDate: formatDateForInput(tender.tenderDate),
+            lastDateOfReceipt: formatDateForInput(tender.lastDateOfReceipt),
+            dateOfOpeningTender: formatDateForInput(tender.dateOfOpeningTender),
+            corrigendumDate: formatDateForInput(tender.corrigendumDate),
+            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
+            agreementDate: formatDateForInput(tender.agreementDate),
+            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
+            bidders: tender.bidders?.map(b => ({ ...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice) })) || [],
+        });
+    }, [tender, form]);
 
+    const handleSave = async (data: Partial<E_tenderFormData>) => {
+        setIsSubmitting(true);
+        try {
+            const currentTenderData = form.getValues();
+            const updatedData = { ...currentTenderData, ...data };
+            
+            if (tender.id === 'new') {
+                const newTenderId = await addTender(updatedData);
+                toast({ title: "Tender Created", description: "The new e-Tender has been saved." });
+                router.replace(`/dashboard/e-tender/${newTenderId}`);
+            } else {
+                await saveTenderToDb(tender.id, data);
+                toast({ title: "Tender Details Updated" });
+            }
+            updateTender(updatedData); // Update context after successful save
+        } catch (error: any) {
+            toast({ title: "Error Saving Tender", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+            setActiveModal(null);
+        }
+    };
+    
+    const pdfReports = [
+        "Notice Inviting Tender (NIT)", "Tender Form", "Corrigendum", "Bid Opening Summary",
+        "Technical Summary", "Financial Summary", "Selection Notice", "Work / Supply Order",
+        "Work Agreement", "Tender Status Summary"
+    ];
+    
     return (
-        <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>e-Tender Details</CardTitle>
-                    <CardDescription>Fill out the sections below to generate all necessary tender documents.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button variant="outline" className="p-8 justify-start text-left h-auto" onClick={() => setActiveModal('basic')}>
-                        <div className="flex items-center gap-4">
-                            <Building className="h-8 w-8 text-primary" />
-                            <div>
-                                <p className="font-bold text-base">Basic Details</p>
-                                <p className="text-sm text-muted-foreground">eTender No, Dates, Name of Work</p>
-                            </div>
-                        </div>
-                    </Button>
-                    <Button variant="outline" className="p-8 justify-start text-left h-auto" onClick={() => setActiveModal('corrigendum')}>
-                        <div className="flex items-center gap-4">
-                            <GitBranch className="h-8 w-8 text-primary" />
-                            <div>
-                                <p className="font-bold text-base">Corrigendum Details</p>
-                                <p className="text-sm text-muted-foreground">Revised dates and bid info</p>
-                            </div>
-                        </div>
-                    </Button>
-                    <Button variant="outline" className="p-8 justify-start text-left h-auto" onClick={() => setActiveModal('opening')}>
-                        <div className="flex items-center gap-4">
-                            <FolderOpen className="h-8 w-8 text-primary" />
-                            <div>
-                                <p className="font-bold text-base">Tender Opening Details</p>
-                                <p className="text-sm text-muted-foreground">Bidder info and committee members</p>
-                            </div>
-                        </div>
-                    </Button>
-                    <Button variant="outline" className="p-8 justify-start text-left h-auto" onClick={() => setActiveModal('workOrder')}>
-                        <div className="flex items-center gap-4">
-                            <ScrollText className="h-8 w-8 text-primary" />
-                            <div>
-                                <p className="font-bold text-base">Work / Supply Order Details</p>
-                                <p className="text-sm text-muted-foreground">Agreement, Engineer, Supervisor</p>
-                            </div>
-                        </div>
-                    </Button>
-                </CardContent>
-            </Card>
+        <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                           <FileText className="h-6 w-6 text-primary"/>
+                           e-Tender: {form.watch('eTenderNo') || 'New Tender'}
+                        </CardTitle>
+                        <CardDescription>File: {form.watch('fileNo') || 'N/A'}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Accordion type="single" collapsible defaultValue="basic-details" className="w-full space-y-4">
+                            
+                            {/* Basic Details Accordion */}
+                            <AccordionItem value="basic-details" className="border rounded-lg">
+                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span className="flex items-center gap-3"><Building className="h-5 w-5"/>Basic Details</span>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('basic'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-0">
+                                    <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
+                                        <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
+                                        <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                        <DetailRow label="File No." value={form.watch('fileNo')} />
+                                        <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
+                                        <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
+                                        <DetailRow label="Location" value={form.watch('location')} />
+                                        <DetailRow label="Estimate Amount (Rs.)" value={form.watch('estimateAmount')?.toLocaleString('en-IN')} />
+                                        <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')?.toLocaleString('en-IN')} />
+                                        <DetailRow label="EMD (Rs.)" value={form.watch('emd')?.toLocaleString('en-IN')} />
+                                        <DetailRow label="Period of Completion" value={`${form.watch('periodOfCompletion') || 0} Days`} />
+                                        <DetailRow label="Last Date of Receipt" value={`${formatDateSafe(form.watch('lastDateOfReceipt'))}, ${form.watch('timeOfReceipt')}`} />
+                                        <DetailRow label="Date of Opening" value={`${formatDateSafe(form.watch('dateOfOpeningTender'))}, ${form.watch('timeOfOpeningTender')}`} />
+                                    </dl>
+                                </AccordionContent>
+                            </AccordionItem>
+                            
+                            {/* Corrigendum Details Accordion */}
+                            <AccordionItem value="corrigendum-details" className="border rounded-lg">
+                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details</span>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-0">
+                                     <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                        <DetailRow label="New Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
+                                        <DetailRow label="New Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
+                                        <DetailRow label="Corrigendum Date" value={formatDateSafe(form.watch('corrigendumDate'))} />
+                                        <DetailRow label="No. of Bids Received" value={form.watch('noOfBids')} />
+                                     </dl>
+                                </AccordionContent>
+                            </AccordionItem>
+                            
+                            {/* Tender Opening Accordion */}
+                             <AccordionItem value="opening-details" className="border rounded-lg">
+                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-0">
+                                     <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
+                                        <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
+                                        <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
+                                        <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow')}` : 'N/A'} />
+                                        <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
+                                        <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
+                                        <div className="md:col-span-3 border-t pt-2 mt-2">
+                                            <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
+                                        </div>
+                                     </dl>
+                                     <div className="mt-4 pt-4 border-t">
+                                        <h4 className="font-semibold text-base mb-2">Bidders ({bidderFields.length})</h4>
+                                        {bidderFields.map((bidder, index) => (
+                                            <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30">
+                                                <h5 className="font-bold text-sm">{bidder.name}</h5>
+                                                <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
+                                                    <DetailRow label="Quoted Amount" value={bidder.quotedAmount?.toLocaleString('en-IN')} />
+                                                    <DetailRow label="Agreement Amount" value={bidder.agreementAmount?.toLocaleString('en-IN')} />
+                                                    <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
+                                                </dl>
+                                            </div>
+                                        ))}
+                                     </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                            
+                            {/* Work Order Accordion */}
+                             <AccordionItem value="work-order-details" className="border rounded-lg">
+                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span className="flex items-center gap-3"><ScrollText className="h-5 w-5"/>Work Order Details</span>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-0">
+                                     <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                         <DetailRow label="Agreement Date" value={formatDateSafe(form.watch('agreementDate'))} />
+                                         <DetailRow label="Date - Work / Supply Order" value={formatDateSafe(form.watch('dateWorkOrder'))} />
+                                         <DetailRow label="Assistant Engineer" value={form.watch('nameOfAssistantEngineer')} />
+                                         <DetailRow label="Supervisor" value={form.watch('nameOfSupervisor')} />
+                                         <DetailRow label="Supervisor Phone" value={form.watch('supervisorPhoneNo')} />
+                                     </dl>
+                                </AccordionContent>
+                            </AccordionItem>
 
-            <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                    <BasicDetailsForm 
-                        initialData={tender} 
-                        onSubmit={(data) => handleSave(data, 'basic')}
-                        onCancel={() => setActiveModal(null)}
-                        isSubmitting={isSubmitting}
-                    />
-                </DialogContent>
-            </Dialog>
-            <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-3xl h-[90vh] flex flex-col p-0">
-                    <CorrigendumDetailsForm 
-                        initialData={tender} 
-                        onSubmit={(data) => handleSave(data, 'corrigendum')}
-                        onCancel={() => setActiveModal(null)}
-                        isSubmitting={isSubmitting}
-                    />
-                </DialogContent>
-            </Dialog>
-            <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-6xl h-[90vh] flex flex-col p-0">
-                    <TenderOpeningDetailsForm
-                        initialData={tender}
-                        onSubmit={(data) => handleSave(data, 'opening')}
-                        onCancel={() => setActiveModal(null)}
-                        isSubmitting={isSubmitting}
-                    />
-                </DialogContent>
-            </Dialog>
-            <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-3xl h-[90vh] flex flex-col p-0">
-                     <WorkOrderDetailsForm
-                        initialData={tender}
-                        onSubmit={(data) => handleSave(data, 'workOrder')}
-                        onCancel={() => setActiveModal(null)}
-                        isSubmitting={isSubmitting}
-                    />
-                </DialogContent>
-            </Dialog>
+                        </Accordion>
+                    </CardContent>
+                </Card>
+                
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>PDF Reports Generation</CardTitle>
+                        <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {pdfReports.map((reportName) => (
+                            <Button key={reportName} variant="outline" className="justify-start">
+                                <Download className="mr-2 h-4 w-4" />
+                                {reportName}
+                            </Button>
+                        ))}
+                    </CardContent>
+                     <CardFooter>
+                        <p className="text-xs text-muted-foreground">PDF generation functionality is currently a placeholder.</p>
+                    </CardFooter>
+                </Card>
 
-             <div className="flex justify-end pt-4">
-                <Button onClick={handleFinalSave} disabled={isSubmitting || tender.id === 'new'}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save All Changes
-                </Button>
-            </div>
-        </div>
+
+                {/* Dialogs for Editing */}
+                <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                        <BasicDetailsForm 
+                            form={form} 
+                            onSubmit={(data) => handleSave(data)}
+                            onCancel={() => setActiveModal(null)}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+                 <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                    <DialogContent className="max-w-xl h-auto flex flex-col p-0">
+                        <CorrigendumDetailsForm 
+                            form={form}
+                            onSubmit={(data) => handleSave(data)}
+                            onCancel={() => setActiveModal(null)}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+                 <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                    <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
+                        <TenderOpeningDetailsForm
+                            form={form}
+                            onSubmit={(data) => handleSave(data)}
+                            onCancel={() => setActiveModal(null)}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                    <DialogContent className="max-w-xl h-auto flex flex-col p-0">
+                        <WorkOrderDetailsForm
+                            form={form}
+                            onSubmit={(data) => handleSave(data)}
+                            onCancel={() => setActiveModal(null)}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </form>
+        </FormProvider>
     );
 }
