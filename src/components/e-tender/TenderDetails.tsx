@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -11,9 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Building, GitBranch, FolderOpen, ScrollText, Loader2, Save } from 'lucide-react';
 import BasicDetailsForm from './BasicDetailsForm';
-// Other form imports will be added here
+import CorrigendumDetailsForm from './CorrigendumDetailsForm';
+import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
+import WorkOrderDetailsForm from './WorkOrderDetailsForm';
+
 import { toast } from '@/hooks/use-toast';
-import { BasicDetailsFormData } from '@/lib/schemas/eTenderSchema';
+import { BasicDetailsFormData, CorrigendumDetailsFormData, TenderOpeningDetailsFormData, WorkOrderDetailsFormData } from '@/lib/schemas/eTenderSchema';
 import { ScrollArea } from '../ui/scroll-area';
 
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
@@ -112,7 +114,7 @@ export default function TenderDetails() {
             </Card>
 
             <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
+                <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                     <BasicDetailsForm 
                         initialData={tender} 
                         onSubmit={(data) => handleSave(data, 'basic')}
@@ -121,26 +123,34 @@ export default function TenderDetails() {
                     />
                 </DialogContent>
             </Dialog>
-
             <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
-                     <div className="flex-1 p-6">
-                        <p>Corrigendum Details Form will go here.</p>
-                    </div>
+                <DialogContent className="sm:max-w-3xl h-[90vh] flex flex-col p-0">
+                    <CorrigendumDetailsForm 
+                        initialData={tender} 
+                        onSubmit={(data) => handleSave(data, 'corrigendum')}
+                        onCancel={() => setActiveModal(null)}
+                        isSubmitting={isSubmitting}
+                    />
                 </DialogContent>
             </Dialog>
             <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
-                     <div className="flex-1 p-6">
-                        <p>Tender Opening Details Form will go here.</p>
-                    </div>
+                <DialogContent className="sm:max-w-6xl h-[90vh] flex flex-col p-0">
+                    <TenderOpeningDetailsForm
+                        initialData={tender}
+                        onSubmit={(data) => handleSave(data, 'opening')}
+                        onCancel={() => setActiveModal(null)}
+                        isSubmitting={isSubmitting}
+                    />
                 </DialogContent>
             </Dialog>
             <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col p-0">
-                     <div className="flex-1 p-6">
-                        <p>Work/Supply Order Details Form will go here.</p>
-                    </div>
+                <DialogContent className="sm:max-w-3xl h-[90vh] flex flex-col p-0">
+                     <WorkOrderDetailsForm
+                        initialData={tender}
+                        onSubmit={(data) => handleSave(data, 'workOrder')}
+                        onCancel={() => setActiveModal(null)}
+                        isSubmitting={isSubmitting}
+                    />
                 </DialogContent>
             </Dialog>
 
