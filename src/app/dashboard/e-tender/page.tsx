@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateSafe } from '@/components/e-tender/utils';
 import { useToast } from '@/hooks/use-toast';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 
@@ -37,7 +37,8 @@ export default function ETenderListPage() {
         return tenders.filter(tender =>
             (tender.eTenderNo?.toLowerCase().includes(lowercasedFilter)) ||
             (tender.nameOfWork?.toLowerCase().includes(lowercasedFilter)) ||
-            (tender.fileNo?.toLowerCase().includes(lowercasedFilter))
+            (tender.fileNo?.toLowerCase().includes(lowercasedFilter)) ||
+            (`GKT/${tender.fileNo}/${tender.eTenderNo}`.toLowerCase().includes(lowercasedFilter))
         );
     }, [tenders, searchTerm]);
 
@@ -86,7 +87,7 @@ export default function ETenderListPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <Input
                                 type="search"
-                                placeholder="Search by eTender No, Name of Work, or File No..."
+                                placeholder="Search by eTender Ref. No, Name of Work, or File No..."
                                 className="w-full pl-10"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -107,7 +108,7 @@ export default function ETenderListPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Sl. No.</TableHead>
-                                    <TableHead>eTender No.</TableHead>
+                                    <TableHead>eTender Ref. No.</TableHead>
                                     <TableHead>Name of Work</TableHead>
                                     <TableHead>Tender Date</TableHead>
                                     <TableHead>Present Status</TableHead>
@@ -119,7 +120,7 @@ export default function ETenderListPage() {
                                     filteredTenders.map((tender, index) => (
                                         <TableRow key={tender.id}>
                                             <TableCell>{index + 1}</TableCell>
-                                            <TableCell className="font-medium">{tender.eTenderNo}</TableCell>
+                                            <TableCell className="font-medium">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</TableCell>
                                             <TableCell>{tender.nameOfWork}</TableCell>
                                             <TableCell>{formatDateSafe(tender.tenderDate)}</TableCell>
                                             <TableCell>
