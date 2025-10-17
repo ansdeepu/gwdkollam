@@ -273,7 +273,7 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">

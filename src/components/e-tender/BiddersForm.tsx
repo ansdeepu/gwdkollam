@@ -1,3 +1,4 @@
+
 // src/components/e-tender/BiddersForm.tsx
 "use client";
 
@@ -13,6 +14,7 @@ import { Loader2, Save, X, PlusCircle, Trash2 } from 'lucide-react';
 import type { E_tenderFormData, Bidder } from '@/lib/schemas/eTenderSchema';
 import { Separator } from '@/components/ui/separator';
 import { v4 as uuidv4 } from 'uuid';
+import { formatDateForInput } from './utils';
 
 interface BiddersFormProps {
     form: UseFormReturn<E_tenderFormData>;
@@ -64,12 +66,28 @@ export default function BiddersForm({ form, onSubmit, onCancel, isSubmitting }: 
                                 <FormField name={`bidders.${index}.name`} control={control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name={`bidders.${index}.address`} control={control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <FormField name={`bidders.${index}.quotedAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                    <FormField name={`bidders.${index}.securityDepositType`} control={control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Type</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage /></FormItem> )}/>
-                                    <FormField name={`bidders.${index}.securityDepositAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Amount</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                    <FormField name={`bidders.${index}.agreementAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Agreement Amount</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                    <FormField name={`bidders.${index}.additionalSecurityDeposit`} control={control} render={({ field }) => ( <FormItem><FormLabel>Addtl. Security Deposit</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                    <FormField name={`bidders.${index}.dateSelectionNotice`} control={control} render={({ field }) => ( <FormItem><FormLabel>Date - Selection Notice</FormLabel><FormControl><Input type="date" {...field}/></FormControl><FormMessage /></FormItem> )}/>
+                                    <FormField name={`bidders.${index}.quotedAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                    <FormField name={`bidders.${index}.securityDepositType`} control={control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Type</FormLabel><FormControl><Input {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem> )}/>
+                                    <FormField name={`bidders.${index}.securityDepositAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                    <FormField name={`bidders.${index}.agreementAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Agreement Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                    <FormField name={`bidders.${index}.additionalSecurityDeposit`} control={control} render={({ field }) => ( <FormItem><FormLabel>Addtl. Security Deposit</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                    <FormField
+                                        name={`bidders.${index}.dateSelectionNotice`}
+                                        control={control}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Date - Selection Notice</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="date"
+                                                        value={formatDateForInput(field.value)}
+                                                        onChange={e => field.onChange(e.target.value)}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                 </div>
                             </div>
                         ))}
