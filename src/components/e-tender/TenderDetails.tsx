@@ -5,9 +5,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTenderData } from './TenderDataContext';
 import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
-import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
+import { useForm, FormProvider, useFieldArray, FormField } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -20,6 +20,8 @@ import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
+import { FormItem, FormLabel, FormControl, FormMessage } from '../ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
 
@@ -91,6 +93,7 @@ export default function TenderDetails() {
                   dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
                   noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details', bidders: 'opening-details',
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
+                  presentStatus: 'status-details',
               };
               
               const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'opening-details' : null);
@@ -149,6 +152,11 @@ export default function TenderDetails() {
         "Work Agreement", "Tender Status Summary"
     ];
     
+    const hasAnyBasicData = useMemo(() => {
+        const values = form.watch(['eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion', 'lastDateOfReceipt', 'timeOfReceipt', 'dateOfOpeningTender', 'timeOfOpeningTender', 'nameOfWorkMalayalam']);
+        return values.some(v => v);
+    }, [form]);
+
     const hasAnyCorrigendumData = useMemo(() => {
         const values = form.watch(['dateTimeOfReceipt', 'dateTimeOfOpening', 'corrigendumDate', 'noOfBids']);
         return values.some(v => v);
@@ -180,25 +188,28 @@ export default function TenderDetails() {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
-                                    <div className="space-y-4 pt-4 border-t">
-                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
-                                            <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
-                                            <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
-                                            <DetailRow label="Present Status" value={form.watch('presentStatus')} />
-                                            <DetailRow label="File No." value={form.watch('fileNo')} />
-                                            <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
-                                            <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
-                                            <DetailRow label="Location" value={form.watch('location')} />
-                                            <DetailRow label="Estimate Amount (Rs.)" value={form.watch('estimateAmount')?.toLocaleString('en-IN')} />
-                                            <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')?.toLocaleString('en-IN')} />
-                                            <DetailRow label="EMD (Rs.)" value={form.watch('emd')?.toLocaleString('en-IN')} />
-                                            <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
-                                            <DetailRow label="Last Date of Receipt" value={formatDateSafe(form.watch('lastDateOfReceipt'))} />
-                                            <DetailRow label="Time of Receipt" value={form.watch('timeOfReceipt')} />
-                                            <DetailRow label="Date of Opening Tender" value={formatDateSafe(form.watch('dateOfOpeningTender'))} />
-                                            <DetailRow label="Time of Opening Tender" value={form.watch('timeOfOpeningTender')} />
-                                        </dl>
-                                    </div>
+                                    {hasAnyBasicData ? (
+                                        <div className="space-y-4 pt-4 border-t">
+                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
+                                                <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
+                                                <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                                <DetailRow label="File No." value={form.watch('fileNo')} />
+                                                <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
+                                                <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
+                                                <DetailRow label="Location" value={form.watch('location')} />
+                                                <DetailRow label="Estimate Amount (Rs.)" value={form.watch('estimateAmount')?.toLocaleString('en-IN')} />
+                                                <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')?.toLocaleString('en-IN')} />
+                                                <DetailRow label="EMD (Rs.)" value={form.watch('emd')?.toLocaleString('en-IN')} />
+                                                <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
+                                                <DetailRow label="Last Date of Receipt" value={formatDateSafe(form.watch('lastDateOfReceipt'))} />
+                                                <DetailRow label="Time of Receipt" value={form.watch('timeOfReceipt')} />
+                                                <DetailRow label="Date of Opening Tender" value={formatDateSafe(form.watch('dateOfOpeningTender'))} />
+                                                <DetailRow label="Time of Opening Tender" value={form.watch('timeOfOpeningTender')} />
+                                            </dl>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground text-center py-4">No basic details have been added.</p>
+                                    )}
                                 </AccordionContent>
                             </AccordionItem>
                             
@@ -287,6 +298,33 @@ export default function TenderDetails() {
                                     ) : (
                                          <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>
                                     )}
+                                </AccordionContent>
+                            </AccordionItem>
+
+                             {/* Present Status Accordion */}
+                            <AccordionItem value="status-details" className="border rounded-lg">
+                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span className="flex items-center gap-3"><FileText className="h-5 w-5"/>Present Status</span>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-0">
+                                    <div className="space-y-4 pt-4 border-t">
+                                        <FormField
+                                            name="presentStatus"
+                                            control={form.control}
+                                            render={({ field }) => (
+                                                <FormItem className="max-w-sm">
+                                                    <FormLabel>Current Tender Status</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
 
