@@ -190,6 +190,9 @@ export default function TenderDetails() {
         return values.some(v => v);
     }, [form]);
 
+    const tenderType = form.watch('tenderType');
+    const workOrderTitle = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
+
     return (
         <FormProvider {...form}>
             <div className="space-y-6">
@@ -209,11 +212,12 @@ export default function TenderDetails() {
                                         <div className="space-y-4 pt-4 border-t">
                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
                                                 <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
-                                                <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                                <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
                                                 <DetailRow label="Location" value={form.watch('location')} />
+                                                <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
                                                 <DetailRow label="Estimate Amount (Rs.)" value={form.watch('estimateAmount')} />
                                                 <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
                                                 <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
@@ -280,7 +284,7 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
@@ -290,10 +294,6 @@ export default function TenderDetails() {
                                                 <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30 relative">
                                                     <div className="flex justify-between items-start">
                                                         <h5 className="font-bold text-sm">{bidder.name}</h5>
-                                                        <div className="flex items-center -mt-1 -mr-1">
-                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveModal('editBidder')}><Edit className="h-4 w-4"/></Button>
-                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                        </div>
                                                     </div>
                                                     <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
                                                         <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
@@ -312,7 +312,7 @@ export default function TenderDetails() {
                              <AccordionItem value="work-order-details" className="border rounded-lg">
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
-                                        <span className="flex items-center gap-3"><ScrollText className="h-5 w-5"/>Work Order Details</span>
+                                        <span className="flex items-center gap-3"><ScrollText className="h-5 w-5"/>{workOrderTitle}</span>
                                         <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
@@ -438,6 +438,7 @@ export default function TenderDetails() {
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
+                            tenderType={tenderType}
                         />
                     </DialogContent>
                 </Dialog>

@@ -49,9 +49,21 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="eTenderNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="tenderType" control={form.control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Type of Tender</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Work">Work</SelectItem>
+                                                <SelectItem value="Purchase">Purchase</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
                                 <FormField name="fileNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -65,13 +77,14 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                 <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="periodOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Last Date of Receipt</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="timeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Receipt</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Tender</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="timeOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Opening Tender</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="periodOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                         </div>
                     </ScrollArea>

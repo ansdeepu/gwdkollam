@@ -26,6 +26,7 @@ export const BasicDetailsSchema = z.object({
     timeOfReceipt: z.string().min(1, "Time of Receipt is required."),
     dateOfOpeningTender: z.string().min(1, "Date of Opening Tender is required."),
     timeOfOpeningTender: z.string().min(1, "Time of Opening Tender is required."),
+    tenderType: z.enum(['Work', 'Purchase']).optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
