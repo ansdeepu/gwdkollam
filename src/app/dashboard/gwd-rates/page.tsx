@@ -488,9 +488,9 @@ export default function GwdRatesPage() {
     for(let i=0; i<10; i++) { yearlyRegHeaders.push(String(currentYear + i)); }
     feeSheet.addRow(yearlyRegHeaders).font = { bold: true };
     registrationFeeItems.forEach(item => {
-        const row: string[] = [item.description];
+        const row: (string|number)[] = [item.description];
         for(let i=0; i<10; i++) {
-            row.push(String(calculateFeeForYear(item.baseAmount, item.baseYear, currentYear + i)));
+            row.push(calculateFeeForYear(item.baseAmount, item.baseYear, currentYear + i));
         }
         feeSheet.addRow(row);
     });
@@ -506,9 +506,9 @@ export default function GwdRatesPage() {
     for(let i=1; i<=10; i++) { renewalHeaders.push(`${i}${i === 1 ? 'st' : i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Renewal`); }
     feeSheet.addRow(renewalHeaders).font = { bold: true };
     renewalFeeItems.forEach(item => {
-        const row: string[] = [item.description];
+        const row: (string|number)[] = [item.description];
         for(let i=1; i<=10; i++) {
-            row.push(String(calculateRenewalFee(item.baseAmount, i)));
+            row.push(calculateRenewalFee(item.baseAmount, i));
         }
         feeSheet.addRow(row);
     });
@@ -562,7 +562,7 @@ export default function GwdRatesPage() {
               </div>
               <Card>
                 <CardContent className="pt-6">
-                  <div className="relative max-h-[70vh] overflow-auto">
+                  <div className="relative">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -605,8 +605,39 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-               <div className="text-center py-10 text-muted-foreground">
-                    <p>e-Tender rates will be displayed here.</p>
+               <div className="text-center py-10 space-y-8">
+                  <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Performance Guarantee</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                        <p>The amount collected at the time of executing the contract agreement will be 5% of the contract value (agreed PAC).</p>
+                        <p>This deposit will be retained till the expiry of the Defect Liability Period.</p>
+                        <p>At least 50% of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.</p>
+                    </CardContent>
+                  </Card>
+                   <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Additional Performance Guarantee</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                        <p>This is an additional amount to be deposited for unbalanced prices, specifically for works quoted below the estimate rate.</p>
+                        <p>This is a disincentive to prevent bidders from quoting unusually low rates. It encourages contractors to quote rates equal to or higher than the estimated rate.</p>
+                        <p>The government has decided to do away with this guarantee for works quoted up to 10% below the estimate rate.</p>
+                        <p>It will be required if works are quoted between 11% to 25% below the estimate rate.</p>
+                    </CardContent>
+                  </Card>
+                   <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Performance Security Deposit</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                        <p>This is a retention amount deducted from the running bill of contractors, in addition to the performance guarantee.</p>
+                        <p>It will be @2.5% of the gross amount of each running bill, so that the amount retained shall be 2.5% of the value of the work done till then.</p>
+                        <p>This can be released against a Bank Guarantee on its accumulation to a minimum of Rs. 5 lakh, subject to the condition that the amount of the Bank Guarantee (except the last one) shall not be less than Rs. 5 lakhs.</p>
+                        <p>This amount will be released after passing the final bill, similar to a refund of deposit.</p>
+                    </CardContent>
+                  </Card>
                 </div>
             </TabsContent>
           </Tabs>
