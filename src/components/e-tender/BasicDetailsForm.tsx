@@ -1,7 +1,7 @@
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -34,14 +34,19 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
         },
     });
-
-    const handleSave = (data: E_tenderFormData) => {
-        onSubmit(data);
-    };
+     
+    useEffect(() => {
+        form.reset({
+            ...tender,
+            tenderDate: formatDateForInput(tender.tenderDate),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
+        });
+    }, [tender, form]);
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Basic Tender Details</DialogTitle>
                     <DialogDescription>Enter the fundamental details for this tender.</DialogDescription>

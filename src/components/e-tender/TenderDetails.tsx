@@ -123,9 +123,8 @@ export default function TenderDetails() {
       }
     };
 
-
     useEffect(() => {
-        form.reset({
+        const processedTender = {
             ...tender,
             tenderDate: formatDateForInput(tender.tenderDate),
             dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
@@ -135,7 +134,8 @@ export default function TenderDetails() {
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
             bidders: tender.bidders?.map(b => ({ ...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice) })) || [],
-        });
+        };
+        form.reset(processedTender);
     }, [tender, form]);
 
     const handleSave = async (data: Partial<E_tenderFormData>) => {
@@ -381,7 +381,6 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm
-                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -391,7 +390,6 @@ export default function TenderDetails() {
                  <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <CorrigendumDetailsForm 
-                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -401,7 +399,6 @@ export default function TenderDetails() {
                  <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
                         <TenderOpeningDetailsForm
-                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -431,7 +428,6 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <WorkOrderDetailsForm
-                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}

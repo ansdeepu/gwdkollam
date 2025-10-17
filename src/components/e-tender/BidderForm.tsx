@@ -49,13 +49,9 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
         form.reset(defaultValues);
     }, [initialData, form]);
 
-    const handleSave = (data: Bidder) => {
-        onSubmit(data);
-    };
-
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>{initialData ? 'Edit Bidder' : 'Add New Bidder'}</DialogTitle>
                     <DialogDescription>Enter the details for the bidder.</DialogDescription>

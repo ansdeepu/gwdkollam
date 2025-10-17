@@ -1,7 +1,7 @@
 // src/components/e-tender/BiddersForm.tsx
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, type UseFormReturn, useFieldArray } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -35,15 +35,11 @@ const createDefaultBidder = (): Bidder => ({
 });
 
 export default function ManageBiddersForm({ form, onSubmit, onCancel, isSubmitting }: ManageBiddersFormProps) {
-    const { control } = form;
+    const { control, getValues } = form;
     const { fields, append, remove } = useFieldArray({
         control,
         name: "bidders"
     });
-
-    const handleFormSubmit = (data: E_tenderFormData) => {
-        onSubmit(data);
-    };
 
     return (
         <>
@@ -98,7 +94,7 @@ export default function ManageBiddersForm({ form, onSubmit, onCancel, isSubmitti
                 <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                     <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
-                <Button type="button" onClick={form.handleSubmit(handleFormSubmit)} disabled={isSubmitting}>
+                <Button type="button" onClick={() => onSubmit(getValues())} disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Bidders
                 </Button>
             </DialogFooter>
