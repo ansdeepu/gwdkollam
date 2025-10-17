@@ -65,17 +65,7 @@ export default function TenderDetails() {
 
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(E_tenderSchema),
-        defaultValues: {
-            ...tender,
-            tenderDate: formatDateForInput(tender.tenderDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
-            corrigendumDate: formatDateForInput(tender.corrigendumDate),
-            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
-            agreementDate: formatDateForInput(tender.agreementDate),
-            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            bidders: tender.bidders?.map(b => ({ ...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice) })) || [],
-        },
+        defaultValues: tender,
     });
 
     const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({
@@ -125,25 +115,14 @@ export default function TenderDetails() {
     };
 
     useEffect(() => {
-        const processedTender = {
-            ...tender,
-            tenderDate: formatDateForInput(tender.tenderDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
-            corrigendumDate: formatDateForInput(tender.corrigendumDate),
-            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
-            agreementDate: formatDateForInput(tender.agreementDate),
-            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            bidders: tender.bidders?.map(b => ({ ...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice) })) || [],
-        };
-        form.reset(processedTender);
+        form.reset(tender);
     }, [tender, form]);
 
-    const handleSave = async (data: Partial<E_tenderFormData>) => {
+    const handleSave = (data: Partial<E_tenderFormData>) => {
         const currentData = form.getValues();
         const updatedData = { ...currentData, ...data };
-        updateTender(updatedData); // Update context
-        form.reset(updatedData); // Update main form state
+        updateTender(updatedData);
+        form.reset(updatedData);
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
@@ -156,7 +135,7 @@ export default function TenderDetails() {
             updateBidder(modalData.index, bidderData);
             toast({ title: "Bidder Updated Locally" });
         }
-        form.reset(form.getValues()); // Re-sync the main form after array operation
+        form.reset(form.getValues());
         setActiveModal(null);
         setModalData(null);
     };
@@ -199,16 +178,16 @@ export default function TenderDetails() {
             <div className="space-y-6">
                 <Card>
                     <CardContent className="pt-6">
-                        <Accordion type="single" collapsible defaultValue="basic-details" value={activeAccordion} onValueChange={setActiveAccordion} className="w-full space-y-4">
-                            
-                            <AccordionItem value="basic-details" className="border rounded-lg">
-                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="flex items-center gap-3"><Building className="h-5 w-5"/>Basic Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('basic'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
+                        <div className="space-y-4">
+                            <Card className="border rounded-lg">
+                                <CardHeader className="flex flex-row justify-between items-center p-4">
+                                    <div className="flex items-center gap-3">
+                                        <Building className="h-5 w-5 text-primary"/>
+                                        <CardTitle className="text-lg font-semibold text-primary">Basic Details</CardTitle>
                                     </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-6 pt-0">
+                                    <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                </CardHeader>
+                                <CardContent className="p-6 pt-0">
                                     {hasAnyBasicData ? (
                                         <div className="space-y-4 pt-4 border-t">
                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
@@ -230,109 +209,111 @@ export default function TenderDetails() {
                                     ) : (
                                         <p className="text-sm text-muted-foreground text-center py-4">No basic details have been added.</p>
                                     )}
-                                </AccordionContent>
-                            </AccordionItem>
-                            
-                            <AccordionItem value="corrigendum-details" className="border rounded-lg">
-                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-6 pt-0">
-                                     {hasAnyCorrigendumData ? (
-                                        <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                            <DetailRow label="Corrigendum Date" value={formatDateSafe(form.watch('corrigendumDate'))} />
-                                            <DetailRow label="No. of Bids Received" value={form.watch('noOfBids')} />
-                                        </dl>
-                                     ) : (
-                                        <p className="text-sm text-muted-foreground text-center py-4">No corrigendum details have been added.</p>
-                                     )}
-                                </AccordionContent>
-                            </AccordionItem>
-                            
-                             <AccordionItem value="opening-details" className="border rounded-lg">
-                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-6 pt-0">
-                                    {hasAnyOpeningData ? (
-                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
-                                            <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
-                                            <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
-                                            <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : ''} />
-                                            <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
-                                            <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
-                                            <div className="md:col-span-3 border-t pt-2 mt-2">
-                                                <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
-                                            </div>
-                                        </dl>
-                                    ) : (
-                                         <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
-                                    )}
-                                </AccordionContent>
-                            </AccordionItem>
-                            
-                             <AccordionItem value="bidders-details" className="border rounded-lg">
-                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-6 pt-0">
-                                     {hasAnyBidderData ? (
-                                        <div className="mt-4 pt-4 border-t space-y-2">
-                                            {bidderFields.map((bidder, index) => (
-                                                <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative group">
-                                                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
-                                                        <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                    </div>
-                                                    <div className="flex justify-between items-start">
-                                                        <h5 className="font-bold text-sm">{bidder.name}</h5>
-                                                    </div>
-                                                    <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
-                                                        <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
-                                                        <DetailRow label="Agreement Amount" value={bidder.agreementAmount} />
-                                                        <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
-                                                    </dl>
-                                                </div>
-                                            ))}
+                                </CardContent>
+                            </Card>
+
+                            <Accordion type="single" collapsible value={activeAccordion} onValueChange={setActiveAccordion} className="w-full space-y-4">
+                                <AccordionItem value="corrigendum-details" className="border rounded-lg">
+                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details</span>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                         </div>
-                                     ) : (
-                                        <p className="text-sm text-muted-foreground text-center py-4">No bidders have been added.</p>
-                                     )}
-                                </AccordionContent>
-                            </AccordionItem>
-                            
-                             <AccordionItem value="work-order-details" className="border rounded-lg">
-                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="flex items-center gap-3"><ScrollText className="h-5 w-5"/>{workOrderTitle}</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-6 pt-0">
-                                    {hasAnyWorkOrderData ? (
-                                         <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                             <DetailRow label="Agreement Date" value={formatDateSafe(form.watch('agreementDate'))} />
-                                             <DetailRow label="Date - Work / Supply Order" value={formatDateSafe(form.watch('dateWorkOrder'))} />
-                                             <DetailRow label="Assistant Engineer" value={form.watch('nameOfAssistantEngineer')} />
-                                             <DetailRow label="Supervisor" value={form.watch('nameOfSupervisor')} />
-                                             <DetailRow label="Supervisor Phone" value={form.watch('supervisorPhoneNo')} />
-                                         </dl>
-                                    ) : (
-                                         <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>
-                                    )}
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
-                        
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-6 pt-0">
+                                         {hasAnyCorrigendumData ? (
+                                            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                                <DetailRow label="Corrigendum Date" value={formatDateSafe(form.watch('corrigendumDate'))} />
+                                                <DetailRow label="No. of Bids Received" value={form.watch('noOfBids')} />
+                                            </dl>
+                                         ) : (
+                                            <p className="text-sm text-muted-foreground text-center py-4">No corrigendum details have been added.</p>
+                                         )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                                
+                                 <AccordionItem value="opening-details" className="border rounded-lg">
+                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-6 pt-0">
+                                        {hasAnyOpeningData ? (
+                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
+                                                <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
+                                                <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
+                                                <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : ''} />
+                                                <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
+                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
+                                                <div className="md:col-span-3 border-t pt-2 mt-2">
+                                                    <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
+                                                </div>
+                                            </dl>
+                                        ) : (
+                                             <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                                
+                                 <AccordionItem value="bidders-details" className="border rounded-lg">
+                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-6 pt-0">
+                                         {hasAnyBidderData ? (
+                                            <div className="mt-4 pt-4 border-t space-y-2">
+                                                {bidderFields.map((bidder, index) => (
+                                                    <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative group">
+                                                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
+                                                            <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                        </div>
+                                                        <div className="flex justify-between items-start">
+                                                            <h5 className="font-bold text-sm">{bidder.name}</h5>
+                                                        </div>
+                                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
+                                                            <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
+                                                            <DetailRow label="Agreement Amount" value={bidder.agreementAmount} />
+                                                            <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
+                                                        </dl>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                         ) : (
+                                            <p className="text-sm text-muted-foreground text-center py-4">No bidders have been added.</p>
+                                         )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                                
+                                 <AccordionItem value="work-order-details" className="border rounded-lg">
+                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="flex items-center gap-3"><ScrollText className="h-5 w-5"/>{workOrderTitle}</span>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-6 pt-0">
+                                        {hasAnyWorkOrderData ? (
+                                             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                                 <DetailRow label="Agreement Date" value={formatDateSafe(form.watch('agreementDate'))} />
+                                                 <DetailRow label="Date - Work / Supply Order" value={formatDateSafe(form.watch('dateWorkOrder'))} />
+                                                 <DetailRow label="Assistant Engineer" value={form.watch('nameOfAssistantEngineer')} />
+                                                 <DetailRow label="Supervisor" value={form.watch('nameOfSupervisor')} />
+                                                 <DetailRow label="Supervisor Phone" value={form.watch('supervisorPhoneNo')} />
+                                             </dl>
+                                        ) : (
+                                             <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </div>
+
                         <Card className="mt-4">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between gap-4">
@@ -416,7 +397,6 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <ManageBiddersForm
-                            initialData={form.getValues()}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
