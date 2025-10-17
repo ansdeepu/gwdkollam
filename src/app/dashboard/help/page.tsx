@@ -2,7 +2,7 @@
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin } from "lucide-react";
+import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin, ImageUp } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
 
@@ -72,6 +72,22 @@ export default function HelpPage() {
                   <li><strong>Viewer:</strong> Has read-only access across the entire application. Viewers can see all data, reports, and user lists but cannot make any changes. This role is for observation and monitoring purposes.</li>
                 </ul>
               </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-11">
+                <AccordionTrigger>How do I add a photo for a staff member?</AccordionTrigger>
+                <AccordionContent>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                        <p className="flex items-start gap-2"><ImageUp className="h-4 w-4 mt-1 shrink-0"/> Direct file uploading is not supported in this application. To add a staff photo, you must use a public URL of an image that is already online.</p>
+                        <p>Follow these steps:</p>
+                        <ol className="list-decimal pl-6 space-y-1">
+                            <li>Upload the staff photo to a public image hosting service (like Imgur, Postimages, or a public Google Photos link).</li>
+                            <li>Get the "direct link" to the image. This link should end in an image format like `.jpg`, `.png`, or `.jpeg`.</li>
+                            <li>Go to the **Establishment** page and click "Edit" on the desired staff member.</li>
+                            <li>Paste the direct image URL into the "Staff Photo URL" field.</li>
+                            <li>A preview of the image will appear. If it looks correct, save the form.</li>
+                        </ol>
+                    </div>
+                </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-10">
                 <AccordionTrigger>How does the Local Self Govt (LSG) and Constituency mapping work?</AccordionTrigger>
