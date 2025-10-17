@@ -15,13 +15,14 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { formatDateForInput, formatDateSafe } from './utils';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
 
@@ -93,7 +94,6 @@ export default function TenderDetails() {
                   dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
                   noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details', bidders: 'opening-details',
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
-                  presentStatus: 'status-details',
               };
               
               const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'opening-details' : null);
@@ -300,22 +300,19 @@ export default function TenderDetails() {
                                     )}
                                 </AccordionContent>
                             </AccordionItem>
-
-                             {/* Present Status Accordion */}
-                            <AccordionItem value="status-details" className="border rounded-lg">
-                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="flex items-center gap-3"><FileText className="h-5 w-5"/>Present Status</span>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-6 pt-0">
-                                    <div className="space-y-4 pt-4 border-t">
+                        </Accordion>
+                        
+                        {/* Present Status Section */}
+                        <Card className="mt-4">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <h3 className="text-lg font-semibold flex items-center gap-3 text-primary"><FileText className="h-5 w-5"/>Present Status</h3>
+                                    <div className="w-full max-w-sm">
                                         <FormField
                                             name="presentStatus"
                                             control={form.control}
                                             render={({ field }) => (
-                                                <FormItem className="max-w-sm">
-                                                    <FormLabel>Current Tender Status</FormLabel>
+                                                <FormItem>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
@@ -325,10 +322,9 @@ export default function TenderDetails() {
                                             )}
                                         />
                                     </div>
-                                </AccordionContent>
-                            </AccordionItem>
-
-                        </Accordion>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </CardContent>
                     <CardFooter className="flex justify-end">
                         <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
