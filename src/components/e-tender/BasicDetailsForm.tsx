@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import { useForm, type UseFormReturn } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { Loader2, Save, X } from 'lucide-react';
 import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
 
 interface BasicDetailsFormProps {
-    form: UseFormReturn<E_tenderFormData>;
+    form: ReturnType<typeof useFormContext<E_tenderFormData>>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
@@ -21,10 +21,6 @@ interface BasicDetailsFormProps {
 
 export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
     
-    const handleFormSubmit = (data: E_tenderFormData) => {
-        onSubmit(data);
-    };
-
     return (
         <>
             <DialogHeader className="p-6 pb-4">
@@ -63,7 +59,7 @@ export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmittin
                 <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                     <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
-                <Button type="button" onClick={form.handleSubmit(handleFormSubmit)} disabled={isSubmitting}>
+                <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
                 </Button>
             </DialogFooter>
