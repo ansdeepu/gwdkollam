@@ -2,7 +2,7 @@
 import { z } from 'zod';
 
 const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional());
-const optionalNumberSchema = z.preprocess((val) => (val === "" ? undefined : Number(val)), z.number().optional());
+const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional());
 
 export const BasicDetailsSchema = z.object({
     eTenderNo: z.string().min(1, "eTender No. is required."),
@@ -54,6 +54,27 @@ export const TenderOpeningDetailsSchema = z.object({
     technicalCommitteeMember2: z.string().optional(),
     technicalCommitteeMember3: z.string().optional(),
     bidders: z.array(BidderSchema).optional(),
+}).superRefine((data, ctx) => {
+    // Check if any field in the tender opening details section (other than quotedPercentage) has data.
+    const hasAnyData =
+        !!data.noOfTenderers ||
+        !!data.noOfSuccessfulTenderers ||
+        !!data.aboveBelow ||
+        !!data.dateOfOpeningBid ||
+        !!data.dateOfTechnicalAndFinancialBidOpening ||
+        !!data.technicalCommitteeMember1 ||
+        !!data.technicalCommitteeMember2 ||
+        !!data.technicalCommitteeMember3 ||
+        (data.bidders && data.bidders.length > 0);
+
+    // If there is data, and quotedPercentage is missing or not a number, add an issue.
+    if (hasAnyData && (data.quotedPercentage === undefined || data.quotedPercentage === null || isNaN(data.quotedPercentage))) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Quoted Percentage is required when other tender opening details are provided.",
+            path: ["quotedPercentage"],
+        });
+    }
 });
 export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSchema>;
 
