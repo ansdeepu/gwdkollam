@@ -191,7 +191,7 @@ export default function TenderDetails() {
                                 <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Building className="h-5 w-5"/>Basic Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('basic'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('basic'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
@@ -225,7 +225,7 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
@@ -247,7 +247,7 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
@@ -273,7 +273,7 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
@@ -301,7 +301,7 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><ScrollText className="h-5 w-5"/>Work Order Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
