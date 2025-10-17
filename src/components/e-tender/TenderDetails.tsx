@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -22,15 +21,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
-import BiddersForm from './BiddersForm';
+import ManageBiddersForm from './BiddersForm';
+import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 
 
-type ModalType = 'basic' | 'corrigendum' | 'opening' | 'bidders' | 'workOrder' | null;
+type ModalType = 'basic' | 'corrigendum' | 'opening' | 'manageBidders' | 'addBidder' | 'editBidder' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
-    // Check for null, undefined, empty string, or zero for numeric types that shouldn't display if 0
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === '' || (typeof value === 'number' && value === 0)) {
         return null;
     }
 
@@ -38,7 +37,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 
     if (label.toLowerCase().includes('date')) {
         const formatted = formatDateSafe(value, label.toLowerCase().includes('time'));
-        if (formatted === 'N/A') return null; // Don't show invalid dates
+        if (formatted === 'N/A') return null; 
         displayValue = formatted;
     } else if (typeof value === 'number') {
         displayValue = value.toLocaleString('en-IN');
@@ -58,6 +57,7 @@ export default function TenderDetails() {
     const { tender, updateTender } = useTenderData();
     const { addTender, updateTender: saveTenderToDb } = useE_tenders();
     const [activeModal, setActiveModal] = useState<ModalType>(null);
+    const [modalData, setModalData] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeAccordion, setActiveAccordion] = useState<string>("basic-details");
 
@@ -79,7 +79,7 @@ export default function TenderDetails() {
         },
     });
 
-    const { fields: bidderFields } = useFieldArray({
+    const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({
         control: form.control,
         name: "bidders"
     });
@@ -88,7 +88,6 @@ export default function TenderDetails() {
       const isValid = await form.trigger();
       if (!isValid) {
           toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
-          // Find the first error and open its accordion
           const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
           if (errorField) {
               const sectionMap: Record<string, string> = {
@@ -148,6 +147,18 @@ export default function TenderDetails() {
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
+
+    const handleBidderSave = (bidderData: Bidder) => {
+        if (activeModal === 'addBidder') {
+            appendBidder(bidderData);
+            toast({ title: "Bidder Added Locally" });
+        } else if (activeModal === 'editBidder' && modalData?.index !== undefined) {
+            updateBidder(modalData.index, bidderData);
+            toast({ title: "Bidder Updated Locally" });
+        }
+        setActiveModal(null);
+        setModalData(null);
+    };
     
     const pdfReports = [
         "Notice Inviting Tender (NIT)", "Tender Form", "Corrigendum", "Bid Opening Summary",
@@ -186,7 +197,6 @@ export default function TenderDetails() {
                     <CardContent className="pt-6">
                         <Accordion type="single" collapsible defaultValue="basic-details" value={activeAccordion} onValueChange={setActiveAccordion} className="w-full space-y-4">
                             
-                            {/* Basic Details Accordion */}
                             <AccordionItem value="basic-details" className="border rounded-lg">
                                 <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
@@ -204,9 +214,9 @@ export default function TenderDetails() {
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
                                                 <DetailRow label="Location" value={form.watch('location')} />
-                                                <DetailRow label="Estimate Amount (Rs.)" value={form.watch('estimateAmount')?.toLocaleString('en-IN')} />
-                                                <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')?.toLocaleString('en-IN')} />
-                                                <DetailRow label="EMD (Rs.)" value={form.watch('emd')?.toLocaleString('en-IN')} />
+                                                <DetailRow label="Estimate Amount (Rs.)" value={form.watch('estimateAmount')} />
+                                                <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
+                                                <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
                                                 <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
                                                 <DetailRow label="Last Date of Receipt" value={formatDateSafe(form.watch('lastDateOfReceipt'))} />
                                                 <DetailRow label="Time of Receipt" value={form.watch('timeOfReceipt')} />
@@ -220,7 +230,6 @@ export default function TenderDetails() {
                                 </AccordionContent>
                             </AccordionItem>
                             
-                            {/* Corrigendum Details Accordion */}
                             <AccordionItem value="corrigendum-details" className="border rounded-lg">
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
@@ -242,7 +251,6 @@ export default function TenderDetails() {
                                 </AccordionContent>
                             </AccordionItem>
                             
-                            {/* Tender Opening Accordion */}
                              <AccordionItem value="opening-details" className="border rounded-lg">
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
@@ -268,12 +276,14 @@ export default function TenderDetails() {
                                 </AccordionContent>
                             </AccordionItem>
                             
-                            {/* Bidders Accordion */}
                              <AccordionItem value="bidders-details" className="border rounded-lg">
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
+                                        <div className="flex items-center gap-2 mr-4">
+                                            <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('addBidder'); setModalData(null); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                            <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('manageBidders'); }}><Edit className="h-4 w-4 mr-2"/>Edit List</Button>
+                                        </div>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
@@ -283,8 +293,8 @@ export default function TenderDetails() {
                                                 <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30">
                                                     <h5 className="font-bold text-sm">{bidder.name}</h5>
                                                     <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
-                                                        <DetailRow label="Quoted Amount" value={bidder.quotedAmount?.toLocaleString('en-IN')} />
-                                                        <DetailRow label="Agreement Amount" value={bidder.agreementAmount?.toLocaleString('en-IN')} />
+                                                        <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
+                                                        <DetailRow label="Agreement Amount" value={bidder.agreementAmount} />
                                                         <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
                                                     </dl>
                                                 </div>
@@ -296,7 +306,6 @@ export default function TenderDetails() {
                                 </AccordionContent>
                             </AccordionItem>
                             
-                            {/* Work Order Accordion */}
                              <AccordionItem value="work-order-details" className="border rounded-lg">
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
@@ -320,7 +329,6 @@ export default function TenderDetails() {
                             </AccordionItem>
                         </Accordion>
                         
-                        {/* Present Status Section */}
                         <Card className="mt-4">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between gap-4">
@@ -371,7 +379,6 @@ export default function TenderDetails() {
                 </Card>
 
 
-                {/* Dialogs for Editing */}
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm
@@ -401,13 +408,23 @@ export default function TenderDetails() {
                         />
                     </DialogContent>
                 </Dialog>
-                <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                <Dialog open={activeModal === 'manageBidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
-                        <BiddersForm
+                        <ManageBiddersForm
                             form={form}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={activeModal === 'addBidder' || activeModal === 'editBidder'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
+                    <DialogContent className="max-w-3xl">
+                        <BidderForm 
+                            onSubmit={handleBidderSave}
+                            onCancel={() => { setActiveModal(null); setModalData(null); }}
+                            isSubmitting={isSubmitting}
+                            initialData={modalData}
                         />
                     </DialogContent>
                 </Dialog>

@@ -1,4 +1,3 @@
-
 // src/components/e-tender/BiddersForm.tsx
 "use client";
 
@@ -16,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { v4 as uuidv4 } from 'uuid';
 import { formatDateForInput } from './utils';
 
-interface BiddersFormProps {
+interface ManageBiddersFormProps {
     form: UseFormReturn<E_tenderFormData>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
@@ -35,7 +34,7 @@ const createDefaultBidder = (): Bidder => ({
     dateSelectionNotice: undefined,
 });
 
-export default function BiddersForm({ form, onSubmit, onCancel, isSubmitting }: BiddersFormProps) {
+export default function ManageBiddersForm({ form, onSubmit, onCancel, isSubmitting }: ManageBiddersFormProps) {
     const { control } = form;
     const { fields, append, remove } = useFieldArray({
         control,
@@ -56,7 +55,7 @@ export default function BiddersForm({ form, onSubmit, onCancel, isSubmitting }: 
                 <ScrollArea className="h-full px-6 py-4">
                     <div className="flex justify-end mb-4">
                         <Button type="button" variant="outline" size="sm" onClick={() => append(createDefaultBidder())}>
-                            <PlusCircle className="h-4 w-4 mr-2"/> Add Bidder
+                            <PlusCircle className="h-4 w-4 mr-2"/> Add New Bidder
                         </Button>
                     </div>
                     <div className="space-y-4">
@@ -100,7 +99,7 @@ export default function BiddersForm({ form, onSubmit, onCancel, isSubmitting }: 
                     <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
                 <Button type="button" onClick={form.handleSubmit(handleFormSubmit)} disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Bidders
                 </Button>
             </DialogFooter>
         </>
