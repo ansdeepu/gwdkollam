@@ -21,6 +21,13 @@ interface BasicDetailsFormProps {
 
 export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
     
+    const handleSaveAndClose = async () => {
+        const isValid = await form.trigger();
+        if (isValid) {
+            onSubmit(form.getValues());
+        }
+    };
+
     return (
         <>
             <DialogHeader className="p-6 pb-4">
@@ -60,7 +67,7 @@ export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmittin
                     <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
-                    <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
+                    <Button type="button" onClick={handleSaveAndClose} disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
                     </Button>
                 </DialogFooter>

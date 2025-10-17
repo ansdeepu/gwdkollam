@@ -65,7 +65,7 @@ export default function TenderDetails() {
         name: "bidders"
     });
     
-    const handleFinalSave = async () => {
+     const handleFinalSave = async () => {
         setIsSubmitting(true);
         try {
             if (tender.id === 'new') {
@@ -83,6 +83,7 @@ export default function TenderDetails() {
             setIsSubmitting(false);
         }
     };
+
 
     useEffect(() => {
         form.reset({
@@ -106,18 +107,18 @@ export default function TenderDetails() {
             const currentTenderData = form.getValues();
             const updatedData = { ...currentTenderData, ...data };
             
-            if (tender.id === 'new') {
-                updateTender(updatedData);
-                toast({ title: "Details Saved", description: "Your changes have been saved locally. Click 'Save All Changes' to finalize.", variant: 'default' });
-
-            } else {
+            updateTender(updatedData);
+            
+            if (tender.id !== 'new') {
                 await saveTenderToDb(tender.id, updatedData);
-                updateTender(updatedData); // Update context after successful save
                 toast({ title: "Tender Details Updated" });
+            } else {
+                toast({ title: "Details Saved Locally", description: "Click 'Save All Changes' to create the new tender." });
             }
+            setActiveModal(null); // Close the dialog on successful save
         } catch (error: any) {
             toast({ title: "Error Saving Tender", description: error.message, variant: "destructive" });
-            throw error; // Re-throw so form knows there was an error
+            throw error; // Re-throw to inform the calling component of the failure
         } finally {
             setIsSubmitting(false);
         }
