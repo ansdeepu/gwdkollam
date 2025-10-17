@@ -67,14 +67,14 @@ export default function TenderDetails() {
     const handleFinalSave = async () => {
         setIsSubmitting(true);
         try {
-            const dataToSave = { ...tender };
             if (tender.id === 'new') {
-                const newTenderId = await addTender(dataToSave);
+                const newTenderId = await addTender(tender);
                 toast({ title: "Tender Created", description: "The new e-Tender has been created and saved." });
                 router.replace(`/dashboard/e-tender/${newTenderId}`);
             } else {
-                await saveTenderToDb(tender.id, dataToSave);
+                await saveTenderToDb(tender.id, tender);
                 toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
+                router.push('/dashboard/e-tender');
             }
         } catch (error: any) {
             toast({ title: "Error Saving Changes", description: error.message, variant: "destructive" });
@@ -100,7 +100,7 @@ export default function TenderDetails() {
     const handleSave = async (data: Partial<E_tenderFormData>) => {
         setIsSubmitting(true);
         try {
-            const currentTenderData = tender;
+            const currentTenderData = form.getValues();
             const updatedData = { ...currentTenderData, ...data };
             
             if (tender.id === 'new') {
@@ -305,3 +305,4 @@ export default function TenderDetails() {
         </FormProvider>
     );
 }
+    
