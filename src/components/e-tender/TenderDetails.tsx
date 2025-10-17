@@ -67,11 +67,9 @@ export default function TenderDetails() {
         defaultValues: {
             ...tender,
             tenderDate: formatDateForInput(tender.tenderDate),
-            lastDateOfReceipt: formatDateForInput(tender.lastDateOfReceipt),
-            dateOfOpeningTender: formatDateForInput(tender.dateOfOpeningTender),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
             corrigendumDate: formatDateForInput(tender.corrigendumDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening),
             dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
@@ -91,8 +89,8 @@ export default function TenderDetails() {
           const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
           if (errorField) {
               const sectionMap: Record<string, string> = {
-                  eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', lastDateOfReceipt: 'basic-details', timeOfReceipt: 'basic-details', dateOfOpeningTender: 'basic-details', timeOfOpeningTender: 'basic-details', nameOfWorkMalayalam: 'basic-details',
-                  dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
+                  eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', dateTimeOfReceipt: 'basic-details', dateTimeOfOpening: 'basic-details', nameOfWorkMalayalam: 'basic-details',
+                  corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
                   noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
                   bidders: 'bidders-details',
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
@@ -130,11 +128,9 @@ export default function TenderDetails() {
         form.reset({
             ...tender,
             tenderDate: formatDateForInput(tender.tenderDate),
-            lastDateOfReceipt: formatDateForInput(tender.lastDateOfReceipt),
-            dateOfOpeningTender: formatDateForInput(tender.dateOfOpeningTender),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
             corrigendumDate: formatDateForInput(tender.corrigendumDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening),
             dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
@@ -167,12 +163,12 @@ export default function TenderDetails() {
     ];
     
     const hasAnyBasicData = useMemo(() => {
-        const values = form.watch(['eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion', 'lastDateOfReceipt', 'timeOfReceipt', 'dateOfOpeningTender', 'timeOfOpeningTender', 'nameOfWorkMalayalam']);
+        const values = form.watch(['eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion', 'dateTimeOfReceipt', 'dateTimeOfOpening', 'nameOfWorkMalayalam']);
         return values.some(v => v);
     }, [form]);
 
     const hasAnyCorrigendumData = useMemo(() => {
-        const values = form.watch(['dateTimeOfReceipt', 'dateTimeOfOpening', 'corrigendumDate', 'noOfBids']);
+        const values = form.watch(['corrigendumDate', 'noOfBids']);
         return values.some(v => v);
     }, [form]);
     
@@ -222,10 +218,8 @@ export default function TenderDetails() {
                                                 <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
                                                 <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
                                                 <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
-                                                <DetailRow label="Last Date of Receipt" value={formatDateSafe(form.watch('lastDateOfReceipt'))} />
-                                                <DetailRow label="Time of Receipt" value={form.watch('timeOfReceipt')} />
-                                                <DetailRow label="Date of Opening Tender" value={formatDateSafe(form.watch('dateOfOpeningTender'))} />
-                                                <DetailRow label="Time of Opening Tender" value={form.watch('timeOfOpeningTender')} />
+                                                <DetailRow label="Last Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
+                                                <DetailRow label="Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
                                             </dl>
                                         </div>
                                     ) : (
@@ -244,8 +238,6 @@ export default function TenderDetails() {
                                 <AccordionContent className="p-6 pt-0">
                                      {hasAnyCorrigendumData ? (
                                         <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                            <DetailRow label="New Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
-                                            <DetailRow label="New Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
                                             <DetailRow label="Corrigendum Date" value={formatDateSafe(form.watch('corrigendumDate'))} />
                                             <DetailRow label="No. of Bids Received" value={form.watch('noOfBids')} />
                                         </dl>
@@ -284,14 +276,18 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
                                      {hasAnyBidderData ? (
-                                        <div className="mt-4 pt-4 border-t">
+                                        <div className="mt-4 pt-4 border-t space-y-2">
                                             {bidderFields.map((bidder, index) => (
-                                                <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30 relative">
+                                                <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative group">
+                                                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
+                                                        <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                    </div>
                                                     <div className="flex justify-between items-start">
                                                         <h5 className="font-bold text-sm">{bidder.name}</h5>
                                                     </div>

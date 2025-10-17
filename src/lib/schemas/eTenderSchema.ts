@@ -22,17 +22,13 @@ export const BasicDetailsSchema = z.object({
     tenderFormFee: z.number().min(0, "Tender Form Fee cannot be negative."),
     emd: z.number().min(0, "EMD cannot be negative."),
     periodOfCompletion: z.number().int().min(1, "Period of Completion must be at least 1 day."),
-    lastDateOfReceipt: z.string().min(1, "Last Date of Receipt is required."),
-    timeOfReceipt: z.string().min(1, "Time of Receipt is required."),
-    dateOfOpeningTender: z.string().min(1, "Date of Opening Tender is required."),
-    timeOfOpeningTender: z.string().min(1, "Time of Opening Tender is required."),
+    dateTimeOfReceipt: z.string().min(1, "Last Date & Time of Receipt is required."),
+    dateTimeOfOpening: z.string().min(1, "Date & Time of Opening Tender is required."),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
 export const CorrigendumDetailsSchema = z.object({
-    dateTimeOfReceipt: optionalDateSchema,
-    dateTimeOfOpening: optionalDateSchema,
     corrigendumDate: optionalDateSchema,
     noOfBids: z.string().optional(),
 });

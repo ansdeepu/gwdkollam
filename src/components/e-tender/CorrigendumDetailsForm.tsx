@@ -33,8 +33,6 @@ export default function CorrigendumDetailsForm({ form, onSubmit, onCancel, isSub
              <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4">
                     <div className="space-y-4">
-                        <FormField name="dateTimeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>New Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                        <FormField name="dateTimeOfOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>New Date & Time of Opening</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         <FormField name="corrigendumDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Corrigendum Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         <FormField name="noOfBids" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Bids Received</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     </div>
