@@ -14,7 +14,7 @@ import { CorrigendumDetailsSchema, type E_tenderFormData, type CorrigendumDetail
 import { formatDateForInput } from './utils';
 
 interface CorrigendumDetailsFormProps {
-    initialData: Partial<E_tenderFormData>;
+    initialData?: Partial<E_tenderFormData>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
@@ -24,15 +24,15 @@ export default function CorrigendumDetailsForm({ initialData, onSubmit, onCancel
     const form = useForm<CorrigendumDetailsFormData>({
         resolver: zodResolver(CorrigendumDetailsSchema),
         defaultValues: {
-            corrigendumDate: formatDateForInput(initialData.corrigendumDate),
-            noOfBids: initialData.noOfBids,
+            corrigendumDate: formatDateForInput(initialData?.corrigendumDate),
+            noOfBids: initialData?.noOfBids,
         }
     });
 
     useEffect(() => {
         form.reset({
-            corrigendumDate: formatDateForInput(initialData.corrigendumDate),
-            noOfBids: initialData.noOfBids,
+            corrigendumDate: formatDateForInput(initialData?.corrigendumDate),
+            noOfBids: initialData?.noOfBids,
         });
     }, [initialData, form]);
 

@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatDateForInput } from './utils';
 
 interface TenderOpeningDetailsFormProps {
-    initialData: Partial<E_tenderFormData>;
+    initialData?: Partial<E_tenderFormData>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
@@ -26,16 +26,16 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
         resolver: zodResolver(TenderOpeningDetailsSchema),
         defaultValues: {
             ...initialData,
-            dateOfOpeningBid: formatDateForInput(initialData.dateOfOpeningBid),
-            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData.dateOfTechnicalAndFinancialBidOpening),
+            dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
+            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
         }
     });
 
      useEffect(() => {
         form.reset({
             ...initialData,
-            dateOfOpeningBid: formatDateForInput(initialData.dateOfOpeningBid),
-            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData.dateOfTechnicalAndFinancialBidOpening),
+            dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
+            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
         });
     }, [initialData, form]);
 

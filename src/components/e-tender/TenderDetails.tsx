@@ -140,6 +140,7 @@ export default function TenderDetails() {
 
     const handleSave = async (data: Partial<E_tenderFormData>) => {
         updateTender(data);
+        form.reset({ ...form.getValues(), ...data }); // Re-sync the main form
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
@@ -152,6 +153,7 @@ export default function TenderDetails() {
             updateBidder(modalData.index, bidderData);
             toast({ title: "Bidder Updated Locally" });
         }
+        form.reset(form.getValues()); // Re-sync the main form after array operation
         setActiveModal(null);
         setModalData(null);
     };
@@ -390,6 +392,7 @@ export default function TenderDetails() {
                  <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <CorrigendumDetailsForm 
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -399,6 +402,7 @@ export default function TenderDetails() {
                  <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
                         <TenderOpeningDetailsForm
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -428,6 +432,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <WorkOrderDetailsForm
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}

@@ -14,7 +14,7 @@ import { WorkOrderDetailsSchema, type E_tenderFormData, type WorkOrderDetailsFor
 import { formatDateForInput } from './utils';
 
 interface WorkOrderDetailsFormProps {
-    initialData: Partial<E_tenderFormData>;
+    initialData?: Partial<E_tenderFormData>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
@@ -26,16 +26,16 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         resolver: zodResolver(WorkOrderDetailsSchema),
         defaultValues: {
             ...initialData,
-            agreementDate: formatDateForInput(initialData.agreementDate),
-            dateWorkOrder: formatDateForInput(initialData.dateWorkOrder),
+            agreementDate: formatDateForInput(initialData?.agreementDate),
+            dateWorkOrder: formatDateForInput(initialData?.dateWorkOrder),
         }
     });
 
     useEffect(() => {
         form.reset({
              ...initialData,
-            agreementDate: formatDateForInput(initialData.agreementDate),
-            dateWorkOrder: formatDateForInput(initialData.dateWorkOrder),
+            agreementDate: formatDateForInput(initialData?.agreementDate),
+            dateWorkOrder: formatDateForInput(initialData?.dateWorkOrder),
         });
     }, [initialData, form]);
 
