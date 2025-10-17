@@ -17,11 +17,12 @@ import { toast } from '@/hooks/use-toast';
 import { formatDateForInput, formatDateSafe } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
-import ManageBiddersForm from './BiddersForm';
+import ManageBiddersForm from './ManageBiddersForm';
 import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 
@@ -46,7 +47,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
     return (
         <div>
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className="text-sm font-semibold">{displayValue}</dd>
+            <dd className={cn("text-sm font-semibold", label === "വർക്കിന്റെ പേര്" && "text-xs")}>{displayValue}</dd>
         </div>
     );
 };
@@ -415,7 +416,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <ManageBiddersForm
-                            form={form}
+                            initialData={form.getValues()}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
