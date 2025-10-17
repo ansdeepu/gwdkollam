@@ -27,7 +27,7 @@ export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmittin
                 <DialogTitle>Basic Tender Details</DialogTitle>
                 <DialogDescription>Enter the fundamental details for this tender.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            <div className="flex-1 min-h-0 flex flex-col">
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
@@ -60,8 +60,11 @@ export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmittin
                     <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
+                    <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
+                    </Button>
                 </DialogFooter>
-            </form>
+            </div>
         </>
     );
 }
