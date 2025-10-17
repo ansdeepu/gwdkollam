@@ -26,7 +26,7 @@ import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 
 
-type ModalType = 'basic' | 'corrigendum' | 'opening' | 'manageBidders' | 'addBidder' | 'editBidder' | 'workOrder' | null;
+type ModalType = 'basic' | 'corrigendum' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && value === 0)) {
@@ -91,7 +91,7 @@ export default function TenderDetails() {
           const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
           if (errorField) {
               const sectionMap: Record<string, string> = {
-                  eTenderRefNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', lastDateOfReceipt: 'basic-details', timeOfReceipt: 'basic-details', dateOfOpeningTender: 'basic-details', timeOfOpeningTender: 'basic-details', nameOfWorkMalayalam: 'basic-details',
+                  eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', lastDateOfReceipt: 'basic-details', timeOfReceipt: 'basic-details', dateOfOpeningTender: 'basic-details', timeOfOpeningTender: 'basic-details', nameOfWorkMalayalam: 'basic-details',
                   dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
                   noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
                   bidders: 'bidders-details',
@@ -167,7 +167,7 @@ export default function TenderDetails() {
     ];
     
     const hasAnyBasicData = useMemo(() => {
-        const values = form.watch(['eTenderRefNo', 'tenderDate', 'fileNo', 'nameOfWork', 'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion', 'lastDateOfReceipt', 'timeOfReceipt', 'dateOfOpeningTender', 'timeOfOpeningTender', 'nameOfWorkMalayalam']);
+        const values = form.watch(['eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion', 'lastDateOfReceipt', 'timeOfReceipt', 'dateOfOpeningTender', 'timeOfOpeningTender', 'nameOfWorkMalayalam']);
         return values.some(v => v);
     }, [form]);
 
@@ -208,7 +208,7 @@ export default function TenderDetails() {
                                     {hasAnyBasicData ? (
                                         <div className="space-y-4 pt-4 border-t">
                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
-                                                <DetailRow label="eTender Ref. No." value={`GKT/${form.watch('fileNo')}/${form.watch('eTenderRefNo')}`} />
+                                                <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
                                                 <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
@@ -280,15 +280,21 @@ export default function TenderDetails() {
                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('manageBidders'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
                                      {hasAnyBidderData ? (
                                         <div className="mt-4 pt-4 border-t">
                                             {bidderFields.map((bidder, index) => (
-                                                <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30">
-                                                    <h5 className="font-bold text-sm">{bidder.name}</h5>
+                                                <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30 relative">
+                                                    <div className="flex justify-between items-start">
+                                                        <h5 className="font-bold text-sm">{bidder.name}</h5>
+                                                        <div className="flex items-center -mt-1 -mr-1">
+                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveModal('editBidder')}><Edit className="h-4 w-4"/></Button>
+                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                        </div>
+                                                    </div>
                                                     <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
                                                         <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
                                                         <DetailRow label="Agreement Amount" value={bidder.agreementAmount} />
@@ -405,7 +411,7 @@ export default function TenderDetails() {
                         />
                     </DialogContent>
                 </Dialog>
-                <Dialog open={activeModal === 'manageBidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <ManageBiddersForm
                             form={form}
@@ -416,7 +422,7 @@ export default function TenderDetails() {
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'addBidder' || activeModal === 'editBidder'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
-                    <DialogContent className="max-w-3xl">
+                    <DialogContent className="max-w-3xl h-[90vh] flex flex-col p-0">
                         <BidderForm 
                             onSubmit={handleBidderSave}
                             onCancel={() => { setActiveModal(null); setModalData(null); }}

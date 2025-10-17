@@ -12,7 +12,7 @@ export const eTenderStatusOptions = [
 export type E_tenderStatus = typeof eTenderStatusOptions[number];
 
 export const BasicDetailsSchema = z.object({
-    eTenderRefNo: z.string().min(1, "eTender Ref. No. is required."),
+    eTenderNo: z.string().min(1, "eTender No. is required."),
     tenderDate: z.string().min(1, "Tender Date is required."),
     fileNo: z.string().min(1, "File No. is required."),
     nameOfWork: z.string().min(1, "Name of Work is required."),

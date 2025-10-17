@@ -35,7 +35,7 @@ export default function ETenderListPage() {
         if (!searchTerm) return tenders;
         const lowercasedFilter = searchTerm.toLowerCase();
         return tenders.filter(tender =>
-            (tender.eTenderRefNo?.toLowerCase().includes(lowercasedFilter)) ||
+            (tender.eTenderNo?.toLowerCase().includes(lowercasedFilter)) ||
             (tender.nameOfWork?.toLowerCase().includes(lowercasedFilter)) ||
             (tender.fileNo?.toLowerCase().includes(lowercasedFilter))
         );
@@ -58,7 +58,7 @@ export default function ETenderListPage() {
         setIsDeleting(true);
         try {
             await deleteTender(tenderToDelete.id);
-            toast({ title: "Tender Deleted", description: `Tender "${tenderToDelete.eTenderRefNo}" has been removed.` });
+            toast({ title: "Tender Deleted", description: `Tender "${tenderToDelete.eTenderNo}" has been removed.` });
         } catch (error: any) {
             toast({ title: "Error", description: error.message, variant: 'destructive' });
         } finally {
@@ -86,7 +86,7 @@ export default function ETenderListPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <Input
                                 type="search"
-                                placeholder="Search by Ref. No, Name of Work, or File No..."
+                                placeholder="Search by eTender No, Name of Work, or File No..."
                                 className="w-full pl-10"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -107,7 +107,7 @@ export default function ETenderListPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Sl. No.</TableHead>
-                                    <TableHead>eTender Ref. No.</TableHead>
+                                    <TableHead>eTender No.</TableHead>
                                     <TableHead>Name of Work</TableHead>
                                     <TableHead>Tender Date</TableHead>
                                     <TableHead>Present Status</TableHead>
@@ -119,7 +119,7 @@ export default function ETenderListPage() {
                                     filteredTenders.map((tender, index) => (
                                         <TableRow key={tender.id}>
                                             <TableCell>{index + 1}</TableCell>
-                                            <TableCell className="font-medium">{`GKT/${tender.fileNo}/${tender.eTenderRefNo}`}</TableCell>
+                                            <TableCell className="font-medium">{tender.eTenderNo}</TableCell>
                                             <TableCell>{tender.nameOfWork}</TableCell>
                                             <TableCell>{formatDateSafe(tender.tenderDate)}</TableCell>
                                             <TableCell>
@@ -155,7 +155,7 @@ export default function ETenderListPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the tender <strong>{tenderToDelete?.eTenderRefNo}</strong>. This action cannot be undone.
+                            This will permanently delete the tender <strong>{tenderToDelete?.eTenderNo}</strong>. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
