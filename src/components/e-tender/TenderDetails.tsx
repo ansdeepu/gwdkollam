@@ -122,14 +122,7 @@ export default function TenderDetails() {
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3">
-                           <FileText className="h-6 w-6 text-primary"/>
-                           e-Tender: {form.watch('eTenderNo') || 'New Tender'}
-                        </CardTitle>
-                        <CardDescription>File: {form.watch('fileNo') || 'N/A'}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                         <Accordion type="single" collapsible defaultValue="basic-details" className="w-full space-y-4">
                             
                             {/* Basic Details Accordion */}
@@ -265,7 +258,7 @@ export default function TenderDetails() {
                     </DialogContent>
                 </Dialog>
                  <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-xl h-auto flex flex-col p-0">
+                    <DialogContent className="max-w-xl flex flex-col p-0">
                         <CorrigendumDetailsForm 
                             form={form}
                             onSubmit={(data) => handleSave(data)}
@@ -285,7 +278,7 @@ export default function TenderDetails() {
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-xl h-auto flex flex-col p-0">
+                    <DialogContent className="max-w-xl flex flex-col p-0">
                         <WorkOrderDetailsForm
                             form={form}
                             onSubmit={(data) => handleSave(data)}
