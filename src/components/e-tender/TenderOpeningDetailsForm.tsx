@@ -39,13 +39,9 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
         });
     }, [initialData, form]);
 
-    const handleFormSubmit = (data: TenderOpeningDetailsFormData) => {
-        onSubmit(data);
-    };
-
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Tender Opening Details</DialogTitle>
                     <DialogDescription>Enter general details related to the tender opening process.</DialogDescription>

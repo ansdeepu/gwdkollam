@@ -12,37 +12,35 @@ import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
 import { BasicDetailsSchema, type E_tenderFormData } from '@/lib/schemas/eTenderSchema';
-import { useTenderData } from './TenderDataContext';
 import { formatDateForInput } from './utils';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 interface BasicDetailsFormProps {
+  initialData?: Partial<E_tenderFormData>;
   onSubmit: (data: Partial<E_tenderFormData>) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
 
-export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
-    const { tender } = useTenderData();
-
+export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(BasicDetailsSchema),
         defaultValues: {
-            ...tender,
-            tenderDate: formatDateForInput(tender.tenderDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
+            ...initialData,
+            tenderDate: formatDateForInput(initialData?.tenderDate),
+            dateTimeOfReceipt: formatDateForInput(initialData?.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(initialData?.dateTimeOfOpening, true),
         },
     });
      
     useEffect(() => {
         form.reset({
-            ...tender,
-            tenderDate: formatDateForInput(tender.tenderDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
+            ...initialData,
+            tenderDate: formatDateForInput(initialData?.tenderDate),
+            dateTimeOfReceipt: formatDateForInput(initialData?.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(initialData?.dateTimeOfOpening, true),
         });
-    }, [tender, form]);
+    }, [initialData, form]);
 
     return (
         <FormProvider {...form}>

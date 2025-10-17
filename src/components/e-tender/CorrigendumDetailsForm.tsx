@@ -36,13 +36,9 @@ export default function CorrigendumDetailsForm({ initialData, onSubmit, onCancel
         });
     }, [initialData, form]);
 
-    const handleFormSubmit = (data: CorrigendumDetailsFormData) => {
-        onSubmit(data);
-    };
-
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Corrigendum Details</DialogTitle>
                     <DialogDescription>Enter details if there are any corrigendum updates.</DialogDescription>

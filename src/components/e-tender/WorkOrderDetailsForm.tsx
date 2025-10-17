@@ -39,15 +39,11 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         });
     }, [initialData, form]);
 
-    const handleFormSubmit = (data: WorkOrderDetailsFormData) => {
-        onSubmit(data);
-    };
-
     const title = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Enter details related to the final order.</DialogDescription>
