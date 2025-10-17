@@ -24,13 +24,10 @@ export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmittin
     // Safe wrapper that awaits parent's onSubmit and closes modal on success
     const handleSaveClick = form.handleSubmit(async (data) => {
         try {
-            // Await parent's save (which does DB work and sets parent state)
             await onSubmit(data);
-            // Close dialog only when parent's save succeeds
-            onCancel();
+            onCancel(); // Close dialog only when parent's save succeeds
         } catch (err) {
             // keep the dialog open so user can see the error toast from parent
-            // optionally log error to console for debugging
             console.error("Error saving basic details:", err);
         }
     });

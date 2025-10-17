@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -52,6 +51,8 @@ export default function TenderDetails() {
             lastDateOfReceipt: formatDateForInput(tender.lastDateOfReceipt),
             dateOfOpeningTender: formatDateForInput(tender.dateOfOpeningTender),
             corrigendumDate: formatDateForInput(tender.corrigendumDate),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening),
             dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
@@ -68,11 +69,11 @@ export default function TenderDetails() {
         setIsSubmitting(true);
         try {
             if (tender.id === 'new') {
-                const newTenderId = await addTender(tender);
+                const newTenderId = await addTender(form.getValues());
                 toast({ title: "Tender Created", description: "The new e-Tender has been created and saved." });
                 router.replace(`/dashboard/e-tender/${newTenderId}`);
             } else {
-                await saveTenderToDb(tender.id, tender);
+                await saveTenderToDb(tender.id, form.getValues());
                 toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
                 router.push('/dashboard/e-tender');
             }
@@ -90,6 +91,8 @@ export default function TenderDetails() {
             lastDateOfReceipt: formatDateForInput(tender.lastDateOfReceipt),
             dateOfOpeningTender: formatDateForInput(tender.dateOfOpeningTender),
             corrigendumDate: formatDateForInput(tender.corrigendumDate),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening),
             dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
@@ -104,17 +107,17 @@ export default function TenderDetails() {
             const updatedData = { ...currentTenderData, ...data };
             
             if (tender.id === 'new') {
-                const newTenderId = await addTender(updatedData);
-                toast({ title: "Tender Details Saved", description: "The new e-Tender has been saved." });
-                router.replace(`/dashboard/e-tender/${newTenderId}`);
+                updateTender(updatedData);
+                toast({ title: "Details Saved", description: "Your changes have been saved locally. Click 'Save All Changes' to finalize.", variant: 'default' });
+
             } else {
                 await saveTenderToDb(tender.id, updatedData);
+                updateTender(updatedData); // Update context after successful save
                 toast({ title: "Tender Details Updated" });
             }
-            updateTender(updatedData); // Update context after successful save
         } catch (error: any) {
             toast({ title: "Error Saving Tender", description: error.message, variant: "destructive" });
-            throw error; // Re-throw error to be caught by the form's onClick handler
+            throw error; // Re-throw so form knows there was an error
         } finally {
             setIsSubmitting(false);
         }
@@ -128,7 +131,7 @@ export default function TenderDetails() {
     
     return (
         <FormProvider {...form}>
-            <form className="space-y-6">
+            <div className="space-y-6">
                 <Card>
                     <CardContent className="pt-6">
                         <Accordion type="single" collapsible defaultValue="basic-details" className="w-full space-y-4">
@@ -189,7 +192,7 @@ export default function TenderDetails() {
                                      <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
                                         <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
                                         <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
-                                        <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow')}` : 'N/A'} />
+                                        <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : 'N/A'} />
                                         <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
                                         <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
                                         <div className="md:col-span-3 border-t pt-2 mt-2">
@@ -301,10 +304,8 @@ export default function TenderDetails() {
                         />
                     </DialogContent>
                 </Dialog>
-            </form>
+            </div>
         </FormProvider>
     );
 }
-    
-
     
