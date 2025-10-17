@@ -70,7 +70,8 @@ export default function TenderPage() {
                 const fetchedTender = await getTender(id);
                 if (fetchedTender) {
                     setTender(fetchedTender);
-                    setHeader(`Edit e-Tender: ${fetchedTender.eTenderNo}`, `Editing details for tender: ${fetchedTender.eTenderNo}`);
+                    const refNo = `GKT/${fetchedTender.fileNo}/${fetchedTender.eTenderNo}`;
+                    setHeader(`Edit e-Tender: ${refNo}`, `Editing details for tender: ${refNo}`);
                 } else {
                     toast({ title: "Tender Not Found", description: "The requested tender could not be found.", variant: "destructive" });
                     setHeader("Tender Not Found", "The requested tender could not be found.");
