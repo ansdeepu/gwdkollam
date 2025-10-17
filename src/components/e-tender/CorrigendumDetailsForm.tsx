@@ -1,27 +1,42 @@
 // src/components/e-tender/CorrigendumDetailsForm.tsx
 "use client";
 
-import React from 'react';
-import { useForm, type UseFormReturn } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
-import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
-import { FormProvider } from 'react-hook-form';
+import { CorrigendumDetailsSchema, type E_tenderFormData, type CorrigendumDetailsFormData } from '@/lib/schemas/eTenderSchema';
+import { formatDateForInput } from './utils';
 
 interface CorrigendumDetailsFormProps {
-    form: UseFormReturn<E_tenderFormData>;
+    initialData: Partial<E_tenderFormData>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
 }
 
-export default function CorrigendumDetailsForm({ form, onSubmit, onCancel, isSubmitting }: CorrigendumDetailsFormProps) {
-    
-    const handleFormSubmit = (data: E_tenderFormData) => {
+export default function CorrigendumDetailsForm({ initialData, onSubmit, onCancel, isSubmitting }: CorrigendumDetailsFormProps) {
+    const form = useForm<CorrigendumDetailsFormData>({
+        resolver: zodResolver(CorrigendumDetailsSchema),
+        defaultValues: {
+            corrigendumDate: formatDateForInput(initialData.corrigendumDate),
+            noOfBids: initialData.noOfBids,
+        }
+    });
+
+    useEffect(() => {
+        form.reset({
+            corrigendumDate: formatDateForInput(initialData.corrigendumDate),
+            noOfBids: initialData.noOfBids,
+        });
+    }, [initialData, form]);
+
+    const handleFormSubmit = (data: CorrigendumDetailsFormData) => {
         onSubmit(data);
     };
 
@@ -35,8 +50,8 @@ export default function CorrigendumDetailsForm({ form, onSubmit, onCancel, isSub
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                            <FormField name="corrigendumDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Corrigendum Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="noOfBids" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Bids Received</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="corrigendumDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Corrigendum Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="noOfBids" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Bids Received</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                     </ScrollArea>
                 </div>

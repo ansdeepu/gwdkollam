@@ -1,7 +1,7 @@
 // src/lib/schemas/eTenderSchema.ts
 import { z } from 'zod';
 
-const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional());
+const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional().nullable());
 const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional());
 
 export const eTenderStatusOptions = [
@@ -18,7 +18,7 @@ export const BasicDetailsSchema = z.object({
     nameOfWork: z.string().min(1, "Name of Work is required."),
     nameOfWorkMalayalam: z.string().optional(),
     location: z.string().min(1, "Location is required."),
-    estimateAmount: z.number().min(0, "Estimate Amount cannot be negative."),
+    estimateAmount: z.number().min(0, "Tender Amount cannot be negative."),
     tenderFormFee: z.number().min(0, "Tender Form Fee cannot be negative."),
     emd: z.number().min(0, "EMD cannot be negative."),
     periodOfCompletion: z.number().int().min(1, "Period of Completion must be at least 1 day."),
@@ -29,7 +29,7 @@ export const BasicDetailsSchema = z.object({
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
 export const CorrigendumDetailsSchema = z.object({
-    corrigendumDate: optionalDateSchema,
+    corrigendumDate: z.string().optional().nullable(),
     noOfBids: z.string().optional(),
 });
 export type CorrigendumDetailsFormData = z.infer<typeof CorrigendumDetailsSchema>;
@@ -43,34 +43,36 @@ export const BidderSchema = z.object({
     securityDepositAmount: optionalNumberSchema,
     agreementAmount: optionalNumberSchema,
     additionalSecurityDeposit: optionalNumberSchema,
-    dateSelectionNotice: optionalDateSchema,
+    dateSelectionNotice: z.string().optional().nullable(),
 });
 export type Bidder = z.infer<typeof BidderSchema>;
 
-const BaseTenderOpeningDetailsSchema = z.object({
+export const TenderOpeningDetailsSchema = z.object({
     noOfTenderers: z.string().optional(),
     noOfSuccessfulTenderers: z.string().optional(),
     quotedPercentage: optionalNumberSchema,
     aboveBelow: z.enum(['Above', 'Below']).optional(),
-    dateOfOpeningBid: optionalDateSchema,
-    dateOfTechnicalAndFinancialBidOpening: optionalDateSchema,
+    dateOfOpeningBid: z.string().optional().nullable(),
+    dateOfTechnicalAndFinancialBidOpening: z.string().optional().nullable(),
     technicalCommitteeMember1: z.string().optional(),
     technicalCommitteeMember2: z.string().optional(),
     technicalCommitteeMember3: z.string().optional(),
 });
+export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSchema>;
+
 
 export const WorkOrderDetailsSchema = z.object({
-    agreementDate: optionalDateSchema,
+    agreementDate: z.string().optional().nullable(),
     nameOfAssistantEngineer: z.string().optional(),
     nameOfSupervisor: z.string().optional(),
     supervisorPhoneNo: z.string().optional(),
-    dateWorkOrder: optionalDateSchema,
+    dateWorkOrder: z.string().optional().nullable(),
 });
 export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
 // Merge all schemas first
 const MergedSchema = BasicDetailsSchema.merge(CorrigendumDetailsSchema)
-    .merge(BaseTenderOpeningDetailsSchema)
+    .merge(TenderOpeningDetailsSchema)
     .merge(WorkOrderDetailsSchema)
     .extend({
         bidders: z.array(BidderSchema).optional(),
@@ -99,5 +101,4 @@ export const E_tenderSchema = MergedSchema.superRefine((data, ctx) => {
     }
 });
 
-export type TenderOpeningDetailsFormData = z.infer<typeof BaseTenderOpeningDetailsSchema>;
 export type E_tenderFormData = z.infer<typeof E_tenderSchema>;

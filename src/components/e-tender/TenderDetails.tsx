@@ -381,6 +381,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -390,7 +391,7 @@ export default function TenderDetails() {
                  <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <CorrigendumDetailsForm 
-                            form={form}
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -400,7 +401,7 @@ export default function TenderDetails() {
                  <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
                         <TenderOpeningDetailsForm
-                            form={form}
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -430,7 +431,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <WorkOrderDetailsForm
-                            form={form}
+                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
