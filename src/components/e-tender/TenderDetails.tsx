@@ -105,7 +105,7 @@ export default function TenderDetails() {
             
             if (tender.id === 'new') {
                 const newTenderId = await addTender(updatedData);
-                toast({ title: "Tender Created", description: "The new e-Tender has been saved." });
+                toast({ title: "Tender Details Saved", description: "The new e-Tender has been saved." });
                 router.replace(`/dashboard/e-tender/${newTenderId}`);
             } else {
                 await saveTenderToDb(tender.id, updatedData);
@@ -114,9 +114,9 @@ export default function TenderDetails() {
             updateTender(updatedData); // Update context after successful save
         } catch (error: any) {
             toast({ title: "Error Saving Tender", description: error.message, variant: "destructive" });
+            throw error; // Re-throw error to be caught by the form's onClick handler
         } finally {
             setIsSubmitting(false);
-            setActiveModal(null);
         }
     };
     
@@ -128,7 +128,7 @@ export default function TenderDetails() {
     
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
+            <form className="space-y-6">
                 <Card>
                     <CardContent className="pt-6">
                         <Accordion type="single" collapsible defaultValue="basic-details" className="w-full space-y-4">
@@ -305,4 +305,6 @@ export default function TenderDetails() {
         </FormProvider>
     );
 }
+    
+
     

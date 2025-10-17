@@ -1,3 +1,4 @@
+
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
@@ -14,27 +15,23 @@ import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
 
 interface BasicDetailsFormProps {
     form: ReturnType<typeof useFormContext<E_tenderFormData>>;
-    onSubmit: (data: Partial<E_tenderFormData>) => Promise<void> | void;
+    onSubmit: (data: Partial<E_tenderFormData>) => Promise<void>;
     onCancel: () => void;
     isSubmitting: boolean;
 }
 
 export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
-
-    // Safe wrapper that awaits parent's onSubmit and closes modal on success
+    
     const handleSaveClick = form.handleSubmit(async (data) => {
         try {
-            // Await parent's save (which does DB work and sets parent state)
-            await onSubmit(data);
-            // Close dialog only when parent's save succeeds
-            onCancel();
-        } catch (err) {
-            // keep the dialog open so user can see the error toast from parent
-            // optionally log error to console for debugging
-            console.error("Error saving basic details:", err);
+          await onSubmit(data);
+          onCancel(); // Close dialog only on successful submission
+        } catch (error) {
+          console.error("Error saving basic details:", error);
+          // The modal will remain open for the user to see the error toast.
         }
     });
-    
+
     return (
         <>
             <DialogHeader className="p-6 pb-4">
@@ -74,16 +71,13 @@ export default function BasicDetailsForm({ form, onSubmit, onCancel, isSubmittin
                     <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
-                    <Button
-                        type="button"
-                        disabled={isSubmitting}
-                        onClick={handleSaveClick}
-                    >
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Details
+                    <Button type="button" onClick={handleSaveClick} disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
                     </Button>
                 </DialogFooter>
             </div>
         </>
     );
 }
+
+    
