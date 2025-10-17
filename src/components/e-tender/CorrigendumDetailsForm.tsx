@@ -10,6 +10,7 @@ import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
 import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
+import { FormProvider } from 'react-hook-form';
 
 interface CorrigendumDetailsFormProps {
     form: UseFormReturn<E_tenderFormData>;
@@ -25,27 +26,29 @@ export default function CorrigendumDetailsForm({ form, onSubmit, onCancel, isSub
     };
     
     return (
-         <>
-            <DialogHeader className="p-6 pb-4">
-                <DialogTitle>Corrigendum Details</DialogTitle>
-                <DialogDescription>Enter details if there are any corrigendum updates.</DialogDescription>
-            </DialogHeader>
-             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full px-6 py-4">
-                    <div className="space-y-4">
-                        <FormField name="corrigendumDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Corrigendum Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                        <FormField name="noOfBids" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Bids Received</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    </div>
-                </ScrollArea>
-            </div>
-            <DialogFooter className="p-6 pt-4">
-                <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
-                    <X className="mr-2 h-4 w-4" /> Cancel
-                </Button>
-                <Button type="button" onClick={form.handleSubmit(handleFormSubmit)} disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
-                </Button>
-            </DialogFooter>
-        </>
+        <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+                <DialogHeader className="p-6 pb-4">
+                    <DialogTitle>Corrigendum Details</DialogTitle>
+                    <DialogDescription>Enter details if there are any corrigendum updates.</DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 min-h-0">
+                    <ScrollArea className="h-full px-6 py-4">
+                        <div className="space-y-4">
+                            <FormField name="corrigendumDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Corrigendum Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="noOfBids" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Bids Received</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        </div>
+                    </ScrollArea>
+                </div>
+                <DialogFooter className="p-6 pt-4">
+                    <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
+                        <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
+                    </Button>
+                </DialogFooter>
+            </form>
+        </FormProvider>
     );
 }
