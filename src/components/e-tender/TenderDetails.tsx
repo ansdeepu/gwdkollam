@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useTenderData } from './TenderDataContext';
 import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
-import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
+import { useForm, FormProvider, useFieldArray, FormField } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { E_tenderSchema, type E_tenderFormData, type Bidder } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
@@ -16,12 +16,14 @@ import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch,
 import { toast } from '@/hooks/use-toast';
 import { formatDateForInput, formatDateSafe } from './utils';
 
-import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
+import { FormItem, FormLabel, FormControl, FormMessage } from '../ui/form';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
-type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
+type ModalType = 'corrigendum' | 'opening' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '') {
@@ -66,6 +68,12 @@ export default function TenderDetails() {
     });
     
      const handleFinalSave = async () => {
+        const isValid = await form.trigger();
+        if (!isValid) {
+            toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const currentTenderData = form.getValues();
@@ -103,8 +111,6 @@ export default function TenderDetails() {
     }, [tender, form]);
 
     const handleSave = async (data: Partial<E_tenderFormData>) => {
-        // This function now only updates the context and closes the modal.
-        // The actual DB saving is handled by handleFinalSave.
         updateTender(data);
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
@@ -128,24 +134,33 @@ export default function TenderDetails() {
                                 <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Building className="h-5 w-5"/>Basic Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('basic'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
-                                    <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
-                                        <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
-                                        <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
-                                        <DetailRow label="File No." value={form.watch('fileNo')} />
-                                        <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
-                                        <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
-                                        <DetailRow label="Location" value={form.watch('location')} />
-                                        <DetailRow label="Estimate Amount (Rs.)" value={form.watch('estimateAmount')?.toLocaleString('en-IN')} />
-                                        <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')?.toLocaleString('en-IN')} />
-                                        <DetailRow label="EMD (Rs.)" value={form.watch('emd')?.toLocaleString('en-IN')} />
-                                        <DetailRow label="Period of Completion" value={`${form.watch('periodOfCompletion') || 0} Days`} />
-                                        <DetailRow label="Last Date of Receipt" value={`${formatDateSafe(form.watch('lastDateOfReceipt'))}, ${form.watch('timeOfReceipt')}`} />
-                                        <DetailRow label="Date of Opening" value={`${formatDateSafe(form.watch('dateOfOpeningTender'))}, ${form.watch('timeOfOpeningTender')}`} />
-                                    </dl>
+                                    <div className="space-y-4 pt-4 border-t">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField name="eTenderNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                        <FormField name="fileNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="nameOfWork" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="nameOfWorkMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>വർക്കിന്റെ പേര് (Name of Work in Malayalam)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <FormField name="estimateAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Estimate Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                        <FormField name="periodOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Last Date of Receipt</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="timeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Receipt</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Tender</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="timeOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Opening Tender</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
                             
@@ -251,15 +266,6 @@ export default function TenderDetails() {
 
 
                 {/* Dialogs for Editing */}
-                <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                        <BasicDetailsForm 
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
-                    </DialogContent>
-                </Dialog>
                  <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <CorrigendumDetailsForm 
@@ -294,4 +300,6 @@ export default function TenderDetails() {
         </FormProvider>
     );
 }
+    
+
     
