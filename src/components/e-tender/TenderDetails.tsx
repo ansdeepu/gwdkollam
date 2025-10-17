@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useTenderData } from './TenderDataContext';
 import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
-import { useForm, FormProvider, useFieldArray, FormField } from 'react-hook-form';
+import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { E_tenderSchema, type E_tenderFormData, type Bidder } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,8 @@ import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
-import { FormItem, FormLabel, FormControl, FormMessage } from '../ui/form';
-import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
+import { FormField } from '../ui/form';
+
 
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
 
@@ -129,7 +128,6 @@ export default function TenderDetails() {
 
     const handleSave = async (data: Partial<E_tenderFormData>) => {
         updateTender(data);
-        toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
     
