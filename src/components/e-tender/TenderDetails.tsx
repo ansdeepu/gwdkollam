@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useTenderData } from './TenderDataContext';
 import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
-import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
+import { useForm, FormProvider, useFieldArray, FormField } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { E_tenderSchema, type E_tenderFormData, type Bidder } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,9 @@ import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
+import { FormItem, FormLabel, FormControl, FormMessage } from '../ui/form';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
 
@@ -71,20 +74,18 @@ export default function TenderDetails() {
         const isValid = await form.trigger();
         if (!isValid) {
             toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
-            const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
+             const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
             if (errorField) {
-                 const sectionMap: Record<keyof E_tenderFormData, string> = {
+                 const sectionMap: Record<string, string> = {
                     eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', lastDateOfReceipt: 'basic-details', timeOfReceipt: 'basic-details', dateOfOpeningTender: 'basic-details', timeOfOpeningTender: 'basic-details', nameOfWorkMalayalam: 'basic-details',
                     dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
                     noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details', bidders: 'opening-details',
                     agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
                 };
                 
-                const section = sectionMap[errorField];
+                const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'opening-details' : null);
                 if (section) {
                     setActiveAccordion(section);
-                } else if (String(errorField).startsWith('bidders')) {
-                    setActiveAccordion('opening-details');
                 }
             }
             return;
@@ -126,7 +127,7 @@ export default function TenderDetails() {
         });
     }, [tender, form]);
 
-    const handleSave = (data: Partial<E_tenderFormData>) => {
+    const handleSave = async (data: Partial<E_tenderFormData>) => {
         updateTender(data);
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
@@ -158,6 +159,7 @@ export default function TenderDetails() {
                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
                                             <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
                                             <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                            <DetailRow label="Present Status" value={form.watch('presentStatus')} />
                                             <DetailRow label="File No." value={form.watch('fileNo')} />
                                             <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                             <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>

@@ -14,6 +14,7 @@ import { formatDateSafe } from '@/components/e-tender/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
 
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
@@ -109,6 +110,7 @@ export default function ETenderListPage() {
                                     <TableHead>eTender No.</TableHead>
                                     <TableHead>Name of Work</TableHead>
                                     <TableHead>Tender Date</TableHead>
+                                    <TableHead>Present Status</TableHead>
                                     <TableHead className="text-center">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -120,6 +122,9 @@ export default function ETenderListPage() {
                                             <TableCell className="font-medium">{tender.eTenderNo}</TableCell>
                                             <TableCell>{tender.nameOfWork}</TableCell>
                                             <TableCell>{formatDateSafe(tender.tenderDate)}</TableCell>
+                                            <TableCell>
+                                                {tender.presentStatus ? <Badge>{tender.presentStatus}</Badge> : 'N/A'}
+                                            </TableCell>
                                             <TableCell className="text-center">
                                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(tender.id)}>
                                                     <Eye className="h-4 w-4" />
@@ -134,7 +139,7 @@ export default function ETenderListPage() {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             No tenders found.
                                         </TableCell>
                                     </TableRow>

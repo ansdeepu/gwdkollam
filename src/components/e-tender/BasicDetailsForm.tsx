@@ -11,9 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
-import { BasicDetailsSchema, type E_tenderFormData } from '@/lib/schemas/eTenderSchema';
+import { BasicDetailsSchema, type E_tenderFormData, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { useTenderData } from './TenderDataContext';
 import { formatDateForInput } from './utils';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 interface BasicDetailsFormProps {
   onSubmit: (data: Partial<E_tenderFormData>) => void;
@@ -31,6 +32,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             tenderDate: formatDateForInput(tender.tenderDate),
             lastDateOfReceipt: formatDateForInput(tender.lastDateOfReceipt),
             dateOfOpeningTender: formatDateForInput(tender.dateOfOpeningTender),
+            presentStatus: tender.presentStatus || 'Tender Process',
         },
     });
 
@@ -48,9 +50,19 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="eTenderNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="presentStatus" control={form.control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Present Status</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                            <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
                             </div>
                             <FormField name="fileNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="nameOfWork" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>

@@ -4,6 +4,13 @@ import { z } from 'zod';
 const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional());
 const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional());
 
+export const eTenderStatusOptions = [
+    "Tender Process",
+    "Selection Notice Issued",
+    "Work Order Issued",
+] as const;
+export type E_tenderStatus = typeof eTenderStatusOptions[number];
+
 export const BasicDetailsSchema = z.object({
     eTenderNo: z.string().min(1, "eTender No. is required."),
     tenderDate: z.string().min(1, "Tender Date is required."),
@@ -19,6 +26,7 @@ export const BasicDetailsSchema = z.object({
     timeOfReceipt: z.string().min(1, "Time of Receipt is required."),
     dateOfOpeningTender: z.string().min(1, "Date of Opening Tender is required."),
     timeOfOpeningTender: z.string().min(1, "Time of Opening Tender is required."),
+    presentStatus: z.enum(eTenderStatusOptions).optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
@@ -43,7 +51,7 @@ export const BidderSchema = z.object({
 });
 export type Bidder = z.infer<typeof BidderSchema>;
 
-export const TenderOpeningDetailsSchema = z.object({
+const BaseTenderOpeningDetailsSchema = z.object({
     noOfTenderers: z.string().optional(),
     noOfSuccessfulTenderers: z.string().optional(),
     quotedPercentage: optionalNumberSchema,
@@ -55,7 +63,6 @@ export const TenderOpeningDetailsSchema = z.object({
     technicalCommitteeMember3: z.string().optional(),
     bidders: z.array(BidderSchema).optional(),
 });
-export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSchema>;
 
 export const WorkOrderDetailsSchema = z.object({
     agreementDate: optionalDateSchema,
@@ -68,7 +75,7 @@ export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
 // Merge all schemas first
 const MergedSchema = BasicDetailsSchema.merge(CorrigendumDetailsSchema)
-    .merge(TenderOpeningDetailsSchema)
+    .merge(BaseTenderOpeningDetailsSchema)
     .merge(WorkOrderDetailsSchema);
 
 // Apply superRefine to the final merged schema
@@ -93,4 +100,5 @@ export const E_tenderSchema = MergedSchema.superRefine((data, ctx) => {
     }
 });
 
+export type TenderOpeningDetailsFormData = z.infer<typeof BaseTenderOpeningDetailsSchema>;
 export type E_tenderFormData = z.infer<typeof E_tenderSchema>;
