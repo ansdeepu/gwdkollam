@@ -73,6 +73,7 @@ import { z } from 'zod';
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const dynamic = 'force-dynamic';
 
@@ -101,7 +102,7 @@ const calculateRenewalFee = (baseAmount: number, renewalNum: number) => {
 
 
 // Fee Details Dialog Component
-const RigFeeDetailsDialog = () => {
+const RigFeeDetailsContent = () => {
     const currentYear = new Date().getFullYear();
     const [selectedRegYear, setSelectedRegYear] = useState<number>(currentYear);
     const [selectedRenewalNum, setSelectedRenewalNum] = useState<number>(1);
@@ -129,7 +130,7 @@ const RigFeeDetailsDialog = () => {
     ];
     
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 mt-6">
             <Card>
                 <CardHeader>
                     <CardTitle className="text-lg">One-time Fees</CardTitle>
@@ -238,7 +239,6 @@ export default function GwdRatesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
-  const [isFeeDetailsOpen, setIsFeeDetailsOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GwdRateItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<GwdRateItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -547,54 +547,69 @@ export default function GwdRatesPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
+       <Card>
         <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-4">
-                <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
-                <Button variant="outline" onClick={() => setIsFeeDetailsOpen(true)}><ClipboardList className="mr-2 h-4 w-4" /> Rig Registration Fee Details</Button>
-                {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
-            </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative max-h-[70vh] overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
-                  <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
-                  <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
-                  <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rateItems.length > 0 ? rateItems.map((item, index) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="py-2 px-4">{index + 1}</TableCell>
-                    <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
-                    <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    <TableCell className="text-center py-2 px-4">
-                      {canManage ? (
-                        <div className="flex items-center justify-center space-x-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">View Only</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <Tabs defaultValue="gwdRates" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="gwdRates">GWD Rates</TabsTrigger>
+              <TabsTrigger value="rigRegFees">Rig Registration Fee Details</TabsTrigger>
+              <TabsTrigger value="eTenderRates">e-Tender Rates</TabsTrigger>
+            </TabsList>
+            <TabsContent value="gwdRates" className="mt-4">
+               <div className="flex justify-end items-center gap-4 mb-4">
+                  <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
+                  {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
+              </div>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="relative max-h-[70vh] overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
+                          <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
+                          <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
+                          <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {rateItems.length > 0 ? rateItems.map((item, index) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="py-2 px-4">{index + 1}</TableCell>
+                            <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
+                            <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                            <TableCell className="text-center py-2 px-4">
+                              {canManage ? (
+                                <div className="flex items-center justify-center space-x-1">
+                                  <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">View Only</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="rigRegFees">
+              <RigFeeDetailsContent />
+            </TabsContent>
+            <TabsContent value="eTenderRates">
+               <div className="text-center py-10 text-muted-foreground">
+                    <p>e-Tender rates will be displayed here.</p>
+                </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -700,23 +715,6 @@ export default function GwdRatesPage() {
               </DialogFooter>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isFeeDetailsOpen} onOpenChange={setIsFeeDetailsOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Rig Registration Fee Details</DialogTitle>
-            <DialogDescription>A detailed breakdown of all fees associated with rig registration and renewals.</DialogDescription>
-          </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto p-1">
-            <RigFeeDetailsDialog />
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-                <Button type="button" variant="secondary">Close</Button>
-            </DialogClose>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
