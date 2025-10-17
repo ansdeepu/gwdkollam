@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -225,14 +226,12 @@ export default function TenderDetails() {
 
                         </Accordion>
                     </CardContent>
-                    {tender.id !== 'new' && (
-                        <CardFooter className="flex justify-end">
-                            <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                Save All Changes
-                            </Button>
-                        </CardFooter>
-                    )}
+                    <CardFooter className="flex justify-end">
+                        <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save All Changes
+                        </Button>
+                    </CardFooter>
                 </Card>
                 
                  <Card>
