@@ -24,7 +24,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '../ui/
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 
-type ModalType = 'corrigendum' | 'opening' | 'workOrder' | 'basic' | null;
+type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '') {
@@ -130,36 +130,22 @@ export default function TenderDetails() {
                     <CardContent className="pt-6">
                         <Accordion type="single" collapsible defaultValue="basic-details" className="w-full space-y-4">
                             
-                            {/* Basic Details Accordion - Always open */}
-                            <AccordionItem value="basic-details" className="border rounded-lg">
-                                <div className="p-4 text-lg font-semibold text-primary flex justify-between items-center w-full">
-                                    <span className="flex items-center gap-3"><Building className="h-5 w-5"/>Basic Details</span>
-                                </div>
-                                <AccordionContent className="p-6 pt-0" forceMount>
-                                    <div className="space-y-4 pt-4 border-t">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <FormField name="eTenderNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                        </div>
-                                        <FormField name="fileNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name="nameOfWork" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name="nameOfWorkMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>വർക്കിന്റെ പേര് (Name of Work in Malayalam)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name="location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <FormField name="estimateAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Estimate Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                        </div>
-                                        <FormField name="periodOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Last Date of Receipt</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField name="timeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Receipt</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Tender</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField name="timeOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Opening Tender</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                        </div>
+                             <AccordionItem value="basic-details" className="border rounded-lg">
+                                <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span className="flex items-center gap-3"><Building className="h-5 w-5"/>Basic Details</span>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('basic'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                                     </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-0">
+                                    <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
+                                        <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
+                                        <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                        <DetailRow label="File No." value={form.watch('fileNo')} />
+                                        <DetailRow label="Estimate Amount" value={form.watch('estimateAmount')?.toLocaleString('en-IN')} />
+                                        <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
+                                        <DetailRow label="Last Date of Receipt" value={formatDateSafe(form.watch('lastDateOfReceipt'))} />
+                                    </dl>
                                 </AccordionContent>
                             </AccordionItem>
                             
