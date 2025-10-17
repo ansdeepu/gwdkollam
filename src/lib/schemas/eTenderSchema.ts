@@ -54,27 +54,6 @@ export const TenderOpeningDetailsSchema = z.object({
     technicalCommitteeMember2: z.string().optional(),
     technicalCommitteeMember3: z.string().optional(),
     bidders: z.array(BidderSchema).optional(),
-}).superRefine((data, ctx) => {
-    // Check if any field in the tender opening details section (other than quotedPercentage) has data.
-    const hasAnyData =
-        !!data.noOfTenderers ||
-        !!data.noOfSuccessfulTenderers ||
-        !!data.aboveBelow ||
-        !!data.dateOfOpeningBid ||
-        !!data.dateOfTechnicalAndFinancialBidOpening ||
-        !!data.technicalCommitteeMember1 ||
-        !!data.technicalCommitteeMember2 ||
-        !!data.technicalCommitteeMember3 ||
-        (data.bidders && data.bidders.length > 0);
-
-    // If there is data, and quotedPercentage is missing or not a number, add an issue.
-    if (hasAnyData && (data.quotedPercentage === undefined || data.quotedPercentage === null || isNaN(data.quotedPercentage))) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Quoted Percentage is required when other tender opening details are provided.",
-            path: ["quotedPercentage"],
-        });
-    }
 });
 export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSchema>;
 
@@ -87,8 +66,31 @@ export const WorkOrderDetailsSchema = z.object({
 });
 export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
-export const E_tenderSchema = BasicDetailsSchema.merge(CorrigendumDetailsSchema)
+// Merge all schemas first
+const MergedSchema = BasicDetailsSchema.merge(CorrigendumDetailsSchema)
     .merge(TenderOpeningDetailsSchema)
     .merge(WorkOrderDetailsSchema);
+
+// Apply superRefine to the final merged schema
+export const E_tenderSchema = MergedSchema.superRefine((data, ctx) => {
+    const hasAnyTenderOpeningData =
+        !!data.noOfTenderers ||
+        !!data.noOfSuccessfulTenderers ||
+        !!data.aboveBelow ||
+        !!data.dateOfOpeningBid ||
+        !!data.dateOfTechnicalAndFinancialBidOpening ||
+        !!data.technicalCommitteeMember1 ||
+        !!data.technicalCommitteeMember2 ||
+        !!data.technicalCommitteeMember3 ||
+        (data.bidders && data.bidders.length > 0);
+
+    if (hasAnyTenderOpeningData && (data.quotedPercentage === undefined || data.quotedPercentage === null || isNaN(data.quotedPercentage))) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Quoted Percentage is required when other tender opening details are provided.",
+            path: ["quotedPercentage"],
+        });
+    }
+});
 
 export type E_tenderFormData = z.infer<typeof E_tenderSchema>;
