@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -300,6 +301,5 @@ export default function TenderDetails() {
         </FormProvider>
     );
 }
-    
 
     
