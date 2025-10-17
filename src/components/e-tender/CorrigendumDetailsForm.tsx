@@ -20,11 +20,11 @@ interface CorrigendumDetailsFormProps {
 }
 
 export default function CorrigendumDetailsForm({ form, onSubmit, onCancel, isSubmitting }: CorrigendumDetailsFormProps) {
-
+    
     const handleFormSubmit = (data: E_tenderFormData) => {
         onSubmit(data);
     };
-    
+
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
