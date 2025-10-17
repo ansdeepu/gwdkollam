@@ -68,12 +68,13 @@ export default function TenderDetails() {
      const handleFinalSave = async () => {
         setIsSubmitting(true);
         try {
+            const currentTenderData = form.getValues();
             if (tender.id === 'new') {
-                const newTenderId = await addTender(form.getValues());
+                const newTenderId = await addTender(currentTenderData);
                 toast({ title: "Tender Created", description: "The new e-Tender has been created and saved." });
                 router.replace(`/dashboard/e-tender/${newTenderId}`);
             } else {
-                await saveTenderToDb(tender.id, form.getValues());
+                await saveTenderToDb(tender.id, currentTenderData);
                 toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
                 router.push('/dashboard/e-tender');
             }
@@ -102,26 +103,11 @@ export default function TenderDetails() {
     }, [tender, form]);
 
     const handleSave = async (data: Partial<E_tenderFormData>) => {
-        setIsSubmitting(true);
-        try {
-            const currentTenderData = form.getValues();
-            const updatedData = { ...currentTenderData, ...data };
-            
-            updateTender(updatedData);
-            
-            if (tender.id !== 'new') {
-                await saveTenderToDb(tender.id, updatedData);
-                toast({ title: "Tender Details Updated" });
-            } else {
-                toast({ title: "Details Saved Locally", description: "Click 'Save All Changes' to create the new tender." });
-            }
-            setActiveModal(null); // Close the dialog on successful save
-        } catch (error: any) {
-            toast({ title: "Error Saving Tender", description: error.message, variant: "destructive" });
-            throw error; // Re-throw to inform the calling component of the failure
-        } finally {
-            setIsSubmitting(false);
-        }
+        // This function now only updates the context and closes the modal.
+        // The actual DB saving is handled by handleFinalSave.
+        updateTender(data);
+        toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
+        setActiveModal(null);
     };
     
     const pdfReports = [
@@ -268,7 +254,6 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm 
-                            form={form} 
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
