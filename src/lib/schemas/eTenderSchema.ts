@@ -12,7 +12,7 @@ export const eTenderStatusOptions = [
 export type E_tenderStatus = typeof eTenderStatusOptions[number];
 
 export const BasicDetailsSchema = z.object({
-    eTenderNo: z.string().min(1, "eTender No. is required."),
+    eTenderRefNo: z.string().min(1, "eTender Ref. No. is required."),
     tenderDate: z.string().min(1, "Tender Date is required."),
     fileNo: z.string().min(1, "File No. is required."),
     nameOfWork: z.string().min(1, "Name of Work is required."),
@@ -26,7 +26,6 @@ export const BasicDetailsSchema = z.object({
     timeOfReceipt: z.string().min(1, "Time of Receipt is required."),
     dateOfOpeningTender: z.string().min(1, "Date of Opening Tender is required."),
     timeOfOpeningTender: z.string().min(1, "Time of Opening Tender is required."),
-    presentStatus: z.enum(eTenderStatusOptions).optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
@@ -61,7 +60,6 @@ const BaseTenderOpeningDetailsSchema = z.object({
     technicalCommitteeMember1: z.string().optional(),
     technicalCommitteeMember2: z.string().optional(),
     technicalCommitteeMember3: z.string().optional(),
-    bidders: z.array(BidderSchema).optional(),
 });
 
 export const WorkOrderDetailsSchema = z.object({
@@ -76,7 +74,11 @@ export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 // Merge all schemas first
 const MergedSchema = BasicDetailsSchema.merge(CorrigendumDetailsSchema)
     .merge(BaseTenderOpeningDetailsSchema)
-    .merge(WorkOrderDetailsSchema);
+    .merge(WorkOrderDetailsSchema)
+    .extend({
+        bidders: z.array(BidderSchema).optional(),
+        presentStatus: z.enum(eTenderStatusOptions).optional(),
+    });
 
 // Apply superRefine to the final merged schema
 export const E_tenderSchema = MergedSchema.superRefine((data, ctx) => {
