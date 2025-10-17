@@ -19,12 +19,11 @@ import { formatDateForInput, formatDateSafe } from './utils';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
-import BasicDetailsForm from './BasicDetailsForm';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 
-type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
+type ModalType = 'corrigendum' | 'opening' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '') {
@@ -45,6 +44,8 @@ export default function TenderDetails() {
     const { addTender, updateTender: saveTenderToDb } = useE_tenders();
     const [activeModal, setActiveModal] = useState<ModalType>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [activeAccordion, setActiveAccordion] = useState<string>("basic-details");
+
 
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(E_tenderSchema),
@@ -72,6 +73,21 @@ export default function TenderDetails() {
         const isValid = await form.trigger();
         if (!isValid) {
             toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
+            const errorField = Object.keys(form.formState.errors)[0];
+            if (errorField) {
+                 const sectionMap: Record<string, string> = {
+                    eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details',
+                    dateTimeOfReceipt: 'corrigendum-details', corrigendumDate: 'corrigendum-details',
+                    noOfTenderers: 'opening-details', dateOfOpeningBid: 'opening-details',
+                    agreementDate: 'work-order-details', dateWorkOrder: 'work-order-details'
+                };
+                const section = Object.keys(sectionMap).find(key => errorField.startsWith(key));
+                if (section) {
+                    setActiveAccordion(sectionMap[section]);
+                } else if (errorField.startsWith('bidders')) {
+                    setActiveAccordion('opening-details');
+                }
+            }
             return;
         }
 
@@ -128,24 +144,40 @@ export default function TenderDetails() {
             <div className="space-y-6">
                 <Card>
                     <CardContent className="pt-6">
-                        <Accordion type="single" collapsible defaultValue="basic-details" className="w-full space-y-4">
+                        <Accordion type="single" collapsible value={activeAccordion} onValueChange={setActiveAccordion} className="w-full space-y-4">
                             
-                             <AccordionItem value="basic-details" className="border rounded-lg">
+                            {/* Basic Details Accordion */}
+                            <AccordionItem value="basic-details" className="border rounded-lg">
                                 <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                     <div className="flex justify-between items-center w-full">
                                         <span className="flex items-center gap-3"><Building className="h-5 w-5"/>Basic Details</span>
-                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('basic'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
-                                    <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
-                                        <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
-                                        <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
-                                        <DetailRow label="File No." value={form.watch('fileNo')} />
-                                        <DetailRow label="Estimate Amount" value={form.watch('estimateAmount')?.toLocaleString('en-IN')} />
-                                        <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
-                                        <DetailRow label="Last Date of Receipt" value={formatDateSafe(form.watch('lastDateOfReceipt'))} />
-                                    </dl>
+                                    <div className="space-y-4 pt-4 border-t">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField name="eTenderNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                        <FormField name="fileNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="nameOfWork" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="nameOfWorkMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>വർക്കിന്റെ പേര് (Name of Work in Malayalam)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <FormField name="estimateAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Estimate Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                        <FormField name="periodOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Last Date of Receipt</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="timeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Receipt</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Tender</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                            <FormField name="timeOfOpeningTender" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Time of Opening Tender</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                        </div>
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
                             
@@ -251,16 +283,6 @@ export default function TenderDetails() {
 
 
                 {/* Dialogs for Editing */}
-                <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                        <BasicDetailsForm
-                            form={form}
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
-                    </DialogContent>
-                </Dialog>
                  <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
                         <CorrigendumDetailsForm 
