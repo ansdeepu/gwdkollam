@@ -21,14 +21,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
+import BiddersForm from './BiddersForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 
 
-type ModalType = 'basic' | 'corrigendum' | 'opening' | 'workOrder' | null;
+type ModalType = 'basic' | 'corrigendum' | 'opening' | 'bidders' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     // Check for null, undefined, empty string, or zero for numeric types that shouldn't display if 0
-    if (value === null || value === undefined || value === '' || (typeof value === 'number' && value === 0)) {
+    if (value === null || value === undefined || value === '') {
         return null;
     }
 
@@ -77,7 +78,7 @@ export default function TenderDetails() {
         },
     });
 
-    const { fields: bidderFields, append: appendBidder, remove: removeBidder } = useFieldArray({
+    const { fields: bidderFields } = useFieldArray({
         control: form.control,
         name: "bidders"
     });
@@ -92,11 +93,12 @@ export default function TenderDetails() {
               const sectionMap: Record<string, string> = {
                   eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', lastDateOfReceipt: 'basic-details', timeOfReceipt: 'basic-details', dateOfOpeningTender: 'basic-details', timeOfOpeningTender: 'basic-details', nameOfWorkMalayalam: 'basic-details',
                   dateTimeOfReceipt: 'corrigendum-details', dateTimeOfOpening: 'corrigendum-details', corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
-                  noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details', bidders: 'opening-details',
+                  noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
+                  bidders: 'bidders-details',
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
               };
               
-              const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'opening-details' : null);
+              const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'bidders-details' : null);
               if (section) {
                   setActiveAccordion(section);
               }
@@ -164,8 +166,12 @@ export default function TenderDetails() {
     
     const hasAnyOpeningData = useMemo(() => {
         const values = form.watch(['noOfTenderers', 'noOfSuccessfulTenderers', 'quotedPercentage', 'aboveBelow', 'dateOfOpeningBid', 'dateOfTechnicalAndFinancialBidOpening', 'technicalCommitteeMember1', 'technicalCommitteeMember2', 'technicalCommitteeMember3']);
-        return values.some(v => v) || bidderFields.length > 0;
-    }, [form, bidderFields]);
+        return values.some(v => v);
+    }, [form]);
+    
+    const hasAnyBidderData = useMemo(() => {
+        return bidderFields.length > 0;
+    }, [bidderFields]);
 
     const hasAnyWorkOrderData = useMemo(() => {
         const values = form.watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'nameOfSupervisor', 'supervisorPhoneNo']);
@@ -245,36 +251,47 @@ export default function TenderDetails() {
                                 </AccordionTrigger>
                                 <AccordionContent className="p-6 pt-0">
                                     {hasAnyOpeningData ? (
-                                        <>
-                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
-                                                <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
-                                                <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
-                                                <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : ''} />
-                                                <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
-                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
-                                                <div className="md:col-span-3 border-t pt-2 mt-2">
-                                                    <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
-                                                </div>
-                                             </dl>
-                                             {bidderFields.length > 0 && (
-                                                 <div className="mt-4 pt-4 border-t">
-                                                    <h4 className="font-semibold text-base mb-2">Bidders ({bidderFields.length})</h4>
-                                                    {bidderFields.map((bidder, index) => (
-                                                        <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30">
-                                                            <h5 className="font-bold text-sm">{bidder.name}</h5>
-                                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
-                                                                <DetailRow label="Quoted Amount" value={bidder.quotedAmount?.toLocaleString('en-IN')} />
-                                                                <DetailRow label="Agreement Amount" value={bidder.agreementAmount?.toLocaleString('en-IN')} />
-                                                                <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
-                                                            </dl>
-                                                        </div>
-                                                    ))}
-                                                 </div>
-                                             )}
-                                        </>
+                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
+                                            <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
+                                            <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
+                                            <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : ''} />
+                                            <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
+                                            <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
+                                            <div className="md:col-span-3 border-t pt-2 mt-2">
+                                                <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
+                                            </div>
+                                        </dl>
                                     ) : (
                                          <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
                                     )}
+                                </AccordionContent>
+                            </AccordionItem>
+                            
+                            {/* Bidders Accordion */}
+                             <AccordionItem value="bidders-details" className="border rounded-lg">
+                               <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <div className="flex justify-between items-center w-full">
+                                        <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
+                                        <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('bidders'); }}><Edit className="h-4 w-4 mr-2"/>Manage Bidders</Button>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-0">
+                                     {hasAnyBidderData ? (
+                                        <div className="mt-4 pt-4 border-t">
+                                            {bidderFields.map((bidder, index) => (
+                                                <div key={bidder.id} className="p-3 border rounded-md mb-2 bg-secondary/30">
+                                                    <h5 className="font-bold text-sm">{bidder.name}</h5>
+                                                    <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
+                                                        <DetailRow label="Quoted Amount" value={bidder.quotedAmount?.toLocaleString('en-IN')} />
+                                                        <DetailRow label="Agreement Amount" value={bidder.agreementAmount?.toLocaleString('en-IN')} />
+                                                        <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
+                                                    </dl>
+                                                </div>
+                                            ))}
+                                        </div>
+                                     ) : (
+                                        <p className="text-sm text-muted-foreground text-center py-4">No bidders have been added.</p>
+                                     )}
                                 </AccordionContent>
                             </AccordionItem>
                             
@@ -374,8 +391,18 @@ export default function TenderDetails() {
                     </DialogContent>
                 </Dialog>
                  <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
+                    <DialogContent className="max-w-2xl flex flex-col p-0">
                         <TenderOpeningDetailsForm
+                            form={form}
+                            onSubmit={handleSave}
+                            onCancel={() => setActiveModal(null)}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                    <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
+                        <BiddersForm
                             form={form}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
