@@ -87,8 +87,17 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="eTenderNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                 <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="fileNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <FormField name="nameOfWork" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                               <FormField name="nameOfWorkMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>വർക്കിന്റെ പേര് (Name of Work in Malayalam)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            </div>
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField name="location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="tenderType" control={form.control} render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Type of Tender</FormLabel>
@@ -102,15 +111,6 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
                                         <FormMessage />
                                     </FormItem>
                                 )}/>
-                                 <FormField name="tenderDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="fileNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <FormField name="nameOfWork" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                               <FormField name="nameOfWorkMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>വർക്കിന്റെ പേര് (Name of Work in Malayalam)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            </div>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField name="location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="periodOfCompletion" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
