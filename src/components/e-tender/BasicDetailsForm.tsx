@@ -33,19 +33,21 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
         },
     });
 
-    const estimateAmount = useWatch({
+    const [estimateAmount, tenderType] = useWatch({
         control: form.control,
-        name: 'estimateAmount'
+        name: ['estimateAmount', 'tenderType']
     });
 
+    const isWorkTender = tenderType === 'Work';
+
     useEffect(() => {
-        if (estimateAmount === undefined || estimateAmount === null) {
-            form.setValue('tenderFormFee', undefined);
-            form.setValue('emd', undefined);
+        if (!isWorkTender || estimateAmount === undefined || estimateAmount === null) {
+            form.setValue('tenderFormFee', initialData?.tenderFormFee ?? undefined);
+            form.setValue('emd', initialData?.emd ?? undefined);
             return;
         }
 
-        // Calculate Tender Form Fee
+        // Calculate Tender Form Fee only for 'Work' type
         let fee = 0;
         if (estimateAmount > 100000 && estimateAmount <= 1000000) {
             fee = 500;
@@ -58,7 +60,7 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
         }
         form.setValue('tenderFormFee', fee);
 
-        // Calculate EMD
+        // Calculate EMD only for 'Work' type
         let emd = 0;
         if (estimateAmount > 200000) {
             const calculatedEmd = Math.round((estimateAmount * 0.025) / 100) * 100;
@@ -66,7 +68,7 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
         }
         form.setValue('emd', emd);
 
-    }, [estimateAmount, form.setValue]);
+    }, [estimateAmount, isWorkTender, form, initialData]);
      
     useEffect(() => {
         form.reset({
@@ -115,8 +117,8 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="estimateAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input readOnly={isWorkTender} type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input readOnly={isWorkTender} type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="dateTimeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Last Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
