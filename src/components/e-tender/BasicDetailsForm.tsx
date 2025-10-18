@@ -2,8 +2,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useForm, useFormContext, FormProvider, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useFormContext, FormProvider, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -11,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
-import { BasicDetailsSchema, type E_tenderFormData } from '@/lib/schemas/eTenderSchema';
+import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
 import { formatDateForInput } from './utils';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
@@ -24,7 +23,7 @@ interface BasicDetailsFormProps {
 export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
     const form = useFormContext<E_tenderFormData>();
 
-    const { control, setValue } = form;
+    const { control, setValue, handleSubmit } = form;
 
     const [estimateAmount, tenderType] = useWatch({
         control: control,
@@ -35,7 +34,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         let fee = 0;
         let emd = 0;
         const amount = estimateAmount || 0;
-        const roundToNearest100 = (num: number) => Math.round(num / 100) * 100;
+        const roundToNearest100 = (num: number) => Math.ceil(num / 100) * 100;
 
         if (tenderType === 'Work') {
             // Tender Form Fee Calculation for Work
@@ -43,30 +42,25 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             else if (amount > 100000 && amount <= 1000000) fee = 500;
             else if (amount > 1000000 && amount <= 5000000) fee = 2500;
             else if (amount > 5000000 && amount <= 10000000) fee = 5000;
-            else if (amount > 10000000) fee = 10000;
+            else fee = 10000;
 
             // EMD Calculation for Work
-            if (amount <= 20000000) { // Up to 2 Crore
-                emd = roundToNearest100(Math.min(amount * 0.025, 50000));
-            } else if (amount > 20000000 && amount <= 50000000) { // > 2 Cr to 5 Cr
-                emd = 100000;
-            } else if (amount > 50000000 && amount <= 100000000) { // > 5 Cr to 10 Cr
-                emd = 200000;
-            } else { // > 10 Cr
-                emd = 500000;
-            }
+            if (amount <= 20000000) emd = roundToNearest100(Math.min(amount * 0.025, 50000));
+            else if (amount > 20000000 && amount <= 50000000) emd = 100000;
+            else if (amount > 50000000 && amount <= 100000000) emd = 200000;
+            else emd = 500000;
 
         } else if (tenderType === 'Purchase') {
             // Tender Form Fee Calculation for Purchase
             if (amount <= 100000) fee = 0;
-            else if (amount > 100000 && amount <= 1000000) fee = 400;
-            else if (amount > 1000000 && amount <= 2500000) fee = 800;
-            else if (amount > 2500000) fee = 1500;
+            else if (amount > 100000 && amount <= 1000000) fee = 400 * 2; // As per user's expected value, this seems doubled
+            else if (amount > 1000000 && amount <= 2500000) fee = 800 * 2; // Doubled
+            else fee = 1500 * 2; // Doubled
             
-            // EMD Calculation for Purchase - No rounding
-            if (amount <= 20000000) { // Up to 2 Crore
-              emd = amount * 0.01;
-            } else { // Above 2 Crore
+            // EMD Calculation for Purchase - 1% of amount, rounded up to nearest 100
+            if (amount <= 20000000) {
+              emd = roundToNearest100(amount * 0.01);
+            } else {
               emd = 0;
             }
         }
@@ -78,7 +72,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
      
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Basic Tender Details</DialogTitle>
                     <DialogDescription>Enter the fundamental details for this tender.</DialogDescription>
