@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useFormContext, FormProvider, useWatch } from 'react-hook-form';
+import { useForm, useFormContext, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -37,16 +37,15 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         const amount = estimateAmount || 0;
         const roundToNearest100 = (num: number) => Math.round(num / 100) * 100;
 
-
         if (tenderType === 'Work') {
-            // Tender Form Fee Calculation
+            // Tender Form Fee Calculation for Work
             if (amount <= 100000) fee = 0;
             else if (amount > 100000 && amount <= 1000000) fee = 500;
             else if (amount > 1000000 && amount <= 5000000) fee = 2500;
             else if (amount > 5000000 && amount <= 10000000) fee = 5000;
             else if (amount > 10000000) fee = 10000;
 
-            // EMD Calculation
+            // EMD Calculation for Work
             if (amount <= 20000000) { // Up to 2 Crore
                 emd = roundToNearest100(Math.min(amount * 0.025, 50000));
             } else if (amount > 20000000 && amount <= 50000000) { // > 2 Cr to 5 Cr
@@ -58,17 +57,17 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             }
 
         } else if (tenderType === 'Purchase') {
-            // Tender Form Fee Calculation
+            // Tender Form Fee Calculation for Purchase
             if (amount <= 100000) fee = 0;
             else if (amount > 100000 && amount <= 1000000) fee = 400;
             else if (amount > 1000000 && amount <= 2500000) fee = 800;
             else if (amount > 2500000) fee = 1500;
             
-            // EMD Calculation
+            // EMD Calculation for Purchase - No rounding
             if (amount <= 20000000) { // Up to 2 Crore
-              emd = roundToNearest100(amount * 0.01);
-            } else {
-              emd = 0; // EMD is not applicable for Purchase above 2 Crore per the new rule
+              emd = amount * 0.01;
+            } else { // Above 2 Crore
+              emd = 0;
             }
         }
 
