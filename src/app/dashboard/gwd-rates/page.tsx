@@ -1,7 +1,7 @@
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -229,6 +229,8 @@ const RigFeeDetailsContent = () => {
 
 export default function GwdRatesPage() {
   const { setHeader } = usePageHeader();
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
   useEffect(() => {
     setHeader('GWD Rates', 'A master list of all standard items and their approved rates used by the department.');
   }, [setHeader]);
@@ -315,6 +317,24 @@ export default function GwdRatesPage() {
       fetchData();
     }
   }, [user, authLoading, fetchData]);
+  
+  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    // Placeholder logic
+    toast({
+      title: "File Selected",
+      description: `Selected ${file.name}. PDF processing is not yet implemented.`,
+    });
+    setTimeout(() => {
+      setIsUploading(false);
+      if (pdfInputRef.current) {
+        pdfInputRef.current.value = "";
+      }
+    }, 2000);
+  };
 
   const handleReorderItem = async (itemId: string, newPosition: number) => {
     if (!canManage || isMoving) return;
@@ -611,12 +631,14 @@ export default function GwdRatesPage() {
                   </CardHeader>
                   <CardContent className="flex flex-col items-center gap-4">
                     <p className="text-sm text-muted-foreground">Upload the official government order (PDF) to automatically update the rates below.</p>
-                    <Button variant="outline" disabled>
-                      <Upload className="mr-2 h-4 w-4" /> Upload PDF (Placeholder)
+                    <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} className="hidden" accept=".pdf" />
+                    <Button variant="outline" onClick={() => pdfInputRef.current?.click()} disabled={isUploading}>
+                      {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4" />}
+                      {isUploading ? "Uploading..." : "Upload PDF"}
                     </Button>
                   </CardContent>
                 </Card>
-                <Card>
+                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Tender Fee</CardTitle>
                   </CardHeader>
