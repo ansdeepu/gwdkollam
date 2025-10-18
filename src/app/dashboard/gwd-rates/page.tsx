@@ -140,14 +140,24 @@ const RigFeeDetailsContent = () => {
                     <CardTitle className="text-lg">One-time Fees</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            {staticFees.map(item => (
-                                <TableRow key={item.description}><TableCell>{item.description}</TableCell><TableCell className="text-right font-mono">{item.amount.toLocaleString('en-IN')}</TableCell></TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    <div className="max-h-[60vh] overflow-auto">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-secondary/80 backdrop-blur-sm">
+                                <TableRow>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">Amount (₹)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {staticFees.map(item => (
+                                    <TableRow key={item.description}>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right font-mono">{item.amount.toLocaleString('en-IN')}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -168,24 +178,26 @@ const RigFeeDetailsContent = () => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Description</TableHead>
-                                <TableHead className="text-right">Fee for {selectedRegYear}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {registrationFeeItems.map(item => (
-                                <TableRow key={item.description}>
-                                    <TableCell>{item.description}</TableCell>
-                                    <TableCell className="text-right font-mono">
-                                        {calculateFeeForYear(item.baseAmount, item.baseYear, selectedRegYear).toLocaleString('en-IN')}
-                                    </TableCell>
+                    <div className="max-h-[60vh] overflow-auto">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-secondary/80 backdrop-blur-sm">
+                                <TableRow>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">Fee for {selectedRegYear}</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {registrationFeeItems.map(item => (
+                                    <TableRow key={item.description}>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right font-mono">
+                                            {calculateFeeForYear(item.baseAmount, item.baseYear, selectedRegYear).toLocaleString('en-IN')}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -206,24 +218,26 @@ const RigFeeDetailsContent = () => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <Table>
-                         <TableHeader>
-                            <TableRow>
-                                <TableHead>Description</TableHead>
-                                <TableHead className="text-right">Fee for Renewal #{selectedRenewalNum}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {renewalFeeItems.map(item => (
-                                 <TableRow key={item.description}>
-                                    <TableCell>{item.description}</TableCell>
-                                    <TableCell className="text-right font-mono">
-                                        {calculateRenewalFee(item.baseAmount, selectedRenewalNum).toLocaleString('en-IN')}
-                                    </TableCell>
+                     <div className="max-h-[60vh] overflow-auto">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-secondary/80 backdrop-blur-sm">
+                                <TableRow>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">Fee for Renewal #{selectedRenewalNum}</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {renewalFeeItems.map(item => (
+                                    <TableRow key={item.description}>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right font-mono">
+                                            {calculateRenewalFee(item.baseAmount, selectedRenewalNum).toLocaleString('en-IN')}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>
@@ -258,7 +272,7 @@ export default function GwdRatesPage() {
   const defaultDescriptions: Record<RateDescriptionId, string> = {
     tenderFee: "No description provided.",
     emd: "No description provided.",
-    performanceGuarantee: "No description provided.",
+    performanceGuarantee: "Performance Guarantee , the amount collected at the time of executing contract agreement will be 5% of the contract value(agrecd PAC)and the deposit will be retained till the texpiry of Defect Liability Period. At least fifty percent(50%) of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.",
     additionalPerformanceGuarantee: "No description provided.",
     performanceSecurityDeposit: "No description provided."
   };
@@ -533,40 +547,42 @@ export default function GwdRatesPage() {
             <TabsContent value="gwdRates" className="mt-4">
                <Card>
                 <CardContent className="pt-6">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
-                        <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
-                        <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
-                        <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rateItems.length > 0 ? rateItems.map((item, index) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="py-2 px-4">{index + 1}</TableCell>
-                          <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
-                          <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                          <TableCell className="text-center py-2 px-4">
-                            {canManage ? (
-                              <div className="flex items-center justify-center space-x-1">
-                                <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">View Only</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )) : (
+                  <div className="max-h-[60vh] overflow-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-secondary/80 backdrop-blur-sm">
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
+                          <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
+                          <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
+                          <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
+                          <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {rateItems.length > 0 ? rateItems.map((item, index) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="py-2 px-4">{index + 1}</TableCell>
+                            <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
+                            <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                            <TableCell className="text-center py-2 px-4">
+                              {canManage ? (
+                                <div className="flex items-center justify-center space-x-1">
+                                  <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">View Only</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -574,7 +590,7 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-               <div className="space-y-6 mt-6">
+              <div className="space-y-6 mt-6">
                 <RateDescriptionCard
                     title="Tender Fee"
                     description={rateDescriptions.tenderFee}
