@@ -1,3 +1,4 @@
+
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -331,54 +332,6 @@ export default function GwdRatesPage() {
     }
   }, [user, authLoading, fetchData]);
   
-  const handleExcelImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(await file.arrayBuffer());
-        const worksheet = workbook.getWorksheet(1);
-        if (!worksheet) throw new Error("No worksheet found.");
-        
-        const batch = writeBatch(db);
-        const existingItemsQuery = await getDocs(collection(db, RATES_COLLECTION));
-        const existingItemsMap = new Map(existingItemsQuery.docs.map(doc => [doc.data().itemName.toLowerCase(), doc.id]));
-        let newOrder = rateItems.length > 0 ? Math.max(...rateItems.map(item => item.order ?? 0)) + 1 : 0;
-        let successCount = 0;
-
-        worksheet.eachRow((row, rowNumber) => {
-            if (rowNumber > 1) { // Skip header row
-                const itemName = row.getCell(1).value?.toString().trim();
-                const rateValue = row.getCell(2).value;
-                const rate = typeof rateValue === 'number' ? rateValue : parseFloat(rateValue?.toString() || '0');
-
-                if (itemName && !isNaN(rate)) {
-                    const existingId = existingItemsMap.get(itemName.toLowerCase());
-                    const data = { itemName, rate, updatedAt: serverTimestamp() };
-                    if (existingId) {
-                        batch.update(doc(db, RATES_COLLECTION, existingId), data);
-                    } else {
-                        batch.set(doc(collection(db, RATES_COLLECTION)), { ...data, order: newOrder++, createdAt: serverTimestamp() });
-                    }
-                    successCount++;
-                }
-            }
-        });
-
-        if (successCount === 0) throw new Error("No valid data rows found in the file.");
-
-        await batch.commit();
-        toast({ title: 'Import Successful', description: `${successCount} rates have been added or updated.` });
-        fetchData();
-    } catch (error: any) {
-        toast({ title: 'Import Failed', description: error.message || 'Could not process the Excel file.', variant: 'destructive' });
-    } finally {
-        setIsUploading(false);
-        if (excelInputRef.current) excelInputRef.current.value = "";
-    }
-};
 
   const handleReorderItem = async (itemId: string, newPosition: number) => {
     if (!canManage || isMoving) return;
@@ -496,23 +449,6 @@ export default function GwdRatesPage() {
     }
   };
   
-  const handleDownloadTemplate = async () => {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("GWD_Rates_Template");
-    worksheet.columns = [
-        { header: 'Name of Item', key: 'itemName', width: 50 },
-        { header: 'Rate', key: 'rate', width: 20 },
-    ];
-    worksheet.addRow(["Bore Well Casing Pipe 110 mm", 850.00]);
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "GWD_Rates_Template.xlsx";
-    link.click();
-    URL.revokeObjectURL(link.href);
-  };
-  
   const handleTenderRatesSave = (newRates: typeof tenderRates) => {
     setTenderRates(newRates);
     setIsEditingTenderRates(false);
@@ -550,16 +486,6 @@ export default function GwdRatesPage() {
             </TabsList>
             <TabsContent value="gwdRates" className="mt-4">
                <div className="flex justify-end items-center gap-4 mb-4">
-                    {canManage && (
-                        <>
-                            <input type="file" ref={excelInputRef} onChange={handleExcelImport} className="hidden" accept=".xlsx" />
-                            <Button variant="outline" onClick={() => excelInputRef.current?.click()} disabled={isUploading}>
-                                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4" />}
-                                Import Excel
-                            </Button>
-                             <Button variant="outline" onClick={handleDownloadTemplate}><FileDown className="mr-2 h-4 w-4" /> Template</Button>
-                        </>
-                    )}
                   <Button variant="outline" onClick={() => {}}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
                   {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
               </div>
@@ -608,74 +534,80 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-                 <div className="flex justify-end my-4">
-                    {canManage && <Button onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Edit Rates</Button>}
-                </div>
-              <div className="text-center py-10 space-y-8">
-                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Tender Fee</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-left space-y-2">
-                    <p className="text-muted-foreground">The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.</p>
-                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>PAC Range (₹)</TableHead>
-                                <TableHead className="text-right">Tender Fee (₹)</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {tenderRates.feeTiers.map(tier => (
-                                <TableRow key={tier.range}>
-                                    <TableCell>{tier.range}</TableCell>
-                                    <TableCell className="text-right font-mono">{tier.amount.toLocaleString('en-IN')}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                  </CardContent>
+              <div className="space-y-8 mt-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle className="text-lg">Tender Fee</CardTitle>
+                            <CardDescription className="text-sm text-left max-w-prose">The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.</CardDescription>
+                        </div>
+                        {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader><TableRow><TableHead>PAC Range (₹)</TableHead><TableHead className="text-right">Tender Fee (₹)</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {tenderRates.feeTiers.map(tier => (
+                                    <TableRow key={tier.range}><TableCell>{tier.range}</TableCell><TableCell className="text-right font-mono">{tier.amount.toLocaleString('en-IN')}</TableCell></TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Earnest Money Deposit (EMD)</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-left space-y-2">
-                    <p>An amount to be deposited by all bidders to ensure their seriousness.</p>
-                    <p className="font-semibold">The EMD is calculated as <span className="text-primary">{tenderRates.emdPercentage}% of the estimated cost</span>, subject to a maximum of <span className="text-primary">₹{tenderRates.emdMax.toLocaleString('en-IN')}</span>.</p>
-                  </CardContent>
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle className="text-lg">Earnest Money Deposit (EMD)</CardTitle>
+                            <CardDescription className="text-sm text-left">An amount to be deposited by all bidders to ensure their seriousness.</CardDescription>
+                        </div>
+                        {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                    </CardHeader>
+                    <CardContent>
+                        <p className="font-semibold">The EMD is calculated as <span className="text-primary">{tenderRates.emdPercentage}% of the estimated cost</span>, subject to a maximum of <span className="text-primary">₹{tenderRates.emdMax.toLocaleString('en-IN')}</span>.</p>
+                    </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Performance Guarantee</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                    <p>The amount collected at the time of executing the contract agreement will be 5% of the contract value (agreed PAC).</p>
-                    <p>This deposit will be retained till the expiry of the Defect Liability Period.</p>
-                    <p>At least 50% of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.</p>
-                  </CardContent>
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle className="text-lg">Performance Guarantee</CardTitle>
+                            <CardDescription className="text-sm text-left">A deposit collected from the successful bidder at the time of executing the contract agreement.</CardDescription>
+                        </div>
+                         {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground space-y-2">
+                        <p>The amount will be <strong>5% of the contract value (agreed PAC)</strong>.</p>
+                        <p>This deposit will be retained till the expiry of the Defect Liability Period.</p>
+                        <p>At least 50% of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.</p>
+                    </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Additional Performance Guarantee</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                    <p>This is an additional amount to be deposited for unbalanced prices, specifically for works quoted below the estimate rate.</p>
-                    <p>This is a disincentive to prevent bidders from quoting unusually low rates. It encourages contractors to quote rates equal to or higher than the estimated rate.</p>
-                    <p>The government has decided to do away with this guarantee for works quoted up to 10% below the estimate rate.</p>
-                    <p>It will be required if works are quoted between 11% to 25% below the estimate rate.</p>
-                  </CardContent>
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle className="text-lg">Additional Performance Guarantee</CardTitle>
+                            <CardDescription className="text-sm text-left">An additional guarantee required for works quoted significantly below the estimate rate.</CardDescription>
+                        </div>
+                         {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground space-y-2">
+                        <p>This is a disincentive to prevent bidders from quoting unusually low rates.</p>
+                        <p>The government has decided to do away with this guarantee for works quoted up to <strong>10% below</strong> the estimate rate.</p>
+                        <p>It will be required if works are quoted between <strong>11% to 25% below</strong> the estimate rate.</p>
+                    </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Performance Security Deposit</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                    <p>This is a retention amount deducted from the running bill of contractors, in addition to the performance guarantee.</p>
-                    <p>It will be @2.5% of the gross amount of each running bill, so that the amount retained shall be 2.5% of the value of the work done till then.</p>
-                    <p>This can be released against a Bank Guarantee on its accumulation to a minimum of Rs. 5 lakh, subject to the condition that the amount of the Bank Guarantee (except the last one) shall not be less than Rs. 5 lakhs.</p>
-                    <p>This amount will be released after passing the final bill, similar to a refund of deposit.</p>
-                  </CardContent>
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle className="text-lg">Performance Security Deposit</CardTitle>
+                            <CardDescription className="text-sm text-left">A retention amount deducted from the running bill of contractors.</CardDescription>
+                        </div>
+                         {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground space-y-2">
+                        <p>This is deducted from running bills in addition to the performance guarantee.</p>
+                        <p>It will be <strong>@2.5% of the gross amount of each running bill</strong>, so that the amount retained shall be 2.5% of the value of the work done till then.</p>
+                        <p>This can be released against a Bank Guarantee on its accumulation to a minimum of Rs. 5 lakh.</p>
+                        <p>This amount will be released after passing the final bill, similar to a refund of deposit.</p>
+                    </CardContent>
                 </Card>
               </div>
             </TabsContent>
