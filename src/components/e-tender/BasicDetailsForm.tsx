@@ -41,42 +41,31 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
     const isWorkTender = tenderType === 'Work';
 
     useEffect(() => {
-        if (!isWorkTender) {
-            // If not a work tender, clear the fields to make them editable.
-            // Check if the current value is not already undefined to prevent unnecessary re-renders.
-            if (form.getValues('tenderFormFee') !== undefined) form.setValue('tenderFormFee', undefined);
-            if (form.getValues('emd') !== undefined) form.setValue('emd', undefined);
-            return;
-        }
+        if (isWorkTender) {
+            if (estimateAmount === undefined || estimateAmount === null) {
+                form.setValue('tenderFormFee', undefined, { shouldValidate: true });
+                form.setValue('emd', undefined, { shouldValidate: true });
+                return;
+            }
 
-        if (estimateAmount === undefined || estimateAmount === null) {
-            // If it is a work tender but amount is not set, clear the fields.
-             if (form.getValues('tenderFormFee') !== undefined) form.setValue('tenderFormFee', undefined);
-             if (form.getValues('emd') !== undefined) form.setValue('emd', undefined);
-            return;
-        }
+            let fee = 0;
+            if (estimateAmount > 100000 && estimateAmount <= 1000000) fee = 500;
+            else if (estimateAmount > 1000000 && estimateAmount <= 5000000) fee = 2500;
+            else if (estimateAmount > 5000000 && estimateAmount <= 10000000) fee = 5000;
+            else if (estimateAmount > 10000000) fee = 10000;
+            form.setValue('tenderFormFee', fee, { shouldValidate: true });
 
-        // Calculate Tender Form Fee only for 'Work' type
-        let fee = 0;
-        if (estimateAmount > 100000 && estimateAmount <= 1000000) {
-            fee = 500;
-        } else if (estimateAmount > 1000000 && estimateAmount <= 5000000) {
-            fee = 2500;
-        } else if (estimateAmount > 5000000 && estimateAmount <= 10000000) {
-            fee = 5000;
-        } else if (estimateAmount > 10000000) {
-            fee = 10000;
+            let emd = 0;
+            if (estimateAmount > 200000) {
+                const calculatedEmd = Math.round((estimateAmount * 0.025) / 100) * 100;
+                emd = Math.min(calculatedEmd, 200000);
+            }
+            form.setValue('emd', emd, { shouldValidate: true });
+        } else {
+            // When not a 'Work' tender, clear the values so they can be edited.
+            form.setValue('tenderFormFee', undefined, { shouldValidate: true });
+            form.setValue('emd', undefined, { shouldValidate: true });
         }
-        form.setValue('tenderFormFee', fee, { shouldValidate: true });
-
-        // Calculate EMD only for 'Work' type
-        let emd = 0;
-        if (estimateAmount > 200000) {
-            const calculatedEmd = Math.round((estimateAmount * 0.025) / 100) * 100;
-            emd = Math.min(calculatedEmd, 200000);
-        }
-        form.setValue('emd', emd, { shouldValidate: true });
-
     }, [estimateAmount, isWorkTender, form]);
      
     useEffect(() => {
