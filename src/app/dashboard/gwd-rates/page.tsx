@@ -1,4 +1,3 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -256,11 +255,11 @@ export default function GwdRatesPage() {
   type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'performanceSecurityDeposit';
   
   const defaultDescriptions: Record<RateDescriptionId, string> = {
-    tenderFee: "",
-    emd: "",
-    performanceGuarantee: "",
-    additionalPerformanceGuarantee: "",
-    performanceSecurityDeposit: ""
+    tenderFee: "The Tender Fee is based on the Probable Amount of Contract (PAC) and is non-refundable. It must be paid by all bidders to participate in the tender process. The fee structure is as follows: Up to 10 lakhs: 0.15% of estimate PAC (minimum Rs.400/- + GST), From 10 lakhs to 50 lakhs: 0.10% of estimate PAC + GST, and Above 50 lakhs: 0.05% of estimate PAC + GST.",
+    emd: "Earnest Money Deposit (EMD) is a security deposit to ensure the seriousness of the bidder. It is typically 2.5% of the estimated cost of the work, subject to a maximum of Rs.1,00,000/-. The EMD is refunded to unsuccessful bidders and is adjusted against the security deposit for the successful bidder.",
+    performanceGuarantee: "Performance Guarantee, the amount collected at the time of executing contract agreement will be 5% of the contract value(agrecd PAC)and the deposit will be retained till the texpiry of Defect Liability Period. At least fifty percent(50%) of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.",
+    additionalPerformanceGuarantee: "Additional Performance Guarantee is the additional amount to be deposited for unbalanced price ie, for works quoted below estimate rate. The collection of additional deposits is a disincentive to the bidder who offers to execute a work below estimated rate and this will induce the contractor to quote a rate equal to or higher than estimated rate. Government therefore decided to do away with additional performance guarantee for all works quoted below upto 10% of the estimate rate. Additional performance guarantee will be required if works quoted between 11% to 25% below estimate rate.",
+    performanceSecurityDeposit: "Security Deposit is the retention amount deducted from the running bill of the contractors in addition to the performance guarantee. This will be @2.5% of the gross amount of each running bill so that the amount so retained shall be 2.5% of the value of the work done till then. This can be released against Bank Guarantee on its accumulation to a minimum amount of Rs.5 lakh subject to the condition that the amount of Bank Guarantee except last one shall not be less than lls.5 lakhs. This amount will be released after passing of final bill as in the case of refund of deposit."
   };
   
   const [rateDescriptions, setRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultDescriptions);
