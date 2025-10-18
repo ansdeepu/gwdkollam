@@ -169,10 +169,15 @@ export default function TenderDetails() {
         "Work Agreement", "Tender Status Summary"
     ];
     
+    const watchedFields = form.watch([
+        'eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'nameOfWorkMalayalam',
+        'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion',
+        'dateTimeOfReceipt', 'dateTimeOfOpening', 'tenderType'
+    ]);
+
     const hasAnyBasicData = useMemo(() => {
-        const values = form.watch(['eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion', 'dateTimeOfReceipt', 'dateTimeOfOpening', 'nameOfWorkMalayalam']);
-        return values.some(v => v);
-    }, [form]);
+        return watchedFields.some(v => v);
+    }, [watchedFields]);
 
     const hasAnyCorrigendumData = useMemo(() => {
         const values = form.watch(['corrigendumDate', 'noOfBids']);
@@ -217,6 +222,7 @@ export default function TenderDetails() {
                                                 <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
                                                 <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
+                                                <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
                                                 
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
@@ -228,7 +234,6 @@ export default function TenderDetails() {
                                                 <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                     <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
                                                     <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
-                                                    <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
                                                 </div>
 
                                                 <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -427,6 +432,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <ManageBiddersForm
+                            form={form}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
