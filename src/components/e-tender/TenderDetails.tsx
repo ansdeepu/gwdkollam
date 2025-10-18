@@ -222,7 +222,7 @@ export default function TenderDetails() {
                                                 <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
                                                 <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
-                                                <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                                <DetailRow label="Tender Date" value={form.watch('tenderDate')} />
                                                 
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
@@ -237,8 +237,8 @@ export default function TenderDetails() {
                                                 </div>
 
                                                 <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                                    <DetailRow label="Last Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
-                                                    <DetailRow label="Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
+                                                    <DetailRow label="Last Date & Time of Receipt" value={form.watch('dateTimeOfReceipt')} />
+                                                    <DetailRow label="Date & Time of Opening" value={form.watch('dateTimeOfOpening')} />
                                                 </div>
                                             </dl>
                                         </div>
