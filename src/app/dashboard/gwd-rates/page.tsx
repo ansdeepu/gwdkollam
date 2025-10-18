@@ -562,42 +562,40 @@ export default function GwdRatesPage() {
               </div>
               <Card>
                 <CardContent className="pt-6">
-                  <div className="relative">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
-                          <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
-                          <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
-                          <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
+                        <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
+                        <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
+                        <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rateItems.length > 0 ? rateItems.map((item, index) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="py-2 px-4">{index + 1}</TableCell>
+                          <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
+                          <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                          <TableCell className="text-center py-2 px-4">
+                            {canManage ? (
+                              <div className="flex items-center justify-center space-x-1">
+                                <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">View Only</span>
+                            )}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {rateItems.length > 0 ? rateItems.map((item, index) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="py-2 px-4">{index + 1}</TableCell>
-                            <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
-                            <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                            <TableCell className="text-center py-2 px-4">
-                              {canManage ? (
-                                <div className="flex items-center justify-center space-x-1">
-                                  <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">View Only</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        )) : (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                      )) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -606,6 +604,22 @@ export default function GwdRatesPage() {
             </TabsContent>
             <TabsContent value="eTenderRates">
                <div className="text-center py-10 space-y-8">
+                  <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Tender Fee</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                        <p>The cost of the tender document is determined by the estimated cost of the work (Probable Amount of Contract - PAC).</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Earnest Money Deposit (EMD)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                        <p>An amount to be deposited by all bidders to ensure their seriousness. It is typically 2.5% of the estimated cost, subject to a maximum of Rs. 50,000.</p>
+                    </CardContent>
+                  </Card>
                   <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">Performance Guarantee</CardTitle>
