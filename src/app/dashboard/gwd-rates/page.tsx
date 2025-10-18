@@ -67,7 +67,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import ExcelJS from "exceljs";
 import { format } from "date-fns";
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, getDocs, query, writeBatch } from "firebase/firestore";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, getDocs, query, writeBatch, setDoc } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import { GwdRateItemFormDataSchema, type GwdRateItem, type GwdRateItemFormData } from "@/lib/schemas";
 import { z } from 'zod';
@@ -81,6 +81,7 @@ export const dynamic = 'force-dynamic';
 
 const db = getFirestore(app);
 const RATES_COLLECTION = 'gwdRates';
+const RATE_DESCRIPTIONS_COLLECTION = 'rateDescriptions';
 
 const calculateFeeForYear = (baseAmount: number, baseYear: number, targetYear: number) => {
     let fee = baseAmount;
@@ -252,29 +253,44 @@ export default function GwdRatesPage() {
   const canManage = user?.role === 'editor';
   
   type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'performanceSecurityDeposit';
-  const [rateDescriptions, setRateDescriptions] = useState<Record<RateDescriptionId, string>>({
-    tenderFee: "The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.",
-    emd: "An amount to be deposited by all bidders to ensure their seriousness.",
-    performanceGuarantee: "A deposit collected from the successful bidder at the time of executing the contract agreement.",
-    additionalPerformanceGuarantee: "An additional guarantee required for works quoted significantly below the estimate rate.",
-    performanceSecurityDeposit: "A retention amount deducted from the running bill of contractors."
-  });
+  
+  const defaultDescriptions: Record<RateDescriptionId, string> = {
+    tenderFee: "",
+    emd: "",
+    performanceGuarantee: "",
+    additionalPerformanceGuarantee: "",
+    performanceSecurityDeposit: ""
+  };
+  
+  const [rateDescriptions, setRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultDescriptions);
   const [editingRate, setEditingRate] = useState<{id: RateDescriptionId, title: string} | null>(null);
 
+  const fetchRateDescriptions = useCallback(async () => {
+    if (!user) return;
+    try {
+        const querySnapshot = await getDocs(collection(db, RATE_DESCRIPTIONS_COLLECTION));
+        if (querySnapshot.empty) {
+            // If the collection doesn't exist or is empty, you might want to initialize it with default values.
+            setRateDescriptions(defaultDescriptions);
+        } else {
+            const descriptions: Partial<Record<RateDescriptionId, string>> = {};
+            querySnapshot.forEach(doc => {
+                descriptions[doc.id as RateDescriptionId] = doc.data().description;
+            });
+            setRateDescriptions(prev => ({...prev, ...descriptions}));
+        }
+    } catch (error) {
+        console.error("Error fetching rate descriptions:", error);
+        toast({ title: "Error", description: "Could not load e-Tender rate descriptions.", variant: "destructive" });
+    }
+  }, [user, toast]);
 
-  // Define the Zod schema for the reorder form inside the component
-  const reorderFormSchema = z.object({
-    newPosition: z.coerce
-      .number({ invalid_type_error: "Please enter a valid number." })
-      .int("Position must be a whole number.")
-      .min(1, "Position cannot be less than 1.")
-      .max(rateItems.length, `Position cannot be greater than ${rateItems.length}.`),
-  });
-  type ReorderFormData = z.infer<typeof reorderFormSchema>;
+  useEffect(() => {
+    if (user) {
+        fetchRateDescriptions();
+    }
+  }, [user, fetchRateDescriptions]);
 
-  const reorderForm = useForm<ReorderFormData>({
-    resolver: zodResolver(reorderFormSchema),
-  });
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -292,7 +308,7 @@ export default function GwdRatesPage() {
           id: doc.id,
           itemName: data.itemName || "",
           rate: data.rate ?? 0,
-          order: data.order, // Can be undefined
+          order: data.order,
           createdAt,
           updatedAt,
         } as GwdRateItem;
@@ -338,7 +354,7 @@ export default function GwdRatesPage() {
       return;
     }
 
-    const newIndex = newPosition - 1; // Convert 1-based user input to 0-based index
+    const newIndex = newPosition - 1;
 
     if (newIndex < 0 || newIndex >= rateItems.length) {
       toast({ title: "Error", description: "The new position is outside the valid range.", variant: "destructive" });
@@ -360,12 +376,12 @@ export default function GwdRatesPage() {
       await batch.commit();
       
       toast({ title: "Item Moved", description: "The item order has been successfully updated." });
-      await fetchData(); // Refresh data from server to ensure correct order is displayed
+      await fetchData();
     } catch (error: any)
     {
       console.error("Item reorder error:", error);
       toast({ title: "Error", description: error.message || "Could not reorder the items.", variant: "destructive" });
-      await fetchData(); // Refresh data to revert to last known good state
+      await fetchData();
     } finally {
       setIsMoving(false);
     }
@@ -374,6 +390,19 @@ export default function GwdRatesPage() {
 
   const itemForm = useForm<GwdRateItemFormData>({ resolver: zodResolver(GwdRateItemFormDataSchema) });
   
+  const reorderFormSchema = z.object({
+    newPosition: z.coerce
+      .number({ invalid_type_error: "Please enter a valid number." })
+      .int("Position must be a whole number.")
+      .min(1, "Position cannot be less than 1.")
+      .max(rateItems.length, `Position cannot be greater than ${rateItems.length}.`),
+  });
+  type ReorderFormData = z.infer<typeof reorderFormSchema>;
+
+  const reorderForm = useForm<ReorderFormData>({
+    resolver: zodResolver(reorderFormSchema),
+  });
+
   const handleOpenReorderDialog = (item: GwdRateItem) => {
     if (!canManage) return;
     const currentPosition = rateItems.findIndex(i => i.id === item.id) + 1;
@@ -450,14 +479,26 @@ export default function GwdRatesPage() {
     setEditingRate({ id, title });
   };
   
-  const handleSaveRateDescription = (newDescription: string) => {
-    if (!editingRate) return;
-    setRateDescriptions(prev => ({
-        ...prev,
-        [editingRate.id]: newDescription,
-    }));
-    toast({ title: `${editingRate.title} Updated`, description: 'The description has been updated for this session.' });
-    setEditingRate(null);
+  const handleSaveRateDescription = async (newDescription: string) => {
+    if (!editingRate || !canManage) return;
+
+    setIsSubmitting(true);
+    try {
+        const docRef = doc(db, RATE_DESCRIPTIONS_COLLECTION, editingRate.id);
+        await setDoc(docRef, { description: newDescription, updatedAt: serverTimestamp() }, { merge: true });
+
+        setRateDescriptions(prev => ({
+            ...prev,
+            [editingRate.id]: newDescription,
+        }));
+        toast({ title: `${editingRate.title} Updated`, description: 'The description has been saved.' });
+    } catch (error: any) {
+        console.error("Error saving rate description:", error);
+        toast({ title: "Save Failed", description: error.message, variant: "destructive" });
+    } finally {
+        setEditingRate(null);
+        setIsSubmitting(false);
+    }
   };
 
 
@@ -495,42 +536,40 @@ export default function GwdRatesPage() {
               </div>
               <Card>
                 <CardContent className="pt-0">
-                  <div className="relative">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
-                          <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
-                          <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
-                          <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
+                        <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
+                        <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
+                        <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rateItems.length > 0 ? rateItems.map((item, index) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="py-2 px-4">{index + 1}</TableCell>
+                          <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
+                          <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                          <TableCell className="text-center py-2 px-4">
+                            {canManage ? (
+                              <div className="flex items-center justify-center space-x-1">
+                                <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">View Only</span>
+                            )}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {rateItems.length > 0 ? rateItems.map((item, index) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="py-2 px-4">{index + 1}</TableCell>
-                            <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
-                            <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                            <TableCell className="text-center py-2 px-4">
-                              {canManage ? (
-                                <div className="flex items-center justify-center space-x-1">
-                                  <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">View Only</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        )) : (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                      )) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -684,6 +723,7 @@ export default function GwdRatesPage() {
             title={editingRate.title}
             initialDescription={rateDescriptions[editingRate.id]}
             onSave={handleSaveRateDescription}
+            isSaving={isSubmitting}
         />
       )}
     </div>
@@ -700,13 +740,13 @@ const RateDescriptionCard = ({ title, description, onEditClick }: { title: strin
             {onEditClick && <Button variant="outline" size="sm" onClick={onEditClick}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
         </CardHeader>
         <CardContent>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{description}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{description || "No description provided."}</p>
         </CardContent>
     </Card>
 );
 
 // New component for the edit description dialog
-const EditRateDescriptionDialog = ({ isOpen, onClose, title, initialDescription, onSave }: { isOpen: boolean; onClose: () => void; title: string; initialDescription: string; onSave: (newDescription: string) => void }) => {
+const EditRateDescriptionDialog = ({ isOpen, onClose, title, initialDescription, onSave, isSaving }: { isOpen: boolean; onClose: () => void; title: string; initialDescription: string; onSave: (newDescription: string) => void, isSaving: boolean }) => {
     const [description, setDescription] = useState(initialDescription);
     
     const handleSave = () => {
@@ -728,8 +768,11 @@ const EditRateDescriptionDialog = ({ isOpen, onClose, title, initialDescription,
                     />
                 </div>
                 <DialogFooter className="p-6 pt-4">
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleSave}>Save Description</Button>
+                    <Button variant="outline" onClick={onClose} disabled={isSaving}>Cancel</Button>
+                    <Button onClick={handleSave} disabled={isSaving}>
+                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                        Save Description
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
