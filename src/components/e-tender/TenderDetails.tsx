@@ -194,8 +194,10 @@ export default function TenderDetails() {
                                                 <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
                                                 <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
+                                                
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
+                                                
                                                 <DetailRow label="Location" value={form.watch('location')} />
                                                 <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
                                                 <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
@@ -203,12 +205,12 @@ export default function TenderDetails() {
                                                 <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                     <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
                                                     <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
-                                                     <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                                    <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
                                                 </div>
 
                                                 <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                                    <DetailRow label="Last Date &amp; Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
-                                                    <DetailRow label="Date &amp; Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
+                                                    <DetailRow label="Last Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
+                                                    <DetailRow label="Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
                                                 </div>
                                             </dl>
                                         </div>
