@@ -1,3 +1,4 @@
+
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -576,7 +577,7 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+               <div className="space-y-6 mt-6">
                 <RateDescriptionCard
                     title="Tender Fee"
                     description={rateDescriptions.tenderFee}
@@ -737,7 +738,7 @@ const RateDescriptionCard = ({ title, description, onEditClick }: { title: strin
             {onEditClick && <Button variant="outline" size="sm" onClick={onEditClick}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
         </CardHeader>
         <CardContent className="flex-grow">
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap h-full min-h-[100px]">{description || "No description provided."}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap text-justify">{description || "No description provided."}</p>
         </CardContent>
     </Card>
 );
