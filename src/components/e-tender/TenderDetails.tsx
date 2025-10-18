@@ -190,20 +190,26 @@ export default function TenderDetails() {
                                 <CardContent className="p-6 pt-0">
                                     {hasAnyBasicData ? (
                                         <div className="space-y-4 pt-4 border-t">
-                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
+                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                 <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
                                                 <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
+
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
+                                                
                                                 <DetailRow label="Location" value={form.watch('location')} />
-                                                <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
                                                 <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
                                                 <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
+
                                                 <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
                                                 <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
-                                                <DetailRow label="Last Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
-                                                <DetailRow label="Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
+                                                <DetailRow label="Tender Date" value={formatDateSafe(form.watch('tenderDate'))} />
+                                                
+                                                <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                                    <DetailRow label="Last Date & Time of Receipt" value={formatDateSafe(form.watch('dateTimeOfReceipt'), true)} />
+                                                    <DetailRow label="Date & Time of Opening" value={formatDateSafe(form.watch('dateTimeOfOpening'), true)} />
+                                                </div>
                                             </dl>
                                         </div>
                                     ) : (
@@ -397,6 +403,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <ManageBiddersForm
+                            initialData={form.getValues()}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
