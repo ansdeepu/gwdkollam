@@ -59,6 +59,8 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             
             if (amount <= 20000000) { // Up to 2 Crore
               emd = amount * 0.01;
+            } else {
+              emd = 0; // EMD is not applicable for Purchase above 2 Crore per the new rule
             }
         }
 
