@@ -229,7 +229,7 @@ const RigFeeDetailsContent = () => {
 
 export default function GwdRatesPage() {
   const { setHeader } = usePageHeader();
-  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   useEffect(() => {
     setHeader('GWD Rates', 'A master list of all standard items and their approved rates used by the department.');
@@ -318,23 +318,54 @@ export default function GwdRatesPage() {
     }
   }, [user, authLoading, fetchData]);
   
-  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleExcelImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
-    toast({
-      title: "PDF Parsing Not Implemented",
-      description: `File '${file.name}' was selected, but the feature to automatically extract data is not yet active.`,
-      duration: 5000,
-    });
-    setTimeout(() => {
-      setIsUploading(false);
-      if (pdfInputRef.current) {
-        pdfInputRef.current.value = "";
-      }
-    }, 2000);
-  };
+    try {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await file.arrayBuffer());
+        const worksheet = workbook.getWorksheet(1);
+        if (!worksheet) throw new Error("No worksheet found.");
+        
+        const batch = writeBatch(db);
+        const existingItemsQuery = await getDocs(collection(db, RATES_COLLECTION));
+        const existingItemsMap = new Map(existingItemsQuery.docs.map(doc => [doc.data().itemName.toLowerCase(), doc.id]));
+        let newOrder = rateItems.length > 0 ? Math.max(...rateItems.map(item => item.order ?? 0)) + 1 : 0;
+        let successCount = 0;
+
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) { // Skip header row
+                const itemName = row.getCell(1).value?.toString().trim();
+                const rateValue = row.getCell(2).value;
+                const rate = typeof rateValue === 'number' ? rateValue : parseFloat(rateValue?.toString() || '0');
+
+                if (itemName && !isNaN(rate)) {
+                    const existingId = existingItemsMap.get(itemName.toLowerCase());
+                    const data = { itemName, rate, updatedAt: serverTimestamp() };
+                    if (existingId) {
+                        batch.update(doc(db, RATES_COLLECTION, existingId), data);
+                    } else {
+                        batch.set(doc(collection(db, RATES_COLLECTION)), { ...data, order: newOrder++, createdAt: serverTimestamp() });
+                    }
+                    successCount++;
+                }
+            }
+        });
+
+        if (successCount === 0) throw new Error("No valid data rows found in the file.");
+
+        await batch.commit();
+        toast({ title: 'Import Successful', description: `${successCount} rates have been added or updated.` });
+        fetchData();
+    } catch (error: any) {
+        toast({ title: 'Import Failed', description: error.message || 'Could not process the Excel file.', variant: 'destructive' });
+    } finally {
+        setIsUploading(false);
+        if (excelInputRef.current) excelInputRef.current.value = "";
+    }
+};
 
   const handleReorderItem = async (itemId: string, newPosition: number) => {
     if (!canManage || isMoving) return;
@@ -452,100 +483,21 @@ export default function GwdRatesPage() {
     }
   };
   
-  const handleExportExcel = async () => {
+  const handleDownloadTemplate = async () => {
     const workbook = new ExcelJS.Workbook();
-
-    // Sheet 1: GWD Rates
-    if (rateItems.length > 0) {
-      const gwdSheet = workbook.addWorksheet("GWD_Rates");
-      gwdSheet.addRow(["GWD Rates Report"]).commit();
-      gwdSheet.mergeCells('A1:C1');
-      gwdSheet.getCell('A1').alignment = { horizontal: 'center' };
-      gwdSheet.getRow(1).font = { bold: true, size: 14 };
-      gwdSheet.addRow([]).commit();
-
-      const gwdHeaders = ["Sl. No.", "Name of Item", "Rate (₹)"];
-      gwdSheet.addRow(gwdHeaders).font = { bold: true };
-      rateItems.forEach((item, index) => {
-        gwdSheet.addRow([index + 1, item.itemName, item.rate]);
-      });
-      gwdSheet.columns = [
-        { header: 'Sl. No.', key: 'slNo', width: 10 },
+    const worksheet = workbook.addWorksheet("GWD_Rates_Template");
+    worksheet.columns = [
         { header: 'Name of Item', key: 'itemName', width: 50 },
-        { header: 'Rate (₹)', key: 'rate', width: 20, style: { numFmt: '"₹"#,##0.00' } },
-      ];
-    }
-    
-    // Sheet 2: Rig Registration Fees
-    const feeSheet = workbook.addWorksheet("Rig_Registration_Fees");
-    feeSheet.addRow(["Rig Registration Fee Details Report"]).commit();
-    feeSheet.mergeCells('A1:C1');
-    feeSheet.getCell('A1').alignment = { horizontal: 'center' };
-    feeSheet.getRow(1).font = { bold: true, size: 14 };
-    feeSheet.addRow([]).commit();
-
-    // One-time fees
-    feeSheet.addRow(["One-time Fees"]).font = { bold: true };
-    const staticFees = [
-        { description: 'Application Fee - Agency Registration', amount: 1000 },
-        { description: 'Application Fee - Rig Registration', amount: 1000 },
-        { description: 'Agency Registration Fee as on 24-01-2023', amount: 60000 },
-        { description: 'Fine without valid registration as on 24-01-2023', amount: 100000 },
+        { header: 'Rate', key: 'rate', width: 20 },
     ];
-    feeSheet.addRow(["Description", "Amount (₹)"]).font = { bold: true };
-    staticFees.forEach(fee => feeSheet.addRow([fee.description, fee.amount]));
-    feeSheet.addRow([]).commit();
-    
-    // Yearly Registration fees for next 10 years
-    feeSheet.addRow(["Yearly Registration Fees (Next 10 Years)"]).font = { bold: true };
-    const registrationFeeItems = [
-        { description: 'Agency Registration Fee', baseAmount: 60000, baseYear: 2023 },
-        { description: 'Rig Registration Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 12000, baseYear: 2023 },
-        { description: 'Agency Registration Fee - Filterpoint, Hand bore', baseAmount: 15000, baseYear: 2023 },
-        { description: 'Rig Registration Fee - Filterpoint, Hand bore', baseAmount: 5000, baseYear: 2023 },
-    ];
-    const currentYear = new Date().getFullYear();
-    const yearlyRegHeaders: string[] = ["Description"];
-    for(let i=0; i<10; i++) { yearlyRegHeaders.push(String(currentYear + i)); }
-    feeSheet.addRow(yearlyRegHeaders).font = { bold: true };
-    registrationFeeItems.forEach(item => {
-        const row: (string|number)[] = [item.description];
-        for(let i=0; i<10; i++) {
-            row.push(calculateFeeForYear(item.baseAmount, item.baseYear, currentYear + i));
-        }
-        feeSheet.addRow(row);
-    });
-    feeSheet.addRow([]).commit();
-
-    // Yearly Renewal fees for first 10 renewals
-    feeSheet.addRow(["Yearly Renewal Fees (First 10 Renewals)"]).font = { bold: true };
-    const renewalFeeItems = [
-        { description: 'Rig Registration Renewal Fee - DTH, Rotary, Dismantling Rig, Calyx', baseAmount: 6000 },
-        { description: 'Rig Registration Renewal Fee - Filterpoint, Hand bore', baseAmount: 3000 },
-    ];
-    const renewalHeaders: string[] = ["Description"];
-    for(let i=1; i<=10; i++) { renewalHeaders.push(`${i}${i === 1 ? 'st' : i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Renewal`); }
-    feeSheet.addRow(renewalHeaders).font = { bold: true };
-    renewalFeeItems.forEach(item => {
-        const row: (string|number)[] = [item.description];
-        for(let i=1; i<=10; i++) {
-            row.push(calculateRenewalFee(item.baseAmount, i));
-        }
-        feeSheet.addRow(row);
-    });
-
-    feeSheet.columns.forEach(column => { if (column) column.width = 30; });
-
-
+    worksheet.addRow(["Bore Well Casing Pipe 110 mm", 850.00]);
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `gwd_rates_report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "Excel Exported", description: `Report downloaded.` });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "GWD_Rates_Template.xlsx";
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   if (authLoading || isLoading) {
@@ -578,7 +530,17 @@ export default function GwdRatesPage() {
             </TabsList>
             <TabsContent value="gwdRates" className="mt-4">
                <div className="flex justify-end items-center gap-4 mb-4">
-                  <Button variant="outline" onClick={handleExportExcel}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
+                    {canManage && (
+                        <>
+                            <input type="file" ref={excelInputRef} onChange={handleExcelImport} className="hidden" accept=".xlsx" />
+                            <Button variant="outline" onClick={() => excelInputRef.current?.click()} disabled={isUploading}>
+                                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4" />}
+                                Import Excel
+                            </Button>
+                             <Button variant="outline" onClick={handleDownloadTemplate}><FileDown className="mr-2 h-4 w-4" /> Template</Button>
+                        </>
+                    )}
+                  <Button variant="outline" onClick={() => {}}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
                   {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
               </div>
               <Card>
@@ -627,19 +589,6 @@ export default function GwdRatesPage() {
             </TabsContent>
             <TabsContent value="eTenderRates">
               <div className="text-center py-10 space-y-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Update Tender Rates via PDF</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center gap-4">
-                    <p className="text-sm text-muted-foreground">Upload the official government order (PDF) to automatically update the rates below.</p>
-                    <input type="file" ref={pdfInputRef} onChange={handlePdfUpload} className="hidden" accept=".pdf" />
-                    <Button variant="outline" onClick={() => pdfInputRef.current?.click()} disabled={isUploading}>
-                      {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4" />}
-                      {isUploading ? "Uploading..." : "Upload PDF"}
-                    </Button>
-                  </CardContent>
-                </Card>
                  <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Tender Fee</CardTitle>
