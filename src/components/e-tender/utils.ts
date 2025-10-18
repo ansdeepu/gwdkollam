@@ -20,7 +20,7 @@ export const formatDateSafe = (date: any, includeTime: boolean = false): string 
     try {
         const d = date instanceof Date ? date : parseISO(date);
         if (!isValid(d)) return 'N/A';
-        return format(d, includeTime ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy');
+        return format(d, includeTime ? 'dd/MM/yyyy hh:mm a' : 'dd/MM/yyyy');
     } catch {
         return String(date); // Fallback to original string if parsing fails
     }

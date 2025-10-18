@@ -227,16 +227,18 @@ export default function TenderDetails() {
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
                                                 
-                                                <DetailRow label="Location" value={form.watch('location')} />
-                                                <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
-                                                <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
+                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
+                                                  <DetailRow label="Location" value={form.watch('location')} />
+                                                  <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
+                                                  <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
+                                                </div>
 
-                                                <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
                                                     <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
                                                     <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
                                                 </div>
 
-                                                <div className="md:col-span-3 border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
                                                     <DetailRow label="Last Date & Time of Receipt" value={form.watch('dateTimeOfReceipt')} />
                                                     <DetailRow label="Date & Time of Opening" value={form.watch('dateTimeOfOpening')} />
                                                 </div>
@@ -432,7 +434,7 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <ManageBiddersForm
-                            form={form}
+                            initialData={form.getValues()}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
