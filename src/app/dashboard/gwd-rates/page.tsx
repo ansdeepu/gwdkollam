@@ -58,7 +58,8 @@ import {
   X,
   ShieldAlert,
   ArrowUpDown,
-  ClipboardList
+  ClipboardList,
+  Upload,
 } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -561,7 +562,7 @@ export default function GwdRatesPage() {
                   {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
               </div>
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-0">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -603,56 +604,83 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-               <div className="text-center py-10 space-y-8">
-                  <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Tender Fee</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                        <p>The cost of the tender document is determined by the estimated cost of the work (Probable Amount of Contract - PAC).</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Earnest Money Deposit (EMD)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                        <p>An amount to be deposited by all bidders to ensure their seriousness. It is typically 2.5% of the estimated cost, subject to a maximum of Rs. 50,000.</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Performance Guarantee</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                        <p>The amount collected at the time of executing the contract agreement will be 5% of the contract value (agreed PAC).</p>
-                        <p>This deposit will be retained till the expiry of the Defect Liability Period.</p>
-                        <p>At least 50% of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.</p>
-                    </CardContent>
-                  </Card>
-                   <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Additional Performance Guarantee</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                        <p>This is an additional amount to be deposited for unbalanced prices, specifically for works quoted below the estimate rate.</p>
-                        <p>This is a disincentive to prevent bidders from quoting unusually low rates. It encourages contractors to quote rates equal to or higher than the estimated rate.</p>
-                        <p>The government has decided to do away with this guarantee for works quoted up to 10% below the estimate rate.</p>
-                        <p>It will be required if works are quoted between 11% to 25% below the estimate rate.</p>
-                    </CardContent>
-                  </Card>
-                   <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Performance Security Deposit</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
-                        <p>This is a retention amount deducted from the running bill of contractors, in addition to the performance guarantee.</p>
-                        <p>It will be @2.5% of the gross amount of each running bill, so that the amount retained shall be 2.5% of the value of the work done till then.</p>
-                        <p>This can be released against a Bank Guarantee on its accumulation to a minimum of Rs. 5 lakh, subject to the condition that the amount of the Bank Guarantee (except the last one) shall not be less than Rs. 5 lakhs.</p>
-                        <p>This amount will be released after passing the final bill, similar to a refund of deposit.</p>
-                    </CardContent>
-                  </Card>
-                </div>
+              <div className="text-center py-10 space-y-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Update Tender Rates via PDF</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col items-center gap-4">
+                    <p className="text-sm text-muted-foreground">Upload the official government order (PDF) to automatically update the rates below.</p>
+                    <Button variant="outline" disabled>
+                      <Upload className="mr-2 h-4 w-4" /> Upload PDF (Placeholder)
+                    </Button>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Tender Fee</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-left space-y-2">
+                    <p className="text-muted-foreground">The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.</p>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>PAC Range (₹)</TableHead>
+                                <TableHead className="text-right">Tender Fee (₹)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow><TableCell>Up to 1 Lakh</TableCell><TableCell className="text-right">500</TableCell></TableRow>
+                            <TableRow><TableCell>1 Lakh to 5 Lakhs</TableCell><TableCell className="text-right">1,000</TableCell></TableRow>
+                            <TableRow><TableCell>5 Lakhs to 10 Lakhs</TableCell><TableCell className="text-right">2,000</TableCell></TableRow>
+                            <TableRow><TableCell>10 Lakhs to 25 Lakhs</TableCell><TableCell className="text-right">4,000</TableCell></TableRow>
+                            <TableRow><TableCell>Above 25 Lakhs</TableCell><TableCell className="text-right">5,000</TableCell></TableRow>
+                        </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Earnest Money Deposit (EMD)</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-left space-y-2">
+                    <p>An amount to be deposited by all bidders to ensure their seriousness.</p>
+                    <p className="font-semibold">The EMD is calculated as <span className="text-primary">2.5% of the estimated cost</span>, subject to a maximum of <span className="text-primary">₹50,000</span>.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Performance Guarantee</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                    <p>The amount collected at the time of executing the contract agreement will be 5% of the contract value (agreed PAC).</p>
+                    <p>This deposit will be retained till the expiry of the Defect Liability Period.</p>
+                    <p>At least 50% of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Additional Performance Guarantee</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                    <p>This is an additional amount to be deposited for unbalanced prices, specifically for works quoted below the estimate rate.</p>
+                    <p>This is a disincentive to prevent bidders from quoting unusually low rates. It encourages contractors to quote rates equal to or higher than the estimated rate.</p>
+                    <p>The government has decided to do away with this guarantee for works quoted up to 10% below the estimate rate.</p>
+                    <p>It will be required if works are quoted between 11% to 25% below the estimate rate.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Performance Security Deposit</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-left space-y-2 text-muted-foreground">
+                    <p>This is a retention amount deducted from the running bill of contractors, in addition to the performance guarantee.</p>
+                    <p>It will be @2.5% of the gross amount of each running bill, so that the amount retained shall be 2.5% of the value of the work done till then.</p>
+                    <p>This can be released against a Bank Guarantee on its accumulation to a minimum of Rs. 5 lakh, subject to the condition that the amount of the Bank Guarantee (except the last one) shall not be less than Rs. 5 lakhs.</p>
+                    <p>This amount will be released after passing the final bill, similar to a refund of deposit.</p>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
