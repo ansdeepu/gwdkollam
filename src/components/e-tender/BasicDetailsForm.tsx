@@ -22,9 +22,9 @@ interface BasicDetailsFormProps {
 }
 
 export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
-    const form = useFormContext<E_tenderFormData>(); // Use the parent form context
+    const form = useFormContext<E_tenderFormData>();
 
-    const { control, setValue, trigger } = form;
+    const { control, setValue } = form;
 
     const [estimateAmount, tenderType] = useWatch({
         control: control,
@@ -34,26 +34,36 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
     useEffect(() => {
         let fee = 0;
         let emd = 0;
+        const amount = estimateAmount || 0;
 
         if (tenderType === 'Work') {
-            if (estimateAmount > 100000 && estimateAmount <= 1000000) fee = 500;
-            else if (estimateAmount > 1000000 && estimateAmount <= 5000000) fee = 2500;
-            else if (estimateAmount > 5000000 && estimateAmount <= 10000000) fee = 5000;
-            else if (estimateAmount > 10000000) fee = 10000;
-            
-            if (estimateAmount > 200000) {
-                const calculatedEmd = Math.round((estimateAmount * 0.025) / 100) * 100;
-                emd = Math.min(calculatedEmd, 200000);
+            if (amount > 100000 && amount <= 1000000) fee = 500;
+            else if (amount > 1000000 && amount <= 5000000) fee = 2500;
+            else if (amount > 5000000 && amount <= 10000000) fee = 5000;
+            else if (amount > 10000000) fee = 10000;
+
+            if (amount <= 20000000) { // Up to 2 Crore
+                emd = Math.min(amount * 0.025, 50000);
+            } else if (amount > 20000000 && amount <= 50000000) { // > 2 Cr to 5 Cr
+                emd = 100000;
+            } else if (amount > 50000000 && amount <= 100000000) { // > 5 Cr to 10 Cr
+                emd = 200000;
+            } else { // > 10 Cr
+                emd = 500000;
             }
+
         } else if (tenderType === 'Purchase') {
-            if (estimateAmount > 100000 && estimateAmount <= 1000000) fee = 400;
-            else if (estimateAmount > 1000000 && estimateAmount <= 2500000) fee = 800;
-            else if (estimateAmount > 2500000) fee = 1500;
-            emd = 0;
+            if (amount > 100000 && amount <= 1000000) fee = 400;
+            else if (amount > 1000000 && amount <= 2500000) fee = 800;
+            else if (amount > 2500000) fee = 1500;
+            
+            if (amount <= 20000000) { // Up to 2 Crore
+              emd = amount * 0.01;
+            }
         }
 
-        setValue('tenderFormFee', fee, { shouldValidate: true });
-        setValue('emd', emd, { shouldValidate: true });
+        setValue('tenderFormFee', fee, { shouldValidate: true, shouldDirty: true });
+        setValue('emd', emd, { shouldValidate: true, shouldDirty: true });
 
     }, [estimateAmount, tenderType, setValue]);
      
