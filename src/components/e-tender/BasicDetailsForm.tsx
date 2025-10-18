@@ -41,9 +41,18 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
     const isWorkTender = tenderType === 'Work';
 
     useEffect(() => {
-        if (!isWorkTender || estimateAmount === undefined || estimateAmount === null) {
-            form.setValue('tenderFormFee', initialData?.tenderFormFee ?? undefined);
-            form.setValue('emd', initialData?.emd ?? undefined);
+        if (!isWorkTender) {
+            // If not a work tender, clear the fields to make them editable.
+            // Check if the current value is not already undefined to prevent unnecessary re-renders.
+            if (form.getValues('tenderFormFee') !== undefined) form.setValue('tenderFormFee', undefined);
+            if (form.getValues('emd') !== undefined) form.setValue('emd', undefined);
+            return;
+        }
+
+        if (estimateAmount === undefined || estimateAmount === null) {
+            // If it is a work tender but amount is not set, clear the fields.
+             if (form.getValues('tenderFormFee') !== undefined) form.setValue('tenderFormFee', undefined);
+             if (form.getValues('emd') !== undefined) form.setValue('emd', undefined);
             return;
         }
 
@@ -58,7 +67,7 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
         } else if (estimateAmount > 10000000) {
             fee = 10000;
         }
-        form.setValue('tenderFormFee', fee);
+        form.setValue('tenderFormFee', fee, { shouldValidate: true });
 
         // Calculate EMD only for 'Work' type
         let emd = 0;
@@ -66,9 +75,9 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
             const calculatedEmd = Math.round((estimateAmount * 0.025) / 100) * 100;
             emd = Math.min(calculatedEmd, 200000);
         }
-        form.setValue('emd', emd);
+        form.setValue('emd', emd, { shouldValidate: true });
 
-    }, [estimateAmount, isWorkTender, form, initialData]);
+    }, [estimateAmount, isWorkTender, form]);
      
     useEffect(() => {
         form.reset({
