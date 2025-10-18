@@ -270,7 +270,6 @@ export default function GwdRatesPage() {
     try {
         const querySnapshot = await getDocs(collection(db, RATE_DESCRIPTIONS_COLLECTION));
         if (querySnapshot.empty) {
-            // If the collection doesn't exist or is empty, you might want to initialize it with default values.
             setRateDescriptions(defaultDescriptions);
         } else {
             const descriptions: Partial<Record<RateDescriptionId, string>> = {};
@@ -577,8 +576,7 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-              <div className="space-y-8 mt-6">
-                
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                 <RateDescriptionCard
                     title="Tender Fee"
                     description={rateDescriptions.tenderFee}
@@ -604,7 +602,6 @@ export default function GwdRatesPage() {
                     description={rateDescriptions.performanceSecurityDeposit}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceSecurityDeposit', "Performance Security Deposit") : undefined}
                 />
-
               </div>
             </TabsContent>
           </Tabs>
@@ -732,15 +729,15 @@ export default function GwdRatesPage() {
 
 // New component for the rate description card
 const RateDescriptionCard = ({ title, description, onEditClick }: { title: string; description: string; onEditClick?: () => void }) => (
-    <Card>
+    <Card className="flex flex-col">
         <CardHeader className="flex flex-row items-start justify-between">
             <div>
                 <CardTitle className="text-lg">{title}</CardTitle>
             </div>
             {onEditClick && <Button variant="outline" size="sm" onClick={onEditClick}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
         </CardHeader>
-        <CardContent>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{description || "No description provided."}</p>
+        <CardContent className="flex-grow">
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap h-full min-h-[100px]">{description || "No description provided."}</p>
         </CardContent>
     </Card>
 );
