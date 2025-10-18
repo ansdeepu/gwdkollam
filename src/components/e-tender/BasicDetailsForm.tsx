@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -32,6 +32,41 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
             dateTimeOfOpening: formatDateForInput(initialData?.dateTimeOfOpening, true),
         },
     });
+
+    const estimateAmount = useWatch({
+        control: form.control,
+        name: 'estimateAmount'
+    });
+
+    useEffect(() => {
+        if (estimateAmount === undefined || estimateAmount === null) {
+            form.setValue('tenderFormFee', undefined);
+            form.setValue('emd', undefined);
+            return;
+        }
+
+        // Calculate Tender Form Fee
+        let fee = 0;
+        if (estimateAmount > 100000 && estimateAmount <= 1000000) {
+            fee = 500;
+        } else if (estimateAmount > 1000000 && estimateAmount <= 5000000) {
+            fee = 2500;
+        } else if (estimateAmount > 5000000 && estimateAmount <= 10000000) {
+            fee = 5000;
+        } else if (estimateAmount > 10000000) {
+            fee = 10000;
+        }
+        form.setValue('tenderFormFee', fee);
+
+        // Calculate EMD
+        let emd = 0;
+        if (estimateAmount > 200000) {
+            const calculatedEmd = Math.round((estimateAmount * 0.025) / 100) * 100;
+            emd = Math.min(calculatedEmd, 200000);
+        }
+        form.setValue('emd', emd);
+
+    }, [estimateAmount, form.setValue]);
      
     useEffect(() => {
         form.reset({
@@ -80,8 +115,8 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="estimateAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="dateTimeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Last Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
