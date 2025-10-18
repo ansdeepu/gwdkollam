@@ -323,10 +323,10 @@ export default function GwdRatesPage() {
     if (!file) return;
 
     setIsUploading(true);
-    // Placeholder logic
     toast({
-      title: "File Selected",
-      description: `Selected ${file.name}. PDF processing is not yet implemented.`,
+      title: "File Uploaded",
+      description: `Selected ${file.name}. Automatic data extraction from PDF is not yet implemented.`,
+      duration: 5000,
     });
     setTimeout(() => {
       setIsUploading(false);
@@ -583,40 +583,42 @@ export default function GwdRatesPage() {
               </div>
               <Card>
                 <CardContent className="pt-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
-                        <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
-                        <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
-                        <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rateItems.length > 0 ? rateItems.map((item, index) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="py-2 px-4">{index + 1}</TableCell>
-                          <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
-                          <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                          <TableCell className="text-center py-2 px-4">
-                            {canManage ? (
-                              <div className="flex items-center justify-center space-x-1">
-                                <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">View Only</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )) : (
+                  <div className="relative">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
+                          <TableHead className="w-[80px] h-auto py-3 px-4">Sl. No.</TableHead>
+                          <TableHead className="h-auto py-3 px-4">Name of Item</TableHead>
+                          <TableHead className="text-right h-auto py-3 px-4">Rate (₹)</TableHead>
+                          <TableHead className="w-[140px] text-center h-auto py-3 px-4">Actions</TableHead>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {rateItems.length > 0 ? rateItems.map((item, index) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="py-2 px-4">{index + 1}</TableCell>
+                            <TableCell className="font-medium py-2 px-4">{item.itemName}</TableCell>
+                            <TableCell className="text-right py-2 px-4">{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                            <TableCell className="text-center py-2 px-4">
+                              {canManage ? (
+                                <div className="flex items-center justify-center space-x-1">
+                                  <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">View Only</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-10">No items found. {canManage && "Add one to get started."}</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
