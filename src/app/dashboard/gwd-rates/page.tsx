@@ -251,6 +251,19 @@ export default function GwdRatesPage() {
   const [itemToReorder, setItemToReorder] = useState<GwdRateItem | null>(null);
 
   const canManage = user?.role === 'editor';
+  
+  const [isEditingTenderRates, setIsEditingTenderRates] = useState(false);
+    const [tenderRates, setTenderRates] = useState({
+    feeTiers: [
+      { range: "Up to 1 Lakh", amount: 500 },
+      { range: "1 Lakh to 5 Lakhs", amount: 1000 },
+      { range: "5 Lakhs to 10 Lakhs", amount: 2000 },
+      { range: "10 Lakhs to 25 Lakhs", amount: 4000 },
+      { range: "Above 25 Lakhs", amount: 5000 },
+    ],
+    emdPercentage: 2.5,
+    emdMax: 50000,
+  });
 
   // Define the Zod schema for the reorder form inside the component
   const reorderFormSchema = z.object({
@@ -499,6 +512,13 @@ export default function GwdRatesPage() {
     link.click();
     URL.revokeObjectURL(link.href);
   };
+  
+  const handleTenderRatesSave = (newRates: typeof tenderRates) => {
+    setTenderRates(newRates);
+    setIsEditingTenderRates(false);
+    toast({ title: "Tender Rates Updated", description: "The rates have been updated for this session." });
+  };
+
 
   if (authLoading || isLoading) {
     return (
@@ -588,6 +608,9 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
+                 <div className="flex justify-end my-4">
+                    {canManage && <Button onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Edit Rates</Button>}
+                </div>
               <div className="text-center py-10 space-y-8">
                  <Card>
                   <CardHeader>
@@ -595,7 +618,7 @@ export default function GwdRatesPage() {
                   </CardHeader>
                   <CardContent className="text-sm text-left space-y-2">
                     <p className="text-muted-foreground">The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.</p>
-                    <Table>
+                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>PAC Range (₹)</TableHead>
@@ -603,11 +626,12 @@ export default function GwdRatesPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow><TableCell>Up to 1 Lakh</TableCell><TableCell className="text-right">500</TableCell></TableRow>
-                            <TableRow><TableCell>1 Lakh to 5 Lakhs</TableCell><TableCell className="text-right">1,000</TableCell></TableRow>
-                            <TableRow><TableCell>5 Lakhs to 10 Lakhs</TableCell><TableCell className="text-right">2,000</TableCell></TableRow>
-                            <TableRow><TableCell>10 Lakhs to 25 Lakhs</TableCell><TableCell className="text-right">4,000</TableCell></TableRow>
-                            <TableRow><TableCell>Above 25 Lakhs</TableCell><TableCell className="text-right">5,000</TableCell></TableRow>
+                            {tenderRates.feeTiers.map(tier => (
+                                <TableRow key={tier.range}>
+                                    <TableCell>{tier.range}</TableCell>
+                                    <TableCell className="text-right font-mono">{tier.amount.toLocaleString('en-IN')}</TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                   </CardContent>
@@ -618,7 +642,7 @@ export default function GwdRatesPage() {
                   </CardHeader>
                   <CardContent className="text-sm text-left space-y-2">
                     <p>An amount to be deposited by all bidders to ensure their seriousness.</p>
-                    <p className="font-semibold">The EMD is calculated as <span className="text-primary">2.5% of the estimated cost</span>, subject to a maximum of <span className="text-primary">₹50,000</span>.</p>
+                    <p className="font-semibold">The EMD is calculated as <span className="text-primary">{tenderRates.emdPercentage}% of the estimated cost</span>, subject to a maximum of <span className="text-primary">₹{tenderRates.emdMax.toLocaleString('en-IN')}</span>.</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -763,6 +787,88 @@ export default function GwdRatesPage() {
           </Form>
         </DialogContent>
       </Dialog>
+      
+       <Dialog open={isEditingTenderRates} onOpenChange={setIsEditingTenderRates}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit e-Tender Rates</DialogTitle>
+            <DialogDescription>
+              Update the default values for Tender Fees and EMD calculation.
+            </DialogDescription>
+          </DialogHeader>
+          <EditTenderRatesForm
+            initialData={tenderRates}
+            onSave={handleTenderRatesSave}
+            onCancel={() => setIsEditingTenderRates(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+// New component for the edit form
+const EditTenderRatesForm = ({ initialData, onSave, onCancel }: { initialData: typeof tenderRates, onSave: (data: typeof tenderRates) => void, onCancel: () => void }) => {
+    const [data, setData] = useState(initialData);
+
+    const handleFeeTierChange = (index: number, value: string) => {
+        const newFeeTiers = [...data.feeTiers];
+        newFeeTiers[index].amount = Number(value) || 0;
+        setData({ ...data, feeTiers: newFeeTiers });
+    };
+    
+    const handleSubmit = () => {
+        onSave(data);
+    };
+
+    return (
+        <div className="space-y-6 py-4">
+            <Card>
+                <CardHeader><CardTitle>Tender Fee Tiers</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    {data.feeTiers.map((tier, index) => (
+                         <div key={index} className="flex items-center gap-4">
+                            <Label htmlFor={`fee-tier-${index}`} className="flex-1">{tier.range}</Label>
+                            <Input
+                                id={`fee-tier-${index}`}
+                                type="number"
+                                value={tier.amount}
+                                onChange={(e) => handleFeeTierChange(index, e.target.value)}
+                                className="w-32"
+                            />
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader><CardTitle>Earnest Money Deposit (EMD)</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Label htmlFor="emd-percentage" className="flex-1">EMD Percentage (%)</Label>
+                        <Input
+                            id="emd-percentage"
+                            type="number"
+                            value={data.emdPercentage}
+                            onChange={(e) => setData({...data, emdPercentage: Number(e.target.value) || 0})}
+                            className="w-32"
+                        />
+                    </div>
+                     <div className="flex items-center gap-4">
+                        <Label htmlFor="emd-max" className="flex-1">EMD Maximum Amount (₹)</Label>
+                        <Input
+                            id="emd-max"
+                            type="number"
+                            value={data.emdMax}
+                            onChange={(e) => setData({...data, emdMax: Number(e.target.value) || 0})}
+                            className="w-32"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+             <DialogFooter>
+                <Button variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button onClick={handleSubmit}>Save Rates</Button>
+            </DialogFooter>
+        </div>
+    );
+};
