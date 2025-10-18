@@ -30,7 +30,7 @@ import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 type ModalType = 'basic' | 'corrigendum' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
-    if (value === null || value === undefined || value === '' || (typeof value === 'number' && value === 0)) {
+    if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
         return null;
     }
 
@@ -65,7 +65,18 @@ export default function TenderDetails() {
 
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(E_tenderSchema),
-        defaultValues: tender,
+        defaultValues: {
+            ...tender,
+            tenderDate: formatDateForInput(tender.tenderDate),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
+            corrigendumDate: formatDateForInput(tender.corrigendumDate),
+            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
+            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
+            agreementDate: formatDateForInput(tender.agreementDate),
+            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
+            bidders: tender.bidders?.map(b => ({...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice)})) || []
+        },
     });
 
     const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({
@@ -115,7 +126,19 @@ export default function TenderDetails() {
     };
 
     useEffect(() => {
-        form.reset(tender);
+        const processedTender = {
+            ...tender,
+            tenderDate: formatDateForInput(tender.tenderDate),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
+            corrigendumDate: formatDateForInput(tender.corrigendumDate),
+            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
+            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
+            agreementDate: formatDateForInput(tender.agreementDate),
+            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
+            bidders: tender.bidders?.map(b => ({...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice)})) || []
+        };
+        form.reset(processedTender);
     }, [tender, form]);
 
     const handleSave = (data: Partial<E_tenderFormData>) => {
@@ -375,7 +398,6 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm
-                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
@@ -405,7 +427,6 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                         <ManageBiddersForm
-                            initialData={form.getValues()}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
