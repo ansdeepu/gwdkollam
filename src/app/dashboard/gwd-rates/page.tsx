@@ -1,4 +1,3 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -270,8 +269,8 @@ export default function GwdRatesPage() {
   type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'performanceSecurityDeposit';
   
   const defaultDescriptions: Record<RateDescriptionId, string> = {
-    tenderFee: "No description provided.",
-    emd: "No description provided.",
+    tenderFee: "For Works:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 500\n- > Rs 10 Lakhs to 50 Lakhs: Rs 2500\n- > Rs 50 Lakhs to 1 Crore: Rs 5000\n- Above 1 Crore: Rs 10000\n\nFor Purchase:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 400\n- > Rs 10 Lakhs to 25 Lakhs: Rs 800\n- Above 25 Lakhs: Rs 1500",
+    emd: "For Works:\n- Up to Rs 2 Lakhs: No EMD\n- Above Rs 2 Lakhs: 2.5% of estimate PAC, rounded to the nearest 100, subject to a maximum of Rs 2,00,000.\n\nFor Purchase:\n- No EMD required.",
     performanceGuarantee: "Performance Guarantee , the amount collected at the time of executing contract agreement will be 5% of the contract value(agrecd PAC)and the deposit will be retained till the texpiry of Defect Liability Period. At least fifty percent(50%) of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.",
     additionalPerformanceGuarantee: "No description provided.",
     performanceSecurityDeposit: "No description provided."
@@ -590,7 +589,7 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-              <div className="space-y-6 mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 <RateDescriptionCard
                     title="Tender Fee"
                     description={rateDescriptions.tenderFee}
@@ -611,11 +610,13 @@ export default function GwdRatesPage() {
                     description={rateDescriptions.additionalPerformanceGuarantee}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('additionalPerformanceGuarantee', "Additional Performance Guarantee") : undefined}
                 />
-                <RateDescriptionCard
-                    title="Performance Security Deposit"
-                    description={rateDescriptions.performanceSecurityDeposit}
-                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceSecurityDeposit', "Performance Security Deposit") : undefined}
-                />
+                 <div className="lg:col-span-2">
+                    <RateDescriptionCard
+                        title="Performance Security Deposit"
+                        description={rateDescriptions.performanceSecurityDeposit}
+                        onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceSecurityDeposit', "Performance Security Deposit") : undefined}
+                    />
+                </div>
               </div>
             </TabsContent>
           </Tabs>

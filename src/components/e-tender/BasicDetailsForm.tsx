@@ -38,35 +38,38 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
         name: ['estimateAmount', 'tenderType']
     });
 
-    const isWorkTender = tenderType === 'Work';
-
     useEffect(() => {
-        if (isWorkTender) {
-            if (estimateAmount === undefined || estimateAmount === null) {
-                form.setValue('tenderFormFee', undefined, { shouldValidate: true });
-                form.setValue('emd', undefined, { shouldValidate: true });
-                return;
-            }
+        if (estimateAmount === undefined || estimateAmount === null) {
+            form.setValue('tenderFormFee', undefined, { shouldValidate: true });
+            form.setValue('emd', undefined, { shouldValidate: true });
+            return;
+        }
 
-            let fee = 0;
+        let fee = 0;
+        let emd = 0;
+
+        if (tenderType === 'Work') {
             if (estimateAmount > 100000 && estimateAmount <= 1000000) fee = 500;
             else if (estimateAmount > 1000000 && estimateAmount <= 5000000) fee = 2500;
             else if (estimateAmount > 5000000 && estimateAmount <= 10000000) fee = 5000;
             else if (estimateAmount > 10000000) fee = 10000;
-            form.setValue('tenderFormFee', fee, { shouldValidate: true });
-
-            let emd = 0;
+            
             if (estimateAmount > 200000) {
                 const calculatedEmd = Math.round((estimateAmount * 0.025) / 100) * 100;
                 emd = Math.min(calculatedEmd, 200000);
             }
-            form.setValue('emd', emd, { shouldValidate: true });
-        } else {
-            // When not a 'Work' tender, clear the values so they can be edited.
-            form.setValue('tenderFormFee', undefined, { shouldValidate: true });
-            form.setValue('emd', undefined, { shouldValidate: true });
+        } else if (tenderType === 'Purchase') {
+            if (estimateAmount > 100000 && estimateAmount <= 1000000) fee = 400;
+            else if (estimateAmount > 1000000 && estimateAmount <= 2500000) fee = 800;
+            else if (estimateAmount > 2500000) fee = 1500;
+            
+            emd = 0; // EMD is 0 for Purchase
         }
-    }, [estimateAmount, isWorkTender, form]);
+
+        form.setValue('tenderFormFee', fee, { shouldValidate: true });
+        form.setValue('emd', emd, { shouldValidate: true });
+
+    }, [estimateAmount, tenderType, form]);
      
     useEffect(() => {
         form.reset({
@@ -115,8 +118,8 @@ export default function BasicDetailsForm({ initialData, onSubmit, onCancel, isSu
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="estimateAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input readOnly={isWorkTender} type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input readOnly={isWorkTender} type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="tenderFormFee" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="emd" control={form.control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="dateTimeOfReceipt" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Last Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem> )}/>
