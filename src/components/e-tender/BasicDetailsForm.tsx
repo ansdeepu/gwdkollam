@@ -35,15 +35,20 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         let fee = 0;
         let emd = 0;
         const amount = estimateAmount || 0;
+        const roundToNearest100 = (num: number) => Math.round(num / 100) * 100;
+
 
         if (tenderType === 'Work') {
-            if (amount > 100000 && amount <= 1000000) fee = 500;
+            // Tender Form Fee Calculation
+            if (amount <= 100000) fee = 0;
+            else if (amount > 100000 && amount <= 1000000) fee = 500;
             else if (amount > 1000000 && amount <= 5000000) fee = 2500;
             else if (amount > 5000000 && amount <= 10000000) fee = 5000;
             else if (amount > 10000000) fee = 10000;
 
+            // EMD Calculation
             if (amount <= 20000000) { // Up to 2 Crore
-                emd = Math.min(amount * 0.025, 50000);
+                emd = roundToNearest100(Math.min(amount * 0.025, 50000));
             } else if (amount > 20000000 && amount <= 50000000) { // > 2 Cr to 5 Cr
                 emd = 100000;
             } else if (amount > 50000000 && amount <= 100000000) { // > 5 Cr to 10 Cr
@@ -53,12 +58,15 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             }
 
         } else if (tenderType === 'Purchase') {
-            if (amount > 100000 && amount <= 1000000) fee = 400;
+            // Tender Form Fee Calculation
+            if (amount <= 100000) fee = 0;
+            else if (amount > 100000 && amount <= 1000000) fee = 400;
             else if (amount > 1000000 && amount <= 2500000) fee = 800;
             else if (amount > 2500000) fee = 1500;
             
+            // EMD Calculation
             if (amount <= 20000000) { // Up to 2 Crore
-              emd = amount * 0.01;
+              emd = roundToNearest100(amount * 0.01);
             } else {
               emd = 0; // EMD is not applicable for Purchase above 2 Crore per the new rule
             }
