@@ -1,4 +1,3 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -76,6 +75,7 @@ import { usePageHeader } from "@/hooks/usePageHeader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 export const dynamic = 'force-dynamic';
 
@@ -230,7 +230,6 @@ const RigFeeDetailsContent = () => {
 
 export default function GwdRatesPage() {
   const { setHeader } = usePageHeader();
-  const [isUploading, setIsUploading] = useState(false);
   useEffect(() => {
     setHeader('GWD Rates', 'A master list of all standard items and their approved rates used by the department.');
   }, [setHeader]);
@@ -252,18 +251,16 @@ export default function GwdRatesPage() {
 
   const canManage = user?.role === 'editor';
   
-  const [isEditingTenderRates, setIsEditingTenderRates] = useState(false);
-    const [tenderRates, setTenderRates] = useState({
-    feeTiers: [
-      { range: "Up to 1 Lakh", amount: 500 },
-      { range: "1 Lakh to 5 Lakhs", amount: 1000 },
-      { range: "5 Lakhs to 10 Lakhs", amount: 2000 },
-      { range: "10 Lakhs to 25 Lakhs", amount: 4000 },
-      { range: "Above 25 Lakhs", amount: 5000 },
-    ],
-    emdPercentage: 2.5,
-    emdMax: 50000,
+  type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'performanceSecurityDeposit';
+  const [rateDescriptions, setRateDescriptions] = useState<Record<RateDescriptionId, string>>({
+    tenderFee: "The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.",
+    emd: "An amount to be deposited by all bidders to ensure their seriousness.",
+    performanceGuarantee: "A deposit collected from the successful bidder at the time of executing the contract agreement.",
+    additionalPerformanceGuarantee: "An additional guarantee required for works quoted significantly below the estimate rate.",
+    performanceSecurityDeposit: "A retention amount deducted from the running bill of contractors."
   });
+  const [editingRate, setEditingRate] = useState<{id: RateDescriptionId, title: string} | null>(null);
+
 
   // Define the Zod schema for the reorder form inside the component
   const reorderFormSchema = z.object({
@@ -447,11 +444,20 @@ export default function GwdRatesPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleOpenRateDescriptionEditor = (id: RateDescriptionId, title: string) => {
+    if (!canManage) return;
+    setEditingRate({ id, title });
+  };
   
-  const handleTenderRatesSave = (newRates: typeof tenderRates) => {
-    setTenderRates(newRates);
-    setIsEditingTenderRates(false);
-    toast({ title: "Tender Rates Updated", description: "The rates have been updated for this session." });
+  const handleSaveRateDescription = (newDescription: string) => {
+    if (!editingRate) return;
+    setRateDescriptions(prev => ({
+        ...prev,
+        [editingRate.id]: newDescription,
+    }));
+    toast({ title: `${editingRate.title} Updated`, description: 'The description has been updated for this session.' });
+    setEditingRate(null);
   };
 
 
@@ -533,66 +539,33 @@ export default function GwdRatesPage() {
             </TabsContent>
             <TabsContent value="eTenderRates">
               <div className="space-y-8 mt-6">
-                <Card>
-                    <CardHeader className="flex flex-row items-start justify-between">
-                        <div>
-                            <CardTitle className="text-lg">Tender Fee</CardTitle>
-                            <CardDescription className="text-sm text-left max-w-prose">The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.</CardDescription>
-                        </div>
-                        {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-start justify-between">
-                        <div>
-                            <CardTitle className="text-lg">Earnest Money Deposit (EMD)</CardTitle>
-                            <CardDescription className="text-sm text-left">An amount to be deposited by all bidders to ensure their seriousness.</CardDescription>
-                        </div>
-                        {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-start justify-between">
-                        <div>
-                            <CardTitle className="text-lg">Performance Guarantee</CardTitle>
-                            <CardDescription className="text-sm text-left">A deposit collected from the successful bidder at the time of executing the contract agreement.</CardDescription>
-                        </div>
-                         {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-start justify-between">
-                        <div>
-                            <CardTitle className="text-lg">Additional Performance Guarantee</CardTitle>
-                            <CardDescription className="text-sm text-left">An additional guarantee required for works quoted significantly below the estimate rate.</CardDescription>
-                        </div>
-                         {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-start justify-between">
-                        <div>
-                            <CardTitle className="text-lg">Performance Security Deposit</CardTitle>
-                            <CardDescription className="text-sm text-left">A retention amount deducted from the running bill of contractors.</CardDescription>
-                        </div>
-                         {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
-                    </CardContent>
-                </Card>
+                
+                <RateDescriptionCard
+                    title="Tender Fee"
+                    description={rateDescriptions.tenderFee}
+                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('tenderFee', "Tender Fee") : undefined}
+                />
+                <RateDescriptionCard
+                    title="Earnest Money Deposit (EMD)"
+                    description={rateDescriptions.emd}
+                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('emd', "Earnest Money Deposit (EMD)") : undefined}
+                />
+                <RateDescriptionCard
+                    title="Performance Guarantee"
+                    description={rateDescriptions.performanceGuarantee}
+                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceGuarantee', "Performance Guarantee") : undefined}
+                />
+                <RateDescriptionCard
+                    title="Additional Performance Guarantee"
+                    description={rateDescriptions.additionalPerformanceGuarantee}
+                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('additionalPerformanceGuarantee', "Additional Performance Guarantee") : undefined}
+                />
+                <RateDescriptionCard
+                    title="Performance Security Deposit"
+                    description={rateDescriptions.performanceSecurityDeposit}
+                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceSecurityDeposit', "Performance Security Deposit") : undefined}
+                />
+
               </div>
             </TabsContent>
           </Tabs>
@@ -704,87 +677,61 @@ export default function GwdRatesPage() {
         </DialogContent>
       </Dialog>
       
-       <Dialog open={isEditingTenderRates} onOpenChange={setIsEditingTenderRates}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit e-Tender Rates</DialogTitle>
-            <DialogDescription>
-              Update the default values for Tender Fees and EMD calculation.
-            </DialogDescription>
-          </DialogHeader>
-          <EditTenderRatesForm
-            initialData={tenderRates}
-            onSave={handleTenderRatesSave}
-            onCancel={() => setIsEditingTenderRates(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {editingRate && (
+        <EditRateDescriptionDialog
+            isOpen={!!editingRate}
+            onClose={() => setEditingRate(null)}
+            title={editingRate.title}
+            initialDescription={rateDescriptions[editingRate.id]}
+            onSave={handleSaveRateDescription}
+        />
+      )}
     </div>
   );
 }
 
-// New component for the edit form
-const EditTenderRatesForm = ({ initialData, onSave, onCancel }: { initialData: typeof tenderRates, onSave: (data: typeof tenderRates) => void, onCancel: () => void }) => {
-    const [data, setData] = useState(initialData);
+// New component for the rate description card
+const RateDescriptionCard = ({ title, description, onEditClick }: { title: string; description: string; onEditClick?: () => void }) => (
+    <Card>
+        <CardHeader className="flex flex-row items-start justify-between">
+            <div>
+                <CardTitle className="text-lg">{title}</CardTitle>
+            </div>
+            {onEditClick && <Button variant="outline" size="sm" onClick={onEditClick}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+        </CardHeader>
+        <CardContent>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{description}</p>
+        </CardContent>
+    </Card>
+);
 
-    const handleFeeTierChange = (index: number, value: string) => {
-        const newFeeTiers = [...data.feeTiers];
-        newFeeTiers[index].amount = Number(value) || 0;
-        setData({ ...data, feeTiers: newFeeTiers });
-    };
+// New component for the edit description dialog
+const EditRateDescriptionDialog = ({ isOpen, onClose, title, initialDescription, onSave }: { isOpen: boolean; onClose: () => void; title: string; initialDescription: string; onSave: (newDescription: string) => void }) => {
+    const [description, setDescription] = useState(initialDescription);
     
-    const handleSubmit = () => {
-        onSave(data);
+    const handleSave = () => {
+        onSave(description);
     };
 
     return (
-        <div className="space-y-6 py-4">
-            <Card>
-                <CardHeader><CardTitle>Tender Fee Tiers</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                    {data.feeTiers.map((tier, index) => (
-                         <div key={index} className="flex items-center gap-4">
-                            <Label htmlFor={`fee-tier-${index}`} className="flex-1">{tier.range}</Label>
-                            <Input
-                                id={`fee-tier-${index}`}
-                                type="number"
-                                value={tier.amount}
-                                onChange={(e) => handleFeeTierChange(index, e.target.value)}
-                                className="w-32"
-                            />
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Earnest Money Deposit (EMD)</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <Label htmlFor="emd-percentage" className="flex-1">EMD Percentage (%)</Label>
-                        <Input
-                            id="emd-percentage"
-                            type="number"
-                            value={data.emdPercentage}
-                            onChange={(e) => setData({...data, emdPercentage: Number(e.target.value) || 0})}
-                            className="w-32"
-                        />
-                    </div>
-                     <div className="flex items-center gap-4">
-                        <Label htmlFor="emd-max" className="flex-1">EMD Maximum Amount (₹)</Label>
-                        <Input
-                            id="emd-max"
-                            type="number"
-                            value={data.emdMax}
-                            onChange={(e) => setData({...data, emdMax: Number(e.target.value) || 0})}
-                            className="w-32"
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-             <DialogFooter>
-                <Button variant="outline" onClick={onCancel}>Cancel</Button>
-                <Button onClick={handleSubmit}>Save Rates</Button>
-            </DialogFooter>
-        </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Edit Rate Description: {title}</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                    <Textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        rows={10}
+                        placeholder="Enter the rate description..."
+                    />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button onClick={handleSave}>Save Description</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 };
