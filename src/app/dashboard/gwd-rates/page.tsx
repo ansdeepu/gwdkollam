@@ -716,10 +716,10 @@ const EditRateDescriptionDialog = ({ isOpen, onClose, title, initialDescription,
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl">
-                <DialogHeader>
+                <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Edit Rate Description: {title}</DialogTitle>
                 </DialogHeader>
-                <div className="py-4">
+                <div className="px-6 space-y-4">
                     <Textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -727,7 +727,7 @@ const EditRateDescriptionDialog = ({ isOpen, onClose, title, initialDescription,
                         placeholder="Enter the rate description..."
                     />
                 </div>
-                <DialogFooter>
+                <DialogFooter className="p-6 pt-4">
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
                     <Button onClick={handleSave}>Save Description</Button>
                 </DialogFooter>
