@@ -324,8 +324,8 @@ export default function GwdRatesPage() {
 
     setIsUploading(true);
     toast({
-      title: "File Uploaded",
-      description: `Selected ${file.name}. Automatic data extraction from PDF is not yet implemented.`,
+      title: "PDF Parsing Not Implemented",
+      description: `File '${file.name}' was selected, but the feature to automatically extract data is not yet active.`,
       duration: 5000,
     });
     setTimeout(() => {
