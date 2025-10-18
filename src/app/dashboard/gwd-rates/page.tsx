@@ -230,7 +230,6 @@ const RigFeeDetailsContent = () => {
 
 export default function GwdRatesPage() {
   const { setHeader } = usePageHeader();
-  const excelInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   useEffect(() => {
     setHeader('GWD Rates', 'A master list of all standard items and their approved rates used by the department.');
@@ -486,7 +485,6 @@ export default function GwdRatesPage() {
             </TabsList>
             <TabsContent value="gwdRates" className="mt-4">
                <div className="flex justify-end items-center gap-4 mb-4">
-                  <Button variant="outline" onClick={() => {}}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>
                   {canManage && <Button onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>}
               </div>
               <Card>
@@ -541,17 +539,10 @@ export default function GwdRatesPage() {
                             <CardTitle className="text-lg">Tender Fee</CardTitle>
                             <CardDescription className="text-sm text-left max-w-prose">The cost of the tender document is based on the estimated Probable Amount of Contract (PAC) of the work, plus GST.</CardDescription>
                         </div>
-                        {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                        {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader><TableRow><TableHead>PAC Range (₹)</TableHead><TableHead className="text-right">Tender Fee (₹)</TableHead></TableRow></TableHeader>
-                            <TableBody>
-                                {tenderRates.feeTiers.map(tier => (
-                                    <TableRow key={tier.range}><TableCell>{tier.range}</TableCell><TableCell className="text-right font-mono">{tier.amount.toLocaleString('en-IN')}</TableCell></TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -560,10 +551,10 @@ export default function GwdRatesPage() {
                             <CardTitle className="text-lg">Earnest Money Deposit (EMD)</CardTitle>
                             <CardDescription className="text-sm text-left">An amount to be deposited by all bidders to ensure their seriousness.</CardDescription>
                         </div>
-                        {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                        {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
                     </CardHeader>
                     <CardContent>
-                        <p className="font-semibold">The EMD is calculated as <span className="text-primary">{tenderRates.emdPercentage}% of the estimated cost</span>, subject to a maximum of <span className="text-primary">₹{tenderRates.emdMax.toLocaleString('en-IN')}</span>.</p>
+                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -572,12 +563,10 @@ export default function GwdRatesPage() {
                             <CardTitle className="text-lg">Performance Guarantee</CardTitle>
                             <CardDescription className="text-sm text-left">A deposit collected from the successful bidder at the time of executing the contract agreement.</CardDescription>
                         </div>
-                         {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                         {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
                     </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground space-y-2">
-                        <p>The amount will be <strong>5% of the contract value (agreed PAC)</strong>.</p>
-                        <p>This deposit will be retained till the expiry of the Defect Liability Period.</p>
-                        <p>At least 50% of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.</p>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -586,12 +575,10 @@ export default function GwdRatesPage() {
                             <CardTitle className="text-lg">Additional Performance Guarantee</CardTitle>
                             <CardDescription className="text-sm text-left">An additional guarantee required for works quoted significantly below the estimate rate.</CardDescription>
                         </div>
-                         {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                         {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
                     </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground space-y-2">
-                        <p>This is a disincentive to prevent bidders from quoting unusually low rates.</p>
-                        <p>The government has decided to do away with this guarantee for works quoted up to <strong>10% below</strong> the estimate rate.</p>
-                        <p>It will be required if works are quoted between <strong>11% to 25% below</strong> the estimate rate.</p>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -600,13 +587,10 @@ export default function GwdRatesPage() {
                             <CardTitle className="text-lg">Performance Security Deposit</CardTitle>
                             <CardDescription className="text-sm text-left">A retention amount deducted from the running bill of contractors.</CardDescription>
                         </div>
-                         {canManage && <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
+                         {canManage && <Button variant="outline" size="sm" onClick={() => setIsEditingTenderRates(true)}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
                     </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground space-y-2">
-                        <p>This is deducted from running bills in addition to the performance guarantee.</p>
-                        <p>It will be <strong>@2.5% of the gross amount of each running bill</strong>, so that the amount retained shall be 2.5% of the value of the work done till then.</p>
-                        <p>This can be released against a Bank Guarantee on its accumulation to a minimum of Rs. 5 lakh.</p>
-                        <p>This amount will be released after passing the final bill, similar to a refund of deposit.</p>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">No rate information available. Please update the rates.</p>
                     </CardContent>
                 </Card>
               </div>
