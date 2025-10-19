@@ -59,7 +59,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             
             // EMD Calculation for Purchase - 1% of amount, rounded up to nearest 100, up to 2 Crore
             if (amount > 0 && amount <= 20000000) {
-              emd = roundToNearest100(amount * 0.01);
+              emd = Math.ceil((amount * 0.01) / 100) * 100;
             } else {
               emd = 0; // No EMD for purchase tenders above 2 Crore
             }
@@ -87,7 +87,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                <FormField name="nameOfWork" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                               <FormField name="nameOfWorkMalayalam" control={control} render={({ field }) => ( <FormItem><FormLabel>വർക്കിന്റെ പേര് (Name of Work in Malayalam)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                               <FormField name="nameOfWorkMalayalam" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work (in Malayalam)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="location" control={control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>

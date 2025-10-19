@@ -200,6 +200,11 @@ export default function TenderDetails() {
 
     const tenderType = form.watch('tenderType');
     const workOrderTitle = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
+    
+    const tenderFormFeeValue = form.watch('tenderFormFee');
+    const displayTenderFormFee = tenderFormFeeValue !== undefined && tenderFormFeeValue > 0 
+        ? `${tenderFormFeeValue.toLocaleString('en-IN')} + GST`
+        : tenderFormFeeValue;
 
     return (
         <FormProvider {...form}>
@@ -217,28 +222,28 @@ export default function TenderDetails() {
                                 </CardHeader>
                                 <CardContent className="p-6 pt-0">
                                     {hasAnyBasicData ? (
-                                        <div className="space-y-4 pt-4 border-t">
-                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+                                        <div className="space-y-4 pt-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                 <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
                                                 <DetailRow label="Tender Date" value={form.watch('tenderDate')} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
-
-                                                <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
-                                                <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
-
+                                            </div>
+                                             <div className="md:col-span-3 pt-4"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
+                                             <div className="md:col-span-3 pt-4"><DetailRow label="Name of Work (in Malayalam)" value={form.watch('nameOfWorkMalayalam')} /></div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4">
                                                 <DetailRow label="Location" value={form.watch('location')} />
                                                 <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
                                                 <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
-                                                
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4">
                                                 <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
-                                                <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
+                                                <DetailRow label="Tender Form Fee (Rs.)" value={displayTenderFormFee} />
                                                 <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
-
-                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4">
-                                                    <DetailRow label="Last Date & Time of Receipt" value={form.watch('dateTimeOfReceipt')} />
-                                                    <DetailRow label="Date & Time of Opening" value={form.watch('dateTimeOfOpening')} />
-                                                </div>
-                                            </dl>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4">
+                                                <DetailRow label="Last Date & Time of Receipt" value={form.watch('dateTimeOfReceipt')} />
+                                                <DetailRow label="Date & Time of Opening" value={form.watch('dateTimeOfOpening')} />
+                                            </div>
                                         </div>
                                     ) : (
                                         <p className="text-sm text-muted-foreground text-center py-4">No basic details have been added.</p>
