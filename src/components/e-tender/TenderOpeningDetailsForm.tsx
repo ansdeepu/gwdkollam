@@ -80,7 +80,7 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
                             </div>
                             <div className="space-y-2">
                                 <FormLabel>Committee Members</FormLabel>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-4">
                                     <FormField name="technicalCommitteeMember1" control={form.control} render={({ field }) => (
                                         <FormItem>
                                             <Select onValueChange={field.onChange} value={field.value}>
