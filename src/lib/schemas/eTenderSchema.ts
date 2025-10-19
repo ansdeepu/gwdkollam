@@ -11,6 +11,19 @@ export const eTenderStatusOptions = [
 ] as const;
 export type E_tenderStatus = typeof eTenderStatusOptions[number];
 
+export const designationOptions = [
+    "Executive Engineer",
+    "Senior Hydrogeologist",
+    "Assistant Executive Engineer",
+    "Hydrogeologist",
+    "Assistant Engineer",
+    "Junior Hydrogeologist",
+    "Junior Geophysicist",
+    "Master Driller",
+    "Senior Driller",
+] as const;
+export type Designation = typeof designationOptions[number];
+
 export const BasicDetailsSchema = z.object({
     eTenderNo: z.string().min(1, "eTender No. is required."),
     tenderDate: z.string().min(1, "Tender Date is required."),
@@ -46,10 +59,6 @@ export const BidderSchema = z.object({
 export type Bidder = z.infer<typeof BidderSchema>;
 
 export const TenderOpeningDetailsSchema = z.object({
-    noOfTenderers: z.string().optional(),
-    noOfSuccessfulTenderers: z.string().optional(),
-    quotedPercentage: optionalNumberSchema,
-    aboveBelow: z.enum(['Above', 'Below']).optional(),
     dateOfOpeningBid: z.string().optional().nullable(),
     dateOfTechnicalAndFinancialBidOpening: z.string().optional().nullable(),
     technicalCommitteeMember1: z.string().optional(),
@@ -79,24 +88,7 @@ const MergedSchema = BasicDetailsSchema.merge(CorrigendumDetailsSchema)
 
 // Apply superRefine to the final merged schema
 export const E_tenderSchema = MergedSchema.superRefine((data, ctx) => {
-    const hasAnyTenderOpeningData =
-        !!data.noOfTenderers ||
-        !!data.noOfSuccessfulTenderers ||
-        !!data.aboveBelow ||
-        !!data.dateOfOpeningBid ||
-        !!data.dateOfTechnicalAndFinancialBidOpening ||
-        !!data.technicalCommitteeMember1 ||
-        !!data.technicalCommitteeMember2 ||
-        !!data.technicalCommitteeMember3 ||
-        (data.bidders && data.bidders.length > 0);
-
-    if (hasAnyTenderOpeningData && (data.quotedPercentage === undefined || data.quotedPercentage === null || isNaN(data.quotedPercentage))) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Quoted Percentage is required when other tender opening details are provided.",
-            path: ["quotedPercentage"],
-        });
-    }
+    // No custom validation needed here now
 });
 
 export type E_tenderFormData = z.infer<typeof E_tenderSchema>;

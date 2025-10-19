@@ -22,7 +22,6 @@ import { cn } from '@/lib/utils';
 import BasicDetailsForm from './BasicDetailsForm';
 import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
-import ManageBiddersForm from './ManageBiddersForm';
 import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 
@@ -94,7 +93,7 @@ export default function TenderDetails() {
               const sectionMap: Record<string, string> = {
                   eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', dateTimeOfReceipt: 'basic-details', dateTimeOfOpening: 'basic-details', nameOfWorkMalayalam: 'basic-details',
                   corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
-                  noOfTenderers: 'opening-details', noOfSuccessfulTenderers: 'opening-details', quotedPercentage: 'opening-details', aboveBelow: 'opening-details', dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
+                  dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
                   bidders: 'bidders-details',
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
               };
@@ -186,7 +185,7 @@ export default function TenderDetails() {
     }, [form]);
     
     const hasAnyOpeningData = useMemo(() => {
-        const values = form.watch(['noOfTenderers', 'noOfSuccessfulTenderers', 'quotedPercentage', 'aboveBelow', 'dateOfOpeningBid', 'dateOfTechnicalAndFinancialBidOpening', 'technicalCommitteeMember1', 'technicalCommitteeMember2', 'technicalCommitteeMember3']);
+        const values = form.watch(['dateOfOpeningBid', 'dateOfTechnicalAndFinancialBidOpening', 'technicalCommitteeMember1', 'technicalCommitteeMember2', 'technicalCommitteeMember3']);
         return values.some(v => v);
     }, [form]);
     
@@ -281,13 +280,10 @@ export default function TenderDetails() {
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyOpeningData ? (
-                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
-                                                <DetailRow label="No. of Tenderers" value={form.watch('noOfTenderers')} />
-                                                <DetailRow label="No. of Successful Tenderers" value={form.watch('noOfSuccessfulTenderers')} />
-                                                <DetailRow label="Quoted Percentage" value={form.watch('quotedPercentage') ? `${form.watch('quotedPercentage')}% ${form.watch('aboveBelow') || ''}` : ''} />
+                                            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
                                                 <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
                                                 <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
-                                                <div className="md:col-span-3 border-t pt-2 mt-2">
+                                                <div className="md:col-span-2 border-t pt-2 mt-2">
                                                     <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
                                                 </div>
                                             </dl>
@@ -427,16 +423,6 @@ export default function TenderDetails() {
                     <DialogContent className="max-w-2xl flex flex-col p-0">
                         <TenderOpeningDetailsForm
                             initialData={tender}
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
-                    </DialogContent>
-                </Dialog>
-                <Dialog open={activeModal === 'bidders'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
-                        <ManageBiddersForm
-                            initialData={form.getValues()}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}

@@ -1,7 +1,7 @@
 // src/components/e-tender/TenderOpeningDetailsForm.tsx
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/input';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
-import { TenderOpeningDetailsSchema, type E_tenderFormData, type TenderOpeningDetailsFormData } from '@/lib/schemas/eTenderSchema';
+import { TenderOpeningDetailsSchema, type E_tenderFormData, type TenderOpeningDetailsFormData, type Designation } from '@/lib/schemas/eTenderSchema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDateForInput } from './utils';
+import { useDataStore } from '@/hooks/use-data-store';
 
 interface TenderOpeningDetailsFormProps {
     initialData?: Partial<E_tenderFormData>;
@@ -21,7 +22,25 @@ interface TenderOpeningDetailsFormProps {
     isSubmitting: boolean;
 }
 
+const committeeMemberDesignations: Designation[] = [
+    "Assistant Executive Engineer",
+    "Hydrogeologist",
+    "Assistant Engineer",
+    "Junior Hydrogeologist",
+    "Junior Geophysicist",
+    "Master Driller",
+    "Senior Driller",
+];
+
 export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCancel, isSubmitting }: TenderOpeningDetailsFormProps) {
+    const { allStaffMembers } = useDataStore();
+
+    const committeeMemberList = useMemo(() => {
+        return allStaffMembers
+            .filter(staff => committeeMemberDesignations.includes(staff.designation as Designation) && staff.status === 'Active')
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [allStaffMembers]);
+    
     const form = useForm<TenderOpeningDetailsFormData>({
         resolver: zodResolver(TenderOpeningDetailsSchema),
         defaultValues: {
@@ -49,22 +68,46 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="noOfTenderers" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Tenderers</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="noOfSuccessfulTenderers" control={form.control} render={({ field }) => ( <FormItem><FormLabel>No. of Successful Tenderers</FormLabel><FormControl><Input {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="quotedPercentage" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Percentage</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="aboveBelow" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Above/Below</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Above">Above</SelectItem><SelectItem value="Below">Below</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="dateOfOpeningBid" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Bid</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)}/></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="dateOfTechnicalAndFinancialBidOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Tech/Fin Bid Opening</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="space-y-2">
                                 <FormLabel>Committee Members</FormLabel>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <FormField name="technicalCommitteeMember1" control={form.control} render={({ field }) => ( <FormItem><FormControl><Input {...field} value={field.value ?? ''} placeholder="Member 1"/></FormControl><FormMessage /></FormItem> )}/>
-                                    <FormField name="technicalCommitteeMember2" control={form.control} render={({ field }) => ( <FormItem><FormControl><Input {...field} value={field.value ?? ''} placeholder="Member 2"/></FormControl><FormMessage /></FormItem> )}/>
-                                    <FormField name="technicalCommitteeMember3" control={form.control} render={({ field }) => ( <FormItem><FormControl><Input {...field} value={field.value ?? ''} placeholder="Member 3"/></FormControl><FormMessage /></FormItem> )}/>
+                                    <FormField name="technicalCommitteeMember1" control={form.control} render={({ field }) => (
+                                        <FormItem>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Member 1" /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                     <FormField name="technicalCommitteeMember2" control={form.control} render={({ field }) => (
+                                        <FormItem>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Member 2" /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                     <FormField name="technicalCommitteeMember3" control={form.control} render={({ field }) => (
+                                        <FormItem>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Member 3" /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
                                 </div>
                             </div>
                         </div>
