@@ -11,18 +11,12 @@ export const eTenderStatusOptions = [
 ] as const;
 export type E_tenderStatus = typeof eTenderStatusOptions[number];
 
-export const committeeMemberDesignations: Designation[] = [
-    "Assistant Executive Engineer",
-    "Assistant Engineer",
-    "Master Driller",
-    "Senior Driller",
-];
-
 export const designationOptions = [
     "Executive Engineer",
     "Senior Hydrogeologist",
     "Assistant Executive Engineer",
     "Hydrogeologist",
+    "Assistant Engineer",
     "Junior Hydrogeologist",
     "Junior Geophysicist",
     "Master Driller",
@@ -84,6 +78,13 @@ export const BidderSchema = z.object({
     status: z.enum(['Accepted', 'Rejected']).optional(),
 });
 export type Bidder = z.infer<typeof BidderSchema>;
+
+export const committeeMemberDesignations: Designation[] = [
+    "Assistant Executive Engineer",
+    "Assistant Engineer",
+    "Master Driller",
+    "Senior Driller",
+];
 
 export const TenderOpeningDetailsSchema = z.object({
     dateOfOpeningBid: z.string().optional().nullable(),
