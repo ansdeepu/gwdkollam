@@ -36,7 +36,8 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 
     let displayValue = String(value);
 
-    if (label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) {
+    // Check for date/time labels, but exclude "Period of Completion"
+    if ((label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) && !label.toLowerCase().includes('period')) {
         const formatted = formatDateSafe(value, label.toLowerCase().includes('time'));
         if (formatted === 'N/A') return null; 
         displayValue = formatted;
@@ -47,7 +48,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
     return (
         <div>
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className={cn("text-sm font-semibold", label === "വർക്കിന്റെ പേര്" && "text-xs")}>{displayValue}</dd>
+            <dd className={cn("text-sm font-semibold", label.toLowerCase().includes('malayalam') && "text-xs")}>{displayValue}</dd>
         </div>
     );
 };
@@ -228,19 +229,19 @@ export default function TenderDetails() {
                                                 <DetailRow label="Tender Date" value={form.watch('tenderDate')} />
                                                 <DetailRow label="File No." value={form.watch('fileNo')} />
                                             </div>
-                                             <div className="md:col-span-3 pt-4"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
-                                             <div className="md:col-span-3 pt-4"><DetailRow label="Name of Work (in Malayalam)" value={form.watch('nameOfWorkMalayalam')} /></div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4">
+                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
+                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work (in Malayalam)" value={form.watch('nameOfWorkMalayalam')} /></div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
                                                 <DetailRow label="Location" value={form.watch('location')} />
                                                 <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
                                                 <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
                                                 <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
                                                 <DetailRow label="Tender Form Fee (Rs.)" value={displayTenderFormFee} />
                                                 <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-2">
                                                 <DetailRow label="Last Date & Time of Receipt" value={form.watch('dateTimeOfReceipt')} />
                                                 <DetailRow label="Date & Time of Opening" value={form.watch('dateTimeOfOpening')} />
                                             </div>
