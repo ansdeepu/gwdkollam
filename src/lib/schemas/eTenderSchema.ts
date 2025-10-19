@@ -63,7 +63,7 @@ export const CorrigendumSchema = z.object({
     id: z.string(),
     corrigendumType: z.enum(corrigendumTypeOptions).optional(),
     corrigendumDate: optionalDateSchema,
-    noOfBids: z.string().optional(),
+    reason: z.string().optional(),
 });
 export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 

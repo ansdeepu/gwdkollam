@@ -14,6 +14,7 @@ import { CorrigendumSchema, type Corrigendum, corrigendumTypeOptions } from '@/l
 import { v4 as uuidv4 } from 'uuid';
 import { formatDateForInput } from './utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Textarea } from '../ui/textarea';
 
 interface CorrigendumFormProps {
     onSubmit: (data: Corrigendum) => void;
@@ -26,7 +27,7 @@ const createDefaultCorrigendum = (): Corrigendum => ({
     id: uuidv4(),
     corrigendumType: undefined,
     corrigendumDate: null,
-    noOfBids: '',
+    reason: '',
 });
 
 export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, initialData }: CorrigendumFormProps) {
@@ -48,28 +49,30 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <FormField name="corrigendumType" control={form.control} render={({ field }) => (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField name="corrigendumType" control={form.control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Type</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl>
+                                            <SelectContent>{corrigendumTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                <FormField name="corrigendumDate" control={form.control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Date</FormLabel>
+                                        <FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            </div>
+                             <FormField name="reason" control={form.control} render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Type</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl>
-                                        <SelectContent>{corrigendumTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}/>
-                            <FormField name="corrigendumDate" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Date</FormLabel>
-                                    <FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}/>
-                            <FormField name="noOfBids" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>No. of Bids</FormLabel>
-                                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormLabel>Reason</FormLabel>
+                                    <FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}/>

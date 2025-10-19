@@ -296,7 +296,7 @@ export default function TenderDetails() {
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                           <DetailRow label="Corrigendum Type" value={corrigendum.corrigendumType} />
                                                           <DetailRow label="Corrigendum Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
-                                                          <DetailRow label="No. of Bids" value={corrigendum.noOfBids} />
+                                                          <DetailRow label="Reason" value={corrigendum.reason} />
                                                         </div>
                                                     </div>
                                                 ))}
