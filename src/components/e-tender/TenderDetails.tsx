@@ -36,7 +36,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 
     let displayValue = String(value);
 
-    if (label.toLowerCase().includes('date')) {
+    if (label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) {
         const formatted = formatDateSafe(value, label.toLowerCase().includes('time'));
         if (formatted === 'N/A') return null; 
         displayValue = formatted;
@@ -220,25 +220,21 @@ export default function TenderDetails() {
                                         <div className="space-y-4 pt-4 border-t">
                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                 <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
-                                                <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
-                                                <DetailRow label="File No." value={form.watch('fileNo')} />
                                                 <DetailRow label="Tender Date" value={form.watch('tenderDate')} />
-                                                
+                                                <DetailRow label="File No." value={form.watch('fileNo')} />
+
                                                 <div className="md:col-span-3"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
                                                 <div className="md:col-span-3"><DetailRow label="വർക്കിന്റെ പേര്" value={form.watch('nameOfWorkMalayalam')} /></div>
+
+                                                <DetailRow label="Location" value={form.watch('location')} />
+                                                <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
+                                                <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
                                                 
-                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
-                                                  <DetailRow label="Location" value={form.watch('location')} />
-                                                  <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
-                                                  <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
-                                                </div>
+                                                <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
+                                                <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
+                                                <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
 
-                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
-                                                    <DetailRow label="Tender Form Fee (Rs.)" value={form.watch('tenderFormFee')} />
-                                                    <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
-                                                </div>
-
-                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
+                                                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4">
                                                     <DetailRow label="Last Date & Time of Receipt" value={form.watch('dateTimeOfReceipt')} />
                                                     <DetailRow label="Date & Time of Opening" value={form.watch('dateTimeOfOpening')} />
                                                 </div>
