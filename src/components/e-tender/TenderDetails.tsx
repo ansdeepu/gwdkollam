@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -13,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users } from 'lucide-react';
+import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { formatDateForInput, formatDateSafe } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -25,9 +24,10 @@ import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
+import SelectionNoticeForm from './SelectionNoticeForm';
 
 
-type ModalType = 'basic' | 'corrigendum' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | null;
+type ModalType = 'basic' | 'corrigendum' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -75,6 +75,7 @@ export default function TenderDetails() {
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
+            selectionNoticeDate: formatDateForInput(tender.selectionNoticeDate),
             bidders: tender.bidders?.map(b => ({...b})) || [],
             corrigendums: tender.corrigendums?.map(c => ({...c, corrigendumDate: formatDateForInput(c.corrigendumDate)})) || []
         },
@@ -101,6 +102,7 @@ export default function TenderDetails() {
                   corrigendums: 'corrigendum-details',
                   dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
                   bidders: 'bidders-details',
+                  selectionNoticeDate: 'selection-notice-details', performanceGuaranteeAmount: 'selection-notice-details', additionalPerformanceGuaranteeAmount: 'selection-notice-details', stampPaperAmount: 'selection-notice-details',
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
               };
               
@@ -141,6 +143,7 @@ export default function TenderDetails() {
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
+            selectionNoticeDate: formatDateForInput(tender.selectionNoticeDate),
             bidders: tender.bidders?.map(b => ({...b})) || [],
             corrigendums: tender.corrigendums?.map(c => ({ ...c, corrigendumDate: formatDateForInput(c.corrigendumDate) })) || []
         };
@@ -195,6 +198,11 @@ export default function TenderDetails() {
     const hasAnyBidderData = useMemo(() => {
         return bidderFields.length > 0;
     }, [bidderFields]);
+
+    const hasAnySelectionNoticeData = useMemo(() => {
+        const values = form.watch(['selectionNoticeDate', 'performanceGuaranteeAmount', 'additionalPerformanceGuaranteeAmount', 'stampPaperAmount']);
+        return values.some(v => v);
+    }, [form]);
 
     const hasAnyWorkOrderData = useMemo(() => {
         const values = form.watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'nameOfSupervisor', 'supervisorPhoneNo']);
@@ -335,6 +343,27 @@ export default function TenderDetails() {
                                          )}
                                     </AccordionContent>
                                 </AccordionItem>
+
+                                <AccordionItem value="selection-notice-details" className="border rounded-lg">
+                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="flex items-center gap-3"><Bell className="h-5 w-5"/>Selection Notice Details</span>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-6 pt-0">
+                                        {hasAnySelectionNoticeData ? (
+                                             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                                 <DetailRow label="Selection Notice Date" value={formatDateSafe(form.watch('selectionNoticeDate'))} />
+                                                 <DetailRow label="Performance Guarantee Amount" value={form.watch('performanceGuaranteeAmount')} />
+                                                 <DetailRow label="Additional Performance Guarantee Amount" value={form.watch('additionalPerformanceGuaranteeAmount')} />
+                                                 <DetailRow label="Stamp Paper required" value={form.watch('stampPaperAmount')} />
+                                             </dl>
+                                        ) : (
+                                             <p className="text-sm text-muted-foreground text-center py-4">No selection notice details have been added.</p>
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
                                 
                                  <AccordionItem value="work-order-details" className="border rounded-lg">
                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
@@ -445,6 +474,16 @@ export default function TenderDetails() {
                             onCancel={() => { setActiveModal(null); setModalData(null); }}
                             isSubmitting={isSubmitting}
                             initialData={modalData}
+                        />
+                    </DialogContent>
+                </Dialog>
+                 <Dialog open={activeModal === 'selectionNotice'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                    <DialogContent className="max-w-2xl flex flex-col p-0">
+                        <SelectionNoticeForm
+                            initialData={tender}
+                            onSubmit={handleSave}
+                            onCancel={() => setActiveModal(null)}
+                            isSubmitting={isSubmitting}
                         />
                     </DialogContent>
                 </Dialog>

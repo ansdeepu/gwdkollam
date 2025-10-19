@@ -1,4 +1,3 @@
-
 // src/lib/schemas/eTenderSchema.ts
 import { z } from 'zod';
 
@@ -20,12 +19,14 @@ export const committeeMemberDesignations: Designation[] = [
 ];
 
 export const designationOptions = [
-    ...committeeMemberDesignations,
     "Executive Engineer",
     "Senior Hydrogeologist",
+    "Assistant Executive Engineer",
     "Hydrogeologist",
     "Junior Hydrogeologist",
     "Junior Geophysicist",
+    "Master Driller",
+    "Senior Driller",
     "Driller",
     "Driller Mechanic",
     "Drilling Assistant",
@@ -103,10 +104,19 @@ export const WorkOrderDetailsSchema = z.object({
 });
 export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
+export const SelectionNoticeDetailsSchema = z.object({
+    selectionNoticeDate: z.string().optional().nullable(),
+    performanceGuaranteeAmount: optionalNumberSchema,
+    additionalPerformanceGuaranteeAmount: optionalNumberSchema,
+    stampPaperAmount: optionalNumberSchema,
+});
+export type SelectionNoticeDetailsFormData = z.infer<typeof SelectionNoticeDetailsSchema>;
+
 // Merge all schemas first
 const MergedSchema = BasicDetailsSchema
     .merge(TenderOpeningDetailsSchema)
     .merge(WorkOrderDetailsSchema)
+    .merge(SelectionNoticeDetailsSchema)
     .extend({
         corrigendums: z.array(CorrigendumSchema).optional(),
         bidders: z.array(BidderSchema).optional(),
