@@ -7,7 +7,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, eTenderStatusOptions, type Corrigendum } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, corrigendumTypeOptions, type Corrigendum } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -18,16 +18,17 @@ import { formatDateForInput, formatDateSafe } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { v4 as uuidv4 } from 'uuid';
 
 import BasicDetailsForm from './BasicDetailsForm';
-import CorrigendumDetailsForm from './CorrigendumDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
+import { Input } from '../ui/input';
 
 
-type ModalType = 'basic' | 'corrigendum' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | null;
+type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -52,6 +53,13 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
         </div>
     );
 };
+
+const createDefaultCorrigendum = (): Corrigendum => ({
+    id: uuidv4(),
+    corrigendumType: undefined,
+    corrigendumDate: null,
+    noOfBids: '',
+});
 
 
 export default function TenderDetails() {
@@ -106,7 +114,7 @@ export default function TenderDetails() {
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
               };
               
-              const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'bidders-details' : null);
+              const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'bidders-details' : 'corrigendum-details');
               if (section) {
                   setActiveAccordion(section);
               }
@@ -264,28 +272,34 @@ export default function TenderDetails() {
 
                             <Accordion type="single" collapsible value={activeAccordion} onValueChange={setActiveAccordion} className="w-full space-y-4">
                                 <AccordionItem value="corrigendum-details" className="border rounded-lg">
-                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details ({corrigendumFields.length})</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Manage</Button>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
-                                         {hasAnyCorrigendumData ? (
-                                            <div className="mt-4 pt-4 border-t space-y-2">
-                                                {corrigendumFields.map((corrigendum, index) => (
-                                                    <div key={corrigendum.id} className="p-3 border rounded-md bg-secondary/30 relative group">
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1">
-                                                            <DetailRow label="Type" value={corrigendum.corrigendumType} />
-                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate as any)} />
-                                                            <DetailRow label="Bids Received" value={corrigendum.noOfBids} />
+                                        <div className="pt-4 border-t">
+                                            <div className="flex justify-end mb-4">
+                                                <Button type="button" variant="outline" size="sm" onClick={() => appendCorrigendum(createDefaultCorrigendum())}>
+                                                    <PlusCircle className="h-4 w-4 mr-2"/> Add New Corrigendum
+                                                </Button>
+                                            </div>
+                                            <div className="space-y-4">
+                                                {corrigendumFields.map((field, index) => (
+                                                    <div key={field.id} className="p-4 border rounded-lg space-y-4 bg-secondary/30 relative">
+                                                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            <FormField name={`corrigendums.${index}.corrigendumType`} control={form.control} render={({ field: formField }) => ( <FormItem><FormLabel>Type</FormLabel><Select onValueChange={formField.onChange} value={formField.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl><SelectContent>{corrigendumTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                                                            <FormField name={`corrigendums.${index}.corrigendumDate`} control={form.control} render={({ field: formField }) => ( <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...formField} value={formatDateForInput(formField.value)} onChange={(e) => formField.onChange(e.target.value ? new Date(e.target.value) : null)} /></FormControl><FormMessage /></FormItem> )}/>
+                                                            <FormField name={`corrigendums.${index}.noOfBids`} control={form.control} render={({ field: formField }) => ( <FormItem><FormLabel>No. of Bids</FormLabel><FormControl><Input {...formField} value={formField.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
                                                         </div>
                                                     </div>
                                                 ))}
+                                                {corrigendumFields.length === 0 && <p className="text-center text-muted-foreground py-8">No corrigendums added.</p>}
                                             </div>
-                                         ) : (
-                                            <p className="text-sm text-muted-foreground text-center py-4">No corrigendum details have been added.</p>
-                                         )}
+                                        </div>
                                     </AccordionContent>
                                 </AccordionItem>
                                 
@@ -442,15 +456,6 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <BasicDetailsForm
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
-                    </DialogContent>
-                </Dialog>
-                 <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                        <CorrigendumDetailsForm 
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
