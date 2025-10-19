@@ -39,11 +39,9 @@ export const BidderSchema = z.object({
     name: z.string().min(1, "Bidder name is required."),
     address: z.string().optional(),
     quotedAmount: optionalNumberSchema,
-    securityDepositType: z.string().optional(),
-    securityDepositAmount: optionalNumberSchema,
-    agreementAmount: optionalNumberSchema,
-    additionalSecurityDeposit: optionalNumberSchema,
-    dateSelectionNotice: z.string().optional().nullable(),
+    quotedPercentage: optionalNumberSchema,
+    aboveBelow: z.enum(['Above', 'Below']).optional(),
+    status: z.enum(['Accepted', 'Rejected']).optional(),
 });
 export type Bidder = z.infer<typeof BidderSchema>;
 

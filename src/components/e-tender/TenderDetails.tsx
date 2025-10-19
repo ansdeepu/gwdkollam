@@ -76,7 +76,7 @@ export default function TenderDetails() {
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            bidders: tender.bidders?.map(b => ({...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice)})) || []
+            bidders: tender.bidders?.map(b => ({...b})) || []
         },
     });
 
@@ -137,7 +137,7 @@ export default function TenderDetails() {
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            bidders: tender.bidders?.map(b => ({...b, dateSelectionNotice: formatDateForInput(b.dateSelectionNotice)})) || []
+            bidders: tender.bidders?.map(b => ({...b})) || []
         };
         form.reset(processedTender);
     }, [tender, form]);
@@ -315,11 +315,11 @@ export default function TenderDetails() {
                                                         </div>
                                                         <div className="flex justify-between items-start">
                                                             <h5 className="font-bold text-sm">{bidder.name}</h5>
+                                                            {bidder.status && <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", bidder.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>{bidder.status}</span>}
                                                         </div>
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-1 text-xs">
                                                             <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
-                                                            <DetailRow label="Agreement Amount" value={bidder.agreementAmount} />
-                                                            <DetailRow label="Selection Notice Date" value={formatDateSafe(bidder.dateSelectionNotice)} />
+                                                            <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
                                                         </dl>
                                                     </div>
                                                 ))}
@@ -444,7 +444,7 @@ export default function TenderDetails() {
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'addBidder' || activeModal === 'editBidder'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
-                    <DialogContent className="max-w-3xl h-[90vh] flex flex-col p-0">
+                    <DialogContent className="max-w-3xl flex flex-col p-0">
                         <BidderForm 
                             onSubmit={handleBidderSave}
                             onCancel={() => { setActiveModal(null); setModalData(null); }}

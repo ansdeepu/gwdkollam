@@ -27,11 +27,9 @@ const createDefaultBidder = (): Bidder => ({
     name: '',
     address: '',
     quotedAmount: undefined,
-    securityDepositType: '',
-    securityDepositAmount: undefined,
-    agreementAmount: undefined,
-    additionalSecurityDeposit: undefined,
-    dateSelectionNotice: undefined,
+    quotedPercentage: undefined,
+    aboveBelow: undefined,
+    status: undefined,
 });
 
 export default function ManageBiddersForm({ initialData, onSubmit, onCancel, isSubmitting }: ManageBiddersFormProps) {
@@ -71,27 +69,7 @@ export default function ManageBiddersForm({ initialData, onSubmit, onCancel, isS
                                     <FormField name={`bidders.${index}.address`} control={control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <FormField name={`bidders.${index}.quotedAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name={`bidders.${index}.securityDepositType`} control={control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Type</FormLabel><FormControl><Input {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name={`bidders.${index}.securityDepositAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name={`bidders.${index}.agreementAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Agreement Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name={`bidders.${index}.additionalSecurityDeposit`} control={control} render={({ field }) => ( <FormItem><FormLabel>Addtl. Security Deposit</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField
-                                            name={`bidders.${index}.dateSelectionNotice`}
-                                            control={control}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Date - Selection Notice</FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            type="date"
-                                                            value={formatDateForInput(field.value)}
-                                                            onChange={e => field.onChange(e.target.value)}
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                                        {/* Fields removed as per request */}
                                     </div>
                                 </div>
                             ))}

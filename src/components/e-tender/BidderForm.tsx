@@ -12,8 +12,8 @@ import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
 import { BidderSchema, type Bidder } from '@/lib/schemas/eTenderSchema';
-import { formatDateForInput } from './utils';
 import { v4 as uuidv4 } from 'uuid';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface BidderFormProps {
     onSubmit: (data: Bidder) => void;
@@ -27,26 +27,19 @@ const createDefaultBidder = (): Bidder => ({
     name: '',
     address: '',
     quotedAmount: undefined,
-    securityDepositType: '',
-    securityDepositAmount: undefined,
-    agreementAmount: undefined,
-    additionalSecurityDeposit: undefined,
-    dateSelectionNotice: undefined,
+    quotedPercentage: undefined,
+    aboveBelow: undefined,
+    status: undefined,
 });
 
 export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialData }: BidderFormProps) {
     const form = useForm<Bidder>({
         resolver: zodResolver(BidderSchema),
-        defaultValues: initialData 
-            ? { ...initialData, dateSelectionNotice: formatDateForInput(initialData.dateSelectionNotice) }
-            : createDefaultBidder(),
+        defaultValues: initialData || createDefaultBidder(),
     });
 
     useEffect(() => {
-        const defaultValues = initialData 
-            ? { ...initialData, dateSelectionNotice: formatDateForInput(initialData.dateSelectionNotice) }
-            : createDefaultBidder();
-        form.reset(defaultValues);
+        form.reset(initialData || createDefaultBidder());
     }, [initialData, form]);
 
     return (
@@ -61,29 +54,11 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
                         <div className="space-y-4">
                            <FormField name="name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                            <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
-                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                           <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                                 <FormField name="quotedAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="securityDepositType" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Type</FormLabel><FormControl><Input {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="securityDepositAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Security Deposit Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="agreementAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreement Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="additionalSecurityDeposit" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Addtl. Security Deposit</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField
-                                    name="dateSelectionNotice"
-                                    control={form.control}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Date - Selection Notice</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="date"
-                                                    value={formatDateForInput(field.value)}
-                                                    onChange={e => field.onChange(e.target.value)}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <FormField name="quotedPercentage" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Percentage</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="aboveBelow" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Above/Below</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Above">Above</SelectItem><SelectItem value="Below">Below</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                                <FormField name="status" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Accepted">Accepted</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                            </div>
                         </div>
                     </ScrollArea>
