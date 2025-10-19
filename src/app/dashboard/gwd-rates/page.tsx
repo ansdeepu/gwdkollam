@@ -269,8 +269,8 @@ export default function GwdRatesPage() {
   type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'performanceSecurityDeposit';
   
   const defaultDescriptions: Record<RateDescriptionId, string> = {
-    tenderFee: "For Works:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 500\n- > Rs 10 Lakhs to 50 Lakhs: Rs 2500\n- > Rs 50 Lakhs to 1 Crore: Rs 5000\n- Above 1 Crore: Rs 10000\n\nFor Purchase:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 800\n- > Rs 10 Lakhs to 25 Lakhs: Rs 1600\n- Above 25 Lakhs: Rs 3000",
-    emd: "For Works:\n- Up to Rs. 2 Crore: 2.5% of the project cost, subject to a maximum of Rs. 50,000\n- Above Rs. 2 Crore up to Rs. 5 Crore: Rs. 1 Lakh\n- Above Rs. 5 Crore up to Rs. 10 Crore: Rs. 2 Lakh\n- Above Rs. 10 Crore: Rs. 5 Lakh\n\nFor Purchase:\n- Up to Rs. 2 Crore: 1.00% of the project cost.",
+    tenderFee: "For Works:\n- Up to Rs 1 Lakh: No Fee\n- Over 1 Lakh up to 10 Lakhs: Rs 500\n- Over 10 Lakhs up to 50 Lakhs: Rs 2500\n- Over 50 Lakhs up to 1 Crore: Rs 5000\n- Above 1 Crore: Rs 10000\n\nFor Purchase:\n- Up to Rs 1 Lakh: No Fee\n- Over 1 Lakh up to 10 Lakhs: Rs 800\n- Over 10 Lakhs up to 25 Lakhs: Rs 1600\n- Above 25 Lakhs: Rs 3000",
+    emd: "For Works:\n- Up to Rs 2 Crore: 2.5% of the project cost (max. Rs 50,000)\n- Over 2 Crore up to 5 Crore: Rs 1 Lakh\n- Over 5 Crore up to 10 Crore: Rs 2 Lakh\n- Above 10 Crore: Rs 5 Lakh\n\nFor Purchase:\n- Up to Rs 2 Crore: 1.00% of the project cost\n- Above 2 Crore: No EMD",
     performanceGuarantee: "Performance Guarantee , the amount collected at the time of executing contract agreement will be 5% of the contract value(agrecd PAC)and the deposit will be retained till the texpiry of Defect Liability Period. At least fifty percent(50%) of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.",
     additionalPerformanceGuarantee: "No description provided.",
     performanceSecurityDeposit: "No description provided."
@@ -589,7 +589,7 @@ export default function GwdRatesPage() {
               <RigFeeDetailsContent />
             </TabsContent>
             <TabsContent value="eTenderRates">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 <RateDescriptionCard
                     title="Tender Fee"
                     description={rateDescriptions.tenderFee}
@@ -744,17 +744,15 @@ export default function GwdRatesPage() {
 
 // New component for the rate description card
 const RateDescriptionCard = ({ title, description, onEditClick }: { title: string; description: string; onEditClick?: () => void }) => (
-    <Card className="flex flex-col">
-        <CardHeader className="flex flex-row items-start justify-between">
-            <div>
-                <CardTitle className="text-lg">{title}</CardTitle>
-            </div>
+    <div className="border rounded-lg p-4 bg-background">
+        <div className="flex flex-row items-start justify-between mb-2">
+            <h4 className="text-lg font-semibold text-foreground">{title}</h4>
             {onEditClick && <Button variant="outline" size="sm" onClick={onEditClick}><Edit className="mr-2 h-4 w-4"/>Update Rate</Button>}
-        </CardHeader>
-        <CardContent className="flex-grow">
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap" style={{ textAlign: 'justify' }}>{description || "No description provided."}</p>
-        </CardContent>
-    </Card>
+        </div>
+        <div className="border-t pt-3">
+             <p className="text-sm text-muted-foreground whitespace-pre-wrap" style={{ textAlign: 'justify' }}>{description || "No description provided."}</p>
+        </div>
+    </div>
 );
 
 // New component for the edit description dialog
