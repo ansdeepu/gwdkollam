@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useFormContext, FormProvider, useWatch } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -53,15 +53,15 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         } else if (tenderType === 'Purchase') {
             // Tender Form Fee Calculation for Purchase
             if (amount <= 100000) fee = 0;
-            else if (amount > 100000 && amount <= 1000000) fee = 400 * 2; // As per user's expected value, this seems doubled
-            else if (amount > 1000000 && amount <= 2500000) fee = 800 * 2; // Doubled
-            else fee = 1500 * 2; // Doubled
+            else if (amount > 100000 && amount <= 1000000) fee = 800; // Corrected from 400 * 2
+            else if (amount > 1000000 && amount <= 2500000) fee = 1600; // Corrected from 800 * 2
+            else fee = 3000; // Corrected from 1500 * 2
             
-            // EMD Calculation for Purchase - 1% of amount, rounded up to nearest 100
-            if (amount <= 20000000) {
+            // EMD Calculation for Purchase - 1% of amount, rounded up to nearest 100, up to 2 Crore
+            if (amount > 0 && amount <= 20000000) {
               emd = roundToNearest100(amount * 0.01);
             } else {
-              emd = 0;
+              emd = 0; // No EMD for purchase tenders above 2 Crore
             }
         }
 

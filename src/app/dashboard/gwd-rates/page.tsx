@@ -269,8 +269,8 @@ export default function GwdRatesPage() {
   type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'performanceSecurityDeposit';
   
   const defaultDescriptions: Record<RateDescriptionId, string> = {
-    tenderFee: "For Works:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 500\n- > Rs 10 Lakhs to 50 Lakhs: Rs 2500\n- > Rs 50 Lakhs to 1 Crore: Rs 5000\n- Above 1 Crore: Rs 10000\n\nFor Purchase:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 400\n- > Rs 10 Lakhs to 25 Lakhs: Rs 800\n- Above 25 Lakhs: Rs 1500",
-    emd: "For Works:\n- Up to Rs. 2 Crore: 2.5% of the project cost, subject to a maximum of Rs. 50,000\n- Above Rs. 2 Crore up to Rs. 5 Crore: Rs. 1 Lakh\n- Above Rs. 5 Crore up to Rs. 10 Crore: Rs. 2 Lakh\n- Above Rs. 10 Crore: Rs. 5 Lakh\n\nFor Purchase:\n- Up to Rs. 2 Crore: 1.00%",
+    tenderFee: "For Works:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 500\n- > Rs 10 Lakhs to 50 Lakhs: Rs 2500\n- > Rs 50 Lakhs to 1 Crore: Rs 5000\n- Above 1 Crore: Rs 10000\n\nFor Purchase:\n- Up to Rs 1 Lakh: No Fee\n- > Rs 1 Lakh to 10 Lakhs: Rs 800\n- > Rs 10 Lakhs to 25 Lakhs: Rs 1600\n- Above 25 Lakhs: Rs 3000",
+    emd: "For Works:\n- Up to Rs. 2 Crore: 2.5% of the project cost, subject to a maximum of Rs. 50,000\n- Above Rs. 2 Crore up to Rs. 5 Crore: Rs. 1 Lakh\n- Above Rs. 5 Crore up to Rs. 10 Crore: Rs. 2 Lakh\n- Above Rs. 10 Crore: Rs. 5 Lakh\n\nFor Purchase:\n- Up to Rs. 2 Crore: 1.00% of the project cost.",
     performanceGuarantee: "Performance Guarantee , the amount collected at the time of executing contract agreement will be 5% of the contract value(agrecd PAC)and the deposit will be retained till the texpiry of Defect Liability Period. At least fifty percent(50%) of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.",
     additionalPerformanceGuarantee: "No description provided.",
     performanceSecurityDeposit: "No description provided."
