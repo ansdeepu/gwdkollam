@@ -1,3 +1,4 @@
+
 // src/lib/schemas/eTenderSchema.ts
 import { z } from 'zod';
 
@@ -11,16 +12,35 @@ export const eTenderStatusOptions = [
 ] as const;
 export type E_tenderStatus = typeof eTenderStatusOptions[number];
 
-export const designationOptions = [
-    "Executive Engineer",
-    "Senior Hydrogeologist",
+export const committeeMemberDesignations: Designation[] = [
     "Assistant Executive Engineer",
-    "Hydrogeologist",
     "Assistant Engineer",
-    "Junior Hydrogeologist",
-    "Junior Geophysicist",
     "Master Driller",
     "Senior Driller",
+];
+
+export const designationOptions = [
+    ...committeeMemberDesignations,
+    "Executive Engineer",
+    "Senior Hydrogeologist",
+    "Hydrogeologist",
+    "Junior Hydrogeologist",
+    "Junior Geophysicist",
+    "Driller",
+    "Driller Mechanic",
+    "Drilling Assistant",
+    "Compressor Driver",
+    "Pump Operator",
+    "Driver, HDV",
+    "Driver, LDV",
+    "Senior Clerk",
+    "L D Typist",
+    "U D Typist",
+    "Tracer",
+    "Lascar",
+    "Office Attendant",
+    "Watcher",
+    "PTS",
 ] as const;
 export type Designation = typeof designationOptions[number];
 
@@ -41,11 +61,17 @@ export const BasicDetailsSchema = z.object({
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
-export const CorrigendumDetailsSchema = z.object({
-    corrigendumDate: z.string().optional().nullable(),
+export const corrigendumTypeOptions = ["Date Extension", "Cancel", "Retender"] as const;
+export type CorrigendumType = typeof corrigendumTypeOptions[number];
+
+export const CorrigendumSchema = z.object({
+    id: z.string(),
+    corrigendumType: z.enum(corrigendumTypeOptions).optional(),
+    corrigendumDate: optionalDateSchema,
     noOfBids: z.string().optional(),
 });
-export type CorrigendumDetailsFormData = z.infer<typeof CorrigendumDetailsSchema>;
+export type Corrigendum = z.infer<typeof CorrigendumSchema>;
+
 
 export const BidderSchema = z.object({
     id: z.string(),
@@ -78,10 +104,11 @@ export const WorkOrderDetailsSchema = z.object({
 export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
 // Merge all schemas first
-const MergedSchema = BasicDetailsSchema.merge(CorrigendumDetailsSchema)
+const MergedSchema = BasicDetailsSchema
     .merge(TenderOpeningDetailsSchema)
     .merge(WorkOrderDetailsSchema)
     .extend({
+        corrigendums: z.array(CorrigendumSchema).optional(),
         bidders: z.array(BidderSchema).optional(),
         presentStatus: z.enum(eTenderStatusOptions).optional(),
     });

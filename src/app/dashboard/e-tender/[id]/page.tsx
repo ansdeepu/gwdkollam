@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/[id]/page.tsx
 "use client";
 
@@ -44,9 +45,9 @@ export default function TenderPage() {
                 timeOfOpeningTender: '',
                 presentStatus: 'Tender Process',
                 bidders: [],
+                corrigendums: [],
                 dateTimeOfReceipt: undefined,
                 dateTimeOfOpening: undefined,
-                corrigendumDate: undefined,
                 noOfBids: undefined,
                 noOfTenderers: undefined,
                 noOfSuccessfulTenderers: undefined,

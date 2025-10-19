@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -7,7 +8,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, eTenderStatusOptions, type Corrigendum } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -70,12 +71,12 @@ export default function TenderDetails() {
             tenderDate: formatDateForInput(tender.tenderDate),
             dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
             dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
-            corrigendumDate: formatDateForInput(tender.corrigendumDate),
             dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            bidders: tender.bidders?.map(b => ({...b})) || []
+            bidders: tender.bidders?.map(b => ({...b})) || [],
+            corrigendums: tender.corrigendums?.map(c => ({...c, corrigendumDate: formatDateForInput(c.corrigendumDate)})) || []
         },
     });
 
@@ -84,6 +85,11 @@ export default function TenderDetails() {
         name: "bidders"
     });
     
+    const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({
+        control: form.control,
+        name: "corrigendums"
+    });
+
     const handleFinalSave = async () => {
       const isValid = await form.trigger();
       if (!isValid) {
@@ -92,7 +98,7 @@ export default function TenderDetails() {
           if (errorField) {
               const sectionMap: Record<string, string> = {
                   eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', dateTimeOfReceipt: 'basic-details', dateTimeOfOpening: 'basic-details', nameOfWorkMalayalam: 'basic-details',
-                  corrigendumDate: 'corrigendum-details', noOfBids: 'corrigendum-details',
+                  corrigendums: 'corrigendum-details',
                   dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
                   bidders: 'bidders-details',
                   agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
@@ -131,12 +137,12 @@ export default function TenderDetails() {
             tenderDate: formatDateForInput(tender.tenderDate),
             dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
             dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
-            corrigendumDate: formatDateForInput(tender.corrigendumDate),
             dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
             agreementDate: formatDateForInput(tender.agreementDate),
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            bidders: tender.bidders?.map(b => ({...b})) || []
+            bidders: tender.bidders?.map(b => ({...b})) || [],
+            corrigendums: tender.corrigendums?.map(c => ({ ...c, corrigendumDate: formatDateForInput(c.corrigendumDate) })) || []
         };
         form.reset(processedTender);
     }, [tender, form]);
@@ -179,10 +185,7 @@ export default function TenderDetails() {
         return watchedFields.some(v => v);
     }, [watchedFields]);
 
-    const hasAnyCorrigendumData = useMemo(() => {
-        const values = form.watch(['corrigendumDate', 'noOfBids']);
-        return values.some(v => v);
-    }, [form]);
+    const hasAnyCorrigendumData = corrigendumFields.length > 0;
     
     const hasAnyOpeningData = useMemo(() => {
         const values = form.watch(['dateOfOpeningBid', 'dateOfTechnicalAndFinancialBidOpening', 'technicalCommitteeMember1', 'technicalCommitteeMember2', 'technicalCommitteeMember3']);
@@ -255,16 +258,23 @@ export default function TenderDetails() {
                                 <AccordionItem value="corrigendum-details" className="border rounded-lg">
                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
-                                            <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
+                                            <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details ({corrigendumFields.length})</span>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('corrigendum'); }}><Edit className="h-4 w-4 mr-2"/>Manage</Button>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
                                          {hasAnyCorrigendumData ? (
-                                            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                <DetailRow label="Corrigendum Date" value={formatDateSafe(form.watch('corrigendumDate'))} />
-                                                <DetailRow label="No. of Bids Received" value={form.watch('noOfBids')} />
-                                            </dl>
+                                            <div className="mt-4 pt-4 border-t space-y-2">
+                                                {corrigendumFields.map((corrigendum, index) => (
+                                                    <div key={corrigendum.id} className="p-3 border rounded-md bg-secondary/30 relative group">
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1">
+                                                            <DetailRow label="Type" value={corrigendum.corrigendumType} />
+                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate as any)} />
+                                                            <DetailRow label="Bids Received" value={corrigendum.noOfBids} />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                          ) : (
                                             <p className="text-sm text-muted-foreground text-center py-4">No corrigendum details have been added.</p>
                                          )}
@@ -410,9 +420,8 @@ export default function TenderDetails() {
                     </DialogContent>
                 </Dialog>
                  <Dialog open={activeModal === 'corrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
-                    <DialogContent className="max-w-xl flex flex-col p-0">
+                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
                         <CorrigendumDetailsForm 
-                            initialData={tender}
                             onSubmit={handleSave}
                             onCancel={() => setActiveModal(null)}
                             isSubmitting={isSubmitting}
