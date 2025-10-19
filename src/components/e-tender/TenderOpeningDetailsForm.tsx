@@ -24,10 +24,7 @@ interface TenderOpeningDetailsFormProps {
 
 const committeeMemberDesignations: Designation[] = [
     "Assistant Executive Engineer",
-    "Hydrogeologist",
     "Assistant Engineer",
-    "Junior Hydrogeologist",
-    "Junior Geophysicist",
     "Master Driller",
     "Senior Driller",
 ];
@@ -38,23 +35,32 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
     const committeeMemberList = useMemo(() => {
         return allStaffMembers
             .filter(staff => committeeMemberDesignations.includes(staff.designation as Designation) && staff.status === 'Active')
-            .sort((a, b) => a.name.localeCompare(b.name));
+            .sort((a, b) => {
+                const orderA = committeeMemberDesignations.indexOf(a.designation as Designation);
+                const orderB = committeeMemberDesignations.indexOf(b.designation as Designation);
+                if (orderA !== orderB) return orderA - orderB;
+                return a.name.localeCompare(b.name);
+            });
     }, [allStaffMembers]);
     
     const form = useForm<TenderOpeningDetailsFormData>({
         resolver: zodResolver(TenderOpeningDetailsSchema),
         defaultValues: {
-            ...initialData,
             dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
+            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
+            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
         }
     });
 
      useEffect(() => {
         form.reset({
-            ...initialData,
             dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
+            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
+            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
         });
     }, [initialData, form]);
 
