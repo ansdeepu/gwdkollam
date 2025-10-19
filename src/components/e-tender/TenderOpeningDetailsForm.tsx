@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -48,9 +48,9 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
         defaultValues: {
             dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
-            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
-            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
-            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
+            technicalCommitteeMember1: initialData?.technicalCommitteeMember1 || undefined,
+            technicalCommitteeMember2: initialData?.technicalCommitteeMember2 || undefined,
+            technicalCommitteeMember3: initialData?.technicalCommitteeMember3 || undefined,
         }
     });
 
@@ -58,11 +58,27 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
         form.reset({
             dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
             dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
-            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
-            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
-            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
+            technicalCommitteeMember1: initialData?.technicalCommitteeMember1 || undefined,
+            technicalCommitteeMember2: initialData?.technicalCommitteeMember2 || undefined,
+            technicalCommitteeMember3: initialData?.technicalCommitteeMember3 || undefined,
         });
     }, [initialData, form]);
+
+    const { control } = form;
+
+    const watchedMembers = useWatch({
+        control,
+        name: ["technicalCommitteeMember1", "technicalCommitteeMember2", "technicalCommitteeMember3"]
+    });
+
+    const getAvailableMembers = (currentField: string) => {
+        const selectedMembers = new Set(watchedMembers.filter(Boolean));
+        const currentMember = form.getValues(currentField as keyof TenderOpeningDetailsFormData);
+        if (currentMember) {
+            selectedMembers.delete(currentMember);
+        }
+        return committeeMemberList.filter(member => !selectedMembers.has(member.name));
+    };
 
     return (
         <FormProvider {...form}>
@@ -75,40 +91,43 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField name="dateOfOpeningBid" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Bid</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="dateOfTechnicalAndFinancialBidOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Tech/Fin Bid Opening</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="dateOfOpeningBid" control={control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Bid</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="dateOfTechnicalAndFinancialBidOpening" control={control} render={({ field }) => ( <FormItem><FormLabel>Date of Tech/Fin Bid Opening</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 pt-4 border-t">
                                 <FormLabel>Committee Members</FormLabel>
                                 <div className="space-y-4">
-                                    <FormField name="technicalCommitteeMember1" control={form.control} render={({ field }) => (
+                                     <FormField name="technicalCommitteeMember1" control={control} render={({ field }) => (
                                         <FormItem>
-                                            <Select onValueChange={field.onChange} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select Member 1" /></SelectTrigger></FormControl>
                                                 <SelectContent>
-                                                    {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
+                                                    {getAvailableMembers('technicalCommitteeMember1').map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
                                         </FormItem>
                                     )}/>
-                                     <FormField name="technicalCommitteeMember2" control={form.control} render={({ field }) => (
+                                     <FormField name="technicalCommitteeMember2" control={control} render={({ field }) => (
                                         <FormItem>
-                                            <Select onValueChange={field.onChange} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select Member 2" /></SelectTrigger></FormControl>
                                                 <SelectContent>
-                                                    {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
+                                                    {getAvailableMembers('technicalCommitteeMember2').map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
                                         </FormItem>
                                     )}/>
-                                     <FormField name="technicalCommitteeMember3" control={form.control} render={({ field }) => (
+                                     <FormField name="technicalCommitteeMember3" control={control} render={({ field }) => (
                                         <FormItem>
-                                            <Select onValueChange={field.onChange} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select Member 3" /></SelectTrigger></FormControl>
                                                 <SelectContent>
-                                                    {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
+                                                    {getAvailableMembers('technicalCommitteeMember3').map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
