@@ -47,7 +47,7 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                 dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
             });
         } else {
-            form.reset(createDefaultCorrigendum());
+             form.reset(createDefaultCorrigendum());
         }
     }, [initialData, form]);
 
@@ -73,19 +73,19 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                                     </FormItem>
                                 )}/>
                                 <FormField name="corrigendumDate" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
                                 )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
                                 )}/>
                                 <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
                                 )}/>
                             </div>
                             <FormField name="reason" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Reason</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Reason</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                             )}/>
                         </div>
                     </ScrollArea>
