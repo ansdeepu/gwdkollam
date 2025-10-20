@@ -83,7 +83,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         
         if (percentageDifference > logic.threshold) {
             const excessPercentage = percentageDifference - logic.threshold;
-            const additionalPG = excessPercentage * tenderAmount; // Use tenderAmount here as per user correction
+            const additionalPG = excessPercentage * estimateAmount;
             return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
