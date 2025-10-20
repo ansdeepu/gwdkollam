@@ -8,6 +8,13 @@ export const formatDateForInput = (date: any, isDateTime: boolean = false): stri
         if (isValid(d)) {
             return format(d, isDateTime ? "yyyy-MM-dd'T'HH:mm" : 'yyyy-MM-dd');
         }
+        // If it's already a string in the correct format, return it
+        if (typeof date === 'string') {
+            const parsed = parseISO(date);
+            if (isValid(parsed)) {
+                 return format(parsed, isDateTime ? "yyyy-MM-dd'T'HH:mm" : 'yyyy-MM-dd');
+            }
+        }
         return '';
     } catch (e) {
         return '';
@@ -35,4 +42,3 @@ export const formatDateSafe = (date: any, includeTime: boolean = false): string 
 
     return format(d, includeTime ? 'dd/MM/yyyy, hh:mm a' : 'dd/MM/yyyy');
 };
-

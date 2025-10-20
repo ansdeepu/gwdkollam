@@ -75,12 +75,6 @@ export default function TenderDetails() {
     const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({ control, name: "corrigendums" });
 
     const handleFinalSave = async () => {
-      const isValid = await form.trigger();
-      if (!isValid) {
-          toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
-          return;
-      }
-  
       setIsSubmitting(true);
       try {
           const currentTenderData = getValues();

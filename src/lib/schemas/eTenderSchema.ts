@@ -133,11 +133,9 @@ export const E_tenderSchema = z.object({
     dateTimeOfOpening: z.any().optional().nullable(),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
     
-    // Nested schemas
     corrigendums: z.array(CorrigendumSchema).optional(),
     bidders: z.array(BidderSchema).optional(),
     
-    // Other fields from various forms
     dateOfOpeningBid: z.any().optional().nullable(),
     dateOfTechnicalAndFinancialBidOpening: z.any().optional().nullable(),
     technicalCommitteeMember1: z.string().optional(),
