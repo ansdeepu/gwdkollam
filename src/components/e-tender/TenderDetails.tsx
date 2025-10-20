@@ -7,7 +7,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions, corrigendumTypeOptions } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -23,13 +23,13 @@ import { v4 as uuidv4 } from 'uuid';
 import BasicDetailsForm from './BasicDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import BidderForm from './BidderForm';
-import CorrigendumForm from './CorrigendumForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
 
-type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'addCorrigendum' | 'editCorrigendum' | 'workOrder' | 'selectionNotice' | null;
+type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -38,7 +38,6 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 
     let displayValue = String(value);
 
-    // Check for date/time labels, but exclude "Period of Completion"
     if ((label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) && !label.toLowerCase().includes('period')) {
         const formatted = formatDateSafe(value, label.toLowerCase().includes('time'));
         if (formatted === 'N/A') return null; 
@@ -193,29 +192,6 @@ export default function TenderDetails() {
         setActiveModal(null);
         setModalData(null);
     };
-
-    const handleCorrigendumSave = (corrigendumData: Corrigendum) => {
-        if (activeModal === 'addCorrigendum') {
-            appendCorrigendum(corrigendumData);
-            toast({ title: "Corrigendum Added Locally" });
-        } else if (activeModal === 'editCorrigendum' && modalData?.index !== undefined) {
-            updateCorrigendum(modalData.index, corrigendumData);
-            toast({ title: "Corrigendum Updated Locally" });
-        }
-        setActiveModal(null);
-        setModalData(null);
-    };
-    
-    const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
-        setModalData({
-            ...corrigendum,
-            corrigendumDate: formatDateForInput(corrigendum.corrigendumDate),
-            lastDateOfReceipt: formatDateForInput(corrigendum.lastDateOfReceipt, true),
-            dateOfOpeningTender: formatDateForInput(corrigendum.dateOfOpeningTender, true),
-            index: index,
-        });
-        setActiveModal('editCorrigendum');
-    };
     
     const pdfReports = [
         "Notice Inviting Tender (NIT)", "Tender Form", "Corrigendum", "Bid Opening Summary",
@@ -312,25 +288,48 @@ export default function TenderDetails() {
                                     <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details ({corrigendumFields.length})</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addCorrigendum'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); appendCorrigendum({ id: uuidv4() }); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
                                        {hasAnyCorrigendumData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
-                                                    <div key={corrigendum.id} className="p-3 border rounded-md bg-secondary/30 relative group">
+                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
                                                         <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
-                                                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
-                                                            <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                        </div>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                                            <DetailRow label="Type" value={corrigendum.corrigendumType} />
-                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
-                                                            <DetailRow label="New Last Date/Time" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
-                                                            <DetailRow label="New Opening Date/Time" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
-                                                            <div className="md:col-span-full"><DetailRow label="Reason" value={corrigendum.reason} /></div>
+                                                         <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                                                             <FormField name={`corrigendums.${index}.corrigendumType`} control={form.control} render={({ field }) => (
+                                                                <FormItem>
+                                                                    <FormLabel>Type</FormLabel>
+                                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl>
+                                                                        <SelectContent>{corrigendumTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                                    </Select>
+                                                                    <FormMessage />
+                                                                </FormItem>
+                                                            )}/>
+                                                            <FormField name={`corrigendums.${index}.corrigendumDate`} control={form.control} render={({ field }) => (
+                                                                <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)} /></FormControl><FormMessage />
+                                                                </FormItem>
+                                                            )}/>
+                                                             <FormField name={`corrigendums.${index}.lastDateOfReceipt`} control={form.control} render={({ field }) => (
+                                                                <FormItem>
+                                                                    <FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage />
+                                                                </FormItem>
+                                                            )}/>
+                                                            <FormField name={`corrigendums.${index}.dateOfOpeningTender`} control={form.control} render={({ field }) => (
+                                                                <FormItem>
+                                                                    <FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage />
+                                                                </FormItem>
+                                                            )}/>
+                                                             <div className="lg:col-span-2">
+                                                                <FormField name={`corrigendums.${index}.reason`} control={form.control} render={({ field }) => (
+                                                                    <FormItem>
+                                                                        <FormLabel>Reason</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage />
+                                                                    </FormItem>
+                                                                )}/>
+                                                             </div>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -512,16 +511,6 @@ export default function TenderDetails() {
                     <DialogContent className="max-w-3xl flex flex-col p-0">
                         <BidderForm 
                             onSubmit={handleBidderSave}
-                            onCancel={() => { setActiveModal(null); setModalData(null); }}
-                            isSubmitting={isSubmitting}
-                            initialData={modalData}
-                        />
-                    </DialogContent>
-                </Dialog>
-                <Dialog open={activeModal === 'addCorrigendum' || activeModal === 'editCorrigendum'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
-                    <DialogContent className="max-w-3xl flex flex-col p-0">
-                        <CorrigendumForm 
-                            onSubmit={handleCorrigendumSave}
                             onCancel={() => { setActiveModal(null); setModalData(null); }}
                             isSubmitting={isSubmitting}
                             initialData={modalData}
