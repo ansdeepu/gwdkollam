@@ -25,14 +25,16 @@ interface SelectionNoticeFormProps {
 
 // Function to parse numbers from the description string
 const parseStampPaperLogic = (description: string) => {
-    const rateMatch = description.match(/₹(\d+)\s*for\s*every\s*₹(\d+,?\d*)/);
-    const minMatch = description.match(/minimum\s*of\s*₹(\d+,?\d*)/);
-    const maxMatch = description.match(/maximum\s*of\s*₹(\d+,?\d*)/);
-
+    // Correctly parse numbers that might have commas
     const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
 
+    // Updated Regex to correctly capture the rate and basis
+    const rateMatch = description.match(/₹\s*([\d,]+)\s*for\s*every\s*₹\s*([\d,]+)/);
+    const minMatch = description.match(/minimum\s*of\s*₹\s*([\d,]+)/);
+    const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
+
     return {
-        ratePerThousand: rateMatch ? parseNumber(rateMatch[1]) : 1,
+        rate: rateMatch ? parseNumber(rateMatch[1]) : 200, // Correctly parse rate
         basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
         min: minMatch ? parseNumber(minMatch[1]) : 200,
         max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
@@ -46,7 +48,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const calculateStampPaperValue = (amount?: number): number => {
         const logic = parseStampPaperLogic(allRateDescriptions.stampPaper);
         
-        const rate = logic.ratePerThousand ?? 1;
+        const rate = logic.rate ?? 200;
         const basis = logic.basis ?? 1000;
         const min = logic.min ?? 200;
         const max = logic.max ?? 100000;
