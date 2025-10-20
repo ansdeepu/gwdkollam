@@ -25,11 +25,12 @@ interface SelectionNoticeFormProps {
 
 const parseStampPaperLogic = (description: string) => {
     const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
-
+    
+    // Updated regex to be more specific
     const rateMatch = description.match(/₹\s*([\d,]+)\s*for\s*every\s*₹\s*([\d,]+)/);
     const minMatch = description.match(/minimum\s*of\s*₹\s*([\d,]+)/);
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
-    
+
     return {
         rate: rateMatch ? parseNumber(rateMatch[1]) : 1,
         basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
@@ -44,8 +45,7 @@ const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
 
     let threshold = 0.10; // Default threshold
     if (apgRequiredThresholdMatch) {
-        // If "between 11% and 25%" exists, the threshold starts after 10%
-        threshold = 0.10;
+        threshold = parseFloat(apgRequiredThresholdMatch[1]) / 100;
     } else if (noApgThresholdMatch) {
         threshold = parseFloat(noApgThresholdMatch[1]) / 100;
     }
@@ -149,7 +149,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs whitespace-pre-wrap">{performanceGuaranteeDescription}</FormDescription>
+                                    <FormDescription className="text-xs">Calculated as 5% of the contract value, rounded up.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
@@ -157,7 +157,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Additional Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs whitespace-pre-wrap">{additionalPerformanceGuaranteeDescription}</FormDescription>
+                                    <FormDescription className="text-xs">Calculated if tender is below estimate by more than the threshold.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
@@ -165,7 +165,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Stamp Paper required</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription className="text-xs whitespace-pre-wrap">{stampPaperDescription}</FormDescription>
+                                    <FormDescription className="text-xs">Calculated based on the contract amount.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
