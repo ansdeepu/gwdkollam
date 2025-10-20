@@ -28,16 +28,32 @@ const createDefaultCorrigendum = (): Corrigendum => ({
     corrigendumType: undefined,
     corrigendumDate: null,
     reason: '',
+    lastDateOfReceipt: null,
+    dateOfOpeningTender: null,
 });
 
 export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, initialData }: CorrigendumFormProps) {
     const form = useForm<Corrigendum>({
         resolver: zodResolver(CorrigendumSchema),
-        defaultValues: initialData ? { ...initialData, corrigendumDate: formatDateForInput(initialData.corrigendumDate) } : createDefaultCorrigendum(),
+        defaultValues: initialData 
+            ? { 
+                ...initialData, 
+                corrigendumDate: formatDateForInput(initialData.corrigendumDate),
+                lastDateOfReceipt: formatDateForInput(initialData.lastDateOfReceipt, true),
+                dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
+              } 
+            : createDefaultCorrigendum(),
     });
 
     useEffect(() => {
-        form.reset(initialData ? { ...initialData, corrigendumDate: formatDateForInput(initialData.corrigendumDate) } : createDefaultCorrigendum());
+        form.reset(initialData 
+            ? { 
+                ...initialData, 
+                corrigendumDate: formatDateForInput(initialData.corrigendumDate),
+                lastDateOfReceipt: formatDateForInput(initialData.lastDateOfReceipt, true),
+                dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
+              } 
+            : createDefaultCorrigendum());
     }, [initialData, form]);
 
     return (
@@ -65,6 +81,22 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                                     <FormItem>
                                         <FormLabel>Date</FormLabel>
                                         <FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Last Date & Time of Receipt</FormLabel>
+                                        <FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Date & Time of Opening</FormLabel>
+                                        <FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}/>

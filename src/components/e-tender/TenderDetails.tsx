@@ -79,7 +79,12 @@ export default function TenderDetails() {
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
             selectionNoticeDate: formatDateForInput(tender.selectionNoticeDate),
             bidders: tender.bidders?.map(b => ({...b})) || [],
-            corrigendums: tender.corrigendums?.map(c => ({...c, corrigendumDate: formatDateForInput(c.corrigendumDate)})) || []
+            corrigendums: tender.corrigendums?.map(c => ({
+                ...c, 
+                corrigendumDate: formatDateForInput(c.corrigendumDate),
+                lastDateOfReceipt: formatDateForInput(c.lastDateOfReceipt, true),
+                dateOfOpeningTender: formatDateForInput(c.dateOfOpeningTender, true),
+            })) || []
         },
     });
 
@@ -147,7 +152,12 @@ export default function TenderDetails() {
             dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
             selectionNoticeDate: formatDateForInput(tender.selectionNoticeDate),
             bidders: tender.bidders?.map(b => ({...b})) || [],
-            corrigendums: tender.corrigendums?.map(c => ({ ...c, corrigendumDate: formatDateForInput(c.corrigendumDate) })) || []
+            corrigendums: tender.corrigendums?.map(c => ({
+                ...c,
+                corrigendumDate: formatDateForInput(c.corrigendumDate),
+                lastDateOfReceipt: formatDateForInput(c.lastDateOfReceipt, true),
+                dateOfOpeningTender: formatDateForInput(c.dateOfOpeningTender, true),
+            })) || []
         };
         form.reset(processedTender);
     }, [tender, form]);
@@ -293,10 +303,12 @@ export default function TenderDetails() {
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...corrigendum, index }); setActiveModal('editCorrigendum'); }}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                         </div>
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                                           <DetailRow label="Corrigendum Type" value={corrigendum.corrigendumType} />
                                                           <DetailRow label="Corrigendum Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
-                                                          <DetailRow label="Reason" value={corrigendum.reason} />
+                                                          <DetailRow label="New Last Date/Time of Receipt" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
+                                                          <DetailRow label="New Date/Time of Opening" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
+                                                          <div className="md:col-span-full"><DetailRow label="Reason" value={corrigendum.reason} /></div>
                                                         </div>
                                                     </div>
                                                 ))}

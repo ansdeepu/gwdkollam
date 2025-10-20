@@ -2,6 +2,7 @@
 import { z } from 'zod';
 
 const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional().nullable());
+const optionalDateTimeSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional().nullable());
 const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional());
 
 export const eTenderStatusOptions = [
@@ -64,6 +65,8 @@ export const CorrigendumSchema = z.object({
     corrigendumType: z.enum(corrigendumTypeOptions).optional(),
     corrigendumDate: optionalDateSchema,
     reason: z.string().optional(),
+    lastDateOfReceipt: optionalDateTimeSchema,
+    dateOfOpeningTender: optionalDateTimeSchema,
 });
 export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 
