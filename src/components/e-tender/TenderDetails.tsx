@@ -19,6 +19,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { isValid, parseISO } from 'date-fns';
 
 import BasicDetailsForm from './BasicDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
@@ -26,7 +27,26 @@ import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
 import CorrigendumForm from './CorrigendumForm';
-import { toDate } from 'date-fns';
+
+// Robust date conversion utility
+const toDateOrNull = (value: any): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date && isValid(value)) return value;
+  
+  // Handle Firestore Timestamp objects
+  if (value && typeof value.seconds === 'number') {
+    const d = new Date(value.seconds * 1000);
+    return isValid(d) ? d : null;
+  }
+  
+  // Handle string values (ISO, yyyy-MM-dd, yyyy-MM-ddTHH:mm)
+  if (typeof value === 'string') {
+    const d = parseISO(value);
+    if (isValid(d)) return d;
+  }
+  
+  return null;
+};
 
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
@@ -78,22 +98,21 @@ export default function TenderDetails() {
       setIsSubmitting(true);
       try {
           const currentTenderData = getValues();
-          // Convert date strings back to Date objects before saving
           const dataForSave = {
               ...currentTenderData,
-              tenderDate: currentTenderData.tenderDate ? toDate(currentTenderData.tenderDate) : null,
-              dateTimeOfReceipt: currentTenderData.dateTimeOfReceipt ? toDate(currentTenderData.dateTimeOfReceipt) : null,
-              dateTimeOfOpening: currentTenderData.dateTimeOfOpening ? toDate(currentTenderData.dateTimeOfOpening) : null,
-              dateOfOpeningBid: currentTenderData.dateOfOpeningBid ? toDate(currentTenderData.dateOfOpeningBid) : null,
-              dateOfTechnicalAndFinancialBidOpening: currentTenderData.dateOfTechnicalAndFinancialBidOpening ? toDate(currentTenderData.dateOfTechnicalAndFinancialBidOpening) : null,
-              selectionNoticeDate: currentTenderData.selectionNoticeDate ? toDate(currentTenderData.selectionNoticeDate) : null,
-              agreementDate: currentTenderData.agreementDate ? toDate(currentTenderData.agreementDate) : null,
-              dateWorkOrder: currentTenderData.dateWorkOrder ? toDate(currentTenderData.dateWorkOrder) : null,
+              tenderDate: toDateOrNull(currentTenderData.tenderDate),
+              dateTimeOfReceipt: toDateOrNull(currentTenderData.dateTimeOfReceipt),
+              dateTimeOfOpening: toDateOrNull(currentTenderData.dateTimeOfOpening),
+              dateOfOpeningBid: toDateOrNull(currentTenderData.dateOfOpeningBid),
+              dateOfTechnicalAndFinancialBidOpening: toDateOrNull(currentTenderData.dateOfTechnicalAndFinancialBidOpening),
+              selectionNoticeDate: toDateOrNull(currentTenderData.selectionNoticeDate),
+              agreementDate: toDateOrNull(currentTenderData.agreementDate),
+              dateWorkOrder: toDateOrNull(currentTenderData.dateWorkOrder),
               corrigendums: (currentTenderData.corrigendums || []).map(c => ({
                   ...c,
-                  corrigendumDate: c.corrigendumDate ? toDate(c.corrigendumDate) : null,
-                  lastDateOfReceipt: c.lastDateOfReceipt ? toDate(c.lastDateOfReceipt) : null,
-                  dateOfOpeningTender: c.dateOfOpeningTender ? toDate(c.dateOfOpeningTender) : null,
+                  corrigendumDate: toDateOrNull(c.corrigendumDate),
+                  lastDateOfReceipt: toDateOrNull(c.lastDateOfReceipt),
+                  dateOfOpeningTender: toDateOrNull(c.dateOfOpeningTender),
               }))
           };
 
@@ -107,7 +126,8 @@ export default function TenderDetails() {
               router.push('/dashboard/e-tender');
           }
       } catch (error: any) {
-          toast({ title: "Error Saving Changes", description: error.message, variant: "destructive" });
+          console.error("Save Error:", error);
+          toast({ title: "Error Saving Changes", description: error.message || "An unknown error occurred.", variant: "destructive" });
       } finally {
           setIsSubmitting(false);
       }

@@ -1,8 +1,6 @@
 // src/lib/schemas/eTenderSchema.ts
 import { z } from 'zod';
 
-const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : null), z.date().optional().nullable());
-const optionalDateTimeSchema = z.preprocess((val) => (val ? new Date(val as string) : null), z.date().optional().nullable());
 const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional());
 
 export const eTenderStatusOptions = [
@@ -42,7 +40,7 @@ export type Designation = typeof designationOptions[number];
 
 export const BasicDetailsSchema = z.object({
     eTenderNo: z.string().optional(),
-    tenderDate: optionalDateSchema,
+    tenderDate: z.any().optional().nullable(),
     fileNo: z.string().optional(),
     nameOfWork: z.string().optional(),
     nameOfWorkMalayalam: z.string().optional(),
@@ -51,8 +49,8 @@ export const BasicDetailsSchema = z.object({
     tenderFormFee: optionalNumberSchema,
     emd: optionalNumberSchema,
     periodOfCompletion: optionalNumberSchema,
-    dateTimeOfReceipt: optionalDateTimeSchema,
-    dateTimeOfOpening: optionalDateTimeSchema,
+    dateTimeOfReceipt: z.any().optional().nullable(),
+    dateTimeOfOpening: z.any().optional().nullable(),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
@@ -90,8 +88,8 @@ export const committeeMemberDesignations: Designation[] = [
 ];
 
 export const TenderOpeningDetailsSchema = z.object({
-    dateOfOpeningBid: z.string().optional().nullable(),
-    dateOfTechnicalAndFinancialBidOpening: z.string().optional().nullable(),
+    dateOfOpeningBid: z.any().optional().nullable(),
+    dateOfTechnicalAndFinancialBidOpening: z.any().optional().nullable(),
     technicalCommitteeMember1: z.string().optional(),
     technicalCommitteeMember2: z.string().optional(),
     technicalCommitteeMember3: z.string().optional(),
@@ -100,16 +98,16 @@ export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSc
 
 
 export const WorkOrderDetailsSchema = z.object({
-    agreementDate: z.string().optional().nullable(),
+    agreementDate: z.any().optional().nullable(),
     nameOfAssistantEngineer: z.string().optional(),
     nameOfSupervisor: z.string().optional(),
     supervisorPhoneNo: z.string().optional(),
-    dateWorkOrder: z.string().optional().nullable(),
+    dateWorkOrder: z.any().optional().nullable(),
 });
 export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
 export const SelectionNoticeDetailsSchema = z.object({
-    selectionNoticeDate: z.string().optional().nullable(),
+    selectionNoticeDate: z.any().optional().nullable(),
     performanceGuaranteeAmount: optionalNumberSchema,
     additionalPerformanceGuaranteeAmount: optionalNumberSchema,
     stampPaperAmount: optionalNumberSchema,
