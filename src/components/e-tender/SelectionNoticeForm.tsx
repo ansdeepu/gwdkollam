@@ -27,25 +27,37 @@ const parseStampPaperLogic = (description: string) => {
     const rateMatch = description.match(/₹\s*([\d,]+)\s*for\s*every\s*₹\s*([\d,]+)/);
     const minMatch = description.match(/minimum\s*of\s*₹\s*([\d,]+)/);
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
+    
     return {
-        rate: rateMatch ? parseNumber(rateMatch[1]) : 1, // Default to 1 if not found
-        basis: rateMatch ? parseNumber(rateMatch[2]) : 1000, // Default to 1000
+        rate: rateMatch ? parseNumber(rateMatch[1]) : 1,
+        basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
         min: minMatch ? parseNumber(minMatch[1]) : 200,
         max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
     };
 };
 
 const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
-    const thresholdMatch = description.match(/more\s+than\s+(\d+)%/);
-    const percentageMatch = description.match(/(\d+)%\s+of\s+the\s+difference/);
-    const capMatch = description.match(/not\s+exceed\s+(\d+)%/);
+    // Look for patterns like "up to 10%", "between 11% and 25%", "25% of the difference"
+    const noApgThresholdMatch = description.match(/up to ([\d.]+)%/);
+    const apgRangeMatch = description.match(/between ([\d.]+)% and ([\d.]+)%/);
+    const percentageMatch = description.match(/([\d.]+)%\s+of\s+the\s+difference/);
+    const capMatch = description.match(/not\s+exceed\s+([\d.]+)%/);
+    
+    let threshold = 0.10; // Default threshold from the text "up to 10%"
+    if (noApgThresholdMatch) {
+        threshold = parseFloat(noApgThresholdMatch[1]) / 100;
+    } else if (apgRangeMatch) {
+        // If a range is given like "11% and 25%", the threshold is the lower bound.
+        threshold = parseFloat(apgRangeMatch[1]) / 100;
+    }
 
     return {
-        threshold: thresholdMatch ? parseInt(thresholdMatch[1], 10) / 100 : 0.15,
-        percentage: percentageMatch ? parseInt(percentageMatch[1], 10) / 100 : 0.25,
-        cap: capMatch ? parseInt(capMatch[1], 10) / 100 : 0.10,
+        threshold: threshold,
+        percentage: percentageMatch ? parseFloat(percentageMatch[1]) / 100 : 0.25,
+        cap: capMatch ? parseFloat(capMatch[1]) / 100 : 0.10,
     };
 };
+
 
 
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
@@ -67,20 +79,22 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const calculateStampPaperValue = useCallback((amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
         const { rate, basis, min, max } = logic;
-        if (amount === undefined || amount === null || amount <= 0) return min;
-        const duty = Math.ceil(amount / basis) * rate; 
+        if (amount === undefined || amount === null || amount <= 0) return min ?? 0;
+        const duty = Math.ceil(amount / (basis ?? 1000)) * (rate ?? 1); 
         const roundedDuty = Math.ceil(duty / 100) * 100;
-        return Math.max(min, Math.min(roundedDuty, max));
+        return Math.max(min ?? 0, Math.min(roundedDuty, max ?? Infinity));
     }, [stampPaperDescription]);
 
     const calculateAdditionalPG = useCallback((estimateAmount?: number, tenderAmount?: number): number => {
         if (!estimateAmount || !tenderAmount || tenderAmount >= estimateAmount) return 0;
-
+        
         const logic = parseAdditionalPerformanceGuaranteeLogic(additionalPerformanceGuaranteeDescription);
         const difference = estimateAmount - tenderAmount;
         const percentageDifference = difference / estimateAmount;
-
-        if (percentageDifference > logic.threshold) {
+        
+        // APG is required for quotations *between* 11% and 25%
+        // This means if the bid is 10.9% below, no APG. If it's 11% or more below, APG is calculated.
+        if (percentageDifference >= logic.threshold) {
             const additionalPG = Math.min(
                 difference * logic.percentage,
                 estimateAmount * logic.cap
@@ -89,6 +103,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         }
         return 0;
     }, [additionalPerformanceGuaranteeDescription]);
+
 
     const form = useForm<SelectionNoticeDetailsFormData>({
         resolver: zodResolver(SelectionNoticeDetailsSchema),
@@ -113,7 +128,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
             additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? additionalPg,
             stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
         });
-    }, [initialData, l1Amount, calculateStampPaperValue, calculateAdditionalPG, reset, stampPaperDescription, additionalPerformanceGuaranteeDescription]);
+    }, [initialData, l1Amount, calculateStampPaperValue, calculateAdditionalPG, reset]);
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
