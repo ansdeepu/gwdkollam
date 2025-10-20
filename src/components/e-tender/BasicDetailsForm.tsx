@@ -129,7 +129,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>Tender Form Fee (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription className="text-xs whitespace-pre-wrap">{tenderFeeDescription}</FormDescription>
+                                        <FormDescription className="text-xs">Auto-calculated based on tender amount and type.</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
@@ -137,7 +137,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>EMD (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription className="text-xs whitespace-pre-wrap">{emdDescription}</FormDescription>
+                                        <FormDescription className="text-xs">Auto-calculated based on tender amount and type.</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
