@@ -149,9 +149,6 @@ export default function TenderDetails() {
     const handleCorrigendumSave = (corrigendumData: Corrigendum) => {
         const dataToSave = {
             ...corrigendumData,
-            corrigendumDate: toDateOrNull(corrigendumData.corrigendumDate),
-            lastDateOfReceipt: toDateOrNull(corrigendumData.lastDateOfReceipt),
-            dateOfOpeningTender: toDateOrNull(corrigendumData.dateOfOpeningTender),
         };
         if (activeModal === 'addCorrigendum') {
             appendCorrigendum(dataToSave);
@@ -300,7 +297,7 @@ export default function TenderDetails() {
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
-                                                         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                         <div className="absolute top-2 right-2 flex items-center gap-1">
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                          </div>
@@ -373,7 +370,7 @@ export default function TenderDetails() {
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {bidderFields.map((bidder, index) => (
                                                     <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative group">
-                                                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="absolute top-2 right-2 flex items-center gap-1">
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
                                                         </div>
@@ -503,7 +500,7 @@ export default function TenderDetails() {
                         <BidderForm onSubmit={handleBidderSave} onCancel={() => { setActiveModal(null); setModalData(null); }} isSubmitting={isSubmitting} initialData={modalData} />
                     </DialogContent>
                 </Dialog>
-                <Dialog open={activeModal === 'addCorrigendum' || activeModal === 'editCorrigendum'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
+                <Dialog open={activeModal === 'addCorrigendum' || activeModal === 'editCorrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-3xl flex flex-col p-0">
                         <CorrigendumForm onSubmit={handleCorrigendumSave} onCancel={() => { setActiveModal(null); setModalData(null); }} isSubmitting={isSubmitting} initialData={modalData} />
                     </DialogContent>
