@@ -7,7 +7,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -40,8 +40,13 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 
     if ((label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) && !label.toLowerCase().includes('period')) {
         const formatted = formatDateSafe(value, label.toLowerCase().includes('time'));
-        if (formatted === 'N/A') return null; 
-        displayValue = formatted;
+        if (formatted === 'N/A' && value) {
+           displayValue = String(value);
+        } else if (formatted !== 'N/A') {
+            displayValue = formatted;
+        } else {
+            return null;
+        }
     } else if (typeof value === 'number') {
         displayValue = value.toLocaleString('en-IN');
     }
@@ -71,7 +76,7 @@ export default function TenderDetails() {
         defaultValues: tender,
     });
 
-    const { control, getValues, setValue } = form;
+    const { control, getValues, setValue, handleSubmit: handleFormSubmit } = form;
     const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({ control, name: "bidders" });
     const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({ control, name: "corrigendums" });
 
@@ -286,10 +291,10 @@ export default function TenderDetails() {
                                                          </div>
                                                          <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 mt-1">
                                                             <DetailRow label="Type" value={corrigendum.corrigendumType} />
-                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
+                                                            <DetailRow label="Date" value={corrigendum.corrigendumDate} />
                                                             <DetailRow label="Reason" value={corrigendum.reason} />
-                                                            <DetailRow label="New Last Date & Time" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
-                                                            <DetailRow label="New Opening Date & Time" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
+                                                            <DetailRow label="New Last Date & Time" value={corrigendum.lastDateOfReceipt} />
+                                                            <DetailRow label="New Opening Date & Time" value={corrigendum.dateOfOpeningTender} />
                                                          </dl>
                                                     </div>
                                                 ))}
@@ -311,8 +316,8 @@ export default function TenderDetails() {
                                         {hasAnyOpeningData ? (
                                             <div className="space-y-4 pt-4 border-t">
                                                 <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                                    <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
-                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
+                                                    <DetailRow label="Date of Opening Bid" value={form.watch('dateOfOpeningBid')} />
+                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={form.watch('dateOfTechnicalAndFinancialBidOpening')} />
                                                 </dl>
                                                 <div className="space-y-2">
                                                     <h4 className="font-semibold">Committee Members:</h4>
@@ -380,7 +385,7 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnySelectionNoticeData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Selection Notice Date" value={formatDateSafe(form.watch('selectionNoticeDate'))} />
+                                                 <DetailRow label="Selection Notice Date" value={form.watch('selectionNoticeDate')} />
                                                  <DetailRow label="Performance Guarantee Amount" value={form.watch('performanceGuaranteeAmount')} />
                                                  <DetailRow label="Additional Performance Guarantee Amount" value={form.watch('additionalPerformanceGuaranteeAmount')} />
                                                  <DetailRow label="Stamp Paper required" value={form.watch('stampPaperAmount')} />
@@ -401,8 +406,8 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyWorkOrderData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Agreement Date" value={formatDateSafe(form.watch('agreementDate'))} />
-                                                 <DetailRow label="Date - Work / Supply Order" value={formatDateSafe(form.watch('dateWorkOrder'))} />
+                                                 <DetailRow label="Agreement Date" value={form.watch('agreementDate')} />
+                                                 <DetailRow label="Date - Work / Supply Order" value={form.watch('dateWorkOrder')} />
                                                  <DetailRow label="Assistant Engineer" value={form.watch('nameOfAssistantEngineer')} />
                                                  <DetailRow label="Supervisor" value={form.watch('nameOfSupervisor')} />
                                                  <DetailRow label="Supervisor Phone" value={form.watch('supervisorPhoneNo')} />
@@ -427,7 +432,7 @@ export default function TenderDetails() {
                                                 <FormItem>
                                                     <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
-                                                        <SelectContent>{form.watch('presentStatus') && <SelectItem value={form.watch('presentStatus')!}>{form.watch('presentStatus')}</SelectItem>}{['Tender Process', 'Selection Notice Issued', 'Work Order Issued'].map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                        <SelectContent>{form.watch('presentStatus') && <SelectItem value={form.watch('presentStatus')!}>{form.watch('presentStatus')}</SelectItem>}{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
                                                     <FormMessage />
                                                 </FormItem>

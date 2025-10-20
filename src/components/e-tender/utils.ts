@@ -21,22 +21,43 @@ export const formatDateForInput = (date: any, isDateTime: boolean = false): stri
     }
 };
 
+export const toDateOrNull = (value: any): Date | null => {
+  if (value === null || value === undefined || value === '') return null;
+  if (value instanceof Date && !isNaN(value.getTime())) return value;
+  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+    try {
+      const ms = value.seconds * 1000 + (value.nanoseconds ? Math.round(value.nanoseconds / 1e6) : 0);
+      const d = new Date(ms);
+      if (!isNaN(d.getTime())) return d;
+    } catch { /* fallthrough */ }
+  }
+  if (typeof value === 'number' && isFinite(value)) {
+    const ms = value < 1e12 ? value * 1000 : value;
+    const d = new Date(ms);
+    if (!isNaN(d.getTime())) return d;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+    const iso = Date.parse(trimmed);
+    if (!isNaN(iso)) return new Date(iso);
+    try {
+      const fallback = new Date(trimmed);
+      if (!isNaN(fallback.getTime())) return fallback;
+    } catch { /* ignore */ }
+  }
+  return null;
+};
+
+
 export const formatDateSafe = (date: any, includeTime: boolean = false): string => {
     if (date === null || date === undefined || date === '') {
         return 'N/A';
     }
     
-    let d;
-    if (date instanceof Date) {
-        d = date;
-    } else if (typeof date === 'object' && date !== null && typeof date.seconds === 'number') {
-        // Handle Firestore Timestamp object
-        d = new Date(date.seconds * 1000);
-    } else {
-        d = new Date(date);
-    }
+    const d = toDateOrNull(date);
 
-    if (!isValid(d)) {
+    if (!d || !isValid(d)) {
         return String(date); // Fallback to original string if parsing fails
     }
 
