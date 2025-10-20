@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -16,7 +15,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { toDateOrNull, formatDateSafe, formatDateForInput } from './utils';
+import { toDateOrNull, formatDateSafe } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
