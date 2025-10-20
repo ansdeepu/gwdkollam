@@ -1,3 +1,4 @@
+
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
@@ -84,7 +85,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         
         if (percentageDifference > logic.threshold) {
             const excessPercentage = percentageDifference - logic.threshold;
-            const additionalPG = excessPercentage * estimateAmount; 
+            const additionalPG = excessPercentage * estimateAmount;
             return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
@@ -154,9 +155,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Additional Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">
-                                        An Additional Performance Guarantee (APG) is required if the accepted tender amount is more than 10% below the department's estimate. The APG amount is calculated based on the excess percentage beyond this 10% threshold. For example, if a bid is 12% below the estimate, the APG will be 2% of the original estimate amount. The final calculated value is then rounded up to the nearest hundred.
-                                    </FormDescription>
+                                    <FormDescription className="text-xs">Required for bids over 10% below estimate; calculated on the excess percentage of the estimate amount.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
