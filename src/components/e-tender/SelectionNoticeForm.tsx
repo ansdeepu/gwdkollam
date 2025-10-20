@@ -37,25 +37,12 @@ const parseStampPaperLogic = (description: string) => {
 };
 
 const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
-    // Look for patterns like "up to 10%", "between 11% and 25%", "25% of the difference"
     const noApgThresholdMatch = description.match(/up to ([\d.]+)%/);
-    const apgRangeMatch = description.match(/between ([\d.]+)% and ([\d.]+)%/);
-    const percentageMatch = description.match(/([\d.]+)%\s+of\s+the\s+difference/);
-    const capMatch = description.match(/not\s+exceed\s+([\d.]+)%/);
-    
-    let threshold = 0.10; // Default threshold from the text "up to 10%"
+    let threshold = 0.10; 
     if (noApgThresholdMatch) {
         threshold = parseFloat(noApgThresholdMatch[1]) / 100;
-    } else if (apgRangeMatch) {
-        // If a range is given like "11% and 25%", the threshold is the lower bound.
-        threshold = parseFloat(apgRangeMatch[1]) / 100;
     }
-
-    return {
-        threshold: threshold,
-        percentage: percentageMatch ? parseFloat(percentageMatch[1]) / 100 : 0.25,
-        cap: capMatch ? parseFloat(capMatch[1]) / 100 : 0.10,
-    };
+    return { threshold };
 };
 
 
@@ -89,16 +76,13 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         if (!estimateAmount || !tenderAmount || tenderAmount >= estimateAmount) return 0;
         
         const logic = parseAdditionalPerformanceGuaranteeLogic(additionalPerformanceGuaranteeDescription);
-        const difference = estimateAmount - tenderAmount;
-        const percentageDifference = difference / estimateAmount;
+        const percentageDifference = (estimateAmount - tenderAmount) / estimateAmount;
         
-        // APG is required for quotations *between* 11% and 25%
-        // This means if the bid is 10.9% below, no APG. If it's 11% or more below, APG is calculated.
-        if (percentageDifference >= logic.threshold) {
-            const additionalPG = Math.min(
-                difference * logic.percentage,
-                estimateAmount * logic.cap
-            );
+        // APG is required if the bid is more than 10% below the estimate rate.
+        if (percentageDifference > logic.threshold) {
+             // The APG is the difference in percentage from 10%, applied to the tender amount.
+            const apgPercentage = percentageDifference - logic.threshold;
+            const additionalPG = tenderAmount * apgPercentage;
             return Math.ceil(additionalPG / 100) * 100; // Round up to nearest 100
         }
         return 0;
