@@ -7,7 +7,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions, corrigendumTypeOptions } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -25,11 +25,11 @@ import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
 import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
-import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
+import CorrigendumForm from './CorrigendumForm';
+import { toDate } from 'date-fns';
 
 
-type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | null;
+type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -67,35 +67,12 @@ export default function TenderDetails() {
 
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(E_tenderSchema),
-        defaultValues: {
-            ...tender,
-            tenderDate: formatDateForInput(tender.tenderDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
-            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
-            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
-            agreementDate: formatDateForInput(tender.agreementDate),
-            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            selectionNoticeDate: formatDateForInput(tender.selectionNoticeDate),
-            bidders: tender.bidders?.map(b => ({...b})) || [],
-            corrigendums: tender.corrigendums?.map(c => ({
-                ...c, 
-                corrigendumDate: formatDateForInput(c.corrigendumDate),
-                lastDateOfReceipt: formatDateForInput(c.lastDateOfReceipt, true),
-                dateOfOpeningTender: formatDateForInput(c.dateOfOpeningTender, true),
-            })) || []
-        },
+        defaultValues: tender,
     });
 
-    const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({
-        control: form.control,
-        name: "bidders"
-    });
-    
-    const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({
-        control: form.control,
-        name: "corrigendums"
-    });
+    const { control, getValues } = form;
+    const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({ control, name: "bidders" });
+    const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({ control, name: "corrigendums" });
 
     const handleFinalSave = async () => {
       const isValid = await form.trigger();
@@ -122,14 +99,15 @@ export default function TenderDetails() {
   
       setIsSubmitting(true);
       try {
-          const currentTenderData = form.getValues();
+          const currentTenderData = getValues();
+          // Convert date strings back to Date objects before saving
           const dataForSave = {
               ...currentTenderData,
               corrigendums: (currentTenderData.corrigendums || []).map(c => ({
                   ...c,
-                  corrigendumDate: c.corrigendumDate ? new Date(c.corrigendumDate) : null,
-                  lastDateOfReceipt: c.lastDateOfReceipt ? new Date(c.lastDateOfReceipt) : null,
-                  dateOfOpeningTender: c.dateOfOpeningTender ? new Date(c.dateOfOpeningTender) : null,
+                  corrigendumDate: c.corrigendumDate ? toDate(c.corrigendumDate) : null,
+                  lastDateOfReceipt: c.lastDateOfReceipt ? toDate(c.lastDateOfReceipt) : null,
+                  dateOfOpeningTender: c.dateOfOpeningTender ? toDate(c.dateOfOpeningTender) : null,
               }))
           };
 
@@ -150,32 +128,13 @@ export default function TenderDetails() {
     };
 
     useEffect(() => {
-        const processedTender = {
-            ...tender,
-            tenderDate: formatDateForInput(tender.tenderDate),
-            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
-            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
-            dateOfOpeningBid: formatDateForInput(tender.dateOfOpeningBid),
-            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(tender.dateOfTechnicalAndFinancialBidOpening),
-            agreementDate: formatDateForInput(tender.agreementDate),
-            dateWorkOrder: formatDateForInput(tender.dateWorkOrder),
-            selectionNoticeDate: formatDateForInput(tender.selectionNoticeDate),
-            bidders: tender.bidders?.map(b => ({...b})) || [],
-            corrigendums: tender.corrigendums?.map(c => ({
-                ...c,
-                corrigendumDate: formatDateForInput(c.corrigendumDate),
-                lastDateOfReceipt: formatDateForInput(c.lastDateOfReceipt, true),
-                dateOfOpeningTender: formatDateForInput(c.dateOfOpeningTender, true),
-            })) || []
-        };
-        form.reset(processedTender);
+        form.reset(tender);
     }, [tender, form]);
 
     const handleSave = (data: Partial<E_tenderFormData>) => {
         const currentData = form.getValues();
         const updatedData = { ...currentData, ...data };
         updateTender(updatedData);
-        form.reset(updatedData);
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
@@ -188,9 +147,31 @@ export default function TenderDetails() {
             updateBidder(modalData.index, bidderData);
             toast({ title: "Bidder Updated Locally" });
         }
-        form.reset(form.getValues());
         setActiveModal(null);
         setModalData(null);
+    };
+    
+    const handleCorrigendumSave = (corrigendumData: Corrigendum) => {
+        if (activeModal === 'addCorrigendum') {
+            appendCorrigendum(corrigendumData);
+            toast({ title: "Corrigendum Added Locally" });
+        } else if (activeModal === 'editCorrigendum' && modalData?.index !== undefined) {
+            updateCorrigendum(modalData.index, corrigendumData);
+            toast({ title: "Corrigendum Updated Locally" });
+        }
+        setActiveModal(null);
+        setModalData(null);
+    };
+
+    const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
+        setModalData({
+            ...corrigendum,
+            index,
+            corrigendumDate: formatDateForInput(corrigendum.corrigendumDate),
+            lastDateOfReceipt: formatDateForInput(corrigendum.lastDateOfReceipt, true),
+            dateOfOpeningTender: formatDateForInput(corrigendum.dateOfOpeningTender, true),
+        });
+        setActiveModal('editCorrigendum');
     };
     
     const pdfReports = [
@@ -288,7 +269,7 @@ export default function TenderDetails() {
                                     <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details ({corrigendumFields.length})</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); appendCorrigendum({ id: uuidv4() }); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addCorrigendum'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
@@ -296,41 +277,18 @@ export default function TenderDetails() {
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
-                                                        <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
-                                                         <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                                                             <FormField name={`corrigendums.${index}.corrigendumType`} control={form.control} render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>Type</FormLabel>
-                                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl>
-                                                                        <SelectContent>{corrigendumTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                                                                    </Select>
-                                                                    <FormMessage />
-                                                                </FormItem>
-                                                            )}/>
-                                                            <FormField name={`corrigendums.${index}.corrigendumDate`} control={form.control} render={({ field }) => (
-                                                                <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)} /></FormControl><FormMessage />
-                                                                </FormItem>
-                                                            )}/>
-                                                             <FormField name={`corrigendums.${index}.lastDateOfReceipt`} control={form.control} render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage />
-                                                                </FormItem>
-                                                            )}/>
-                                                            <FormField name={`corrigendums.${index}.dateOfOpeningTender`} control={form.control} render={({ field }) => (
-                                                                <FormItem>
-                                                                    <FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage />
-                                                                </FormItem>
-                                                            )}/>
-                                                             <div className="lg:col-span-2">
-                                                                <FormField name={`corrigendums.${index}.reason`} control={form.control} render={({ field }) => (
-                                                                    <FormItem>
-                                                                        <FormLabel>Reason</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage />
-                                                                    </FormItem>
-                                                                )}/>
-                                                             </div>
-                                                        </div>
+                                                         <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
+                                                         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
+                                                            <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                         </div>
+                                                         <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 mt-1">
+                                                            <DetailRow label="Type" value={corrigendum.corrigendumType} />
+                                                            <DetailRow label="Date" value={corrigendum.corrigendumDate} />
+                                                            <DetailRow label="Reason" value={corrigendum.reason} />
+                                                            <DetailRow label="New Last Date & Time" value={corrigendum.lastDateOfReceipt} />
+                                                            <DetailRow label="New Opening Date & Time" value={corrigendum.dateOfOpeningTender} />
+                                                         </dl>
                                                     </div>
                                                 ))}
                                             </div>
@@ -364,7 +322,7 @@ export default function TenderDetails() {
                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setModalData(null); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
@@ -450,7 +408,7 @@ export default function TenderDetails() {
                                                 <FormItem>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                                                        <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                        <SelectContent>{form.watch('presentStatus') && <SelectItem value={form.watch('presentStatus')!}>{form.watch('presentStatus')}</SelectItem>}{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
                                                     <FormMessage />
                                                 </FormItem>
@@ -487,55 +445,34 @@ export default function TenderDetails() {
                     </CardFooter>
                 </Card>
 
-
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                        <BasicDetailsForm
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
+                        <BasicDetailsForm onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
                     </DialogContent>
                 </Dialog>
-                 <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
-                        <TenderOpeningDetailsForm
-                            initialData={tender}
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
+                        <TenderOpeningDetailsForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'addBidder' || activeModal === 'editBidder'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
                     <DialogContent className="max-w-3xl flex flex-col p-0">
-                        <BidderForm 
-                            onSubmit={handleBidderSave}
-                            onCancel={() => { setActiveModal(null); setModalData(null); }}
-                            isSubmitting={isSubmitting}
-                            initialData={modalData}
-                        />
+                        <BidderForm onSubmit={handleBidderSave} onCancel={() => { setActiveModal(null); setModalData(null); }} isSubmitting={isSubmitting} initialData={modalData} />
                     </DialogContent>
                 </Dialog>
-                 <Dialog open={activeModal === 'selectionNotice'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                <Dialog open={activeModal === 'addCorrigendum' || activeModal === 'editCorrigendum'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
+                    <DialogContent className="max-w-3xl flex flex-col p-0">
+                        <CorrigendumForm onSubmit={handleCorrigendumSave} onCancel={() => { setActiveModal(null); setModalData(null); }} isSubmitting={isSubmitting} initialData={modalData} />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={activeModal === 'selectionNotice'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
-                        <SelectionNoticeForm
-                            initialData={tender}
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                        />
+                        <SelectionNoticeForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-xl flex flex-col p-0">
-                        <WorkOrderDetailsForm
-                            initialData={tender}
-                            onSubmit={handleSave}
-                            onCancel={() => setActiveModal(null)}
-                            isSubmitting={isSubmitting}
-                            tenderType={tenderType}
-                        />
+                        <WorkOrderDetailsForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} tenderType={tenderType}/>
                     </DialogContent>
                 </Dialog>
             </div>

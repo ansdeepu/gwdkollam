@@ -116,20 +116,57 @@ export const SelectionNoticeDetailsSchema = z.object({
 });
 export type SelectionNoticeDetailsFormData = z.infer<typeof SelectionNoticeDetailsSchema>;
 
-// Merge all schemas first
-const MergedSchema = BasicDetailsSchema
-    .merge(TenderOpeningDetailsSchema)
-    .merge(WorkOrderDetailsSchema)
-    .merge(SelectionNoticeDetailsSchema)
-    .extend({
-        corrigendums: z.array(CorrigendumSchema).optional(),
-        bidders: z.array(BidderSchema).optional(),
-        presentStatus: z.enum(eTenderStatusOptions).optional(),
-    });
+// This is the main schema for the entire form
+export const E_tenderSchema = z.object({
+    id: z.string(),
+    eTenderNo: z.string().min(1, "eTender No. is required."),
+    tenderDate: z.any().refine(val => val, { message: "Tender Date is required." }),
+    fileNo: z.string().min(1, "File No. is required."),
+    nameOfWork: z.string().min(1, "Name of Work is required."),
+    nameOfWorkMalayalam: z.string().optional(),
+    location: z.string().min(1, "Location is required."),
+    estimateAmount: optionalNumberSchema,
+    tenderFormFee: optionalNumberSchema,
+    emd: optionalNumberSchema,
+    periodOfCompletion: optionalNumberSchema,
+    dateTimeOfReceipt: z.any().refine(val => val, { message: "Last Date & Time of Receipt is required." }),
+    dateTimeOfOpening: z.any().refine(val => val, { message: "Date & Time of Opening Tender is required." }),
+    tenderType: z.enum(['Work', 'Purchase']).optional(),
+    
+    // Nested schemas
+    corrigendums: z.array(CorrigendumSchema).optional(),
+    bidders: z.array(BidderSchema).optional(),
+    
+    // Other fields from various forms
+    dateOfOpeningBid: z.any().optional().nullable(),
+    dateOfTechnicalAndFinancialBidOpening: z.any().optional().nullable(),
+    technicalCommitteeMember1: z.string().optional(),
+    technicalCommitteeMember2: z.string().optional(),
+    technicalCommitteeMember3: z.string().optional(),
+    
+    selectionNoticeDate: z.any().optional().nullable(),
+    performanceGuaranteeAmount: optionalNumberSchema,
+    additionalPerformanceGuaranteeAmount: optionalNumberSchema,
+    stampPaperAmount: optionalNumberSchema,
+    
+    agreementDate: z.any().optional().nullable(),
+    dateWorkOrder: z.any().optional().nullable(),
+    nameOfAssistantEngineer: z.string().optional(),
+    nameOfSupervisor: z.string().optional(),
+    supervisorPhoneNo: z.string().optional(),
 
-// Apply superRefine to the final merged schema
-export const E_tenderSchema = MergedSchema.superRefine((data, ctx) => {
-    // No custom validation needed here now
+    presentStatus: z.enum(eTenderStatusOptions).optional(),
+    
+    // Deprecated fields that may exist in old data
+    lastDateOfReceipt: z.any().optional(),
+    timeOfReceipt: z.any().optional(),
+    dateOfOpeningTender: z.any().optional(),
+    timeOfOpeningTender: z.any().optional(),
+    noOfBids: z.any().optional(),
+    noOfTenderers: z.any().optional(),
+    noOfSuccessfulTenderers: z.any().optional(),
+    quotedPercentage: z.any().optional(),
+    aboveBelow: z.any().optional(),
 });
 
 export type E_tenderFormData = z.infer<typeof E_tenderSchema>;
