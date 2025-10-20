@@ -42,10 +42,10 @@ const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
     const noApgThresholdMatch = description.match(/up to ([\d.]+)%/);
 
     let threshold = 0.10; // Default threshold
-    if (apgRequiredThresholdMatch) {
-        threshold = parseFloat(apgRequiredThresholdMatch[1]) / 100;
-    } else if (noApgThresholdMatch) {
+    if (noApgThresholdMatch) {
         threshold = parseFloat(noApgThresholdMatch[1]) / 100;
+    } else if (apgRequiredThresholdMatch) {
+        threshold = parseFloat(apgRequiredThresholdMatch[1]) / 100;
     }
     return { threshold };
 };
@@ -83,7 +83,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         
         if (percentageDifference > logic.threshold) {
             const excessPercentage = percentageDifference - logic.threshold;
-            const additionalPG = excessPercentage * estimateAmount;
+            const additionalPG = excessPercentage * tenderAmount;
             return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
