@@ -23,28 +23,33 @@ interface SelectionNoticeFormProps {
 
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
     
-    const calculatedPG = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : 0;
-    const calculatedStamp = 200;
+    const calculateStampPaperValue = (amount?: number): number => {
+        if (amount === undefined || amount === null || amount <= 0) {
+            return 200; // Default to minimum if no amount
+        }
+        const duty = Math.ceil(amount / 1000) * 1;
+        return Math.max(200, Math.min(duty, 100000));
+    };
 
     const form = useForm<SelectionNoticeDetailsFormData>({
         resolver: zodResolver(SelectionNoticeDetailsSchema),
         defaultValues: {
             selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
-            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount ?? calculatedPG,
+            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount,
             additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
-            stampPaperAmount: initialData?.stampPaperAmount ?? calculatedStamp,
+            stampPaperAmount: initialData?.stampPaperAmount,
         }
     });
 
     useEffect(() => {
-        const calculatedPG = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : initialData?.performanceGuaranteeAmount || 0;
-        const calculatedStamp = 200;
+        const pg = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : 0;
+        const stamp = calculateStampPaperValue(l1Amount);
 
         form.reset({
             selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
-            performanceGuaranteeAmount: calculatedPG,
+            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount ?? pg,
             additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
-            stampPaperAmount: calculatedStamp,
+            stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
         });
     }, [initialData, form, l1Amount]);
 
