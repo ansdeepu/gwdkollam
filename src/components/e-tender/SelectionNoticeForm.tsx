@@ -31,7 +31,7 @@ const parseStampPaperLogic = (description: string) => {
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
 
     return {
-        rate: rateMatch ? parseNumber(rateMatch[1]) : 1, // Correctly default to 1, not 200
+        rate: rateMatch ? parseNumber(rateMatch[1]) : 1,
         basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
         min: minMatch ? parseNumber(minMatch[1]) : 200,
         max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
