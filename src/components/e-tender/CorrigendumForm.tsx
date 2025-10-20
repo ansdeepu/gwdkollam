@@ -1,3 +1,4 @@
+
 // src/components/e-tender/CorrigendumForm.tsx
 "use client";
 
@@ -38,13 +39,16 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
     });
 
     useEffect(() => {
-        const data = initialData || createDefaultCorrigendum();
-        form.reset({
-            ...data,
-            corrigendumDate: formatDateForInput(data.corrigendumDate),
-            lastDateOfReceipt: formatDateForInput(data.lastDateOfReceipt, true),
-            dateOfOpeningTender: formatDateForInput(data.dateOfOpeningTender, true),
-        });
+        if (initialData) {
+            form.reset({
+                ...initialData,
+                corrigendumDate: formatDateForInput(initialData.corrigendumDate),
+                lastDateOfReceipt: formatDateForInput(initialData.lastDateOfReceipt, true),
+                dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
+            });
+        } else {
+            form.reset(createDefaultCorrigendum());
+        }
     }, [initialData, form]);
 
     return (
