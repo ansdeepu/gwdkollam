@@ -40,15 +40,12 @@ const parseStampPaperLogic = (description: string) => {
     };
 };
 
-
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
     const { allRateDescriptions } = useDataStore();
     const isNewTender = initialData?.id === 'new';
 
-    // Determine which description to use: historical from the tender, or current from the store
+    // **FIX**: Prioritize the tender's saved description. If it doesn't exist, use the hardcoded default to guarantee it matches old logic.
     const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee;
-    
-    // **FIX**: Prioritize the tender's saved description. If it doesn't exist, use the hardcoded default to guarantee it matches old logic, not new settings.
     const stampPaperDescription = initialData?.stampPaperDescription || defaultRateDescriptions.stampPaper;
 
     const calculateStampPaperValue = (amount?: number): number => {
@@ -117,12 +114,12 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                             <FormField name="performanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
-                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
+                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl>
                                     <FormDescription className="text-xs whitespace-pre-wrap">{performanceGuaranteeDescription}</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
-                            <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Additional Performance Guarantee Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Additional Performance Guarantee Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="stampPaperAmount" control={form.control} render={({ field }) => ( 
                                 <FormItem>
                                     <FormLabel>Stamp Paper required</FormLabel>
