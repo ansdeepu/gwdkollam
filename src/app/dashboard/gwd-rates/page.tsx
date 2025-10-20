@@ -266,14 +266,13 @@ export default function GwdRatesPage() {
 
   const canManage = user?.role === 'editor';
   
-  type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'performanceSecurityDeposit';
+  type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee';
   
   const defaultDescriptions: Record<RateDescriptionId, string> = {
     tenderFee: "For Works:\n- Up to Rs 1 Lakh: No Fee\n- Over 1 Lakh up to 10 Lakhs: Rs 500\n- Over 10 Lakhs up to 50 Lakhs: Rs 2500\n- Over 50 Lakhs up to 1 Crore: Rs 5000\n- Above 1 Crore: Rs 10000\n\nFor Purchase:\n- Up to Rs 1 Lakh: No Fee\n- Over 1 Lakh up to 10 Lakhs: Rs 800\n- Over 10 Lakhs up to 25 Lakhs: Rs 1600\n- Above 25 Lakhs: Rs 3000",
     emd: "For Works:\n- Up to Rs. 2 Crore: 2.5% of the project cost, subject to a maximum of Rs. 50,000\n- Above Rs. 2 Crore up to Rs. 5 Crore: Rs. 1 Lakh\n- Above Rs. 5 Crore up to Rs. 10 Crore: Rs. 2 Lakh\n- Above Rs. 10 Crore: Rs. 5 Lakh\n\nFor Purchase:\n- Up to 2 Crore: 1.00% of the project cost\n- Above 2 Crore: No EMD",
     performanceGuarantee: "Performance Guarantee , the amount collected at the time of executing contract agreement will be 5% of the contract value(agrecd PAC)and the deposit will be retained till the texpiry of Defect Liability Period. At least fifty percent(50%) of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.",
     additionalPerformanceGuarantee: "No description provided.",
-    performanceSecurityDeposit: "No description provided."
   };
   
   const [rateDescriptions, setRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultDescriptions);
@@ -610,13 +609,6 @@ export default function GwdRatesPage() {
                     description={rateDescriptions.additionalPerformanceGuarantee}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('additionalPerformanceGuarantee', "Additional Performance Guarantee") : undefined}
                 />
-                 <div className="">
-                    <RateDescriptionCard
-                        title="Performance Security Deposit"
-                        description={rateDescriptions.performanceSecurityDeposit}
-                        onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceSecurityDeposit', "Performance Security Deposit") : undefined}
-                    />
-                </div>
               </div>
             </TabsContent>
           </Tabs>
