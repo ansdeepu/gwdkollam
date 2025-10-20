@@ -46,7 +46,7 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                 dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
             });
         } else {
-             form.reset(createDefaultCorrigendum());
+            form.reset(createDefaultCorrigendum());
         }
     }, [initialData, form]);
 

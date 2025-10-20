@@ -159,7 +159,7 @@ export default function TenderDetails() {
 
     const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
         setModalData({
-            ...corrigendum,
+            ...corrigendum, // Pass the raw data
             index: index,
         });
         setActiveModal('editCorrigendum');
@@ -296,11 +296,11 @@ export default function TenderDetails() {
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
-                                                         <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
                                                          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                          </div>
+                                                         <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
                                                          <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 mt-1">
                                                             <DetailRow label="Type" value={corrigendum.corrigendumType} />
                                                             <DetailRow label="Date" value={corrigendum.corrigendumDate} />
@@ -323,7 +323,7 @@ export default function TenderDetails() {
                                             <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
                                             <div className="flex items-center gap-2 mr-4">
                                                 <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>
+                                                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
@@ -337,14 +337,14 @@ export default function TenderDetails() {
                                                 <div className="space-y-2">
                                                     <h4 className="font-semibold">Committee Members:</h4>
                                                     {committeeMemberDetails.length > 0 ? (
-                                                        <ul className="list-inside">
-                                                            {committeeMemberDetails.map((member, i) => 
-                                                                <li key={i} className="text-sm">
-                                                                    <span className="font-semibold">{i+1}. {member.name}</span>
-                                                                    <span className="text-muted-foreground"> ({member.designation})</span>
-                                                                </li>
-                                                            )}
-                                                        </ul>
+                                                        <ol className="list-decimal list-inside text-sm space-y-1">
+                                                          {committeeMemberDetails.map((member, i) => (
+                                                            <li key={i}>
+                                                              <span className="font-semibold">{member.name}</span>
+                                                              <span className="text-muted-foreground"> ({member.designation})</span>
+                                                            </li>
+                                                          ))}
+                                                        </ol>
                                                     ) : (
                                                         <p className="text-sm text-muted-foreground">No committee members assigned.</p>
                                                     )}

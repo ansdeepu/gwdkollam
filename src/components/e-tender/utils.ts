@@ -3,22 +3,11 @@ import { format, isValid, parseISO, toDate } from 'date-fns';
 
 export const formatDateForInput = (date: any, isDateTime: boolean = false): string => {
     if (!date) return '';
-    try {
-        const d = toDate(date);
-        if (isValid(d)) {
-            return format(d, isDateTime ? "yyyy-MM-dd'T'HH:mm" : 'yyyy-MM-dd');
-        }
-        // If it's already a string in the correct format, return it
-        if (typeof date === 'string') {
-            const parsed = parseISO(date);
-            if (isValid(parsed)) {
-                 return format(parsed, isDateTime ? "yyyy-MM-dd'T'HH:mm" : 'yyyy-MM-dd');
-            }
-        }
-        return '';
-    } catch (e) {
-        return '';
+    const d = toDateOrNull(date);
+    if (d && isValid(d)) {
+        return format(d, isDateTime ? "yyyy-MM-dd'T'HH:mm" : 'yyyy-MM-dd');
     }
+    return '';
 };
 
 export const toDateOrNull = (value: any): Date | null => {
