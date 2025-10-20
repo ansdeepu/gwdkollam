@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -20,6 +20,7 @@ interface BidderFormProps {
     onCancel: () => void;
     isSubmitting: boolean;
     initialData?: Bidder | null;
+    tenderAmount?: number;
 }
 
 const createDefaultBidder = (): Bidder => ({
@@ -32,15 +33,36 @@ const createDefaultBidder = (): Bidder => ({
     status: undefined,
 });
 
-export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialData }: BidderFormProps) {
+export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialData, tenderAmount }: BidderFormProps) {
     const form = useForm<Bidder>({
         resolver: zodResolver(BidderSchema),
         defaultValues: initialData || createDefaultBidder(),
     });
 
+    const { control, setValue, watch } = form;
+    const [quotedPercentage, aboveBelow] = watch(['quotedPercentage', 'aboveBelow']);
+
+
     useEffect(() => {
-        form.reset(initialData || createDefaultBidder());
+        if (initialData) {
+            form.reset(initialData);
+        } else {
+            form.reset(createDefaultBidder());
+        }
     }, [initialData, form]);
+
+    useEffect(() => {
+        if (tenderAmount && quotedPercentage !== undefined && aboveBelow) {
+            const percentage = quotedPercentage / 100;
+            let calculatedAmount = 0;
+            if (aboveBelow === 'Above') {
+                calculatedAmount = tenderAmount * (1 + percentage);
+            } else {
+                calculatedAmount = tenderAmount * (1 - percentage);
+            }
+            setValue('quotedAmount', Math.round(calculatedAmount * 100) / 100);
+        }
+    }, [tenderAmount, quotedPercentage, aboveBelow, setValue]);
 
     return (
         <FormProvider {...form}>
@@ -61,7 +83,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
                                 <FormField name="aboveBelow" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Above/Below</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Above">Above</SelectItem><SelectItem value="Below">Below</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField name="quotedAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="quotedAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="status" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Accepted">Accepted</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                            </div>
                         </div>
