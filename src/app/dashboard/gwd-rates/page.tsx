@@ -567,6 +567,11 @@ export default function GwdRatesPage() {
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceGuarantee', "Performance Guarantee") : undefined}
                 />
                 <RateDescriptionCard
+                    title="Additional Performance Guarantee"
+                    description={allRateDescriptions.additionalPerformanceGuarantee}
+                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('additionalPerformanceGuarantee', "Additional Performance Guarantee") : undefined}
+                />
+                <RateDescriptionCard
                     title="Stamp Paper"
                     description={allRateDescriptions.stampPaper}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('stampPaper', "Stamp Paper") : undefined}
