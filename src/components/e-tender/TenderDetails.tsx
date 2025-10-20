@@ -328,12 +328,10 @@ export default function TenderDetails() {
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyOpeningData ? (
-                                            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
                                                 <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
                                                 <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
-                                                <div className="md:col-span-2 border-t pt-2 mt-2">
-                                                    <DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} />
-                                                </div>
+                                                <div className="md:col-span-3"><DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} /></div>
                                             </dl>
                                         ) : (
                                              <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
