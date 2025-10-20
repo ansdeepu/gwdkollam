@@ -24,16 +24,14 @@ interface SelectionNoticeFormProps {
 
 // Function to parse numbers from the description string
 const parseStampPaperLogic = (description: string) => {
-    // Correctly parse numbers that might have commas
     const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
 
-    // Updated Regex to correctly capture the rate and basis
     const rateMatch = description.match(/₹\s*([\d,]+)\s*for\s*every\s*₹\s*([\d,]+)/);
     const minMatch = description.match(/minimum\s*of\s*₹\s*([\d,]+)/);
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
 
     return {
-        rate: rateMatch ? parseNumber(rateMatch[1]) : 200,
+        rate: rateMatch ? parseNumber(rateMatch[1]) : 1, // Correctly default to 1, not 200
         basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
         min: minMatch ? parseNumber(minMatch[1]) : 200,
         max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
@@ -44,20 +42,19 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const { allRateDescriptions } = useDataStore();
     const isNewTender = initialData?.id === 'new';
 
-    // **FIX**: Prioritize the tender's saved description. If it doesn't exist, use the hardcoded default to guarantee it matches old logic.
     const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee;
     const stampPaperDescription = initialData?.stampPaperDescription || defaultRateDescriptions.stampPaper;
 
     const calculateStampPaperValue = (amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
         
-        const rate = logic.rate ?? 200;
+        const rate = logic.rate ?? 1;
         const basis = logic.basis ?? 1000;
         const min = logic.min ?? 200;
         const max = logic.max ?? 100000;
 
         if (amount === undefined || amount === null || amount <= 0) {
-            return min; // Default to minimum if no amount
+            return min;
         }
         
         const duty = Math.ceil(amount / basis) * rate; 
@@ -90,7 +87,6 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
-        // Snapshot the descriptions on save if it's a new tender or they don't exist
         if (isNewTender || !initialData?.performanceGuaranteeDescription) {
             formData.performanceGuaranteeDescription = allRateDescriptions.performanceGuarantee;
         }
