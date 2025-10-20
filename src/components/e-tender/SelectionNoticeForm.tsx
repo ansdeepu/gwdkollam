@@ -1,3 +1,4 @@
+
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
@@ -24,6 +25,7 @@ interface SelectionNoticeFormProps {
 
 const parseStampPaperLogic = (description: string) => {
     const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
+
     const rateMatch = description.match(/₹\s*([\d,]+)\s*for\s*every\s*₹\s*([\d,]+)/);
     const minMatch = description.match(/minimum\s*of\s*₹\s*([\d,]+)/);
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
@@ -38,8 +40,13 @@ const parseStampPaperLogic = (description: string) => {
 
 const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
     const noApgThresholdMatch = description.match(/up to ([\d.]+)%/);
-    let threshold = 0.10; 
-    if (noApgThresholdMatch) {
+    const apgRequiredThresholdMatch = description.match(/between ([\d.]+)% and ([\d.]+)%/);
+
+    let threshold = 0.10; // Default threshold
+    if (apgRequiredThresholdMatch) {
+        // If "between 11% and 25%" exists, the threshold starts after 10%
+        threshold = 0.10;
+    } else if (noApgThresholdMatch) {
         threshold = parseFloat(noApgThresholdMatch[1]) / 100;
     }
     return { threshold };
@@ -78,12 +85,10 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         const logic = parseAdditionalPerformanceGuaranteeLogic(additionalPerformanceGuaranteeDescription);
         const percentageDifference = (estimateAmount - tenderAmount) / estimateAmount;
         
-        // APG is required if the bid is more than 10% below the estimate rate.
         if (percentageDifference > logic.threshold) {
-             // The APG is the difference in percentage from 10%, applied to the tender amount.
             const apgPercentage = percentageDifference - logic.threshold;
-            const additionalPG = tenderAmount * apgPercentage;
-            return Math.ceil(additionalPG / 100) * 100; // Round up to nearest 100
+            const additionalPG = estimateAmount * apgPercentage; // APG is calculated on the estimate amount.
+            return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
     }, [additionalPerformanceGuaranteeDescription]);
