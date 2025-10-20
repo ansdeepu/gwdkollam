@@ -1,4 +1,3 @@
-
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
@@ -11,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
-import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
+import type { E_tenderFormData, BasicDetailsFormData } from '@/lib/schemas/eTenderSchema';
 import { formatDateForInput } from './utils';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import { useDataStore } from '@/hooks/use-data-store';
@@ -28,9 +27,9 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
 
     const { control, setValue, handleSubmit } = form;
 
-    const [estimateAmount, tenderType] = useWatch({
+    const [estimateAmount, tenderType, id] = useWatch({
         control: control,
-        name: ['estimateAmount', 'tenderType']
+        name: ['estimateAmount', 'tenderType', 'id']
     });
 
     useEffect(() => {
@@ -73,12 +72,24 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
 
     }, [estimateAmount, tenderType, setValue]);
      
-    const tenderFeeDescription = allRateDescriptions.tenderFee;
-    const emdDescription = allRateDescriptions.emd;
+    const tenderFeeDescription = form.getValues('tenderFeeDescription') || allRateDescriptions.tenderFee;
+    const emdDescription = form.getValues('emdDescription') || allRateDescriptions.emd;
+
+    const onFormSubmit = (data: E_tenderFormData) => {
+        const formData: Partial<E_tenderFormData> = { ...data };
+        // If this is a new tender or the descriptions haven't been set, snapshot them.
+        if (id === 'new' || !form.getValues('tenderFeeDescription')) {
+            formData.tenderFeeDescription = allRateDescriptions.tenderFee;
+        }
+        if (id === 'new' || !form.getValues('emdDescription')) {
+            formData.emdDescription = allRateDescriptions.emd;
+        }
+        onSubmit(formData);
+    };
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Basic Tender Details</DialogTitle>
                     <DialogDescription>Enter the fundamental details for this tender.</DialogDescription>

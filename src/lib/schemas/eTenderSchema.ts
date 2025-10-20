@@ -52,6 +52,9 @@ export const BasicDetailsSchema = z.object({
     dateTimeOfReceipt: z.any().optional().nullable(),
     dateTimeOfOpening: z.any().optional().nullable(),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
+    // Descriptions for historical context
+    tenderFeeDescription: z.string().optional(),
+    emdDescription: z.string().optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
@@ -111,6 +114,9 @@ export const SelectionNoticeDetailsSchema = z.object({
     performanceGuaranteeAmount: optionalNumberSchema,
     additionalPerformanceGuaranteeAmount: optionalNumberSchema,
     stampPaperAmount: optionalNumberSchema,
+    // Descriptions for historical context
+    performanceGuaranteeDescription: z.string().optional(),
+    stampPaperDescription: z.string().optional(),
 });
 export type SelectionNoticeDetailsFormData = z.infer<typeof SelectionNoticeDetailsSchema>;
 
@@ -152,6 +158,12 @@ export const E_tenderSchema = z.object({
     supervisorPhoneNo: z.string().optional(),
 
     presentStatus: z.enum(eTenderStatusOptions).optional(),
+    
+    // Historical Descriptions
+    tenderFeeDescription: z.string().optional(),
+    emdDescription: z.string().optional(),
+    performanceGuaranteeDescription: z.string().optional(),
+    stampPaperDescription: z.string().optional(),
     
     // Deprecated fields that may exist in old data
     lastDateOfReceipt: z.any().optional(),

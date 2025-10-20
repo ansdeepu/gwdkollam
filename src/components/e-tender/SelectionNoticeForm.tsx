@@ -1,4 +1,3 @@
-
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
@@ -34,7 +33,7 @@ const parseStampPaperLogic = (description: string) => {
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
 
     return {
-        rate: rateMatch ? parseNumber(rateMatch[1]) : 200, // Correctly parse rate
+        rate: rateMatch ? parseNumber(rateMatch[1]) : 200,
         basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
         min: minMatch ? parseNumber(minMatch[1]) : 200,
         max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
@@ -44,9 +43,14 @@ const parseStampPaperLogic = (description: string) => {
 
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
     const { allRateDescriptions } = useDataStore();
-    
+    const isNewTender = initialData?.id === 'new';
+
+    // Determine which description to use: historical from the tender, or current from the store
+    const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee;
+    const stampPaperDescription = initialData?.stampPaperDescription || allRateDescriptions.stampPaper;
+
     const calculateStampPaperValue = (amount?: number): number => {
-        const logic = parseStampPaperLogic(allRateDescriptions.stampPaper);
+        const logic = parseStampPaperLogic(stampPaperDescription);
         
         const rate = logic.rate ?? 200;
         const basis = logic.basis ?? 1000;
@@ -83,11 +87,23 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
             additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
             stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
         });
-    }, [initialData, form, l1Amount, allRateDescriptions.stampPaper]); // Depend on the description string
+    }, [initialData, form, l1Amount, stampPaperDescription]);
+
+    const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
+        const formData: Partial<E_tenderFormData> = { ...data };
+        // Snapshot the descriptions on save if it's a new tender or they don't exist
+        if (isNewTender || !initialData?.performanceGuaranteeDescription) {
+            formData.performanceGuaranteeDescription = allRateDescriptions.performanceGuarantee;
+        }
+        if (isNewTender || !initialData?.stampPaperDescription) {
+            formData.stampPaperDescription = allRateDescriptions.stampPaper;
+        }
+        onSubmit(formData);
+    };
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Selection Notice Details</DialogTitle>
                     <DialogDescription>Enter details related to the selection notice.</DialogDescription>
@@ -100,7 +116,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription className="text-xs whitespace-pre-wrap">{allRateDescriptions.performanceGuarantee}</FormDescription>
+                                    <FormDescription className="text-xs whitespace-pre-wrap">{performanceGuaranteeDescription}</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
@@ -109,7 +125,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Stamp Paper required</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription className="text-xs whitespace-pre-wrap">{allRateDescriptions.stampPaper}</FormDescription>
+                                    <FormDescription className="text-xs whitespace-pre-wrap">{stampPaperDescription}</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
