@@ -1,3 +1,4 @@
+
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
@@ -45,10 +46,12 @@ const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
     if (noApgThresholdMatch) {
         threshold = parseFloat(noApgThresholdMatch[1]) / 100;
     } else if (apgRequiredThresholdMatch) {
+        // Using the lower bound of the range as the start of the APG requirement
         threshold = parseFloat(apgRequiredThresholdMatch[1]) / 100;
     }
     return { threshold };
 };
+
 
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
     const { allRateDescriptions } = useDataStore();
@@ -83,7 +86,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         
         if (percentageDifference > logic.threshold) {
             const excessPercentage = percentageDifference - logic.threshold;
-            const additionalPG = excessPercentage * estimateAmount; // Correct: Use estimateAmount
+            const additionalPG = excessPercentage * tenderAmount; // Use tenderAmount as per clarification
             return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
@@ -153,7 +156,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Additional Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Based on the bid being below the estimate threshold.</FormDescription>
+                                    <FormDescription className="text-xs">Calculated if bid is below the estimate threshold.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
