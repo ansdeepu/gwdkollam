@@ -8,7 +8,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, corrigendumTypeOptions, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -200,11 +200,7 @@ export default function TenderDetails() {
     const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
         setModalData({
             ...corrigendum,
-            index,
-            corrigendumDate: formatDateForInput(corrigendum.corrigendumDate),
-            corrigendumType: corrigendum.corrigendumType,
-            lastDateOfReceipt: formatDateForInput(corrigendum.lastDateOfReceipt, true),
-            dateOfOpeningTender: formatDateForInput(corrigendum.dateOfOpeningTender, true),
+            index: index,
         });
         setActiveModal('editCorrigendum');
     };
@@ -312,16 +308,14 @@ export default function TenderDetails() {
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-3 border rounded-md bg-secondary/30 relative group">
-                                                        <div className="flex justify-between items-start mb-2">
-                                                          <h4 className="text-sm font-semibold text-primary">Corrigendum No. {index + 1}</h4>
-                                                          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
-                                                              <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                          </div>
+                                                        <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
+                                                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
+                                                            <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                                             <DetailRow label="Type" value={corrigendum.corrigendumType} />
-                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
+                                                            <DetailRow label="Date" value={corrigendum.corrigendumDate} />
                                                             <DetailRow label="New Last Date/Time" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
                                                             <DetailRow label="New Opening Date/Time" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
                                                             <div className="md:col-span-full"><DetailRow label="Reason" value={corrigendum.reason} /></div>
@@ -345,8 +339,8 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyOpeningData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 border-t">
-                                                <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
-                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
+                                                <DetailRow label="Date of Opening Bid" value={form.watch('dateOfOpeningBid')} />
+                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={form.watch('dateOfTechnicalAndFinancialBidOpening')} />
                                                 <div className="md:col-span-full"><DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} /></div>
                                             </dl>
                                         ) : (
