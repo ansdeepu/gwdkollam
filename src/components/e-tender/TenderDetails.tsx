@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { toDateOrNull, formatDateSafe, formatDateForInput } from './utils';
@@ -69,6 +70,7 @@ export default function TenderDetails() {
     const [modalData, setModalData] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeAccordion, setActiveAccordion] = useState<string>("basic-details");
+    const [isClearOpeningDetailsConfirmOpen, setIsClearOpeningDetailsConfirmOpen] = useState(false);
 
 
     const form = useForm<E_tenderFormData>({
@@ -164,6 +166,19 @@ export default function TenderDetails() {
             dateOfOpeningTender: corrigendum.dateOfOpeningTender ? formatDateForInput(corrigendum.dateOfOpeningTender, true) : null,
         });
         setActiveModal('editCorrigendum');
+    };
+    
+    const handleClearOpeningDetails = () => {
+        const clearedData = {
+            dateOfOpeningBid: null,
+            dateOfTechnicalAndFinancialBidOpening: null,
+            technicalCommitteeMember1: undefined,
+            technicalCommitteeMember2: undefined,
+            technicalCommitteeMember3: undefined,
+        };
+        updateTender(clearedData);
+        toast({ title: "Opening Details Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
+        setIsClearOpeningDetailsConfirmOpen(false);
     };
     
     const pdfReports = [
@@ -309,7 +324,10 @@ export default function TenderDetails() {
                                     <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                            <div className="flex items-center gap-2 mr-4">
+                                                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>
+                                            </div>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
@@ -499,6 +517,19 @@ export default function TenderDetails() {
                         <WorkOrderDetailsForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} tenderType={tenderType}/>
                     </DialogContent>
                 </Dialog>
+                
+                <AlertDialog open={isClearOpeningDetailsConfirmOpen} onOpenChange={setIsClearOpeningDetailsConfirmOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>This will clear all tender opening details, including dates and committee members. This action cannot be undone until you save all changes.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleClearOpeningDetails}>Yes, Clear</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </FormProvider>
     );

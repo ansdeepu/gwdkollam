@@ -64,18 +64,6 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
         });
     }, [initialData, form]);
 
-    const handleClearAll = () => {
-        const clearedData = {
-            dateOfOpeningBid: null,
-            dateOfTechnicalAndFinancialBidOpening: null,
-            technicalCommitteeMember1: undefined,
-            technicalCommitteeMember2: undefined,
-            technicalCommitteeMember3: undefined,
-        };
-        form.reset(clearedData);
-        onSubmit(clearedData);
-    };
-
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
@@ -111,10 +99,7 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
                         </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4 flex justify-between">
-                    <Button variant="destructive" type="button" onClick={handleClearAll} disabled={isSubmitting}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Clear All
-                    </Button>
+                <DialogFooter className="p-6 pt-4 flex justify-end">
                     <div className="flex gap-2">
                         <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                             <X className="mr-2 h-4 w-4" /> Cancel
