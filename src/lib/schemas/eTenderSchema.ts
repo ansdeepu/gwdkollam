@@ -1,8 +1,8 @@
 // src/lib/schemas/eTenderSchema.ts
 import { z } from 'zod';
 
-const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional().nullable());
-const optionalDateTimeSchema = z.preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional().nullable());
+const optionalDateSchema = z.preprocess((val) => (val ? new Date(val as string) : null), z.date().optional().nullable());
+const optionalDateTimeSchema = z.preprocess((val) => (val ? new Date(val as string) : null), z.date().optional().nullable());
 const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional());
 
 export const eTenderStatusOptions = [
@@ -42,7 +42,7 @@ export type Designation = typeof designationOptions[number];
 
 export const BasicDetailsSchema = z.object({
     eTenderNo: z.string().min(1, "eTender No. is required."),
-    tenderDate: z.string().min(1, "Tender Date is required."),
+    tenderDate: z.union([z.string(), z.date()]).refine(val => val, { message: "Tender Date is required." }),
     fileNo: z.string().min(1, "File No. is required."),
     nameOfWork: z.string().min(1, "Name of Work is required."),
     nameOfWorkMalayalam: z.string().optional(),
@@ -51,8 +51,8 @@ export const BasicDetailsSchema = z.object({
     tenderFormFee: z.number().min(0, "Tender Form Fee cannot be negative."),
     emd: z.number().min(0, "EMD cannot be negative."),
     periodOfCompletion: z.number().int().min(1, "Period of Completion must be at least 1 day."),
-    dateTimeOfReceipt: z.string().min(1, "Last Date & Time of Receipt is required."),
-    dateTimeOfOpening: z.string().min(1, "Date & Time of Opening Tender is required."),
+    dateTimeOfReceipt: z.union([z.string(), z.date()]).refine(val => val, { message: "Last Date & Time of Receipt is required." }),
+    dateTimeOfOpening: z.union([z.string(), z.date()]).refine(val => val, { message: "Date & Time of Opening Tender is required." }),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;

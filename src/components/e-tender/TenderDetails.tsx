@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -125,12 +124,22 @@ export default function TenderDetails() {
       setIsSubmitting(true);
       try {
           const currentTenderData = form.getValues();
+          const dataForSave = {
+              ...currentTenderData,
+              corrigendums: (currentTenderData.corrigendums || []).map(c => ({
+                  ...c,
+                  corrigendumDate: c.corrigendumDate ? new Date(c.corrigendumDate) : null,
+                  lastDateOfReceipt: c.lastDateOfReceipt ? new Date(c.lastDateOfReceipt) : null,
+                  dateOfOpeningTender: c.dateOfOpeningTender ? new Date(c.dateOfOpeningTender) : null,
+              }))
+          };
+
           if (tender.id === 'new') {
-              const newTenderId = await addTender(currentTenderData);
+              const newTenderId = await addTender(dataForSave);
               toast({ title: "Tender Created", description: "The new e-Tender has been created and saved." });
               router.replace(`/dashboard/e-tender/${newTenderId}`);
           } else {
-              await saveTenderToDb(tender.id, currentTenderData);
+              await saveTenderToDb(tender.id, dataForSave);
               toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
               router.push('/dashboard/e-tender');
           }
