@@ -1,3 +1,4 @@
+
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
@@ -12,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
 import { SelectionNoticeDetailsSchema, type E_tenderFormData, type SelectionNoticeDetailsFormData } from '@/lib/schemas/eTenderSchema';
 import { formatDateForInput } from './utils';
+import { useDataStore } from '@/hooks/use-data-store';
 
 interface SelectionNoticeFormProps {
     initialData?: Partial<E_tenderFormData>;
@@ -22,6 +24,7 @@ interface SelectionNoticeFormProps {
 }
 
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
+    const { allRateDescriptions } = useDataStore();
     
     const calculateStampPaperValue = (amount?: number): number => {
         if (amount === undefined || amount === null || amount <= 0) {
@@ -74,7 +77,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription>Calculated as 5% of the L1 bidder's quoted amount, rounded up to the nearest ₹100.</FormDescription>
+                                    <FormDescription className="text-xs whitespace-pre-wrap">{allRateDescriptions.performanceGuarantee}</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
@@ -83,7 +86,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Stamp Paper required</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription>Calculated as ₹1 for every ₹1,000 (or part thereof) of the L1 amount, rounded up to the nearest hundred (min ₹200, max ₹1,00,000).</FormDescription>
+                                    <FormDescription className="text-xs whitespace-pre-wrap">{allRateDescriptions.stampPaper}</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>

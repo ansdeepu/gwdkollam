@@ -1,3 +1,4 @@
+
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -76,6 +77,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useDataStore, type RateDescriptionId } from "@/hooks/use-data-store";
 
 export const dynamic = 'force-dynamic';
 
@@ -116,7 +118,6 @@ const RigFeeDetailsContent = () => {
     const staticFees = [
         { description: 'Application Fee - Agency Registration', amount: 1000 },
         { description: 'Application Fee - Rig Registration', amount: 1000 },
-        { description: 'Agency Registration Fee as on 24-01-2023', amount: 60000 },
         { description: 'Fine without valid registration as on 24-01-2023', amount: 100000 },
     ];
     
@@ -245,12 +246,9 @@ const RigFeeDetailsContent = () => {
 
 export default function GwdRatesPage() {
   const { setHeader } = usePageHeader();
-  useEffect(() => {
-    setHeader('GWD Rates', 'A master list of all standard items and their approved rates used by the department.');
-  }, [setHeader]);
-
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { allRateDescriptions, refetchRateDescriptions } = useDataStore();
 
   const [rateItems, setRateItems] = useState<GwdRateItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -266,44 +264,11 @@ export default function GwdRatesPage() {
 
   const canManage = user?.role === 'editor';
   
-  type RateDescriptionId = 'tenderFee' | 'emd' | 'performanceGuarantee' | 'additionalPerformanceGuarantee' | 'stampPaper';
-  
-  const defaultDescriptions: Record<RateDescriptionId, string> = {
-    tenderFee: "For Works:\n- Up to Rs 1 Lakh: No Fee\n- Over 1 Lakh up to 10 Lakhs: Rs 500\n- Over 10 Lakhs up to 50 Lakhs: Rs 2500\n- Over 50 Lakhs up to 1 Crore: Rs 5000\n- Above 1 Crore: Rs 10000\n\nFor Purchase:\n- Up to Rs 1 Lakh: No Fee\n- Over 1 Lakh up to 10 Lakhs: Rs 800\n- Over 10 Lakhs up to 25 Lakhs: Rs 1600\n- Above 25 Lakhs: Rs 3000",
-    emd: "For Works:\n- Up to Rs. 2 Crore: 2.5% of the project cost, subject to a maximum of Rs. 50,000\n- Above Rs. 2 Crore up to Rs. 5 Crore: Rs. 1 Lakh\n- Above Rs. 5 Crore up to Rs. 10 Crore: Rs. 2 Lakh\n- Above Rs. 10 Crore: Rs. 5 Lakh\n\nFor Purchase:\n- Up to 2 Crore: 1.00% of the project cost\n- Above 2 Crore: No EMD",
-    performanceGuarantee: "Performance Guarantee , the amount collected at the time of executing contract agreement will be 5% of the contract value(agrecd PAC)and the deposit will be retained till the texpiry of Defect Liability Period. At least fifty percent(50%) of this deposit shall be collected in the form of Treasury Fixed Deposit and the rest in the form of Bank Guarantee or any other forms prescribed in the revised PWD Manual.",
-    additionalPerformanceGuarantee: "No description provided.",
-    stampPaper: "For agreements or memorandums, stamp duty shall be ₹1 for every ₹1,000 (or part) of the contract amount, subject to a minimum of ₹200 and a maximum of ₹1,00,000. For supplementary deeds, duty shall be based on the amount in the supplementary agreement.",
-  };
-  
-  const [rateDescriptions, setRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultDescriptions);
   const [editingRate, setEditingRate] = useState<{id: RateDescriptionId, title: string} | null>(null);
 
-  const fetchRateDescriptions = useCallback(async () => {
-    if (!user) return;
-    try {
-        const querySnapshot = await getDocs(collection(db, RATE_DESCRIPTIONS_COLLECTION));
-        if (querySnapshot.empty) {
-            setRateDescriptions(defaultDescriptions);
-        } else {
-            const descriptions: Partial<Record<RateDescriptionId, string>> = {};
-            querySnapshot.forEach(doc => {
-                descriptions[doc.id as RateDescriptionId] = doc.data().description;
-            });
-            setRateDescriptions(prev => ({...defaultDescriptions, ...descriptions}));
-        }
-    } catch (error) {
-        console.error("Error fetching rate descriptions:", error);
-        toast({ title: "Error", description: "Could not load e-Tender rate descriptions.", variant: "destructive" });
-    }
-  }, [user, toast]);
-
   useEffect(() => {
-    if (user) {
-        fetchRateDescriptions();
-    }
-  }, [user, fetchRateDescriptions]);
-
+    setHeader('GWD Rates', 'A master list of all standard items and their approved rates used by the department.');
+  }, [setHeader]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -499,11 +464,7 @@ export default function GwdRatesPage() {
     try {
         const docRef = doc(db, RATE_DESCRIPTIONS_COLLECTION, editingRate.id);
         await setDoc(docRef, { description: newDescription, updatedAt: serverTimestamp() }, { merge: true });
-
-        setRateDescriptions(prev => ({
-            ...prev,
-            [editingRate.id]: newDescription,
-        }));
+        refetchRateDescriptions();
         toast({ title: `${editingRate.title} Updated`, description: 'The description has been saved.' });
     } catch (error: any) {
         console.error("Error saving rate description:", error);
@@ -592,27 +553,22 @@ export default function GwdRatesPage() {
                <div className="grid grid-cols-1 gap-6 mt-6">
                 <RateDescriptionCard
                     title="Tender Fee"
-                    description={rateDescriptions.tenderFee}
+                    description={allRateDescriptions.tenderFee}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('tenderFee', "Tender Fee") : undefined}
                 />
                 <RateDescriptionCard
                     title="Earnest Money Deposit (EMD)"
-                    description={rateDescriptions.emd}
+                    description={allRateDescriptions.emd}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('emd', "Earnest Money Deposit (EMD)") : undefined}
                 />
                 <RateDescriptionCard
                     title="Performance Guarantee"
-                    description={rateDescriptions.performanceGuarantee}
+                    description={allRateDescriptions.performanceGuarantee}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('performanceGuarantee', "Performance Guarantee") : undefined}
                 />
                 <RateDescriptionCard
-                    title="Additional Performance Guarantee"
-                    description={rateDescriptions.additionalPerformanceGuarantee}
-                    onEditClick={canManage ? () => handleOpenRateDescriptionEditor('additionalPerformanceGuarantee', "Additional Performance Guarantee") : undefined}
-                />
-                <RateDescriptionCard
                     title="Stamp Paper"
-                    description={rateDescriptions.stampPaper}
+                    description={allRateDescriptions.stampPaper}
                     onEditClick={canManage ? () => handleOpenRateDescriptionEditor('stampPaper', "Stamp Paper") : undefined}
                 />
               </div>
@@ -731,7 +687,7 @@ export default function GwdRatesPage() {
             isOpen={!!editingRate}
             onClose={() => setEditingRate(null)}
             title={editingRate.title}
-            initialDescription={rateDescriptions[editingRate.id]}
+            initialDescription={allRateDescriptions[editingRate.id]}
             onSave={handleSaveRateDescription}
             isSaving={isSubmitting}
         />

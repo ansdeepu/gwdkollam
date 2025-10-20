@@ -1,3 +1,4 @@
+
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
@@ -13,6 +14,7 @@ import { Loader2, Save, X } from 'lucide-react';
 import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
 import { formatDateForInput } from './utils';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
+import { useDataStore } from '@/hooks/use-data-store';
 
 interface BasicDetailsFormProps {
   onSubmit: (data: Partial<E_tenderFormData>) => void;
@@ -22,6 +24,7 @@ interface BasicDetailsFormProps {
 
 export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
     const form = useFormContext<E_tenderFormData>();
+    const { allRateDescriptions } = useDataStore();
 
     const { control, setValue, handleSubmit } = form;
 
@@ -70,17 +73,8 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
 
     }, [estimateAmount, tenderType, setValue]);
      
-    const tenderFeeDescription = tenderType === 'Work'
-        ? "Calculated based on Tender Amount for Works."
-        : tenderType === 'Purchase'
-        ? "Calculated based on Tender Amount for Purchases."
-        : "Select a tender type to see calculation rules.";
-        
-    const emdDescription = tenderType === 'Work'
-        ? "For Works: 2.5% of amount (max ₹50k) up to 2 Cr, then tiered."
-        : tenderType === 'Purchase'
-        ? "For Purchases: 1% of amount up to 2 Cr, then 0."
-        : "Select a tender type to see calculation rules.";
+    const tenderFeeDescription = allRateDescriptions.tenderFee;
+    const emdDescription = allRateDescriptions.emd;
 
     return (
         <FormProvider {...form}>
@@ -124,7 +118,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>Tender Form Fee (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription>{tenderFeeDescription}</FormDescription>
+                                        <FormDescription className="text-xs whitespace-pre-wrap">{tenderFeeDescription}</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
@@ -132,7 +126,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>EMD (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription>{emdDescription}</FormDescription>
+                                        <FormDescription className="text-xs whitespace-pre-wrap">{emdDescription}</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
