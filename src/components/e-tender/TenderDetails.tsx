@@ -311,8 +311,8 @@ export default function TenderDetails() {
                                        {hasAnyCorrigendumData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
-                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
-                                                         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100">
+                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative">
+                                                         <div className="absolute top-2 right-2 flex items-center gap-1">
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                          </div>
@@ -384,11 +384,7 @@ export default function TenderDetails() {
                                          {hasAnyBidderData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {bidderFields.map((bidder, index) => (
-                                                    <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative group">
-                                                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100">
-                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
-                                                            <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                        </div>
+                                                    <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative">
                                                         <div className="flex items-center justify-between mb-2">
                                                             <h5 className="font-bold text-sm flex items-center gap-2">
                                                                 Bidder #{index + 1}: {bidder.name}
@@ -396,8 +392,13 @@ export default function TenderDetails() {
                                                                     <Badge className="bg-green-600 text-white ml-2">L1</Badge>
                                                                 )}
                                                             </h5>
+                                                            <div className="flex items-center gap-1">
+                                                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
+                                                              <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2">
+                                                        <p className="text-xs text-muted-foreground">{bidder.address}</p>
+                                                        <div className="flex items-center gap-2 mt-1">
                                                             {bidder.status && <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", bidder.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>{bidder.status}</span>}
                                                         </div>
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
