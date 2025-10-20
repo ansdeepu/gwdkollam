@@ -7,7 +7,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -179,15 +179,25 @@ export default function TenderDetails() {
 
     const hasAnyCorrigendumData = corrigendumFields.length > 0;
     
-    const committeeMembers = [
+    const committeeMemberNames = [
         form.watch('technicalCommitteeMember1'),
         form.watch('technicalCommitteeMember2'),
         form.watch('technicalCommitteeMember3')
     ].filter(Boolean);
 
+    const committeeMemberDetails = useMemo(() => {
+        return committeeMemberNames.map(name => {
+            const staff = allStaffMembers.find(s => s.name === name);
+            return {
+                name,
+                designation: staff?.designation || 'N/A'
+            };
+        });
+    }, [committeeMemberNames, allStaffMembers]);
+
     const hasAnyOpeningData = useMemo(() => {
-        return form.watch('dateOfOpeningBid') || form.watch('dateOfTechnicalAndFinancialBidOpening') || committeeMembers.length > 0;
-    }, [form, committeeMembers]);
+        return form.watch('dateOfOpeningBid') || form.watch('dateOfTechnicalAndFinancialBidOpening') || committeeMemberDetails.length > 0;
+    }, [form, committeeMemberDetails]);
     
     const hasAnyBidderData = useMemo(() => {
         return bidderFields.length > 0;
@@ -306,9 +316,14 @@ export default function TenderDetails() {
                                                 </dl>
                                                 <div className="space-y-2">
                                                     <h4 className="font-semibold">Committee Members:</h4>
-                                                    {committeeMembers.length > 0 ? (
-                                                        <ul className="list-disc list-inside">
-                                                            {committeeMembers.map((member, i) => <li key={i}>{member}</li>)}
+                                                    {committeeMemberDetails.length > 0 ? (
+                                                        <ul className="list-inside">
+                                                            {committeeMemberDetails.map((member, i) => 
+                                                                <li key={i} className="text-sm">
+                                                                    <span className="font-semibold">{i+1}. {member.name}</span>
+                                                                    <span className="text-muted-foreground"> ({member.designation})</span>
+                                                                </li>
+                                                            )}
                                                         </ul>
                                                     ) : (
                                                         <p className="text-sm text-muted-foreground">No committee members assigned.</p>
@@ -412,7 +427,7 @@ export default function TenderDetails() {
                                                 <FormItem>
                                                     <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
-                                                        <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                        <SelectContent>{form.watch('presentStatus') && <SelectItem value={form.watch('presentStatus')!}>{form.watch('presentStatus')}</SelectItem>}{['Tender Process', 'Selection Notice Issued', 'Work Order Issued'].map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
                                                     <FormMessage />
                                                 </FormItem>
