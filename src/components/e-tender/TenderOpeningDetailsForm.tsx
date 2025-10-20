@@ -9,17 +9,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Save, X } from 'lucide-react';
+import { Loader2, Save, X, Trash2 } from 'lucide-react';
 import { TenderOpeningDetailsSchema, type E_tenderFormData, type TenderOpeningDetailsFormData, type Designation } from '@/lib/schemas/eTenderSchema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDateForInput } from './utils';
 import { useDataStore } from '@/hooks/use-data-store';
 
 interface TenderOpeningDetailsFormProps {
-    initialData?: {
-        memberIndex: 1 | 2 | 3;
-        currentValue?: string | null;
-    };
+    initialData?: Partial<E_tenderFormData>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
@@ -46,64 +43,86 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
             });
     }, [allStaffMembers]);
     
-    const form = useForm<any>({ // Use `any` for simplicity in this single-field form
+    const form = useForm<TenderOpeningDetailsFormData>({
+        resolver: zodResolver(TenderOpeningDetailsSchema),
         defaultValues: {
-            memberName: initialData?.currentValue || undefined,
-        }
+            dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
+            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
+            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
+            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
+        },
     });
 
      useEffect(() => {
         form.reset({
-            memberName: initialData?.currentValue || undefined,
+            dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
+            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
+            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
+            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
         });
     }, [initialData, form]);
 
-    const { control } = form;
-
-    const handleFormSubmit = (data: { memberName?: string }) => {
-        if (initialData?.memberIndex) {
-            onSubmit({
-                [`technicalCommitteeMember${initialData.memberIndex}`]: data.memberName,
-            });
-        }
+    const handleClearAll = () => {
+        const clearedData = {
+            dateOfOpeningBid: null,
+            dateOfTechnicalAndFinancialBidOpening: null,
+            technicalCommitteeMember1: undefined,
+            technicalCommitteeMember2: undefined,
+            technicalCommitteeMember3: undefined,
+        };
+        form.reset(clearedData);
+        onSubmit(clearedData);
     };
-
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
-                    <DialogTitle>Edit Committee Member {initialData?.memberIndex}</DialogTitle>
-                    <DialogDescription>Select a staff member for this committee slot.</DialogDescription>
+                    <DialogTitle>Tender Opening Details</DialogTitle>
+                    <DialogDescription>Manage dates and committee members for the tender opening process.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                             <FormField
-                                name="memberName"
-                                control={control}
-                                render={({ field }) => (
-                                <FormItem>
-                                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select a Member" /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
-                                            {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}/>
+                            <FormField name="dateOfOpeningBid" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Bid</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="dateOfTechnicalAndFinancialBidOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Technical and Financial Bid Opening</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)}/></FormControl><FormMessage /></FormItem> )}/>
+                            
+                            {[1, 2, 3].map(i => (
+                                <FormField
+                                    key={i}
+                                    name={`technicalCommitteeMember${i}` as const}
+                                    control={form.control}
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Committee Member {i}</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select a Member" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
+                                                {committeeMemberList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            ))}
                         </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4">
-                    <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
-                        <X className="mr-2 h-4 w-4" /> Cancel
+                <DialogFooter className="p-6 pt-4 flex justify-between">
+                    <Button variant="destructive" type="button" onClick={handleClearAll} disabled={isSubmitting}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Clear All
                     </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
+                            <X className="mr-2 h-4 w-4" /> Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save
+                        </Button>
+                    </div>
                 </DialogFooter>
             </form>
         </FormProvider>

@@ -7,7 +7,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -211,20 +211,6 @@ export default function TenderDetails() {
         ? `${tenderFormFeeValue.toLocaleString('en-IN')} + GST`
         : tenderFormFeeValue;
 
-    const handleClearCommitteeMember = (memberIndex: 1 | 2 | 3) => {
-        setValue(`technicalCommitteeMember${memberIndex}`, undefined);
-        updateTender({ [`technicalCommitteeMember${memberIndex}`]: undefined });
-        toast({ title: `Committee Member ${memberIndex} Cleared` });
-    };
-
-    const handleEditCommitteeMember = (memberIndex: 1 | 2 | 3) => {
-        setModalData({
-            memberIndex,
-            currentValue: form.watch(`technicalCommitteeMember${memberIndex}`)
-        });
-        setActiveModal('opening');
-    };
-
     return (
         <FormProvider {...form}>
             <div className="space-y-6">
@@ -308,6 +294,7 @@ export default function TenderDetails() {
                                     <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
+                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
@@ -320,39 +307,16 @@ export default function TenderDetails() {
                                                 <div className="space-y-2">
                                                     <h4 className="font-semibold">Committee Members:</h4>
                                                     {committeeMembers.length > 0 ? (
-                                                        <div className="space-y-2">
-                                                            {[1, 2, 3].map(i => {
-                                                                const memberName = form.watch(`technicalCommitteeMember${i}` as const);
-                                                                if (!memberName) {
-                                                                    return (
-                                                                        <div key={i} className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
-                                                                            <span className="text-sm text-muted-foreground italic">Member {i} not assigned</span>
-                                                                            <Button size="sm" variant="outline" onClick={() => handleEditCommitteeMember(i as 1|2|3)}>Assign</Button>
-                                                                        </div>
-                                                                    );
-                                                                }
-                                                                const staffInfo = allStaffMembers.find(s => s.name === memberName);
-                                                                return (
-                                                                    <div key={i} className="flex items-center justify-between p-2 border rounded-md">
-                                                                        <div className="text-sm">
-                                                                            <span className="font-bold">{i}. {memberName}</span>
-                                                                            <span className="text-muted-foreground"> ({staffInfo?.designation || 'N/A'})</span>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Button size="sm" variant="ghost" onClick={() => handleEditCommitteeMember(i as 1|2|3)}><Edit className="h-4 w-4"/></Button>
-                                                                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleClearCommitteeMember(i as 1|2|3)}><Trash2 className="h-4 w-4"/></Button>
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
+                                                        <ul className="list-disc list-inside">
+                                                            {committeeMembers.map((member, i) => <li key={i}>{member}</li>)}
+                                                        </ul>
                                                     ) : (
-                                                         <p className="text-sm text-muted-foreground text-center py-4">No committee members assigned. <Button variant="link" className="p-0 h-auto" onClick={() => handleEditCommitteeMember(1)}>Assign Member 1</Button></p>
+                                                        <p className="text-sm text-muted-foreground">No committee members assigned.</p>
                                                     )}
                                                 </div>
                                             </div>
                                         ) : (
-                                             <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added. <Button variant="link" className="p-0 h-auto" onClick={() => handleEditCommitteeMember(1)}>Add Details</Button></p>
+                                             <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
                                         )}
                                     </AccordionContent>
                                 </AccordionItem>
@@ -446,9 +410,9 @@ export default function TenderDetails() {
                                             control={form.control}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                                                        <SelectContent>{form.watch('presentStatus') && <SelectItem value={form.watch('presentStatus')!}>{form.watch('presentStatus')}</SelectItem>}</SelectContent>
+                                                    <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value}>
+                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
+                                                        <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
                                                     <FormMessage />
                                                 </FormItem>
@@ -492,7 +456,7 @@ export default function TenderDetails() {
                 </Dialog>
                 <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
-                        <TenderOpeningDetailsForm initialData={modalData} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
+                        <TenderOpeningDetailsForm initialData={form.getValues()} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'addBidder' || activeModal === 'editBidder'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
