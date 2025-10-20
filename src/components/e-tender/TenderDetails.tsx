@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -146,11 +147,17 @@ export default function TenderDetails() {
     };
     
     const handleCorrigendumSave = (corrigendumData: Corrigendum) => {
+        const dataToSave = {
+            ...corrigendumData,
+            corrigendumDate: toDateOrNull(corrigendumData.corrigendumDate),
+            lastDateOfReceipt: toDateOrNull(corrigendumData.lastDateOfReceipt),
+            dateOfOpeningTender: toDateOrNull(corrigendumData.dateOfOpeningTender),
+        };
         if (activeModal === 'addCorrigendum') {
-            appendCorrigendum(corrigendumData);
+            appendCorrigendum(dataToSave);
             toast({ title: "Corrigendum Added Locally" });
         } else if (activeModal === 'editCorrigendum' && modalData?.index !== undefined) {
-            updateCorrigendum(modalData.index, corrigendumData);
+            updateCorrigendum(modalData.index, dataToSave);
             toast({ title: "Corrigendum Updated Locally" });
         }
         setActiveModal(null);
@@ -158,10 +165,7 @@ export default function TenderDetails() {
     };
 
     const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
-        setModalData({
-            ...corrigendum, // Pass the raw data
-            index: index,
-        });
+        setModalData({ ...corrigendum, index });
         setActiveModal('editCorrigendum');
     };
     
