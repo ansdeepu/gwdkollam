@@ -78,22 +78,6 @@ export default function TenderDetails() {
       const isValid = await form.trigger();
       if (!isValid) {
           toast({ title: "Validation Error", description: "Please check all fields for errors.", variant: "destructive" });
-          const errorField = Object.keys(form.formState.errors)[0] as keyof E_tenderFormData;
-          if (errorField) {
-              const sectionMap: Record<string, string> = {
-                  eTenderNo: 'basic-details', tenderDate: 'basic-details', fileNo: 'basic-details', nameOfWork: 'basic-details', location: 'basic-details', estimateAmount: 'basic-details', tenderFormFee: 'basic-details', emd: 'basic-details', periodOfCompletion: 'basic-details', dateTimeOfReceipt: 'basic-details', dateTimeOfOpening: 'basic-details', nameOfWorkMalayalam: 'basic-details',
-                  corrigendums: 'corrigendum-details',
-                  dateOfOpeningBid: 'opening-details', dateOfTechnicalAndFinancialBidOpening: 'opening-details', technicalCommitteeMember1: 'opening-details', technicalCommitteeMember2: 'opening-details', technicalCommitteeMember3: 'opening-details',
-                  bidders: 'bidders-details',
-                  selectionNoticeDate: 'selection-notice-details', performanceGuaranteeAmount: 'selection-notice-details', additionalPerformanceGuaranteeAmount: 'selection-notice-details', stampPaperAmount: 'selection-notice-details',
-                  agreementDate: 'work-order-details', nameOfAssistantEngineer: 'work-order-details', nameOfSupervisor: 'work-order-details', supervisorPhoneNo: 'work-order-details', dateWorkOrder: 'work-order-details',
-              };
-              
-              const section = sectionMap[errorField] || (String(errorField).startsWith('bidders') ? 'bidders-details' : 'corrigendum-details');
-              if (section) {
-                  setActiveAccordion(section);
-              }
-          }
           return;
       }
   

@@ -41,18 +41,18 @@ export const designationOptions = [
 export type Designation = typeof designationOptions[number];
 
 export const BasicDetailsSchema = z.object({
-    eTenderNo: z.string().min(1, "eTender No. is required."),
-    tenderDate: z.union([z.string(), z.date()]).refine(val => val, { message: "Tender Date is required." }),
-    fileNo: z.string().min(1, "File No. is required."),
-    nameOfWork: z.string().min(1, "Name of Work is required."),
+    eTenderNo: z.string().optional(),
+    tenderDate: optionalDateSchema,
+    fileNo: z.string().optional(),
+    nameOfWork: z.string().optional(),
     nameOfWorkMalayalam: z.string().optional(),
-    location: z.string().min(1, "Location is required."),
-    estimateAmount: z.number().min(0, "Tender Amount cannot be negative."),
-    tenderFormFee: z.number().min(0, "Tender Form Fee cannot be negative."),
-    emd: z.number().min(0, "EMD cannot be negative."),
-    periodOfCompletion: z.number().int().min(1, "Period of Completion must be at least 1 day."),
-    dateTimeOfReceipt: z.union([z.string(), z.date()]).refine(val => val, { message: "Last Date & Time of Receipt is required." }),
-    dateTimeOfOpening: z.union([z.string(), z.date()]).refine(val => val, { message: "Date & Time of Opening Tender is required." }),
+    location: z.string().optional(),
+    estimateAmount: optionalNumberSchema,
+    tenderFormFee: optionalNumberSchema,
+    emd: optionalNumberSchema,
+    periodOfCompletion: optionalNumberSchema,
+    dateTimeOfReceipt: optionalDateTimeSchema,
+    dateTimeOfOpening: optionalDateTimeSchema,
     tenderType: z.enum(['Work', 'Purchase']).optional(),
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
@@ -73,7 +73,7 @@ export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 
 export const BidderSchema = z.object({
     id: z.string(),
-    name: z.string().min(1, "Bidder name is required."),
+    name: z.string().optional(),
     address: z.string().optional(),
     quotedAmount: optionalNumberSchema,
     quotedPercentage: optionalNumberSchema,
@@ -118,19 +118,19 @@ export type SelectionNoticeDetailsFormData = z.infer<typeof SelectionNoticeDetai
 
 // This is the main schema for the entire form
 export const E_tenderSchema = z.object({
-    id: z.string(),
-    eTenderNo: z.string().min(1, "eTender No. is required."),
-    tenderDate: z.any().refine(val => val, { message: "Tender Date is required." }),
-    fileNo: z.string().min(1, "File No. is required."),
-    nameOfWork: z.string().min(1, "Name of Work is required."),
+    id: z.string().optional(),
+    eTenderNo: z.string().optional(),
+    tenderDate: z.any().optional().nullable(),
+    fileNo: z.string().optional(),
+    nameOfWork: z.string().optional(),
     nameOfWorkMalayalam: z.string().optional(),
-    location: z.string().min(1, "Location is required."),
+    location: z.string().optional(),
     estimateAmount: optionalNumberSchema,
     tenderFormFee: optionalNumberSchema,
     emd: optionalNumberSchema,
     periodOfCompletion: optionalNumberSchema,
-    dateTimeOfReceipt: z.any().refine(val => val, { message: "Last Date & Time of Receipt is required." }),
-    dateTimeOfOpening: z.any().refine(val => val, { message: "Date & Time of Opening Tender is required." }),
+    dateTimeOfReceipt: z.any().optional().nullable(),
+    dateTimeOfOpening: z.any().optional().nullable(),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
     
     // Nested schemas
