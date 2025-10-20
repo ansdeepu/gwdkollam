@@ -304,11 +304,11 @@ export default function TenderDetails() {
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                                          <DetailRow label="Corrigendum Type" value={corrigendum.corrigendumType} />
-                                                          <DetailRow label="Corrigendum Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
-                                                          <DetailRow label="New Last Date/Time of Receipt" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
-                                                          <DetailRow label="New Date/Time of Opening" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
-                                                          <div className="md:col-span-full"><DetailRow label="Reason" value={corrigendum.reason} /></div>
+                                                            <DetailRow label="Type" value={corrigendum.corrigendumType} />
+                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
+                                                            <DetailRow label="New Last Date/Time" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
+                                                            <DetailRow label="New Opening Date/Time" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
+                                                            <div className="md:col-span-full"><DetailRow label="Reason" value={corrigendum.reason} /></div>
                                                         </div>
                                                     </div>
                                                 ))}
