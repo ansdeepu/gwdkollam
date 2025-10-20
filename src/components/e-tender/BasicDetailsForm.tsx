@@ -14,6 +14,9 @@ import type { E_tenderFormData, BasicDetailsFormData } from '@/lib/schemas/eTend
 import { formatDateForInput } from './utils';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import { useDataStore } from '@/hooks/use-data-store';
+import { useTenderData } from './TenderDataContext';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
 
 interface BasicDetailsFormProps {
   onSubmit: (data: Partial<E_tenderFormData>) => void;
@@ -22,15 +25,21 @@ interface BasicDetailsFormProps {
 }
 
 export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
-    const form = useFormContext<E_tenderFormData>();
+    const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
 
-    const { control, setValue, handleSubmit } = form;
-
-    const [estimateAmount, tenderType, id] = useWatch({
-        control: control,
-        name: ['estimateAmount', 'tenderType', 'id']
+    const form = useForm<BasicDetailsFormData>({
+        resolver: zodResolver(BasicDetailsSchema),
+        defaultValues: tender,
     });
+    
+    const { control, setValue, handleSubmit, watch, getValues } = form;
+
+    const [estimateAmount, tenderType, id] = watch([
+        'estimateAmount',
+        'tenderType',
+        'id'
+    ]);
 
     useEffect(() => {
         let fee = 0;
@@ -72,16 +81,16 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
 
     }, [estimateAmount, tenderType, setValue]);
      
-    const tenderFeeDescription = form.getValues('tenderFeeDescription') || allRateDescriptions.tenderFee;
-    const emdDescription = form.getValues('emdDescription') || allRateDescriptions.emd;
+    const tenderFeeDescription = getValues('tenderFeeDescription') || allRateDescriptions.tenderFee;
+    const emdDescription = getValues('emdDescription') || allRateDescriptions.emd;
 
-    const onFormSubmit = (data: E_tenderFormData) => {
+    const onFormSubmit = (data: BasicDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
         // If this is a new tender or the descriptions haven't been set, snapshot them.
-        if (id === 'new' || !form.getValues('tenderFeeDescription')) {
+        if (id === 'new' || !getValues('tenderFeeDescription')) {
             formData.tenderFeeDescription = allRateDescriptions.tenderFee;
         }
-        if (id === 'new' || !form.getValues('emdDescription')) {
+        if (id === 'new' || !getValues('emdDescription')) {
             formData.emdDescription = allRateDescriptions.emd;
         }
         onSubmit(formData);
@@ -129,7 +138,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>Tender Form Fee (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription className="text-xs">Auto-calculated based on tender amount and type.</FormDescription>
+                                        <FormDescription className="text-xs">Based on tender amount and type.</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
@@ -137,7 +146,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>EMD (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription className="text-xs">Auto-calculated based on tender amount and type.</FormDescription>
+                                        <FormDescription className="text-xs">Based on tender amount and type.</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
