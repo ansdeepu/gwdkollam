@@ -24,12 +24,11 @@ interface SelectionNoticeFormProps {
 }
 
 const parseStampPaperLogic = (description: string) => {
-    const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
-    
-    // Updated regex to be more specific
     const rateMatch = description.match(/₹\s*([\d,]+)\s*for\s*every\s*₹\s*([\d,]+)/);
     const minMatch = description.match(/minimum\s*of\s*₹\s*([\d,]+)/);
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
+    
+    const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
 
     return {
         rate: rateMatch ? parseNumber(rateMatch[1]) : 1,
@@ -39,9 +38,10 @@ const parseStampPaperLogic = (description: string) => {
     };
 };
 
+
 const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
+    const apgRequiredThresholdMatch = description.match(/between\s+([\d.]+)%\s+and\s+([\d.]+)%/);
     const noApgThresholdMatch = description.match(/up to ([\d.]+)%/);
-    const apgRequiredThresholdMatch = description.match(/between ([\d.]+)% and ([\d.]+)%/);
 
     let threshold = 0.10; // Default threshold
     if (apgRequiredThresholdMatch) {
@@ -51,7 +51,6 @@ const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
     }
     return { threshold };
 };
-
 
 
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
@@ -87,7 +86,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         
         if (percentageDifference > logic.threshold) {
             const apgPercentage = percentageDifference - logic.threshold;
-            const additionalPG = estimateAmount * apgPercentage; // APG is calculated on the estimate amount.
+            const additionalPG = tenderAmount * apgPercentage; // APG is calculated on the TENDER amount.
             return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
@@ -149,7 +148,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Calculated as 5% of the contract value, rounded up.</FormDescription>
+                                    <FormDescription className="text-xs">Calculated based on 5% of the contract value.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
@@ -157,7 +156,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Additional Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Calculated if tender is below estimate by more than the threshold.</FormDescription>
+                                    <FormDescription className="text-xs">Calculated if tender is below estimate by a set threshold.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
