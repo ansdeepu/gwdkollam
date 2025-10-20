@@ -18,27 +18,35 @@ interface SelectionNoticeFormProps {
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
+    l1Amount?: number;
 }
 
-export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting }: SelectionNoticeFormProps) {
+export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
+    
+    const calculatedPG = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : 0;
+    const calculatedStamp = 200;
+
     const form = useForm<SelectionNoticeDetailsFormData>({
         resolver: zodResolver(SelectionNoticeDetailsSchema),
         defaultValues: {
             selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
-            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount,
-            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount,
-            stampPaperAmount: initialData?.stampPaperAmount,
+            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount ?? calculatedPG,
+            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
+            stampPaperAmount: initialData?.stampPaperAmount ?? calculatedStamp,
         }
     });
 
     useEffect(() => {
+        const calculatedPG = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : initialData?.performanceGuaranteeAmount || 0;
+        const calculatedStamp = 200;
+
         form.reset({
             selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
-            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount,
-            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount,
-            stampPaperAmount: initialData?.stampPaperAmount,
+            performanceGuaranteeAmount: calculatedPG,
+            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
+            stampPaperAmount: calculatedStamp,
         });
-    }, [initialData, form]);
+    }, [initialData, form, l1Amount]);
 
     return (
         <FormProvider {...form}>
@@ -49,11 +57,11 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-4">
                             <FormField name="selectionNoticeDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Selection Notice Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="performanceGuaranteeAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Performance Guarantee Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Additional Performance Guarantee Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="stampPaperAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Stamp Paper required</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="performanceGuaranteeAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Performance Guarantee Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Additional Performance Guarantee Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="stampPaperAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Stamp Paper required</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                     </ScrollArea>
                 </div>

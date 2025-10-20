@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -253,17 +252,13 @@ export default function TenderDetails() {
         ? `${tenderFormFeeValue.toLocaleString('en-IN')} + GST`
         : tenderFormFeeValue;
 
-    const l1BidderId = useMemo(() => {
+    const l1Bidder = useMemo(() => {
         if (!bidderFields || bidderFields.length === 0) return null;
-
-        const validBidders = bidderFields.filter(b => typeof b.quotedAmount === 'number');
+        const validBidders = bidderFields.filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
         if (validBidders.length === 0) return null;
-
-        const lowestBidder = validBidders.reduce((lowest, current) => {
-            return (current.quotedAmount ?? Infinity) < (lowest.quotedAmount ?? Infinity) ? current : lowest;
-        });
-
-        return lowestBidder.id;
+        return validBidders.reduce((lowest, current) => 
+            (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest
+        );
     }, [bidderFields]);
 
 
@@ -324,7 +319,7 @@ export default function TenderDetails() {
                                        {hasAnyCorrigendumData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
-                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative">
+                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
                                                          <div className="absolute top-2 right-2 flex items-center gap-1">
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
@@ -397,13 +392,12 @@ export default function TenderDetails() {
                                          {hasAnyBidderData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {bidderFields.map((bidder, index) => (
-                                                    <div key={bidder.id} className="group p-3 border rounded-md bg-secondary/30 relative">
+                                                    <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative">
                                                         <div className="flex items-start justify-between mb-2">
                                                             <div className="flex items-center gap-2">
-                                                              <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
-                                                              {bidder.id === l1BidderId && (
-                                                                  <Badge className="bg-green-600 text-white">L1</Badge>
-                                                              )}
+                                                                <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
+                                                                {bidder.id === l1Bidder?.id && <Badge className="bg-green-600 text-white">L1</Badge>}
+                                                                {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
                                                             </div>
                                                             <div className="flex items-center gap-1">
                                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
@@ -411,7 +405,6 @@ export default function TenderDetails() {
                                                             </div>
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">{bidder.address}</p>
-                                                        {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
                                                             <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
                                                             <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
@@ -556,7 +549,7 @@ export default function TenderDetails() {
                 </Dialog>
                 <Dialog open={activeModal === 'selectionNotice'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
-                        <SelectionNoticeForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
+                        <SelectionNoticeForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} l1Amount={l1Bidder?.quotedAmount} />
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
