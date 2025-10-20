@@ -73,6 +73,7 @@ export default function TenderDetails() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeAccordion, setActiveAccordion] = useState<string>("basic-details");
     const [isClearOpeningDetailsConfirmOpen, setIsClearOpeningDetailsConfirmOpen] = useState(false);
+    const [isClearSelectionNoticeConfirmOpen, setIsClearSelectionNoticeConfirmOpen] = useState(false);
 
 
     const form = useForm<E_tenderFormData>({
@@ -178,6 +179,18 @@ export default function TenderDetails() {
         updateTender(clearedData);
         toast({ title: "Opening Details Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
         setIsClearOpeningDetailsConfirmOpen(false);
+    };
+    
+    const handleClearSelectionNotice = () => {
+        const clearedData = {
+            selectionNoticeDate: null,
+            performanceGuaranteeAmount: undefined,
+            additionalPerformanceGuaranteeAmount: undefined,
+            stampPaperAmount: undefined,
+        };
+        updateTender(clearedData);
+        toast({ title: "Selection Notice Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
+        setIsClearSelectionNoticeConfirmOpen(false);
     };
     
     const pdfReports = [
@@ -384,23 +397,21 @@ export default function TenderDetails() {
                                          {hasAnyBidderData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {bidderFields.map((bidder, index) => (
-                                                    <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative">
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <h5 className="font-bold text-sm flex items-center gap-2">
-                                                                Bidder #{index + 1}: {bidder.name}
-                                                                {bidder.id === l1BidderId && (
-                                                                    <Badge className="bg-green-600 text-white ml-2">L1</Badge>
-                                                                )}
-                                                            </h5>
+                                                    <div key={bidder.id} className="group p-3 border rounded-md bg-secondary/30 relative">
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div className="flex items-center gap-2">
+                                                              <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
+                                                              {bidder.id === l1BidderId && (
+                                                                  <Badge className="bg-green-600 text-white">L1</Badge>
+                                                              )}
+                                                            </div>
                                                             <div className="flex items-center gap-1">
-                                                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
-                                                              <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
+                                                                <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
                                                             </div>
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">{bidder.address}</p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            {bidder.status && <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", bidder.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>{bidder.status}</span>}
-                                                        </div>
+                                                        {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
                                                             <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
                                                             <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
@@ -418,7 +429,16 @@ export default function TenderDetails() {
                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><Bell className="h-5 w-5"/>Selection Notice Details</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
+                                            <div className="flex items-center gap-2 mr-4">
+                                                {hasAnySelectionNoticeData ? (
+                                                    <>
+                                                        <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                                        <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
+                                                    </>
+                                                ) : (
+                                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                                )}
+                                            </div>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
@@ -554,6 +574,19 @@ export default function TenderDetails() {
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction onClick={handleClearOpeningDetails}>Yes, Clear</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                
+                <AlertDialog open={isClearSelectionNoticeConfirmOpen} onOpenChange={setIsClearSelectionNoticeConfirmOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>This will clear all selection notice details. This action cannot be undone until you save all changes.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleClearSelectionNotice}>Yes, Clear</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
