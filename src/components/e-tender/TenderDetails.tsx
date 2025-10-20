@@ -7,14 +7,14 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { formatDateForInput, formatDateSafe } from './utils';
+import { toDateOrNull, formatDateSafe, formatDateForInput } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -27,27 +27,7 @@ import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
 import CorrigendumForm from './CorrigendumForm';
-
-// Robust date conversion utility
-const toDateOrNull = (value: any): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date && isValid(value)) return value;
-  
-  // Handle Firestore Timestamp objects
-  if (value && typeof value.seconds === 'number') {
-    const d = new Date(value.seconds * 1000);
-    return isValid(d) ? d : null;
-  }
-  
-  // Handle string values (ISO, yyyy-MM-dd, yyyy-MM-ddTHH:mm)
-  if (typeof value === 'string') {
-    const d = parseISO(value);
-    if (isValid(d)) return d;
-  }
-  
-  return null;
-};
-
+import { useDataStore } from '@/hooks/use-data-store';
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
@@ -79,6 +59,7 @@ export default function TenderDetails() {
     const router = useRouter();
     const { tender, updateTender } = useTenderData();
     const { addTender, updateTender: saveTenderToDb } = useE_tenders();
+    const { allStaffMembers } = useDataStore();
     const [activeModal, setActiveModal] = useState<ModalType>(null);
     const [modalData, setModalData] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,7 +71,7 @@ export default function TenderDetails() {
         defaultValues: tender,
     });
 
-    const { control, getValues } = form;
+    const { control, getValues, setValue } = form;
     const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({ control, name: "bidders" });
     const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({ control, name: "corrigendums" });
 
@@ -198,10 +179,15 @@ export default function TenderDetails() {
 
     const hasAnyCorrigendumData = corrigendumFields.length > 0;
     
+    const committeeMembers = [
+        form.watch('technicalCommitteeMember1'),
+        form.watch('technicalCommitteeMember2'),
+        form.watch('technicalCommitteeMember3')
+    ].filter(Boolean);
+
     const hasAnyOpeningData = useMemo(() => {
-        const values = form.watch(['dateOfOpeningBid', 'dateOfTechnicalAndFinancialBidOpening', 'technicalCommitteeMember1', 'technicalCommitteeMember2', 'technicalCommitteeMember3']);
-        return values.some(v => v);
-    }, [form]);
+        return form.watch('dateOfOpeningBid') || form.watch('dateOfTechnicalAndFinancialBidOpening') || committeeMembers.length > 0;
+    }, [form, committeeMembers]);
     
     const hasAnyBidderData = useMemo(() => {
         return bidderFields.length > 0;
@@ -224,6 +210,20 @@ export default function TenderDetails() {
     const displayTenderFormFee = tenderFormFeeValue !== undefined && tenderFormFeeValue > 0 
         ? `${tenderFormFeeValue.toLocaleString('en-IN')} + GST`
         : tenderFormFeeValue;
+
+    const handleClearCommitteeMember = (memberIndex: 1 | 2 | 3) => {
+        setValue(`technicalCommitteeMember${memberIndex}`, undefined);
+        updateTender({ [`technicalCommitteeMember${memberIndex}`]: undefined });
+        toast({ title: `Committee Member ${memberIndex} Cleared` });
+    };
+
+    const handleEditCommitteeMember = (memberIndex: 1 | 2 | 3) => {
+        setModalData({
+            memberIndex,
+            currentValue: form.watch(`technicalCommitteeMember${memberIndex}`)
+        });
+        setActiveModal('opening');
+    };
 
     return (
         <FormProvider {...form}>
@@ -304,27 +304,61 @@ export default function TenderDetails() {
                                     </AccordionContent>
                                 </AccordionItem>
                                 
-                                 <AccordionItem value="opening-details" className="border rounded-lg">
-                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
+                                <AccordionItem value="opening-details" className="border rounded-lg">
+                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Add</Button>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyOpeningData ? (
-                                             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 border-t">
-                                                <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
-                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
-                                                <div className="md:col-span-full"><DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} /></div>
-                                            </dl>
+                                            <div className="space-y-4 pt-4 border-t">
+                                                <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                                    <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
+                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
+                                                </dl>
+                                                <div className="space-y-2">
+                                                    <h4 className="font-semibold">Committee Members:</h4>
+                                                    {committeeMembers.length > 0 ? (
+                                                        <div className="space-y-2">
+                                                            {[1, 2, 3].map(i => {
+                                                                const memberName = form.watch(`technicalCommitteeMember${i}` as const);
+                                                                if (!memberName) {
+                                                                    return (
+                                                                        <div key={i} className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                                                                            <span className="text-sm text-muted-foreground italic">Member {i} not assigned</span>
+                                                                            <Button size="sm" variant="outline" onClick={() => handleEditCommitteeMember(i as 1|2|3)}>Assign</Button>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                const staffInfo = allStaffMembers.find(s => s.name === memberName);
+                                                                return (
+                                                                    <div key={i} className="flex items-center justify-between p-2 border rounded-md">
+                                                                        <div className="text-sm">
+                                                                            <span className="font-bold">{i}. {memberName}</span>
+                                                                            <span className="text-muted-foreground"> ({staffInfo?.designation || 'N/A'})</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Button size="sm" variant="ghost" onClick={() => handleEditCommitteeMember(i as 1|2|3)}><Edit className="h-4 w-4"/></Button>
+                                                                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleClearCommitteeMember(i as 1|2|3)}><Trash2 className="h-4 w-4"/></Button>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                         <p className="text-sm text-muted-foreground text-center py-4">No committee members assigned. <Button variant="link" className="p-0 h-auto" onClick={() => handleEditCommitteeMember(1)}>Assign Member 1</Button></p>
+                                                    )}
+                                                </div>
+                                            </div>
                                         ) : (
-                                             <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
+                                             <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added. <Button variant="link" className="p-0 h-auto" onClick={() => handleEditCommitteeMember(1)}>Add Details</Button></p>
                                         )}
                                     </AccordionContent>
                                 </AccordionItem>
+
                                 
-                                 <AccordionItem value="bidders-details" className="border rounded-lg">
+                                <AccordionItem value="bidders-details" className="border rounded-lg">
                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
                                         <div className="flex justify-between items-center w-full">
                                             <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
@@ -414,7 +448,7 @@ export default function TenderDetails() {
                                                 <FormItem>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                                                        <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                        <SelectContent>{form.watch('presentStatus') && <SelectItem value={form.watch('presentStatus')!}>{form.watch('presentStatus')}</SelectItem>}</SelectContent>
                                                     </Select>
                                                     <FormMessage />
                                                 </FormItem>
@@ -458,7 +492,7 @@ export default function TenderDetails() {
                 </Dialog>
                 <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
-                        <TenderOpeningDetailsForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
+                        <TenderOpeningDetailsForm initialData={modalData} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'addBidder' || activeModal === 'editBidder'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
