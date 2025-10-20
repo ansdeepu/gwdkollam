@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
 import { SelectionNoticeDetailsSchema, type E_tenderFormData, type SelectionNoticeDetailsFormData } from '@/lib/schemas/eTenderSchema';
 import { formatDateForInput } from './utils';
-import { useDataStore } from '@/hooks/use-data-store';
+import { useDataStore, defaultRateDescriptions } from '@/hooks/use-data-store';
 
 interface SelectionNoticeFormProps {
     initialData?: Partial<E_tenderFormData>;
@@ -47,7 +47,9 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
 
     // Determine which description to use: historical from the tender, or current from the store
     const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee;
-    const stampPaperDescription = initialData?.stampPaperDescription || allRateDescriptions.stampPaper;
+    
+    // **FIX**: Prioritize the tender's saved description. If it doesn't exist, use the hardcoded default to guarantee it matches old logic, not new settings.
+    const stampPaperDescription = initialData?.stampPaperDescription || defaultRateDescriptions.stampPaper;
 
     const calculateStampPaperValue = (amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
