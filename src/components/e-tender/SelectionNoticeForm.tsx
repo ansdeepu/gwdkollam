@@ -1,7 +1,7 @@
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -31,10 +31,10 @@ const parseStampPaperLogic = (description: string) => {
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
 
     return {
-        rate: rateMatch ? parseNumber(rateMatch[1]) : 1,
-        basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
-        min: minMatch ? parseNumber(minMatch[1]) : 200,
-        max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
+        rate: rateMatch ? parseNumber(rateMatch[1]) : undefined,
+        basis: rateMatch ? parseNumber(rateMatch[2]) : undefined,
+        min: minMatch ? parseNumber(minMatch[1]) : undefined,
+        max: maxMatch ? parseNumber(maxMatch[1]) : undefined,
     };
 };
 
@@ -42,13 +42,11 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const { allRateDescriptions } = useDataStore();
     const isNewTender = initialData?.id === 'new';
 
-    const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee;
-    
-    // This is the crucial fix: Always prefer the historical description if it exists.
-    // If it doesn't (new tender or cleared tender), use the LATEST from the data store.
     const stampPaperDescription = useMemo(() => {
-        return initialData?.stampPaperDescription || allRateDescriptions.stampPaper;
+        return initialData?.stampPaperDescription || allRateDescriptions.stampPaper || defaultRateDescriptions.stampPaper;
     }, [initialData?.stampPaperDescription, allRateDescriptions.stampPaper]);
+    
+    const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee || defaultRateDescriptions.performanceGuarantee;
 
     const calculateStampPaperValue = useCallback((amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
@@ -77,25 +75,27 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
             stampPaperAmount: initialData?.stampPaperAmount,
         }
     });
+    
+    const { reset, handleSubmit } = form;
 
     useEffect(() => {
         const pg = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(l1Amount);
 
-        form.reset({
+        reset({
             selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
             performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount ?? pg,
             additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
             stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
         });
-    }, [initialData, form, l1Amount, calculateStampPaperValue, stampPaperDescription]);
+    }, [initialData, l1Amount, calculateStampPaperValue, reset, stampPaperDescription]);
+
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
         if (isNewTender || !initialData?.performanceGuaranteeDescription) {
             formData.performanceGuaranteeDescription = allRateDescriptions.performanceGuarantee;
         }
-        // Always snapshot the description that was used for the calculation on save.
         formData.stampPaperDescription = stampPaperDescription;
 
         onSubmit(formData);
@@ -103,7 +103,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Selection Notice Details</DialogTitle>
                     <DialogDescription>Enter details related to the selection notice.</DialogDescription>
