@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { useForm, FormProvider, useWatch, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -70,6 +70,18 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
 
     }, [estimateAmount, tenderType, setValue]);
      
+    const tenderFeeDescription = tenderType === 'Work'
+        ? "Calculated based on Tender Amount for Works."
+        : tenderType === 'Purchase'
+        ? "Calculated based on Tender Amount for Purchases."
+        : "Select a tender type to see calculation rules.";
+        
+    const emdDescription = tenderType === 'Work'
+        ? "For Works: 2.5% of amount (max ₹50k) up to 2 Cr, then tiered."
+        : tenderType === 'Purchase'
+        ? "For Purchases: 1% of amount up to 2 Cr, then 0."
+        : "Select a tender type to see calculation rules.";
+
     return (
         <FormProvider {...form}>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
@@ -108,8 +120,22 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="estimateAmount" control={control} render={({ field }) => ( <FormItem><FormLabel>Tender Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="tenderFormFee" control={control} render={({ field }) => ( <FormItem><FormLabel>Tender Form Fee (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="emd" control={control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="tenderFormFee" control={control} render={({ field }) => ( 
+                                    <FormItem>
+                                        <FormLabel>Tender Form Fee (Rs.)</FormLabel>
+                                        <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
+                                        <FormDescription>{tenderFeeDescription}</FormDescription>
+                                        <FormMessage />
+                                    </FormItem> 
+                                )}/>
+                                <FormField name="emd" control={control} render={({ field }) => ( 
+                                    <FormItem>
+                                        <FormLabel>EMD (Rs.)</FormLabel>
+                                        <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
+                                        <FormDescription>{emdDescription}</FormDescription>
+                                        <FormMessage />
+                                    </FormItem> 
+                                )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="dateTimeOfReceipt" control={control} render={({ field }) => ( <FormItem><FormLabel>Last Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage /></FormItem> )}/>
