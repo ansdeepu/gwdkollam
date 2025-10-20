@@ -27,8 +27,14 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         if (amount === undefined || amount === null || amount <= 0) {
             return 200; // Default to minimum if no amount
         }
-        const duty = Math.ceil(amount / 1000) * 1;
-        return Math.max(200, Math.min(duty, 100000));
+        // Calculate duty as ₹1 for every ₹1,000 or part thereof.
+        const duty = Math.ceil(amount / 1000) * 1; 
+        
+        // Round the calculated duty up to the nearest 100.
+        const roundedDuty = Math.ceil(duty / 100) * 100;
+        
+        // Ensure the final value is within the min/max range.
+        return Math.max(200, Math.min(roundedDuty, 100000));
     };
 
     const form = useForm<SelectionNoticeDetailsFormData>({
@@ -77,7 +83,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Stamp Paper required</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription>Calculated as ₹1 for every ₹1,000 of the L1 amount (min ₹200, max ₹1,00,000).</FormDescription>
+                                    <FormDescription>Calculated as ₹1 for every ₹1,000 (or part thereof) of the L1 amount, rounded up to the nearest hundred (min ₹200, max ₹1,00,000).</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
