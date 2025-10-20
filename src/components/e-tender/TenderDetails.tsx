@@ -186,6 +186,8 @@ export default function TenderDetails() {
             performanceGuaranteeAmount: undefined,
             additionalPerformanceGuaranteeAmount: undefined,
             stampPaperAmount: undefined,
+            performanceGuaranteeDescription: undefined, // Also clear the description
+            stampPaperDescription: undefined, // Also clear the description
         };
         updateTender(clearedData);
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
