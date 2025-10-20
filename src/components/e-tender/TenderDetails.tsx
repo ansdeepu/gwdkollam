@@ -159,9 +159,9 @@ export default function TenderDetails() {
         setModalData({
             ...corrigendum,
             index,
-            corrigendumDate: formatDateForInput(corrigendum.corrigendumDate),
-            lastDateOfReceipt: formatDateForInput(corrigendum.lastDateOfReceipt, true),
-            dateOfOpeningTender: formatDateForInput(corrigendum.dateOfOpeningTender, true),
+            corrigendumDate: corrigendum.corrigendumDate ? formatDateForInput(corrigendum.corrigendumDate) : null,
+            lastDateOfReceipt: corrigendum.lastDateOfReceipt ? formatDateForInput(corrigendum.lastDateOfReceipt, true) : null,
+            dateOfOpeningTender: corrigendum.dateOfOpeningTender ? formatDateForInput(corrigendum.dateOfOpeningTender, true) : null,
         });
         setActiveModal('editCorrigendum');
     };
