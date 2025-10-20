@@ -63,10 +63,10 @@ export type CorrigendumType = typeof corrigendumTypeOptions[number];
 export const CorrigendumSchema = z.object({
     id: z.string(),
     corrigendumType: z.enum(corrigendumTypeOptions).optional(),
-    corrigendumDate: optionalDateSchema,
+    corrigendumDate: z.any().optional().nullable(),
     reason: z.string().optional(),
-    lastDateOfReceipt: optionalDateTimeSchema,
-    dateOfOpeningTender: optionalDateTimeSchema,
+    lastDateOfReceipt: z.any().optional().nullable(),
+    dateOfOpeningTender: z.any().optional().nullable(),
 });
 export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 

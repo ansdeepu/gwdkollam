@@ -81,6 +81,14 @@ export default function TenderDetails() {
           // Convert date strings back to Date objects before saving
           const dataForSave = {
               ...currentTenderData,
+              tenderDate: currentTenderData.tenderDate ? toDate(currentTenderData.tenderDate) : null,
+              dateTimeOfReceipt: currentTenderData.dateTimeOfReceipt ? toDate(currentTenderData.dateTimeOfReceipt) : null,
+              dateTimeOfOpening: currentTenderData.dateTimeOfOpening ? toDate(currentTenderData.dateTimeOfOpening) : null,
+              dateOfOpeningBid: currentTenderData.dateOfOpeningBid ? toDate(currentTenderData.dateOfOpeningBid) : null,
+              dateOfTechnicalAndFinancialBidOpening: currentTenderData.dateOfTechnicalAndFinancialBidOpening ? toDate(currentTenderData.dateOfTechnicalAndFinancialBidOpening) : null,
+              selectionNoticeDate: currentTenderData.selectionNoticeDate ? toDate(currentTenderData.selectionNoticeDate) : null,
+              agreementDate: currentTenderData.agreementDate ? toDate(currentTenderData.agreementDate) : null,
+              dateWorkOrder: currentTenderData.dateWorkOrder ? toDate(currentTenderData.dateWorkOrder) : null,
               corrigendums: (currentTenderData.corrigendums || []).map(c => ({
                   ...c,
                   corrigendumDate: c.corrigendumDate ? toDate(c.corrigendumDate) : null,
