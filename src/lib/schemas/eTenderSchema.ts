@@ -116,6 +116,7 @@ export const SelectionNoticeDetailsSchema = z.object({
     stampPaperAmount: optionalNumberSchema,
     // Descriptions for historical context
     performanceGuaranteeDescription: z.string().optional(),
+    additionalPerformanceGuaranteeDescription: z.string().optional(),
     stampPaperDescription: z.string().optional(),
 });
 export type SelectionNoticeDetailsFormData = z.infer<typeof SelectionNoticeDetailsSchema>;
@@ -163,6 +164,7 @@ export const E_tenderSchema = z.object({
     tenderFeeDescription: z.string().optional(),
     emdDescription: z.string().optional(),
     performanceGuaranteeDescription: z.string().optional(),
+    additionalPerformanceGuaranteeDescription: z.string().optional(),
     stampPaperDescription: z.string().optional(),
     
     // Deprecated fields that may exist in old data

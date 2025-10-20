@@ -22,21 +22,31 @@ interface SelectionNoticeFormProps {
     l1Amount?: number;
 }
 
-// Function to parse numbers from the description string
 const parseStampPaperLogic = (description: string) => {
     const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
-
     const rateMatch = description.match(/₹\s*([\d,]+)\s*for\s*every\s*₹\s*([\d,]+)/);
     const minMatch = description.match(/minimum\s*of\s*₹\s*([\d,]+)/);
     const maxMatch = description.match(/maximum\s*of\s*₹\s*([\d,]+)/);
-
     return {
-        rate: rateMatch ? parseNumber(rateMatch[1]) : undefined,
-        basis: rateMatch ? parseNumber(rateMatch[2]) : undefined,
-        min: minMatch ? parseNumber(minMatch[1]) : undefined,
-        max: maxMatch ? parseNumber(maxMatch[1]) : undefined,
+        rate: rateMatch ? parseNumber(rateMatch[1]) : 1, // Default to 1 if not found
+        basis: rateMatch ? parseNumber(rateMatch[2]) : 1000, // Default to 1000
+        min: minMatch ? parseNumber(minMatch[1]) : 200,
+        max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
     };
 };
+
+const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
+    const thresholdMatch = description.match(/more\s+than\s+(\d+)%/);
+    const percentageMatch = description.match(/(\d+)%\s+of\s+the\s+difference/);
+    const capMatch = description.match(/not\s+exceed\s+(\d+)%/);
+
+    return {
+        threshold: thresholdMatch ? parseInt(thresholdMatch[1], 10) / 100 : 0.15,
+        percentage: percentageMatch ? parseInt(percentageMatch[1], 10) / 100 : 0.25,
+        cap: capMatch ? parseInt(capMatch[1], 10) / 100 : 0.10,
+    };
+};
+
 
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
     const { allRateDescriptions } = useDataStore();
@@ -46,57 +56,76 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         return initialData?.stampPaperDescription || allRateDescriptions.stampPaper || defaultRateDescriptions.stampPaper;
     }, [initialData?.stampPaperDescription, allRateDescriptions.stampPaper]);
     
-    const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee || defaultRateDescriptions.performanceGuarantee;
+    const performanceGuaranteeDescription = useMemo(() => {
+        return initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee || defaultRateDescriptions.performanceGuarantee;
+    }, [initialData?.performanceGuaranteeDescription, allRateDescriptions.performanceGuarantee]);
+    
+    const additionalPerformanceGuaranteeDescription = useMemo(() => {
+        return initialData?.additionalPerformanceGuaranteeDescription || allRateDescriptions.additionalPerformanceGuarantee || defaultRateDescriptions.additionalPerformanceGuarantee;
+    }, [initialData?.additionalPerformanceGuaranteeDescription, allRateDescriptions.additionalPerformanceGuarantee]);
 
     const calculateStampPaperValue = useCallback((amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
-        
-        const rate = logic.rate ?? 1;
-        const basis = logic.basis ?? 1000;
-        const min = logic.min ?? 200;
-        const max = logic.max ?? 100000;
-
-        if (amount === undefined || amount === null || amount <= 0) {
-            return min;
-        }
-        
+        const { rate, basis, min, max } = logic;
+        if (amount === undefined || amount === null || amount <= 0) return min;
         const duty = Math.ceil(amount / basis) * rate; 
         const roundedDuty = Math.ceil(duty / 100) * 100;
-        
         return Math.max(min, Math.min(roundedDuty, max));
     }, [stampPaperDescription]);
+
+    const calculateAdditionalPG = useCallback((estimateAmount?: number, tenderAmount?: number): number => {
+        if (!estimateAmount || !tenderAmount || tenderAmount >= estimateAmount) return 0;
+
+        const logic = parseAdditionalPerformanceGuaranteeLogic(additionalPerformanceGuaranteeDescription);
+        const difference = estimateAmount - tenderAmount;
+        const percentageDifference = difference / estimateAmount;
+
+        if (percentageDifference > logic.threshold) {
+            const additionalPG = Math.min(
+                difference * logic.percentage,
+                estimateAmount * logic.cap
+            );
+            return Math.ceil(additionalPG / 100) * 100; // Round up to nearest 100
+        }
+        return 0;
+    }, [additionalPerformanceGuaranteeDescription]);
 
     const form = useForm<SelectionNoticeDetailsFormData>({
         resolver: zodResolver(SelectionNoticeDetailsSchema),
         defaultValues: {
             selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
             performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount,
-            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
+            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount,
             stampPaperAmount: initialData?.stampPaperAmount,
         }
     });
     
-    const { reset, handleSubmit } = form;
+    const { reset, handleSubmit, setValue } = form;
 
     useEffect(() => {
         const pg = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(l1Amount);
+        const additionalPg = calculateAdditionalPG(initialData?.estimateAmount, l1Amount);
 
         reset({
             selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
             performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount ?? pg,
-            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
+            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? additionalPg,
             stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
         });
-    }, [initialData, l1Amount, calculateStampPaperValue, reset, stampPaperDescription]);
-
+    }, [initialData, l1Amount, calculateStampPaperValue, calculateAdditionalPG, reset, stampPaperDescription, additionalPerformanceGuaranteeDescription]);
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
         if (isNewTender || !initialData?.performanceGuaranteeDescription) {
-            formData.performanceGuaranteeDescription = allRateDescriptions.performanceGuarantee;
+            formData.performanceGuaranteeDescription = performanceGuaranteeDescription;
         }
-        formData.stampPaperDescription = stampPaperDescription;
+        if (isNewTender || !initialData?.additionalPerformanceGuaranteeDescription) {
+            formData.additionalPerformanceGuaranteeDescription = additionalPerformanceGuaranteeDescription;
+        }
+        if (isNewTender || !initialData?.stampPaperDescription) {
+            formData.stampPaperDescription = stampPaperDescription;
+        }
 
         onSubmit(formData);
     };
@@ -115,12 +144,19 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                             <FormField name="performanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
-                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl>
+                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
                                     <FormDescription className="text-xs whitespace-pre-wrap">{performanceGuaranteeDescription}</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
-                            <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Additional Performance Guarantee Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
+                                <FormItem>
+                                    <FormLabel>Additional Performance Guarantee Amount</FormLabel>
+                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
+                                    <FormDescription className="text-xs whitespace-pre-wrap">{additionalPerformanceGuaranteeDescription}</FormDescription>
+                                    <FormMessage />
+                                </FormItem> 
+                            )}/>
                             <FormField name="stampPaperAmount" control={form.control} render={({ field }) => ( 
                                 <FormItem>
                                     <FormLabel>Stamp Paper required</FormLabel>
