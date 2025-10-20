@@ -1,4 +1,3 @@
-
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
@@ -46,7 +45,6 @@ const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
     if (noApgThresholdMatch) {
         threshold = parseFloat(noApgThresholdMatch[1]) / 100;
     } else if (apgRequiredThresholdMatch) {
-        // Using the lower bound of the range as the start of the APG requirement
         threshold = parseFloat(apgRequiredThresholdMatch[1]) / 100;
     }
     return { threshold };
@@ -86,7 +84,8 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         
         if (percentageDifference > logic.threshold) {
             const excessPercentage = percentageDifference - logic.threshold;
-            const additionalPG = excessPercentage * tenderAmount; // Use tenderAmount as per clarification
+            // Corrected: Use estimateAmount as the base for the final calculation
+            const additionalPG = excessPercentage * estimateAmount; 
             return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
