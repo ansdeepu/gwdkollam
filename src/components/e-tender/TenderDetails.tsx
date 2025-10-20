@@ -479,4 +479,3 @@ export default function TenderDetails() {
         </FormProvider>
     );
 }
-
