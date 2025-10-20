@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { isValid, parseISO } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 import BasicDetailsForm from './BasicDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
@@ -239,6 +240,20 @@ export default function TenderDetails() {
         ? `${tenderFormFeeValue.toLocaleString('en-IN')} + GST`
         : tenderFormFeeValue;
 
+    const l1BidderId = useMemo(() => {
+        if (!bidderFields || bidderFields.length === 0) return null;
+
+        const validBidders = bidderFields.filter(b => typeof b.quotedAmount === 'number');
+        if (validBidders.length === 0) return null;
+
+        const lowestBidder = validBidders.reduce((lowest, current) => {
+            return (current.quotedAmount ?? Infinity) < (lowest.quotedAmount ?? Infinity) ? current : lowest;
+        });
+
+        return lowestBidder.id;
+    }, [bidderFields]);
+
+
     return (
         <FormProvider {...form}>
             <div className="space-y-6">
@@ -296,7 +311,7 @@ export default function TenderDetails() {
                                        {hasAnyCorrigendumData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
                                                 {corrigendumFields.map((corrigendum, index) => (
-                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
+                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative">
                                                          <div className="absolute top-2 right-2 flex items-center gap-1">
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
@@ -375,7 +390,10 @@ export default function TenderDetails() {
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
                                                         </div>
                                                         <div className="flex justify-between items-start mb-2">
-                                                             <h5 className="font-bold text-sm flex items-center gap-2">Bidder #{index + 1}: {bidder.name}</h5>
+                                                            <h5 className="font-bold text-sm flex items-center gap-2">Bidder #{index + 1}: {bidder.name}</h5>
+                                                            {bidder.id === l1BidderId && (
+                                                                <Badge className="bg-green-600 text-white">L1</Badge>
+                                                            )}
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             {bidder.status && <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", bidder.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>{bidder.status}</span>}
