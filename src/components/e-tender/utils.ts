@@ -15,12 +15,24 @@ export const formatDateForInput = (date: any, isDateTime: boolean = false): stri
 };
 
 export const formatDateSafe = (date: any, includeTime: boolean = false): string => {
-    if (!date) return 'N/A';
-    try {
-        const d = toDate(date);
-        if (!isValid(d)) return String(date); // Fallback for non-ISO strings that might be valid
-        return format(d, includeTime ? 'dd/MM/yyyy, hh:mm a' : 'dd/MM/yyyy');
-    } catch {
+    if (date === null || date === undefined || date === '') {
+        return 'N/A';
+    }
+    
+    let d;
+    if (date instanceof Date) {
+        d = date;
+    } else if (typeof date === 'object' && date !== null && typeof date.seconds === 'number') {
+        // Handle Firestore Timestamp object
+        d = new Date(date.seconds * 1000);
+    } else {
+        d = new Date(date);
+    }
+
+    if (!isValid(d)) {
         return String(date); // Fallback to original string if parsing fails
     }
+
+    return format(d, includeTime ? 'dd/MM/yyyy, hh:mm a' : 'dd/MM/yyyy');
 };
+

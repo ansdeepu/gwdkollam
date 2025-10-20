@@ -284,10 +284,10 @@ export default function TenderDetails() {
                                                          </div>
                                                          <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 mt-1">
                                                             <DetailRow label="Type" value={corrigendum.corrigendumType} />
-                                                            <DetailRow label="Date" value={corrigendum.corrigendumDate} />
+                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
                                                             <DetailRow label="Reason" value={corrigendum.reason} />
-                                                            <DetailRow label="New Last Date & Time" value={corrigendum.lastDateOfReceipt} />
-                                                            <DetailRow label="New Opening Date & Time" value={corrigendum.dateOfOpeningTender} />
+                                                            <DetailRow label="New Last Date & Time" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
+                                                            <DetailRow label="New Opening Date & Time" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
                                                          </dl>
                                                     </div>
                                                 ))}
@@ -408,7 +408,7 @@ export default function TenderDetails() {
                                                 <FormItem>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                                                        <SelectContent>{form.watch('presentStatus') && <SelectItem value={form.watch('presentStatus')!}>{form.watch('presentStatus')}</SelectItem>}{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                        <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
                                                     <FormMessage />
                                                 </FormItem>
