@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -160,10 +161,7 @@ export default function TenderDetails() {
     const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
         setModalData({
             ...corrigendum,
-            index,
-            corrigendumDate: corrigendum.corrigendumDate ? formatDateForInput(corrigendum.corrigendumDate) : null,
-            lastDateOfReceipt: corrigendum.lastDateOfReceipt ? formatDateForInput(corrigendum.lastDateOfReceipt, true) : null,
-            dateOfOpeningTender: corrigendum.dateOfOpeningTender ? formatDateForInput(corrigendum.dateOfOpeningTender, true) : null,
+            index: index,
         });
         setActiveModal('editCorrigendum');
     };
