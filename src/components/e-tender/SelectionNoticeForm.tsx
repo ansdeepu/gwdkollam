@@ -1,7 +1,7 @@
 // src/components/e-tender/SelectionNoticeForm.tsx
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -43,9 +43,14 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const isNewTender = initialData?.id === 'new';
 
     const performanceGuaranteeDescription = initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee;
-    const stampPaperDescription = initialData?.stampPaperDescription || defaultRateDescriptions.stampPaper;
+    
+    // This is the crucial fix: Always prefer the historical description if it exists.
+    // If it doesn't (new tender or cleared tender), use the LATEST from the data store.
+    const stampPaperDescription = useMemo(() => {
+        return initialData?.stampPaperDescription || allRateDescriptions.stampPaper;
+    }, [initialData?.stampPaperDescription, allRateDescriptions.stampPaper]);
 
-    const calculateStampPaperValue = (amount?: number): number => {
+    const calculateStampPaperValue = useCallback((amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
         
         const rate = logic.rate ?? 1;
@@ -61,7 +66,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         const roundedDuty = Math.ceil(duty / 100) * 100;
         
         return Math.max(min, Math.min(roundedDuty, max));
-    };
+    }, [stampPaperDescription]);
 
     const form = useForm<SelectionNoticeDetailsFormData>({
         resolver: zodResolver(SelectionNoticeDetailsSchema),
@@ -83,16 +88,16 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
             additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
             stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
         });
-    }, [initialData, form, l1Amount, stampPaperDescription]);
+    }, [initialData, form, l1Amount, calculateStampPaperValue, stampPaperDescription]);
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
         if (isNewTender || !initialData?.performanceGuaranteeDescription) {
             formData.performanceGuaranteeDescription = allRateDescriptions.performanceGuarantee;
         }
-        if (isNewTender || !initialData?.stampPaperDescription) {
-            formData.stampPaperDescription = allRateDescriptions.stampPaper;
-        }
+        // Always snapshot the description that was used for the calculation on save.
+        formData.stampPaperDescription = stampPaperDescription;
+
         onSubmit(formData);
     };
 
