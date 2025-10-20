@@ -51,6 +51,8 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
             dateWorkOrder: formatDateForInput(initialData?.dateWorkOrder),
         }
     });
+    
+    const { setValue } = form;
 
     useEffect(() => {
         form.reset({
@@ -61,6 +63,12 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
     }, [initialData, form]);
 
     const title = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
+    
+    const handleSupervisorChange = (staffId: string) => {
+        const selectedStaff = supervisorList.find(s => s.id === staffId);
+        setValue('nameOfSupervisor', selectedStaff?.name || '');
+        setValue('supervisorPhoneNo', selectedStaff?.phoneNo || '');
+    };
 
     return (
         <FormProvider {...form}>
@@ -81,7 +89,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                 control={form.control}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Name of Assistant Engineer</FormLabel>
+                                        <FormLabel>Measurer</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value || ""}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select an Engineer" /></SelectTrigger></FormControl>
                                             <SelectContent>
@@ -100,10 +108,13 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Name of Supervisor</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                                            <Select onValueChange={(value) => {
+                                                const staff = supervisorList.find(s => s.name === value);
+                                                handleSupervisorChange(staff?.id || '');
+                                            }} value={field.value || ""}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
+                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue('supervisorPhoneNo', ''); }}>-- Clear Selection --</SelectItem>
                                                     {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
@@ -111,7 +122,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                         </FormItem>
                                     )}
                                 />
-                                <FormField name="supervisorPhoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Supervisor Phone No.</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="supervisorPhoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Supervisor Phone No.</FormLabel><FormControl><Input {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                         </div>
                     </ScrollArea>

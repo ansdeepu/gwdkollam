@@ -33,7 +33,7 @@ import { useDataStore } from '@/hooks/use-data-store';
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
-const DetailRow = ({ label, value }: { label: string; value: any }) => {
+const DetailRow = ({ label, value, subValue }: { label: string; value: any; subValue?: string }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
         return null;
     }
@@ -56,7 +56,10 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
     return (
         <div>
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className={cn("text-sm font-semibold", label.toLowerCase().includes('malayalam') && "text-xs")}>{displayValue}</dd>
+            <dd className={cn("text-sm font-semibold", label.toLowerCase().includes('malayalam') && "text-xs")}>
+              {displayValue}
+              {subValue && <span className="text-xs text-muted-foreground ml-1">({subValue})</span>}
+            </dd>
         </div>
     );
 };
@@ -80,7 +83,7 @@ export default function TenderDetails() {
         defaultValues: tender,
     });
 
-    const { control, getValues, setValue, handleSubmit: handleFormSubmit } = form;
+    const { control, getValues, setValue, handleSubmit: handleFormSubmit, watch } = form;
     const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({ control, name: "bidders" });
     const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({ control, name: "corrigendums" });
 
@@ -128,9 +131,10 @@ export default function TenderDetails() {
     }, [tender, form]);
 
     const handleSave = (data: Partial<E_tenderFormData>) => {
-        const currentData = form.getValues();
+        const currentData = getValues();
         const updatedData = { ...currentData, ...data };
         updateTender(updatedData);
+        form.reset(updatedData); // Immediately reset the form to reflect changes
         toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
         setActiveModal(null);
     };
@@ -176,6 +180,7 @@ export default function TenderDetails() {
             technicalCommitteeMember3: undefined,
         };
         updateTender(clearedData);
+        form.reset({ ...form.getValues(), ...clearedData });
         toast({ title: "Opening Details Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
         setIsClearOpeningDetailsConfirmOpen(false);
     };
@@ -190,6 +195,7 @@ export default function TenderDetails() {
             stampPaperDescription: undefined, // Also clear the description
         };
         updateTender(clearedData);
+        form.reset({ ...form.getValues(), ...clearedData });
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
         setIsClearSelectionNoticeConfirmOpen(false);
     };
@@ -200,7 +206,7 @@ export default function TenderDetails() {
         "Work Agreement", "Tender Status Summary"
     ];
     
-    const watchedFields = form.watch([
+    const watchedFields = watch([
         'eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'nameOfWorkMalayalam',
         'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion',
         'dateTimeOfReceipt', 'dateTimeOfOpening', 'tenderType'
@@ -213,9 +219,9 @@ export default function TenderDetails() {
     const hasAnyCorrigendumData = corrigendumFields.length > 0;
     
     const committeeMemberNames = [
-        form.watch('technicalCommitteeMember1'),
-        form.watch('technicalCommitteeMember2'),
-        form.watch('technicalCommitteeMember3')
+        watch('technicalCommitteeMember1'),
+        watch('technicalCommitteeMember2'),
+        watch('technicalCommitteeMember3')
     ].filter(Boolean);
 
     const committeeMemberDetails = useMemo(() => {
@@ -229,27 +235,34 @@ export default function TenderDetails() {
     }, [committeeMemberNames, allStaffMembers]);
 
     const hasAnyOpeningData = useMemo(() => {
-        return form.watch('dateOfOpeningBid') || form.watch('dateOfTechnicalAndFinancialBidOpening') || committeeMemberDetails.length > 0;
-    }, [form, committeeMemberDetails]);
+        return watch('dateOfOpeningBid') || watch('dateOfTechnicalAndFinancialBidOpening') || committeeMemberDetails.length > 0;
+    }, [watch, committeeMemberDetails]);
     
     const hasAnyBidderData = useMemo(() => {
         return bidderFields.length > 0;
     }, [bidderFields]);
 
     const hasAnySelectionNoticeData = useMemo(() => {
-        const values = form.watch(['selectionNoticeDate', 'performanceGuaranteeAmount', 'additionalPerformanceGuaranteeAmount', 'stampPaperAmount']);
+        const values = watch(['selectionNoticeDate', 'performanceGuaranteeAmount', 'additionalPerformanceGuaranteeAmount', 'stampPaperAmount']);
         return values.some(v => v);
-    }, [form]);
+    }, [watch]);
+    
+    const assistantEngineerName = watch('nameOfAssistantEngineer');
+    const supervisorName = watch('nameOfSupervisor');
+
+    const assistantEngineerDesignation = useMemo(() => allStaffMembers.find(s => s.name === assistantEngineerName)?.designation, [assistantEngineerName, allStaffMembers]);
+    const supervisorDesignation = useMemo(() => allStaffMembers.find(s => s.name === supervisorName)?.designation, [supervisorName, allStaffMembers]);
+
 
     const hasAnyWorkOrderData = useMemo(() => {
-        const values = form.watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'nameOfSupervisor', 'supervisorPhoneNo']);
+        const values = watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'nameOfSupervisor', 'supervisorPhoneNo']);
         return values.some(v => v);
-    }, [form]);
+    }, [watch]);
 
-    const tenderType = form.watch('tenderType');
+    const tenderType = watch('tenderType');
     const workOrderTitle = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
     
-    const tenderFormFeeValue = form.watch('tenderFormFee');
+    const tenderFormFeeValue = watch('tenderFormFee');
     const displayTenderFormFee = tenderFormFeeValue !== undefined && tenderFormFeeValue > 0 
         ? `${tenderFormFeeValue.toLocaleString('en-IN')} + GST`
         : tenderFormFeeValue;
@@ -282,25 +295,25 @@ export default function TenderDetails() {
                                     {hasAnyBasicData ? (
                                         <div className="space-y-4 pt-4">
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
-                                                <DetailRow label="eTender No." value={form.watch('eTenderNo')} />
-                                                <DetailRow label="Tender Date" value={form.watch('tenderDate')} />
-                                                <DetailRow label="File No." value={form.watch('fileNo')} />
+                                                <DetailRow label="eTender No." value={watch('eTenderNo')} />
+                                                <DetailRow label="Tender Date" value={watch('tenderDate')} />
+                                                <DetailRow label="File No." value={watch('fileNo')} />
                                             </div>
-                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work" value={form.watch('nameOfWork')} /></div>
-                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work (in Malayalam)" value={form.watch('nameOfWorkMalayalam')} /></div>
+                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work" value={watch('nameOfWork')} /></div>
+                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work (in Malayalam)" value={watch('nameOfWorkMalayalam')} /></div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
-                                                <DetailRow label="Location" value={form.watch('location')} />
-                                                <DetailRow label="Period of Completion (Days)" value={form.watch('periodOfCompletion')} />
-                                                <DetailRow label="Type of Tender" value={form.watch('tenderType')} />
+                                                <DetailRow label="Location" value={watch('location')} />
+                                                <DetailRow label="Period of Completion (Days)" value={watch('periodOfCompletion')} />
+                                                <DetailRow label="Type of Tender" value={watch('tenderType')} />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
-                                                <DetailRow label="Tender Amount (Rs.)" value={form.watch('estimateAmount')} />
+                                                <DetailRow label="Tender Amount (Rs.)" value={watch('estimateAmount')} />
                                                 <DetailRow label="Tender Form Fee (Rs.)" value={displayTenderFormFee} />
-                                                <DetailRow label="EMD (Rs.)" value={form.watch('emd')} />
+                                                <DetailRow label="EMD (Rs.)" value={watch('emd')} />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-2">
-                                                <DetailRow label="Last Date & Time of Receipt" value={form.watch('dateTimeOfReceipt')} />
-                                                <DetailRow label="Date & Time of Opening" value={form.watch('dateTimeOfOpening')} />
+                                                <DetailRow label="Last Date & Time of Receipt" value={watch('dateTimeOfReceipt')} />
+                                                <DetailRow label="Date & Time of Opening" value={watch('dateTimeOfOpening')} />
                                             </div>
                                         </div>
                                     ) : (
@@ -357,8 +370,8 @@ export default function TenderDetails() {
                                         {hasAnyOpeningData ? (
                                             <div className="space-y-4 pt-4 border-t">
                                                 <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                                    <DetailRow label="Date of Opening Bid" value={form.watch('dateOfOpeningBid')} />
-                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={form.watch('dateOfTechnicalAndFinancialBidOpening')} />
+                                                    <DetailRow label="Date of Opening Bid" value={watch('dateOfOpeningBid')} />
+                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={watch('dateOfTechnicalAndFinancialBidOpening')} />
                                                 </dl>
                                                 <div className="space-y-2">
                                                     <h4 className="font-semibold">Committee Members:</h4>
@@ -439,10 +452,10 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnySelectionNoticeData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Selection Notice Date" value={form.watch('selectionNoticeDate')} />
-                                                 <DetailRow label="Performance Guarantee Amount" value={form.watch('performanceGuaranteeAmount')} />
-                                                 <DetailRow label="Additional Performance Guarantee Amount" value={form.watch('additionalPerformanceGuaranteeAmount')} />
-                                                 <DetailRow label="Stamp Paper required" value={form.watch('stampPaperAmount')} />
+                                                 <DetailRow label="Selection Notice Date" value={watch('selectionNoticeDate')} />
+                                                 <DetailRow label="Performance Guarantee Amount" value={watch('performanceGuaranteeAmount')} />
+                                                 <DetailRow label="Additional Performance Guarantee Amount" value={watch('additionalPerformanceGuaranteeAmount')} />
+                                                 <DetailRow label="Stamp Paper required" value={watch('stampPaperAmount')} />
                                              </dl>
                                         ) : (
                                              <p className="text-sm text-muted-foreground text-center py-4">No selection notice details have been added.</p>
@@ -460,11 +473,11 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyWorkOrderData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Agreement Date" value={form.watch('agreementDate')} />
-                                                 <DetailRow label="Date - Work / Supply Order" value={form.watch('dateWorkOrder')} />
-                                                 <DetailRow label="Assistant Engineer" value={form.watch('nameOfAssistantEngineer')} />
-                                                 <DetailRow label="Supervisor" value={form.watch('nameOfSupervisor')} />
-                                                 <DetailRow label="Supervisor Phone" value={form.watch('supervisorPhoneNo')} />
+                                                 <DetailRow label="Agreement Date" value={watch('agreementDate')} />
+                                                 <DetailRow label="Date - Work / Supply Order" value={watch('dateWorkOrder')} />
+                                                 <DetailRow label="Measurer" value={watch('nameOfAssistantEngineer')} subValue={assistantEngineerDesignation} />
+                                                 <DetailRow label="Supervisor" value={watch('nameOfSupervisor')} subValue={supervisorDesignation} />
+                                                 <DetailRow label="Supervisor Phone" value={watch('supervisorPhoneNo')} />
                                              </dl>
                                         ) : (
                                              <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>
@@ -481,7 +494,7 @@ export default function TenderDetails() {
                                     <div className="w-full max-w-sm">
                                         <FormField
                                             name="presentStatus"
-                                            control={form.control}
+                                            control={control}
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value}>
@@ -530,7 +543,7 @@ export default function TenderDetails() {
                 </Dialog>
                 <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
-                        <TenderOpeningDetailsForm initialData={form.getValues()} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
+                        <TenderOpeningDetailsForm initialData={getValues()} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting}/>
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'addBidder' || activeModal === 'editBidder'} onOpenChange={() => { setActiveModal(null); setModalData(null); }}>
