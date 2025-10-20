@@ -82,7 +82,8 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         const percentageDifference = (estimateAmount - tenderAmount) / estimateAmount;
         
         if (percentageDifference > logic.threshold) {
-            const additionalPG = estimateAmount - tenderAmount;
+            const excessPercentage = percentageDifference - logic.threshold;
+            const additionalPG = excessPercentage * tenderAmount; // Use tenderAmount here as per user correction
             return Math.ceil(additionalPG / 100) * 100;
         }
         return 0;
@@ -144,7 +145,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Based on 5% of the L1 contract value.</FormDescription>
+                                    <FormDescription className="text-xs">Auto-calculated: 5% of the L1 contract value.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
@@ -152,7 +153,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Additional Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Required if bid is below estimate threshold.</FormDescription>
+                                    <FormDescription className="text-xs">Auto-calculated if bid is below estimate threshold.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
@@ -160,7 +161,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Stamp Paper required</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription className="text-xs">Calculated based on the L1 contract amount.</FormDescription>
+                                    <FormDescription className="text-xs">Auto-calculated based on the L1 contract amount.</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
