@@ -200,6 +200,9 @@ export default function TenderDetails() {
     const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
         setModalData({
             ...corrigendum,
+            corrigendumDate: formatDateForInput(corrigendum.corrigendumDate),
+            lastDateOfReceipt: formatDateForInput(corrigendum.lastDateOfReceipt, true),
+            dateOfOpeningTender: formatDateForInput(corrigendum.dateOfOpeningTender, true),
             index: index,
         });
         setActiveModal('editCorrigendum');
@@ -315,7 +318,7 @@ export default function TenderDetails() {
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                                             <DetailRow label="Type" value={corrigendum.corrigendumType} />
-                                                            <DetailRow label="Date" value={corrigendum.corrigendumDate} />
+                                                            <DetailRow label="Date" value={formatDateSafe(corrigendum.corrigendumDate)} />
                                                             <DetailRow label="New Last Date/Time" value={formatDateSafe(corrigendum.lastDateOfReceipt, true)} />
                                                             <DetailRow label="New Opening Date/Time" value={formatDateSafe(corrigendum.dateOfOpeningTender, true)} />
                                                             <div className="md:col-span-full"><DetailRow label="Reason" value={corrigendum.reason} /></div>
@@ -339,8 +342,8 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyOpeningData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 border-t">
-                                                <DetailRow label="Date of Opening Bid" value={form.watch('dateOfOpeningBid')} />
-                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={form.watch('dateOfTechnicalAndFinancialBidOpening')} />
+                                                <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
+                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
                                                 <div className="md:col-span-full"><DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} /></div>
                                             </dl>
                                         ) : (
