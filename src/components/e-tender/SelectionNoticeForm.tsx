@@ -23,21 +23,42 @@ interface SelectionNoticeFormProps {
     l1Amount?: number;
 }
 
+// Function to parse numbers from the description string
+const parseStampPaperLogic = (description: string) => {
+    const rateMatch = description.match(/₹(\d+)\s*for\s*every\s*₹(\d+,?\d*)/);
+    const minMatch = description.match(/minimum\s*of\s*₹(\d+,?\d*)/);
+    const maxMatch = description.match(/maximum\s*of\s*₹(\d+,?\d*)/);
+
+    const parseNumber = (str: string | undefined) => str ? parseInt(str.replace(/,/g, ''), 10) : undefined;
+
+    return {
+        ratePerThousand: rateMatch ? parseNumber(rateMatch[1]) : 1,
+        basis: rateMatch ? parseNumber(rateMatch[2]) : 1000,
+        min: minMatch ? parseNumber(minMatch[1]) : 200,
+        max: maxMatch ? parseNumber(maxMatch[1]) : 100000,
+    };
+};
+
+
 export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
     const { allRateDescriptions } = useDataStore();
     
     const calculateStampPaperValue = (amount?: number): number => {
-        if (amount === undefined || amount === null || amount <= 0) {
-            return 200; // Default to minimum if no amount
-        }
-        // Calculate duty as ₹1 for every ₹1,000 or part thereof.
-        const duty = Math.ceil(amount / 1000) * 1; 
+        const logic = parseStampPaperLogic(allRateDescriptions.stampPaper);
         
-        // Round the calculated duty up to the nearest 100.
+        const rate = logic.ratePerThousand ?? 1;
+        const basis = logic.basis ?? 1000;
+        const min = logic.min ?? 200;
+        const max = logic.max ?? 100000;
+
+        if (amount === undefined || amount === null || amount <= 0) {
+            return min; // Default to minimum if no amount
+        }
+        
+        const duty = Math.ceil(amount / basis) * rate; 
         const roundedDuty = Math.ceil(duty / 100) * 100;
         
-        // Ensure the final value is within the min/max range.
-        return Math.max(200, Math.min(roundedDuty, 100000));
+        return Math.max(min, Math.min(roundedDuty, max));
     };
 
     const form = useForm<SelectionNoticeDetailsFormData>({
@@ -60,7 +81,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
             additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? 0,
             stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
         });
-    }, [initialData, form, l1Amount]);
+    }, [initialData, form, l1Amount, allRateDescriptions.stampPaper]); // Depend on the description string
 
     return (
         <FormProvider {...form}>
