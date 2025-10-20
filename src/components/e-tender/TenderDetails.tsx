@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -196,6 +197,17 @@ export default function TenderDetails() {
         setModalData(null);
     };
     
+    const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
+        setModalData({
+            ...corrigendum,
+            index,
+            corrigendumDate: formatDateForInput(corrigendum.corrigendumDate),
+            lastDateOfReceipt: formatDateForInput(corrigendum.lastDateOfReceipt, true),
+            dateOfOpeningTender: formatDateForInput(corrigendum.dateOfOpeningTender, true),
+        });
+        setActiveModal('editCorrigendum');
+    };
+    
     const pdfReports = [
         "Notice Inviting Tender (NIT)", "Tender Form", "Corrigendum", "Bid Opening Summary",
         "Technical Summary", "Financial Summary", "Selection Notice", "Work / Supply Order",
@@ -300,7 +312,7 @@ export default function TenderDetails() {
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-3 border rounded-md bg-secondary/30 relative group">
                                                         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...corrigendum, index }); setActiveModal('editCorrigendum'); }}><Edit className="h-4 w-4"/></Button>
+                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -328,10 +340,10 @@ export default function TenderDetails() {
                                     </AccordionTrigger>
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyOpeningData ? (
-                                             <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-4 border-t">
+                                             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 border-t">
                                                 <DetailRow label="Date of Opening Bid" value={formatDateSafe(form.watch('dateOfOpeningBid'))} />
                                                 <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(form.watch('dateOfTechnicalAndFinancialBidOpening'))} />
-                                                <div className="md:col-span-3"><DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} /></div>
+                                                <div className="md:col-span-full"><DetailRow label="Committee Members" value={[form.watch('technicalCommitteeMember1'), form.watch('technicalCommitteeMember2'), form.watch('technicalCommitteeMember3')].filter(Boolean).join(', ')} /></div>
                                             </dl>
                                         ) : (
                                              <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
