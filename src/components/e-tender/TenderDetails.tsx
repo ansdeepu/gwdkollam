@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -249,14 +248,19 @@ export default function TenderDetails() {
     }, [watch]);
     
     const assistantEngineerName = watch('nameOfAssistantEngineer');
-    const supervisorName = watch('nameOfSupervisor');
 
     const assistantEngineerDesignation = useMemo(() => allStaffMembers.find(s => s.name === assistantEngineerName)?.designation, [assistantEngineerName, allStaffMembers]);
-    const supervisorDesignation = useMemo(() => allStaffMembers.find(s => s.name === supervisorName)?.designation, [supervisorName, allStaffMembers]);
+    
+    const supervisor1Name = watch('supervisor1Name');
+    const supervisor2Name = watch('supervisor2Name');
+    const supervisor3Name = watch('supervisor3Name');
+    const supervisor1Designation = useMemo(() => allStaffMembers.find(s => s.name === supervisor1Name)?.designation, [supervisor1Name, allStaffMembers]);
+    const supervisor2Designation = useMemo(() => allStaffMembers.find(s => s.name === supervisor2Name)?.designation, [supervisor2Name, allStaffMembers]);
+    const supervisor3Designation = useMemo(() => allStaffMembers.find(s => s.name === supervisor3Name)?.designation, [supervisor3Name, allStaffMembers]);
 
 
     const hasAnyWorkOrderData = useMemo(() => {
-        const values = watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'nameOfSupervisor', 'supervisorPhoneNo']);
+        const values = watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'supervisor1Name', 'supervisor2Name', 'supervisor3Name']);
         return values.some(v => v);
     }, [watch]);
 
@@ -477,8 +481,9 @@ export default function TenderDetails() {
                                                  <DetailRow label="Agreement Date" value={watch('agreementDate')} />
                                                  <DetailRow label="Date - Work / Supply Order" value={watch('dateWorkOrder')} />
                                                  <DetailRow label="Measurer" value={watch('nameOfAssistantEngineer')} subValue={assistantEngineerDesignation} />
-                                                 <DetailRow label="Supervisor" value={watch('nameOfSupervisor')} subValue={supervisorDesignation} />
-                                                 <DetailRow label="Supervisor Phone" value={watch('supervisorPhoneNo')} />
+                                                 <DetailRow label="Supervisor 1" value={watch('supervisor1Name')} subValue={supervisor1Designation} />
+                                                 <DetailRow label="Supervisor 2" value={watch('supervisor2Name')} subValue={supervisor2Designation} />
+                                                 <DetailRow label="Supervisor 3" value={watch('supervisor3Name')} subValue={supervisor3Designation} />
                                              </dl>
                                         ) : (
                                              <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>

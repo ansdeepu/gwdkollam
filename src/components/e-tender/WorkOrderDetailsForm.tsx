@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -52,7 +52,19 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         }
     });
     
-    const { setValue } = form;
+    const { setValue, watch } = form;
+
+    const [
+        supervisor1Id,
+        supervisor2Id,
+        supervisor3Id,
+    ] = watch(['supervisor1Id', 'supervisor2Id', 'supervisor3Id']);
+
+    const availableSupervisors = useMemo(() => {
+        const selectedIds = [supervisor1Id, supervisor2Id, supervisor3Id].filter(Boolean);
+        return supervisorList.filter(s => !selectedIds.includes(s.id));
+    }, [supervisor1Id, supervisor2Id, supervisor3Id, supervisorList]);
+
 
     useEffect(() => {
         form.reset({
@@ -64,11 +76,58 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
 
     const title = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
     
-    const handleSupervisorChange = (staffId: string) => {
-        const selectedStaff = supervisorList.find(s => s.id === staffId);
-        setValue('nameOfSupervisor', selectedStaff?.name || '');
-        setValue('supervisorPhoneNo', selectedStaff?.phoneNo || '');
+    const handleSupervisorChange = (staffId: string | null, fieldIndex: 1 | 2 | 3) => {
+        const selectedStaff = staffId ? supervisorList.find(s => s.id === staffId) : null;
+        setValue(`supervisor${fieldIndex}Id`, selectedStaff?.id || null);
+        setValue(`supervisor${fieldIndex}Name`, selectedStaff?.name || null);
+        setValue(`supervisor${fieldIndex}Phone`, selectedStaff?.phoneNo || null);
     };
+
+    const SupervisorSelector = ({ index }: { index: 1 | 2 | 3 }) => {
+        const fieldId = `supervisor${index}Id` as const;
+        const fieldName = `supervisor${index}Name` as const;
+        const fieldPhone = `supervisor${index}Phone` as const;
+        
+        const currentId = watch(fieldId);
+        const currentStaffMember = currentId ? supervisorList.find(s => s.id === currentId) : null;
+
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                 <FormField
+                    name={fieldName}
+                    control={form.control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Name of Supervisor {index}</FormLabel>
+                             <Select onValueChange={(value) => {
+                                 const staff = supervisorList.find(s => s.name === value);
+                                 handleSupervisorChange(staff?.id || null, index);
+                             }} value={field.value || ""}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); handleSupervisorChange(null, index); }}>-- Clear Selection --</SelectItem>
+                                    {currentStaffMember && <SelectItem key={currentStaffMember.id} value={currentStaffMember.name}>{currentStaffMember.name} ({currentStaffMember.designation})</SelectItem>}
+                                    {availableSupervisors.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    name={fieldPhone}
+                    control={form.control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Supervisor Phone No. {index}</FormLabel>
+                            <FormControl><Input {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+        )
+    }
 
     return (
         <FormProvider {...form}>
@@ -101,29 +160,9 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                     </FormItem>
                                 )}
                             />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <FormField
-                                    name="nameOfSupervisor"
-                                    control={form.control}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Name of Supervisor</FormLabel>
-                                            <Select onValueChange={(value) => {
-                                                const staff = supervisorList.find(s => s.name === value);
-                                                handleSupervisorChange(staff?.id || '');
-                                            }} value={field.value || ""}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue('supervisorPhoneNo', ''); }}>-- Clear Selection --</SelectItem>
-                                                    {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField name="supervisorPhoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Supervisor Phone No.</FormLabel><FormControl><Input {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl><FormMessage /></FormItem> )}/>
-                            </div>
+                            <SupervisorSelector index={1} />
+                            <SupervisorSelector index={2} />
+                            <SupervisorSelector index={3} />
                         </div>
                     </ScrollArea>
                 </div>

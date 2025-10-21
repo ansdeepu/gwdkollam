@@ -103,9 +103,19 @@ export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSc
 export const WorkOrderDetailsSchema = z.object({
     agreementDate: z.any().optional().nullable(),
     nameOfAssistantEngineer: z.string().optional(),
-    nameOfSupervisor: z.string().optional(),
-    supervisorPhoneNo: z.string().optional(),
     dateWorkOrder: z.any().optional().nullable(),
+    // Supervisor 1
+    supervisor1Id: z.string().optional().nullable(),
+    supervisor1Name: z.string().optional().nullable(),
+    supervisor1Phone: z.string().optional().nullable(),
+    // Supervisor 2
+    supervisor2Id: z.string().optional().nullable(),
+    supervisor2Name: z.string().optional().nullable(),
+    supervisor2Phone: z.string().optional().nullable(),
+    // Supervisor 3
+    supervisor3Id: z.string().optional().nullable(),
+    supervisor3Name: z.string().optional().nullable(),
+    supervisor3Phone: z.string().optional().nullable(),
 });
 export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
@@ -155,8 +165,19 @@ export const E_tenderSchema = z.object({
     agreementDate: z.any().optional().nullable(),
     dateWorkOrder: z.any().optional().nullable(),
     nameOfAssistantEngineer: z.string().optional(),
-    nameOfSupervisor: z.string().optional(),
-    supervisorPhoneNo: z.string().optional(),
+    
+    // Supervisor 1
+    supervisor1Id: z.string().optional().nullable(),
+    supervisor1Name: z.string().optional().nullable(),
+    supervisor1Phone: z.string().optional().nullable(),
+    // Supervisor 2
+    supervisor2Id: z.string().optional().nullable(),
+    supervisor2Name: z.string().optional().nullable(),
+    supervisor2Phone: z.string().optional().nullable(),
+    // Supervisor 3
+    supervisor3Id: z.string().optional().nullable(),
+    supervisor3Name: z.string().optional().nullable(),
+    supervisor3Phone: z.string().optional().nullable(),
 
     presentStatus: z.enum(eTenderStatusOptions).optional(),
     
@@ -177,6 +198,8 @@ export const E_tenderSchema = z.object({
     noOfSuccessfulTenderers: z.any().optional(),
     quotedPercentage: z.any().optional(),
     aboveBelow: z.any().optional(),
+    nameOfSupervisor: z.string().optional(),
+    supervisorPhoneNo: z.string().optional(),
 });
 
 export type E_tenderFormData = z.infer<typeof E_tenderSchema>;
