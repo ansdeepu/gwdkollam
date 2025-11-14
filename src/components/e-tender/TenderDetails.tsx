@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { isValid, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 import BasicDetailsForm from './BasicDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
@@ -202,7 +203,8 @@ export default function TenderDetails() {
     };
     
     const pdfReports = [
-        "Notice Inviting Tender (NIT)", "Tender Form", "Corrigendum", "Bid Opening Summary",
+        "Notice Inviting Tender (NIT)",
+        "Corrigendum", "Bid Opening Summary",
         "Technical Summary", "Financial Summary", "Selection Notice", "Work / Supply Order",
         "Work Agreement"
     ];
@@ -531,6 +533,12 @@ export default function TenderDetails() {
                         <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Button asChild variant="outline" className="justify-start">
+                            <Link href="/path-to-your-fillable-tender-form.pdf" target="_blank" rel="noopener noreferrer">
+                                <Download className="mr-2 h-4 w-4" />
+                                Tender Form
+                            </Link>
+                        </Button>
                         {pdfReports.map((reportName) => (
                             <Button key={reportName} variant="outline" className="justify-start">
                                 <Download className="mr-2 h-4 w-4" />
@@ -539,7 +547,7 @@ export default function TenderDetails() {
                         ))}
                     </CardContent>
                      <CardFooter>
-                        <p className="text-xs text-muted-foreground">PDF generation functionality is currently a placeholder.</p>
+                        <p className="text-xs text-muted-foreground">The 'Tender Form' button now links to a fillable PDF. Other reports are placeholders.</p>
                     </CardFooter>
                 </Card>
 
