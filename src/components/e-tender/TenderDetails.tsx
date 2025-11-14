@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -203,7 +204,7 @@ export default function TenderDetails() {
     const pdfReports = [
         "Notice Inviting Tender (NIT)", "Tender Form", "Corrigendum", "Bid Opening Summary",
         "Technical Summary", "Financial Summary", "Selection Notice", "Work / Supply Order",
-        "Work Agreement", "Tender Status Summary"
+        "Work Agreement"
     ];
     
     const watchedFields = watch([
@@ -503,7 +504,7 @@ export default function TenderDetails() {
                                             control={control}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value}>
+                                                    <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value || undefined}>
                                                         <FormControl><SelectTrigger><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
                                                         <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
