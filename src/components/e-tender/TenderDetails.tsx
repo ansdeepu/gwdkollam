@@ -31,10 +31,10 @@ import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
 import CorrigendumForm from './CorrigendumForm';
 import { useDataStore } from '@/hooks/use-data-store';
+import PdfReportDialogs from './pdf/PdfReportDialogs';
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
-// **IMPORTANT**: Replace this placeholder with the public URL for your fillable PDF.
 const FILLABLE_TENDER_FORM_URL = "YOUR_PUBLIC_PDF_URL_HERE";
 
 
@@ -204,12 +204,6 @@ export default function TenderDetails() {
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
         setIsClearSelectionNoticeConfirmOpen(false);
     };
-    
-    const pdfReports = [
-        "Corrigendum", "Bid Opening Summary",
-        "Technical Summary", "Financial Summary", "Selection Notice", "Work / Supply Order",
-        "Work Agreement"
-    ];
     
     const watchedFields = watch([
         'eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'nameOfWorkMalayalam',
@@ -534,19 +528,8 @@ export default function TenderDetails() {
                         <CardTitle>PDF Reports Generation</CardTitle>
                         <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <Button asChild variant="outline" className="justify-start">
-                            <Link href={FILLABLE_TENDER_FORM_URL} target="_blank" rel="noopener noreferrer">
-                                <Download className="mr-2 h-4 w-4" />
-                                Tender Form
-                            </Link>
-                        </Button>
-                        {pdfReports.map((reportName) => (
-                            <Button key={reportName} variant="outline" className="justify-start">
-                                <Download className="mr-2 h-4 w-4" />
-                                {reportName}
-                            </Button>
-                        ))}
+                    <CardContent>
+                      <PdfReportDialogs tenderData={getValues()} />
                     </CardContent>
                      <CardFooter>
                         <p className="text-xs text-muted-foreground">The 'Tender Form' button links to your fillable PDF. Other reports are placeholders.</p>
