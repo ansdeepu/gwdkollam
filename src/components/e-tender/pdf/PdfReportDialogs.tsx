@@ -1,43 +1,110 @@
-
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useTenderData } from '../TenderDataContext';
+import { PDFDocument } from 'pdf-lib';
+import download from 'downloadjs';
+import { formatDateSafe } from '../utils';
+import { toast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
-const ReportButton = ({ reportType, label }: { reportType: string, label: string }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ReportButton = ({ reportType, label, onClick, disabled, isLoading }: { reportType: string, label: string, onClick: () => void, disabled?: boolean, isLoading?: boolean }) => {
 
   return (
-    <>
-      <Button onClick={() => setIsOpen(true)} variant="outline" className="justify-start">
-        <Download className="mr-2 h-4 w-4" />
+    <Button onClick={onClick} variant="outline" className="justify-start" disabled={disabled || isLoading}>
+        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
         {label}
-      </Button>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl h-[80vh]">
-            <DialogHeader>
-            <DialogTitle>{label}</DialogTitle>
-            <DialogDescription>This is a placeholder for the report content. PDF generation will be implemented here.</DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="flex-1 min-h-0 border rounded-md p-4 bg-secondary/20">
-                 <p>Placeholder content for {label}.</p>
-            </ScrollArea>
-            <DialogFooter>
-            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
-            <Button><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    </Button>
   );
 };
 
+const PlaceholderReportButton = ({ label }: { label: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+      <>
+          <Button onClick={() => setIsOpen(true)} variant="outline" className="justify-start">
+              <Download className="mr-2 h-4 w-4" />
+              {label}
+          </Button>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogContent className="max-w-4xl h-[80vh]">
+                  <DialogHeader>
+                      <DialogTitle>{label}</DialogTitle>
+                      <DialogDescription>This is a placeholder for the report content. PDF generation will be implemented here.</DialogDescription>
+                  </DialogHeader>
+                  <ScrollArea className="flex-1 min-h-0 border rounded-md p-4 bg-secondary/20">
+                      <p>Placeholder content for {label}.</p>
+                  </ScrollArea>
+                  <DialogFooter>
+                      <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+                      <Button><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
+      </>
+  );
+};
+
+
 export default function PdfReportDialogs() {
+    const { tender } = useTenderData();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleGenerateTenderForm = async () => {
+        setIsLoading(true);
+        try {
+            const formUrl = '/Tender-Form.pdf';
+            const existingPdfBytes = await fetch(formUrl).then(res => res.arrayBuffer());
+
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+            const form = pdfDoc.getForm();
+
+            const fields = {
+                'file_no_header': tender.fileNo,
+                'e_tender_no_header': tender.eTenderNo,
+                'tender_date_header': formatDateSafe(tender.tenderDate),
+                'name_of_work': tender.nameOfWork,
+                'pac': tender.estimateAmount?.toLocaleString('en-IN') || '',
+                'emd': tender.emd?.toLocaleString('en-IN') || '',
+                'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true),
+                'opening_date': formatDateSafe(tender.dateTimeOfOpening, true),
+                'bid_submission_fee': tender.tenderFormFee?.toLocaleString('en-IN') || '',
+                'location': tender.location,
+                'period_of_completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} days` : '',
+            };
+
+            Object.entries(fields).forEach(([fieldName, value]) => {
+                try {
+                    const field = form.getTextField(fieldName);
+                    if (value !== undefined && value !== null) {
+                        field.setText(String(value));
+                    }
+                } catch (e) {
+                    console.warn(`Could not find or set field: ${fieldName}`);
+                }
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            const fileName = `TenderForm_${tender.fileNo || 'filled'}.pdf`;
+            download(pdfBytes, fileName, "application/pdf");
+
+            toast({ title: 'PDF Generated', description: 'Your tender form has been downloaded.' });
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            toast({ title: 'PDF Generation Failed', description: 'Could not generate the tender form. Check console for details.', variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
     return (
         <Card>
             <CardHeader>
@@ -46,18 +113,58 @@ export default function PdfReportDialogs() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <ReportButton reportType="nit" label="Notice Inviting Tender (NIT)" />
-                    <ReportButton reportType="tender_form" label="Tender Form" />
-                    <ReportButton reportType="corrigendum" label="Corrigendum" />
-                    <ReportButton reportType="bid_opening" label="Bid Opening Summary" />
-                    <ReportButton reportType="technical_summary" label="Technical Summary" />
-                    <ReportButton reportType="financial_summary" label="Financial Summary" />
-                    <ReportButton reportType="selection_notice" label="Selection Notice" />
-                    <ReportButton reportType="work_supply_order" label="Work / Supply Order" />
-                    <ReportButton reportType="work_agreement" label="Work Agreement" />
+                    <Link href={`/dashboard/e-tender/${tender.id}/print`} passHref target="_blank">
+                        <Button variant="outline" className="w-full justify-start">
+                            <Download className="mr-2 h-4 w-4" />
+                            Notice Inviting Tender (NIT)
+                        </Button>
+                    </Link>
+                    <ReportButton
+                        reportType="tender_form"
+                        label="Tender Form"
+                        onClick={handleGenerateTenderForm}
+                        isLoading={isLoading}
+                    />
+                    <PlaceholderReportButton reportType="corrigendum" label="Corrigendum" />
+                    <PlaceholderReportButton reportType="bid_opening" label="Bid Opening Summary" />
+                    <PlaceholderReportButton reportType="technical_summary" label="Technical Summary" />
+                    <PlaceholderReportButton reportType="financial_summary" label="Financial Summary" />
+                    <PlaceholderReportButton reportType="selection_notice" label="Selection Notice" />
+                    <PlaceholderReportButton reportType="work_supply_order" label="Work / Supply Order" />
+                    <PlaceholderReportButton reportType="work_agreement" label="Work Agreement" />
                 </div>
             </CardContent>
         </Card>
     );
 }
-
+```
+  </change>
+  <change>
+    <file>tsconfig.json</file>
+    <content><![CDATA[{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/downloadjs.d.ts"],
+  "exclude": ["node_modules"]
+}
