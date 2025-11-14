@@ -32,13 +32,18 @@ const ReportDialogContent = ({ title, children }: { title: string, children: Rea
 );
 
 const NoticeInvitingTenderPdf = ({ tenderData }: PdfReportProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-      <Button asChild className="justify-start">
-          <Link href={`/dashboard/e-tender/${tenderData.id}/print`} target="_blank">
-              <Printer className="mr-2 h-4 w-4" />
-              Notice Inviting Tender (NIT)
-          </Link>
+    <>
+      <Button onClick={() => setIsOpen(true)} className="justify-start">
+        <Download className="mr-2 h-4 w-4" /> Notice Inviting Tender (NIT)
       </Button>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <ReportDialogContent title="Notice Inviting Tender (NIT) Report">
+          <pre>{JSON.stringify({ type: "NIT", data: "Placeholder" }, null, 2)}</pre>
+        </ReportDialogContent>
+      </Dialog>
+    </>
   );
 };
 
