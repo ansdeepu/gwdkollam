@@ -31,12 +31,8 @@ import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
 import CorrigendumForm from './CorrigendumForm';
 import { useDataStore } from '@/hooks/use-data-store';
-import PdfReportDialogs from './pdf/PdfReportDialogs';
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
-
-const FILLABLE_TENDER_FORM_URL = "YOUR_PUBLIC_PDF_URL_HERE";
-
 
 const DetailRow = ({ label, value, subValue }: { label: string; value: any; subValue?: string }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -525,15 +521,16 @@ export default function TenderDetails() {
                 
                  <Card>
                     <CardHeader>
-                        <CardTitle>PDF Reports Generation</CardTitle>
-                        <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
+                        <CardTitle>Reports</CardTitle>
+                        <CardDescription>Generate and download documents for this tender.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <PdfReportDialogs tenderData={getValues()} />
+                        <Button asChild>
+                            <Link href={`/dashboard/e-tender/${tender.id}/reports`}>
+                                Go to Reports Page
+                            </Link>
+                        </Button>
                     </CardContent>
-                     <CardFooter>
-                        <p className="text-xs text-muted-foreground">The 'Tender Form' button links to your fillable PDF. Other reports are placeholders.</p>
-                    </CardFooter>
                 </Card>
 
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
