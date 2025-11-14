@@ -36,7 +36,7 @@ const NoticeInvitingTenderPdf = ({ tenderData }: PdfReportProps) => {
   return (
     <>
       <Button onClick={() => setIsOpen(true)} variant="outline" className="justify-start">
-        <Download className="mr-2 h-4 w-4" /> Notice Inviting Tender
+        <Download className="mr-2 h-4 w-4" /> Notice Inviting Tender (NIT)
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <ReportDialogContent title="Notice Inviting Tender Report">
