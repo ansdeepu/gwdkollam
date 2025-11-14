@@ -62,7 +62,7 @@ export default function PdfReportDialogs() {
             const formUrl = '/Tender-Form.pdf';
             const formResponse = await fetch(formUrl);
             if (!formResponse.ok) {
-                if (formResponse.status === 404) {
+                 if (formResponse.status === 404) {
                     throw new Error(`The template file was not found. Please ensure 'Tender-Form.pdf' exists in the 'public' folder.`);
                 }
                 throw new Error(`Failed to load the PDF template. Status: ${formResponse.status}`);
