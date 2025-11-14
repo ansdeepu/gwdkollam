@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -34,6 +33,9 @@ import CorrigendumForm from './CorrigendumForm';
 import { useDataStore } from '@/hooks/use-data-store';
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
+
+// **IMPORTANT**: Replace this placeholder with the public URL of your fillable PDF from Firebase Storage.
+const FILLABLE_TENDER_FORM_URL = "/path-to-your-fillable-tender-form.pdf";
 
 const DetailRow = ({ label, value, subValue }: { label: string; value: any; subValue?: string }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -203,7 +205,6 @@ export default function TenderDetails() {
     };
     
     const pdfReports = [
-        "Notice Inviting Tender (NIT)",
         "Corrigendum", "Bid Opening Summary",
         "Technical Summary", "Financial Summary", "Selection Notice", "Work / Supply Order",
         "Work Agreement"
@@ -534,7 +535,7 @@ export default function TenderDetails() {
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <Button asChild variant="outline" className="justify-start">
-                            <Link href="/path-to-your-fillable-tender-form.pdf" target="_blank" rel="noopener noreferrer">
+                            <Link href={FILLABLE_TENDER_FORM_URL} target="_blank" rel="noopener noreferrer">
                                 <Download className="mr-2 h-4 w-4" />
                                 Tender Form
                             </Link>
