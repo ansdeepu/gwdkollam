@@ -97,10 +97,9 @@ export default function PdfReportDialogs() {
 
         } catch (error: any) {
             console.error("PDF Generation Error:", error);
-            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive' });
+            toast({ title: "PDF Generation Failed", description: "Could not process the selected PDF. Ensure it is a valid fillable PDF template.", variant: 'destructive' });
         } finally {
             setIsLoading(false);
-            // Reset file input to allow selecting the same file again
             if(fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
@@ -108,7 +107,6 @@ export default function PdfReportDialogs() {
     }, [tender]);
     
     const handleGenerateTenderForm = () => {
-        // Programmatically click the hidden file input
         fileInputRef.current?.click();
     };
 
