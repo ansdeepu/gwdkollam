@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
@@ -46,7 +46,6 @@ const NoticeInvitingTenderPdf = ({ tenderData }: PdfReportProps) => {
     </>
   );
 };
-
 
 const CorrigendumPdf = ({ tenderData }: PdfReportProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -163,6 +162,12 @@ const WorkAgreementPdf = ({ tenderData }: PdfReportProps) => {
 export default function PdfReportDialogs({ tenderData }: { tenderData: E_tenderFormData }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <Button asChild className="justify-start bg-primary/90 hover:bg-primary">
+          <Link href={`/dashboard/e-tender/${tenderData.id}/print`} target="_blank">
+              <Printer className="mr-2 h-4 w-4" />
+              Printable Tender Notice
+          </Link>
+      </Button>
       <NoticeInvitingTenderPdf tenderData={tenderData} />
       <Button asChild variant="outline" className="justify-start">
         <Link href={FILLABLE_TENDER_FORM_URL} target="_blank" rel="noopener noreferrer">
