@@ -95,10 +95,14 @@ export default function TenderPage() {
     return (
         <TenderDataProvider initialTender={tender}>
             <div className="space-y-6">
-                <div className="flex justify-end">
+                <div className="flex justify-between">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back
+                    </Button>
+                    <Button onClick={() => router.push(`/dashboard/e-tender/${id}/reports`)}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        PDF Reports Generation
                     </Button>
                 </div>
                 <TenderDetails />
