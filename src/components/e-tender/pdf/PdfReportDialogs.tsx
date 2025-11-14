@@ -59,7 +59,7 @@ export default function PdfReportDialogs() {
     const handleGenerateTenderForm = useCallback(async () => {
         setIsLoading(true);
         try {
-            const pdfUrl = '/Tender-Form.pdf'; // URL to the template in the public folder
+            const pdfUrl = '/Tender-Form.pdf'; 
             
             const existingPdfBytes = await fetch(pdfUrl).then(res => {
                 if (!res.ok) {
@@ -95,6 +95,8 @@ export default function PdfReportDialogs() {
                     console.warn(`Could not find or set field: ${fieldName}`);
                 }
             });
+            
+            form.flatten();
 
             const pdfBytes = await pdfDoc.save();
             download(pdfBytes, `TenderForm_${tender.fileNo || 'filled'}.pdf`, 'application/pdf');
