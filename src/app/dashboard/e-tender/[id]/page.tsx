@@ -100,10 +100,6 @@ export default function TenderPage() {
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back
                     </Button>
-                    <Button onClick={() => router.push(`/dashboard/e-tender/${id}/reports`)}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        PDF Reports Generation
-                    </Button>
                 </div>
                 <TenderDetails />
             </div>

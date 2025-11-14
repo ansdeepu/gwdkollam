@@ -32,6 +32,7 @@ import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
 import CorrigendumForm from './CorrigendumForm';
 import { useDataStore } from '@/hooks/use-data-store';
+import PdfReportDialogs from './pdf/PdfReportDialogs'; // Import the component
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
@@ -512,6 +513,10 @@ export default function TenderDetails() {
                                 </div>
                             </CardContent>
                         </Card>
+                        
+                        <div className="mt-6">
+                            <PdfReportDialogs />
+                        </div>
                     </CardContent>
                     <CardFooter className="flex justify-end">
                         <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>

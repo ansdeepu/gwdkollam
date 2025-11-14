@@ -1,48 +1,107 @@
-
-// src/app/dashboard/e-tender/[id]/reports/page.tsx
+// src/app/dashboard/e-tender/[id]/page.tsx
 "use client";
 
-import React from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import PdfReportDialogs from '@/components/e-tender/pdf/PdfReportDialogs';
-import { ArrowLeft, FileText } from 'lucide-react';
-import { usePageHeader } from '@/hooks/usePageHeader';
-import { useE_tenders } from '@/hooks/useE_tenders';
-import { TenderDataProvider } from '@/components/e-tender/TenderDataContext';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useE_tenders, type E_tender } from "@/hooks/useE_tenders";
+import { usePageHeader } from "@/hooks/usePageHeader";
+import { Loader2, ArrowLeft, FileText, FilePlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TenderDataProvider } from "@/components/e-tender/TenderDataContext";
+import TenderDetails from "@/components/e-tender/TenderDetails";
+import { toast } from "@/hooks/use-toast";
 
-export default function TenderReportsPage() {
+export default function TenderPage() {
     const params = useParams();
     const router = useRouter();
     const { id } = params;
     const { getTender, isLoading } = useE_tenders();
-    const [tender, setTender] = React.useState(null);
     const { setHeader } = usePageHeader();
+    const [tender, setTender] = useState<E_tender | null>(null);
 
-    React.useEffect(() => {
-        setHeader('e-Tender Reports', `Generate and download various PDF reports for the tender.`);
-        if (typeof id === 'string') {
-            getTender(id).then(setTender);
+    useEffect(() => {
+        if (typeof id !== 'string' || !id) {
+            setHeader("Invalid Tender", "No tender ID was provided.");
+            return;
         }
-    }, [id, getTender, setHeader]);
+
+        if (id === 'new') {
+            const newTenderData: E_tender = {
+                id: 'new',
+                eTenderNo: '',
+                tenderDate: null,
+                fileNo: '',
+                nameOfWork: '',
+                nameOfWorkMalayalam: '',
+                location: '',
+                estimateAmount: undefined,
+                tenderFormFee: undefined,
+                emd: undefined,
+                periodOfCompletion: undefined,
+                lastDateOfReceipt: null,
+                timeOfReceipt: '',
+                dateOfOpeningTender: null,
+                timeOfOpeningTender: '',
+                presentStatus: 'Tender Process',
+                bidders: [],
+                corrigendums: [],
+                dateTimeOfReceipt: undefined,
+                dateTimeOfOpening: undefined,
+                noOfBids: undefined,
+                noOfTenderers: undefined,
+                noOfSuccessfulTenderers: undefined,
+                quotedPercentage: undefined,
+                aboveBelow: undefined,
+                dateOfOpeningBid: undefined,
+                dateOfTechnicalAndFinancialBidOpening: undefined,
+                technicalCommitteeMember1: undefined,
+                technicalCommitteeMember2: undefined,
+                technicalCommitteeMember3: undefined,
+                agreementDate: undefined,
+                dateWorkOrder: undefined,
+                nameOfAssistantEngineer: undefined,
+                nameOfSupervisor: undefined,
+                supervisorPhoneNo: undefined,
+            };
+            setTender(newTenderData);
+            setHeader("Create New e-Tender", "Fill in the details for the new tender.");
+        } else {
+            const fetchTender = async () => {
+                const fetchedTender = await getTender(id);
+                if (fetchedTender) {
+                    setTender(fetchedTender);
+                    const refNo = `GKT/${fetchedTender.fileNo}/${fetchedTender.eTenderNo}`;
+                    setHeader(`Edit e-Tender: ${refNo}`, `Editing details for tender: ${refNo}`);
+                } else {
+                    toast({ title: "Tender Not Found", description: "The requested tender could not be found.", variant: "destructive" });
+                    setHeader("Tender Not Found", "The requested tender could not be found.");
+                    router.push('/dashboard');
+                }
+            };
+            fetchTender();
+        }
+    }, [id, getTender, setHeader, router, toast]);
 
     if (isLoading || !tender) {
-        return <div>Loading tender details...</div>;
+        return (
+            <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <p className="ml-3 text-muted-foreground">Loading Tender Data...</p>
+            </div>
+        );
     }
     
     return (
         <TenderDataProvider initialTender={tender}>
             <div className="space-y-6">
-                <div className="flex justify-start">
+                <div className="flex justify-between">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Tender Details
+                        Back
                     </Button>
                 </div>
-                <PdfReportDialogs />
+                <TenderDetails />
             </div>
         </TenderDataProvider>
     );
 }
-
