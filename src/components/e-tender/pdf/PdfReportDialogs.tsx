@@ -15,7 +15,6 @@ import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 const ReportButton = ({ reportType, label, onClick, disabled, isLoading }: { reportType: string, label: string, onClick: () => void, disabled?: boolean, isLoading?: boolean }) => {
-
   return (
     <Button onClick={onClick} variant="outline" className="justify-start" disabled={disabled || isLoading}>
         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
@@ -43,7 +42,7 @@ const PlaceholderReportButton = ({ label }: { label: string }) => {
                   </ScrollArea>
                   <DialogFooter>
                       <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
-                      <Button><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
+                      <Button disabled><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
                   </DialogFooter>
               </DialogContent>
           </Dialog>
@@ -56,62 +55,6 @@ export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleGenerateTenderForm = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const formUrl = '/Tender-Form.pdf';
-            const formResponse = await fetch(formUrl);
-            if (!formResponse.ok) {
-                 if (formResponse.status === 404) {
-                    throw new Error(`The template file was not found. Please ensure 'Tender-Form.pdf' exists in the 'public' folder.`);
-                }
-                throw new Error(`Failed to load the PDF template. Status: ${formResponse.status}`);
-            }
-            const existingPdfBytes = await formResponse.arrayBuffer();
-
-            const pdfDoc = await PDFDocument.load(existingPdfBytes);
-            const form = pdfDoc.getForm();
-
-            const fields = {
-                'file_no_header': tender.fileNo,
-                'e_tender_no_header': tender.eTenderNo,
-                'tender_date_header': formatDateSafe(tender.tenderDate),
-                'name_of_work': tender.nameOfWork,
-                'pac': tender.estimateAmount?.toLocaleString('en-IN') || '',
-                'emd': tender.emd?.toLocaleString('en-IN') || '',
-                'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true),
-                'opening_date': formatDateSafe(tender.dateTimeOfOpening, true),
-                'bid_submission_fee': tender.tenderFormFee?.toLocaleString('en-IN') || '',
-                'location': tender.location,
-                'period_of_completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} days` : '',
-            };
-
-            Object.entries(fields).forEach(([fieldName, value]) => {
-                try {
-                    const field = form.getTextField(fieldName);
-                    if (value !== undefined && value !== null) {
-                        field.setText(String(value));
-                    }
-                } catch (e) {
-                    console.warn(`Could not find or set field: ${fieldName}`);
-                }
-            });
-
-            const pdfBytes = await pdfDoc.save();
-            const fileName = `TenderForm_${tender.fileNo || 'filled'}.pdf`;
-            download(pdfBytes, fileName, "application/pdf");
-
-            toast({ title: 'PDF Generated', description: 'Your tender form has been downloaded.' });
-
-        } catch (error: any) {
-            console.error('Error generating PDF:', error);
-            toast({ title: 'PDF Generation Failed', description: error.message, variant: 'destructive', duration: 8000 });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [tender]);
-
-
     return (
         <Card>
             <CardHeader>
@@ -120,19 +63,19 @@ export default function PdfReportDialogs() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <ReportButton
-                        reportType="tender_form"
-                        label="Tender Form"
-                        onClick={handleGenerateTenderForm}
-                        isLoading={isLoading}
-                    />
-                    <PlaceholderReportButton reportType="corrigendum" label="Corrigendum" />
-                    <PlaceholderReportButton reportType="bid_opening" label="Bid Opening Summary" />
-                    <PlaceholderReportButton reportType="technical_summary" label="Technical Summary" />
-                    <PlaceholderReportButton reportType="financial_summary" label="Financial Summary" />
-                    <PlaceholderReportButton reportType="selection_notice" label="Selection Notice" />
-                    <PlaceholderReportButton reportType="work_supply_order" label="Work / Supply Order" />
-                    <PlaceholderReportButton reportType="work_agreement" label="Work Agreement" />
+                    <Button asChild variant="outline" className="justify-start">
+                        <Link href="/Tender-Form.pdf" download={`Tender_Form_${tender.fileNo || 'gwd'}.pdf`}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Tender Form
+                        </Link>
+                    </Button>
+                    <PlaceholderReportButton label="Corrigendum" />
+                    <PlaceholderReportButton label="Bid Opening Summary" />
+                    <PlaceholderReportButton label="Technical Summary" />
+                    <PlaceholderReportButton label="Financial Summary" />
+                    <PlaceholderReportButton label="Selection Notice" />
+                    <PlaceholderReportButton label="Work / Supply Order" />
+                    <PlaceholderReportButton label="Work Agreement" />
                 </div>
             </CardContent>
         </Card>
