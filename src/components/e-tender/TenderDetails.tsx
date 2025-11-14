@@ -34,8 +34,9 @@ import { useDataStore } from '@/hooks/use-data-store';
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
-// **IMPORTANT**: Replace this placeholder with the public URL of your fillable PDF from Firebase Storage.
-const FILLABLE_TENDER_FORM_URL = "/path-to-your-fillable-tender-form.pdf";
+// **IMPORTANT**: Replace this placeholder with the public URL for your fillable PDF.
+const FILLABLE_TENDER_FORM_URL = "YOUR_PUBLIC_PDF_URL_HERE";
+
 
 const DetailRow = ({ label, value, subValue }: { label: string; value: any; subValue?: string }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -548,7 +549,7 @@ export default function TenderDetails() {
                         ))}
                     </CardContent>
                      <CardFooter>
-                        <p className="text-xs text-muted-foreground">The 'Tender Form' button now links to a fillable PDF. Other reports are placeholders.</p>
+                        <p className="text-xs text-muted-foreground">The 'Tender Form' button links to your fillable PDF. Other reports are placeholders.</p>
                     </CardFooter>
                 </Card>
 
