@@ -59,10 +59,11 @@ export default function PdfReportDialogs() {
     const handleGenerateTenderForm = useCallback(async () => {
         setIsLoading(true);
         try {
-            const pdfUrl = '/Tender-Form.pdf';
+            const pdfUrl = '/Tender-Form.pdf'; // URL to the template in the public folder
+            
             const existingPdfBytes = await fetch(pdfUrl).then(res => {
                 if (!res.ok) {
-                    throw new Error(`The template file could not be found. Please ensure 'Tender-Form.pdf' is in the public folder and the name is correct. (Status: ${res.status})`);
+                    throw new Error(`The template file could not be found at ${pdfUrl}. Please ensure 'Tender-Form.pdf' is in the public folder. (Status: ${res.status})`);
                 }
                 return res.arrayBuffer();
             });
@@ -71,14 +72,17 @@ export default function PdfReportDialogs() {
             const form = pdfDoc.getForm();
             
             const fieldMappings: Record<string, any> = {
-                'Name of Work': tender.nameOfWork,
-                'Location': tender.location,
-                'Amount': tender.estimateAmount?.toString(),
-                'EMD': tender.emd?.toString(),
-                'Cost of Tender Form': tender.tenderFormFee?.toString(),
-                'Period of Completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} days` : '',
-                'Last Date and Time for receipt of tender': formatDateSafe(tender.dateTimeOfReceipt, true),
-                'Date and Time of opening of Tender': formatDateSafe(tender.dateTimeOfOpening, true),
+                'file_no_header': tender.fileNo,
+                'e_tender_no_header': tender.eTenderNo,
+                'tender_date_header': formatDateSafe(tender.tenderDate),
+                'name_of_work': tender.nameOfWork,
+                'pac': tender.estimateAmount?.toString(),
+                'emd': tender.emd?.toString(),
+                'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true),
+                'opening_date': formatDateSafe(tender.dateTimeOfOpening, true),
+                'bid_submission_fee': tender.tenderFormFee?.toString(),
+                'location': tender.location,
+                'period_of_completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} days` : '',
             };
             
             Object.keys(fieldMappings).forEach(fieldName => {
