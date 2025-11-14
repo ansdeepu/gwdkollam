@@ -60,7 +60,11 @@ export default function PdfReportDialogs() {
         setIsLoading(true);
         try {
             const formUrl = '/Tender-Form.pdf';
-            const existingPdfBytes = await fetch(formUrl).then(res => res.arrayBuffer());
+            const formResponse = await fetch(formUrl);
+            if (!formResponse.ok) {
+                throw new Error(`Could not find the template PDF at ${formUrl}. Make sure the file exists in the 'public' folder and is named correctly (case-sensitive).`);
+            }
+            const existingPdfBytes = await formResponse.arrayBuffer();
 
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             const form = pdfDoc.getForm();
@@ -96,9 +100,9 @@ export default function PdfReportDialogs() {
 
             toast({ title: 'PDF Generated', description: 'Your tender form has been downloaded.' });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error generating PDF:', error);
-            toast({ title: 'PDF Generation Failed', description: 'Could not generate the tender form. Check console for details.', variant: 'destructive' });
+            toast({ title: 'PDF Generation Failed', description: error.message, variant: 'destructive', duration: 8000 });
         } finally {
             setIsLoading(false);
         }
@@ -113,12 +117,7 @@ export default function PdfReportDialogs() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Link href={`/dashboard/e-tender/${tender.id}/print`} passHref target="_blank">
-                        <Button variant="outline" className="w-full justify-start">
-                            <Download className="mr-2 h-4 w-4" />
-                            Notice Inviting Tender (NIT)
-                        </Button>
-                    </Link>
+                    <PlaceholderReportButton reportType="nit" label="Notice Inviting Tender (NIT)" />
                     <ReportButton
                         reportType="tender_form"
                         label="Tender Form"
