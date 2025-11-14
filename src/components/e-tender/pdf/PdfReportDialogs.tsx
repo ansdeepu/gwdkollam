@@ -32,18 +32,13 @@ const ReportDialogContent = ({ title, children }: { title: string, children: Rea
 );
 
 const NoticeInvitingTenderPdf = ({ tenderData }: PdfReportProps) => {
-  const [isOpen, setIsOpen] = useState(false);
   return (
-    <>
-      <Button onClick={() => setIsOpen(true)} variant="outline" className="justify-start">
-        <Download className="mr-2 h-4 w-4" /> Notice Inviting Tender (NIT)
+      <Button asChild className="justify-start">
+          <Link href={`/dashboard/e-tender/${tenderData.id}/print`} target="_blank">
+              <Printer className="mr-2 h-4 w-4" />
+              Notice Inviting Tender (NIT)
+          </Link>
       </Button>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <ReportDialogContent title="Notice Inviting Tender Report">
-          <pre>{JSON.stringify({ type: "Notice Inviting Tender", data: "Placeholder" }, null, 2)}</pre>
-        </ReportDialogContent>
-      </Dialog>
-    </>
   );
 };
 
@@ -162,19 +157,7 @@ const WorkAgreementPdf = ({ tenderData }: PdfReportProps) => {
 export default function PdfReportDialogs({ tenderData }: { tenderData: E_tenderFormData }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Button asChild className="justify-start bg-primary/90 hover:bg-primary">
-          <Link href={`/dashboard/e-tender/${tenderData.id}/print`} target="_blank">
-              <Printer className="mr-2 h-4 w-4" />
-              Printable Tender Notice
-          </Link>
-      </Button>
       <NoticeInvitingTenderPdf tenderData={tenderData} />
-      <Button asChild variant="outline" className="justify-start">
-        <Link href={FILLABLE_TENDER_FORM_URL} target="_blank" rel="noopener noreferrer">
-          <Download className="mr-2 h-4 w-4" />
-          Tender Form
-        </Link>
-      </Button>
       <CorrigendumPdf tenderData={tenderData} />
       <BidOpeningSummaryPdf tenderData={tenderData} />
       <TechnicalSummaryPdf tenderData={tenderData} />
