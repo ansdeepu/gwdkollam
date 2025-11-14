@@ -1,7 +1,7 @@
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
@@ -54,22 +54,21 @@ const PlaceholderReportButton = ({ label }: { label: string }) => {
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
-    const handleGenerateTenderForm = useCallback(async () => {
+    const handleFileSelected = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            toast({ title: "No File Selected", description: "Please select a PDF template to continue.", variant: "default" });
+            return;
+        }
+
         setIsLoading(true);
         try {
-            const formUrl = '/Tender-Form.pdf';
-            const existingPdfBytes = await fetch(formUrl).then(res => {
-                if (!res.ok) {
-                    throw new Error(`The template file was not found. Please ensure 'Tender-Form.pdf' is in the 'public' folder. (Status: ${res.status})`);
-                }
-                return res.arrayBuffer();
-            });
-
+            const existingPdfBytes = await file.arrayBuffer();
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             const form = pdfDoc.getForm();
             
-            // Map your tender data to the form fields
             const fieldMappings: Record<string, any> = {
                 'Name of Work': tender.nameOfWork,
                 'Location': tender.location,
@@ -101,8 +100,18 @@ export default function PdfReportDialogs() {
             toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive' });
         } finally {
             setIsLoading(false);
+            // Reset file input to allow selecting the same file again
+            if(fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
         }
     }, [tender]);
+    
+    const handleGenerateTenderForm = () => {
+        // Programmatically click the hidden file input
+        fileInputRef.current?.click();
+    };
+
 
     return (
         <Card>
@@ -111,6 +120,13 @@ export default function PdfReportDialogs() {
                 <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
             </CardHeader>
             <CardContent>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelected}
+                    className="hidden"
+                    accept="application/pdf"
+                />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                      <ReportButton 
                         reportType="tenderForm"
