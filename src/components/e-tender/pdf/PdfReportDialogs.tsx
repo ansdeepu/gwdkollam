@@ -9,8 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
 import Link from 'next/link';
 
-// **IMPORTANT**: Replace this placeholder with the public URL for your fillable PDF.
-const FILLABLE_TENDER_FORM_URL = "YOUR_PUBLIC_PDF_URL_HERE";
+// **IMPORTANT**: Replace "YOUR_FILE_ID" with the actual ID from your Google Drive share link.
+const FILLABLE_TENDER_FORM_URL = "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID";
 
 interface PdfReportProps {
   tenderData: E_tenderFormData;
