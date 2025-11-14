@@ -32,6 +32,23 @@ const ReportDialogContent = ({ title, children }: { title: string, children: Rea
   </DialogContent>
 );
 
+const NoticeInvitingTenderPdf = ({ tenderData }: PdfReportProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setIsOpen(true)} variant="outline" className="justify-start">
+        <Download className="mr-2 h-4 w-4" /> Notice Inviting Tender
+      </Button>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <ReportDialogContent title="Notice Inviting Tender Report">
+          <pre>{JSON.stringify({ type: "Notice Inviting Tender", data: "Placeholder" }, null, 2)}</pre>
+        </ReportDialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+
 const CorrigendumPdf = ({ tenderData }: PdfReportProps) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -153,6 +170,7 @@ export default function PdfReportDialogs({ tenderData }: { tenderData: E_tenderF
           Tender Form
         </Link>
       </Button>
+      <NoticeInvitingTenderPdf tenderData={tenderData} />
       <CorrigendumPdf tenderData={tenderData} />
       <BidOpeningSummaryPdf tenderData={tenderData} />
       <TechnicalSummaryPdf tenderData={tenderData} />
