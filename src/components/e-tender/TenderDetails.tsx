@@ -530,7 +530,7 @@ export default function TenderDetails() {
                         <CardTitle>PDF Reports Generation</CardTitle>
                         <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {pdfReports.map((reportName) => (
                             <Button key={reportName} variant="outline" className="justify-start">
                                 <Download className="mr-2 h-4 w-4" />
