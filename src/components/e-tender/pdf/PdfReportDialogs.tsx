@@ -54,20 +54,19 @@ const PlaceholderReportButton = ({ label }: { label: string }) => {
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
-    
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const handleGenerateTenderForm = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Construct the full URL to the file in the public folder.
-            const pdfUrl = `${window.location.origin}/Tender-Form.pdf`;
-            
-            const response = await fetch(pdfUrl);
-            
-            if (!response.ok) {
-                 throw new Error(`The template file could not be found at ${pdfUrl}. Please ensure 'Tender-Form.pdf' is in the public folder and the name is correct. (Status: ${response.status})`);
-            }
+            const pdfUrl = '/Tender-Form.pdf';
+            const existingPdfBytes = await fetch(pdfUrl).then(res => {
+                if (!res.ok) {
+                    throw new Error(`The template file could not be found. Please ensure 'Tender-Form.pdf' is in the public folder and the name is correct. (Status: ${res.status})`);
+                }
+                return res.arrayBuffer();
+            });
 
-            const existingPdfBytes = await response.arrayBuffer();
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             const form = pdfDoc.getForm();
             
@@ -104,7 +103,7 @@ export default function PdfReportDialogs() {
             setIsLoading(false);
         }
     }, [tender]);
-
+    
 
     return (
         <Card>
