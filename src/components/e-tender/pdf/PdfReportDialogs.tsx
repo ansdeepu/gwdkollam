@@ -163,13 +163,13 @@ const WorkAgreementPdf = ({ tenderData }: PdfReportProps) => {
 export default function PdfReportDialogs({ tenderData }: { tenderData: E_tenderFormData }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <NoticeInvitingTenderPdf tenderData={tenderData} />
       <Button asChild variant="outline" className="justify-start">
         <Link href={FILLABLE_TENDER_FORM_URL} target="_blank" rel="noopener noreferrer">
           <Download className="mr-2 h-4 w-4" />
           Tender Form
         </Link>
       </Button>
-      <NoticeInvitingTenderPdf tenderData={tenderData} />
       <CorrigendumPdf tenderData={tenderData} />
       <BidOpeningSummaryPdf tenderData={tenderData} />
       <TechnicalSummaryPdf tenderData={tenderData} />
