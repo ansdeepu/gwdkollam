@@ -1,7 +1,7 @@
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
@@ -56,13 +56,16 @@ export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleGenerateTenderForm = async () => {
+    const handleGenerateTenderForm = useCallback(async () => {
         setIsLoading(true);
         try {
             const formUrl = '/Tender-Form.pdf';
             const formResponse = await fetch(formUrl);
             if (!formResponse.ok) {
-                throw new Error(`Could not find the template PDF at ${formUrl}. Make sure the file exists in the 'public' folder and is named correctly (case-sensitive).`);
+                if (formResponse.status === 404) {
+                    throw new Error(`The template file was not found. Please ensure 'Tender-Form.pdf' exists in the 'public' folder.`);
+                }
+                throw new Error(`Failed to load the PDF template. Status: ${formResponse.status}`);
             }
             const existingPdfBytes = await formResponse.arrayBuffer();
 
@@ -106,7 +109,7 @@ export default function PdfReportDialogs() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [tender]);
 
 
     return (
@@ -117,7 +120,6 @@ export default function PdfReportDialogs() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <PlaceholderReportButton reportType="nit" label="Notice Inviting Tender (NIT)" />
                     <ReportButton
                         reportType="tender_form"
                         label="Tender Form"
