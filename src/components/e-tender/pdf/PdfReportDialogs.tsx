@@ -54,18 +54,20 @@ const PlaceholderReportButton = ({ label }: { label: string }) => {
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     
-    const handleFileSelected = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) {
-            toast({ title: "No File Selected", description: "Please select a PDF template to continue.", variant: "default" });
-            return;
-        }
-
+    const handleGenerateTenderForm = useCallback(async () => {
         setIsLoading(true);
         try {
-            const existingPdfBytes = await file.arrayBuffer();
+            // Construct the full URL to the file in the public folder.
+            const pdfUrl = `${window.location.origin}/Tender-Form.pdf`;
+            
+            const response = await fetch(pdfUrl);
+            
+            if (!response.ok) {
+                 throw new Error(`The template file could not be found at ${pdfUrl}. Please ensure 'Tender-Form.pdf' is in the public folder and the name is correct. (Status: ${response.status})`);
+            }
+
+            const existingPdfBytes = await response.arrayBuffer();
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             const form = pdfDoc.getForm();
             
@@ -97,18 +99,11 @@ export default function PdfReportDialogs() {
 
         } catch (error: any) {
             console.error("PDF Generation Error:", error);
-            toast({ title: "PDF Generation Failed", description: "Could not process the selected PDF. Ensure it is a valid fillable PDF template.", variant: 'destructive' });
+            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
         } finally {
             setIsLoading(false);
-            if(fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
         }
     }, [tender]);
-    
-    const handleGenerateTenderForm = () => {
-        fileInputRef.current?.click();
-    };
 
 
     return (
@@ -118,13 +113,6 @@ export default function PdfReportDialogs() {
                 <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
             </CardHeader>
             <CardContent>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileSelected}
-                    className="hidden"
-                    accept="application/pdf"
-                />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                      <ReportButton 
                         reportType="tenderForm"
