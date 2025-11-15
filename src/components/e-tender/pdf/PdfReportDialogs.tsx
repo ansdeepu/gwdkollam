@@ -105,7 +105,8 @@ export default function PdfReportDialogs() {
             form.flatten();
 
             const pdfBytes = await pdfDoc.save();
-            download(pdfBytes, `TenderForm_${tender.fileNo || 'filled'}.pdf`, 'application/pdf');
+            const fileName = `bTenderForm${tender.eTenderNo?.replace(/\//g, '_') || 'filled'}.pdf`;
+            download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Tender Form has been downloaded." });
 
         } catch (error: any) {
