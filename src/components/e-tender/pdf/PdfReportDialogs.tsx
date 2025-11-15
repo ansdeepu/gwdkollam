@@ -8,16 +8,24 @@ import { Download, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PDFFont } from 'pdf-lib';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 const ReportButton = ({ reportType, label, onClick, disabled, isLoading }: { reportType: string, label: string, onClick: () => void, disabled?: boolean, isLoading?: boolean }) => {
+  const [isButtonLoading, setIsButtonLoading] = useState(false);
+
+  const handleClick = async () => {
+    setIsButtonLoading(true);
+    await onClick();
+    setIsButtonLoading(false);
+  };
+
   return (
-    <Button onClick={onClick} variant="outline" className="justify-start" disabled={disabled || isLoading}>
-        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+    <Button onClick={handleClick} variant="outline" className="justify-start" disabled={disabled || isButtonLoading}>
+        {(isLoading || isButtonLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
         {label}
     </Button>
   );
@@ -55,67 +63,77 @@ export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleGenerateTenderForm = useCallback(async () => {
-        setIsLoading(true);
+    const fillPdfForm = useCallback(async (templatePath: string): Promise<Uint8Array> => {
+        const existingPdfBytes = await fetch(templatePath).then(res => {
+            if (!res.ok) {
+                throw new Error(`The template file could not be found. Please ensure '${templatePath.split('/').pop()}' is in the public folder.`);
+            }
+            return res.arrayBuffer();
+        });
+
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const form = pdfDoc.getForm();
+        const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+
+        const tenderFee = tender.tenderFormFee || 0;
+        const gst = tenderFee * 0.18;
+        const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
+
+        const fieldMappings: Record<string, any> = {
+            'file_no_header': `GKT/${tender.fileNo || ''}`,
+            'e_tender_no_header': tender.eTenderNo,
+            'tender_date_header': formatDateSafe(tender.tenderDate),
+            'name_of_work': tender.nameOfWork,
+            'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
+            'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
+            'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
+            'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
+            'bid_submission_fee': displayTenderFee,
+            'location': tender.location,
+            'period_of_completion': tender.periodOfCompletion || '',
+        };
+
+        Object.keys(fieldMappings).forEach(fieldName => {
+            try {
+                const field = form.getTextField(fieldName);
+                if (field) {
+                    const fieldValue = String(fieldMappings[fieldName] || '');
+                    field.setText(fieldValue);
+                    field.updateAppearances(timesRomanFont, { fontSize: 12 });
+                }
+            } catch (e) {
+                console.warn(`Could not find or set field: ${fieldName}`);
+            }
+        });
+
+        form.flatten();
+        return await pdfDoc.save();
+    }, [tender]);
+    
+    const handleGenerateNIT = useCallback(async () => {
         try {
-            const pdfUrl = '/Tender-Form.pdf'; 
-            
-            const existingPdfBytes = await fetch(pdfUrl).then(res => {
-                if (!res.ok) {
-                    throw new Error(`The template file could not be found. Please ensure 'Tender-Form.pdf' is in the public folder.`);
-                }
-                return res.arrayBuffer();
-            });
+            const pdfBytes = await fillPdfForm('/NIT.pdf');
+            const fileName = `NIT_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+            download(pdfBytes, fileName, 'application/pdf');
+            toast({ title: "PDF Generated", description: "Your Notice Inviting Tender has been downloaded." });
+        } catch (error: any) {
+            console.error("NIT Generation Error:", error);
+            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
+        }
+    }, [tender, fillPdfForm]);
 
-            const pdfDoc = await PDFDocument.load(existingPdfBytes);
-            const form = pdfDoc.getForm();
-            
-            const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-            
-            const tenderFee = tender.tenderFormFee || 0;
-            const gst = tenderFee * 0.18;
 
-            const fieldMappings: Record<string, any> = {
-                'file_no_header': `GKT/${tender.fileNo || ''}`,
-                'e_tender_no_header': tender.eTenderNo,
-                'tender_date_header': formatDateSafe(tender.tenderDate),
-                'name_of_work': tender.nameOfWork,
-                'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
-                'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
-                'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
-                'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
-                'bid_submission_fee': tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A',
-                'location': tender.location,
-                'period_of_completion': tender.periodOfCompletion || '',
-            };
-            
-            Object.keys(fieldMappings).forEach(fieldName => {
-                try {
-                    const field = form.getTextField(fieldName);
-                    if (field) {
-                        const fieldValue = String(fieldMappings[fieldName] || '');
-                        field.setText(fieldValue);
-                        field.updateAppearances(timesRomanFont, { fontSize: 12, textColor: rgb(0, 0, 0) });
-                    }
-                } catch (e) {
-                    console.warn(`Could not find or set field: ${fieldName}`);
-                }
-            });
-            
-            form.flatten();
-
-            const pdfBytes = await pdfDoc.save();
+    const handleGenerateTenderForm = useCallback(async () => {
+        try {
+            const pdfBytes = await fillPdfForm('/Tender-Form.pdf');
             const fileName = `bTenderForm${tender.eTenderNo?.replace(/\//g, '_') || 'filled'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Tender Form has been downloaded." });
-
         } catch (error: any) {
-            console.error("PDF Generation Error:", error);
+            console.error("Tender Form Generation Error:", error);
             toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
-        } finally {
-            setIsLoading(false);
         }
-    }, [tender]);
+    }, [tender, fillPdfForm]);
     
 
     return (
@@ -126,6 +144,13 @@ export default function PdfReportDialogs() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <ReportButton 
+                        reportType="nit"
+                        label="Notice Inviting Tender (NIT)"
+                        onClick={handleGenerateNIT}
+                        isLoading={isLoading}
+                        disabled={isLoading}
+                    />
                      <ReportButton 
                         reportType="tenderForm"
                         label="Tender Form"
