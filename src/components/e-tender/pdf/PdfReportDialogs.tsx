@@ -8,7 +8,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
 import { toast } from '@/hooks/use-toast';
@@ -63,7 +63,7 @@ export default function PdfReportDialogs() {
             
             const existingPdfBytes = await fetch(pdfUrl).then(res => {
                 if (!res.ok) {
-                    throw new Error(`The template file could not be found at ${pdfUrl}. Please ensure 'Tender-Form.pdf' is in the public folder. (Status: ${res.status})`);
+                    throw new Error(`The template file could not be found. Please ensure 'Tender-Form.pdf' is in the public folder.`);
                 }
                 return res.arrayBuffer();
             });
@@ -71,16 +71,21 @@ export default function PdfReportDialogs() {
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             const form = pdfDoc.getForm();
             
+            const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+            
+            const tenderFee = tender.tenderFormFee || 0;
+            const gst = tenderFee * 0.18;
+
             const fieldMappings: Record<string, any> = {
-                'file_no_header': tender.fileNo,
+                'file_no_header': `GKT/${tender.fileNo || ''}`,
                 'e_tender_no_header': tender.eTenderNo,
                 'tender_date_header': formatDateSafe(tender.tenderDate),
                 'name_of_work': tender.nameOfWork,
-                'pac': tender.estimateAmount?.toString(),
-                'emd': tender.emd?.toString(),
-                'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true),
-                'opening_date': formatDateSafe(tender.dateTimeOfOpening, true),
-                'bid_submission_fee': tender.tenderFormFee?.toString(),
+                'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
+                'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
+                'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
+                'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
+                'bid_submission_fee': tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A',
                 'location': tender.location,
                 'period_of_completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} days` : '',
             };
@@ -90,6 +95,7 @@ export default function PdfReportDialogs() {
                     const field = form.getTextField(fieldName);
                     if (field) {
                         field.setText(String(fieldMappings[fieldName] || ''));
+                        field.updateAppearances(timesRomanFont, { fontSize: 12, textColor: rgb(0,0,0) });
                     }
                 } catch (e) {
                     console.warn(`Could not find or set field: ${fieldName}`);

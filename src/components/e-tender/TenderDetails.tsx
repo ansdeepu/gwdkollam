@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -37,7 +36,7 @@ import PdfReportDialogs from './pdf/PdfReportDialogs'; // Import the component
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
 
-const DetailRow = ({ label, value, subValue }: { label: string; value: any; subValue?: string }) => {
+const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: string; value: any; subValue?: string; isCurrency?: boolean }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
         return null;
     }
@@ -45,7 +44,7 @@ const DetailRow = ({ label, value, subValue }: { label: string; value: any; subV
     let displayValue = String(value);
 
     if ((label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) && !label.toLowerCase().includes('period')) {
-        const formatted = formatDateSafe(value, label.toLowerCase().includes('time'));
+        const formatted = formatDateSafe(value, label.toLowerCase().includes('time'), label.toLowerCase().includes('receipt'), label.toLowerCase().includes('opening'));
         if (formatted === 'N/A' && value) {
            displayValue = String(value);
         } else if (formatted !== 'N/A') {
@@ -54,7 +53,11 @@ const DetailRow = ({ label, value, subValue }: { label: string; value: any; subV
             return null;
         }
     } else if (typeof value === 'number') {
-        displayValue = value.toLocaleString('en-IN');
+        if (isCurrency) {
+            displayValue = `Rs. ${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+            displayValue = value.toLocaleString('en-IN');
+        }
     }
 
     return (
@@ -266,9 +269,13 @@ export default function TenderDetails() {
     const workOrderTitle = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
     
     const tenderFormFeeValue = watch('tenderFormFee');
-    const displayTenderFormFee = tenderFormFeeValue !== undefined && tenderFormFeeValue > 0 
-        ? `${tenderFormFeeValue.toLocaleString('en-IN')} + GST`
-        : tenderFormFeeValue;
+    const displayTenderFormFee = useMemo(() => {
+        if (tenderFormFeeValue === undefined || tenderFormFeeValue === null) return null;
+        const fee = Number(tenderFormFeeValue);
+        if (isNaN(fee) || fee <= 0) return 'Rs. 0.00';
+        const gst = fee * 0.18;
+        return `Rs. ${fee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)`;
+    }, [tenderFormFeeValue]);
 
     const l1Bidder = useMemo(() => {
         if (!bidderFields || bidderFields.length === 0) return null;
@@ -300,7 +307,7 @@ export default function TenderDetails() {
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                 <DetailRow label="eTender No." value={watch('eTenderNo')} />
                                                 <DetailRow label="Tender Date" value={watch('tenderDate')} />
-                                                <DetailRow label="File No." value={watch('fileNo')} />
+                                                <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
                                             </div>
                                             <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work" value={watch('nameOfWork')} /></div>
                                             <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work (in Malayalam)" value={watch('nameOfWorkMalayalam')} /></div>
@@ -310,9 +317,9 @@ export default function TenderDetails() {
                                                 <DetailRow label="Type of Tender" value={watch('tenderType')} />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
-                                                <DetailRow label="Tender Amount (Rs.)" value={watch('estimateAmount')} />
+                                                <DetailRow label="Tender Amount (Rs.)" value={watch('estimateAmount')} isCurrency />
                                                 <DetailRow label="Tender Form Fee (Rs.)" value={displayTenderFormFee} />
-                                                <DetailRow label="EMD (Rs.)" value={watch('emd')} />
+                                                <DetailRow label="EMD (Rs.)" value={watch('emd')} isCurrency/>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-2">
                                                 <DetailRow label="Last Date & Time of Receipt" value={watch('dateTimeOfReceipt')} />
@@ -424,7 +431,7 @@ export default function TenderDetails() {
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">{bidder.address}</p>
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
-                                                            <DetailRow label="Quoted Amount" value={bidder.quotedAmount} />
+                                                            <DetailRow label="Quoted Amount" value={bidder.quotedAmount} isCurrency/>
                                                             <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
                                                         </dl>
                                                     </div>
@@ -456,9 +463,9 @@ export default function TenderDetails() {
                                         {hasAnySelectionNoticeData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
                                                  <DetailRow label="Selection Notice Date" value={watch('selectionNoticeDate')} />
-                                                 <DetailRow label="Performance Guarantee Amount" value={watch('performanceGuaranteeAmount')} />
-                                                 <DetailRow label="Additional Performance Guarantee Amount" value={watch('additionalPerformanceGuaranteeAmount')} />
-                                                 <DetailRow label="Stamp Paper required" value={watch('stampPaperAmount')} />
+                                                 <DetailRow label="Performance Guarantee Amount" value={watch('performanceGuaranteeAmount')} isCurrency />
+                                                 <DetailRow label="Additional Performance Guarantee Amount" value={watch('additionalPerformanceGuaranteeAmount')} isCurrency />
+                                                 <DetailRow label="Stamp Paper required" value={watch('stampPaperAmount')} isCurrency />
                                              </dl>
                                         ) : (
                                              <p className="text-sm text-muted-foreground text-center py-4">No selection notice details have been added.</p>

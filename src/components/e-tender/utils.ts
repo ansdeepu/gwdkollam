@@ -39,7 +39,7 @@ export const toDateOrNull = (value: any): Date | null => {
 };
 
 
-export const formatDateSafe = (date: any, includeTime: boolean = false): string => {
+export const formatDateSafe = (date: any, includeTime: boolean = false, receiptFormat: boolean = false, openingFormat: boolean = false): string => {
     if (date === null || date === undefined || date === '') {
         return 'N/A';
     }
@@ -48,6 +48,13 @@ export const formatDateSafe = (date: any, includeTime: boolean = false): string 
 
     if (!d || !isValid(d)) {
         return String(date); // Fallback to original string if parsing fails
+    }
+
+    if (receiptFormat) {
+        return format(d, 'dd/MM/yyyy \'up to\' hh:mm a');
+    }
+    if (openingFormat) {
+        return format(d, 'dd/MM/yyyy \'at\' hh:mm a');
     }
 
     return format(d, includeTime ? 'dd/MM/yyyy, hh:mm a' : 'dd/MM/yyyy');
