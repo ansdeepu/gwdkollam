@@ -54,7 +54,6 @@ const PlaceholderReportButton = ({ label }: { label: string }) => {
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleGenerateTenderForm = useCallback(async () => {
         setIsLoading(true);
@@ -87,15 +86,16 @@ export default function PdfReportDialogs() {
                 'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
                 'bid_submission_fee': tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A',
                 'location': tender.location,
-                'period_of_completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} days` : '',
+                'period_of_completion': tender.periodOfCompletion || '',
             };
             
             Object.keys(fieldMappings).forEach(fieldName => {
                 try {
                     const field = form.getTextField(fieldName);
                     if (field) {
-                        field.setText(String(fieldMappings[fieldName] || ''));
-                        field.updateAppearances(timesRomanFont, { fontSize: 12, textColor: rgb(0,0,0) });
+                        const fieldValue = String(fieldMappings[fieldName] || '');
+                        field.setText(fieldValue);
+                        field.updateAppearances(timesRomanFont, { fontSize: 12, textColor: rgb(0, 0, 0) });
                     }
                 } catch (e) {
                     console.warn(`Could not find or set field: ${fieldName}`);
