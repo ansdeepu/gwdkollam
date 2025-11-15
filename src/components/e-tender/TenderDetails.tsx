@@ -63,7 +63,7 @@ const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: stri
     return (
         <div>
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className={cn("text-sm font-semibold", label.toLowerCase().includes('malayalam') && "text-xs")}>
+            <dd className={cn("text-sm font-semibold font-serif", label.toLowerCase().includes('malayalam') && "text-xs")}>
               {displayValue}
               {subValue && <span className="text-xs text-muted-foreground ml-1">({subValue})</span>}
             </dd>
