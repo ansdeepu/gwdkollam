@@ -142,52 +142,52 @@ export default function PdfReportDialogs() {
                         let currentY = rect.y + rect.height - fontSize;
                         
                         const words = text.split(' ');
-                        const lines: string[] = [];
                         let line = '';
-                        let isFirstLineOfParagraph = true;
 
-                        words.forEach(word => {
+                        for (let i = 0; i < words.length; i++) {
+                            const word = words[i];
+                            const isFirstLineOfParagraph = line === '' && currentY === rect.y + rect.height - fontSize;
                             const currentIndent = isFirstLineOfParagraph ? indent : 0;
-                            const availableWidth = rect.width - currentIndent - 4; // 2 padding on each side
+                            const availableWidth = rect.width - currentIndent - 4; // 2px padding on each side
 
-                            const testLine = line + word + ' ';
-                            if (customFont.widthOfTextAtSize(testLine, fontSize) > availableWidth) {
-                                lines.push(line);
-                                line = word + ' ';
-                                isFirstLineOfParagraph = false;
+                            const testLine = line ? `${line} ${word}` : word;
+                            const testLineWidth = customFont.widthOfTextAtSize(testLine, fontSize);
+
+                            if (testLineWidth > availableWidth && line !== '') {
+                                // Justify and draw the completed line
+                                const wordsInLine = line.split(' ');
+                                const textWidth = customFont.widthOfTextAtSize(line, fontSize);
+                                let wordSpacing = 0;
+                                if (wordsInLine.length > 1) {
+                                    wordSpacing = (availableWidth - textWidth) / (wordsInLine.length - 1);
+                                }
+                                firstPage.drawText(line, {
+                                    x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
+                                    y: currentY,
+                                    font: customFont,
+                                    size: fontSize,
+                                    color: rgb(0, 0, 0),
+                                    wordSpacing: wordSpacing,
+                                });
+                                currentY -= fontSize * lineHeight;
+                                line = word;
                             } else {
                                 line = testLine;
                             }
-                        });
-                        lines.push(line);
+                        }
 
-
-                        lines.forEach((lineText, index) => {
-                            const isFirstLine = index === 0;
-                            const lineIndent = isFirstLine ? indent : 0;
-                            const availableWidth = rect.width - lineIndent - 4;
-                            const wordsInLine = lineText.trim().split(' ');
-                            const textWidth = customFont.widthOfTextAtSize(lineText.trim(), fontSize);
-                            
-                            let xPos = rect.x + 2 + lineIndent;
-                            let wordSpacing = 0;
-                            const isLastLineOfParagraph = index === lines.length - 1;
-
-                            if (!isLastLineOfParagraph && wordsInLine.length > 1) {
-                                wordSpacing = (availableWidth - textWidth) / (wordsInLine.length - 1);
-                            }
-                            
-                            firstPage.drawText(lineText.trim(), { 
-                                x: xPos, 
-                                y: currentY, 
-                                font: customFont, 
-                                size: fontSize, 
+                        // Draw the last line (left-aligned)
+                        if (line) {
+                             const isFirstLineOfParagraph = currentY === rect.y + rect.height - fontSize;
+                             const currentIndent = isFirstLineOfParagraph ? indent : 0;
+                             firstPage.drawText(line, {
+                                x: rect.x + 2 + currentIndent,
+                                y: currentY,
+                                font: customFont,
+                                size: fontSize,
                                 color: rgb(0, 0, 0),
-                                wordSpacing: wordSpacing,
                             });
-                            
-                            currentY -= fontSize * lineHeight;
-                        });
+                        }
                         
                         form.removeField(field);
 
@@ -268,8 +268,8 @@ export default function PdfReportDialogs() {
             };
 
             const justified = {
-                'name_of_work': { fontSize: 12, lineHeight: 1.2 },
-                'bid_opening': { fontSize: 12, lineHeight: 1.3, indent: 20 }
+                'name_of_work': { fontSize: 13, lineHeight: 1.2 },
+                'bid_opening': { fontSize: 13, lineHeight: 1.3, indent: 20 }
             };
 
             const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings, justified);
