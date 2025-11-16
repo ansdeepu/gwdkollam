@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -139,49 +140,62 @@ export default function PdfReportDialogs() {
                         if (widgets.length === 0) continue;
                         const rect = widgets[0].getRectangle();
                         
-                        let currentY = rect.y + rect.height - fontSize;
                         const words = text.split(' ');
-                        let line = '';
+                        let lines: string[] = [];
+                        let currentLine = '';
+                        let isFirstLine = true;
 
-                        for (let n = 0; n < words.length; n++) {
-                            const testLine = line + words[n] + ' ';
-                            const width = customFont.widthOfTextAtSize(testLine, fontSize);
-                            const isFirstLineOfParagraph = line === '';
-                            const availableWidth = rect.width - (isFirstLineOfParagraph ? indent : 0) - 4; // Padding
+                        for (const word of words) {
+                            const currentIndent = isFirstLine ? indent : 0;
+                            const testLine = currentLine ? `${currentLine} ${word}` : word;
+                            const testLineWidth = customFont.widthOfTextAtSize(testLine, fontSize);
 
-                            if (width > availableWidth && n > 0) {
-                                // Justify the completed line
-                                const wordsInLine = line.trim().split(' ');
-                                if (wordsInLine.length > 1) {
-                                    const textWidth = customFont.widthOfTextAtSize(line.trim(), fontSize);
-                                    const totalSpacing = availableWidth - textWidth;
-                                    const spacingPerWord = totalSpacing / (wordsInLine.length - 1);
-                                    firstPage.drawText(line.trim(), {
-                                        x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
-                                        y: currentY,
-                                        font: customFont, size: fontSize, color: rgb(0, 0, 0),
-                                        wordSpacing: spacingPerWord,
-                                    });
-                                } else {
-                                     firstPage.drawText(line, {
-                                        x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
-                                        y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0),
-                                    });
-                                }
-                                currentY -= fontSize * lineHeight;
-                                line = words[n] + ' ';
+                            if (testLineWidth < rect.width - 4 - currentIndent) {
+                                currentLine = testLine;
                             } else {
-                                line = testLine;
+                                lines.push(currentLine);
+                                currentLine = word;
+                                isFirstLine = false;
                             }
                         }
-                        // Draw the last line (left-aligned)
-                         if (line) {
-                             const isFirstLineOfParagraph = currentY === rect.y + rect.height - fontSize;
-                             firstPage.drawText(line.trim(), {
-                                x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
-                                y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0),
-                            });
-                        }
+                        lines.push(currentLine); // Add the last line
+
+                        let currentY = rect.y + rect.height - fontSize;
+                        isFirstLine = true;
+
+                        lines.forEach((line, index) => {
+                            const isLastLine = index === lines.length - 1;
+                            const currentIndent = isFirstLine ? indent : 0;
+                            const availableWidth = rect.width - 4 - currentIndent;
+                            
+                            if (isLastLine || line.split(' ').length <= 1) {
+                                // Draw last line or single-word lines left-aligned
+                                firstPage.drawText(line, {
+                                    x: rect.x + 2 + currentIndent,
+                                    y: currentY,
+                                    font: customFont,
+                                    size: fontSize,
+                                    color: rgb(0, 0, 0),
+                                });
+                            } else {
+                                const wordsInLine = line.split(' ');
+                                const textWidth = customFont.widthOfTextAtSize(line, fontSize);
+                                const totalSpacing = availableWidth - textWidth;
+                                const wordSpacing = totalSpacing / (wordsInLine.length - 1);
+                                
+                                firstPage.drawText(line, {
+                                    x: rect.x + 2 + currentIndent,
+                                    y: currentY,
+                                    font: customFont,
+                                    size: fontSize,
+                                    color: rgb(0, 0, 0),
+                                    wordSpacing: wordSpacing,
+                                });
+                            }
+                            currentY -= fontSize * lineHeight;
+                            isFirstLine = false;
+                        });
+
                         form.removeField(field);
 
                     } else if (field.constructor.name === 'PDFTextField') {
