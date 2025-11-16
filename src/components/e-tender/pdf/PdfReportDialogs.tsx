@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -73,11 +74,14 @@ export default function PdfReportDialogs() {
 
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
         const form = pdfDoc.getForm();
+        const fields = form.getFields();
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
 
         const tenderFee = tender.tenderFormFee || 0;
         const gst = tenderFee * 0.18;
         const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
-
+        
         const fieldMappings: Record<string, any> = {
             'file_no_header': `GKT/${tender.fileNo || ''}`,
             'e_tender_no_header': tender.eTenderNo,
@@ -92,15 +96,20 @@ export default function PdfReportDialogs() {
             'period_of_completion': tender.periodOfCompletion || '',
         };
 
-        Object.keys(fieldMappings).forEach(fieldName => {
-            try {
-                const field = form.getTextField(fieldName);
-                if (field) {
-                    const fieldValue = String(fieldMappings[fieldName] || '');
-                    field.setText(fieldValue);
+        fields.forEach(field => {
+            const fieldName = field.getName();
+            if (fieldName in fieldMappings) {
+                const widgets = field.acroField.getWidgets();
+                if (widgets.length > 0) {
+                    const rect = widgets[0].getRectangle();
+                    const text = String(fieldMappings[fieldName] || '');
+                     firstPage.drawText(text, {
+                        x: rect.x + 5, // Small padding from left
+                        y: rect.y + (rect.height / 2) - 4, // Vertically center approx
+                        size: 10,
+                        color: rgb(0, 0, 0),
+                    });
                 }
-            } catch (e) {
-                console.warn(`Could not find or set field: ${fieldName}`);
             }
         });
 
@@ -124,7 +133,8 @@ export default function PdfReportDialogs() {
     const handleGenerateTenderForm = useCallback(async () => {
         try {
             const pdfBytes = await fillPdfForm('/Tender-Form.pdf');
-            const fileName = `bTenderForm${tender.eTenderNo?.replace(/\//g, '_') || 'filled'}.pdf`;
+            const tenderNoFormatted = tender.eTenderNo?.replace(/\//g, '_') || 'filled';
+            const fileName = `bTenderForm${tenderNoFormatted}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Tender Form has been downloaded." });
         } catch (error: any) {
