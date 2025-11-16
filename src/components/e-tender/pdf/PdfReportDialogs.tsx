@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
+import { default as fontkit } from '@pdf-lib/fontkit';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
 import { toast } from '@/hooks/use-toast';
@@ -123,7 +123,7 @@ export default function PdfReportDialogs() {
                 'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
                 'bid_submission_fee': displayTenderFee,
                 'location': tender.location,
-                'period_of_completion': tender.periodOfCompletion || '',
+                'period_of_completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} Days` : '',
             };
 
             const allMappings = { ...defaultMappings, ...fieldMappings };
@@ -144,15 +144,19 @@ export default function PdfReportDialogs() {
                         const words = text.split(' ');
                         let line = '';
                         const lines: string[] = [];
+                        let isFirstLineOfParagraph = true;
 
                         for (let i = 0; i < words.length; i++) {
+                            const currentIndent = isFirstLineOfParagraph ? indent : 0;
+                            const availableWidth = rect.width - currentIndent;
+                            
                             const testLine = line + words[i] + ' ';
                             const width = customFont.widthOfTextAtSize(testLine, fontSize);
-                            const currentFieldWidth = rect.width - (lines.length === 0 ? indent : 0);
-                            
-                            if (width > currentFieldWidth && i > 0) {
+
+                            if (width > availableWidth && i > 0) {
                                 lines.push(line.trim());
                                 line = words[i] + ' ';
+                                isFirstLineOfParagraph = false; // Next line is not the first
                             } else {
                                 line = testLine;
                             }
@@ -163,22 +167,27 @@ export default function PdfReportDialogs() {
                             const isFirstLine = index === 0;
                             const isLastLine = index === lines.length - 1;
                             const lineIndent = isFirstLine ? indent : 0;
-                            const lineFieldWidth = rect.width - lineIndent;
+                            const availableWidth = rect.width - lineIndent;
                             
+                            const wordsInLine = lineText.split(' ');
                             const textWidth = customFont.widthOfTextAtSize(lineText, fontSize);
                             
                             let xPos = rect.x + 2 + lineIndent;
+                            let wordSpacing = 0;
 
-                            if (isLastLine) {
-                                firstPage.drawText(lineText, { x: xPos, y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
-                            } else {
-                                const wordsInLine = lineText.split(' ');
-                                let wordSpacing = 0;
-                                if (wordsInLine.length > 1) {
-                                    wordSpacing = (lineFieldWidth - textWidth) / (wordsInLine.length - 1);
-                                }
-                                firstPage.drawText(lineText, { x: xPos, y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
+                            if (!isLastLine && wordsInLine.length > 1) {
+                                wordSpacing = (availableWidth - textWidth) / (wordsInLine.length - 1);
                             }
+                            
+                            firstPage.drawText(lineText, { 
+                                x: xPos, 
+                                y: currentY, 
+                                font: customFont, 
+                                size: fontSize, 
+                                color: rgb(0, 0, 0),
+                                wordSpacing: wordSpacing,
+                            });
+                            
                             currentY -= fontSize * lineHeight;
                         });
                         
