@@ -62,7 +62,7 @@ const PlaceholderReportButton = ({ label, hasIcon = true }: { label: string, has
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
-
+    
     const fillPdfForm = useCallback(async (templatePath: string): Promise<Uint8Array | null> => {
       try {
         const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -133,7 +133,7 @@ export default function PdfReportDialogs() {
             const pdfBytes = await fillPdfForm('/Tender-Form.pdf');
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const tenderNoFormatted = tender.eTenderNo?.replace(/\//g, '_') || 'filled';
-            const fileName = `bTenderForm${tenderNoFormatted}.pdf`;
+            const fileName = `TenderForm_${tenderNoFormatted}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Tender Form has been downloaded." });
         } catch (error: any) {
@@ -168,7 +168,7 @@ export default function PdfReportDialogs() {
                         disabled={isLoading}
                     />
                     <PlaceholderReportButton label="Corrigendum" />
-                    
+                    <PlaceholderReportButton label="Bid Opening Summary" />
                     <PlaceholderReportButton label="Technical Summary" />
                     <PlaceholderReportButton label="Financial Summary" />
                     <PlaceholderReportButton label="Selection Notice" />
