@@ -15,6 +15,19 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+const DetailRow = ({ label, value, isCurrency = false }: { label: string; value: any; isCurrency?: boolean; }) => {
+    if (value === null || value === undefined || value === '') return null;
+    let displayValue = isCurrency ? `Rs. ${Number(value).toLocaleString('en-IN')}` : String(value);
+    return (
+        <div className="grid grid-cols-2 gap-2 py-1.5 border-b">
+            <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+            <dd className="text-sm">{displayValue}</dd>
+        </div>
+    );
+};
 
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
@@ -25,6 +38,7 @@ export default function ETenderListPage() {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
+    const [tenderToView, setTenderToView] = useState<E_tender | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     React.useEffect(() => {
@@ -127,13 +141,18 @@ export default function ETenderListPage() {
                                                 {tender.presentStatus ? <Badge>{tender.presentStatus}</Badge> : 'N/A'}
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <Button variant="ghost" size="icon" onClick={() => handleEdit(tender.id)}>
+                                                <Button variant="ghost" size="icon" onClick={() => setTenderToView(tender)}>
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                                 {user?.role === 'editor' && (
+                                                    <>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(tender.id)}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
                                                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
+                                                    </>
                                                 )}
                                             </TableCell>
                                         </TableRow>
@@ -167,6 +186,40 @@ export default function ETenderListPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={!!tenderToView} onOpenChange={() => setTenderToView(null)}>
+                <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+                    <DialogHeader className="p-6 pb-4 border-b">
+                        <DialogTitle>Tender Details</DialogTitle>
+                        <DialogDescription>Viewing details for {`GKT/${tenderToView?.fileNo}/${tenderToView?.eTenderNo}`}</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 min-h-0">
+                        <ScrollArea className="h-full px-6 py-4">
+                            {tenderToView && (
+                                <dl className="space-y-2">
+                                    <DetailRow label="eTender No." value={tenderToView.eTenderNo} />
+                                    <DetailRow label="Tender Date" value={formatDateSafe(tenderToView.tenderDate)} />
+                                    <DetailRow label="File No." value={tenderToView.fileNo} />
+                                    <DetailRow label="Name of Work" value={tenderToView.nameOfWork} />
+                                    <DetailRow label="Location" value={tenderToView.location} />
+                                    <DetailRow label="Tender Amount" value={tenderToView.estimateAmount} isCurrency />
+                                    <DetailRow label="Tender Form Fee" value={tenderToView.tenderFormFee} isCurrency />
+                                    <DetailRow label="EMD" value={tenderToView.emd} isCurrency />
+                                    <DetailRow label="Period of Completion" value={`${tenderToView.periodOfCompletion || 'N/A'} days`} />
+                                    <DetailRow label="Last Date & Time of Receipt" value={formatDateSafe(tenderToView.dateTimeOfReceipt, true)} />
+                                    <DetailRow label="Date & Time of Opening" value={formatDateSafe(tenderToView.dateTimeOfOpening, true)} />
+                                    <DetailRow label="Present Status" value={tenderToView.presentStatus} />
+                                </dl>
+                            )}
+                        </ScrollArea>
+                    </div>
+                    <DialogFooter className="p-6 pt-4 border-t">
+                        <DialogClose asChild>
+                            <Button variant="outline">Close</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

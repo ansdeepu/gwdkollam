@@ -1,7 +1,7 @@
 // src/components/e-tender/TenderDataContext.tsx
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import type { E_tender } from '@/hooks/useE_tenders';
 
 interface TenderDataContextType {
@@ -13,6 +13,10 @@ const TenderDataContext = createContext<TenderDataContextType | undefined>(undef
 
 export function TenderDataProvider({ initialTender, children }: { initialTender: E_tender, children: ReactNode }) {
     const [tender, setTender] = useState<E_tender>(initialTender);
+    
+    useEffect(() => {
+        setTender(initialTender);
+    }, [initialTender]);
 
     const updateTender = useCallback((updatedData: Partial<E_tender>) => {
         setTender(prevTender => ({ ...prevTender, ...updatedData }));
