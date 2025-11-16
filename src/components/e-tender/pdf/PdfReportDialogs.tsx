@@ -31,12 +31,12 @@ const ReportButton = ({ reportType, label, onClick, disabled, isLoading }: { rep
   );
 };
 
-const PlaceholderReportButton = ({ label }: { label: string }) => {
+const PlaceholderReportButton = ({ label, hasIcon = true }: { label: string, hasIcon?: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
       <>
           <Button onClick={() => setIsOpen(true)} variant="outline" className="justify-start">
-              <Download className="mr-2 h-4 w-4" />
+              {hasIcon && <Download className="mr-2 h-4 w-4" />}
               {label}
           </Button>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
