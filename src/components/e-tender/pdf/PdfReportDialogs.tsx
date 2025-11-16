@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -139,17 +140,17 @@ export default function PdfReportDialogs() {
 
                         const rect = firstWidget.getRectangle();
                         const fieldWidth = rect.width;
-                        let currentY = rect.y + rect.height - fontSize; 
+                        let currentY = rect.y + rect.height - fontSize;
 
                         const words = text.split(' ');
                         let line = '';
-                        const lines = [];
+                        const lines: string[] = [];
 
                         for (let i = 0; i < words.length; i++) {
                             const testLine = line + words[i] + ' ';
                             const width = customFont.widthOfTextAtSize(testLine, fontSize);
                             if (width > fieldWidth && i > 0) {
-                                lines.push(line);
+                                lines.push(line.trim());
                                 line = words[i] + ' ';
                             } else {
                                 line = testLine;
@@ -160,21 +161,33 @@ export default function PdfReportDialogs() {
                         lines.forEach((lineText, index) => {
                             const isLastLine = index === lines.length - 1;
                             const textWidth = customFont.widthOfTextAtSize(lineText, fontSize);
-                            const wordsInLine = lineText.split(' ');
-                            let wordSpacing = 0;
                             
-                            if (!isLastLine && wordsInLine.length > 1) {
-                                wordSpacing = (fieldWidth - textWidth) / (wordsInLine.length - 1);
+                            if (isLastLine) {
+                                // Draw the last line left-aligned
+                                firstPage.drawText(lineText, {
+                                    x: rect.x + 2,
+                                    y: currentY,
+                                    font: customFont,
+                                    size: fontSize,
+                                    color: rgb(0, 0, 0),
+                                });
+                            } else {
+                                // Justify the line
+                                const wordsInLine = lineText.split(' ');
+                                let wordSpacing = 0;
+                                if (wordsInLine.length > 1) {
+                                    wordSpacing = (fieldWidth - textWidth) / (wordsInLine.length - 1);
+                                }
+                                
+                                firstPage.drawText(lineText, {
+                                    x: rect.x + 2,
+                                    y: currentY,
+                                    font: customFont,
+                                    size: fontSize,
+                                    color: rgb(0, 0, 0),
+                                    wordSpacing,
+                                });
                             }
-
-                            firstPage.drawText(lineText, {
-                                x: rect.x + 2,
-                                y: currentY,
-                                font: customFont,
-                                size: fontSize,
-                                color: rgb(0, 0, 0),
-                                ...(wordSpacing > 0 && { wordSpacing }),
-                            });
                             currentY -= fontSize * lineHeight;
                         });
                         
@@ -299,12 +312,12 @@ export default function PdfReportDialogs() {
                         disabled={isLoading}
                     />
                     <PlaceholderReportButton label="Corrigendum" />
-                    <ReportButton
+                     <ReportButton 
                         reportType="bidOpeningSummary"
                         label="Bid Opening Summary"
                         onClick={handleGenerateBidOpeningSummary}
                         isLoading={isLoading}
-                        disabled={isLoading}
+                        disabled={isLoading || (tender.bidders || []).length === 0}
                     />
                     <PlaceholderReportButton label="Technical Summary" />
                     <PlaceholderReportButton label="Financial Summary" />
