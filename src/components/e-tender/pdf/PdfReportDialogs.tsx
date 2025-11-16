@@ -70,11 +70,10 @@ export default function PdfReportDialogs() {
             }
             return res.arrayBuffer();
         });
-
+        
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
-        const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const form = pdfDoc.getForm();
-
+        
         const tenderFee = tender.tenderFormFee || 0;
         const gst = tenderFee * 0.18;
         const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
@@ -97,7 +96,6 @@ export default function PdfReportDialogs() {
             try {
                 const field = form.getTextField(fieldName);
                 field.setText(String(fieldValue || ''));
-                field.updateAppearances(helveticaFont);
             } catch (e) {
                 console.warn(`Could not find or set field "${fieldName}" in PDF. It might be a read-only field or have a different name.`);
             }
