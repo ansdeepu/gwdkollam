@@ -313,7 +313,7 @@ export default function TenderDetails() {
                                             <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work (in Malayalam)" value={watch('nameOfWorkMalayalam')} /></div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
                                                 <DetailRow label="Location" value={watch('location')} />
-                                                <DetailRow label="Period of Completion (Days)" value={watch('periodOfCompletion') ? `${watch('periodOfCompletion')} Days` : null} />
+                                                <DetailRow label="Period of Completion (Days)" value={watch('periodOfCompletion')} />
                                                 <DetailRow label="Type of Tender" value={watch('tenderType')} />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">

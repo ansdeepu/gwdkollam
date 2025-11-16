@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -73,10 +72,8 @@ export default function PdfReportDialogs() {
         });
 
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const form = pdfDoc.getForm();
-        const fields = form.getFields();
-        const pages = pdfDoc.getPages();
-        const firstPage = pages[0];
 
         const tenderFee = tender.tenderFormFee || 0;
         const gst = tenderFee * 0.18;
@@ -96,20 +93,13 @@ export default function PdfReportDialogs() {
             'period_of_completion': tender.periodOfCompletion || '',
         };
 
-        fields.forEach(field => {
-            const fieldName = field.getName();
-            if (fieldName in fieldMappings) {
-                const widgets = field.acroField.getWidgets();
-                if (widgets.length > 0) {
-                    const rect = widgets[0].getRectangle();
-                    const text = String(fieldMappings[fieldName] || '');
-                     firstPage.drawText(text, {
-                        x: rect.x + 5, // Small padding from left
-                        y: rect.y + (rect.height / 2) - 4, // Vertically center approx
-                        size: 10,
-                        color: rgb(0, 0, 0),
-                    });
-                }
+        Object.entries(fieldMappings).forEach(([fieldName, fieldValue]) => {
+            try {
+                const field = form.getTextField(fieldName);
+                field.setText(String(fieldValue || ''));
+                field.updateAppearances(helveticaFont);
+            } catch (e) {
+                console.warn(`Could not find or set field "${fieldName}" in PDF. It might be a read-only field or have a different name.`);
             }
         });
 
