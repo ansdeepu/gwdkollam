@@ -84,7 +84,7 @@ export default function PdfReportDialogs() {
     const fillPdfForm = useCallback(async (
         templatePath: string,
         fieldMappings: Record<string, any> = {},
-        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number }> = {}
+        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number; indent?: number }> = {}
     ): Promise<Uint8Array | null> => {
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -132,16 +132,15 @@ export default function PdfReportDialogs() {
                  try {
                     const field = form.getField(fieldName);
                     if (justifiedFields[fieldName]) {
-                        const { fontSize = 10, lineHeight = 1.2 } = justifiedFields[fieldName];
+                        const { fontSize = 10, lineHeight = 1.2, indent = 0 } = justifiedFields[fieldName];
                         const text = String(fieldValue || '');
                         const widgets = field.acroField.getWidgets();
                         const firstWidget = widgets[0];
                         if (!firstWidget) continue;
 
                         const rect = firstWidget.getRectangle();
-                        const fieldWidth = rect.width;
                         let currentY = rect.y + rect.height - fontSize;
-
+                        
                         const words = text.split(' ');
                         let line = '';
                         const lines: string[] = [];
@@ -149,7 +148,9 @@ export default function PdfReportDialogs() {
                         for (let i = 0; i < words.length; i++) {
                             const testLine = line + words[i] + ' ';
                             const width = customFont.widthOfTextAtSize(testLine, fontSize);
-                            if (width > fieldWidth && i > 0) {
+                            const currentFieldWidth = rect.width - (lines.length === 0 ? indent : 0);
+                            
+                            if (width > currentFieldWidth && i > 0) {
                                 lines.push(line.trim());
                                 line = words[i] + ' ';
                             } else {
@@ -159,34 +160,24 @@ export default function PdfReportDialogs() {
                         lines.push(line.trim());
 
                         lines.forEach((lineText, index) => {
+                            const isFirstLine = index === 0;
                             const isLastLine = index === lines.length - 1;
+                            const lineIndent = isFirstLine ? indent : 0;
+                            const lineFieldWidth = rect.width - lineIndent;
+                            
                             const textWidth = customFont.widthOfTextAtSize(lineText, fontSize);
                             
+                            let xPos = rect.x + 2 + lineIndent;
+
                             if (isLastLine) {
-                                // Draw the last line left-aligned
-                                firstPage.drawText(lineText, {
-                                    x: rect.x + 2,
-                                    y: currentY,
-                                    font: customFont,
-                                    size: fontSize,
-                                    color: rgb(0, 0, 0),
-                                });
+                                firstPage.drawText(lineText, { x: xPos, y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
                             } else {
-                                // Justify the line
                                 const wordsInLine = lineText.split(' ');
                                 let wordSpacing = 0;
                                 if (wordsInLine.length > 1) {
-                                    wordSpacing = (fieldWidth - textWidth) / (wordsInLine.length - 1);
+                                    wordSpacing = (lineFieldWidth - textWidth) / (wordsInLine.length - 1);
                                 }
-                                
-                                firstPage.drawText(lineText, {
-                                    x: rect.x + 2,
-                                    y: currentY,
-                                    font: customFont,
-                                    size: fontSize,
-                                    color: rgb(0, 0, 0),
-                                    wordSpacing,
-                                });
+                                firstPage.drawText(lineText, { x: xPos, y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
                             }
                             currentY -= fontSize * lineHeight;
                         });
@@ -270,8 +261,8 @@ export default function PdfReportDialogs() {
             };
 
             const justified = {
-                'name_of_work': { fontSize: 10, lineHeight: 1.2 },
-                'bid_opening': { fontSize: 11, lineHeight: 1.3 }
+                'name_of_work': { fontSize: 12, lineHeight: 1.2 },
+                'bid_opening': { fontSize: 12, lineHeight: 1.3, indent: 20 }
             };
 
             const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings, justified);
