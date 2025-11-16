@@ -73,7 +73,7 @@ export default function PdfReportDialogs() {
 
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
         const form = pdfDoc.getForm();
-        const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
 
         const tenderFee = tender.tenderFormFee || 0;
         const gst = tenderFee * 0.18;
@@ -99,7 +99,7 @@ export default function PdfReportDialogs() {
                 if (field) {
                     const fieldValue = String(fieldMappings[fieldName] || '');
                     field.setText(fieldValue);
-                    field.updateAppearances(helveticaFont, { fontSize: 12 });
+                    field.updateAppearances(timesRomanFont, { fontSize: 12 });
                 }
             } catch (e) {
                 console.warn(`Could not find or set field: ${fieldName}`);
