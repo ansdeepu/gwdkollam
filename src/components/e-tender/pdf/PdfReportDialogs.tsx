@@ -139,45 +139,43 @@ export default function PdfReportDialogs() {
 
                         const rect = firstWidget.getRectangle();
                         const fieldWidth = rect.width;
-                        let currentY = rect.y + rect.height - fontSize; // Start from top
-                        
-                        const lines = [];
-                        let currentLine = '';
-                        const words = text.split(' ');
+                        let currentY = rect.y + rect.height - fontSize; 
 
-                        for (const word of words) {
-                            const testLine = currentLine.length > 0 ? `${currentLine} ${word}` : word;
-                            const testWidth = customFont.widthOfTextAtSize(testLine, fontSize);
-                            if (testWidth < fieldWidth) {
-                                currentLine = testLine;
+                        const words = text.split(' ');
+                        let line = '';
+                        const lines = [];
+
+                        for (let i = 0; i < words.length; i++) {
+                            const testLine = line + words[i] + ' ';
+                            const width = customFont.widthOfTextAtSize(testLine, fontSize);
+                            if (width > fieldWidth && i > 0) {
+                                lines.push(line);
+                                line = words[i] + ' ';
                             } else {
-                                lines.push(currentLine);
-                                currentLine = word;
+                                line = testLine;
                             }
                         }
-                        lines.push(currentLine); // Add the last line
+                        lines.push(line.trim());
 
                         lines.forEach((lineText, index) => {
-                             const isLastLine = index === lines.length - 1;
-                             const wordsInLine = lineText.split(' ');
-                             const textWidth = customFont.widthOfTextAtSize(lineText, fontSize);
-                             let wordSpacing = 0;
-
-                             if (!isLastLine && wordsInLine.length > 1) {
-                                 const totalSpacing = fieldWidth - textWidth;
-                                 wordSpacing = totalSpacing / (wordsInLine.length - 1);
-                             }
+                            const isLastLine = index === lines.length - 1;
+                            const textWidth = customFont.widthOfTextAtSize(lineText, fontSize);
+                            const wordsInLine = lineText.split(' ');
+                            let wordSpacing = 0;
                             
-                             firstPage.drawText(lineText, {
+                            if (!isLastLine && wordsInLine.length > 1) {
+                                wordSpacing = (fieldWidth - textWidth) / (wordsInLine.length - 1);
+                            }
+
+                            firstPage.drawText(lineText, {
                                 x: rect.x + 2,
                                 y: currentY,
                                 font: customFont,
                                 size: fontSize,
                                 color: rgb(0, 0, 0),
-                                wordBreaks: [' '],
                                 ...(wordSpacing > 0 && { wordSpacing }),
-                             });
-                             currentY -= fontSize * lineHeight;
+                            });
+                            currentY -= fontSize * lineHeight;
                         });
                         
                         form.removeField(field);
