@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -124,6 +123,8 @@ export default function PdfReportDialogs() {
                 'bid_submission_fee': displayTenderFee,
                 'location': tender.location,
                 'period_of_completion': tender.periodOfCompletion,
+                'place': 'Kollam',
+                'bid_date': formatDateSafe(tender.dateOfOpeningBid),
             };
 
             const allMappings = { ...defaultMappings, ...fieldMappings };
@@ -135,60 +136,52 @@ export default function PdfReportDialogs() {
                         const { fontSize = 12, lineHeight = 1.3, indent = 0 } = justifiedFields[fieldName];
                         const text = String(fieldValue || '');
                         const widgets = field.acroField.getWidgets();
-                        const firstWidget = widgets[0];
-                        if (!firstWidget) continue;
-
-                        const rect = firstWidget.getRectangle();
-                        let currentY = rect.y + rect.height - fontSize;
+                        if (widgets.length === 0) continue;
+                        const rect = widgets[0].getRectangle();
                         
+                        let currentY = rect.y + rect.height - fontSize;
                         const words = text.split(' ');
                         let line = '';
 
-                        for (let i = 0; i < words.length; i++) {
-                            const word = words[i];
-                            const isFirstLineOfParagraph = line === '' && currentY === rect.y + rect.height - fontSize;
-                            const currentIndent = isFirstLineOfParagraph ? indent : 0;
-                            const availableWidth = rect.width - currentIndent - 4; // 2px padding on each side
+                        for (let n = 0; n < words.length; n++) {
+                            const testLine = line + words[n] + ' ';
+                            const width = customFont.widthOfTextAtSize(testLine, fontSize);
+                            const isFirstLineOfParagraph = line === '';
+                            const availableWidth = rect.width - (isFirstLineOfParagraph ? indent : 0) - 4; // Padding
 
-                            const testLine = line ? `${line} ${word}` : word;
-                            const testLineWidth = customFont.widthOfTextAtSize(testLine, fontSize);
-
-                            if (testLineWidth > availableWidth && line !== '') {
-                                // Justify and draw the completed line
-                                const wordsInLine = line.split(' ');
-                                const textWidth = customFont.widthOfTextAtSize(line, fontSize);
-                                let wordSpacing = 0;
+                            if (width > availableWidth && n > 0) {
+                                // Justify the completed line
+                                const wordsInLine = line.trim().split(' ');
                                 if (wordsInLine.length > 1) {
-                                    wordSpacing = (availableWidth - textWidth) / (wordsInLine.length - 1);
+                                    const textWidth = customFont.widthOfTextAtSize(line.trim(), fontSize);
+                                    const totalSpacing = availableWidth - textWidth;
+                                    const spacingPerWord = totalSpacing / (wordsInLine.length - 1);
+                                    firstPage.drawText(line.trim(), {
+                                        x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
+                                        y: currentY,
+                                        font: customFont, size: fontSize, color: rgb(0, 0, 0),
+                                        wordSpacing: spacingPerWord,
+                                    });
+                                } else {
+                                     firstPage.drawText(line, {
+                                        x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
+                                        y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0),
+                                    });
                                 }
-                                firstPage.drawText(line, {
-                                    x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
-                                    y: currentY,
-                                    font: customFont,
-                                    size: fontSize,
-                                    color: rgb(0, 0, 0),
-                                    wordSpacing: wordSpacing,
-                                });
                                 currentY -= fontSize * lineHeight;
-                                line = word;
+                                line = words[n] + ' ';
                             } else {
                                 line = testLine;
                             }
                         }
-
                         // Draw the last line (left-aligned)
-                        if (line) {
+                         if (line) {
                              const isFirstLineOfParagraph = currentY === rect.y + rect.height - fontSize;
-                             const currentIndent = isFirstLineOfParagraph ? indent : 0;
-                             firstPage.drawText(line, {
-                                x: rect.x + 2 + currentIndent,
-                                y: currentY,
-                                font: customFont,
-                                size: fontSize,
-                                color: rgb(0, 0, 0),
+                             firstPage.drawText(line.trim(), {
+                                x: rect.x + 2 + (isFirstLineOfParagraph ? indent : 0),
+                                y: currentY, font: customFont, size: fontSize, color: rgb(0, 0, 0),
                             });
                         }
-                        
                         form.removeField(field);
 
                     } else if (field.constructor.name === 'PDFTextField') {
@@ -263,8 +256,6 @@ export default function PdfReportDialogs() {
             
             const fieldMappings = {
                 'bid_opening': bidOpeningText,
-                'bid_date': formatDateSafe(tender.dateOfOpeningBid),
-                'place': 'Kollam',
             };
 
             const justified = {
@@ -310,7 +301,7 @@ export default function PdfReportDialogs() {
                         disabled={isLoading}
                     />
                     <PlaceholderReportButton label="Corrigendum" />
-                     <ReportButton 
+                    <ReportButton 
                         reportType="bidOpeningSummary"
                         label="Bid Opening Summary"
                         onClick={handleGenerateBidOpeningSummary}
