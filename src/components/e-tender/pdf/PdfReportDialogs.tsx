@@ -58,12 +58,28 @@ const PlaceholderReportButton = ({ label, hasIcon = true }: { label: string, has
   );
 };
 
+const numberToWords = (num: number): string => {
+    if (num < 0) return 'Negative';
+    if (num === 0) return 'Zero';
+
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    if (num < 10) return ones[num];
+    if (num < 20) return teens[num - 10];
+    if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ` ${ones[num % 10]}` : '');
+    
+    // For numbers >= 100, just return the number as a string for this use case.
+    return num.toString();
+};
+
 
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
     
-    const fillPdfForm = useCallback(async (templatePath: string): Promise<Uint8Array | null> => {
+    const fillPdfForm = useCallback(async (templatePath: string, fieldMappings: Record<string, any> = {}): Promise<Uint8Array | null> => {
       try {
         const existingPdfBytes = await fetch(templatePath).then(res => {
             if (!res.ok) {
@@ -79,7 +95,7 @@ export default function PdfReportDialogs() {
         const gst = tenderFee * 0.18;
         const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
         
-        const fieldMappings: Record<string, any> = {
+        const defaultMappings: Record<string, any> = {
             'file_no_header': `GKT/${tender.fileNo || ''}`,
             'e_tender_no_header': tender.eTenderNo,
             'tender_date_header': formatDateSafe(tender.tenderDate),
@@ -93,7 +109,9 @@ export default function PdfReportDialogs() {
             'period_of_completion': tender.periodOfCompletion || '',
         };
 
-        Object.entries(fieldMappings).forEach(([fieldName, fieldValue]) => {
+        const allMappings = { ...defaultMappings, ...fieldMappings };
+
+        Object.entries(allMappings).forEach(([fieldName, fieldValue]) => {
             try {
                 const field = form.getTextField(fieldName);
                 field.setText(String(fieldValue || ''));
@@ -144,6 +162,45 @@ export default function PdfReportDialogs() {
         }
     }, [tender.eTenderNo, fillPdfForm]);
     
+    const handleGenerateBidOpeningSummary = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const bidders = tender.bidders || [];
+            const numBidders = bidders.length;
+            const numBiddersInWords = numberToWords(numBidders);
+            
+            const l1Bidder = bidders.length > 0 
+                ? bidders.reduce((lowest, current) => 
+                    (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest
+                  )
+                : null;
+
+            let bidOpeningText = `${numBiddersInWords} bids were received and opened as per the prescribed tender procedure. All participating contractors submitted the requisite documents, and the bids were found to be admissible.`;
+
+            if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
+                bidOpeningText += ` The lowest quoted rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by Sri. ${l1Bidder.name || 'N/A'}.`;
+            }
+            bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
+            
+            const fieldMappings = {
+                'bid_opening': bidOpeningText,
+                'bid_date': formatDateSafe(tender.dateOfOpeningBid),
+            };
+
+            const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings);
+            if (!pdfBytes) throw new Error("PDF generation failed.");
+            const fileName = `Bid_Opening_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+            download(pdfBytes, fileName, 'application/pdf');
+            toast({ title: "PDF Generated", description: "Your Bid Opening Summary has been downloaded." });
+
+        } catch (error: any) {
+            console.error("Bid Opening Summary Generation Error:", error);
+            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [tender, fillPdfForm]);
+    
 
     return (
         <Card>
@@ -168,7 +225,13 @@ export default function PdfReportDialogs() {
                         disabled={isLoading}
                     />
                     <PlaceholderReportButton label="Corrigendum" />
-                    <PlaceholderReportButton label="Bid Opening Summary" />
+                    <ReportButton
+                        reportType="bidOpeningSummary"
+                        label="Bid Opening Summary"
+                        onClick={handleGenerateBidOpeningSummary}
+                        isLoading={isLoading}
+                        disabled={isLoading}
+                    />
                     <PlaceholderReportButton label="Technical Summary" />
                     <PlaceholderReportButton label="Financial Summary" />
                     <PlaceholderReportButton label="Selection Notice" />
