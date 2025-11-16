@@ -8,7 +8,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
 import { toast } from '@/hooks/use-toast';
@@ -79,53 +79,115 @@ export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const [isLoading, setIsLoading] = useState(false);
     
-    const fillPdfForm = useCallback(async (templatePath: string, fieldMappings: Record<string, any> = {}): Promise<Uint8Array | null> => {
-      try {
-        const existingPdfBytes = await fetch(templatePath).then(res => {
-            if (!res.ok) {
-                throw new Error(`The template file could not be found. Please ensure '${templatePath.split('/').pop()}' is in the public folder.`);
+    const fillPdfForm = useCallback(async (
+        templatePath: string,
+        fieldMappings: Record<string, any> = {},
+        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number }> = {}
+    ): Promise<Uint8Array | null> => {
+        try {
+            const [existingPdfBytes, fontBytes] = await Promise.all([
+                fetch(templatePath).then(res => {
+                    if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
+                    return res.arrayBuffer();
+                }),
+                fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer())
+            ]);
+            
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+            const customFont = await pdfDoc.embedFont(fontBytes);
+            const form = pdfDoc.getForm();
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+
+            const tenderFee = tender.tenderFormFee || 0;
+            const gst = tenderFee * 0.18;
+            const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
+            
+            const defaultMappings: Record<string, any> = {
+                'file_no_header': `GKT/${tender.fileNo || ''}`,
+                'e_tender_no_header': tender.eTenderNo,
+                'tender_date_header': formatDateSafe(tender.tenderDate),
+                'name_of_work': tender.nameOfWork,
+                'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
+                'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
+                'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
+                'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
+                'bid_submission_fee': displayTenderFee,
+                'location': tender.location,
+                'period_of_completion': tender.periodOfCompletion || '',
+            };
+
+            const allMappings = { ...defaultMappings, ...fieldMappings };
+
+            for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
+                 try {
+                    const field = form.getField(fieldName);
+                    if (justifiedFields[fieldName]) {
+                        const { fontSize = 10, lineHeight = 1.2 } = justifiedFields[fieldName];
+                        const text = String(fieldValue || '');
+                        const widgets = field.acroField.getWidgets();
+                        const firstWidget = widgets[0];
+                        if (!firstWidget) continue;
+
+                        const rect = firstWidget.getRectangle();
+                        const fieldWidth = rect.width;
+                        const words = text.split(' ');
+                        let line = '';
+                        let currentY = rect.y + rect.height - fontSize; // Start from top
+                        
+                        const lines = [];
+                        for (const word of words) {
+                            const testLine = line.length > 0 ? `${line} ${word}` : word;
+                            const testWidth = customFont.widthOfTextAtSize(testLine, fontSize);
+                            if (testWidth < fieldWidth) {
+                                line = testLine;
+                            } else {
+                                lines.push(line);
+                                line = word;
+                            }
+                        }
+                        lines.push(line); // Add the last line
+
+                        lines.forEach((currentLine, index) => {
+                             const isLastLine = index === lines.length - 1;
+                             const wordsInLine = currentLine.split(' ');
+                             const textWidth = customFont.widthOfTextAtSize(currentLine, fontSize);
+                             let wordSpacing = 0;
+
+                             if (!isLastLine && wordsInLine.length > 1) {
+                                 const totalSpacing = fieldWidth - textWidth;
+                                 wordSpacing = totalSpacing / (wordsInLine.length - 1);
+                             }
+                            
+                             firstPage.drawText(currentLine, {
+                                x: rect.x + 2, // Small padding
+                                y: currentY,
+                                font: customFont,
+                                size: fontSize,
+                                color: rgb(0, 0, 0),
+                                wordBreaks: [' '], // Prevent default breaking
+                                ...(wordSpacing > 0 && { wordSpacing }),
+                             });
+                             currentY -= fontSize * lineHeight;
+                        });
+                        
+                        // After drawing, remove the field so the drawn text is visible
+                        form.removeField(field);
+
+                    } else if (field.constructor.name === 'PDFTextField') {
+                        (field as any).setText(String(fieldValue || ''));
+                    }
+                } catch (e) {
+                    console.warn(`Could not find or set field "${fieldName}" in PDF.`, e);
+                }
             }
-            return res.arrayBuffer();
-        });
-        
-        const pdfDoc = await PDFDocument.load(existingPdfBytes);
-        const form = pdfDoc.getForm();
-        
-        const tenderFee = tender.tenderFormFee || 0;
-        const gst = tenderFee * 0.18;
-        const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
-        
-        const defaultMappings: Record<string, any> = {
-            'file_no_header': `GKT/${tender.fileNo || ''}`,
-            'e_tender_no_header': tender.eTenderNo,
-            'tender_date_header': formatDateSafe(tender.tenderDate),
-            'name_of_work': tender.nameOfWork,
-            'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
-            'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
-            'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
-            'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
-            'bid_submission_fee': displayTenderFee,
-            'location': tender.location,
-            'period_of_completion': tender.periodOfCompletion || '',
-        };
-
-        const allMappings = { ...defaultMappings, ...fieldMappings };
-
-        Object.entries(allMappings).forEach(([fieldName, fieldValue]) => {
-            try {
-                const field = form.getTextField(fieldName);
-                field.setText(String(fieldValue || ''));
-            } catch (e) {
-                console.warn(`Could not find or set field "${fieldName}" in PDF. It might be a read-only field or have a different name.`);
-            }
-        });
-
-        form.flatten();
-        return await pdfDoc.save();
-      } catch (error) {
-        console.error("Error in fillPdfForm:", error);
-        throw error;
-      }
+            
+            form.flatten();
+            return await pdfDoc.save();
+        } catch (error) {
+            console.error("Error in fillPdfForm:", error);
+            throw error;
+        }
     }, [tender]);
     
     const handleGenerateNIT = useCallback(async () => {
@@ -187,7 +249,12 @@ export default function PdfReportDialogs() {
                 'bid_date': formatDateSafe(tender.dateOfOpeningBid),
             };
 
-            const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings);
+            const justified = {
+                'name_of_work': { fontSize: 10, lineHeight: 1.2 },
+                'bid_opening': { fontSize: 11, lineHeight: 1.3 }
+            };
+
+            const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings, justified);
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Bid_Opening_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
