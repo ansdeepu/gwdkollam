@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
 import { toast } from '@/hooks/use-toast';
@@ -85,16 +86,23 @@ export default function PdfReportDialogs() {
         justifiedFields: Record<string, { fontSize?: number; lineHeight?: number }> = {}
     ): Promise<Uint8Array | null> => {
         try {
-            const [existingPdfBytes, fontBytes] = await Promise.all([
-                fetch(templatePath).then(res => {
-                    if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
-                    return res.arrayBuffer();
-                }),
-                fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer())
-            ]);
+            const existingPdfBytes = await fetch(templatePath).then(res => {
+                if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
+                return res.arrayBuffer();
+            });
             
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
-            const customFont = await pdfDoc.embedFont(fontBytes);
+            pdfDoc.registerFontkit(fontkit);
+
+            let customFont;
+            try {
+                const fontBytes = await fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer());
+                customFont = await pdfDoc.embedFont(fontBytes);
+            } catch (fontError) {
+                console.warn("Custom font not found or failed to load. Falling back to standard font.");
+                customFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+            }
+
             const form = pdfDoc.getForm();
             const pages = pdfDoc.getPages();
             const firstPage = pages[0];
@@ -131,27 +139,28 @@ export default function PdfReportDialogs() {
 
                         const rect = firstWidget.getRectangle();
                         const fieldWidth = rect.width;
-                        const words = text.split(' ');
-                        let line = '';
                         let currentY = rect.y + rect.height - fontSize; // Start from top
                         
                         const lines = [];
+                        let currentLine = '';
+                        const words = text.split(' ');
+
                         for (const word of words) {
-                            const testLine = line.length > 0 ? `${line} ${word}` : word;
+                            const testLine = currentLine.length > 0 ? `${currentLine} ${word}` : word;
                             const testWidth = customFont.widthOfTextAtSize(testLine, fontSize);
                             if (testWidth < fieldWidth) {
-                                line = testLine;
+                                currentLine = testLine;
                             } else {
-                                lines.push(line);
-                                line = word;
+                                lines.push(currentLine);
+                                currentLine = word;
                             }
                         }
-                        lines.push(line); // Add the last line
+                        lines.push(currentLine); // Add the last line
 
-                        lines.forEach((currentLine, index) => {
+                        lines.forEach((lineText, index) => {
                              const isLastLine = index === lines.length - 1;
-                             const wordsInLine = currentLine.split(' ');
-                             const textWidth = customFont.widthOfTextAtSize(currentLine, fontSize);
+                             const wordsInLine = lineText.split(' ');
+                             const textWidth = customFont.widthOfTextAtSize(lineText, fontSize);
                              let wordSpacing = 0;
 
                              if (!isLastLine && wordsInLine.length > 1) {
@@ -159,19 +168,18 @@ export default function PdfReportDialogs() {
                                  wordSpacing = totalSpacing / (wordsInLine.length - 1);
                              }
                             
-                             firstPage.drawText(currentLine, {
-                                x: rect.x + 2, // Small padding
+                             firstPage.drawText(lineText, {
+                                x: rect.x + 2,
                                 y: currentY,
                                 font: customFont,
                                 size: fontSize,
                                 color: rgb(0, 0, 0),
-                                wordBreaks: [' '], // Prevent default breaking
+                                wordBreaks: [' '],
                                 ...(wordSpacing > 0 && { wordSpacing }),
                              });
                              currentY -= fontSize * lineHeight;
                         });
                         
-                        // After drawing, remove the field so the drawn text is visible
                         form.removeField(field);
 
                     } else if (field.constructor.name === 'PDFTextField') {
