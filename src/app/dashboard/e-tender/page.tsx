@@ -1,11 +1,11 @@
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Edit, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,17 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { TenderDataProvider } from '@/components/e-tender/TenderDataContext';
 
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
@@ -46,7 +57,7 @@ export default function ETenderListPage() {
         router.push('/dashboard/e-tender/new');
     };
 
-    const handleEdit = (id: string) => {
+    const handleViewAndEdit = (id: string) => {
         router.push(`/dashboard/e-tender/${id}`);
     };
     
@@ -126,8 +137,8 @@ export default function ETenderListPage() {
                                                 {tender.presentStatus ? <Badge>{tender.presentStatus}</Badge> : 'N/A'}
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <Button variant="ghost" size="icon" onClick={() => handleEdit(tender.id)}>
-                                                    <Edit className="h-4 w-4" />
+                                                <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
+                                                    <Eye className="h-4 w-4" />
                                                 </Button>
                                                 {user?.role === 'editor' && (
                                                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
