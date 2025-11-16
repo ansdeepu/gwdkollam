@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { default as fontkit } from '@pdf-lib/fontkit';
+import fontkit from '@pdf-lib/fontkit';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
 import { toast } from '@/hooks/use-toast';
@@ -123,7 +123,7 @@ export default function PdfReportDialogs() {
                 'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
                 'bid_submission_fee': displayTenderFee,
                 'location': tender.location,
-                'period_of_completion': tender.periodOfCompletion ? `${tender.periodOfCompletion} Days` : '',
+                'period_of_completion': tender.periodOfCompletion,
             };
 
             const allMappings = { ...defaultMappings, ...fieldMappings };
@@ -132,7 +132,7 @@ export default function PdfReportDialogs() {
                  try {
                     const field = form.getField(fieldName);
                     if (justifiedFields[fieldName]) {
-                        const { fontSize = 10, lineHeight = 1.2, indent = 0 } = justifiedFields[fieldName];
+                        const { fontSize = 12, lineHeight = 1.3, indent = 0 } = justifiedFields[fieldName];
                         const text = String(fieldValue || '');
                         const widgets = field.acroField.getWidgets();
                         const firstWidget = widgets[0];
@@ -142,44 +142,42 @@ export default function PdfReportDialogs() {
                         let currentY = rect.y + rect.height - fontSize;
                         
                         const words = text.split(' ');
-                        let line = '';
                         const lines: string[] = [];
+                        let line = '';
                         let isFirstLineOfParagraph = true;
 
-                        for (let i = 0; i < words.length; i++) {
+                        words.forEach(word => {
                             const currentIndent = isFirstLineOfParagraph ? indent : 0;
-                            const availableWidth = rect.width - currentIndent;
-                            
-                            const testLine = line + words[i] + ' ';
-                            const width = customFont.widthOfTextAtSize(testLine, fontSize);
+                            const availableWidth = rect.width - currentIndent - 4; // 2 padding on each side
 
-                            if (width > availableWidth && i > 0) {
-                                lines.push(line.trim());
-                                line = words[i] + ' ';
-                                isFirstLineOfParagraph = false; // Next line is not the first
+                            const testLine = line + word + ' ';
+                            if (customFont.widthOfTextAtSize(testLine, fontSize) > availableWidth) {
+                                lines.push(line);
+                                line = word + ' ';
+                                isFirstLineOfParagraph = false;
                             } else {
                                 line = testLine;
                             }
-                        }
-                        lines.push(line.trim());
+                        });
+                        lines.push(line);
+
 
                         lines.forEach((lineText, index) => {
                             const isFirstLine = index === 0;
-                            const isLastLine = index === lines.length - 1;
                             const lineIndent = isFirstLine ? indent : 0;
-                            const availableWidth = rect.width - lineIndent;
-                            
-                            const wordsInLine = lineText.split(' ');
-                            const textWidth = customFont.widthOfTextAtSize(lineText, fontSize);
+                            const availableWidth = rect.width - lineIndent - 4;
+                            const wordsInLine = lineText.trim().split(' ');
+                            const textWidth = customFont.widthOfTextAtSize(lineText.trim(), fontSize);
                             
                             let xPos = rect.x + 2 + lineIndent;
                             let wordSpacing = 0;
+                            const isLastLineOfParagraph = index === lines.length - 1;
 
-                            if (!isLastLine && wordsInLine.length > 1) {
+                            if (!isLastLineOfParagraph && wordsInLine.length > 1) {
                                 wordSpacing = (availableWidth - textWidth) / (wordsInLine.length - 1);
                             }
                             
-                            firstPage.drawText(lineText, { 
+                            firstPage.drawText(lineText.trim(), { 
                                 x: xPos, 
                                 y: currentY, 
                                 font: customFont, 
