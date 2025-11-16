@@ -253,6 +253,7 @@ export default function PdfReportDialogs() {
             const fieldMappings = {
                 'bid_opening': bidOpeningText,
                 'bid_date': formatDateSafe(tender.dateOfOpeningBid),
+                'place': 'Kollam',
             };
 
             const justified = {
