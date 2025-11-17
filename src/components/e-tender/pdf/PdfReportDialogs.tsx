@@ -132,8 +132,9 @@ export default function PdfReportDialogs() {
                     const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
                     
                     field.setText(String(fieldValue || ''));
-                    field.updateAppearances(font);
                     field.setFontSize(fontSize);
+                    field.updateAppearances(font);
+
 
                 } catch (e) {
                     // This is expected if a field doesn't exist
@@ -195,7 +196,7 @@ export default function PdfReportDialogs() {
                   )
                 : null;
 
-            let bidOpeningText = `${numBiddersInWords} bids were received and opened as per the prescribed tender procedure. All participating contractors submitted the requisite documents, and the bids were found to be admissible.`;
+            let bidOpeningText = `     ${numBiddersInWords} bids were received and opened as per the prescribed tender procedure. All participating contractors submitted the requisite documents, and the bids were found to be admissible.`;
 
             if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
                 bidOpeningText += ` The lowest quoted rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by ${l1Bidder.name || 'N/A'}.`;
@@ -227,7 +228,7 @@ export default function PdfReportDialogs() {
                 )
                 : null;
 
-            let techSummaryText = `The bids received were scrutinized and all participating contractors submitted the required documents. Upon verification, all bids were found to be technically qualified and hence accepted.`;
+            let techSummaryText = `     The bids received were scrutinized and all participating contractors submitted the required documents. Upon verification, all bids were found to be technically qualified and hence accepted.`;
             if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
                 techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by ${l1Bidder.name || 'N/A'}.`;
             }
@@ -267,73 +268,81 @@ export default function PdfReportDialogs() {
     }, [tender, fillPdfForm, allStaffMembers]);
     
     const handleGenerateFinancialSummary = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const font = await PDFDocument.create().then(doc => doc.embedFont(StandardFonts.TimesRoman));
-            const courierFont = await PDFDocument.create().then(doc => doc.embedFont(StandardFonts.Courier));
-            const fontSize = 12;
+    setIsLoading(true);
+    try {
+        const bidders = [...(tender.bidders || [])]
+            .filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
+            .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
 
-            const bidders = [...(tender.bidders || [])]
-                .filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
-                .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
+        const l1Bidder = bidders[0];
+        const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
+        const INDENT = "     ";
 
-            const l1Bidder = bidders[0];
-            const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
+        let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
 
-            const INDENT = "     "; // 5 spaces for indentation
+        const slNoWidth = 8;
+        const nameWidth = 45;
+        const amountWidth = 25;
+        const rankWidth = 8;
 
-            let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
+        const header = 
+            "Sl. No.".padEnd(slNoWidth) + 
+            "Name of Bidder".padEnd(nameWidth) + 
+            "Quoted Amount (Rs.)".padStart(amountWidth) + 
+            " ".repeat(2) +
+            "Rank".padEnd(rankWidth);
+        
+        const separator = "-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 2);
 
-            const header = "Sl. No.    Name of Bidder                                    Quoted Amount (Rs.)    Rank";
-            const separator = "-".repeat(header.length);
-            const bidderRows = bidders.map((bidder, index) => {
-                const sl = `${index + 1}.`.padEnd(11);
-                const name = (bidder.name || 'N/A').padEnd(50);
-                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(23);
-                const rank = `L${index + 1}`.padStart(8);
-                return `${sl}${name}${amount}${rank}`;
-            }).join('\n');
-            const finTableText = `${header}\n${separator}\n${bidderRows}`;
-            
-            let finResultText = `${INDENT}No valid bids to recommend.`;
-            if (l1Bidder) {
-              const bidderName = l1Bidder.name || 'N/A';
-              finResultText = `${INDENT}${bidderName}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.`;
-            }
-            
-            const committeeMemberNames = [
-                tender.technicalCommitteeMember1,
-                tender.technicalCommitteeMember2,
-                tender.technicalCommitteeMember3,
-            ].filter(Boolean) as string[];
+        const bidderRows = bidders.map((bidder, index) => {
+            const sl = `${index + 1}.`.padEnd(slNoWidth);
+            const name = (bidder.name || 'N/A').padEnd(nameWidth);
+            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
+            const rank = `L${index + 1}`.padEnd(rankWidth);
+            return `${sl}${name}${amount}  ${rank}`;
+        }).join('\n');
 
-            const committeeMembersText = committeeMemberNames.map((name, index) => {
-                const staffInfo = allStaffMembers.find(s => s.name === name);
-                const designation = staffInfo ? staffInfo.designation : 'N/A';
-                return `${index + 1}. ${name}, ${designation}`;
-            }).join('\n');
-            
-            const fieldMappings = {
-                'fin_summary': finSummaryText,
-                'fin_table': finTableText,
-                'fin_result': finResultText,
-                'fin_committee': committeeMembersText,
-                'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
-            };
-
-            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: fontSize + 1, courierFields: ['fin_table'] });
-
-            if (!pdfBytes) throw new Error("PDF generation failed.");
-            const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
-            download(pdfBytes, fileName, 'application/pdf');
-            toast({ title: "PDF Generated", description: "Your Financial Summary has been downloaded." });
-
-        } catch (error: any) {
-            console.error("Financial Summary Generation Error:", error);
-            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
-        } finally {
-            setIsLoading(false);
+        const finTableText = `${header}\n${separator}\n${bidderRows}`;
+        
+        let finResultText = `${INDENT}No valid bids to recommend.`;
+        if (l1Bidder) {
+            const bidderName = l1Bidder.name || 'N/A';
+            finResultText = `${INDENT}${bidderName}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.`;
         }
+        
+        const committeeMemberNames = [
+            tender.technicalCommitteeMember1,
+            tender.technicalCommitteeMember2,
+            tender.technicalCommitteeMember3,
+        ].filter(Boolean) as string[];
+
+        const committeeMembersText = committeeMemberNames.map((name, index) => {
+            const staffInfo = allStaffMembers.find(s => s.name === name);
+            const designation = staffInfo ? staffInfo.designation : 'N/A';
+            return `${index + 1}. ${name}, ${designation}`;
+        }).join('\n');
+        
+        const fieldMappings = {
+            'fin_summary': finSummaryText,
+            'fin_table': finTableText,
+            'fin_result': finResultText,
+            'fin_committee': committeeMembersText,
+            'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
+        };
+
+        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: 11, courierFields: ['fin_table'] });
+
+        if (!pdfBytes) throw new Error("PDF generation failed.");
+        const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+        download(pdfBytes, fileName, 'application/pdf');
+        toast({ title: "PDF Generated", description: "Your Financial Summary has been downloaded." });
+
+    } catch (error: any) {
+        console.error("Financial Summary Generation Error:", error);
+        toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
+    } finally {
+        setIsLoading(false);
+    }
     }, [tender, fillPdfForm, allStaffMembers]);
 
     return (
