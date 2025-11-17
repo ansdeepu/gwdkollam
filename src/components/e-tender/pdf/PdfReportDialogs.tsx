@@ -282,13 +282,15 @@ export default function PdfReportDialogs() {
         const slNoWidth = 8;
         const nameWidth = 45;
         const amountWidth = 30;
+        const rankSpacer = ' '.repeat(5);
         const rankWidth = 8;
-        const rankSpacer = ' '.repeat(20);
+        
+        const totalHeaderWidth = slNoWidth + nameWidth + amountWidth + rankSpacer.length + rankWidth;
 
         const header = 
             "Sl. No.".padEnd(slNoWidth) + 
             "Name of Bidder".padEnd(nameWidth) + 
-            "Quoted Amount (Rs.)".padStart(amountWidth) + 
+            "Quoted Amount (Rs.)".padStart(amountWidth) +
             rankSpacer +
             "Rank".padEnd(rankWidth);
 
@@ -300,7 +302,7 @@ export default function PdfReportDialogs() {
             return `${sl}${name}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
-        const finTableText = `${header}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + rankSpacer.length)}\n${bidderRows}`;
+        const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
         if (l1Bidder) {
@@ -338,8 +340,9 @@ export default function PdfReportDialogs() {
         for (const [fieldName, fieldValue] of Object.entries(fieldMappings)) {
             try {
                 const field = form.getTextField(fieldName);
+                const fontToUse = fieldName === 'fin_table' ? courierFont : timesRomanFont;
                 field.setText(String(fieldValue || ''));
-                field.updateAppearances(fieldName === 'fin_table' ? courierFont : timesRomanFont);
+                field.updateAppearances(fontToUse);
                 field.setFontSize(FONT_SIZE);
             } catch (e) {
                 console.warn(`Could not find or fill field: ${fieldName}`);
