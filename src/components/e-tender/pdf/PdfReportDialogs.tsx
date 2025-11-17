@@ -363,34 +363,31 @@ export default function PdfReportDialogs() {
 
             let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${bidders.map((_, i) => `L${i+1}`).join(', ')}.`;
             
-            // Define column widths
-            const colWidths = {
-                slNo: 7,
-                name: 45,
-                amount: 20,
-                rank: 8
-            };
-            const totalWidth = Object.values(colWidths).reduce((a, b) => a + b, 0);
+            const colWidths = { slNo: 7, name: 45, amount: 20, rank: 8 };
 
-            // Helper to pad strings
-            const pad = (str: string, len: number, align: 'left' | 'right' = 'left') => {
-                const spaces = ' '.repeat(Math.max(0, len - str.length));
-                return align === 'left' ? str + spaces : spaces + str;
+            const pad = (str: string, len: number, align: 'left' | 'right' | 'center' = 'left') => {
+                const spacesNeeded = len - str.length;
+                if (spacesNeeded <= 0) return str;
+                if (align === 'right') return ' '.repeat(spacesNeeded) + str;
+                if (align === 'center') {
+                    const left = Math.floor(spacesNeeded / 2);
+                    const right = spacesNeeded - left;
+                    return ' '.repeat(left) + str + ' '.repeat(right);
+                }
+                return str + ' '.repeat(spacesNeeded);
             };
 
-            // Build table header
             const header = 
-                `| ${pad('Sl.No.', colWidths.slNo)}| ` +
-                `${pad('Name of Bidder', colWidths.name)}| ` +
+                `| ${pad('Sl.No.', colWidths.slNo)} | ` +
+                `${pad('Name of Bidder', colWidths.name)} | ` +
                 `${pad('Quoted Amount (Rs.)', colWidths.amount, 'right')} | ` +
-                `${pad('Rank', colWidths.rank)}|`;
+                `${pad('Rank', colWidths.rank, 'center')} |`;
             const separator = `+${'-'.repeat(colWidths.slNo + 2)}+${'-'.repeat(colWidths.name + 2)}+${'-'.repeat(colWidths.amount + 2)}+${'-'.repeat(colWidths.rank + 2)}+`;
 
-            // Build table rows
             const rows = bidders.map((bidder, index) => {
                 const rank = `L${index + 1}`;
                 const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                return `| ${pad((index + 1).toString() + '.', colWidths.slNo)}| ${pad(bidder.name || 'N/A', colWidths.name)}| ${pad(amount, colWidths.amount, 'right')} | ${pad(rank, colWidths.rank)}|`;
+                return `| ${pad((index + 1).toString() + '.', colWidths.slNo)} | ${pad(bidder.name || 'N/A', colWidths.name)} | ${pad(amount, colWidths.amount, 'right')} | ${pad(rank, colWidths.rank, 'center')} |`;
             });
             
             const finTableText = [header, separator, ...rows, separator].join('\n');
@@ -408,6 +405,9 @@ export default function PdfReportDialogs() {
                 const designation = staffInfo ? staffInfo.designation : 'N/A';
                 return `${index + 1}. ${name}, ${designation}`;
             }).join('\n');
+            
+            const pdfDocForFont = await PDFDocument.create();
+            const courierFont = await pdfDocForFont.embedFont(StandardFonts.Courier);
 
             const pdfBytes = await fillPdfForm('/Financial-Summary.pdf',
                 {
@@ -421,7 +421,7 @@ export default function PdfReportDialogs() {
                     'fin_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
                     'fin_result': { fontSize: 13, lineHeight: 1.3, indent: 20 },
                     'name_of_work': { fontSize: 13, lineHeight: 1.2 },
-                    'fin_table': { fontSize: 10, lineHeight: 1.2, font: await PDFDocument.load(await fetch('/Courier.ttf').then(res => res.arrayBuffer())).then(doc => doc.embedFont(StandardFonts.Courier)) }
+                    'fin_table': { fontSize: 10, lineHeight: 1.2, font: courierFont }
                 }
             );
 
