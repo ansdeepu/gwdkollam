@@ -85,11 +85,8 @@ export default function PdfReportDialogs() {
     
     const fillPdfForm = useCallback(async (
         templatePath: string,
-        fieldMappings: Record<string, any> = {},
-        options: { fontSize?: number; courierFields?: string[]; skipDefaultMappings?: boolean } = {}
+        fieldMappings: Record<string, any> = {}
     ): Promise<Uint8Array | null> => {
-        const { fontSize = 11.5, courierFields = [], skipDefaultMappings = false } = options;
-    
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
                 if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
@@ -97,11 +94,6 @@ export default function PdfReportDialogs() {
             });
     
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
-            pdfDoc.registerFontkit(fontkit);
-    
-            const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-            const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
-    
             const form = pdfDoc.getForm();
     
             const tenderFee = tender.tenderFormFee || 0;
@@ -109,12 +101,9 @@ export default function PdfReportDialogs() {
             const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
             const defaultMappings: Record<string, any> = {
-                // Default names for header fields, used by NIT.pdf and Tender-Form.pdf
                 'file_no_header': `GKT/${tender.fileNo || ''}`,
                 'e_tender_no_header': tender.eTenderNo,
                 'tender_date_header': formatDateSafe(tender.tenderDate),
-                
-                // Common fields used across multiple templates
                 'name_of_work': tender.nameOfWork,
                 'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
                 'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
@@ -127,24 +116,27 @@ export default function PdfReportDialogs() {
                 'bid_date': formatDateSafe(tender.dateOfOpeningBid),
             };
     
-            const allMappings = skipDefaultMappings ? fieldMappings : { ...defaultMappings, ...fieldMappings };
-    
-            Object.keys(allMappings).forEach(fieldName => {
+            const allMappings = { ...defaultMappings, ...fieldMappings };
+
+            // New logic: iterate and fill fields safely
+            for (const fieldName in allMappings) {
                 const fieldValue = allMappings[fieldName];
-                if (fieldValue === undefined || fieldValue === null) return;
-                
+                if (fieldValue === undefined || fieldValue === null) continue;
+
                 try {
-                    const field = form.getTextField(fieldName);
-                    const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
-                    field.setText(String(fieldValue));
-                    field.updateAppearances(font);
-                    field.setFontSize(fontSize);
+                    const field = form.getField(fieldName);
+                    if (field.constructor.name === 'PDFTextField') {
+                        const textField = field as import('pdf-lib').PDFTextField;
+                        textField.setText(String(fieldValue));
+                        textField.defaultUpdateAppearances();
+                    }
+                    // Add other field types like checkboxes if needed
                 } catch (e) {
                     // Field might not exist in this template, which is okay.
-                    // console.warn(`Could not find or set field: ${fieldName}`);
+                    // console.warn(`Field not found: ${fieldName}`);
                 }
-            });
-    
+            }
+
             form.flatten();
             return await pdfDoc.save();
         } catch (error) {
@@ -261,7 +253,7 @@ export default function PdfReportDialogs() {
                 'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
 
-            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings, { skipDefaultMappings: true });
+            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings);
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Technical_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
@@ -291,7 +283,7 @@ export default function PdfReportDialogs() {
         const slNoWidth = 4;
         const nameWidth = 45;
         const amountSpacer = ' '.repeat(3); 
-        const amountWidth = 20; // Increased width for "Quoted Amount (Rs.)"
+        const amountWidth = 25;
         const rankSpacer = ' '.repeat(5); 
         const rankWidth = 5;
 
@@ -343,12 +335,7 @@ export default function PdfReportDialogs() {
             'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
         };
         
-        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, {
-            skipDefaultMappings: true,
-            courierFields: ['fin_table'],
-            fontSize: 12
-        });
-
+        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings);
 
         if (!pdfBytes) throw new Error("PDF generation failed.");
         const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
