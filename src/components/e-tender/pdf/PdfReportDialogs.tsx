@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -108,6 +109,7 @@ export default function PdfReportDialogs() {
             }
 
             const form = pdfDoc.getForm();
+            const firstPage = pdfDoc.getPages()[0];
             
             const tenderFee = tender.tenderFormFee || 0;
             const gst = tenderFee * 0.18;
@@ -141,6 +143,7 @@ export default function PdfReportDialogs() {
                         const widgets = field.acroField.getWidgets();
 
                         if (widgets.length > 0) {
+                            field.setText(''); // Clear the field first
                             const rect = widgets[0].getRectangle();
                             const width = rect.width;
                             const words = text.split(' ');
@@ -330,13 +333,14 @@ export default function PdfReportDialogs() {
                 .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
 
             const l1Bidder = bidders[0];
+            const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
 
-            let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${bidders.map((_, i) => `L${i+1}`).join(', ')}.`;
+            let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
             
-            const colWidths = { slNo: 7, name: 45, amount: 20, rank: 8 };
+            const colWidths = { slNo: 8, name: 45, amount: 20, rank: 8 };
             const pad = (str: string, len: number, align: 'left' | 'right' | 'center' = 'left') => {
                 const strLen = str.length;
-                if (strLen >= len) return str;
+                if (strLen >= len) return str.substring(0, len);
                 const spacesNeeded = len - strLen;
                 if (align === 'right') return ' '.repeat(spacesNeeded) + str;
                 if (align === 'center') { const left = Math.floor(spacesNeeded / 2); return ' '.repeat(left) + str + ' '.repeat(spacesNeeded - left); }
@@ -344,7 +348,7 @@ export default function PdfReportDialogs() {
             };
 
             const header = 
-                `| ${pad('Sl.No.', colWidths.slNo)} | ` +
+                `| ${pad('Sl. No.', colWidths.slNo)} | ` +
                 `${pad('Name of Bidder', colWidths.name)} | ` +
                 `${pad('Quoted Amount (Rs.)', colWidths.amount, 'right')} | ` +
                 `${pad('Rank', colWidths.rank, 'center')} |`;
