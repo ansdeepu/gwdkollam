@@ -88,7 +88,7 @@ export default function PdfReportDialogs() {
         fieldMappings: Record<string, any> = {},
         options: { fontSize?: number, justifiedFields?: string[], courierFields?: string[] } = {}
     ): Promise<Uint8Array | null> => {
-        const { fontSize = 10, justifiedFields = [], courierFields = [] } = options;
+        const { fontSize = 11, justifiedFields = [], courierFields = [] } = options;
 
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -269,6 +269,13 @@ export default function PdfReportDialogs() {
     const handleGenerateFinancialSummary = useCallback(async () => {
         setIsLoading(true);
         try {
+            const pdfDoc = await PDFDocument.create();
+            const page = pdfDoc.addPage();
+            const { width, height } = page.getSize();
+            const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+            const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
+            const fontSize = 12;
+
             const bidders = [...(tender.bidders || [])]
                 .filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
                 .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
@@ -278,13 +285,16 @@ export default function PdfReportDialogs() {
 
             let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
             
-            const finTableText = bidders.map((bidder, index) => {
-                const sl = `${index + 1}.`.padEnd(4);
-                const name = (bidder.name || 'N/A').padEnd(45);
-                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(15);
+            const header = "Sl. No.  Name of Bidder                                    Quoted Amount (Rs.)  Rank ";
+            const separator = "-".repeat(header.length);
+            const bidderRows = bidders.map((bidder, index) => {
+                const sl = `${index + 1}.`.padEnd(9);
+                const name = (bidder.name || 'N/A').padEnd(50);
+                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(20);
                 const rank = `L${index + 1}`.padEnd(5);
                 return `${sl}${name}${amount}  ${rank}`;
             }).join('\n');
+            const finTableText = `${header}\n${separator}\n${bidderRows}`;
             
             let finResultText = 'No valid bids to recommend.';
             if (l1Bidder) {
@@ -304,16 +314,28 @@ export default function PdfReportDialogs() {
                 return `${index + 1}. ${name}, ${designation}`;
             }).join('\n');
             
-            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf',
-                {
-                    'fin_summary': finSummaryText,
-                    'fin_table': finTableText,
-                    'fin_result': finResultText,
-                    'fin_committee': committeeMembersText,
-                    'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
-                },
-                { fontSize: 11, justifiedFields: ['fin_summary', 'fin_result'], courierFields: ['fin_table'] }
-            );
+            const existingPdfBytes = await fetch('/Financial-Summary.pdf').then(res => res.arrayBuffer());
+            const templatePdf = await PDFDocument.load(existingPdfBytes);
+            const form = templatePdf.getForm();
+
+            const setTextField = (fieldName: string, text: string, useCourier = false) => {
+                try {
+                    const field = form.getTextField(fieldName);
+                    field.setText(text);
+                    field.updateAppearances(useCourier ? courierFont : font);
+                } catch (e) {
+                    console.warn(`Field ${fieldName} not found in PDF.`);
+                }
+            };
+            
+            setTextField('fin_summary', finSummaryText);
+            setTextField('fin_table', finTableText, true);
+            setTextField('fin_result', finResultText);
+            setTextField('fin_committee', committeeMembersText);
+            setTextField('fin_date', formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening));
+
+            form.flatten();
+            const pdfBytes = await templatePdf.save();
 
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
