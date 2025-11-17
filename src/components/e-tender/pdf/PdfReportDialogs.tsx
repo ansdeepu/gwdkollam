@@ -187,7 +187,7 @@ export default function PdfReportDialogs() {
                             
                             const wordsInLine = line.split(' ');
                             if (!isLastLine && wordsInLine.length > 1) {
-                                const textWidth = fontToUse.widthOfTextAtSize(line, fontSize);
+                                const textWidth = fontToUse.widthOfTextAtSize(line.replace(/ /g, ''), fontSize);
                                 const totalSpacing = (availableWidth - currentIndent) - textWidth;
                                 const wordSpacing = totalSpacing / (wordsInLine.length - 1);
                                 firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: fontToUse, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
@@ -295,18 +295,18 @@ export default function PdfReportDialogs() {
     const handleGenerateTechnicalSummary = useCallback(async () => {
         setIsLoading(true);
         try {
-            const l1Bidder = (tender.bidders || []).length > 0 
-                ? (tender.bidders || []).reduce((lowest, current) => 
+            const l1Bidder = (tender.bidders || []).length > 0
+                ? (tender.bidders || []).reduce((lowest, current) =>
                     (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest
-                  )
+                )
                 : null;
 
             let techSummaryText = `The bids received were scrutinized and all participating contractors submitted the required documents. Upon verification, all bids were found to be technically qualified and hence accepted.`;
             if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
-                 techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by ${l1Bidder.name || 'N/A'}.`;
+                techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by ${l1Bidder.name || 'N/A'}.`;
             }
             techSummaryText += ' All technically qualified bids are recommended for financial evaluation.';
-            
+
             const committeeMemberNames = [
                 tender.technicalCommitteeMember1,
                 tender.technicalCommitteeMember2,
@@ -319,15 +319,16 @@ export default function PdfReportDialogs() {
                 return `${index + 1}. ${name}, ${designation}`;
             }).join('\n');
 
+
             const fieldMappings = {
                 'tech_summary': techSummaryText,
                 'committee_members': committeeMembersText,
                 'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
-            
+
             const justified = {
                 'tech_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
-                 'name_of_work': { fontSize: 13, lineHeight: 1.2 },
+                'name_of_work': { fontSize: 13, lineHeight: 1.2 },
             };
 
             const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings, justified);
@@ -382,7 +383,7 @@ export default function PdfReportDialogs() {
                 return `| ${pad((index + 1).toString() + '.', colWidths.slNo)} | ${pad(bidder.name || 'N/A', colWidths.name)} | ${pad(amount, colWidths.amount, 'right')} | ${pad(rank, colWidths.rank, 'center')} |`;
             });
             
-            const finTableText = [header, separator, ...rows, separator].join('\n');
+            const finTableText = [separator, header, separator, ...rows, separator].join('\n');
             
             let finResultText = l1Bidder ? `${l1Bidder.name || 'N/A'}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.` : 'No valid bids to recommend.';
             
