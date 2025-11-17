@@ -135,72 +135,28 @@ export default function PdfReportDialogs() {
             for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
                  try {
                     const field = form.getField(fieldName);
+                    const fontToUseForField = justifiedFields[fieldName]?.font || customFont;
+                    
                     if (justifiedFields[fieldName]) {
                         const { fontSize = 12, lineHeight = 1.3, indent = 0 } = justifiedFields[fieldName];
                         const text = String(fieldValue || '');
                         const widgets = field.acroField.getWidgets();
-                        if (widgets.length === 0) continue;
-                        const rect = widgets[0].getRectangle();
-                        const availableWidth = rect.width - 4; // padding
-
-                        const fontToUse = justifiedFields[fieldName].font || customFont;
-
-                        let words = text.split(' ');
-                        let lines: string[] = [];
-                        
-                        let currentLine = '';
-                        if (indent > 0) {
-                            for (let i = 0; i < words.length; i++) {
-                                const word = words[i];
-                                const lineWithNextWord = currentLine === '' ? word : `${currentLine} ${word}`;
-                                if (fontToUse.widthOfTextAtSize(lineWithNextWord, fontSize) < (availableWidth - indent)) {
-                                    currentLine = lineWithNextWord;
-                                } else {
-                                    break;
-                                }
-                            }
-                            const consumedWordCount = currentLine.split(' ').length;
-                            lines.push(currentLine);
-                            words.splice(0, consumedWordCount);
+                        if (widgets.length > 0) {
+                            const rect = widgets[0].getRectangle();
+                            field.acroField.deleteFrom(widgets[0].getRef()); // Remove widget but not field data
+                            firstPage.drawText(text, {
+                                x: rect.x + 2,
+                                y: rect.y + 2,
+                                font: fontToUseForField,
+                                size: fontSize,
+                                color: rgb(0,0,0),
+                                lineHeight: fontSize * lineHeight,
+                                ...(fieldName === 'fin_table' && { font: fontToUseForField }),
+                            });
                         }
-
-                        currentLine = '';
-                        for (const word of words) {
-                            const lineWithNextWord = currentLine === '' ? word : `${currentLine} ${word}`;
-                            if (fontToUse.widthOfTextAtSize(lineWithNextWord, fontSize) < availableWidth) {
-                                currentLine = lineWithNextWord;
-                            } else {
-                                lines.push(currentLine);
-                                currentLine = word;
-                            }
-                        }
-                        if (currentLine) {
-                            lines.push(currentLine);
-                        }
-
-                        let y = rect.y + rect.height - fontSize;
-                        
-                        lines.forEach((line, index) => {
-                            if (y < rect.y) return;
-                            const isLastLine = index === lines.length - 1;
-                            const currentIndent = index === 0 ? indent : 0;
-                            
-                            const wordsInLine = line.split(' ');
-                            if (!isLastLine && wordsInLine.length > 1) {
-                                const textWidth = fontToUse.widthOfTextAtSize(line.replace(/ /g, ''), fontSize);
-                                const totalSpacing = (availableWidth - currentIndent) - textWidth;
-                                const wordSpacing = totalSpacing / (wordsInLine.length - 1);
-                                firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: fontToUse, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
-                            } else {
-                                 firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: fontToUse, size: fontSize, color: rgb(0, 0, 0) });
-                            }
-                            y -= fontSize * lineHeight;
-                        });
-                        
-                        form.removeField(field);
-
                     } else if (field.constructor.name === 'PDFTextField') {
                         (field as any).setText(String(fieldValue || ''));
+                        (field as any).updateAppearances(fontToUseForField);
                     }
                 } catch (e) {
                     console.warn(`Could not find or set field "${fieldName}" in PDF.`, e);
