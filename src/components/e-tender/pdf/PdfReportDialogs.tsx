@@ -247,9 +247,9 @@ export default function PdfReportDialogs() {
 
 
             const fieldMappings = {
-                'file_no': `GKT/${tender.fileNo || ''}`,
-                'e_tender_no': tender.eTenderNo,
-                'dated': formatDateSafe(tender.tenderDate),
+                'tech_file_no': `GKT/${tender.fileNo || ''}`,
+                'tech_e_tender_no': tender.eTenderNo,
+                'tech_dated': formatDateSafe(tender.tenderDate),
                 'name_of_work': tender.nameOfWork,
                 'tech_summary': techSummaryText,
                 'committee_members': committeeMembersText,
@@ -285,18 +285,16 @@ export default function PdfReportDialogs() {
         
         const slNoWidth = 4;
         const nameWidth = 45;
-        const amountSpacer = ' '.repeat(12); // Adjust this space
+        const amountSpacer = ' '.repeat(15);
         const amountWidth = 15;
-        const rankSpacer = ' '.repeat(3); // Adjust this space
+        const rankSpacer = ' '.repeat(5);
         const rankWidth = 5;
-        
-        const totalHeaderWidth = slNoWidth + nameWidth + amountSpacer.length + amountWidth + rankSpacer.length + rankWidth;
 
         const headerLine1 = 
             "Sl. No.".padEnd(slNoWidth) + 
             "Name of Bidder".padEnd(nameWidth) +
             amountSpacer + 
-            "Quoted Amount".padStart(amountWidth) + 
+            "Quoted Amount".padStart(amountWidth) +
             rankSpacer +
             "Rank".padEnd(rankWidth);
         const headerLine2 = ' '.repeat(slNoWidth + nameWidth + amountSpacer.length) + "(Rs.)".padStart(amountWidth);
@@ -311,6 +309,7 @@ export default function PdfReportDialogs() {
             return `${sl}${name}${amountSpacer}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
+        const totalHeaderWidth = headerLine1.length;
         const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
@@ -332,9 +331,9 @@ export default function PdfReportDialogs() {
         }).join('\n');
         
         const fieldMappings = {
-            'file_no': `GKT/${tender.fileNo || ''}`,
-            'e_tender_no': tender.eTenderNo,
-            'dated': formatDateSafe(tender.tenderDate),
+            'fin_file_no': `GKT/${tender.fileNo || ''}`,
+            'fin_e_tender_no': tender.eTenderNo,
+            'fin_dated': formatDateSafe(tender.tenderDate),
             'name_of_work': tender.nameOfWork,
             'fin_summary': finSummaryText,
             'fin_table': finTableText,
