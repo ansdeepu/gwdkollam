@@ -128,13 +128,15 @@ export default function PdfReportDialogs() {
 
             for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
                  try {
-                    const field = form.getTextField(fieldName);
-                    const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
-                    
-                    field.setText(String(fieldValue || ''));
-                    field.updateAppearances(font);
-                    field.setFontSize(fontSize);
-
+                    const field = form.getField(fieldName);
+                    if (field.constructor.name === 'PDFTextField') {
+                       const textField = field as import('pdf-lib').PDFTextField;
+                       const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
+                       
+                       textField.setText(String(fieldValue || ''));
+                       textField.updateAppearances(font);
+                       textField.setFontSize(fontSize);
+                    }
                 } catch (e) {
                     // This is expected if a field doesn't exist
                 }
