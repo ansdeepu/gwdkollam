@@ -285,7 +285,7 @@ export default function PdfReportDialogs() {
         
         const slNoWidth = 4;
         const nameWidth = 45;
-        const amountSpacer = ' '.repeat(3); 
+        const amountSpacer = ' '.repeat(5); 
         const amountWidth = 15;
         const rankSpacer = ' '.repeat(5); 
         const rankWidth = 5;
@@ -303,7 +303,7 @@ export default function PdfReportDialogs() {
             return `${sl}${name}${amountSpacer}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
-        const totalHeaderWidth = headerLine1.length;
+        const totalHeaderWidth = Math.max(headerLine1.length, headerLine2.length);
         const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
@@ -336,26 +336,11 @@ export default function PdfReportDialogs() {
             'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
         };
         
-        const FONT_SIZE = 12;
-        const pdfDoc = await PDFDocument.load(await fetch('/Financial-Summary.pdf').then(res => res.arrayBuffer()));
-        pdfDoc.registerFontkit(fontkit);
-        const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-        const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
-        const form = pdfDoc.getForm();
-
-        for (const [fieldName, fieldValue] of Object.entries(fieldMappings)) {
-            try {
-                const field = form.getTextField(fieldName);
-                const fontToUse = fieldName === 'fin_table' ? courierFont : timesRomanFont;
-                field.setText(String(fieldValue || ''));
-                field.updateAppearances(fontToUse);
-                field.setFontSize(FONT_SIZE);
-            } catch (e) {
-                console.warn(`Could not find or fill field: ${fieldName}`);
-            }
-        }
-        form.flatten();
-        const pdfBytes = await pdfDoc.save();
+        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, {
+            skipDefaultMappings: true,
+            courierFields: ['fin_table'],
+            fontSize: 12
+        });
 
 
         if (!pdfBytes) throw new Error("PDF generation failed.");
