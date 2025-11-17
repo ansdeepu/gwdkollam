@@ -281,14 +281,14 @@ export default function PdfReportDialogs() {
 
         const slNoWidth = 8;
         const nameWidth = 45;
-        const amountWidth = 20; // Width for amount column
-        const rankWidth = 8;  // Width for rank column
+        const amountWidth = 25; 
+        const rankWidth = 8;
 
         const headerLine = 
             "Sl. No.".padEnd(slNoWidth) + 
             "Name of Bidder".padEnd(nameWidth) + 
             "Quoted Amount (Rs.)".padStart(amountWidth) +
-            "  " + // Tab-like space
+            " ".repeat(4) + // Space before Rank
             "Rank".padEnd(rankWidth);
 
         const bidderRows = bidders.map((bidder, index) => {
@@ -296,10 +296,10 @@ export default function PdfReportDialogs() {
             const name = (bidder.name || 'N/A').padEnd(nameWidth);
             const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
             const rank = `L${index + 1}`.padEnd(rankWidth);
-            return `${sl}${name}${amount}  ${rank}`;
+            return `${sl}${name}${amount}    ${rank}`;
         }).join('\n');
 
-        const finTableText = `${headerLine}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 2)}\n${bidderRows}`;
+        const finTableText = `${headerLine}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 4)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
         if (l1Bidder) {
