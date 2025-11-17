@@ -88,7 +88,7 @@ export default function PdfReportDialogs() {
         fieldMappings: Record<string, any> = {},
         options: { fontSize?: number, justifiedFields?: string[], courierFields?: string[] } = {}
     ): Promise<Uint8Array | null> => {
-        const { fontSize = 12, justifiedFields = [], courierFields = [] } = options;
+        const { fontSize = 11.5, justifiedFields = [], courierFields = [] } = options;
 
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -281,14 +281,14 @@ export default function PdfReportDialogs() {
 
         const slNoWidth = 8;
         const nameWidth = 45;
-        const amountWidth = 25; 
+        const amountWidth = 30; // Increased width for amount
         const rankWidth = 8;
 
         const headerLine = 
             "Sl. No.".padEnd(slNoWidth) + 
             "Name of Bidder".padEnd(nameWidth) + 
             "Quoted Amount (Rs.)".padStart(amountWidth) +
-            " ".repeat(4) + // Space before Rank
+            " ".repeat(4) +
             "Rank".padEnd(rankWidth);
 
         const bidderRows = bidders.map((bidder, index) => {
@@ -298,8 +298,8 @@ export default function PdfReportDialogs() {
             const rank = `L${index + 1}`.padEnd(rankWidth);
             return `${sl}${name}${amount}    ${rank}`;
         }).join('\n');
-
-        const finTableText = `${headerLine}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 4)}\n${bidderRows}`;
+        
+        const finTableText = `${headerLine}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 8)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
         if (l1Bidder) {
@@ -327,7 +327,7 @@ export default function PdfReportDialogs() {
             'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
         };
 
-        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: 11.5, courierFields: ['fin_table'] });
+        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { courierFields: ['fin_table'] });
 
         if (!pdfBytes) throw new Error("PDF generation failed.");
         const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
