@@ -282,30 +282,33 @@ export default function PdfReportDialogs() {
         const INDENT = "     ";
 
         let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
-
-        const slNoWidth = 8;
-        const nameWidth = 45;
-        const amountWidth = 30;
-        const rankSpacer = ' '.repeat(5);
-        const rankWidth = 8;
         
-        const totalHeaderWidth = slNoWidth + nameWidth + amountWidth + rankSpacer.length + rankWidth;
+        const slNoWidth = 4;
+        const nameWidth = 45;
+        const amountSpacer = ' '.repeat(12); // Adjust this space
+        const amountWidth = 15;
+        const rankSpacer = ' '.repeat(3); // Adjust this space
+        const rankWidth = 5;
+        
+        const totalHeaderWidth = slNoWidth + nameWidth + amountSpacer.length + amountWidth + rankSpacer.length + rankWidth;
 
         const headerLine1 = 
             "Sl. No.".padEnd(slNoWidth) + 
-            "Name of Bidder".padEnd(nameWidth) + 
-            "Quoted Amount (Rs.)".padStart(amountWidth) + 
+            "Name of Bidder".padEnd(nameWidth) +
+            amountSpacer + 
+            "Quoted Amount".padStart(amountWidth) + 
             rankSpacer +
             "Rank".padEnd(rankWidth);
+        const headerLine2 = ' '.repeat(slNoWidth + nameWidth + amountSpacer.length) + "(Rs.)".padStart(amountWidth);
         
-        const header = `${headerLine1}`;
+        const header = `${headerLine1}\n${headerLine2}`;
 
         const bidderRows = bidders.map((bidder, index) => {
             const sl = `${index + 1}.`.padEnd(slNoWidth);
             const name = (bidder.name || 'N/A').padEnd(nameWidth);
-            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth - 5);
+            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
             const rank = `L${index + 1}`.padEnd(rankWidth);
-            return `${sl}${name}${amount}${rankSpacer}${rank}`;
+            return `${sl}${name}${amountSpacer}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
         const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
