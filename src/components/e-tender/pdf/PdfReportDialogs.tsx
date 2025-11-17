@@ -147,14 +147,32 @@ export default function PdfReportDialogs() {
                         let lines: string[] = [];
                         let currentLine = '';
                         
-                        for (let i = 0; i < words.length; i++) {
-                            const word = words[i];
-                            const isFirstWordInLine = currentLine === '';
-                            const lineWithNextWord = isFirstWordInLine ? word : `${currentLine} ${word}`;
-                            const currentIndent = lines.length === 0 ? indent : 0;
-                            const lineWidth = customFont.widthOfTextAtSize(lineWithNextWord, fontSize);
+                        // First line with indentation
+                        if (indent > 0) {
+                            currentLine = '';
+                            for (let i = 0; i < words.length; i++) {
+                                const word = words[i];
+                                const lineWithNextWord = currentLine === '' ? word : `${currentLine} ${word}`;
+                                const lineWidth = customFont.widthOfTextAtSize(lineWithNextWord, fontSize);
+                                if (lineWidth < (availableWidth - indent)) {
+                                    currentLine = lineWithNextWord;
+                                } else {
+                                    lines.push(currentLine);
+                                    words = words.slice(i);
+                                    currentLine = '';
+                                    break;
+                                }
+                            }
+                            if (currentLine) { // if the whole paragraph fits in one line
+                                lines.push(currentLine);
+                                words = [];
+                            }
+                        }
                         
-                            if (lineWidth < (availableWidth - currentIndent)) {
+                        currentLine = '';
+                        for (const word of words) {
+                            const lineWithNextWord = currentLine === '' ? word : `${currentLine} ${word}`;
+                            if (customFont.widthOfTextAtSize(lineWithNextWord, fontSize) < availableWidth) {
                                 currentLine = lineWithNextWord;
                             } else {
                                 lines.push(currentLine);
@@ -170,18 +188,14 @@ export default function PdfReportDialogs() {
                             const isLastLine = index === lines.length - 1;
                             const currentIndent = index === 0 ? indent : 0;
                             
-                            if (isLastLine) {
-                                firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
+                            const wordsInLine = line.split(' ');
+                            if (!isLastLine && wordsInLine.length > 1) {
+                                const textWidth = customFont.widthOfTextAtSize(line, fontSize);
+                                const totalSpacing = (availableWidth - currentIndent) - textWidth;
+                                const wordSpacing = totalSpacing / (wordsInLine.length - 1);
+                                firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
                             } else {
-                                const wordsInLine = line.split(' ');
-                                if (wordsInLine.length > 1) {
-                                    const textWidth = customFont.widthOfTextAtSize(line, fontSize);
-                                    const totalSpacing = availableWidth - currentIndent - textWidth;
-                                    const wordSpacing = totalSpacing / (wordsInLine.length - 1);
-                                    firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
-                                } else {
-                                     firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
-                                }
+                                 firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
                             }
                             y -= fontSize * lineHeight;
                         });
@@ -333,6 +347,66 @@ export default function PdfReportDialogs() {
         }
     }, [tender, fillPdfForm, allStaffMembers]);
     
+     const handleGenerateFinancialSummary = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const bidders = [...(tender.bidders || [])]
+                .filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
+                .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
+
+            const l1Bidder = bidders[0];
+
+            let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${bidders.map((_, i) => `L${i+1}`).join(', ')}.`;
+            
+            let finTableText = "Sl. No.\tName of Bidder\t\t\t\tQuoted Amount (Rs.)\tRank\n";
+            finTableText += "----------------------------------------------------------------------------------------------------------------------\n";
+            bidders.forEach((bidder, index) => {
+                const rank = `L${index + 1}`;
+                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                finTableText += `${index + 1}.\t${bidder.name || 'N/A'}\t\t\t\t${amount}\t${rank}\n`;
+            });
+            
+            let finResultText = l1Bidder ? `Sri. ${l1Bidder.name || 'N/A'}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.` : 'No valid bids to recommend.';
+            
+            const committeeMemberNames = [
+                tender.technicalCommitteeMember1,
+                tender.technicalCommitteeMember2,
+                tender.technicalCommitteeMember3,
+            ].filter(Boolean) as string[];
+
+            const committeeMembersText = committeeMemberNames.map((name, index) => {
+                const staffInfo = allStaffMembers.find(s => s.name === name);
+                const designation = staffInfo ? staffInfo.designation : 'N/A';
+                return `${index + 1}. ${name}, ${designation}`;
+            }).join('\n');
+
+            const fieldMappings = {
+                'fin_summary': finSummaryText,
+                'fin_table': finTableText,
+                'fin_result': finResultText,
+                'fin_committee': committeeMembersText,
+                'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
+            };
+            
+            const justified = {
+                'fin_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
+                'fin_result': { fontSize: 13, lineHeight: 1.3, indent: 20 },
+                'name_of_work': { fontSize: 13, lineHeight: 1.2 },
+            };
+
+            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, justified);
+            if (!pdfBytes) throw new Error("PDF generation failed.");
+            const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+            download(pdfBytes, fileName, 'application/pdf');
+            toast({ title: "PDF Generated", description: "Your Financial Summary has been downloaded." });
+
+        } catch (error: any) {
+            console.error("Financial Summary Generation Error:", error);
+            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [tender, fillPdfForm, allStaffMembers]);
 
     return (
         <Card>
@@ -371,7 +445,13 @@ export default function PdfReportDialogs() {
                         isLoading={isLoading}
                         disabled={isLoading}
                     />
-                    <PlaceholderReportButton label="Financial Summary" />
+                    <ReportButton
+                        reportType="financialSummary"
+                        label="Financial Summary"
+                        onClick={handleGenerateFinancialSummary}
+                        isLoading={isLoading}
+                        disabled={isLoading || (tender.bidders || []).length === 0}
+                    />
                     <PlaceholderReportButton label="Selection Notice" />
                     <PlaceholderReportButton label="Work / Supply Order" />
                     <PlaceholderReportButton label="Work Agreement" />
