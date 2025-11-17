@@ -103,7 +103,6 @@ export default function PdfReportDialogs() {
             const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
     
             const form = pdfDoc.getForm();
-            const allFields = form.getFields();
     
             const tenderFee = tender.tenderFormFee || 0;
             const gst = tenderFee * 0.18;
@@ -127,19 +126,22 @@ export default function PdfReportDialogs() {
     
             const allMappings = skipDefaultMappings ? fieldMappings : { ...defaultMappings, ...fieldMappings };
     
-            allFields.forEach(field => {
-                const fieldName = field.getName();
-                if (fieldName in allMappings) {
-                    const fieldValue = allMappings[fieldName];
-                    if (field.constructor.name === 'PDFTextField') {
-                        const textField = field as import('pdf-lib').PDFTextField;
-                        const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
-                        
-                        textField.setText(String(fieldValue || ''));
-                        textField.updateAppearances(font);
-                        textField.setFontSize(fontSize);
-                    }
+            Object.keys(allMappings).forEach(fieldName => {
+              try {
+                const field = form.getField(fieldName);
+                const fieldValue = allMappings[fieldName];
+                if (field && field.constructor.name === 'PDFTextField') {
+                  const textField = field as import('pdf-lib').PDFTextField;
+                  const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
+                  
+                  textField.setText(String(fieldValue || ''));
+                  textField.updateAppearances(font);
+                  textField.setFontSize(fontSize);
                 }
+              } catch(e) {
+                // Field might not exist in this specific template, so we can ignore the error
+                // console.warn(`Could not find or set field: ${fieldName}`, e);
+              }
             });
     
             form.flatten();
