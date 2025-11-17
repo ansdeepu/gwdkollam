@@ -269,11 +269,8 @@ export default function PdfReportDialogs() {
     const handleGenerateFinancialSummary = useCallback(async () => {
         setIsLoading(true);
         try {
-            const pdfDoc = await PDFDocument.create();
-            const page = pdfDoc.addPage();
-            const { width, height } = page.getSize();
-            const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-            const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
+            const font = await PDFDocument.create().then(doc => doc.embedFont(StandardFonts.TimesRoman));
+            const courierFont = await PDFDocument.create().then(doc => doc.embedFont(StandardFonts.Courier));
             const fontSize = 12;
 
             const bidders = [...(tender.bidders || [])]
@@ -283,9 +280,11 @@ export default function PdfReportDialogs() {
             const l1Bidder = bidders[0];
             const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
 
-            let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
-            
-            const header = "Sl. No.  Name of Bidder                                    Quoted Amount (Rs.)  Rank ";
+            const INDENT = "     "; // 5 spaces for indentation
+
+            let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
+
+            const header = "Sl. No.  Name of Bidder                                    Quoted Amount (Rs.)  Rank";
             const separator = "-".repeat(header.length);
             const bidderRows = bidders.map((bidder, index) => {
                 const sl = `${index + 1}.`.padEnd(9);
@@ -296,10 +295,10 @@ export default function PdfReportDialogs() {
             }).join('\n');
             const finTableText = `${header}\n${separator}\n${bidderRows}`;
             
-            let finResultText = 'No valid bids to recommend.';
+            let finResultText = `${INDENT}No valid bids to recommend.`;
             if (l1Bidder) {
               const bidderName = l1Bidder.name || 'N/A';
-              finResultText = `${bidderName}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.`;
+              finResultText = `${INDENT}${bidderName}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.`;
             }
             
             const committeeMemberNames = [
@@ -314,28 +313,15 @@ export default function PdfReportDialogs() {
                 return `${index + 1}. ${name}, ${designation}`;
             }).join('\n');
             
-            const existingPdfBytes = await fetch('/Financial-Summary.pdf').then(res => res.arrayBuffer());
-            const templatePdf = await PDFDocument.load(existingPdfBytes);
-            const form = templatePdf.getForm();
-
-            const setTextField = (fieldName: string, text: string, useCourier = false) => {
-                try {
-                    const field = form.getTextField(fieldName);
-                    field.setText(text);
-                    field.updateAppearances(useCourier ? courierFont : font);
-                } catch (e) {
-                    console.warn(`Field ${fieldName} not found in PDF.`);
-                }
+            const fieldMappings = {
+                'fin_summary': finSummaryText,
+                'fin_table': finTableText,
+                'fin_result': finResultText,
+                'fin_committee': committeeMembersText,
+                'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
-            
-            setTextField('fin_summary', finSummaryText);
-            setTextField('fin_table', finTableText, true);
-            setTextField('fin_result', finResultText);
-            setTextField('fin_committee', committeeMembersText);
-            setTextField('fin_date', formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening));
 
-            form.flatten();
-            const pdfBytes = await templatePdf.save();
+            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize, courierFields: ['fin_table'] });
 
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
