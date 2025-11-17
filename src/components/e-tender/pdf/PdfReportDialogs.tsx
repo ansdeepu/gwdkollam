@@ -287,19 +287,30 @@ export default function PdfReportDialogs() {
         
         const totalHeaderWidth = slNoWidth + nameWidth + amountWidth + rankSpacer.length + rankWidth;
 
-        const header = 
+        const headerLine1 = 
             "Sl. No.".padEnd(slNoWidth) + 
             "Name of Bidder".padEnd(nameWidth) + 
-            "Quoted Amount (Rs.)".padStart(amountWidth) +
+            "Quoted Amount".padStart(amountWidth) + 
             rankSpacer +
             "Rank".padEnd(rankWidth);
+        const headerLine2 = 
+            "".padEnd(slNoWidth) + 
+            "".padEnd(nameWidth) + 
+            "(Rs.)".padStart(amountWidth) +
+            rankSpacer +
+            "".padEnd(rankWidth);
+        
+        const header = `${headerLine1}\n${headerLine2}`;
 
         const bidderRows = bidders.map((bidder, index) => {
             const sl = `${index + 1}.`.padEnd(slNoWidth);
             const name = (bidder.name || 'N/A').padEnd(nameWidth);
-            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
+            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth - 4); // Adjusted padding
             const rank = `L${index + 1}`.padEnd(rankWidth);
-            return `${sl}${name}${amount}${rankSpacer}${rank}`;
+            if (index === 1) { // Second bidder
+              return `${sl}${name}${' '.repeat(5)}${amount}${rankSpacer}${rank}`;
+            }
+            return `${sl}${name}${' '.repeat(4)}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
         const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
