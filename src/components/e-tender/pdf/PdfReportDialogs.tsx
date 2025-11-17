@@ -86,28 +86,29 @@ export default function PdfReportDialogs() {
     const fillPdfForm = useCallback(async (
         templatePath: string,
         fieldMappings: Record<string, any> = {},
-        options: { fontSize?: number, justifiedFields?: string[], courierFields?: string[], skipDefaultMappings?: boolean } = {}
+        options: { fontSize?: number; justifiedFields?: string[]; courierFields?: string[]; skipDefaultMappings?: boolean } = {}
     ): Promise<Uint8Array | null> => {
-        const { fontSize = 11.5, justifiedFields = [], courierFields = [], skipDefaultMappings = false } = options;
-
+        const { fontSize = 11.5, courierFields = [], skipDefaultMappings = false } = options;
+    
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
                 if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
                 return res.arrayBuffer();
             });
-            
+    
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             pdfDoc.registerFontkit(fontkit);
-
+    
             const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
             const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
-
+    
             const form = pdfDoc.getForm();
-            
+            const allFields = form.getFields();
+    
             const tenderFee = tender.tenderFormFee || 0;
             const gst = tenderFee * 0.18;
             const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
-            
+    
             const defaultMappings: Record<string, any> = {
                 'file_no_header': `GKT/${tender.fileNo || ''}`,
                 'e_tender_no_header': tender.eTenderNo,
@@ -123,25 +124,24 @@ export default function PdfReportDialogs() {
                 'place': 'Kollam',
                 'bid_date': formatDateSafe(tender.dateOfOpeningBid),
             };
-
+    
             const allMappings = skipDefaultMappings ? fieldMappings : { ...defaultMappings, ...fieldMappings };
-
-            for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
-                 try {
-                    const field = form.getField(fieldName);
+    
+            allFields.forEach(field => {
+                const fieldName = field.getName();
+                if (fieldName in allMappings) {
+                    const fieldValue = allMappings[fieldName];
                     if (field.constructor.name === 'PDFTextField') {
-                       const textField = field as import('pdf-lib').PDFTextField;
-                       const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
-                       
-                       textField.setText(String(fieldValue || ''));
-                       textField.updateAppearances(font);
-                       textField.setFontSize(fontSize);
+                        const textField = field as import('pdf-lib').PDFTextField;
+                        const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
+                        
+                        textField.setText(String(fieldValue || ''));
+                        textField.updateAppearances(font);
+                        textField.setFontSize(fontSize);
                     }
-                } catch (e) {
-                    // This is expected if a field doesn't exist
                 }
-            }
-
+            });
+    
             form.flatten();
             return await pdfDoc.save();
         } catch (error) {
