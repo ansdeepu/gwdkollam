@@ -156,20 +156,12 @@ export default function PdfReportDialogs() {
                                 if (fontToUse.widthOfTextAtSize(lineWithNextWord, fontSize) < (availableWidth - indent)) {
                                     currentLine = lineWithNextWord;
                                 } else {
-                                    lines.push(currentLine);
-                                    words = words.slice(i);
                                     break;
                                 }
                             }
-                            if (words.length > 0 && currentLine !== '') {
-                                lines.push(currentLine);
-                                currentLine = '';
-                            } else if (words.length > 0 && currentLine === '') {
-                               // A single long word is on the line
-                            } else { // The whole text fit on the first indented line
-                                lines.push(currentLine);
-                                words = [];
-                            }
+                            const consumedWordCount = currentLine.split(' ').length;
+                            lines.push(currentLine);
+                            words.splice(0, consumedWordCount);
                         }
 
                         currentLine = '';
@@ -273,7 +265,7 @@ export default function PdfReportDialogs() {
             let bidOpeningText = `${numBiddersInWords} bids were received and opened as per the prescribed tender procedure. All participating contractors submitted the requisite documents, and the bids were found to be admissible.`;
 
             if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
-                bidOpeningText += ` The lowest quoted rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by Sri. ${l1Bidder.name || 'N/A'}.`;
+                bidOpeningText += ` The lowest quoted rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by ${l1Bidder.name || 'N/A'}.`;
             }
             bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
             
@@ -311,7 +303,7 @@ export default function PdfReportDialogs() {
 
             let techSummaryText = `The bids received were scrutinized and all participating contractors submitted the required documents. Upon verification, all bids were found to be technically qualified and hence accepted.`;
             if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
-                 techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by Sri. ${l1Bidder.name || 'N/A'}.`;
+                 techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by ${l1Bidder.name || 'N/A'}.`;
             }
             techSummaryText += ' All technically qualified bids are recommended for financial evaluation.';
             
@@ -392,7 +384,7 @@ export default function PdfReportDialogs() {
             
             const finTableText = [header, separator, ...rows, separator].join('\n');
             
-            let finResultText = l1Bidder ? `Sri. ${l1Bidder.name || 'N/A'}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.` : 'No valid bids to recommend.';
+            let finResultText = l1Bidder ? `${l1Bidder.name || 'N/A'}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.` : 'No valid bids to recommend.';
             
             const committeeMemberNames = [
                 tender.technicalCommitteeMember1,
