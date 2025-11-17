@@ -15,6 +15,7 @@ import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { useDataStore } from '@/hooks/use-data-store';
 
 const ReportButton = ({ reportType, label, onClick, disabled, isLoading }: { reportType: string, label: string, onClick: () => void, disabled?: boolean, isLoading?: boolean }) => {
   const [isButtonLoading, setIsButtonLoading] = useState(false);
@@ -79,6 +80,7 @@ const numberToWords = (num: number): string => {
 
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
+    const { allStaffMembers } = useDataStore();
     const [isLoading, setIsLoading] = useState(false);
     
     const fillPdfForm = useCallback(async (
@@ -294,15 +296,21 @@ export default function PdfReportDialogs() {
             }
             techSummaryText += ' All technically qualified bids are recommended for financial evaluation.';
             
-            const committeeMembers = [
+            const committeeMemberNames = [
                 tender.technicalCommitteeMember1,
                 tender.technicalCommitteeMember2,
-                tender.technicalCommitteeMember3
-            ].filter(Boolean).join('\n');
+                tender.technicalCommitteeMember3,
+            ].filter(Boolean) as string[];
+
+            const committeeMembersText = committeeMemberNames.map((name, index) => {
+                const staffInfo = allStaffMembers.find(s => s.name === name);
+                const designation = staffInfo ? staffInfo.designation : 'N/A';
+                return `${index + 1}. ${name}, ${designation}`;
+            }).join('\n');
 
             const fieldMappings = {
                 'tech_summary': techSummaryText,
-                'committee_members': committeeMembers,
+                'committee_members': committeeMembersText,
                 'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
             
@@ -323,7 +331,7 @@ export default function PdfReportDialogs() {
         } finally {
             setIsLoading(false);
         }
-    }, [tender, fillPdfForm]);
+    }, [tender, fillPdfForm, allStaffMembers]);
     
 
     return (
