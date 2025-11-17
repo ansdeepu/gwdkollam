@@ -282,29 +282,13 @@ export default function PdfReportDialogs() {
 
             let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
             
-            const colWidths = { slNo: 8, name: 50, amount: 20, rank: 10 };
-            
-            const pad = (str: string = '', len: number, align: 'left' | 'right' | 'center' = 'left') => {
-                const strLen = str.length;
-                if (strLen >= len) return str.substring(0, len);
-                const spacesNeeded = len - strLen;
-                if (align === 'right') return ' '.repeat(spacesNeeded) + str;
-                if (align === 'center') { const left = Math.floor(spacesNeeded / 2); return ' '.repeat(left) + str + ' '.repeat(spacesNeeded - left); }
-                return str + ' '.repeat(spacesNeeded);
-            };
-
-            const header = `| ${pad('Sl. No.', colWidths.slNo)} | ${pad('Name of Bidder', colWidths.name)} | ${pad('Quoted Amount (Rs.)', colWidths.amount, 'right')} | ${pad('Rank', colWidths.rank, 'center')} |`;
-            const separator = `+${'-'.repeat(colWidths.slNo + 2)}+${'-'.repeat(colWidths.name + 2)}+${'-'.repeat(colWidths.amount + 2)}+${'-'.repeat(colWidths.rank + 2)}+`;
-
-            const rows: string[] = bidders.map((bidder, index) => {
-                const sl = (index + 1).toString();
+            const finTableText = bidders.map((bidder, index) => {
+                const sl = `${index + 1}.`;
                 const name = bidder.name || 'N/A';
                 const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const rank = `L${index + 1}`;
-                return `| ${pad(sl, colWidths.slNo)} | ${pad(name, colWidths.name)} | ${pad(amount, colWidths.amount, 'right')} | ${pad(rank, colWidths.rank, 'center')} |`;
-            });
-            
-            const finTableText = [separator, header, separator, ...rows.map(row => `${row}\n${separator}`).join('').trimEnd()].join('\n');
+                return `${sl} ${name} ${amount} ${rank}`;
+            }).join('\n');
             
             let finResultText = 'No valid bids to recommend.';
             if (l1Bidder) {
