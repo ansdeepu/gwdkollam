@@ -287,15 +287,17 @@ export default function PdfReportDialogs() {
         
         const slNoWidth = 4;
         const nameWidth = 45;
-        const amountSpacer = ' '.repeat(5); 
-        const amountWidth = 15;
+        const amountSpacer = ' '.repeat(3); 
+        const amountWidth = 20; // Increased width for "Quoted Amount (Rs.)"
         const rankSpacer = ' '.repeat(5); 
         const rankWidth = 5;
 
-        const headerLine1 = "Sl. No.".padEnd(slNoWidth) + "Name of Bidder".padEnd(nameWidth) + amountSpacer + "Quoted Amount".padStart(amountWidth) + rankSpacer + "Rank".padEnd(rankWidth);
-        const headerLine2 = ' '.repeat(slNoWidth + nameWidth + amountSpacer.length) + "(Rs.)".padStart(amountWidth);
-        
-        const header = `${headerLine1}\n${headerLine2}`;
+        const header = "Sl. No.".padEnd(slNoWidth) 
+                     + "Name of Bidder".padEnd(nameWidth) 
+                     + amountSpacer 
+                     + "Quoted Amount (Rs.)".padStart(amountWidth) 
+                     + rankSpacer 
+                     + "Rank".padEnd(rankWidth);
 
         const bidderRows = bidders.map((bidder, index) => {
             const sl = `${index + 1}.`.padEnd(slNoWidth);
@@ -305,7 +307,7 @@ export default function PdfReportDialogs() {
             return `${sl}${name}${amountSpacer}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
-        const totalHeaderWidth = Math.max(headerLine1.length, headerLine2.length);
+        const totalHeaderWidth = header.length;
         const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
