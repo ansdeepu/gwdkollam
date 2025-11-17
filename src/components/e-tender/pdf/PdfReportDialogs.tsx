@@ -85,7 +85,8 @@ export default function PdfReportDialogs() {
     
     const fillPdfForm = useCallback(async (
         templatePath: string,
-        fieldMappings: Record<string, any> = {}
+        fieldMappings: Record<string, any> = {},
+        fontSize: number = 10 // Default font size
     ): Promise<Uint8Array | null> => {
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -96,7 +97,7 @@ export default function PdfReportDialogs() {
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             pdfDoc.registerFontkit(fontkit);
 
-            let timesRomanFont;
+            let timesRomanFont: PDFFont;
             try {
                 const fontBytes = await fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer());
                 timesRomanFont = await pdfDoc.embedFont(fontBytes);
@@ -133,17 +134,24 @@ export default function PdfReportDialogs() {
 
             for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
                  try {
-                    const field = form.getField(fieldName);
-                    if (field.constructor.name === 'PDFTextField') {
-                        const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
-                        (field as any).setText(String(fieldValue || ''));
-                        (field as any).updateAppearances(font);
-                    }
+                    const field = form.getTextField(fieldName);
+                    const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
+                    field.setText(String(fieldValue || ''));
+                    // We don't call updateAppearances here to handle it globally later
                 } catch (e) {
                     // This is expected if a field doesn't exist, e.g., only one template has 'tech_summary'
                 }
             }
             
+            // Set font and flatten after setting all text
+            form.getFields().forEach(field => {
+                if (field.constructor.name === 'PDFTextField') {
+                    const fieldName = field.getName();
+                    const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
+                    (field as any).updateAppearances(font, { fontSize });
+                }
+            });
+
             form.flatten();
             return await pdfDoc.save();
         } catch (error) {
@@ -283,11 +291,11 @@ export default function PdfReportDialogs() {
             let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
             
             const finTableText = bidders.map((bidder, index) => {
-                const sl = `${index + 1}.`;
-                const name = bidder.name || 'N/A';
-                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const rank = `L${index + 1}`;
-                return `${sl} ${name} ${amount} ${rank}`;
+                const sl = `${index + 1}.`.padEnd(4);
+                const name = (bidder.name || 'N/A').padEnd(45);
+                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(15);
+                const rank = `L${index + 1}`.padEnd(5);
+                return `${sl}${name}${amount}  ${rank}`;
             }).join('\n');
             
             let finResultText = 'No valid bids to recommend.';
@@ -315,7 +323,8 @@ export default function PdfReportDialogs() {
                     'fin_result': finResultText,
                     'fin_committee': committeeMembersText,
                     'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
-                }
+                },
+                11 // Increased font size
             );
 
             if (!pdfBytes) throw new Error("PDF generation failed.");
