@@ -131,48 +131,10 @@ export default function PdfReportDialogs() {
                     const field = form.getTextField(fieldName);
                     const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
                     
-                    if (justifiedFields.includes(fieldName) && fieldValue) {
-                        const text = String(fieldValue);
-                        const fieldWidgets = field.acroField.getWidgets();
-                        fieldWidgets.forEach(widget => {
-                            const { width, height } = widget.getRectangle();
-                            const lines = text.split('\n');
-                            let y = height - fontSize; 
-                             
-                             widget.drawText(lines.map(line => {
-                                 let textWidth = font.widthOfTextAtSize(line, fontSize);
-                                 if(textWidth > width -10) {
-                                      // simple wrap
-                                     let words = line.split(' ');
-                                     let currentLine = '';
-                                     let resultLines = [];
-                                     for(let word of words) {
-                                         let testLine = currentLine.length > 0 ? `${currentLine} ${word}` : word;
-                                         if(font.widthOfTextAtSize(testLine, fontSize) > width -10) {
-                                             resultLines.push(currentLine);
-                                             currentLine = word;
-                                         } else {
-                                             currentLine = testLine;
-                                         }
-                                     }
-                                     resultLines.push(currentLine);
-                                     return resultLines.join('\n');
-                                 }
-                                 return line;
-                             }).join('\n'), {
-                                 x: 5,
-                                 y: y,
-                                 font,
-                                 size: fontSize,
-                                 lineHeight: fontSize + 2,
-                                 color: rgb(0,0,0),
-                             });
-                        });
-                        
-                    } else {
-                        field.setText(String(fieldValue || ''));
-                        field.updateAppearances(font, { fontSize });
-                    }
+                    field.setText(String(fieldValue || ''));
+                    field.updateAppearances(font);
+                    field.setFontSize(fontSize);
+
                 } catch (e) {
                     // This is expected if a field doesn't exist
                 }
