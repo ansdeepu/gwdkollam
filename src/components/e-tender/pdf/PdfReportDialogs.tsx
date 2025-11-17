@@ -96,7 +96,7 @@ export default function PdfReportDialogs() {
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             pdfDoc.registerFontkit(fontkit);
 
-            let timesRomanFont, courierFont;
+            let timesRomanFont;
             try {
                 const fontBytes = await fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer());
                 timesRomanFont = await pdfDoc.embedFont(fontBytes);
@@ -104,14 +104,8 @@ export default function PdfReportDialogs() {
                 console.warn("Custom Times New Roman font not found. Falling back to standard font.");
                 timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
             }
-
-            try {
-                 courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
-            } catch (fontError) {
-                 console.warn("Courier font not found. This is highly unusual. Falling back to Helvetica.");
-                 courierFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-            }
-
+            
+            const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
 
             const form = pdfDoc.getForm();
             
@@ -147,7 +141,6 @@ export default function PdfReportDialogs() {
                     }
                 } catch (e) {
                     // This is expected if a field doesn't exist, e.g., only one template has 'tech_summary'
-                    // console.warn(`Could not find or set field "${fieldName}" in PDF.`);
                 }
             }
             
@@ -289,8 +282,11 @@ export default function PdfReportDialogs() {
 
             let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
             
-            const colWidths = { slNo: 8, name: 45, amount: 20, rank: 8 };
-            const pad = (str: string, len: number, align: 'left' | 'right' | 'center' = 'left') => {
+            // Redesigned table generation
+            const colWidths = { slNo: 11, name: 50, amount: 20, rank: 10 };
+            const totalWidth = Object.values(colWidths).reduce((a, b) => a + b, 0) + (Object.keys(colWidths).length * 3) - 1;
+
+            const pad = (str: string = '', len: number, align: 'left' | 'right' | 'center' = 'left') => {
                 const strLen = str.length;
                 if (strLen >= len) return str.substring(0, len);
                 const spacesNeeded = len - strLen;
@@ -299,20 +295,24 @@ export default function PdfReportDialogs() {
                 return str + ' '.repeat(spacesNeeded);
             };
 
-            const header = 
-                `| ${pad('Sl. No.', colWidths.slNo)} | ` +
-                `${pad('Name of Bidder', colWidths.name)} | ` +
-                `${pad('Quoted Amount (Rs.)', colWidths.amount, 'right')} | ` +
-                `${pad('Rank', colWidths.rank, 'center')} |`;
+            const headerLine1 = `| ${pad('Sl. No.', colWidths.slNo)} | ${pad('Name of Bidder', colWidths.name)} | ${pad('Quoted', colWidths.amount + colWidths.rank + 3, 'center')} |`;
+            const headerLine2 = `| ${pad('Amount (Rs.)', colWidths.slNo)} | ${pad('', colWidths.name)} | ${pad('', colWidths.amount, 'right')} | ${pad('Rank', colWidths.rank, 'center')} |`;
+            
             const separator = `+${'-'.repeat(colWidths.slNo + 2)}+${'-'.repeat(colWidths.name + 2)}+${'-'.repeat(colWidths.amount + 2)}+${'-'.repeat(colWidths.rank + 2)}+`;
 
-            const rows = bidders.map((bidder, index) => {
+            const rows: string[] = [];
+            bidders.forEach((bidder, index) => {
                 const rank = `L${index + 1}`;
                 const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                return `| ${pad((index + 1).toString() + '.', colWidths.slNo)} | ${pad(bidder.name || 'N/A', colWidths.name)} | ${pad(amount, colWidths.amount, 'right')} | ${pad(rank, colWidths.rank, 'center')} |`;
+                const rowLine1 = `| ${pad((index + 1).toString() + '.', colWidths.slNo)} | ${pad(bidder.name || 'N/A', colWidths.name)} | ${pad('', colWidths.amount, 'right')} | ${pad('', colWidths.rank, 'center')} |`;
+                const rowLine2 = `| ${pad(amount, colWidths.slNo, 'right')} | ${pad('', colWidths.name)} | ${pad('', colWidths.amount, 'right')} | ${pad(rank, colWidths.rank, 'center')} |`;
+
+                rows.push(separator);
+                rows.push(rowLine1);
+                rows.push(rowLine2);
             });
             
-            const finTableText = [separator, header, separator, ...rows, separator].join('\n');
+            const finTableText = [separator, headerLine1, headerLine2, ...rows, separator].join('\n');
             
             let finResultText = l1Bidder ? `${l1Bidder.name || 'N/A'}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.` : 'No valid bids to recommend.';
             
