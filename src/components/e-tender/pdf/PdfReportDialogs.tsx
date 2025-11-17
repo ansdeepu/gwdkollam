@@ -86,7 +86,7 @@ export default function PdfReportDialogs() {
     const fillPdfForm = useCallback(async (
         templatePath: string,
         fieldMappings: Record<string, any> = {},
-        options: { fontSize?: number; justifiedFields?: string[]; courierFields?: string[]; skipDefaultMappings?: boolean } = {}
+        options: { fontSize?: number; courierFields?: string[]; skipDefaultMappings?: boolean } = {}
     ): Promise<Uint8Array | null> => {
         const { fontSize = 11.5, courierFields = [], skipDefaultMappings = false } = options;
     
@@ -109,9 +109,12 @@ export default function PdfReportDialogs() {
             const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
             const defaultMappings: Record<string, any> = {
+                // Default names for header fields, used by NIT.pdf and Tender-Form.pdf
                 'file_no_header': `GKT/${tender.fileNo || ''}`,
                 'e_tender_no_header': tender.eTenderNo,
                 'tender_date_header': formatDateSafe(tender.tenderDate),
+                
+                // Common fields used across multiple templates
                 'name_of_work': tender.nameOfWork,
                 'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
                 'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
@@ -127,21 +130,19 @@ export default function PdfReportDialogs() {
             const allMappings = skipDefaultMappings ? fieldMappings : { ...defaultMappings, ...fieldMappings };
     
             Object.keys(allMappings).forEach(fieldName => {
-              try {
-                const field = form.getField(fieldName);
                 const fieldValue = allMappings[fieldName];
-                if (field && field.constructor.name === 'PDFTextField') {
-                  const textField = field as import('pdf-lib').PDFTextField;
-                  const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
-                  
-                  textField.setText(String(fieldValue || ''));
-                  textField.updateAppearances(font);
-                  textField.setFontSize(fontSize);
+                if (fieldValue === undefined || fieldValue === null) return;
+                
+                try {
+                    const field = form.getTextField(fieldName);
+                    const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
+                    field.setText(String(fieldValue));
+                    field.updateAppearances(font);
+                    field.setFontSize(fontSize);
+                } catch (e) {
+                    // Field might not exist in this template, which is okay.
+                    // console.warn(`Could not find or set field: ${fieldName}`);
                 }
-              } catch(e) {
-                // Field might not exist in this specific template, so we can ignore the error
-                // console.warn(`Could not find or set field: ${fieldName}`, e);
-              }
             });
     
             form.flatten();
