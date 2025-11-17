@@ -139,63 +139,51 @@ export default function PdfReportDialogs() {
                         const widgets = field.acroField.getWidgets();
                         if (widgets.length === 0) continue;
                         const rect = widgets[0].getRectangle();
-                        
-                        const words = text.split(' ');
+                        const availableWidth = rect.width - 4;
+
+                        let words = text.split(' ');
                         let lines: string[] = [];
                         let currentLine = '';
-                        let isFirstLine = true;
-
-                        for (const word of words) {
-                            const currentIndent = isFirstLine ? indent : 0;
-                            const testLine = currentLine ? `${currentLine} ${word}` : word;
-                            const testLineWidth = customFont.widthOfTextAtSize(testLine, fontSize);
-
-                            if (testLineWidth < rect.width - 4 - currentIndent) {
-                                currentLine = testLine;
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            const word = words[i];
+                            const isFirstWordInLine = currentLine === '';
+                            const lineWithNextWord = isFirstWordInLine ? word : `${currentLine} ${word}`;
+                            const currentIndent = lines.length === 0 ? indent : 0;
+                            const lineWidth = customFont.widthOfTextAtSize(lineWithNextWord, fontSize);
+                        
+                            if (lineWidth < (availableWidth - currentIndent)) {
+                                currentLine = lineWithNextWord;
                             } else {
                                 lines.push(currentLine);
                                 currentLine = word;
-                                isFirstLine = false;
                             }
                         }
-                        lines.push(currentLine); // Add the last line
+                        lines.push(currentLine);
 
-                        let currentY = rect.y + rect.height - fontSize;
-                        isFirstLine = true;
-
+                        let y = rect.y + rect.height - fontSize;
+                        
                         lines.forEach((line, index) => {
+                            if (y < rect.y) return; // Stop if text overflows the box
                             const isLastLine = index === lines.length - 1;
-                            const currentIndent = isFirstLine ? indent : 0;
-                            const availableWidth = rect.width - 4 - currentIndent;
+                            const currentIndent = index === 0 ? indent : 0;
                             
-                            if (isLastLine || line.split(' ').length <= 1) {
-                                // Draw last line or single-word lines left-aligned
-                                firstPage.drawText(line, {
-                                    x: rect.x + 2 + currentIndent,
-                                    y: currentY,
-                                    font: customFont,
-                                    size: fontSize,
-                                    color: rgb(0, 0, 0),
-                                });
+                            if (isLastLine) {
+                                firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
                             } else {
                                 const wordsInLine = line.split(' ');
-                                const textWidth = customFont.widthOfTextAtSize(line, fontSize);
-                                const totalSpacing = availableWidth - textWidth;
-                                const wordSpacing = totalSpacing / (wordsInLine.length - 1);
-                                
-                                firstPage.drawText(line, {
-                                    x: rect.x + 2 + currentIndent,
-                                    y: currentY,
-                                    font: customFont,
-                                    size: fontSize,
-                                    color: rgb(0, 0, 0),
-                                    wordSpacing: wordSpacing,
-                                });
+                                if (wordsInLine.length > 1) {
+                                    const textWidth = customFont.widthOfTextAtSize(line, fontSize);
+                                    const totalSpacing = availableWidth - currentIndent - textWidth;
+                                    const wordSpacing = totalSpacing / (wordsInLine.length - 1);
+                                    firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
+                                } else {
+                                     firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
+                                }
                             }
-                            currentY -= fontSize * lineHeight;
-                            isFirstLine = false;
+                            y -= fontSize * lineHeight;
                         });
-
+                        
                         form.removeField(field);
 
                     } else if (field.constructor.name === 'PDFTextField') {
@@ -290,6 +278,52 @@ export default function PdfReportDialogs() {
             setIsLoading(false);
         }
     }, [tender, fillPdfForm]);
+
+    const handleGenerateTechnicalSummary = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const l1Bidder = (tender.bidders || []).length > 0 
+                ? (tender.bidders || []).reduce((lowest, current) => 
+                    (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest
+                  )
+                : null;
+
+            let techSummaryText = `The bids received were scrutinized and all participating contractors submitted the required documents. Upon verification, all bids were found to be technically qualified and hence accepted.`;
+            if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
+                 techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by Sri. ${l1Bidder.name || 'N/A'}.`;
+            }
+            techSummaryText += ' All technically qualified bids are recommended for financial evaluation.';
+            
+            const committeeMembers = [
+                tender.technicalCommitteeMember1,
+                tender.technicalCommitteeMember2,
+                tender.technicalCommitteeMember3
+            ].filter(Boolean).join('\n');
+
+            const fieldMappings = {
+                'tech_summary': techSummaryText,
+                'committee_members': committeeMembers,
+                'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
+            };
+            
+            const justified = {
+                'tech_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
+                 'name_of_work': { fontSize: 13, lineHeight: 1.2 },
+            };
+
+            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings, justified);
+            if (!pdfBytes) throw new Error("PDF generation failed.");
+            const fileName = `Technical_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+            download(pdfBytes, fileName, 'application/pdf');
+            toast({ title: "PDF Generated", description: "Your Technical Summary has been downloaded." });
+
+        } catch (error: any) {
+            console.error("Technical Summary Generation Error:", error);
+            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [tender, fillPdfForm]);
     
 
     return (
@@ -322,7 +356,13 @@ export default function PdfReportDialogs() {
                         isLoading={isLoading}
                         disabled={isLoading || (tender.bidders || []).length === 0}
                     />
-                    <PlaceholderReportButton label="Technical Summary" />
+                    <ReportButton
+                        reportType="technicalSummary"
+                        label="Technical Summary"
+                        onClick={handleGenerateTechnicalSummary}
+                        isLoading={isLoading}
+                        disabled={isLoading}
+                    />
                     <PlaceholderReportButton label="Financial Summary" />
                     <PlaceholderReportButton label="Selection Notice" />
                     <PlaceholderReportButton label="Work / Supply Order" />
