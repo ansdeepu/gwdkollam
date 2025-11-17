@@ -85,8 +85,7 @@ export default function PdfReportDialogs() {
     
     const fillPdfForm = useCallback(async (
         templatePath: string,
-        fieldMappings: Record<string, any> = {},
-        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number; indent?: number, font?: PDFFont, align?: 'left' | 'center' | 'right' }> = {}
+        fieldMappings: Record<string, any> = {}
     ): Promise<Uint8Array | null> => {
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -97,19 +96,24 @@ export default function PdfReportDialogs() {
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             pdfDoc.registerFontkit(fontkit);
 
-            let customFont, courierFont;
+            let timesRomanFont, courierFont;
             try {
                 const fontBytes = await fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer());
-                customFont = await pdfDoc.embedFont(fontBytes);
-                courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
+                timesRomanFont = await pdfDoc.embedFont(fontBytes);
             } catch (fontError) {
-                console.warn("Custom font not found or failed to load. Falling back to standard font.");
-                customFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-                courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
+                console.warn("Custom Times New Roman font not found. Falling back to standard font.");
+                timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
             }
 
+            try {
+                 courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
+            } catch (fontError) {
+                 console.warn("Courier font not found. This is highly unusual. Falling back to Helvetica.");
+                 courierFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            }
+
+
             const form = pdfDoc.getForm();
-            const firstPage = pdfDoc.getPages()[0];
             
             const tenderFee = tender.tenderFormFee || 0;
             const gst = tenderFee * 0.18;
@@ -136,54 +140,14 @@ export default function PdfReportDialogs() {
             for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
                  try {
                     const field = form.getField(fieldName);
-                    
-                    if (justifiedFields[fieldName]) {
-                        const { fontSize = 12, lineHeight = 1.3, indent = 0, font: fieldFont = customFont } = justifiedFields[fieldName];
-                        const text = String(fieldValue || '');
-                        const widgets = field.acroField.getWidgets();
-
-                        if (widgets.length > 0) {
-                            field.setText(''); // Clear the field first
-                            const rect = widgets[0].getRectangle();
-                            const width = rect.width;
-                            const words = text.split(' ');
-                            let currentLine = '';
-                            let y = rect.y + rect.height - fontSize; // Start from top
-                            let isFirstLine = true;
-                            
-                            for (let n = 0; n < words.length; n++) {
-                                const word = words[n];
-                                const testLine = currentLine.length > 0 ? `${currentLine} ${word}` : word;
-                                const lineWidth = fieldFont.widthOfTextAtSize(testLine, fontSize);
-
-                                const availableWidth = width - (isFirstLine ? indent : 0);
-                                
-                                if (lineWidth > availableWidth && currentLine.length > 0) {
-                                    firstPage.drawText(currentLine, {
-                                        x: rect.x + (isFirstLine ? indent : 0), y,
-                                        font: fieldFont, size: fontSize, color: rgb(0, 0, 0),
-                                    });
-                                    y -= (fontSize * lineHeight);
-                                    currentLine = word;
-                                    isFirstLine = false;
-                                } else {
-                                    currentLine = testLine;
-                                }
-                            }
-                            // Draw the last line
-                            if (currentLine) {
-                                firstPage.drawText(currentLine, {
-                                    x: rect.x + (isFirstLine ? indent : 0), y,
-                                    font: fieldFont, size: fontSize, color: rgb(0, 0, 0),
-                                });
-                            }
-                        }
-                    } else if (field.constructor.name === 'PDFTextField') {
+                    if (field.constructor.name === 'PDFTextField') {
+                        const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
                         (field as any).setText(String(fieldValue || ''));
-                        (field as any).updateAppearances(customFont);
+                        (field as any).updateAppearances(font);
                     }
                 } catch (e) {
-                    console.warn(`Could not find or set field "${fieldName}" in PDF.`, e);
+                    // This is expected if a field doesn't exist, e.g., only one template has 'tech_summary'
+                    // console.warn(`Could not find or set field "${fieldName}" in PDF.`);
                 }
             }
             
@@ -249,16 +213,9 @@ export default function PdfReportDialogs() {
             }
             bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
             
-            const fieldMappings = {
-                'bid_opening': bidOpeningText,
-            };
+            const fieldMappings = { 'bid_opening': bidOpeningText };
 
-            const justified = {
-                'name_of_work': { fontSize: 13, lineHeight: 1.2 },
-                'bid_opening': { fontSize: 13, lineHeight: 1.3, indent: 20 }
-            };
-
-            const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings, justified);
+            const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings);
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Bid_Opening_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
@@ -306,12 +263,7 @@ export default function PdfReportDialogs() {
                 'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
 
-            const justified = {
-                'tech_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
-                'name_of_work': { fontSize: 13, lineHeight: 1.2 },
-            };
-
-            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings, justified);
+            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings);
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Technical_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
@@ -376,9 +328,6 @@ export default function PdfReportDialogs() {
                 return `${index + 1}. ${name}, ${designation}`;
             }).join('\n');
             
-            const pdfDocForFont = await PDFDocument.create();
-            const courierFont = await pdfDocForFont.embedFont(StandardFonts.Courier);
-
             const pdfBytes = await fillPdfForm('/Financial-Summary.pdf',
                 {
                     'fin_summary': finSummaryText,
@@ -386,12 +335,6 @@ export default function PdfReportDialogs() {
                     'fin_result': finResultText,
                     'fin_committee': committeeMembersText,
                     'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
-                },
-                {
-                    'fin_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
-                    'fin_result': { fontSize: 13, lineHeight: 1.3, indent: 20 },
-                    'name_of_work': { fontSize: 13, lineHeight: 1.2 },
-                    'fin_table': { fontSize: 10, lineHeight: 1.2, font: courierFont }
                 }
             );
 
