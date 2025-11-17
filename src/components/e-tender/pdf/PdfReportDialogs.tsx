@@ -281,9 +281,9 @@ export default function PdfReportDialogs() {
 
         const slNoWidth = 8;
         const nameWidth = 45;
-        const amountWidth = 30; // Increased width
+        const amountWidth = 30;
         const rankWidth = 8;
-        const rankSpacer = ' '.repeat(40); // 10 tabs * 4 spaces/tab
+        const rankSpacer = ' '.repeat(20);
 
         const header = 
             "Sl. No.".padEnd(slNoWidth) + 
@@ -327,21 +327,19 @@ export default function PdfReportDialogs() {
             'fin_committee': committeeMembersText,
             'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
         };
-
+        
+        const FONT_SIZE = 12;
         const pdfDoc = await PDFDocument.load(await fetch('/Financial-Summary.pdf').then(res => res.arrayBuffer()));
         pdfDoc.registerFontkit(fontkit);
         const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
         const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
         const form = pdfDoc.getForm();
 
-        const FONT_SIZE = 13;
-
         for (const [fieldName, fieldValue] of Object.entries(fieldMappings)) {
             try {
                 const field = form.getTextField(fieldName);
-                const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
                 field.setText(String(fieldValue || ''));
-                field.updateAppearances(font);
+                field.updateAppearances(fieldName === 'fin_table' ? courierFont : timesRomanFont);
                 field.setFontSize(FONT_SIZE);
             } catch (e) {
                 console.warn(`Could not find or fill field: ${fieldName}`);
