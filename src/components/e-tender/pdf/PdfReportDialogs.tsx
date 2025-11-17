@@ -9,7 +9,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PDFFont } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
@@ -86,7 +86,7 @@ export default function PdfReportDialogs() {
     const fillPdfForm = useCallback(async (
         templatePath: string,
         fieldMappings: Record<string, any> = {},
-        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number; indent?: number }> = {}
+        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number; indent?: number, font?: PDFFont }> = {}
     ): Promise<Uint8Array | null> => {
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -141,61 +141,66 @@ export default function PdfReportDialogs() {
                         const widgets = field.acroField.getWidgets();
                         if (widgets.length === 0) continue;
                         const rect = widgets[0].getRectangle();
-                        const availableWidth = rect.width - 4;
+                        const availableWidth = rect.width - 4; // padding
+
+                        const fontToUse = justifiedFields[fieldName].font || customFont;
 
                         let words = text.split(' ');
                         let lines: string[] = [];
-                        let currentLine = '';
                         
-                        // First line with indentation
+                        let currentLine = '';
                         if (indent > 0) {
-                            currentLine = '';
                             for (let i = 0; i < words.length; i++) {
                                 const word = words[i];
                                 const lineWithNextWord = currentLine === '' ? word : `${currentLine} ${word}`;
-                                const lineWidth = customFont.widthOfTextAtSize(lineWithNextWord, fontSize);
-                                if (lineWidth < (availableWidth - indent)) {
+                                if (fontToUse.widthOfTextAtSize(lineWithNextWord, fontSize) < (availableWidth - indent)) {
                                     currentLine = lineWithNextWord;
                                 } else {
                                     lines.push(currentLine);
                                     words = words.slice(i);
-                                    currentLine = '';
                                     break;
                                 }
                             }
-                            if (currentLine) { // if the whole paragraph fits in one line
+                            if (words.length > 0 && currentLine !== '') {
+                                lines.push(currentLine);
+                                currentLine = '';
+                            } else if (words.length > 0 && currentLine === '') {
+                               // A single long word is on the line
+                            } else { // The whole text fit on the first indented line
                                 lines.push(currentLine);
                                 words = [];
                             }
                         }
-                        
+
                         currentLine = '';
                         for (const word of words) {
                             const lineWithNextWord = currentLine === '' ? word : `${currentLine} ${word}`;
-                            if (customFont.widthOfTextAtSize(lineWithNextWord, fontSize) < availableWidth) {
+                            if (fontToUse.widthOfTextAtSize(lineWithNextWord, fontSize) < availableWidth) {
                                 currentLine = lineWithNextWord;
                             } else {
                                 lines.push(currentLine);
                                 currentLine = word;
                             }
                         }
-                        lines.push(currentLine);
+                        if (currentLine) {
+                            lines.push(currentLine);
+                        }
 
                         let y = rect.y + rect.height - fontSize;
                         
                         lines.forEach((line, index) => {
-                            if (y < rect.y) return; // Stop if text overflows the box
+                            if (y < rect.y) return;
                             const isLastLine = index === lines.length - 1;
                             const currentIndent = index === 0 ? indent : 0;
                             
                             const wordsInLine = line.split(' ');
                             if (!isLastLine && wordsInLine.length > 1) {
-                                const textWidth = customFont.widthOfTextAtSize(line, fontSize);
+                                const textWidth = fontToUse.widthOfTextAtSize(line, fontSize);
                                 const totalSpacing = (availableWidth - currentIndent) - textWidth;
                                 const wordSpacing = totalSpacing / (wordsInLine.length - 1);
-                                firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
+                                firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: fontToUse, size: fontSize, color: rgb(0, 0, 0), wordSpacing });
                             } else {
-                                 firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: customFont, size: fontSize, color: rgb(0, 0, 0) });
+                                 firstPage.drawText(line, { x: rect.x + 2 + currentIndent, y, font: fontToUse, size: fontSize, color: rgb(0, 0, 0) });
                             }
                             y -= fontSize * lineHeight;
                         });
@@ -358,13 +363,37 @@ export default function PdfReportDialogs() {
 
             let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${bidders.map((_, i) => `L${i+1}`).join(', ')}.`;
             
-            let finTableText = "Sl. No.\tName of Bidder\t\t\t\tQuoted Amount (Rs.)\tRank\n";
-            finTableText += "----------------------------------------------------------------------------------------------------------------------\n";
-            bidders.forEach((bidder, index) => {
+            // Define column widths
+            const colWidths = {
+                slNo: 7,
+                name: 45,
+                amount: 20,
+                rank: 8
+            };
+            const totalWidth = Object.values(colWidths).reduce((a, b) => a + b, 0);
+
+            // Helper to pad strings
+            const pad = (str: string, len: number, align: 'left' | 'right' = 'left') => {
+                const spaces = ' '.repeat(Math.max(0, len - str.length));
+                return align === 'left' ? str + spaces : spaces + str;
+            };
+
+            // Build table header
+            const header = 
+                `| ${pad('Sl.No.', colWidths.slNo)}| ` +
+                `${pad('Name of Bidder', colWidths.name)}| ` +
+                `${pad('Quoted Amount (Rs.)', colWidths.amount, 'right')} | ` +
+                `${pad('Rank', colWidths.rank)}|`;
+            const separator = `+${'-'.repeat(colWidths.slNo + 2)}+${'-'.repeat(colWidths.name + 2)}+${'-'.repeat(colWidths.amount + 2)}+${'-'.repeat(colWidths.rank + 2)}+`;
+
+            // Build table rows
+            const rows = bidders.map((bidder, index) => {
                 const rank = `L${index + 1}`;
                 const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                finTableText += `${index + 1}.\t${bidder.name || 'N/A'}\t\t\t\t${amount}\t${rank}\n`;
+                return `| ${pad((index + 1).toString() + '.', colWidths.slNo)}| ${pad(bidder.name || 'N/A', colWidths.name)}| ${pad(amount, colWidths.amount, 'right')} | ${pad(rank, colWidths.rank)}|`;
             });
+            
+            const finTableText = [header, separator, ...rows, separator].join('\n');
             
             let finResultText = l1Bidder ? `Sri. ${l1Bidder.name || 'N/A'}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.` : 'No valid bids to recommend.';
             
@@ -380,21 +409,22 @@ export default function PdfReportDialogs() {
                 return `${index + 1}. ${name}, ${designation}`;
             }).join('\n');
 
-            const fieldMappings = {
-                'fin_summary': finSummaryText,
-                'fin_table': finTableText,
-                'fin_result': finResultText,
-                'fin_committee': committeeMembersText,
-                'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
-            };
-            
-            const justified = {
-                'fin_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
-                'fin_result': { fontSize: 13, lineHeight: 1.3, indent: 20 },
-                'name_of_work': { fontSize: 13, lineHeight: 1.2 },
-            };
+            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf',
+                {
+                    'fin_summary': finSummaryText,
+                    'fin_table': finTableText,
+                    'fin_result': finResultText,
+                    'fin_committee': committeeMembersText,
+                    'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
+                },
+                {
+                    'fin_summary': { fontSize: 13, lineHeight: 1.3, indent: 20 },
+                    'fin_result': { fontSize: 13, lineHeight: 1.3, indent: 20 },
+                    'name_of_work': { fontSize: 13, lineHeight: 1.2 },
+                    'fin_table': { fontSize: 10, lineHeight: 1.2, font: await PDFDocument.load(await fetch('/Courier.ttf').then(res => res.arrayBuffer())).then(doc => doc.embedFont(StandardFonts.Courier)) }
+                }
+            );
 
-            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, justified);
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
