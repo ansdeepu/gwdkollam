@@ -281,14 +281,15 @@ export default function PdfReportDialogs() {
 
         const slNoWidth = 8;
         const nameWidth = 45;
-        const amountWidth = 20; 
+        const amountWidth = 30; // Increased width
         const rankWidth = 8;
+        const rankSpacer = ' '.repeat(40); // 10 tabs * 4 spaces/tab
 
-        const headerLine1 = 
+        const header = 
             "Sl. No.".padEnd(slNoWidth) + 
             "Name of Bidder".padEnd(nameWidth) + 
             "Quoted Amount (Rs.)".padStart(amountWidth) + 
-            " ".repeat(4) + // Spacer
+            rankSpacer +
             "Rank".padEnd(rankWidth);
 
         const bidderRows = bidders.map((bidder, index) => {
@@ -296,10 +297,10 @@ export default function PdfReportDialogs() {
             const name = (bidder.name || 'N/A').padEnd(nameWidth);
             const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
             const rank = `L${index + 1}`.padEnd(rankWidth);
-            return `${sl}${name}${amount}    ${rank}`;
+            return `${sl}${name}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
-        const finTableText = `${headerLine1}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 4)}\n${bidderRows}`;
+        const finTableText = `${header}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + rankSpacer.length)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
         if (l1Bidder) {
@@ -327,7 +328,28 @@ export default function PdfReportDialogs() {
             'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
         };
 
-        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: 13, courierFields: ['fin_table'] });
+        const pdfDoc = await PDFDocument.load(await fetch('/Financial-Summary.pdf').then(res => res.arrayBuffer()));
+        pdfDoc.registerFontkit(fontkit);
+        const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+        const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
+        const form = pdfDoc.getForm();
+
+        const FONT_SIZE = 13;
+
+        for (const [fieldName, fieldValue] of Object.entries(fieldMappings)) {
+            try {
+                const field = form.getTextField(fieldName);
+                const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
+                field.setText(String(fieldValue || ''));
+                field.updateAppearances(font);
+                field.setFontSize(FONT_SIZE);
+            } catch (e) {
+                console.warn(`Could not find or fill field: ${fieldName}`);
+            }
+        }
+        form.flatten();
+        const pdfBytes = await pdfDoc.save();
+
 
         if (!pdfBytes) throw new Error("PDF generation failed.");
         const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
