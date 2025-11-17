@@ -86,8 +86,10 @@ export default function PdfReportDialogs() {
     const fillPdfForm = useCallback(async (
         templatePath: string,
         fieldMappings: Record<string, any> = {},
-        fontSize: number = 10 // Default font size
+        options: { fontSize?: number, justifiedFields?: string[], courierFields?: string[] } = {}
     ): Promise<Uint8Array | null> => {
+        const { fontSize = 10, justifiedFields = [], courierFields = [] } = options;
+
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
                 if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
@@ -97,15 +99,7 @@ export default function PdfReportDialogs() {
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             pdfDoc.registerFontkit(fontkit);
 
-            let timesRomanFont: PDFFont;
-            try {
-                const fontBytes = await fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer());
-                timesRomanFont = await pdfDoc.embedFont(fontBytes);
-            } catch (fontError) {
-                console.warn("Custom Times New Roman font not found. Falling back to standard font.");
-                timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-            }
-            
+            const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
             const courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
 
             const form = pdfDoc.getForm();
@@ -135,22 +129,54 @@ export default function PdfReportDialogs() {
             for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
                  try {
                     const field = form.getTextField(fieldName);
-                    const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
-                    field.setText(String(fieldValue || ''));
-                    // We don't call updateAppearances here to handle it globally later
+                    const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
+                    
+                    if (justifiedFields.includes(fieldName) && fieldValue) {
+                        const text = String(fieldValue);
+                        const fieldWidgets = field.acroField.getWidgets();
+                        fieldWidgets.forEach(widget => {
+                            const { width, height } = widget.getRectangle();
+                            const lines = text.split('\n');
+                            let y = height - fontSize; 
+                             
+                             widget.drawText(lines.map(line => {
+                                 let textWidth = font.widthOfTextAtSize(line, fontSize);
+                                 if(textWidth > width -10) {
+                                      // simple wrap
+                                     let words = line.split(' ');
+                                     let currentLine = '';
+                                     let resultLines = [];
+                                     for(let word of words) {
+                                         let testLine = currentLine.length > 0 ? `${currentLine} ${word}` : word;
+                                         if(font.widthOfTextAtSize(testLine, fontSize) > width -10) {
+                                             resultLines.push(currentLine);
+                                             currentLine = word;
+                                         } else {
+                                             currentLine = testLine;
+                                         }
+                                     }
+                                     resultLines.push(currentLine);
+                                     return resultLines.join('\n');
+                                 }
+                                 return line;
+                             }).join('\n'), {
+                                 x: 5,
+                                 y: y,
+                                 font,
+                                 size: fontSize,
+                                 lineHeight: fontSize + 2,
+                                 color: rgb(0,0,0),
+                             });
+                        });
+                        
+                    } else {
+                        field.setText(String(fieldValue || ''));
+                        field.updateAppearances(font, { fontSize });
+                    }
                 } catch (e) {
-                    // This is expected if a field doesn't exist, e.g., only one template has 'tech_summary'
+                    // This is expected if a field doesn't exist
                 }
             }
-            
-            // Set font and flatten after setting all text
-            form.getFields().forEach(field => {
-                if (field.constructor.name === 'PDFTextField') {
-                    const fieldName = field.getName();
-                    const font = fieldName === 'fin_table' ? courierFont : timesRomanFont;
-                    (field as any).updateAppearances(font, { fontSize });
-                }
-            });
 
             form.flatten();
             return await pdfDoc.save();
@@ -278,7 +304,7 @@ export default function PdfReportDialogs() {
         }
     }, [tender, fillPdfForm, allStaffMembers]);
     
-     const handleGenerateFinancialSummary = useCallback(async () => {
+    const handleGenerateFinancialSummary = useCallback(async () => {
         setIsLoading(true);
         try {
             const bidders = [...(tender.bidders || [])]
@@ -324,7 +350,7 @@ export default function PdfReportDialogs() {
                     'fin_committee': committeeMembersText,
                     'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
                 },
-                11 // Increased font size
+                { fontSize: 11, justifiedFields: ['fin_summary', 'fin_result'], courierFields: ['fin_table'] }
             );
 
             if (!pdfBytes) throw new Error("PDF generation failed.");
