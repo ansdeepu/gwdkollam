@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -86,7 +85,7 @@ export default function PdfReportDialogs() {
     const fillPdfForm = useCallback(async (
         templatePath: string,
         fieldMappings: Record<string, any> = {},
-        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number; indent?: number, font?: PDFFont }> = {}
+        justifiedFields: Record<string, { fontSize?: number; lineHeight?: number; indent?: number, font?: PDFFont, align?: 'left' | 'center' | 'right' }> = {}
     ): Promise<Uint8Array | null> => {
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -97,19 +96,19 @@ export default function PdfReportDialogs() {
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             pdfDoc.registerFontkit(fontkit);
 
-            let customFont;
+            let customFont, courierFont;
             try {
                 const fontBytes = await fetch('/Times-New-Roman.ttf').then(res => res.arrayBuffer());
                 customFont = await pdfDoc.embedFont(fontBytes);
+                courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
             } catch (fontError) {
                 console.warn("Custom font not found or failed to load. Falling back to standard font.");
                 customFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+                courierFont = await pdfDoc.embedFont(StandardFonts.Courier);
             }
 
             const form = pdfDoc.getForm();
-            const pages = pdfDoc.getPages();
-            const firstPage = pages[0];
-
+            
             const tenderFee = tender.tenderFormFee || 0;
             const gst = tenderFee * 0.18;
             const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
@@ -135,28 +134,50 @@ export default function PdfReportDialogs() {
             for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
                  try {
                     const field = form.getField(fieldName);
-                    const fontToUseForField = justifiedFields[fieldName]?.font || customFont;
                     
                     if (justifiedFields[fieldName]) {
-                        const { fontSize = 12, lineHeight = 1.3, indent = 0 } = justifiedFields[fieldName];
+                        const { fontSize = 12, lineHeight = 1.3, indent = 0, font: fieldFont = customFont } = justifiedFields[fieldName];
                         const text = String(fieldValue || '');
                         const widgets = field.acroField.getWidgets();
+
                         if (widgets.length > 0) {
                             const rect = widgets[0].getRectangle();
-                            field.acroField.deleteFrom(widgets[0].getRef()); // Remove widget but not field data
-                            firstPage.drawText(text, {
-                                x: rect.x + 2,
-                                y: rect.y + 2,
-                                font: fontToUseForField,
-                                size: fontSize,
-                                color: rgb(0,0,0),
-                                lineHeight: fontSize * lineHeight,
-                                ...(fieldName === 'fin_table' && { font: fontToUseForField }),
-                            });
+                            const width = rect.width;
+                            const words = text.split(' ');
+                            let currentLine = '';
+                            let y = rect.y + rect.height - fontSize; // Start from top
+                            let isFirstLine = true;
+                            
+                            for (let n = 0; n < words.length; n++) {
+                                const word = words[n];
+                                const testLine = currentLine.length > 0 ? `${currentLine} ${word}` : word;
+                                const lineWidth = fieldFont.widthOfTextAtSize(testLine, fontSize);
+
+                                const availableWidth = width - (isFirstLine ? indent : 0);
+                                
+                                if (lineWidth > availableWidth && currentLine.length > 0) {
+                                    firstPage.drawText(currentLine, {
+                                        x: rect.x + (isFirstLine ? indent : 0), y,
+                                        font: fieldFont, size: fontSize, color: rgb(0, 0, 0),
+                                    });
+                                    y -= (fontSize * lineHeight);
+                                    currentLine = word;
+                                    isFirstLine = false;
+                                } else {
+                                    currentLine = testLine;
+                                }
+                            }
+                            // Draw the last line
+                            if (currentLine) {
+                                firstPage.drawText(currentLine, {
+                                    x: rect.x + (isFirstLine ? indent : 0), y,
+                                    font: fieldFont, size: fontSize, color: rgb(0, 0, 0),
+                                });
+                            }
                         }
                     } else if (field.constructor.name === 'PDFTextField') {
                         (field as any).setText(String(fieldValue || ''));
-                        (field as any).updateAppearances(fontToUseForField);
+                        (field as any).updateAppearances(customFont);
                     }
                 } catch (e) {
                     console.warn(`Could not find or set field "${fieldName}" in PDF.`, e);
@@ -262,7 +283,7 @@ export default function PdfReportDialogs() {
                 techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by ${l1Bidder.name || 'N/A'}.`;
             }
             techSummaryText += ' All technically qualified bids are recommended for financial evaluation.';
-
+            
             const committeeMemberNames = [
                 tender.technicalCommitteeMember1,
                 tender.technicalCommitteeMember2,
@@ -313,16 +334,12 @@ export default function PdfReportDialogs() {
             let finSummaryText = `The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${bidders.map((_, i) => `L${i+1}`).join(', ')}.`;
             
             const colWidths = { slNo: 7, name: 45, amount: 20, rank: 8 };
-
             const pad = (str: string, len: number, align: 'left' | 'right' | 'center' = 'left') => {
-                const spacesNeeded = len - str.length;
-                if (spacesNeeded <= 0) return str;
+                const strLen = str.length;
+                if (strLen >= len) return str;
+                const spacesNeeded = len - strLen;
                 if (align === 'right') return ' '.repeat(spacesNeeded) + str;
-                if (align === 'center') {
-                    const left = Math.floor(spacesNeeded / 2);
-                    const right = spacesNeeded - left;
-                    return ' '.repeat(left) + str + ' '.repeat(right);
-                }
+                if (align === 'center') { const left = Math.floor(spacesNeeded / 2); return ' '.repeat(left) + str + ' '.repeat(spacesNeeded - left); }
                 return str + ' '.repeat(spacesNeeded);
             };
 
