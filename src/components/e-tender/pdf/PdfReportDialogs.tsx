@@ -88,7 +88,7 @@ export default function PdfReportDialogs() {
         fieldMappings: Record<string, any> = {},
         options: { fontSize?: number, justifiedFields?: string[], courierFields?: string[] } = {}
     ): Promise<Uint8Array | null> => {
-        const { fontSize = 11, justifiedFields = [], courierFields = [] } = options;
+        const { fontSize = 12, justifiedFields = [], courierFields = [] } = options;
 
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -132,9 +132,8 @@ export default function PdfReportDialogs() {
                     const font = courierFields.includes(fieldName) ? courierFont : timesRomanFont;
                     
                     field.setText(String(fieldValue || ''));
-                    field.setFontSize(fontSize);
                     field.updateAppearances(font);
-
+                    field.setFontSize(fontSize);
 
                 } catch (e) {
                     // This is expected if a field doesn't exist
@@ -282,17 +281,12 @@ export default function PdfReportDialogs() {
 
         const slNoWidth = 8;
         const nameWidth = 45;
-        const amountWidth = 25;
+        const amountWidth = 20;
         const rankWidth = 8;
-
-        const header = 
-            "Sl. No.".padEnd(slNoWidth) + 
-            "Name of Bidder".padEnd(nameWidth) + 
-            "Quoted Amount (Rs.)".padStart(amountWidth) + 
-            " ".repeat(2) +
-            "Rank".padEnd(rankWidth);
         
-        const separator = "-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 2);
+        const headerLine1 = "Sl. No.".padEnd(slNoWidth) + "Name of Bidder".padEnd(nameWidth) + "Quoted Amount ".padStart(amountWidth) + " ".repeat(2) + "Rank".padEnd(rankWidth);
+        const headerLine2 = " ".repeat(slNoWidth) + " ".repeat(nameWidth) + "(Rs.)".padStart(amountWidth) + " ".repeat(2 + rankWidth);
+        const header = `${headerLine1}\n${headerLine2}`;
 
         const bidderRows = bidders.map((bidder, index) => {
             const sl = `${index + 1}.`.padEnd(slNoWidth);
@@ -302,7 +296,7 @@ export default function PdfReportDialogs() {
             return `${sl}${name}${amount}  ${rank}`;
         }).join('\n');
 
-        const finTableText = `${header}\n${separator}\n${bidderRows}`;
+        const finTableText = `${header}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
         if (l1Bidder) {
@@ -330,7 +324,7 @@ export default function PdfReportDialogs() {
             'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
         };
 
-        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: 11, courierFields: ['fin_table'] });
+        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: 12, courierFields: ['fin_table'] });
 
         if (!pdfBytes) throw new Error("PDF generation failed.");
         const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
