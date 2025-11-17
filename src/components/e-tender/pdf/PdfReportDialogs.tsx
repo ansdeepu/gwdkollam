@@ -86,9 +86,9 @@ export default function PdfReportDialogs() {
     const fillPdfForm = useCallback(async (
         templatePath: string,
         fieldMappings: Record<string, any> = {},
-        options: { fontSize?: number, justifiedFields?: string[], courierFields?: string[] } = {}
+        options: { fontSize?: number, justifiedFields?: string[], courierFields?: string[], skipDefaultMappings?: boolean } = {}
     ): Promise<Uint8Array | null> => {
-        const { fontSize = 11.5, justifiedFields = [], courierFields = [] } = options;
+        const { fontSize = 11.5, justifiedFields = [], courierFields = [], skipDefaultMappings = false } = options;
 
         try {
             const existingPdfBytes = await fetch(templatePath).then(res => {
@@ -124,7 +124,7 @@ export default function PdfReportDialogs() {
                 'bid_date': formatDateSafe(tender.dateOfOpeningBid),
             };
 
-            const allMappings = { ...defaultMappings, ...fieldMappings };
+            const allMappings = skipDefaultMappings ? fieldMappings : { ...defaultMappings, ...fieldMappings };
 
             for (const [fieldName, fieldValue] of Object.entries(allMappings)) {
                  try {
@@ -250,13 +250,13 @@ export default function PdfReportDialogs() {
                 'tech_file_no': `GKT/${tender.fileNo || ''}`,
                 'tech_e_tender_no': tender.eTenderNo,
                 'tech_dated': formatDateSafe(tender.tenderDate),
-                'name_of_work': tender.nameOfWork,
+                'tech_name_of_work': tender.nameOfWork,
                 'tech_summary': techSummaryText,
                 'committee_members': committeeMembersText,
                 'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
 
-            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings);
+            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings, { skipDefaultMappings: true });
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Technical_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
@@ -285,18 +285,12 @@ export default function PdfReportDialogs() {
         
         const slNoWidth = 4;
         const nameWidth = 45;
-        const amountSpacer = ' '.repeat(15);
+        const amountSpacer = ' '.repeat(3); 
         const amountWidth = 15;
-        const rankSpacer = ' '.repeat(5);
+        const rankSpacer = ' '.repeat(5); 
         const rankWidth = 5;
 
-        const headerLine1 = 
-            "Sl. No.".padEnd(slNoWidth) + 
-            "Name of Bidder".padEnd(nameWidth) +
-            amountSpacer + 
-            "Quoted Amount".padStart(amountWidth) +
-            rankSpacer +
-            "Rank".padEnd(rankWidth);
+        const headerLine1 = "Sl. No.".padEnd(slNoWidth) + "Name of Bidder".padEnd(nameWidth) + amountSpacer + "Quoted Amount".padStart(amountWidth) + rankSpacer + "Rank".padEnd(rankWidth);
         const headerLine2 = ' '.repeat(slNoWidth + nameWidth + amountSpacer.length) + "(Rs.)".padStart(amountWidth);
         
         const header = `${headerLine1}\n${headerLine2}`;
@@ -334,7 +328,7 @@ export default function PdfReportDialogs() {
             'fin_file_no': `GKT/${tender.fileNo || ''}`,
             'fin_e_tender_no': tender.eTenderNo,
             'fin_dated': formatDateSafe(tender.tenderDate),
-            'name_of_work': tender.nameOfWork,
+            'fin_name_of_work': tender.nameOfWork,
             'fin_summary': finSummaryText,
             'fin_table': finTableText,
             'fin_result': finResultText,
