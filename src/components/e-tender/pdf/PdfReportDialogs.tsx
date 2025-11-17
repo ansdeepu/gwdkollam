@@ -247,6 +247,10 @@ export default function PdfReportDialogs() {
 
 
             const fieldMappings = {
+                'file_no': `GKT/${tender.fileNo || ''}`,
+                'e_tender_no': tender.eTenderNo,
+                'dated': formatDateSafe(tender.tenderDate),
+                'name_of_work': tender.nameOfWork,
                 'tech_summary': techSummaryText,
                 'committee_members': committeeMembersText,
                 'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
@@ -290,27 +294,18 @@ export default function PdfReportDialogs() {
         const headerLine1 = 
             "Sl. No.".padEnd(slNoWidth) + 
             "Name of Bidder".padEnd(nameWidth) + 
-            "Quoted Amount".padStart(amountWidth) + 
+            "Quoted Amount (Rs.)".padStart(amountWidth) + 
             rankSpacer +
             "Rank".padEnd(rankWidth);
-        const headerLine2 = 
-            "".padEnd(slNoWidth) + 
-            "".padEnd(nameWidth) + 
-            "(Rs.)".padStart(amountWidth) +
-            rankSpacer +
-            "".padEnd(rankWidth);
         
-        const header = `${headerLine1}\n${headerLine2}`;
+        const header = `${headerLine1}`;
 
         const bidderRows = bidders.map((bidder, index) => {
             const sl = `${index + 1}.`.padEnd(slNoWidth);
             const name = (bidder.name || 'N/A').padEnd(nameWidth);
-            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth - 4); // Adjusted padding
+            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth - 5);
             const rank = `L${index + 1}`.padEnd(rankWidth);
-            if (index === 1) { // Second bidder
-              return `${sl}${name}${' '.repeat(5)}${amount}${rankSpacer}${rank}`;
-            }
-            return `${sl}${name}${' '.repeat(4)}${amount}${rankSpacer}${rank}`;
+            return `${sl}${name}${amount}${rankSpacer}${rank}`;
         }).join('\n');
         
         const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
@@ -334,6 +329,10 @@ export default function PdfReportDialogs() {
         }).join('\n');
         
         const fieldMappings = {
+            'file_no': `GKT/${tender.fileNo || ''}`,
+            'e_tender_no': tender.eTenderNo,
+            'dated': formatDateSafe(tender.tenderDate),
+            'name_of_work': tender.nameOfWork,
             'fin_summary': finSummaryText,
             'fin_table': finTableText,
             'fin_result': finResultText,
