@@ -281,12 +281,15 @@ export default function PdfReportDialogs() {
 
         const slNoWidth = 8;
         const nameWidth = 45;
-        const amountWidth = 20;
-        const rankWidth = 8;
-        
-        const headerLine1 = "Sl. No.".padEnd(slNoWidth) + "Name of Bidder".padEnd(nameWidth) + "Quoted Amount ".padStart(amountWidth) + " ".repeat(2) + "Rank".padEnd(rankWidth);
-        const headerLine2 = " ".repeat(slNoWidth) + " ".repeat(nameWidth) + "(Rs.)".padStart(amountWidth) + " ".repeat(2 + rankWidth);
-        const header = `${headerLine1}\n${headerLine2}`;
+        const amountWidth = 20; // Width for amount column
+        const rankWidth = 8;  // Width for rank column
+
+        const headerLine = 
+            "Sl. No.".padEnd(slNoWidth) + 
+            "Name of Bidder".padEnd(nameWidth) + 
+            "Quoted Amount (Rs.)".padStart(amountWidth) +
+            "  " + // Tab-like space
+            "Rank".padEnd(rankWidth);
 
         const bidderRows = bidders.map((bidder, index) => {
             const sl = `${index + 1}.`.padEnd(slNoWidth);
@@ -296,7 +299,7 @@ export default function PdfReportDialogs() {
             return `${sl}${name}${amount}  ${rank}`;
         }).join('\n');
 
-        const finTableText = `${header}\n${bidderRows}`;
+        const finTableText = `${headerLine}\n${"-".repeat(slNoWidth + nameWidth + amountWidth + rankWidth + 2)}\n${bidderRows}`;
         
         let finResultText = `${INDENT}No valid bids to recommend.`;
         if (l1Bidder) {
@@ -324,7 +327,7 @@ export default function PdfReportDialogs() {
             'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
         };
 
-        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: 12, courierFields: ['fin_table'] });
+        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: 11.5, courierFields: ['fin_table'] });
 
         if (!pdfBytes) throw new Error("PDF generation failed.");
         const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
