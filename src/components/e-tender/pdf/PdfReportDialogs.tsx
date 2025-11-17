@@ -284,14 +284,14 @@ export default function PdfReportDialogs() {
 
             let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
 
-            const header = "Sl. No.  Name of Bidder                                    Quoted Amount (Rs.)  Rank";
+            const header = "Sl. No.    Name of Bidder                                    Quoted Amount (Rs.)    Rank";
             const separator = "-".repeat(header.length);
             const bidderRows = bidders.map((bidder, index) => {
-                const sl = `${index + 1}.`.padEnd(9);
+                const sl = `${index + 1}.`.padEnd(11);
                 const name = (bidder.name || 'N/A').padEnd(50);
-                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(20);
-                const rank = `L${index + 1}`.padEnd(5);
-                return `${sl}${name}${amount}  ${rank}`;
+                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(23);
+                const rank = `L${index + 1}`.padStart(8);
+                return `${sl}${name}${amount}${rank}`;
             }).join('\n');
             const finTableText = `${header}\n${separator}\n${bidderRows}`;
             
@@ -321,7 +321,7 @@ export default function PdfReportDialogs() {
                 'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
 
-            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize, courierFields: ['fin_table'] });
+            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings, { fontSize: fontSize + 1, courierFields: ['fin_table'] });
 
             if (!pdfBytes) throw new Error("PDF generation failed.");
             const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
