@@ -1,0 +1,50 @@
+// src/components/e-tender/pdf/generators/bidOpeningSummaryGenerator.ts
+import { PDFDocument, PDFTextField } from 'pdf-lib';
+import type { E_tender } from '@/hooks/useE_tenders';
+import { formatDateSafe } from '../../utils';
+import { numberToWords } from './utils';
+
+export async function generateBidOpeningSummary(tender: E_tender): Promise<Uint8Array> {
+    const templatePath = '/Bid-Opening-Summary.pdf';
+    const existingPdfBytes = await fetch(templatePath).then(res => {
+        if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
+        return res.arrayBuffer();
+    });
+
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    const form = pdfDoc.getForm();
+
+    const bidders = tender.bidders || [];
+    const numBidders = bidders.length;
+    const numBiddersInWords = numberToWords(numBidders);
+    
+    const l1Bidder = bidders.length > 0 ? bidders.reduce((lowest, current) => (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest) : null;
+
+    let bidOpeningText = `     ${numBiddersInWords} bids were received and opened as per the prescribed tender procedure. All participating contractors submitted the requisite documents, and the bids were found to be admissible.`;
+    if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
+        bidOpeningText += ` The lowest quoted rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by ${l1Bidder.name || 'N/A'}.`;
+    }
+    bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
+    
+    const fieldMappings: Record<string, any> = {
+        'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no_header': tender.eTenderNo,
+        'tender_date_header': formatDateSafe(tender.tenderDate),
+        'name_of_work': tender.nameOfWork,
+        'bid_date': formatDateSafe(tender.dateOfOpeningBid),
+        'bid_opening': bidOpeningText,
+    };
+
+    const allFields = form.getFields();
+    allFields.forEach(field => {
+        const fieldName = field.getName();
+        if (fieldName in fieldMappings) {
+            const textField = form.getTextField(fieldName);
+            textField.setText(String(fieldMappings[fieldName] || ''));
+            textField.defaultUpdateAppearances();
+        }
+    });
+
+    form.flatten();
+    return await pdfDoc.save();
+}
