@@ -74,7 +74,7 @@ export default function SelectionNoticePrintPage() {
             const additionalPerformanceGuaranteeStr = additionalPerformanceGuarantee.toLocaleString('en-IN');
 
             return (
-                 <p className="leading-normal text-justify indent-8">
+                 <p className="leading-relaxed text-justify indent-8">
                     മേൽ സൂചന പ്രകാരം <span>{workName}</span> എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                     സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                     മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -87,7 +87,7 @@ export default function SelectionNoticePrintPage() {
             );
         }
         return (
-            <p className="leading-normal text-justify indent-8">
+            <p className="leading-relaxed text-justify indent-8">
                 മേൽ സൂചന പ്രകാരം <span>{workName}</span> എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -138,13 +138,13 @@ export default function SelectionNoticePrintPage() {
                 </div>
 
                 <div className="space-y-2 mt-4">
-                    <p className="flex text-justify">
+                    <p className="flex text-justify leading-relaxed">
                         <span className="w-20 shrink-0">വിഷയം:</span>
                         <span>
                             {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
                         </span>
                     </p>
-                    <p className="flex">
+                    <p className="flex leading-relaxed">
                         <span className="w-20 shrink-0">സൂചന:</span>
                         <span>ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
                     </p>
