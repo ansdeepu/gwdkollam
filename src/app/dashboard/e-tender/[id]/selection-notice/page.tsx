@@ -61,7 +61,7 @@ export default function SelectionNoticePrintPage() {
             const apgPercentageStr = apgPercentage.toFixed(2);
 
             return (
-                 <p className="text-sm leading-relaxed text-justify indent-8">
+                 <p className="text-sm leading-normal text-justify indent-8">
                     മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                     സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                     മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -74,7 +74,7 @@ export default function SelectionNoticePrintPage() {
             );
         }
         return (
-            <p className="text-sm leading-relaxed text-justify indent-8">
+            <p className="text-sm leading-normal text-justify indent-8">
                 മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -89,14 +89,14 @@ export default function SelectionNoticePrintPage() {
     return (
         <div className="bg-white text-black p-2">
             <div 
-                className="max-w-4xl mx-auto border-2 border-black p-6 space-y-4 min-h-[29cm]"
+                className="max-w-4xl mx-auto border-2 border-black px-12 py-4 space-y-4"
                 style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}
             >
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
                 
-                <div className="text-sm mt-4">
+                <div className="text-sm">
                     <div className="flex justify-between">
                         <div>
                             <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
@@ -113,12 +113,12 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-4">
                     <p className="text-sm">പ്രേഷകൻ</p>
                     <p className="text-sm ml-8">ജില്ലാ ആഫീസർ</p>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-6">
                     <p className="text-sm">സ്വീകർത്താവ്</p>
                     <div className="text-sm ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
@@ -126,11 +126,11 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
                 
-                <div className="mt-6">
+                <div className="mt-4">
                     <p className="text-sm">സർ,</p>
                 </div>
 
-                <div className="text-sm space-y-2 mt-4">
+                <div className="text-sm space-y-2">
                     <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം :</span>
                         <span className="flex-1">
@@ -143,11 +143,11 @@ export default function SelectionNoticePrintPage() {
                     </p>
                 </div>
                 
-                <div className="mt-6">
+                <div className="mt-4">
                     <MainContent />
                 </div>
                 
-                <div className="text-right mt-16">
+                <div className="text-right mt-8">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <br /><br /><br />
                     <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
