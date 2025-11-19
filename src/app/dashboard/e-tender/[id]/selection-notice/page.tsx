@@ -92,13 +92,13 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black min-h-screen font-serif">
-          <div className="max-w-4xl mx-auto p-12 space-y-4">
+        <div className="bg-white text-black">
+          <div className="max-w-4xl mx-auto p-10 space-y-4 font-serif">
               <div className="text-center">
                   <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
               </div>
               
-              <div className="text-sm flex justify-between pt-4">
+              <div className="text-sm flex justify-between pt-2">
                   <div>
                       <p>നമ്പർ: ജി.കെ.റ്റി / <span className="font-mono">{tender.fileNo || '__________'}</span></p>
                       <p>ടെണ്ടർ നമ്പർ : <span className="font-mono">{tender.eTenderNo || '__________'}</span></p>
@@ -112,12 +112,12 @@ export default function SelectionNoticePrintPage() {
                   </div>
               </div>
 
-              <div className="pt-8">
+              <div className="pt-6">
                   <p>പ്രേഷകൻ</p>
                   <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
 
-              <div className="pt-4">
+              <div className="pt-2">
                   <p>സ്വീകർത്താവ്</p>
                   <div className="ml-8">
                       <p>{l1Bidder?.name || '____________________'}</p>
@@ -125,30 +125,30 @@ export default function SelectionNoticePrintPage() {
                   </div>
               </div>
               
-              <div className="pt-4">
+              <div className="pt-2">
                   <p>സർ,</p>
               </div>
 
-              <div className="space-y-2 pt-4">
-                  <p className="flex text-justify">
+              <div className="space-y-2 pt-2">
+                  <p className="flex text-justify leading-relaxed">
                       <span className="w-20 shrink-0">വിഷയം:</span>
                       <span>
                           {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
                       </span>
                   </p>
-                  <p className="flex">
+                  <p className="flex leading-relaxed">
                       <span className="w-20 shrink-0">സൂചന:</span>
                       <span>ഈ ഓഫീസിലെ <span className="font-mono">{formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono">{tender.eTenderNo || '__________'}</span></span>
                   </p>
               </div>
               
-              <div className="pt-4">
+              <div className="pt-2">
                   <MainContent />
               </div>
               
-              <div className="pt-16 text-right">
+              <div className="pt-10 text-right">
                   <p>വിശ്വസ്തതയോടെ</p>
-                  <div className="h-16" />
+                  <div className="h-12" />
                   <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
           </div>
