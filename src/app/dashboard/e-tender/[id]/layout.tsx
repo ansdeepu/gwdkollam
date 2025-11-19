@@ -7,11 +7,13 @@ import { useE_tenders, type E_tender } from "@/hooks/useE_tenders";
 import { TenderDataProvider } from "@/components/e-tender/TenderDataContext";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useDataStore } from "@/hooks/use-data-store";
 
 export default function TenderLayout({ children }: { children: ReactNode }) {
     const params = useParams();
     const { id } = params;
     const { getTender, isLoading } = useE_tenders();
+    const { allStaffMembers, allRateDescriptions } = useDataStore(); // Ensure data store is loaded
     const [tender, setTender] = useState<E_tender | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
 

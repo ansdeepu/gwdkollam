@@ -81,7 +81,7 @@ export default function TenderPage() {
             };
             fetchTender();
         }
-    }, [id, getTender, setHeader, router, toast]);
+    }, [id, getTender, setHeader, router]);
 
     if (isLoading || !tender) {
         return (
@@ -95,7 +95,7 @@ export default function TenderPage() {
     return (
         <TenderDataProvider initialTender={tender}>
             <div className="space-y-6">
-                <div className="flex justify-between">
+                <div className="flex justify-between no-print">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back
