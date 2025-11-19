@@ -74,9 +74,11 @@ export default function WorkOrderPrintPage() {
                   </div>
               </div>
               
-              <div className="flex justify-between pt-4">
+              <div className="pt-4">
                   <p>പ്രേഷകൻ</p>
-                  <p className="text-right">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+                  <div className="text-right">
+                      <p>{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+                  </div>
               </div>
 
               <div>

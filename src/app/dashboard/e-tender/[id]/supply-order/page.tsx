@@ -63,9 +63,11 @@ export default function SupplyOrderPrintPage() {
                         <p>Date: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                     </div>
                 </div>
-                <div className="flex justify-between items-start pt-6">
-                    <span>From</span>
-                    <span className="text-right">District Officer</span>
+                 <div className="pt-6">
+                    <p>From</p>
+                    <div className="text-right">
+                        <p>District Officer</p>
+                    </div>
                 </div>
                 <div className="pt-2">
                     <p>To</p>
