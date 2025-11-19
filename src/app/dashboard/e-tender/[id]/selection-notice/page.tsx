@@ -89,7 +89,7 @@ export default function SelectionNoticePrintPage() {
     return (
         <div className="bg-white text-black p-2">
             <div 
-                className="max-w-4xl mx-auto border-2 border-black px-12 py-4 space-y-4"
+                className="max-w-4xl mx-auto border-2 border-black px-12 py-6 space-y-4"
                  style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}
             >
                 <div className="text-center">
@@ -134,7 +134,7 @@ export default function SelectionNoticePrintPage() {
                     <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം :</span>
                         <span className="flex-1">
-                            ഭൂജല വകുപ്പ്, കൊല്ലം - {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്
+                            {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്
                         </span>
                     </p>
                     <p className="flex">
