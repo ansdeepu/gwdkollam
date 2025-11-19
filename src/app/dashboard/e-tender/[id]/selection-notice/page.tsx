@@ -11,6 +11,8 @@ export default function SelectionNoticePrintPage() {
     useEffect(() => {
         if (tender && tender.eTenderNo) {
             document.title = `Selection_Notice_${tender.eTenderNo.replace(/\//g, '_')}`;
+            // Automatically trigger the print dialog
+            window.print();
         } else {
             document.title = 'Selection_Notice';
         }
@@ -47,7 +49,7 @@ export default function SelectionNoticePrintPage() {
     const MainContent = () => {
         if (isApgRequired) {
             return (
-                 <p className="text-sm leading-relaxed text-justify">
+                 <p className="text-sm leading-relaxed text-justify indent-8">
                     മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                     സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                     മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -60,7 +62,7 @@ export default function SelectionNoticePrintPage() {
             );
         }
         return (
-            <p className="text-sm leading-relaxed text-justify">
+            <p className="text-sm leading-relaxed text-justify indent-8">
                 മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -74,7 +76,7 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="bg-white text-black p-8" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black p-16 space-y-12 min-h-[29.7cm]">
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-12 min-h-[27cm]">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
@@ -96,11 +98,13 @@ export default function SelectionNoticePrintPage() {
 
                 <div className="space-y-4">
                     <p className="text-sm">പ്രേഷകൻ</p>
+                    <div className="h-2"></div>
                     <p className="text-sm ml-8">ജില്ലാ ആഫീസർ</p>
                 </div>
 
                 <div className="space-y-4">
                     <p className="text-sm">സ്വീകർത്താവ്</p>
+                    <div className="h-2"></div>
                     <div className="text-sm ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
                         <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
@@ -112,14 +116,14 @@ export default function SelectionNoticePrintPage() {
                 </div>
 
                 <div className="text-sm space-y-2">
-                    <p className="flex">
-                        <span className="w-20">വിഷയം :</span>
+                    <p className="flex text-justify">
+                        <span className="w-20 shrink-0">വിഷയം :</span>
                         <span className="flex-1">
                              ഭൂജല വകുപ്പ്, കൊല്ലം - {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്
                         </span>
                     </p>
                     <p className="flex">
-                        <span className="w-20">സൂചന :</span>
+                        <span className="w-20 shrink-0">സൂചന :</span>
                         <span>ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
                     </p>
                 </div>
