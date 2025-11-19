@@ -78,24 +78,26 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-8" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black p-16 space-y-6 min-h-[29.7cm]">
+        <div className="bg-white text-black p-2" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-6">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
                 
-                <div className="text-sm flex justify-between">
-                    <div className="space-y-1">
-                        <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
-                        <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
-                    </div>
-                    <div className="text-right">
-                        <p>ജില്ലാ ആഫീസറുടെ കാര്യാലയം,</p>
-                        <p>ഭൂജലവകുപ്പ്, ഹൈസ്കൂൾ ജംഗ്ഷൻ</p>
-                        <p>തേവള്ളി പി. ഓ, കൊല്ലം -691009</p>
-                        <p>ഫോൺനമ്പർ. 0474 - 2790313</p>
-                        <p>ഇമെയിൽ: gwdklm@gmail.com</p>
-                        <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
+                <div className="text-sm">
+                    <div className="flex justify-between">
+                        <div>
+                            <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
+                            <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
+                        </div>
+                        <div className="text-right">
+                            <p>ജില്ലാ ആഫീസറുടെ കാര്യാലയം,</p>
+                            <p>ഭൂജലവകുപ്പ്, ഹൈസ്കൂൾ ജംഗ്ഷൻ</p>
+                            <p>തേവള്ളി പി. ഓ, കൊല്ലം -691009</p>
+                            <p>ഫോൺനമ്പർ. 0474 - 2790313</p>
+                            <p>ഇമെയിൽ: gwdklm@gmail.com</p>
+                            <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
+                        </div>
                     </div>
                 </div>
 
@@ -131,7 +133,7 @@ export default function SelectionNoticePrintPage() {
                 
                 <MainContent />
                 
-                <div className="mt-16 text-right">
+                <div className="mt-8 text-right">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <br /><br /><br />
                     <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
