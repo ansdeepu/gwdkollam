@@ -89,7 +89,7 @@ export default function SelectionNoticePrintPage() {
     return (
         <div className="bg-white text-black p-8" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
             <div 
-                className="max-w-4xl mx-auto border-2 border-black px-12 py-4 space-y-4"
+                className="max-w-4xl mx-auto border-2 border-black px-12 py-8 space-y-6"
             >
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
@@ -125,7 +125,7 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
                 
-                <div className="mt-4">
+                <div>
                     <p>സർ,</p>
                 </div>
 
@@ -133,7 +133,7 @@ export default function SelectionNoticePrintPage() {
                     <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം :</span>
                         <span className="flex-1">
-                            {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്
+                            {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്.
                         </span>
                     </p>
                     <p className="flex">
@@ -142,13 +142,13 @@ export default function SelectionNoticePrintPage() {
                     </p>
                 </div>
                 
-                <div className="mt-4">
+                <div>
                     <MainContent />
                 </div>
                 
-                <div className="text-right mt-8">
+                <div className="text-right">
                     <p>വിശ്വസ്തതയോടെ</p>
-                    <div className="h-24" />
+                    <div className="h-16" />
                     <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
                 </div>
             </div>
