@@ -101,7 +101,7 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="bg-white text-black p-8 font-serif">
-            <div className="max-w-4xl mx-auto border-2 border-black p-12 flex flex-col min-h-screen">
+            <div className="max-w-4xl mx-auto p-12">
                 <div className="flex-grow">
                     <div className="text-center">
                         <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
