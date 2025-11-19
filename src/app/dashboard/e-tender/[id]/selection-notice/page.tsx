@@ -4,7 +4,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe, toDateOrNull } from '@/components/e-tender/utils';
-import { AnjaliOldLipi } from '@/app/fonts';
 
 export default function SelectionNoticePrintPage() {
     const { tender } = useTenderData();
@@ -88,8 +87,8 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-8">
-            <div className={`${AnjaliOldLipi.className} max-w-4xl mx-auto border-2 border-black p-12 space-y-6 min-h-[27cm]`}>
+        <div className="bg-white text-black p-8 font-serif">
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-4 min-h-[27cm]">
                 <div>
                     <div className="text-center">
                         <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
