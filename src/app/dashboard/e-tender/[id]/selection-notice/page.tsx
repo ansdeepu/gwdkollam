@@ -16,6 +16,8 @@ export default function SelectionNoticePrintPage() {
         } else {
             document.title = 'Selection_Notice';
         }
+        // Automatically trigger print dialog
+        window.print();
     }, [tender]);
     
     const l1Bidder = useMemo(() => {
@@ -31,12 +33,12 @@ export default function SelectionNoticePrintPage() {
         if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
         if (l1Bidder.quotedAmount >= tender.estimateAmount) return false;
         
-        const logic = tender.additionalPerformanceGuaranteeDescription 
-            ? { threshold: parseFloat(tender.additionalPerformanceGuaranteeDescription.match(/up to ([\d.]+)%|between\s+([\d.]+)%/)?.find(v => v) || '10') / 100 }
-            : { threshold: 0.10 };
+        const description = tender.additionalPerformanceGuaranteeDescription || '';
+        const thresholdMatch = description.match(/up to ([\d.]+)%|between\s+([\d.]+)%/);
+        const threshold = thresholdMatch ? parseFloat(thresholdMatch.find(v => v) || '10') / 100 : 0.10;
 
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
-        return percentageDifference > logic.threshold;
+        return percentageDifference > threshold;
 
     }, [tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
 
@@ -47,10 +49,10 @@ export default function SelectionNoticePrintPage() {
     const apgPercentageText = useMemo(() => {
         if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return '0';
         
-        const threshold = tender.additionalPerformanceGuaranteeDescription 
-            ? parseFloat(tender.additionalPerformanceGuaranteeDescription.match(/up to ([\d.]+)%|between\s+([\d.]+)%/)?.find(v => v) || '10') / 100
-            : 0.10;
-
+        const description = tender.additionalPerformanceGuaranteeDescription || '';
+        const thresholdMatch = description.match(/up to ([\d.]+)%|between\s+([\d.]+)%/);
+        const threshold = thresholdMatch ? parseFloat(thresholdMatch.find(v => v) || '10') / 100 : 0.10;
+        
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
         const excessPercentage = percentageDifference - threshold;
         
@@ -84,7 +86,7 @@ export default function SelectionNoticePrintPage() {
         }
         return (
             <p className="leading-normal text-justify indent-8">
-                മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
                 ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
@@ -96,8 +98,8 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-8 font-serif min-h-screen">
-            <div className="max-w-4xl mx-auto border-2 border-black p-12 flex flex-col h-full min-h-[calc(100vh-4rem)]">
+        <div className="bg-white text-black p-8 font-serif">
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-6">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
@@ -150,7 +152,7 @@ export default function SelectionNoticePrintPage() {
                     <MainContent />
                 </div>
                 
-                <div className="mt-auto text-right pt-8">
+                <div className="text-right pt-8">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <div className="h-16" />
                     <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
