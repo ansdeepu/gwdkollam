@@ -7,6 +7,10 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    fontFamily: {
+        ...fontFamily,
+        mono: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.mono],
+    },
   	extend: {
       colors: {
   			background: 'hsl(var(--background))',
