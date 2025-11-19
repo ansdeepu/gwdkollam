@@ -89,7 +89,7 @@ export default function SelectionNoticePrintPage() {
     return (
         <div className="bg-white text-black p-2">
             <div 
-                className="max-w-4xl mx-auto border-2 border-black px-12 py-10 space-y-4 min-h-[29cm]"
+                className="max-w-4xl mx-auto border-2 border-black px-12 py-4 space-y-4"
                  style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}
             >
                 <div className="text-center">
@@ -147,9 +147,9 @@ export default function SelectionNoticePrintPage() {
                     <MainContent />
                 </div>
                 
-                <div className="text-right mt-16">
+                <div className="text-right mt-8">
                     <p>വിശ്വസ്തതയോടെ</p>
-                    <div className="h-24" />
+                    <div className="h-16" />
                     <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
                 </div>
             </div>
