@@ -29,8 +29,11 @@ export default function SelectionNoticePrintPage() {
     
     const isApgRequired = useMemo(() => {
         if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
+        // Check if quoted amount is less than estimate amount
+        if (l1Bidder.quotedAmount >= tender.estimateAmount) return false;
         const difference = tender.estimateAmount - l1Bidder.quotedAmount;
         const percentageDifference = (difference / tender.estimateAmount);
+        // APG is required if the bid is more than 10% below the estimate
         return percentageDifference > 0.10;
     }, [tender.estimateAmount, l1Bidder?.quotedAmount]);
 
@@ -76,13 +79,13 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="bg-white text-black p-8" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-12 min-h-[27cm]">
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-8 min-h-[27cm]">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
                 
                 <div className="text-sm flex justify-between">
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
                         <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
                     </div>
@@ -96,15 +99,13 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-2">
                     <p className="text-sm">പ്രേഷകൻ</p>
-                    <div className="h-2"></div>
                     <p className="text-sm ml-8">ജില്ലാ ആഫീസർ</p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-2">
                     <p className="text-sm">സ്വീകർത്താവ്</p>
-                    <div className="h-2"></div>
                     <div className="text-sm ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
                         <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
