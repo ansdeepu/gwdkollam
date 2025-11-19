@@ -81,7 +81,7 @@ export default function SelectionNoticePrintPage() {
                     ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span>
                     രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്  ഡെപ്പോസിറ്റായും അഡിഷണൽ പെർഫോമൻസ്
                     ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ <span className="font-mono">{estimateAmountStr}/-</span> രൂപയുടെ <span className="font-mono">{apgPercentageText}%</span> തുകയായ <span className="font-mono">{additionalPerformanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
-                    ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ്
+                    ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെന്റ്
                     വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
                 </p>
             );
@@ -101,7 +101,7 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="bg-white text-black p-8 font-serif">
-            <div className="max-w-4xl mx-auto border-2 border-black p-12 flex flex-col min-h-screen">
+            <div className="max-w-4xl mx-auto p-12">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
@@ -154,7 +154,7 @@ export default function SelectionNoticePrintPage() {
                     <MainContent />
                 </div>
                 
-                <div className="mt-auto pt-16 text-right">
+                <div className="pt-16 text-right">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <div className="h-16" />
                     <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
