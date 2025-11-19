@@ -29,20 +29,19 @@ export default function SelectionNoticePrintPage() {
         );
     }, [tender.bidders]);
     
+    const apgThreshold = useMemo(() => {
+        const description = tender.additionalPerformanceGuaranteeDescription || '';
+        const thresholdMatch = description.match(/up to ([\d.]+)%|between\s+([\d.]+)%/);
+        return thresholdMatch ? parseFloat(thresholdMatch.find(v => v) || '10') / 100 : 0.10;
+    }, [tender.additionalPerformanceGuaranteeDescription]);
+
     const isApgRequired = useMemo(() => {
         if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
         if (l1Bidder.quotedAmount >= tender.estimateAmount) return false;
-        
-        const description = tender.additionalPerformanceGuaranteeDescription || '';
-        // Look for patterns like "up to 10%" or "between 10% and 15%"
-        const thresholdMatch = description.match(/up to ([\d.]+)%|between\s+([\d.]+)%/);
-        // Default to 10% if no specific threshold is found in the description
-        const threshold = thresholdMatch ? parseFloat(thresholdMatch.find(v => v) || '10') / 100 : 0.10;
-
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
-        return percentageDifference > threshold;
+        return percentageDifference > apgThreshold;
+    }, [tender.estimateAmount, l1Bidder?.quotedAmount, apgThreshold]);
 
-    }, [tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
 
     const performanceGuarantee = tender.performanceGuaranteeAmount ?? 0;
     const additionalPerformanceGuarantee = tender.additionalPerformanceGuaranteeAmount ?? 0;
@@ -50,17 +49,10 @@ export default function SelectionNoticePrintPage() {
     
     const apgPercentageText = useMemo(() => {
         if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return '0';
-        
-        const description = tender.additionalPerformanceGuaranteeDescription || '';
-        const thresholdMatch = description.match(/up to ([\d.]+)%|between\s+([\d.]+)%/);
-        const threshold = thresholdMatch ? parseFloat(thresholdMatch.find(v => v) || '10') / 100 : 0.10;
-        
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
-        const excessPercentage = percentageDifference - threshold;
-        
+        const excessPercentage = percentageDifference - apgThreshold;
         return (excessPercentage * 100).toFixed(1);
-
-    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
+    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount, apgThreshold]);
 
 
     const MainContent = () => {
@@ -100,66 +92,66 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-8 font-serif">
-            <div className="max-w-4xl mx-auto p-12 space-y-4">
-                <div className="text-center">
-                    <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
-                </div>
-                
-                <div className="text-sm flex justify-between mt-4">
-                    <div>
-                        <p>നമ്പർ: ജി.കെ.റ്റി / <span className="font-mono">{tender.fileNo || '__________'}</span></p>
-                        <p>ടെണ്ടർ നമ്പർ : <span className="font-mono">{tender.eTenderNo || '__________'}</span></p>
-                    </div>
-                    <div className="text-right">
-                        <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
-                        <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം'}</p>
-                        <p>ഫോൺനമ്പർ: <span className="font-mono">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
-                        <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
-                        <p>തീയതി: <span className="font-mono">{formatDateSafe(tender.selectionNoticeDate) || '__________'}</span></p>
-                    </div>
-                </div>
+        <div className="bg-white text-black min-h-screen font-serif">
+          <div className="max-w-4xl mx-auto p-12 space-y-4">
+              <div className="text-center">
+                  <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
+              </div>
+              
+              <div className="text-sm flex justify-between pt-4">
+                  <div>
+                      <p>നമ്പർ: ജി.കെ.റ്റി / <span className="font-mono">{tender.fileNo || '__________'}</span></p>
+                      <p>ടെണ്ടർ നമ്പർ : <span className="font-mono">{tender.eTenderNo || '__________'}</span></p>
+                  </div>
+                  <div className="text-right">
+                      <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം'}</p>
+                      <p>ഫോൺനമ്പർ: <span className="font-mono">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
+                      <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
+                      <p>തീയതി: <span className="font-mono">{formatDateSafe(tender.selectionNoticeDate) || '__________'}</span></p>
+                  </div>
+              </div>
 
-                <div className="pt-8">
-                    <p>പ്രേഷകൻ</p>
-                    <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
-                </div>
+              <div className="pt-8">
+                  <p>പ്രേഷകൻ</p>
+                  <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+              </div>
 
-                <div className="pt-4">
-                    <p>സ്വീകർത്താവ്</p>
-                    <div className="ml-8">
-                        <p>{l1Bidder?.name || '____________________'}</p>
-                        <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
-                    </div>
-                </div>
-                
-                <div className="pt-4">
-                    <p>സർ,</p>
-                </div>
+              <div className="pt-4">
+                  <p>സ്വീകർത്താവ്</p>
+                  <div className="ml-8">
+                      <p>{l1Bidder?.name || '____________________'}</p>
+                      <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
+                  </div>
+              </div>
+              
+              <div className="pt-4">
+                  <p>സർ,</p>
+              </div>
 
-                <div className="space-y-2 mt-4">
-                    <p className="flex text-justify">
-                        <span className="w-20 shrink-0">വിഷയം:</span>
-                        <span>
-                            {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
-                        </span>
-                    </p>
-                    <p className="flex">
-                        <span className="w-20 shrink-0">സൂചന:</span>
-                        <span>ഈ ഓഫീസിലെ <span className="font-mono">{formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono">{tender.eTenderNo || '__________'}</span></span>
-                    </p>
-                </div>
-                
-                <div className="pt-4">
-                    <MainContent />
-                </div>
-                
-                <div className="pt-16 text-right">
-                    <p>വിശ്വസ്തതയോടെ</p>
-                    <div className="h-16" />
-                    <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
-                </div>
-            </div>
+              <div className="space-y-2 pt-4">
+                  <p className="flex text-justify">
+                      <span className="w-20 shrink-0">വിഷയം:</span>
+                      <span>
+                          {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
+                      </span>
+                  </p>
+                  <p className="flex">
+                      <span className="w-20 shrink-0">സൂചന:</span>
+                      <span>ഈ ഓഫീസിലെ <span className="font-mono">{formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono">{tender.eTenderNo || '__________'}</span></span>
+                  </p>
+              </div>
+              
+              <div className="pt-4">
+                  <MainContent />
+              </div>
+              
+              <div className="pt-16 text-right">
+                  <p>വിശ്വസ്തതയോടെ</p>
+                  <div className="h-16" />
+                  <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+              </div>
+          </div>
         </div>
     );
 }
