@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -8,7 +9,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenderData } from '../TenderDataContext';
-import { PDFDocument, rgb, StandardFonts, PDFFont } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PDFFont, PDFTextField, PDFCheckBox } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import download from 'downloadjs';
 import { formatDateSafe } from '../utils';
@@ -94,11 +95,10 @@ export default function PdfReportDialogs() {
     const { allStaffMembers } = useDataStore();
     const [isLoading, setIsLoading] = useState(false);
     
-    const fillPdfForm = useCallback(async (
-        templatePath: string,
-        fieldMappings: Record<string, any> = {}
-    ): Promise<Uint8Array | null> => {
+    const handleGenerateNIT = useCallback(async () => {
+        setIsLoading(true);
         try {
+            const templatePath = '/NIT.pdf';
             const existingPdfBytes = await fetch(templatePath).then(res => {
                 if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
                 return res.arrayBuffer();
@@ -106,12 +106,12 @@ export default function PdfReportDialogs() {
     
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             const form = pdfDoc.getForm();
-    
+
             const tenderFee = tender.tenderFormFee || 0;
             const gst = tenderFee * 0.18;
             const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
-    
-            const defaultMappings: Record<string, any> = {
+
+            const fieldMappings: Record<string, any> = {
                 'file_no_header': `GKT/${tender.fileNo || ''}`,
                 'e_tender_no_header': tender.eTenderNo,
                 'tender_date_header': formatDateSafe(tender.tenderDate),
@@ -123,47 +123,22 @@ export default function PdfReportDialogs() {
                 'bid_submission_fee': displayTenderFee,
                 'location': tender.location,
                 'period_of_completion': tender.periodOfCompletion,
-                'place': 'Kollam',
-                'bid_date': formatDateSafe(tender.dateOfOpeningBid),
             };
-    
-            const allMappings = { ...defaultMappings, ...fieldMappings };
 
-            for (const fieldName in allMappings) {
-                const fieldValue = allMappings[fieldName];
-                if (fieldValue === undefined || fieldValue === null) continue;
-            
+            for (const fieldName in fieldMappings) {
                 try {
                     const field = form.getField(fieldName);
                     if (field instanceof PDFTextField) {
-                        field.setText(String(fieldValue));
+                        field.setText(String(fieldMappings[fieldName] || ''));
                         field.defaultUpdateAppearances();
-                    } else if (field instanceof PDFCheckBox) {
-                        if (String(fieldValue).toLowerCase() === 'true' || String(fieldValue).toLowerCase() === 'on') {
-                            field.check();
-                        } else {
-                            field.uncheck();
-                        }
-                    } // Add other field types if needed (PDFDropdown, etc.)
+                    }
                 } catch (e) {
-                    // Field might not exist in this template, which is okay.
-                    // console.warn(`Field not found or wrong type: ${fieldName}`);
+                    console.warn(`Field '${fieldName}' not found in NIT template.`);
                 }
             }
 
             form.flatten();
-            return await pdfDoc.save();
-        } catch (error) {
-            console.error("Error in fillPdfForm:", error);
-            throw error;
-        }
-    }, [tender]);
-    
-    const handleGenerateNIT = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const pdfBytes = await fillPdfForm('/NIT.pdf');
-            if (!pdfBytes) throw new Error("PDF generation failed.");
+            const pdfBytes = await pdfDoc.save();
             const fileName = `NIT_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Notice Inviting Tender has been downloaded." });
@@ -173,16 +148,44 @@ export default function PdfReportDialogs() {
         } finally {
             setIsLoading(false);
         }
-    }, [tender.eTenderNo, fillPdfForm]);
+    }, [tender]);
 
 
     const handleGenerateTenderForm = useCallback(async () => {
         setIsLoading(true);
         try {
-            const pdfBytes = await fillPdfForm('/Tender-Form.pdf');
-            if (!pdfBytes) throw new Error("PDF generation failed.");
-            const tenderNoFormatted = tender.eTenderNo?.replace(/\//g, '_') || 'filled';
-            const fileName = `TenderForm_${tenderNoFormatted}.pdf`;
+            const templatePath = '/Tender-Form.pdf';
+            const existingPdfBytes = await fetch(templatePath).then(res => {
+                if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
+                return res.arrayBuffer();
+            });
+    
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+            const form = pdfDoc.getForm();
+            
+            const fieldMappings: Record<string, any> = {
+                'file_no': `GKT/${tender.fileNo || ''}`,
+                'e_tender_no': tender.eTenderNo,
+                'name_of_work': tender.nameOfWork,
+                'pac': tender.estimateAmount ? `${tender.estimateAmount.toLocaleString('en-IN')}` : '',
+                'emd': tender.emd ? `${tender.emd.toLocaleString('en-IN')}` : '',
+            };
+
+             for (const fieldName in fieldMappings) {
+                try {
+                    const field = form.getField(fieldName);
+                    if (field instanceof PDFTextField) {
+                        field.setText(String(fieldMappings[fieldName] || ''));
+                        field.defaultUpdateAppearances();
+                    }
+                } catch (e) {
+                    console.warn(`Field '${fieldName}' not found in Tender Form template.`);
+                }
+            }
+
+            form.flatten();
+            const pdfBytes = await pdfDoc.save();
+            const fileName = `TenderForm_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Tender Form has been downloaded." });
         } catch (error: any) {
@@ -191,32 +194,51 @@ export default function PdfReportDialogs() {
         } finally {
             setIsLoading(false);
         }
-    }, [tender.eTenderNo, fillPdfForm]);
+    }, [tender]);
     
     const handleGenerateBidOpeningSummary = useCallback(async () => {
         setIsLoading(true);
         try {
+            const templatePath = '/Bid-Opening-Summary.pdf';
+            const existingPdfBytes = await fetch(templatePath).then(res => res.arrayBuffer());
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+            const form = pdfDoc.getForm();
+
             const bidders = tender.bidders || [];
             const numBidders = bidders.length;
             const numBiddersInWords = numberToWords(numBidders);
             
-            const l1Bidder = bidders.length > 0 
-                ? bidders.reduce((lowest, current) => 
-                    (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest
-                  )
-                : null;
+            const l1Bidder = bidders.length > 0 ? bidders.reduce((lowest, current) => (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest) : null;
 
             let bidOpeningText = `     ${numBiddersInWords} bids were received and opened as per the prescribed tender procedure. All participating contractors submitted the requisite documents, and the bids were found to be admissible.`;
-
             if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
                 bidOpeningText += ` The lowest quoted rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by ${l1Bidder.name || 'N/A'}.`;
             }
             bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
             
-            const fieldMappings = { 'bid_opening': bidOpeningText };
+            const fieldMappings = {
+                'file_no_header': `GKT/${tender.fileNo || ''}`,
+                'e_tender_no_header': tender.eTenderNo,
+                'tender_date_header': formatDateSafe(tender.tenderDate),
+                'name_of_work': tender.nameOfWork,
+                'bid_date': formatDateSafe(tender.dateOfOpeningBid),
+                'bid_opening': bidOpeningText,
+            };
 
-            const pdfBytes = await fillPdfForm('/Bid-Opening-Summary.pdf', fieldMappings);
-            if (!pdfBytes) throw new Error("PDF generation failed.");
+            for (const fieldName in fieldMappings) {
+                try {
+                    const field = form.getField(fieldName);
+                    if (field instanceof PDFTextField) {
+                        field.setText(String(fieldMappings[fieldName] || ''));
+                        field.defaultUpdateAppearances();
+                    }
+                } catch (e) {
+                     console.warn(`Field '${fieldName}' not found in Bid Opening Summary template.`);
+                }
+            }
+
+            form.flatten();
+            const pdfBytes = await pdfDoc.save();
             const fileName = `Bid_Opening_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Bid Opening Summary has been downloaded." });
@@ -227,35 +249,28 @@ export default function PdfReportDialogs() {
         } finally {
             setIsLoading(false);
         }
-    }, [tender, fillPdfForm]);
+    }, [tender]);
 
     const handleGenerateTechnicalSummary = useCallback(async () => {
         setIsLoading(true);
         try {
-            const l1Bidder = (tender.bidders || []).length > 0
-                ? (tender.bidders || []).reduce((lowest, current) =>
-                    (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest
-                )
-                : null;
+            const templatePath = '/Technical-Summary.pdf';
+            const existingPdfBytes = await fetch(templatePath).then(res => res.arrayBuffer());
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+            const form = pdfDoc.getForm();
 
+            const l1Bidder = (tender.bidders || []).length > 0 ? (tender.bidders || []).reduce((lowest, current) => (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest) : null;
             let techSummaryText = `     The bids received were scrutinized and all participating contractors submitted the required documents. Upon verification, all bids were found to be technically qualified and hence accepted.`;
             if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
                 techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by ${l1Bidder.name || 'N/A'}.`;
             }
             techSummaryText += ' All technically qualified bids are recommended for financial evaluation.';
             
-            const committeeMemberNames = [
-                tender.technicalCommitteeMember1,
-                tender.technicalCommitteeMember2,
-                tender.technicalCommitteeMember3,
-            ].filter(Boolean) as string[];
-
+            const committeeMemberNames = [tender.technicalCommitteeMember1, tender.technicalCommitteeMember2, tender.technicalCommitteeMember3].filter(Boolean) as string[];
             const committeeMembersText = committeeMemberNames.map((name, index) => {
                 const staffInfo = allStaffMembers.find(s => s.name === name);
-                const designation = staffInfo ? staffInfo.designation : 'N/A';
-                return `${index + 1}. ${name}, ${designation}`;
+                return `${index + 1}. ${name}, ${staffInfo?.designation || 'N/A'}`;
             }).join('\n');
-
 
             const fieldMappings = {
                 'tech_file_no': `GKT/${tender.fileNo || ''}`,
@@ -267,8 +282,20 @@ export default function PdfReportDialogs() {
                 'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
 
-            const pdfBytes = await fillPdfForm('/Technical-Summary.pdf', fieldMappings);
-            if (!pdfBytes) throw new Error("PDF generation failed.");
+            for (const fieldName in fieldMappings) {
+                try {
+                    const field = form.getField(fieldName);
+                    if (field instanceof PDFTextField) {
+                        field.setText(String(fieldMappings[fieldName] || ''));
+                        field.defaultUpdateAppearances();
+                    }
+                } catch (e) {
+                     console.warn(`Field '${fieldName}' not found in Technical Summary template.`);
+                }
+            }
+
+            form.flatten();
+            const pdfBytes = await pdfDoc.save();
             const fileName = `Technical_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Technical Summary has been downloaded." });
@@ -279,45 +306,32 @@ export default function PdfReportDialogs() {
         } finally {
             setIsLoading(false);
         }
-    }, [tender, fillPdfForm, allStaffMembers]);
+    }, [tender, allStaffMembers]);
     
     const handleGenerateFinancialSummary = useCallback(async () => {
         setIsLoading(true);
         try {
-            const bidders = [...(tender.bidders || [])]
-                .filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
-                .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
+            const templatePath = '/Financial-Summary.pdf';
+            const existingPdfBytes = await fetch(templatePath).then(res => res.arrayBuffer());
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+            const form = pdfDoc.getForm();
 
+            const bidders = [...(tender.bidders || [])].filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0).sort((a, b) => a.quotedAmount! - b.quotedAmount!);
             const l1Bidder = bidders[0];
             const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
             const INDENT = "     ";
 
             let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
             
-            const slNoWidth = 4;
-            const nameWidth = 45;
-            const amountSpacer = ' '.repeat(3); 
-            const amountWidth = 25;
-            const rankSpacer = ' '.repeat(5); 
-            const rankWidth = 5;
-
-            const header = "Sl. No.".padEnd(slNoWidth) 
-                        + "Name of Bidder".padEnd(nameWidth) 
-                        + amountSpacer 
-                        + "Quoted Amount (Rs.)".padStart(amountWidth) 
-                        + rankSpacer 
-                        + "Rank".padEnd(rankWidth);
-
+            const header = "Sl. No.    Name of Bidder                                Quoted Amount (Rs.)     Rank";
             const bidderRows = bidders.map((bidder, index) => {
-                const sl = `${index + 1}.`.padEnd(slNoWidth);
-                const name = (bidder.name || 'N/A').padEnd(nameWidth);
-                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
-                const rank = `L${index + 1}`.padEnd(rankWidth);
-                return `${sl}${name}${amountSpacer}${amount}${rankSpacer}${rank}`;
+                const sl = `${index + 1}.`.padEnd(10);
+                const name = (bidder.name || 'N/A').padEnd(45);
+                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(25);
+                const rank = `L${index + 1}`.padEnd(5);
+                return `${sl}${name}${amount}     ${rank}`;
             }).join('\n');
-            
-            const totalHeaderWidth = header.length;
-            const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
+            const finTableText = `${header}\n${"-".repeat(header.length + 10)}\n${bidderRows}`;
             
             let finResultText = `${INDENT}No valid bids to recommend.`;
             if (l1Bidder) {
@@ -325,16 +339,10 @@ export default function PdfReportDialogs() {
                 finResultText = `${INDENT}${bidderName}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.`;
             }
             
-            const committeeMemberNames = [
-                tender.technicalCommitteeMember1,
-                tender.technicalCommitteeMember2,
-                tender.technicalCommitteeMember3,
-            ].filter(Boolean) as string[];
-
+            const committeeMemberNames = [tender.technicalCommitteeMember1, tender.technicalCommitteeMember2, tender.technicalCommitteeMember3].filter(Boolean) as string[];
             const committeeMembersText = committeeMemberNames.map((name, index) => {
                 const staffInfo = allStaffMembers.find(s => s.name === name);
-                const designation = staffInfo ? staffInfo.designation : 'N/A';
-                return `${index + 1}. ${name}, ${designation}`;
+                return `${index + 1}. ${name}, ${staffInfo?.designation || 'N/A'}`;
             }).join('\n');
             
             const fieldMappings = {
@@ -349,9 +357,20 @@ export default function PdfReportDialogs() {
                 'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
             };
             
-            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings);
+            for (const fieldName in fieldMappings) {
+                try {
+                    const field = form.getField(fieldName);
+                    if (field instanceof PDFTextField) {
+                        field.setText(String(fieldMappings[fieldName] || ''));
+                        field.defaultUpdateAppearances();
+                    }
+                } catch (e) {
+                     console.warn(`Field '${fieldName}' not found in Financial Summary template.`);
+                }
+            }
 
-            if (!pdfBytes) throw new Error("PDF generation failed.");
+            form.flatten();
+            const pdfBytes = await pdfDoc.save();
             const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Your Financial Summary has been downloaded." });
@@ -362,7 +381,7 @@ export default function PdfReportDialogs() {
         } finally {
             setIsLoading(false);
         }
-    }, [tender, fillPdfForm, allStaffMembers]);
+    }, [tender, allStaffMembers]);
 
     return (
         <Card>
