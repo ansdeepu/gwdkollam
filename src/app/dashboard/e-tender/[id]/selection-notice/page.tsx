@@ -87,8 +87,11 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-8 font-serif">
-            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-4 min-h-[27cm]">
+        <div className="bg-white text-black p-8">
+            <div 
+                className="max-w-4xl mx-auto border-2 border-black p-12 space-y-4 min-h-[27cm]"
+                style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}
+            >
                 <div>
                     <div className="text-center">
                         <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
