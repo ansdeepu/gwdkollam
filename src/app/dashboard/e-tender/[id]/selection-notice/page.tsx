@@ -9,20 +9,68 @@ export default function SelectionNoticePrintPage() {
     const { tender } = useTenderData();
 
     useEffect(() => {
-        if (tender) {
-            document.title = `Selection_Notice_${tender.eTenderNo?.replace(/\//g, '_') || 'Tender'}`;
+        if (tender && tender.eTenderNo) {
+            document.title = `Selection_Notice_${tender.eTenderNo.replace(/\//g, '_')}`;
+        } else {
+            document.title = 'Selection_Notice';
         }
     }, [tender]);
     
     const l1Bidder = useMemo(() => {
         if (!tender.bidders || tender.bidders.length === 0) return null;
-        return tender.bidders.reduce((lowest, current) => 
-            (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest
+        const validBidders = tender.bidders.filter(b => b.quotedAmount);
+        if (validBidders.length === 0) return null;
+        return validBidders.reduce((lowest, current) => 
+            (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest
         );
     }, [tender.bidders]);
+    
+    const isApgRequired = useMemo(() => {
+        if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
+        const difference = tender.estimateAmount - l1Bidder.quotedAmount;
+        const percentageDifference = (difference / tender.estimateAmount);
+        return percentageDifference > 0.10;
+    }, [tender.estimateAmount, l1Bidder?.quotedAmount]);
 
     const performanceGuarantee = tender.performanceGuaranteeAmount ?? 0;
+    const additionalPerformanceGuarantee = tender.additionalPerformanceGuaranteeAmount ?? 0;
     const stampPaperValue = tender.stampPaperAmount ?? 200;
+    
+    const apgPercentage = useMemo(() => {
+        if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return 0;
+        const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
+        const excessPercentage = percentageDifference - 0.10;
+        return excessPercentage * 100;
+    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount]);
+
+
+    const MainContent = () => {
+        if (isApgRequired) {
+            return (
+                 <p className="text-sm leading-relaxed text-justify">
+                    മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                    സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
+                    മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
+                    ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {l1Bidder?.quotedAmount?.toLocaleString('en-IN') ?? '__________'}/- രൂപയുടെ 5% തുകയായ {performanceGuarantee.toLocaleString('en-IN') ?? '__________'}/-
+                    രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്  ഡെപ്പോസിറ്റായും അഡിഷണൽ പെർഫോമൻസ്
+                    ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ {tender.estimateAmount?.toLocaleString('en-IN') ?? '__________'}/- രൂപയുടെ {apgPercentage.toFixed(2)}% തുകയായ {additionalPerformanceGuarantee.toLocaleString('en-IN') ?? '__________'}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
+                    ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValue.toLocaleString('en-IN') ?? '200'}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ്
+                    വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
+                </p>
+            );
+        }
+        return (
+            <p className="text-sm leading-relaxed text-justify">
+                മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
+                മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
+                ഗ്യാരന്റിയായി ടെണ്ടറിൽ കോട്ട് ചെയ്തിരിക്കുന്ന {l1Bidder?.quotedAmount?.toLocaleString('en-IN') ?? '__________'}/- രൂപയുടെ 5% തുകയായ {performanceGuarantee.toLocaleString('en-IN') ?? '__________'}/-
+                രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ
+                കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValue.toLocaleString('en-IN') ?? '200'}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
+                നിർദ്ദേശിക്കുന്നു.
+            </p>
+        );
+    };
 
     return (
         <div className="bg-white text-black p-8" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
@@ -32,7 +80,7 @@ export default function SelectionNoticePrintPage() {
                 </div>
                 
                 <div className="text-sm flex justify-between">
-                    <div>
+                    <div className="space-y-2">
                         <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
                         <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
                     </div>
@@ -42,7 +90,7 @@ export default function SelectionNoticePrintPage() {
                         <p>തേവള്ളി പി. ഓ, കൊല്ലം -691009</p>
                         <p>ഫോൺനമ്പർ. 0474 - 2790313</p>
                         <p>ഇമെയിൽ: gwdklm@gmail.com</p>
-                        <p>തീയതി: {formatDateSafe(new Date())}</p>
+                        <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
                     </div>
                 </div>
 
@@ -66,8 +114,8 @@ export default function SelectionNoticePrintPage() {
                 <div className="text-sm space-y-2">
                     <p className="flex">
                         <span className="w-20">വിഷയം :</span>
-                        <span>
-                            ഭൂജല വകുപ്പ്, കൊല്ലം - {tender.location} {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്
+                        <span className="flex-1">
+                             ഭൂജല വകുപ്പ്, കൊല്ലം - {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്
                         </span>
                     </p>
                     <p className="flex">
@@ -76,15 +124,7 @@ export default function SelectionNoticePrintPage() {
                     </p>
                 </div>
                 
-                <p className="text-sm leading-relaxed text-justify">
-                    മേൽ സൂചന പ്രകാരം {tender.location} {tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
-                    സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
-                    മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
-                    ഗ്യാരന്റിയായി ടെണ്ടറിൽ കോട്ട് ചെയ്തിരിക്കുന്ന {l1Bidder?.quotedAmount?.toLocaleString('en-IN') ?? '__________'}/- രൂപയുടെ 5% തുകയായ {performanceGuarantee.toLocaleString('en-IN') ?? '__________'}/-
-                    രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ
-                    കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValue.toLocaleString('en-IN') ?? '200'}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
-                    നിർദ്ദേശിക്കുന്നു.
-                </p>
+                <MainContent />
                 
                 <div className="mt-24 text-right">
                     <p>വിശ്വസ്തതയോടെ</p>
