@@ -30,31 +30,29 @@ export default function SelectionNoticePrintPage() {
     const isApgRequired = useMemo(() => {
         if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
         if (l1Bidder.quotedAmount >= tender.estimateAmount) return false;
-        const difference = tender.estimateAmount - l1Bidder.quotedAmount;
-        const percentageDifference = (difference / tender.estimateAmount);
         
-        const apgLogic = tender.additionalPerformanceGuaranteeDescription || '';
-        const thresholdMatch = apgLogic.match(/below the estimate cost by more than ([\d.]+)%/);
-        const threshold = thresholdMatch ? parseFloat(thresholdMatch[1]) / 100 : 0.15; // Default to 15% if not found
-        
-        return percentageDifference > threshold;
-    }, [tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
+        // APG is required if the bid is more than 10% below the estimate.
+        const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
+        return percentageDifference > 0.10;
+
+    }, [tender.estimateAmount, l1Bidder?.quotedAmount]);
 
     const performanceGuarantee = tender.performanceGuaranteeAmount ?? 0;
     const additionalPerformanceGuarantee = tender.additionalPerformanceGuaranteeAmount ?? 0;
     const stampPaperValue = tender.stampPaperAmount ?? 200;
     
-    const apgPercentage = useMemo(() => {
-        if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return 0;
+    // Calculate the percentage for the APG text
+    const apgPercentageText = useMemo(() => {
+        if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return '0';
         
-        const apgLogic = tender.additionalPerformanceGuaranteeDescription || '';
-        const thresholdMatch = apgLogic.match(/below the estimate cost by more than ([\d.]+)%/);
-        const threshold = thresholdMatch ? parseFloat(thresholdMatch[1]) / 100 : 0.15;
-
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
-        const excessPercentage = percentageDifference - threshold;
-        return excessPercentage * 100;
-    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
+        // The text seems to require the percentage *beyond* the initial threshold (10%)
+        const excessPercentage = percentageDifference - 0.10; 
+        
+        // The example shows "2.1 %", so we format it this way.
+        return (excessPercentage * 100).toFixed(1);
+
+    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount]);
 
 
     const MainContent = () => {
@@ -66,7 +64,6 @@ export default function SelectionNoticePrintPage() {
         if (isApgRequired) {
             const estimateAmountStr = (tender.estimateAmount ?? 0).toLocaleString('en-IN');
             const additionalPerformanceGuaranteeStr = additionalPerformanceGuarantee.toLocaleString('en-IN');
-            const apgPercentageStr = apgPercentage.toFixed(2);
 
             return (
                  <p className="leading-normal text-justify indent-8">
@@ -75,7 +72,7 @@ export default function SelectionNoticePrintPage() {
                     മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
                     ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
                     രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്  ഡെപ്പോസിറ്റായും അഡിഷണൽ പെർഫോമൻസ്
-                    ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ {estimateAmountStr}/- രൂപയുടെ {apgPercentageStr}% തുകയായ {additionalPerformanceGuaranteeStr}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
+                    ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ {estimateAmountStr}/- രൂപയുടെ {apgPercentageText}% തുകയായ {additionalPerformanceGuaranteeStr}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
                     ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValueStr}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ്
                     വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
                 </p>
@@ -86,7 +83,7 @@ export default function SelectionNoticePrintPage() {
                 മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
-                ഗ്യാരന്റിയായി ടെണ്ടറിൽ കോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
+                ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
                 രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ
                 കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValueStr}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
                 നിർദ്ദേശിക്കുന്നു.
@@ -96,7 +93,7 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="bg-white text-black p-8" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black px-12 py-8 space-y-4">
+            <div className="max-w-4xl mx-auto border-2 border-black px-12 py-4 space-y-4">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
@@ -134,13 +131,13 @@ export default function SelectionNoticePrintPage() {
 
                 <div className="space-y-2">
                     <p className="flex text-justify">
-                        <span className="w-20 shrink-0">വിഷയം :</span>
+                        <span className="w-20 shrink-0">വിഷയം:</span>
                         <span>
-                            {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
+                            {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
                         </span>
                     </p>
                     <p className="flex">
-                        <span className="w-20 shrink-0">സൂചന :</span>
+                        <span className="w-20 shrink-0">സൂചന:</span>
                         <span>ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
                     </p>
                 </div>
