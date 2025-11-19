@@ -92,8 +92,8 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black">
-          <div className="max-w-4xl mx-auto p-10 space-y-4 font-serif">
+        <div className="-m-6 bg-white min-h-screen">
+          <div className="max-w-4xl mx-auto p-12 space-y-4 font-serif">
               <div className="text-center">
                   <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
               </div>
@@ -148,7 +148,7 @@ export default function SelectionNoticePrintPage() {
               
               <div className="pt-10 text-right">
                   <p>വിശ്വസ്തതയോടെ</p>
-                  <div className="h-12" />
+                  <div className="h-16" />
                   <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
           </div>
