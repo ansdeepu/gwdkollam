@@ -65,7 +65,7 @@ export default function SupplyOrderPrintPage() {
                 </div>
                 <div className="flex justify-between items-start pt-6">
                     <span>From</span>
-                    <span>District Officer</span>
+                    <span className="text-right">District Officer</span>
                 </div>
                 <div className="pt-2">
                     <p>To</p>

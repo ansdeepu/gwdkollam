@@ -73,10 +73,10 @@ export default function WorkOrderPrintPage() {
                       <p>തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                   </div>
               </div>
-
-              <div>
+              
+              <div className="flex justify-between pt-4">
                   <p>പ്രേഷകൻ</p>
-                  <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+                  <p className="text-right">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
 
               <div>
