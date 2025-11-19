@@ -59,7 +59,7 @@ export default function SelectionNoticePrintPage() {
 
 
     const MainContent = () => {
-        const workName = tender.nameOfWork; // Using English name as per template example
+        const workName = tender.nameOfWork;
         const quotedAmountStr = (l1Bidder?.quotedAmount ?? 0).toLocaleString('en-IN');
         const performanceGuaranteeStr = performanceGuarantee.toLocaleString('en-IN');
         const stampPaperValueStr = stampPaperValue.toLocaleString('en-IN');
@@ -96,7 +96,7 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
+        <div className="bg-white text-black p-8" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
             <div className="max-w-4xl mx-auto border-2 border-black px-12 py-8 space-y-6">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
@@ -135,14 +135,14 @@ export default function SelectionNoticePrintPage() {
 
                 <div className="space-y-2">
                     <p className="flex text-justify">
-                        <span className="w-20 shrink-0">വിഷയം :</span>
-                        <span className="flex-1">
-                            {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
+                        <span className="w-20 shrink-0">വിഷയം</span>
+                        <span>
+                            : {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
                         </span>
                     </p>
                     <p className="flex">
-                        <span className="w-20 shrink-0">സൂചന :</span>
-                        <span>ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
+                        <span className="w-20 shrink-0">സൂചന</span>
+                        <span>: ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
                     </p>
                 </div>
                 
