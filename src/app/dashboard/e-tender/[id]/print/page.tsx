@@ -1,25 +1,31 @@
 // src/app/dashboard/e-tender/[id]/print/page.tsx
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe } from '@/components/e-tender/utils';
 
 export default function TenderPrintPage() {
     const { tender } = useTenderData();
 
+    useEffect(() => {
+        if (tender) {
+            document.title = `NIT_${tender.eTenderNo?.replace(/\//g, '_') || 'Notice'}`;
+        }
+    }, [tender]);
+
     return (
         <div className="bg-white text-black p-8 font-serif">
-            <div className="max-w-4xl mx-auto border-2 border-black p-8">
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-12">
                 <h1 className="text-xl font-bold text-center mb-1">GROUND WATER DEPARTMENT</h1>
-                <h2 className="text-lg font-bold text-center mb-4">NOTICE INVITING TENDER</h2>
+                <h2 className="text-lg font-bold text-center mb-4 underline">NOTICE INVITING TENDER</h2>
                 
-                <div className="text-sm">
-                    <p className="mb-4">No: {tender.fileNo || '__________'}</p>
-                    <p className="text-right mb-4">Date: {formatDateSafe(tender.tenderDate) || '__________'}</p>
+                <div className="text-sm flex justify-between">
+                    <p>No: {tender.fileNo ? `GKT/${tender.fileNo}` : '__________'}</p>
+                    <p>Date: {formatDateSafe(tender.tenderDate) || '__________'}</p>
                 </div>
                 
-                <p className="text-sm leading-relaxed mb-4">
+                <p className="text-sm leading-relaxed mb-4 text-justify">
                     The Executive Engineer, Ground Water Department, Kollam, for and on behalf of the Governor of Kerala invites online tenders from registered bidders of the Ground Water Department for the work specified below.
                 </p>
 
@@ -60,7 +66,7 @@ export default function TenderPrintPage() {
                     </tbody>
                 </table>
                 
-                <div className="text-sm space-y-4 leading-relaxed">
+                <div className="text-sm space-y-4 leading-relaxed text-justify">
                     <p>
                         Tender documents and any other details can be obtained from the website <a href="http://www.etenders.kerala.gov.in" className="underline text-blue-800">www.etenders.kerala.gov.in</a>.
                         All bid/tender documents are to be submitted online only and in the designated cover(s)/envelope(s) on the website. Tenders/bids shall be accepted only through online mode on the website and no manual submission of the same shall be entertained. Late tenders will not be accepted.

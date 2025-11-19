@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -17,21 +16,28 @@ import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useDataStore } from '@/hooks/use-data-store';
 
-const ReportButton = ({ reportType, label, onClick, disabled, isLoading }: { reportType: string, label: string, onClick: () => void, disabled?: boolean, isLoading?: boolean }) => {
+const ReportButton = ({ reportType, label, onClick, disabled, isLoading, isPlaceholder, href }: { reportType: string, label: string, onClick?: () => void, disabled?: boolean, isLoading?: boolean, isPlaceholder?: boolean, href?: string }) => {
   const [isButtonLoading, setIsButtonLoading] = useState(false);
 
   const handleClick = async () => {
+      if (!onClick) return;
     setIsButtonLoading(true);
     await onClick();
     setIsButtonLoading(false);
   };
-
-  return (
-    <Button onClick={handleClick} variant="outline" className="justify-start" disabled={disabled || isButtonLoading}>
-        {(isLoading || isButtonLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-        {label}
-    </Button>
+  
+  const content = (
+      <Button onClick={handleClick} variant="outline" className="justify-start" disabled={disabled || isButtonLoading || isLoading}>
+          {(isLoading || isButtonLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          {label}
+      </Button>
   );
+  
+  if (href) {
+      return <Link href={href} passHref target="_blank" rel="noopener noreferrer">{content}</Link>;
+  }
+
+  return content;
 };
 
 const PlaceholderReportButton = ({ label, hasIcon = true }: { label: string, hasIcon?: boolean }) => {
@@ -69,12 +75,17 @@ const numberToWords = (num: number): string => {
     const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
-    if (num < 10) return ones[num];
-    if (num < 20) return teens[num - 10];
-    if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ` ${ones[num % 10]}` : '');
-    
-    // For numbers >= 100, just return the number as a string for this use case.
-    return num.toString();
+    const numToWords = (n: number): string => {
+        if (n < 10) return ones[n];
+        if (n < 20) return teens[n - 10];
+        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ` ${ones[n % 10]}` : '');
+        if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ` and ${numToWords(n % 100)}` : '');
+        if (n < 100000) return numToWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ` ${numToWords(n % 1000)}` : '');
+        if (n < 10000000) return numToWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ` ${numToWords(n % 100000)}` : '');
+        return 'Number too large';
+    };
+
+    return numToWords(num);
 };
 
 
@@ -118,22 +129,25 @@ export default function PdfReportDialogs() {
     
             const allMappings = { ...defaultMappings, ...fieldMappings };
 
-            // New logic: iterate and fill fields safely
             for (const fieldName in allMappings) {
                 const fieldValue = allMappings[fieldName];
                 if (fieldValue === undefined || fieldValue === null) continue;
-
+            
                 try {
                     const field = form.getField(fieldName);
-                    if (field.constructor.name === 'PDFTextField') {
-                        const textField = field as import('pdf-lib').PDFTextField;
-                        textField.setText(String(fieldValue));
-                        textField.defaultUpdateAppearances();
-                    }
-                    // Add other field types like checkboxes if needed
+                    if (field instanceof PDFTextField) {
+                        field.setText(String(fieldValue));
+                        field.defaultUpdateAppearances();
+                    } else if (field instanceof PDFCheckBox) {
+                        if (String(fieldValue).toLowerCase() === 'true' || String(fieldValue).toLowerCase() === 'on') {
+                            field.check();
+                        } else {
+                            field.uncheck();
+                        }
+                    } // Add other field types if needed (PDFDropdown, etc.)
                 } catch (e) {
                     // Field might not exist in this template, which is okay.
-                    // console.warn(`Field not found: ${fieldName}`);
+                    // console.warn(`Field not found or wrong type: ${fieldName}`);
                 }
             }
 
@@ -268,86 +282,86 @@ export default function PdfReportDialogs() {
     }, [tender, fillPdfForm, allStaffMembers]);
     
     const handleGenerateFinancialSummary = useCallback(async () => {
-    setIsLoading(true);
-    try {
-        const bidders = [...(tender.bidders || [])]
-            .filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
-            .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
+        setIsLoading(true);
+        try {
+            const bidders = [...(tender.bidders || [])]
+                .filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
+                .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
 
-        const l1Bidder = bidders[0];
-        const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
-        const INDENT = "     ";
+            const l1Bidder = bidders[0];
+            const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
+            const INDENT = "     ";
 
-        let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
-        
-        const slNoWidth = 4;
-        const nameWidth = 45;
-        const amountSpacer = ' '.repeat(3); 
-        const amountWidth = 25;
-        const rankSpacer = ' '.repeat(5); 
-        const rankWidth = 5;
+            let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
+            
+            const slNoWidth = 4;
+            const nameWidth = 45;
+            const amountSpacer = ' '.repeat(3); 
+            const amountWidth = 25;
+            const rankSpacer = ' '.repeat(5); 
+            const rankWidth = 5;
 
-        const header = "Sl. No.".padEnd(slNoWidth) 
-                     + "Name of Bidder".padEnd(nameWidth) 
-                     + amountSpacer 
-                     + "Quoted Amount (Rs.)".padStart(amountWidth) 
-                     + rankSpacer 
-                     + "Rank".padEnd(rankWidth);
+            const header = "Sl. No.".padEnd(slNoWidth) 
+                        + "Name of Bidder".padEnd(nameWidth) 
+                        + amountSpacer 
+                        + "Quoted Amount (Rs.)".padStart(amountWidth) 
+                        + rankSpacer 
+                        + "Rank".padEnd(rankWidth);
 
-        const bidderRows = bidders.map((bidder, index) => {
-            const sl = `${index + 1}.`.padEnd(slNoWidth);
-            const name = (bidder.name || 'N/A').padEnd(nameWidth);
-            const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
-            const rank = `L${index + 1}`.padEnd(rankWidth);
-            return `${sl}${name}${amountSpacer}${amount}${rankSpacer}${rank}`;
-        }).join('\n');
-        
-        const totalHeaderWidth = header.length;
-        const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
-        
-        let finResultText = `${INDENT}No valid bids to recommend.`;
-        if (l1Bidder) {
-            const bidderName = l1Bidder.name || 'N/A';
-            finResultText = `${INDENT}${bidderName}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.`;
+            const bidderRows = bidders.map((bidder, index) => {
+                const sl = `${index + 1}.`.padEnd(slNoWidth);
+                const name = (bidder.name || 'N/A').padEnd(nameWidth);
+                const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(amountWidth);
+                const rank = `L${index + 1}`.padEnd(rankWidth);
+                return `${sl}${name}${amountSpacer}${amount}${rankSpacer}${rank}`;
+            }).join('\n');
+            
+            const totalHeaderWidth = header.length;
+            const finTableText = `${header}\n${"-".repeat(totalHeaderWidth)}\n${bidderRows}`;
+            
+            let finResultText = `${INDENT}No valid bids to recommend.`;
+            if (l1Bidder) {
+                const bidderName = l1Bidder.name || 'N/A';
+                finResultText = `${INDENT}${bidderName}, who quoted the lowest rate, may be accepted and recommended for issuance of the selection notice.`;
+            }
+            
+            const committeeMemberNames = [
+                tender.technicalCommitteeMember1,
+                tender.technicalCommitteeMember2,
+                tender.technicalCommitteeMember3,
+            ].filter(Boolean) as string[];
+
+            const committeeMembersText = committeeMemberNames.map((name, index) => {
+                const staffInfo = allStaffMembers.find(s => s.name === name);
+                const designation = staffInfo ? staffInfo.designation : 'N/A';
+                return `${index + 1}. ${name}, ${designation}`;
+            }).join('\n');
+            
+            const fieldMappings = {
+                'fin_file_no': `GKT/${tender.fileNo || ''}`,
+                'fin_e_tender_no': tender.eTenderNo,
+                'fin_dated': formatDateSafe(tender.tenderDate),
+                'fin_name_of_work': tender.nameOfWork,
+                'fin_summary': finSummaryText,
+                'fin_table': finTableText,
+                'fin_result': finResultText,
+                'fin_committee': committeeMembersText,
+                'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
+            };
+            
+            const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings);
+
+            if (!pdfBytes) throw new Error("PDF generation failed.");
+            const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+            download(pdfBytes, fileName, 'application/pdf');
+            toast({ title: "PDF Generated", description: "Your Financial Summary has been downloaded." });
+
+        } catch (error: any) {
+            console.error("Financial Summary Generation Error:", error);
+            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
+        } finally {
+            setIsLoading(false);
         }
-        
-        const committeeMemberNames = [
-            tender.technicalCommitteeMember1,
-            tender.technicalCommitteeMember2,
-            tender.technicalCommitteeMember3,
-        ].filter(Boolean) as string[];
-
-        const committeeMembersText = committeeMemberNames.map((name, index) => {
-            const staffInfo = allStaffMembers.find(s => s.name === name);
-            const designation = staffInfo ? staffInfo.designation : 'N/A';
-            return `${index + 1}. ${name}, ${designation}`;
-        }).join('\n');
-        
-        const fieldMappings = {
-            'fin_file_no': `GKT/${tender.fileNo || ''}`,
-            'fin_e_tender_no': tender.eTenderNo,
-            'fin_dated': formatDateSafe(tender.tenderDate),
-            'fin_name_of_work': tender.nameOfWork,
-            'fin_summary': finSummaryText,
-            'fin_table': finTableText,
-            'fin_result': finResultText,
-            'fin_committee': committeeMembersText,
-            'fin_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
-        };
-        
-        const pdfBytes = await fillPdfForm('/Financial-Summary.pdf', fieldMappings);
-
-        if (!pdfBytes) throw new Error("PDF generation failed.");
-        const fileName = `Financial_Summary_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
-        download(pdfBytes, fileName, 'application/pdf');
-        toast({ title: "PDF Generated", description: "Your Financial Summary has been downloaded." });
-
-    } catch (error: any) {
-        console.error("Financial Summary Generation Error:", error);
-        toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
-    } finally {
-        setIsLoading(false);
-    }
     }, [tender, fillPdfForm, allStaffMembers]);
 
     return (
@@ -394,8 +408,18 @@ export default function PdfReportDialogs() {
                         isLoading={isLoading}
                         disabled={isLoading || (tender.bidders || []).length === 0}
                     />
-                    <PlaceholderReportButton label="Selection Notice" />
-                    <PlaceholderReportButton label="Work / Supply Order" />
+                    <ReportButton 
+                        reportType="selectionNotice"
+                        label="Selection Notice"
+                        href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}
+                        disabled={!tender.id || tender.id === 'new'}
+                    />
+                    <ReportButton 
+                        reportType="workOrder"
+                        label="Work / Supply Order"
+                        href={tender.id ? `/dashboard/e-tender/${tender.id}/work-order` : '#'}
+                        disabled={!tender.id || tender.id === 'new'}
+                    />
                     <PlaceholderReportButton label="Work Agreement" />
                 </div>
             </CardContent>
