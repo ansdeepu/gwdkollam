@@ -31,28 +31,32 @@ export default function SelectionNoticePrintPage() {
         if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
         if (l1Bidder.quotedAmount >= tender.estimateAmount) return false;
         
-        // APG is required if the bid is more than 10% below the estimate.
-        const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
-        return percentageDifference > 0.10;
+        const logic = tender.additionalPerformanceGuaranteeDescription 
+            ? { threshold: parseFloat(tender.additionalPerformanceGuaranteeDescription.match(/up to ([\d.]+)%|between\s+([\d.]+)%/)?.find(v => v) || '10') / 100 }
+            : { threshold: 0.10 };
 
-    }, [tender.estimateAmount, l1Bidder?.quotedAmount]);
+        const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
+        return percentageDifference > logic.threshold;
+
+    }, [tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
 
     const performanceGuarantee = tender.performanceGuaranteeAmount ?? 0;
     const additionalPerformanceGuarantee = tender.additionalPerformanceGuaranteeAmount ?? 0;
     const stampPaperValue = tender.stampPaperAmount ?? 200;
     
-    // Calculate the percentage for the APG text
     const apgPercentageText = useMemo(() => {
         if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return '0';
         
+        const threshold = tender.additionalPerformanceGuaranteeDescription 
+            ? parseFloat(tender.additionalPerformanceGuaranteeDescription.match(/up to ([\d.]+)%|between\s+([\d.]+)%/)?.find(v => v) || '10') / 100
+            : 0.10;
+
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
-        // The text seems to require the percentage *beyond* the initial threshold (10%)
-        const excessPercentage = percentageDifference - 0.10; 
+        const excessPercentage = percentageDifference - threshold;
         
-        // The example shows "2.1 %", so we format it this way.
         return (excessPercentage * 100).toFixed(1);
 
-    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount]);
+    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
 
 
     const MainContent = () => {
@@ -92,13 +96,13 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-8" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black px-12 py-4 space-y-4">
+        <div className="bg-white text-black p-8 font-serif min-h-screen">
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 flex flex-col h-full min-h-[calc(100vh-4rem)]">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
                 
-                <div className="text-sm flex justify-between">
+                <div className="text-sm flex justify-between mt-4">
                     <div>
                         <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
                         <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
@@ -107,17 +111,17 @@ export default function SelectionNoticePrintPage() {
                         <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
                         <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം'}</p>
                         <p>ഫോൺനമ്പർ: {officeAddress?.phoneNo || '0474 - 2790313'}</p>
-                        <p>ഇമെയിൽ: gwdklm@gmail.com</p>
+                        <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
                         <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
                     </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-8">
                     <p>പ്രേഷകൻ</p>
                     <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-4">
                     <p>സ്വീകർത്താവ്</p>
                     <div className="ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
@@ -125,11 +129,11 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
                 
-                <div className="pt-2">
+                <div className="pt-4">
                     <p>സർ,</p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 mt-4">
                     <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം:</span>
                         <span>
@@ -142,11 +146,11 @@ export default function SelectionNoticePrintPage() {
                     </p>
                 </div>
                 
-                <div className="pt-2">
+                <div className="pt-4">
                     <MainContent />
                 </div>
                 
-                <div className="text-right pt-4">
+                <div className="mt-auto text-right pt-8">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <div className="h-16" />
                     <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
