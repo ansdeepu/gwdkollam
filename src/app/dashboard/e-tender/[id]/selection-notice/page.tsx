@@ -77,7 +77,7 @@ export default function SelectionNoticePrintPage() {
             <p className="leading-normal text-justify indent-8">
                 മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
-                മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെอร์ഫോമൻസ്
+                മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
                 ഗ്യാരന്റിയായി ടെണ്ടറിൽ കോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
                 രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ
                 കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValueStr}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
@@ -87,10 +87,10 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black text-sm p-8">
+        <div className="bg-white text-black p-2">
             <div 
-                className="max-w-4xl mx-auto border-2 border-black px-12 py-4 space-y-4"
-                style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}
+                className="max-w-4xl mx-auto border-2 border-black px-12 py-10 space-y-4 min-h-[29cm]"
+                 style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}
             >
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
@@ -113,12 +113,12 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-8">
                     <p>പ്രേഷകൻ</p>
                     <p className="ml-8">ജില്ലാ ആഫീസർ</p>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-12">
                     <p>സ്വീകർത്താവ്</p>
                     <div className="ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
@@ -147,9 +147,9 @@ export default function SelectionNoticePrintPage() {
                     <MainContent />
                 </div>
                 
-                <div className="text-right mt-8">
+                <div className="text-right mt-16">
                     <p>വിശ്വസ്തതയോടെ</p>
-                    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+                    <div className="h-24" />
                     <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
                 </div>
             </div>
