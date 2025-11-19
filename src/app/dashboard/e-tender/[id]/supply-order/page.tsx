@@ -15,6 +15,7 @@ export default function SupplyOrderPrintPage() {
     useEffect(() => {
         if (tender) {
             document.title = `Supply_Order_${tender.eTenderNo?.replace(/\//g, '_') || 'Tender'}`;
+            setTimeout(() => window.print(), 500);
         }
     }, [tender]);
 
