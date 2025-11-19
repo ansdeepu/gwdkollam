@@ -4,9 +4,11 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe, toDateOrNull } from '@/components/e-tender/utils';
+import { useDataStore } from '@/hooks/use-data-store';
 
 export default function SelectionNoticePrintPage() {
     const { tender } = useTenderData();
+    const { officeAddress } = useDataStore();
 
     useEffect(() => {
         if (tender && tender.eTenderNo) {
@@ -29,13 +31,16 @@ export default function SelectionNoticePrintPage() {
     
     const isApgRequired = useMemo(() => {
         if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
-        // Check if quoted amount is less than estimate amount
         if (l1Bidder.quotedAmount >= tender.estimateAmount) return false;
         const difference = tender.estimateAmount - l1Bidder.quotedAmount;
         const percentageDifference = (difference / tender.estimateAmount);
-        // APG is required if the bid is more than 10% below the estimate
-        return percentageDifference > 0.10;
-    }, [tender.estimateAmount, l1Bidder?.quotedAmount]);
+        
+        const apgLogic = tender.additionalPerformanceGuaranteeDescription || '';
+        const thresholdMatch = apgLogic.match(/below the estimate cost by more than ([\d.]+)%/);
+        const threshold = thresholdMatch ? parseFloat(thresholdMatch[1]) / 100 : 0.15; // Default to 15% if not found
+        
+        return percentageDifference > threshold;
+    }, [tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
 
     const performanceGuarantee = tender.performanceGuaranteeAmount ?? 0;
     const additionalPerformanceGuarantee = tender.additionalPerformanceGuaranteeAmount ?? 0;
@@ -43,14 +48,19 @@ export default function SelectionNoticePrintPage() {
     
     const apgPercentage = useMemo(() => {
         if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return 0;
+        
+        const apgLogic = tender.additionalPerformanceGuaranteeDescription || '';
+        const thresholdMatch = apgLogic.match(/below the estimate cost by more than ([\d.]+)%/);
+        const threshold = thresholdMatch ? parseFloat(thresholdMatch[1]) / 100 : 0.15;
+
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
-        const excessPercentage = percentageDifference - 0.10;
+        const excessPercentage = percentageDifference - threshold;
         return excessPercentage * 100;
-    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount]);
+    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount, tender.additionalPerformanceGuaranteeDescription]);
 
 
     const MainContent = () => {
-        const workName = tender.nameOfWorkMalayalam || tender.nameOfWork;
+        const workName = tender.nameOfWork; // Using English name as per template example
         const quotedAmountStr = (l1Bidder?.quotedAmount ?? 0).toLocaleString('en-IN');
         const performanceGuaranteeStr = performanceGuarantee.toLocaleString('en-IN');
         const stampPaperValueStr = stampPaperValue.toLocaleString('en-IN');
@@ -61,7 +71,7 @@ export default function SelectionNoticePrintPage() {
             const apgPercentageStr = apgPercentage.toFixed(2);
 
             return (
-                 <p className="leading-normal text-justify indent-8">
+                 <p className="leading-relaxed text-justify indent-8">
                     മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                     സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                     മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -74,7 +84,7 @@ export default function SelectionNoticePrintPage() {
             );
         }
         return (
-            <p className="leading-normal text-justify indent-8">
+            <p className="leading-relaxed text-justify indent-8">
                 മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -88,36 +98,31 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="bg-white text-black p-8" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
-            <div 
-                className="max-w-4xl mx-auto border-2 border-black px-12 py-8 space-y-6"
-            >
+            <div className="max-w-4xl mx-auto border-2 border-black px-12 py-8 space-y-4">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
                 
-                <div className="text-sm">
-                    <div className="flex justify-between">
-                        <div>
-                            <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
-                            <p className="mt-1">ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
-                        </div>
-                        <div className="text-right">
-                            <p>ജില്ലാ ആഫീസറുടെ കാര്യാലയം,</p>
-                            <p>ഭൂജലവകുപ്പ്, ഹൈസ്കൂൾ ജംഗ്ഷൻ</p>
-                            <p>തേവള്ളി പി. ഓ, കൊല്ലം -691009</p>
-                            <p>ഫോൺനമ്പർ. 0474 - 2790313</p>
-                            <p>ഇമെയിൽ: gwdklm@gmail.com</p>
-                            <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
-                        </div>
+                <div className="text-sm flex justify-between">
+                    <div>
+                        <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
+                        <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
+                    </div>
+                    <div className="text-right">
+                        <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
+                        <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം'}</p>
+                        <p>ഫോൺനമ്പർ: {officeAddress?.phoneNo || '0474 - 2790313'}</p>
+                        <p>ഇമെയിൽ: gwdklm@gmail.com</p>
+                        <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
                     </div>
                 </div>
 
-                <div className="mt-8">
+                <div className="pt-8">
                     <p>പ്രേഷകൻ</p>
-                    <p className="ml-8">ജില്ലാ ആഫീസർ</p>
+                    <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
                 </div>
 
-                <div className="mt-12">
+                <div className="pt-4">
                     <p>സ്വീകർത്താവ്</p>
                     <div className="ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
@@ -125,15 +130,15 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
                 
-                <div>
+                <div className="pt-4">
                     <p>സർ,</p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 pt-4">
                     <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം :</span>
                         <span className="flex-1">
-                            {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്.
+                            {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്.
                         </span>
                     </p>
                     <p className="flex">
@@ -142,14 +147,14 @@ export default function SelectionNoticePrintPage() {
                     </p>
                 </div>
                 
-                <div>
+                <div className="pt-4">
                     <MainContent />
                 </div>
                 
-                <div className="text-right">
+                <div className="text-right pt-8">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <div className="h-16" />
-                    <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
+                    <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
                 </div>
             </div>
         </div>
