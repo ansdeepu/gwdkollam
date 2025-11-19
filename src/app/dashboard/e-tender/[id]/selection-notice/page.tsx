@@ -56,7 +56,7 @@ export default function SelectionNoticePrintPage() {
 
 
     const MainContent = () => {
-        const workName = tender.nameOfWork;
+        const workName = tender.nameOfWorkMalayalam || tender.nameOfWork;
         const quotedAmountStr = (l1Bidder?.quotedAmount ?? 0).toLocaleString('en-IN');
         const performanceGuaranteeStr = performanceGuarantee.toLocaleString('en-IN');
         const stampPaperValueStr = stampPaperValue.toLocaleString('en-IN');
@@ -80,7 +80,7 @@ export default function SelectionNoticePrintPage() {
         }
         return (
             <p className="leading-normal text-justify indent-8">
-                മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
                 ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
@@ -133,7 +133,7 @@ export default function SelectionNoticePrintPage() {
                     <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം:</span>
                         <span>
-                            {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
+                            {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
                         </span>
                     </p>
                     <p className="flex">
