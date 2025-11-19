@@ -35,12 +35,14 @@ export default function WorkOrderPrintPage() {
     const supervisor3 = allStaffMembers.find(s => s.id === tender.supervisor3Id);
 
     const supervisors = [supervisor1, supervisor2, supervisor3].filter(Boolean) as StaffMember[];
-
-    const supervisorListText = [
-        measurer ? `${measurer.name}, ${measurer.designation}` : '____________________',
-        ...supervisors.map(s => `${s.name}, ${s.designation} (ഫോൺ നമ്പർ: ${s.phoneNo || 'N/A'})`)
-    ].join(', ');
     
+    const supervisorList = [
+        measurer ? `${measurer.name}, ${measurer.designation}` : null,
+        ...supervisors.map(s => `${s.name}, ${s.designation}${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}`)
+    ].filter(Boolean);
+
+    const supervisorListText = supervisorList.length > 0 ? supervisorList.join(', ') : '____________________';
+
     const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ ${tender.periodOfCompletion || '___'} ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ ${supervisorListText} എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
 
     const copyToList = [
