@@ -116,11 +116,20 @@ export default function PdfReportDialogs() {
                         href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}
                         disabled={!tender.id || tender.id === 'new'}
                     />
-                    <ReportButton 
-                        label="Work / Supply Order"
-                        href={tender.id ? `/dashboard/e-tender/${tender.id}/work-order` : '#'}
-                        disabled={!tender.id || tender.id === 'new'}
-                    />
+                    {tender.tenderType === 'Work' && (
+                        <ReportButton 
+                            label="Work Order"
+                            href={tender.id ? `/dashboard/e-tender/${tender.id}/work-order` : '#'}
+                            disabled={!tender.id || tender.id === 'new'}
+                        />
+                    )}
+                    {tender.tenderType === 'Purchase' && (
+                        <ReportButton 
+                            label="Supply Order"
+                            href={tender.id ? `/dashboard/e-tender/${tender.id}/supply-order` : '#'}
+                            disabled={!tender.id || tender.id === 'new'}
+                        />
+                    )}
                     <PlaceholderReportButton label="Work Agreement" />
                 </div>
             </CardContent>
