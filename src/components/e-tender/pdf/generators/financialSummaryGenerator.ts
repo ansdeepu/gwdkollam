@@ -1,24 +1,18 @@
 // src/components/e-tender/pdf/generators/financialSummaryGenerator.ts
-import { PDFDocument, PDFTextField } from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
 
 export async function generateFinancialSummary(tender: E_tender, allStaffMembers: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Financial-Summary.pdf';
-     const [existingPdfBytes, fontBytes] = await Promise.all([
-        fetch(templatePath).then(res => {
-            if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
-            return res.arrayBuffer();
-        }),
-        fetch('/AnjaliOldLipi.ttf').then(res => {
-            if (!res.ok) throw new Error('Font file not found: AnjaliOldLipi.ttf');
-            return res.arrayBuffer();
-        })
-    ]);
+    const existingPdfBytes = await fetch(templatePath).then(res => {
+        if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
+        return res.arrayBuffer();
+    });
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const anjaliFont = await pdfDoc.embedFont(fontBytes);
+    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const form = pdfDoc.getForm();
 
     const bidders = [...(tender.bidders || [])].filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0).sort((a, b) => a.quotedAmount! - b.quotedAmount!);
@@ -69,7 +63,7 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
             try {
                 const textField = form.getTextField(fieldName);
                 textField.setText(String(fieldMappings[fieldName] || ''));
-                textField.updateAppearances(anjaliFont);
+                textField.updateAppearances(timesRomanFont);
             } catch(e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
             }
