@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/[id]/selection-notice/page.tsx
 "use client";
 
@@ -13,8 +14,6 @@ export default function SelectionNoticePrintPage() {
     useEffect(() => {
         if (tender && tender.eTenderNo) {
             document.title = `Selection_Notice_${tender.eTenderNo.replace(/\//g, '_')}`;
-            // Automatically trigger the print dialog
-            window.print();
         } else {
             document.title = 'Selection_Notice';
         }
@@ -71,7 +70,7 @@ export default function SelectionNoticePrintPage() {
             const apgPercentageStr = apgPercentage.toFixed(2);
 
             return (
-                 <p className="leading-relaxed text-justify indent-8">
+                 <p className="leading-normal text-justify indent-8">
                     മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                     സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                     മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -84,7 +83,7 @@ export default function SelectionNoticePrintPage() {
             );
         }
         return (
-            <p className="leading-relaxed text-justify indent-8">
+            <p className="leading-normal text-justify indent-8">
                 മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
@@ -97,8 +96,8 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-8" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black px-12 py-8 space-y-4">
+        <div className="bg-white text-black" style={{ fontFamily: '"Times New Roman", "AnjaliOldLipi", serif' }}>
+            <div className="max-w-4xl mx-auto border-2 border-black px-12 py-8 space-y-6">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
@@ -117,12 +116,12 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
 
-                <div className="pt-8">
+                <div className="pt-4">
                     <p>പ്രേഷകൻ</p>
                     <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-2">
                     <p>സ്വീകർത്താവ്</p>
                     <div className="ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
@@ -130,15 +129,15 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
                 
-                <div className="pt-4">
+                <div className="pt-2">
                     <p>സർ,</p>
                 </div>
 
-                <div className="space-y-2 pt-4">
+                <div className="space-y-2">
                     <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം :</span>
                         <span className="flex-1">
-                            {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് - സംബന്ധിച്ച്.
+                            {tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
                         </span>
                     </p>
                     <p className="flex">
@@ -147,11 +146,11 @@ export default function SelectionNoticePrintPage() {
                     </p>
                 </div>
                 
-                <div className="pt-4">
+                <div className="pt-2">
                     <MainContent />
                 </div>
                 
-                <div className="text-right pt-8">
+                <div className="text-right pt-4">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <div className="h-16" />
                     <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
