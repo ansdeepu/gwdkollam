@@ -78,8 +78,8 @@ export default function SelectionNoticePrintPage() {
     };
 
     return (
-        <div className="bg-white text-black p-2" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-6 flex flex-col justify-between min-h-[27cm]">
+        <div className="bg-white text-black p-8" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
+            <div className="max-w-4xl mx-auto border-2 border-black p-12 space-y-4">
                 <div>
                     <div className="text-center">
                         <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
@@ -137,7 +137,7 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
                 
-                <div className="text-right">
+                <div className="text-right mt-24">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <br /><br /><br />
                     <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
