@@ -16,7 +16,6 @@ export default function WorkOrderPrintPage() {
         if (tender) {
             const prefix = tender.tenderType === 'Purchase' ? 'Supply_Order' : 'Work_Order';
             document.title = `${prefix}_${tender.eTenderNo?.replace(/\//g, '_') || 'Tender'}`;
-            // Intentionally not calling window.print() automatically
         }
     }, [tender]);
 
@@ -126,7 +125,7 @@ export default function WorkOrderPrintPage() {
                     </div>
                     {/* Right Column */}
                     <div className="space-y-6">
-                        <div className="text-center">
+                        <div className="text-center print:break-before-page">
                             <h2 className="font-bold underline">Special Conditions</h2>
                             <ol className="list-decimal list-inside text-left mt-2 space-y-1">
                                 <li>The entire supply shall be completed within 15 days from the date of receipt of this order.</li>

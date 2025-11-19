@@ -17,7 +17,7 @@ export default function SelectionNoticePrintPage() {
             document.title = 'Selection_Notice';
         }
         // Automatically trigger print dialog
-        window.print();
+        setTimeout(() => window.print(), 500);
     }, [tender]);
     
     const l1Bidder = useMemo(() => {
@@ -123,16 +123,14 @@ export default function SelectionNoticePrintPage() {
               </div>
 
               <div className="space-y-2 pt-2">
-                  <p className="flex text-justify leading-relaxed">
-                      <span className="w-20 shrink-0">വിഷയം:</span>
-                      <span>
-                          {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
-                      </span>
-                  </p>
-                  <p className="flex leading-relaxed">
-                      <span className="w-20 shrink-0">സൂചന:</span>
-                      <span>ഈ ഓഫീസിലെ <span className="font-mono">{formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono">{tender.eTenderNo || '__________'}</span></span>
-                  </p>
+                  <div className="grid grid-cols-[auto,1fr] gap-x-2">
+                      <span className="font-semibold">വിഷയം:</span>
+                      <span className="text-justify">: {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.</span>
+                  </div>
+                  <div className="grid grid-cols-[auto,1fr] gap-x-2">
+                      <span className="font-semibold">സൂചന:</span>
+                      <span>: ഈ ഓഫീസിലെ <span className="font-mono">{formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono">{tender.eTenderNo || '__________'}</span></span>
+                  </div>
               </div>
               
               <div className="pt-2">
