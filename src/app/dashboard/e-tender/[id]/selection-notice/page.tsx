@@ -31,33 +31,38 @@ export default function SelectionNoticePrintPage() {
     
     const apgThreshold = useMemo(() => {
         const description = tender.additionalPerformanceGuaranteeDescription || '';
-        const thresholdMatch = description.match(/up to ([\d.]+)%|between\s+([\d.]+)%/);
-        return thresholdMatch ? parseFloat(thresholdMatch.find(v => v) || '10') / 100 : 0.10;
+        const thresholdMatch = description.match(/below the estimate cost by more than ([\d.]+)%/);
+        return thresholdMatch ? parseFloat(thresholdMatch[1]) / 100 : 0.15;
     }, [tender.additionalPerformanceGuaranteeDescription]);
-
+    
     const isApgRequired = useMemo(() => {
         if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
-        if (l1Bidder.quotedAmount >= tender.estimateAmount) return false;
+        if (l1Bidder.quotedAmount >= tender.estimateAmount) return false; // Not below estimate
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
         return percentageDifference > apgThreshold;
     }, [tender.estimateAmount, l1Bidder?.quotedAmount, apgThreshold]);
-
 
     const performanceGuarantee = tender.performanceGuaranteeAmount ?? 0;
     const additionalPerformanceGuarantee = tender.additionalPerformanceGuaranteeAmount ?? 0;
     const stampPaperValue = tender.stampPaperAmount ?? 200;
     
-    const apgPercentageText = useMemo(() => {
+    const excessPercentageText = useMemo(() => {
         if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return '0';
         const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
         const excessPercentage = percentageDifference - apgThreshold;
-        return (excessPercentage * 100).toFixed(1);
+        return (excessPercentage * 100).toFixed(2);
     }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount, apgThreshold]);
 
 
     const MainContent = () => {
         const workName = tender.nameOfWorkMalayalam || tender.nameOfWork;
-        const quotedAmountStr = (l1Bidder?.quotedAmount ?? 0).toLocaleString('en-IN');
+        
+        if (!l1Bidder) {
+            return <p className="leading-relaxed text-justify indent-8">ടെണ്ടർ അംഗീകരിച്ചു. ദയവായി മറ്റ് വിവരങ്ങൾ ചേർക്കുക.</p>
+        }
+
+        const quotedAmountStr = (l1Bidder.quotedAmount ?? 0).toLocaleString('en-IN');
+        const quotedPercentageStr = `${l1Bidder.quotedPercentage || 0}% ${l1Bidder.aboveBelow || ''}`;
         const performanceGuaranteeStr = performanceGuarantee.toLocaleString('en-IN');
         const stampPaperValueStr = stampPaperValue.toLocaleString('en-IN');
 
@@ -67,26 +72,14 @@ export default function SelectionNoticePrintPage() {
 
             return (
                  <p className="leading-relaxed text-justify indent-8">
-                    മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
-                    സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
-                    മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">14</span> ദിവസത്തിനകം പെർഫോമൻസ്
-                    ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span>
-                    രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്  ഡെപ്പോസിറ്റായും അഡിഷണൽ പെർഫോമൻസ്
-                    ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ <span className="font-mono">{estimateAmountStr}/-</span> രൂപയുടെ <span className="font-mono">{apgPercentageText}%</span> തുകയായ <span className="font-mono">{additionalPerformanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
-                    ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെന്റ്
-                    വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
+                    മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തിക്ക് വേണ്ടി <span className="font-mono">{quotedPercentageStr}</span> നിരക്കിൽ താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">14</span> ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും, അഡിഷണൽ പെർഫോമൻസ് ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയുടെ <span className="font-mono">{excessPercentageText}%</span> കുറവ് വന്ന തുകയായ <span className="font-mono">{additionalPerformanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെന്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
                 </p>
             );
         }
+
         return (
             <p className="leading-relaxed text-justify indent-8">
-                മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
-                സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
-                മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">14</span> ദിവസത്തിനകം പെർഫോമൻസ്
-                ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span>
-                രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ
-                കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
-                നിർദ്ദേശിക്കുന്നു.
+                മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തിക്ക് വേണ്ടി <span className="font-mono">{quotedPercentageStr}</span> നിരക്കിൽ താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">14</span> ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
             </p>
         );
     };
