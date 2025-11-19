@@ -75,9 +75,9 @@ export default function SelectionNoticePrintPage() {
 
             return (
                  <p className="leading-relaxed text-justify indent-8">
-                    മേൽ സൂചന പ്രകാരം <span>{workName}</span> എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                    മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                     സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
-                    മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
+                    മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">14</span> ദിവസത്തിനകം പെർഫോമൻസ്
                     ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span>
                     രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്  ഡെപ്പോസിറ്റായും അഡിഷണൽ പെർഫോമൻസ്
                     ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ <span className="font-mono">{estimateAmountStr}/-</span> രൂപയുടെ <span className="font-mono">{apgPercentageText}%</span> തുകയായ <span className="font-mono">{additionalPerformanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
@@ -88,9 +88,9 @@ export default function SelectionNoticePrintPage() {
         }
         return (
             <p className="leading-relaxed text-justify indent-8">
-                മേൽ സൂചന പ്രകാരം <span>{workName}</span> എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
-                മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
+                മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">14</span> ദിവസത്തിനകം പെർഫോമൻസ്
                 ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span>
                 രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ
                 കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
@@ -101,22 +101,22 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="bg-white text-black p-8 font-serif">
-            <div className="max-w-4xl mx-auto p-12">
+            <div className="max-w-4xl mx-auto p-12 space-y-4">
                 <div className="text-center">
                     <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
                 </div>
                 
                 <div className="text-sm flex justify-between mt-4">
                     <div>
-                        <p>നമ്പർ: {tender.fileNo ? `ജി.കെ.റ്റി / ${tender.fileNo}` : '__________'}</p>
-                        <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
+                        <p>നമ്പർ: ജി.കെ.റ്റി / <span className="font-mono">{tender.fileNo || '__________'}</span></p>
+                        <p>ടെണ്ടർ നമ്പർ : <span className="font-mono">{tender.eTenderNo || '__________'}</span></p>
                     </div>
                     <div className="text-right">
                         <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
                         <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം'}</p>
-                        <p>ഫോൺനമ്പർ: {officeAddress?.phoneNo || '0474 - 2790313'}</p>
+                        <p>ഫോൺനമ്പർ: <span className="font-mono">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
                         <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
-                        <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
+                        <p>തീയതി: <span className="font-mono">{formatDateSafe(tender.selectionNoticeDate) || '__________'}</span></p>
                     </div>
                 </div>
 
@@ -138,15 +138,15 @@ export default function SelectionNoticePrintPage() {
                 </div>
 
                 <div className="space-y-2 mt-4">
-                    <p className="flex text-justify leading-relaxed">
+                    <p className="flex text-justify">
                         <span className="w-20 shrink-0">വിഷയം:</span>
                         <span>
                             {tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് സെലക്ഷൻ നോട്ടീസ് നൽകുന്നത് സംബന്ധിച്ച്.
                         </span>
                     </p>
-                    <p className="flex leading-relaxed">
+                    <p className="flex">
                         <span className="w-20 shrink-0">സൂചന:</span>
-                        <span>ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
+                        <span>ഈ ഓഫീസിലെ <span className="font-mono">{formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono">{tender.eTenderNo || '__________'}</span></span>
                     </p>
                 </div>
                 

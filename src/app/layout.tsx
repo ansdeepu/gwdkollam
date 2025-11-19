@@ -1,12 +1,11 @@
 import type {Metadata} from 'next';
-import { Roboto_Mono } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
-const robotoMono = Roboto_Mono({
-  variable: '--font-roboto-mono',
+const inter = Inter({
+  variable: '--font-sans',
   subsets: ['latin'],
-  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${robotoMono.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>

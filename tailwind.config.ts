@@ -8,7 +8,7 @@ export default {
   ],
   theme: {
     fontFamily: {
-        ...fontFamily,
+        sans: ["var(--font-sans)", ...fontFamily.sans],
         mono: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.mono],
     },
   	extend: {
