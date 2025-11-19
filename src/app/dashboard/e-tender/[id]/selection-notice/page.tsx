@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe, toDateOrNull } from '@/components/e-tender/utils';
+import { AnjaliOldLipi } from '@/app/fonts';
 
 export default function SelectionNoticePrintPage() {
     const { tender } = useTenderData();
@@ -50,36 +51,45 @@ export default function SelectionNoticePrintPage() {
 
 
     const MainContent = () => {
+        const workName = tender.nameOfWorkMalayalam || tender.nameOfWork;
+        const quotedAmountStr = (l1Bidder?.quotedAmount ?? 0).toLocaleString('en-IN');
+        const performanceGuaranteeStr = performanceGuarantee.toLocaleString('en-IN');
+        const stampPaperValueStr = stampPaperValue.toLocaleString('en-IN');
+
         if (isApgRequired) {
+            const estimateAmountStr = (tender.estimateAmount ?? 0).toLocaleString('en-IN');
+            const additionalPerformanceGuaranteeStr = additionalPerformanceGuarantee.toLocaleString('en-IN');
+            const apgPercentageStr = apgPercentage.toFixed(2);
+
             return (
                  <p className="text-sm leading-relaxed text-justify indent-8">
-                    മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                    മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                     സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                     മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
-                    ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {l1Bidder?.quotedAmount?.toLocaleString('en-IN') ?? '__________'}/- രൂപയുടെ 5% തുകയായ {performanceGuarantee.toLocaleString('en-IN') ?? '__________'}/-
+                    ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
                     രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്  ഡെപ്പോസിറ്റായും അഡിഷണൽ പെർഫോമൻസ്
-                    ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ {tender.estimateAmount?.toLocaleString('en-IN') ?? '__________'}/- രൂപയുടെ {apgPercentage.toFixed(2)}% തുകയായ {additionalPerformanceGuarantee.toLocaleString('en-IN') ?? '__________'}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
-                    ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValue.toLocaleString('en-IN') ?? '200'}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ്
+                    ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയായ {estimateAmountStr}/- രൂപയുടെ {apgPercentageStr}% തുകയായ {additionalPerformanceGuaranteeStr}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ്
+                    ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValueStr}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ്
                     വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
                 </p>
             );
         }
         return (
             <p className="text-sm leading-relaxed text-justify indent-8">
-                മേൽ സൂചന പ്രകാരം {tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
+                മേൽ സൂചന പ്രകാരം {workName} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ
                 സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന്
                 മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ്
-                ഗ്യാരന്റിയായി ടെണ്ടറിൽ കോട്ട് ചെയ്തിരിക്കുന്ന {l1Bidder?.quotedAmount?.toLocaleString('en-IN') ?? '__________'}/- രൂപയുടെ 5% തുകയായ {performanceGuarantee.toLocaleString('en-IN') ?? '__________'}/-
+                ഗ്യാരന്റിയായി ടെണ്ടറിൽ കോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/-
                 രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ
-                കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValue.toLocaleString('en-IN') ?? '200'}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
+                കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValueStr}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും
                 നിർദ്ദേശിക്കുന്നു.
             </p>
         );
     };
 
     return (
-        <div className="bg-white text-black p-8" style={{ fontFamily: 'AnjaliNewLipi, sans-serif' }}>
-            <div className="max-w-4xl mx-auto border-2 border-black p-16 space-y-6 flex flex-col justify-between min-h-[27cm]">
+        <div className="bg-white text-black p-8">
+            <div className={`${AnjaliOldLipi.className} max-w-4xl mx-auto border-2 border-black p-12 space-y-6 min-h-[27cm]`}>
                 <div>
                     <div className="text-center">
                         <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
@@ -137,7 +147,7 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
                 
-                <div className="text-right mt-16">
+                <div className="text-right mt-24">
                     <p>വിശ്വസ്തതയോടെ</p>
                     <br /><br /><br />
                     <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
