@@ -70,7 +70,7 @@ export default function WorkOrderPrintPage() {
     if (tender.tenderType === 'Purchase') {
         return (
             <div className="-m-6 bg-white min-h-screen">
-              <div className="max-w-5xl mx-auto p-12 text-black text-sm" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+              <div className="max-w-5xl mx-auto p-12 text-black text-base font-mono">
                 {/* Page 1 */}
                 <div className="space-y-4">
                     <div className="flex justify-between">

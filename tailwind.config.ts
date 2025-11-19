@@ -9,6 +9,7 @@ export default {
   theme: {
     fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
+        serif: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.mono],
         mono: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.mono],
     },
   	extend: {
