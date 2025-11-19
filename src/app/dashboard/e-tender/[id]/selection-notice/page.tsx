@@ -94,12 +94,12 @@ export default function SelectionNoticePrintPage() {
                     </div>
                 </div>
 
-                <div>
+                <div className="space-y-4">
                     <p className="text-sm">പ്രേഷകൻ</p>
                     <p className="text-sm ml-8">ജില്ലാ ആഫീസർ</p>
                 </div>
 
-                <div>
+                <div className="space-y-4">
                     <p className="text-sm">സ്വീകർത്താവ്</p>
                     <div className="text-sm ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
