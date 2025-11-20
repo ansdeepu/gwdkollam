@@ -1,0 +1,71 @@
+// src/components/e-tender/pdf/CorrigendumReports.tsx
+"use client";
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Download, Loader2 } from 'lucide-react';
+import { useTenderData } from '../TenderDataContext';
+import download from 'downloadjs';
+import { toast } from '@/hooks/use-toast';
+import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
+import { generateRetenderCorrigendum } from './generators/retenderCorrigendumGenerator';
+import { generateDateExtensionCorrigendum } from './generators/dateExtensionCorrigendumGenerator';
+import { generateCancelCorrigendum } from './generators/cancelCorrigendumGenerator';
+
+interface CorrigendumReportsProps {
+  corrigendum: Corrigendum;
+}
+
+export default function CorrigendumReports({ corrigendum }: CorrigendumReportsProps) {
+  const { tender } = useTenderData();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerate = async () => {
+    setIsLoading(true);
+    try {
+      let pdfBytes: Uint8Array;
+      let fileNamePrefix: string;
+      
+      switch (corrigendum.corrigendumType) {
+        case 'Retender':
+          pdfBytes = await generateRetenderCorrigendum(tender, corrigendum);
+          fileNamePrefix = 'Corrigendum_Retender';
+          break;
+        case 'Date Extension':
+          pdfBytes = await generateDateExtensionCorrigendum(tender, corrigendum);
+          fileNamePrefix = 'Corrigendum_DateExtension';
+          break;
+        case 'Cancel':
+          pdfBytes = await generateCancelCorrigendum(tender, corrigendum);
+          fileNamePrefix = 'Corrigendum_Cancel';
+          break;
+        default:
+          toast({ title: "Generation Not Supported", description: `PDF generation for type '${corrigendum.corrigendumType}' is not implemented.`, variant: 'destructive' });
+          setIsLoading(false);
+          return;
+      }
+      
+      const fileName = `${fileNamePrefix}_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+      download(pdfBytes, fileName, 'application/pdf');
+      toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
+
+    } catch (error: any) {
+      console.error("Corrigendum PDF Generation Error:", error);
+      toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7"
+      onClick={(e) => { e.stopPropagation(); handleGenerate(); }}
+      disabled={isLoading || !corrigendum.corrigendumType}
+    >
+      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+    </Button>
+  );
+}
