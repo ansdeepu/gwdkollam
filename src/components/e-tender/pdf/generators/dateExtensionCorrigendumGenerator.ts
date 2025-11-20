@@ -22,6 +22,7 @@ export async function generateDateExtensionCorrigendum(
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const form = pdfDoc.getForm();
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
     // Format dates for the main text
     const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
@@ -33,27 +34,33 @@ export async function generateDateExtensionCorrigendum(
         corrigendum.reason ||
         `The time period for submitting e-tenders expired on ${lastDate}, and only one valid bid was received for the above work. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
 
-    // ✅ Correct field names from your PDF
+    // ✅ Correct field names (from your PDF)
     const fieldMappings: Record<string, string> = {
-        'file_no_header': `GKT/${tender.fileNo || ""}`,
-        'e_tender_no_header': tender.eTenderNo || "",
-        'tender_date_header': formatDateSafe(tender.tenderDate),
-        'name_of_work': tender.nameOfWork || "",
-        'date_ext': reasonText,
-        'date': formatDateSafe(corrigendum.corrigendumDate),
+        file_no_header: `GKT/${tender.fileNo || ""}`,
+        e_tender_no_header: tender.eTenderNo || "",
+        tender_date_header: formatDateSafe(tender.tenderDate),
+        name_of_work: tender.nameOfWork || "",
+        date_ext: reasonText, // This is the main multiline paragraph
+        date: formatDateSafe(corrigendum.corrigendumDate),
     };
+    
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
     // Fill fields safely
     for (const [fieldName, value] of Object.entries(fieldMappings)) {
         try {
             const field = form.getTextField(fieldName);
             field.setText(value);
+            
+            const isBold = boldFields.includes(fieldName);
 
             if (fieldName === "date_ext") {
                 field.setAlignment(TextAlignment.Justify);
+                 field.updateAppearances(font);
+            } else {
+                 field.updateAppearances(isBold ? boldFont : font);
             }
 
-            field.updateAppearances(font);
         } catch (err) {
             console.warn(`⚠️ Could not fill field '${fieldName}':`, err);
         }
