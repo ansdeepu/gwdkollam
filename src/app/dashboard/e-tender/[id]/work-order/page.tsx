@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/[id]/work-order/page.tsx
 "use client";
 
@@ -75,6 +74,11 @@ export default function WorkOrderPrintPage() {
                   </div>
               </div>
 
+              <div className="pt-6">
+                  <p>പ്രേഷകൻ</p>
+                  <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+              </div>
+              
               <div>
                   <p>സ്വീകർത്താവ്</p>
                   <div className="ml-8">
