@@ -23,23 +23,22 @@ export async function generateDateExtensionCorrigendum(
     const form = pdfDoc.getForm();
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
 
-    // Format dates
-    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
-    const newLastDate = formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false);
-    const newOpeningDate = formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true);
+    // Format dates from the tender and corrigendum
+    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, false, false);
+    const newLastDate = formatDateSafe(corrigendum.lastDateOfReceipt, true, false, false);
+    const newOpeningDate = formatDateSafe(corrigendum.dateOfOpeningTender, true, false, false);
 
-    // Auto-generate reason only if not provided
-    const reasonText =
-        corrigendum.reason ||
-        `The time period for submitting e-tenders expired on ${lastDate}, and only one valid bid was received for the above work. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
+    // Construct the reason text as specified
+    const reasonText = `The time period for submitting e-tenders expired on ${lastDate}, and ${corrigendum.reason || 'a sufficient number of bids were not received'}. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
 
+    // Correct field names for PDF mapping
     const fieldMappings: Record<string, string> = {
         file_no_header: `GKT/${tender.fileNo || ""}`,
         e_tender_no_header: tender.eTenderNo || "",
         tender_date_header: formatDateSafe(tender.tenderDate),
         name_of_work: tender.nameOfWork || "",
+        date_ext: reasonText, // This is the main paragraph field
         date: formatDateSafe(corrigendum.corrigendumDate),
-        date_ext: reasonText,
     };
 
     // Fill fields safely
@@ -48,6 +47,7 @@ export async function generateDateExtensionCorrigendum(
             const field = form.getTextField(fieldName);
             field.setText(value);
 
+            // Ensure multiline text is justified
             if (fieldName === "date_ext") {
                 field.setAlignment(TextAlignment.Justify);
             }
