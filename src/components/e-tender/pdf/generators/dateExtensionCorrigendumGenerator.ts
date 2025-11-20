@@ -23,10 +23,12 @@ export async function generateDateExtensionCorrigendum(
     const form = pdfDoc.getForm();
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
 
+    // Format dates
     const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
     const newLastDate = formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false);
     const newOpeningDate = formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true);
 
+    // Auto-generate reason only if not provided
     const reasonText =
         corrigendum.reason ||
         `The time period for submitting e-tenders expired on ${lastDate}, and only one valid bid was received for the above work. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
@@ -40,6 +42,7 @@ export async function generateDateExtensionCorrigendum(
         date: formatDateSafe(corrigendum.corrigendumDate),
     };
 
+    // Fill fields safely
     for (const [fieldName, value] of Object.entries(fieldMappings)) {
         try {
             const field = form.getTextField(fieldName);
