@@ -13,6 +13,7 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
 
     const bidders = [...(tender.bidders || [])].filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0).sort((a, b) => a.quotedAmount! - b.quotedAmount!);
@@ -43,6 +44,8 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
         const staffInfo = allStaffMembers.find(s => s.name === name);
         return `${index + 1}. ${name}, ${staffInfo?.designation || 'N/A'}`;
     }).join('\n');
+
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
     
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
@@ -62,8 +65,9 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
         if (fieldName in fieldMappings) {
             try {
                 const textField = form.getTextField(fieldName);
+                const isBold = boldFields.includes(fieldName);
                 textField.setText(String(fieldMappings[fieldName] || ''));
-                textField.updateAppearances(timesRomanFont);
+                textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             } catch(e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
             }
