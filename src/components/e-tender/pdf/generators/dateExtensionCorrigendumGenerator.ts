@@ -34,14 +34,14 @@ export async function generateDateExtensionCorrigendum(
         corrigendum.reason ||
         `No bid was received for the above work`;
 
-    const fullParagraph = `The time period for submitting e-tenders expired on ${lastDate}, and ${reasonText}. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
+    const fullParagraph = `     The time period for submitting e-tenders expired on ${lastDate}, and ${reasonText}. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
 
     const fieldMappings: Record<string, string> = {
         file_no_header: `GKT/${tender.fileNo || ""}`,
         e_tender_no_header: tender.eTenderNo || "",
         tender_date_header: formatDateSafe(corrigendum.corrigendumDate),
         name_of_work: tender.nameOfWork || "",
-        date_ext: fullParagraph,
+        date_ext: fullParagraph, // multiline box (4096 flag)
         date: formatDateSafe(corrigendum.corrigendumDate),
     };
     
