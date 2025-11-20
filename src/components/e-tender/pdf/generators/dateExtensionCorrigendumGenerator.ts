@@ -13,32 +13,37 @@ export async function generateDateExtensionCorrigendum(tender: E_tender, corrige
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
-
-    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true);
-    const newLastDate = formatDateSafe(corrigendum.lastDateOfReceipt, true, true);
+    
+    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
+    const newLastDate = formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false);
     const newOpeningDate = formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true);
     
     const reasonText = corrigendum.reason || `The time period for submitting e-tenders expired on ${lastDate}, and only one valid bid was received for the above work. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
 
     const fieldMappings: Record<string, any> = {
-        'e_tender_no': tender.eTenderNo,
-        'file_no': `GKT/${tender.fileNo || ''}`,
-        'corrigendum_date': formatDateSafe(corrigendum.corrigendumDate),
+        'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no_header': tender.eTenderNo,
+        'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
+        'corrigendum_date': formatDateSafe(corrigendum.corrigendumDate),
         'date-ext': reasonText,
         'new_last_date': newLastDate,
         'new_opening_date': newOpeningDate,
     };
+    
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const textField = form.getTextField(fieldName);
+            const isBold = boldFields.includes(fieldName);
             textField.setText(String(value || ''));
             if (fieldName === 'date-ext') {
                 textField.setAlignment(TextAlignment.Justify);
             }
-            textField.updateAppearances(timesRomanFont);
+            textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
         } catch (e) {
             console.warn(`Could not fill field ${fieldName}:`, e);
         }
