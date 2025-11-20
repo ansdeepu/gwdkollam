@@ -5,7 +5,7 @@ import { formatDateSafe } from '../../utils';
 import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
 
 export async function generateRetenderCorrigendum(tender: E_tender, corrigendum: Corrigendum): Promise<Uint8Array> {
-    const templatePath = '/CORRIGENDUM - RETENDER.pdf';
+    const templatePath = '/Corrigendum-Retender.pdf';
     const existingPdfBytes = await fetch(templatePath).then(res => {
         if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
         return res.arrayBuffer();
