@@ -146,21 +146,7 @@ export default function PdfReportDialogs() {
                         label="Tender Form"
                         onClick={() => handleGeneratePdf(generateTenderForm, 'TenderForm', 'Your Tender Form has been downloaded.')}
                     />
-                    <ReportButton 
-                        label="Bid Opening Summary"
-                        onClick={() => handleGeneratePdf(generateBidOpeningSummary, 'Bid_Opening_Summary', 'Your Bid Opening Summary has been downloaded.')}
-                        disabled={(tender.bidders || []).length === 0}
-                    />
-                    <ReportButton
-                        label="Technical Summary"
-                        onClick={() => handleGeneratePdf(generateTechnicalSummary, 'Technical_Summary', 'Your Technical Summary has been downloaded.')}
-                    />
-                    <ReportButton
-                        label="Financial Summary"
-                        onClick={() => handleGeneratePdf(generateFinancialSummary, 'Financial_Summary', 'Your Financial Summary has been downloaded.')}
-                        disabled={(tender.bidders || []).length === 0}
-                    />
-                     <DropdownMenu>
+                    <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="justify-start w-full" disabled={(tender.corrigendums?.length || 0) === 0}>
                                 <Download className="mr-2 h-4 w-4" />
@@ -175,6 +161,20 @@ export default function PdfReportDialogs() {
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    <ReportButton 
+                        label="Bid Opening Summary"
+                        onClick={() => handleGeneratePdf(generateBidOpeningSummary, 'Bid_Opening_Summary', 'Your Bid Opening Summary has been downloaded.')}
+                        disabled={(tender.bidders || []).length === 0}
+                    />
+                    <ReportButton
+                        label="Technical Summary"
+                        onClick={() => handleGeneratePdf(generateTechnicalSummary, 'Technical_Summary', 'Your Technical Summary has been downloaded.')}
+                    />
+                    <ReportButton
+                        label="Financial Summary"
+                        onClick={() => handleGeneratePdf(generateFinancialSummary, 'Financial_Summary', 'Your Financial Summary has been downloaded.')}
+                        disabled={(tender.bidders || []).length === 0}
+                    />
                     <ReportButton 
                         label="Selection Notice"
                         href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}
