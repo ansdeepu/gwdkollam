@@ -55,7 +55,7 @@ export default function WorkOrderPrintPage() {
 
     return (
         <div className="-m-6 bg-white min-h-screen">
-          <div className="max-w-4xl mx-auto p-12 space-y-6 font-serif text-base">
+          <div className="max-w-4xl mx-auto p-12 space-y-6 font-serif text-xl">
               <div className="text-center">
                   <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
               </div>
@@ -137,7 +137,7 @@ export default function WorkOrderPrintPage() {
                   <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
 
-              <div className="text-base space-y-1 pt-8">
+              <div className="text-xl space-y-1 pt-8">
                   <p>പകർപ്പ്</p>
                   <ol className="list-decimal list-outside ml-8">
                       {copyToList.map((person, index) => (
