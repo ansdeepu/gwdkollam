@@ -48,7 +48,7 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
            try {
             const textField = form.getTextField(fieldName);
             const isBold = boldFields.includes(fieldName);
-
+            
             textField.setText(String(fieldMappings[fieldName] || ''));
             
             if (fieldName === 'tech_summary') {
