@@ -63,11 +63,9 @@ export default function SupplyOrderPrintPage() {
                         <p>Date: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                     </div>
                 </div>
-                 <div className="pt-6">
+                 <div className="pt-6 flex justify-between">
                     <p>From</p>
-                    <div className="text-right">
-                        <p>District Officer</p>
-                    </div>
+                    <p>District Officer</p>
                 </div>
                 <div className="pt-2">
                     <p>To</p>
@@ -84,8 +82,8 @@ export default function SupplyOrderPrintPage() {
                 <div className="flex space-x-4">
                     <span>Ref:</span>
                     <div className="flex-1">
-                        <p>1. e-Tender Notice of this office, {tender.eTenderNo || '__________'}, dated {formatDateSafe(tender.tenderDate) || '__________'}.</p>
-                        <p>2. Supply Agreement No. {tender.eTenderNo || '__________'}, dated {formatDateSafe(tender.agreementDate) || '__________'}.</p>
+                        <p>1. 	e-Tender Notice of this office, {tender.eTenderNo || '__________'}, dated {formatDateSafe(tender.tenderDate) || '__________'}.</p>
+                        <p>2.	Supply Agreement No. {tender.eTenderNo || '__________'}, dated {formatDateSafe(tender.agreementDate) || '__________'}.</p>
                     </div>
                 </div>
                 <p className="text-justify leading-relaxed indent-8">As per the 1st reference cited above, e-tender was invited for the purchase of {tender.nameOfWork}.</p>
@@ -96,8 +94,8 @@ export default function SupplyOrderPrintPage() {
                 </div>
                 <div className="pt-16 text-xs">
                   <p>Copy to:</p>
-                  <p>1. File</p>
-                  <p>2. OC</p>
+                  <p>1.	File</p>
+                  <p>2.	OC</p>
                 </div>
             </div>
 
