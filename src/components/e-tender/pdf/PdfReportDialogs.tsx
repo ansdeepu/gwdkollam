@@ -96,7 +96,6 @@ export default function PdfReportDialogs() {
                         label="Tender Form"
                         onClick={() => handleGeneratePdf(generateTenderForm, 'TenderForm', 'Your Tender Form has been downloaded.')}
                     />
-                    <PlaceholderReportButton label="Corrigendum" />
                     <ReportButton 
                         label="Bid Opening Summary"
                         onClick={() => handleGeneratePdf(generateBidOpeningSummary, 'Bid_Opening_Summary', 'Your Bid Opening Summary has been downloaded.')}
