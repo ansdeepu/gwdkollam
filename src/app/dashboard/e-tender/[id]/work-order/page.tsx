@@ -56,31 +56,31 @@ export default function WorkOrderPrintPage() {
 
     return (
         <div className="-m-6 bg-white min-h-screen">
-          <div className="max-w-4xl mx-auto p-12 space-y-6 font-serif text-lg">
+          <div className="max-w-4xl mx-auto p-8 space-y-4 font-serif text-base">
               <div className="text-center">
                   <h1 className="font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
               </div>
 
-              <div className="flex justify-between text-xl">
+              <div className="flex justify-between text-lg">
                   <div>
-                      <p>നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
-                      <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
+                      <p>നമ്പർ: ജി.കെ.റ്റി / <span className="font-mono text-xl">{tender.fileNo || '__________'}</span></p>
+                      <p>ടെണ്ടർ നമ്പർ : <span className="font-mono text-xl">{tender.eTenderNo || '__________'}</span></p>
                   </div>
                   <div className="text-right">
                       <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
                       <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം - 691009'}</p>
-                      <p>ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
-                      <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
-                      <p>തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
+                      <p>ഫോൺനമ്പർ. <span className="font-mono text-xl">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
+                      <p>ഇമെയിൽ: <span className="font-mono text-xl">{officeAddress?.email || 'gwdklm@gmail.com'}</span></p>
+                      <p>തീയതി: <span className="font-mono text-xl">{formatDateSafe(tender.dateWorkOrder) || '__________'}</span></p>
                   </div>
               </div>
 
-               <div className="pt-6 text-xl">
+               <div className="pt-4 text-lg">
                   <p>പ്രേഷകൻ</p>
                   <p className="ml-8">ജില്ലാ ആഫീസർ</p>
               </div>
               
-              <div className="text-xl">
+              <div className="text-lg">
                   <p>സ്വീകർത്താവ്</p>
                   <div className="ml-8">
                       <p>{l1Bidder?.name || '____________________'}</p>
@@ -88,32 +88,32 @@ export default function WorkOrderPrintPage() {
                   </div>
               </div>
               
-              <p className="text-xl">സർ,</p>
+              <p className="text-lg">സർ,</p>
 
-               <div className="grid grid-cols-[auto,1fr] gap-x-2 text-xl">
+               <div className="grid grid-cols-[auto,1fr] gap-x-2 text-lg">
                     <span className="font-semibold">വിഷയം:</span>
                     <span className="text-justify">{tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് {workOrderTitle} നൽകുന്നത്– സംബന്ധിച്ച്.</span>
                 </div>
-                <div className="grid grid-cols-[auto,1fr] gap-x-2 text-xl">
+                <div className="grid grid-cols-[auto,1fr] gap-x-2 text-lg">
                     <span className="font-semibold">സൂചന:</span>
                     <span className="flex flex-col">
-                        <span>1. ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfOpeningBid) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
-                        <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ {tender.eTenderNo || '__________'} തീയതി {formatDateSafe(tender.agreementDate) || '__________'}</span>
+                        <span>1. ഈ ഓഫീസിലെ <span className="font-mono text-xl">{formatDateSafe(tender.dateOfOpeningBid) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono text-xl">{tender.eTenderNo || '__________'}</span></span>
+                        <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ <span className="font-mono text-xl">{tender.eTenderNo || '__________'}</span> തീയതി <span className="font-mono text-xl">{formatDateSafe(tender.agreementDate) || '__________'}</span></span>
                     </span>
                 </div>
               
-              <p className="leading-relaxed text-justify indent-8 text-xl">
+              <p className="leading-normal text-justify indent-8 text-base">
                 {mainParagraph}
               </p>
 
-              <div className='pl-8 space-y-1 text-xl'>
+              <div className='pl-8 space-y-1 text-base'>
                 <p>എസ്റ്റിമേറ്റ് തുക : {tender.estimateAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
                 <p>എഗ്രിമെന്റ് തുക: {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
               </div>
 
               <div>
-                <p className="font-bold underline text-xl">നിബന്ധനകൾ</p>
-                <ol className="list-decimal list-outside ml-12 space-y-1 text-justify leading-relaxed text-xl">
+                <p className="font-bold underline text-lg">നിബന്ധനകൾ</p>
+                <ol className="list-decimal list-outside ml-12 space-y-1 text-justify leading-normal text-base">
                     <li>എല്ലാ വർക്കുകളും തുടങ്ങേണ്ടതും പൂർത്തീകരിക്കേണ്ടതും വകുപ്പ് സൂപ്പർവിഷന് നിയോഗിക്കുന്ന ഉദ്യോഗസ്ഥന്റെ സാന്നിധ്യത്തിൽ ആയിരിക്കണം.</li>
                     <li>കുഴൽകിണർ നിർമ്മാണം, ട്യൂബ് വെൽ നിർമ്മാണം, കുടിവെള്ള പദ്ധതി, കൃത്രിമ ഭൂജലസംപോഷണ പദ്ധതി എന്നിവയ്ക്കായി ഉപയോഗിക്കുന്ന പൈപ്പുകളുടെ  ISI മുദ്ര, ബ്യൂറോ ഓഫ് ഇന്ത്യൻ സ്റ്റാൻഡേർഡ്‌സ്‌ അംഗീകരിച്ചിട്ടുള്ള ലിസ്റ്റിൽ ഉൾപ്പെടുന്നതായിരിക്കണം. ആയത് സംബന്ധിച്ച ഗുണനിലവാര സർട്ടിഫിക്കറ്റ് പ്രവൃത്തി നിർവഹണത്തിന് മുന്നോടിയായി ഓഫീസിൽ സമർപ്പിക്കേണ്ടതാണ്.</li>
                     <li>വർക്ക് ഓർഡർ ലഭിച്ചതിന് 5 ദിവസത്തിനകം വർക്ക് തുടങ്ങിയിരിക്കേണ്ടതും, വർക്ക് ഓർഡറിൽ പറഞ്ഞിരിക്കുന്ന നിശ്ചിത ദിവസത്തിനകം വർക്ക് പൂർത്തീകരിക്കുകയും ചെയ്യേണ്ടതാണ്.</li>
@@ -132,13 +132,13 @@ export default function WorkOrderPrintPage() {
                 </ol>
               </div>
 
-              <div className="pt-10 text-right text-xl">
+              <div className="pt-8 text-right text-lg">
                   <p>വിശ്വസ്തതയോടെ</p>
-                  <div className="h-16" />
+                  <div className="h-12" />
                   <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
 
-              <div className="text-xl space-y-1 pt-8">
+              <div className="text-base space-y-1 pt-6">
                   <p>പകർപ്പ്</p>
                   <ol className="list-decimal list-outside ml-8">
                       {copyToList.map((person, index) => (
