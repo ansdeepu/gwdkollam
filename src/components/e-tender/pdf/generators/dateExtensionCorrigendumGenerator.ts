@@ -22,9 +22,10 @@ export async function generateDateExtensionCorrigendum(
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const form = pdfDoc.getForm();
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
     // Format dates
-    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, false, false);
+    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
     const newLastDate = formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false);
     const newOpeningDate = formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true);
 
@@ -35,34 +36,35 @@ export async function generateDateExtensionCorrigendum(
 
     const fullParagraph = `The time period for submitting e-tenders expired on ${lastDate}, and ${reasonText}. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
 
-
-    // Correct field names (from your PDF)
     const fieldMappings: Record<string, string> = {
         file_no_header: `GKT/${tender.fileNo || ""}`,
         e_tender_no_header: tender.eTenderNo || "",
         tender_date_header: formatDateSafe(corrigendum.corrigendumDate),
         name_of_work: tender.nameOfWork || "",
-        date_ext: fullParagraph, // multiline box (4096 flag)
+        date_ext: fullParagraph,
         date: formatDateSafe(corrigendum.corrigendumDate),
     };
+    
+    const boldFields = ['name_of_work'];
 
     // Fill fields safely
     for (const [fieldName, value] of Object.entries(fieldMappings)) {
         try {
             const field = form.getTextField(fieldName);
             field.setText(value);
+            
+            const selectedFont = boldFields.includes(fieldName) ? boldFont : font;
 
             if (fieldName === "date_ext") {
                 field.setAlignment(TextAlignment.Justify);
             }
 
-            field.updateAppearances(font);
+            field.updateAppearances(selectedFont);
         } catch (err) {
             console.warn(`⚠️ Could not fill field '${fieldName}':`, err);
         }
     }
 
-    // Optional: make output non-editable
     form.flatten();
 
     return await pdfDoc.save();
