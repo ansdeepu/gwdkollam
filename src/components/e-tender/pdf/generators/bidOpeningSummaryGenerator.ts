@@ -1,5 +1,5 @@
 // src/components/e-tender/pdf/generators/bidOpeningSummaryGenerator.ts
-import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
 import { numberToWords } from './utils';
@@ -13,6 +13,7 @@ export async function generateBidOpeningSummary(tender: E_tender): Promise<Uint8
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
 
     const bidders = tender.bidders || [];
@@ -27,6 +28,8 @@ export async function generateBidOpeningSummary(tender: E_tender): Promise<Uint8
     }
     bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
     
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
+
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': tender.eTenderNo,
@@ -42,8 +45,15 @@ export async function generateBidOpeningSummary(tender: E_tender): Promise<Uint8
         if (fieldName in fieldMappings) {
             try {
                 const textField = form.getTextField(fieldName);
+                const isBold = boldFields.includes(fieldName);
+                
                 textField.setText(String(fieldMappings[fieldName] || ''));
-                textField.updateAppearances(timesRomanFont);
+
+                if (fieldName === 'bid_opening') {
+                    textField.setAlignment(TextAlignment.Justify);
+                }
+                
+                textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             } catch (e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
             }
