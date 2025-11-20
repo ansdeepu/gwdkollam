@@ -12,11 +12,14 @@ export async function generateNIT(tender: E_tender): Promise<Uint8Array> {
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
 
     const tenderFee = tender.tenderFormFee || 0;
     const gst = tenderFee * 0.18;
     const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
+    
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
@@ -39,8 +42,9 @@ export async function generateNIT(tender: E_tender): Promise<Uint8Array> {
         if (fieldName in fieldMappings) {
             try {
                 const textField = form.getTextField(fieldName);
+                const isBold = boldFields.includes(fieldName);
                 textField.setText(String(fieldMappings[fieldName] || ''));
-                textField.updateAppearances(timesRomanFont);
+                textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             } catch(e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
             }
