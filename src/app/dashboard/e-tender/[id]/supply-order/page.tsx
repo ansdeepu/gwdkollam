@@ -65,9 +65,7 @@ export default function SupplyOrderPrintPage() {
                 </div>
                  <div className="pt-6">
                     <p>From</p>
-                    <div className="text-right">
-                        <p>District Officer</p>
-                    </div>
+                    <p className="text-right">District Officer</p>
                 </div>
                 <div className="pt-2">
                     <p>To</p>

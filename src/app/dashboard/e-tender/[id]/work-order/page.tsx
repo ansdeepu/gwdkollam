@@ -76,9 +76,7 @@ export default function WorkOrderPrintPage() {
               
               <div className="pt-4">
                   <p>പ്രേഷകൻ</p>
-                  <div className="text-right">
-                    <p>{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
-                  </div>
+                  <p className="text-right">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
 
               <div>
