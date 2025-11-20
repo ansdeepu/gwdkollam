@@ -12,6 +12,7 @@ export async function generateTenderForm(tender: E_tender): Promise<Uint8Array> 
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
     
     const tenderFee = tender.tenderFormFee || 0;
@@ -55,8 +56,12 @@ export async function generateTenderForm(tender: E_tender): Promise<Uint8Array> 
         if (fieldName in fieldMappings) {
             try {
                 const textField = form.getTextField(fieldName);
+                let font = timesRomanFont;
+                if (['tender_no_form_83', 'date_form_83'].includes(fieldName)) {
+                    font = timesRomanBoldFont;
+                }
                 textField.setText(String(fieldMappings[fieldName] || ''));
-                textField.updateAppearances(timesRomanFont);
+                textField.updateAppearances(font);
             } catch (e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
             }
