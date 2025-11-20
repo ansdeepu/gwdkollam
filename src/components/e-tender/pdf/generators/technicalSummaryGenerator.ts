@@ -1,5 +1,5 @@
 // src/components/e-tender/pdf/generators/technicalSummaryGenerator.ts
-import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
@@ -13,6 +13,7 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
 
     const l1Bidder = (tender.bidders || []).length > 0 ? (tender.bidders || []).reduce((lowest, current) => (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest) : null;
@@ -27,6 +28,8 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
         const staffInfo = allStaffMembers.find(s => s.name === name);
         return `${index + 1}. ${name}, ${staffInfo?.designation || 'N/A'}`;
     }).join('\n');
+
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
@@ -44,8 +47,15 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
         if (fieldName in fieldMappings) {
            try {
             const textField = form.getTextField(fieldName);
+            const isBold = boldFields.includes(fieldName);
+
             textField.setText(String(fieldMappings[fieldName] || ''));
-            textField.updateAppearances(timesRomanFont);
+            
+            if (fieldName === 'tech_summary') {
+                textField.setAlignment(TextAlignment.Justify);
+            }
+            
+            textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
            } catch(e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
            }
