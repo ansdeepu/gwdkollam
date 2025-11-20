@@ -29,10 +29,10 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
     }).join('\n');
 
     const fieldMappings: Record<string, any> = {
-        'tech_file_no': `GKT/${tender.fileNo || ''}`,
-        'tech_e_tender_no': tender.eTenderNo,
-        'tech_dated': formatDateSafe(tender.tenderDate),
-        'tech_name_of_work': tender.nameOfWork,
+        'file_no': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no': tender.eTenderNo,
+        'dated': formatDateSafe(tender.tenderDate),
+        'name_of_work': tender.nameOfWork,
         'tech_summary': techSummaryText,
         'committee_members': committeeMembersText,
         'tech_date': formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening),
