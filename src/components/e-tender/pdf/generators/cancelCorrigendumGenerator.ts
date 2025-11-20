@@ -14,22 +14,26 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const form = pdfDoc.getForm();
+    
+    const defaultReason = "the said work has been allotted to the Departmental Rig for execution";
+    const reason = corrigendum.reason || defaultReason;
 
-    const reasonText = corrigendum.reason || `The tender invited for the above work is hereby cancelled, as the said work has been allotted to the Departmental Rig for execution. Hence, further processing of the tender is not required. Any bids received in response to this tender shall be treated as withdrawn, and no further correspondence in this regard will be entertained. It is also noted that the tender for this work was published mistakenly, and the same stands cancelled accordingly.`;
+    const reasonText = `The tender invited for the above work is hereby cancelled, as ${reason}. Hence, further processing of the tender is not required. Any bids received in response to this tender shall be treated as withdrawn, and no further correspondence in this regard will be entertained. It is also noted that the tender for this work was published mistakenly, and the same stands cancelled accordingly.`;
 
     const fieldMappings: Record<string, any> = {
-        'e_tender_no': tender.eTenderNo,
-        'file_no': `GKT/${tender.fileNo || ''}`,
-        'corrigendum_date': formatDateSafe(corrigendum.corrigendumDate),
+        'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no_header': tender.eTenderNo,
+        'tender_date_header': formatDateSafe(corrigendum.corrigendumDate),
         'name_of_work': tender.nameOfWork,
-        'reason': reasonText,
+        'paragraph': reasonText,
+        'date': formatDateSafe(corrigendum.corrigendumDate),
     };
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const textField = form.getTextField(fieldName);
             textField.setText(String(value || ''));
-            if (fieldName === 'reason') {
+            if (fieldName === 'paragraph') {
                 textField.setAlignment(TextAlignment.Justify);
             }
             textField.updateAppearances(timesRomanFont);
