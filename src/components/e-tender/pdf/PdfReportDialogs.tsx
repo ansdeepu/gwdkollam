@@ -10,6 +10,12 @@ import download from 'downloadjs';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useDataStore } from '@/hooks/use-data-store';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Import the new generator functions
 import { generateNIT } from './generators/nitGenerator';
@@ -17,6 +23,11 @@ import { generateTenderForm } from './generators/tenderFormGenerator';
 import { generateBidOpeningSummary } from './generators/bidOpeningSummaryGenerator';
 import { generateTechnicalSummary } from './generators/technicalSummaryGenerator';
 import { generateFinancialSummary } from './generators/financialSummaryGenerator';
+import { generateRetenderCorrigendum } from './generators/retenderCorrigendumGenerator';
+import { generateDateExtensionCorrigendum } from './generators/dateExtensionCorrigendumGenerator';
+import { generateCancelCorrigendum } from './generators/cancelCorrigendumGenerator';
+import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
+
 
 const ReportButton = ({
   label,
@@ -39,7 +50,7 @@ const ReportButton = ({
   };
   
   const content = (
-      <Button onClick={handleClick} variant="outline" className="justify-start" disabled={disabled || isLoading}>
+      <Button onClick={handleClick} variant="outline" className="justify-start w-full" disabled={disabled || isLoading}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
           {label}
       </Button>
@@ -63,6 +74,7 @@ const PlaceholderReportButton = ({ label }: { label: string }) => (
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const { allStaffMembers } = useDataStore();
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleGeneratePdf = useCallback(async (
         generator: (tender: typeof tender, staff?: typeof allStaffMembers) => Promise<Uint8Array>,
@@ -79,6 +91,44 @@ export default function PdfReportDialogs() {
             toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
         }
     }, [tender, allStaffMembers]);
+
+    const handleCorrigendumGenerate = async (corrigendum: Corrigendum) => {
+        setIsLoading(true);
+        try {
+          let pdfBytes: Uint8Array;
+          let fileNamePrefix: string;
+          
+          switch (corrigendum.corrigendumType) {
+            case 'Retender':
+              pdfBytes = await generateRetenderCorrigendum(tender, corrigendum);
+              fileNamePrefix = 'Corrigendum_Retender';
+              break;
+            case 'Date Extension':
+              pdfBytes = await generateDateExtensionCorrigendum(tender, corrigendum);
+              fileNamePrefix = 'Corrigendum_DateExtension';
+              break;
+            case 'Cancel':
+              pdfBytes = await generateCancelCorrigendum(tender, corrigendum);
+              fileNamePrefix = 'Corrigendum_Cancel';
+              break;
+            default:
+              toast({ title: "Generation Not Supported", description: `PDF generation for type '${corrigendum.corrigendumType}' is not implemented.`, variant: 'destructive' });
+              setIsLoading(false);
+              return;
+          }
+          
+          const fileName = `${fileNamePrefix}_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+          download(pdfBytes, fileName, 'application/pdf');
+          toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
+    
+        } catch (error: any) {
+          console.error("Corrigendum PDF Generation Error:", error);
+          toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive' });
+        } finally {
+          setIsLoading(false);
+        }
+    };
+
 
     return (
         <Card>
@@ -110,6 +160,21 @@ export default function PdfReportDialogs() {
                         onClick={() => handleGeneratePdf(generateFinancialSummary, 'Financial_Summary', 'Your Financial Summary has been downloaded.')}
                         disabled={(tender.bidders || []).length === 0}
                     />
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="justify-start w-full" disabled={(tender.corrigendums?.length || 0) === 0}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Corrigendum ({tender.corrigendums?.length || 0})
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            {(tender.corrigendums || []).map((corrigendum, index) => (
+                                <DropdownMenuItem key={corrigendum.id} onSelect={() => handleCorrigendumGenerate(corrigendum)}>
+                                    Corrigendum No. {index + 1}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <ReportButton 
                         label="Selection Notice"
                         href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}

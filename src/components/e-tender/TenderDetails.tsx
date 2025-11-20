@@ -348,7 +348,6 @@ export default function TenderDetails() {
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
                                                          <div className="absolute top-2 right-2 flex items-center gap-1">
-                                                            <CorrigendumReports corrigendum={corrigendum} />
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                          </div>
