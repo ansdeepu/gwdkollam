@@ -45,9 +45,9 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
     }).join('\n');
     
     const fieldMappings: Record<string, any> = {
-        'file_no': `GKT/${tender.fileNo || ''}`,
-        'e_tender_no': tender.eTenderNo,
-        'dated': formatDateSafe(tender.tenderDate),
+        'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no_header': tender.eTenderNo,
+        'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
         'fin_summary': finSummaryText,
         'fin_table': finTableText,
