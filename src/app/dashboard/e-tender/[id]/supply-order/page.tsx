@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/[id]/supply-order/page.tsx
 "use client";
 
@@ -66,7 +67,7 @@ export default function SupplyOrderPrintPage() {
                 
                  <div className="pt-2">
                     <p>From</p>
-                    <p>District Officer</p>
+                    <p className="ml-8">District Officer</p>
                 </div>
                  <div className="pt-2">
                     <p>To</p>
