@@ -24,11 +24,14 @@ export async function generateTenderForm(tender: E_tender): Promise<Uint8Array> 
     }
 
     const fieldMappings: Record<string, any> = {
+        'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no_header': tender.eTenderNo,
+        'tender_date_header': formatDateSafe(tender.tenderDate),
         'file_no': `GKT/${tender.fileNo || ''}`,
         'e_tender_no': tender.eTenderNo,
         'tender_no_page_2': tender.eTenderNo,
         'date_page_2': formatDateSafe(tender.tenderDate),
-        'tender_no_form_83': tender.eTenderNo, 
+        'tender_no_form_83': tender.eTenderNo,
         'date_form_83': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
         'pac': formatCurrency(tender.estimateAmount),
