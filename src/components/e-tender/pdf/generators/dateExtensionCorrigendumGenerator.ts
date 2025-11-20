@@ -23,27 +23,23 @@ export async function generateDateExtensionCorrigendum(
     const form = pdfDoc.getForm();
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
 
-    // Format dates from the tender and corrigendum for use in the reason text
-    const originalLastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
+    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
     const newLastDate = formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false);
     const newOpeningDate = formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true);
 
-    // Auto-generate the reason paragraph only if one isn't provided in the corrigendum data
     const reasonText =
         corrigendum.reason ||
-        `The time period for submitting e-tenders expired on ${originalLastDate}, and only one valid bid was received for the above work. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
+        `The time period for submitting e-tenders expired on ${lastDate}, and only one valid bid was received for the above work. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
 
-    // Map the data to the correct PDF field names
     const fieldMappings: Record<string, string> = {
-        'file_no_header': `GKT/${tender.fileNo || ""}`,
-        'e_tender_no_header': tender.eTenderNo || "",
-        'tender_date_header': formatDateSafe(tender.tenderDate),
-        'name_of_work': tender.nameOfWork || "",
-        'date_ext': reasonText,
-        'date': formatDateSafe(corrigendum.corrigendumDate),
+        file_no_header: `GKT/${tender.fileNo || ""}`,
+        e_tender_no_header: tender.eTenderNo || "",
+        tender_date_header: formatDateSafe(tender.tenderDate),
+        name_of_work: tender.nameOfWork || "",
+        date_ext: reasonText,
+        date: formatDateSafe(corrigendum.corrigendumDate),
     };
 
-    // Fill the PDF fields with the mapped data
     for (const [fieldName, value] of Object.entries(fieldMappings)) {
         try {
             const field = form.getTextField(fieldName);
@@ -59,7 +55,6 @@ export async function generateDateExtensionCorrigendum(
         }
     }
 
-    // Flatten the form to make the fields non-editable
     form.flatten();
 
     return await pdfDoc.save();
