@@ -63,9 +63,11 @@ export default function SupplyOrderPrintPage() {
                         <p>Date: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                     </div>
                 </div>
-                 <div className="pt-6 flex justify-between">
+                 <div className="pt-6">
                     <p>From</p>
-                    <p>District Officer</p>
+                    <div className="text-right">
+                        <p>District Officer</p>
+                    </div>
                 </div>
                 <div className="pt-2">
                     <p>To</p>
@@ -89,8 +91,8 @@ export default function SupplyOrderPrintPage() {
                 <p className="text-justify leading-relaxed indent-8">As per the 1st reference cited above, e-tender was invited for the purchase of {tender.nameOfWork}.</p>
                 <p className="text-justify leading-relaxed indent-8">Vide the 2nd reference cited, {l1Bidder?.name || 'N/A'}, {l1Bidder?.address || 'N/A'}, submitted the lowest bid of Rs. {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0.00'}/- (Rupees {quotedAmountInWords} only) for the aforesaid purchase. Your bid was accepted accordingly.</p>
                 <p className="text-justify leading-relaxed indent-8">You are therefore directed to supply the items as per the schedule and specifications mentioned in the e-tender, and complete the supply within the stipulated period of {tender.periodOfCompletion || '___'} days under the supervision of {supervisorDetailsText}. Thereafter, you shall submit the bill in triplicate to this office for processing of payment.</p>
-                <div className="flex justify-end pt-8">
-                    <span>District Officer</span>
+                <div className="text-right pt-8">
+                    <p>District Officer</p>
                 </div>
                 <div className="pt-16 text-xs">
                   <p>Copy to:</p>
@@ -156,7 +158,7 @@ export default function SupplyOrderPrintPage() {
                     </table>
                     <p className="text-xs text-left mt-2">N.B: The specifications, quantities, price, etc., are subject to correction. Errors or omissions, if any, will be intimated to or by the contractor within ten days from this date.</p>
                 </div>
-                <div className="pt-24 flex justify-end">
+                <div className="pt-24 text-right">
                     <span>District officer</span>
                 </div>
             </div>

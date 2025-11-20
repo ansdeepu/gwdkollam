@@ -74,9 +74,11 @@ export default function WorkOrderPrintPage() {
                   </div>
               </div>
               
-              <div className="pt-4 flex justify-between">
+              <div className="pt-4">
                   <p>പ്രേഷകൻ</p>
-                  <p>{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+                  <div className="text-right">
+                    <p>{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+                  </div>
               </div>
 
               <div>
@@ -89,19 +91,17 @@ export default function WorkOrderPrintPage() {
               
               <p>സർ,</p>
 
-              <div className="space-y-2">
-                    <div className="grid grid-cols-[auto,1fr] gap-x-2">
-                        <span className="font-semibold">വിഷയം:</span>
-                        <span className="text-justify">{tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് {workOrderTitle} നൽകുന്നത്– സംബന്ധിച്ച്.</span>
-                    </div>
-                    <div className="grid grid-cols-[auto,1fr] gap-x-2">
-                        <span className="font-semibold">സൂചന:</span>
-                        <span className="flex flex-col">
-                            <span>1. ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfOpeningBid) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
-                            <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ {tender.eTenderNo || '__________'} തീയതി {formatDateSafe(tender.agreementDate) || '__________'}</span>
-                        </span>
-                    </div>
-              </div>
+               <div className="grid grid-cols-[auto,1fr] gap-x-2">
+                    <span className="font-semibold">വിഷയം:</span>
+                    <span className="text-justify">{tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് {workOrderTitle} നൽകുന്നത്– സംബന്ധിച്ച്.</span>
+                </div>
+                <div className="grid grid-cols-[auto,1fr] gap-x-2">
+                    <span className="font-semibold">സൂചന:</span>
+                    <span className="flex flex-col">
+                        <span>1. ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfOpeningBid) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
+                        <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ {tender.eTenderNo || '__________'} തീയതി {formatDateSafe(tender.agreementDate) || '__________'}</span>
+                    </span>
+                </div>
               
               <p className="leading-relaxed text-justify indent-8">
                 {mainParagraph}
@@ -120,7 +120,7 @@ export default function WorkOrderPrintPage() {
                     <li>വർക്ക് ഓർഡർ ലഭിച്ചതിന് 5 ദിവസത്തിനകം വർക്ക് തുടങ്ങിയിരിക്കേണ്ടതും, വർക്ക് ഓർഡറിൽ പറഞ്ഞിരിക്കുന്ന നിശ്ചിത ദിവസത്തിനകം വർക്ക് പൂർത്തീകരിക്കുകയും ചെയ്യേണ്ടതാണ്.</li>
                     <li>കുടിവെള്ളപദ്ധതികൾക്കായി വാട്ടർ ടാങ്ക് സ്ഥാപിക്കുന്ന ആംഗിൾ അയൺ അഥവാ കോൺക്രീറ്റ് സ്ട്രക്ച്ചർ / കോൺക്രീറ്റ് അഥവാ സ്റ്റീൽ പമ്പ് ഹൌസ് / ഹൈഡ്രന്റ് / വെൽ പ്രൊട്ടക്ഷൻ കവർ തുടങ്ങിയ എല്ലാ പ്രവൃത്തികളും പൂർത്തികരിക്കുന്നത് എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന അളവിലും തന്നിരിക്കുന്ന ഡ്രോയിംഗിന്റെ അടിസ്ഥാനത്തിലും ആയിരിക്കണം.</li>
                     <li>എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന സ്പെസിഫിക്കേഷൻ പ്രകാരം ഉള്ള വസ്തുക്കൾ മാത്രമാണ് പ്രവൃത്തിയ്ക്ക് ഉപയോഗിക്കേണ്ടത്.</li>
-                    <li>വർക്ക് പൂർത്തീകരിച്ച് കംപ്ലീഷൻ സർട്ടിഫിക്കറ്റ് ഉൾപ്പെടെ ബിൽ സമർപ്പിക്കേണ്ടതാണ്. ഫണ്ടിന്റെ ലഭ്യത അനുസരിച്ചാണ്  ബിൽ തുക അനുവദിക്കുന്നത്.</li>
+                    <li>വർക്ക് പൂർത്തീകരിച്ച് കംപ്ലീഷൻ സർട്ടിഫിക്കറ്റ് ഉൾപ്പെടെ ബിൽ സമർപ്പിക്കേണ്ടതാണ്. ഫണ്ടിന്റെ ലഭ്യത അനുസരിച്ചാണ്  ബിൽ തുക മാറി നൽകുന്നത്.</li>
                     <li>പ്രവൃത്തി തൃപ്തികരമല്ലാത്ത പക്ഷം ബിൽ തുക മാറി നൽകുന്നതല്ല.</li>
                     <li>പ്രവൃത്തിക്ക് വേണ്ട നിശ്ചിത സമയ പരിധി നിർബന്ധമായും പാലിക്കേണ്ടതാണ്.</li>
                     <li>കുടിവെള്ളപദ്ധതിയുടെ കെട്ടിട നമ്പർ, കറണ്ട് കണക്ഷൻ എന്നിവ എടുത്ത് സ്‌കീം പൂർത്തീകരിച്ച് ഓണർഷിപ്പ് സർട്ടിഫിക്കറ്റ് ലഭ്യമാക്കേണ്ടത് കോൺട്രാക്ടറുടെ ചുമതലയാണ്.</li>
