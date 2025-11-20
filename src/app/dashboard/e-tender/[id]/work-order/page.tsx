@@ -15,6 +15,7 @@ export default function WorkOrderPrintPage() {
     useEffect(() => {
         if (tender) {
             document.title = `Work_Order_${tender.eTenderNo?.replace(/\//g, '_') || 'Tender'}`;
+            setTimeout(() => window.print(), 500); // Automatically trigger print
         }
     }, [tender]);
 
