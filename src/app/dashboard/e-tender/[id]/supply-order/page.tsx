@@ -49,6 +49,8 @@ export default function SupplyOrderPrintPage() {
           <div className="max-w-5xl mx-auto p-12 text-black text-xl font-mono">
             {/* Page 1 */}
             <div className="space-y-6">
+                <p>From</p>
+                <p>District Officer</p>
                 <div className="flex justify-between">
                     <div>
                         <p>File No. GKT/{tender.fileNo || '__________'}</p>
@@ -65,13 +67,6 @@ export default function SupplyOrderPrintPage() {
                 </div>
                 
                  <div className="pt-2">
-                    <p>From</p>
-                </div>
-                 <div className="pt-2 text-right">
-                    <p>District Officer</p>
-                </div>
-
-                <div className="pt-2">
                     <p>To</p>
                     <div className="ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
@@ -94,15 +89,15 @@ export default function SupplyOrderPrintPage() {
                 <p className="text-justify leading-relaxed indent-8">Vide the 2nd reference cited, {l1Bidder?.name || 'N/A'}, {l1Bidder?.address || 'N/A'}, submitted the lowest bid of Rs. {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0.00'}/- (Rupees {quotedAmountInWords} only) for the aforesaid purchase. Your bid was accepted accordingly.</p>
                 <p className="text-justify leading-relaxed indent-8">You are therefore directed to supply the items as per the schedule and specifications mentioned in the e-tender, and complete the supply within the stipulated period of {tender.periodOfCompletion || '___'} days under the supervision of {supervisorDetailsText}. Thereafter, you shall submit the bill in triplicate to this office for processing of payment.</p>
                 
-                 <div className="pt-16 text-right">
-                  <div className="h-16" />
+                 <div className="pt-8 text-right">
+                  <div className="h-12" />
                   <p className="font-semibold">District Officer</p>
                 </div>
                 
                 <div className="pt-8 text-sm">
-                  <p>Copy to:</p>
-                  <p>1.	File</p>
-                  <p>2.	OC</p>
+                  <p className="text-base">Copy to:</p>
+                  <p className="text-base">1.	File</p>
+                  <p className="text-base">2.	OC</p>
                 </div>
             </div>
 
