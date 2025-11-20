@@ -65,6 +65,11 @@ export default function SupplyOrderPrintPage() {
                 </div>
                 
                 <div className="pt-2">
+                    <p>From</p>
+                    <p className="ml-8">District Officer</p>
+                </div>
+
+                <div className="pt-2">
                     <p>To</p>
                     <div className="ml-8">
                         <p>{l1Bidder?.name || '____________________'}</p>
