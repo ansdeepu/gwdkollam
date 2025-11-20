@@ -22,24 +22,25 @@ export async function generateDateExtensionCorrigendum(tender: E_tender, corrige
     const reasonText = corrigendum.reason || `The time period for submitting e-tenders expired on ${lastDate}, and only one valid bid was received for the above work. Consequently, the deadline for submitting e-tenders has been extended to ${newLastDate}, and the opening of the tender has been rescheduled to ${newOpeningDate}.`;
 
     const fieldMappings: Record<string, any> = {
-        'file_no_header': `GKT/${tender.fileNo || ''}`,
-        'e_tender_no_header': tender.eTenderNo,
-        'tender_date_header': formatDateSafe(tender.tenderDate),
-        'name_of_work': tender.nameOfWork,
-        'date': formatDateSafe(corrigendum.corrigendumDate),
-        'date-ext': reasonText,
+        'File No': `GKT/${tender.fileNo || ''}`,
+        'e-Tender No': tender.eTenderNo,
+        'Date': formatDateSafe(corrigendum.corrigendumDate),
+        'Name of Work': tender.nameOfWork,
+        'Reason': reasonText,
+        'Place': 'Kollam',
+        'Date 2': formatDateSafe(corrigendum.corrigendumDate),
     };
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const textField = form.getTextField(fieldName);
             textField.setText(String(value || ''));
-            if (fieldName === 'date-ext') {
+            if (fieldName === 'Reason') {
                 textField.setAlignment(TextAlignment.Justify);
             }
             textField.updateAppearances(timesRomanFont);
         } catch (e) {
-            console.warn(`Could not fill field ${fieldName}:`, e);
+            console.warn(`Could not fill field '${fieldName}':`, e);
         }
     });
 
