@@ -56,12 +56,12 @@ export default function WorkOrderPrintPage() {
 
     return (
         <div className="-m-6 bg-white min-h-screen">
-          <div className="max-w-4xl mx-auto p-12 space-y-6 font-serif text-xl">
+          <div className="max-w-4xl mx-auto p-12 space-y-6 font-serif text-lg">
               <div className="text-center">
-                  <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
+                  <h1 className="font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
               </div>
 
-              <div className="flex justify-between">
+              <div className="flex justify-between text-xl">
                   <div>
                       <p>നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
                       <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
@@ -75,12 +75,12 @@ export default function WorkOrderPrintPage() {
                   </div>
               </div>
 
-               <div className="pt-6">
+               <div className="pt-6 text-xl">
                   <p>പ്രേഷകൻ</p>
                   <p className="ml-8">ജില്ലാ ആഫീസർ</p>
               </div>
               
-              <div>
+              <div className="text-xl">
                   <p>സ്വീകർത്താവ്</p>
                   <div className="ml-8">
                       <p>{l1Bidder?.name || '____________________'}</p>
@@ -88,13 +88,13 @@ export default function WorkOrderPrintPage() {
                   </div>
               </div>
               
-              <p>സർ,</p>
+              <p className="text-xl">സർ,</p>
 
-               <div className="grid grid-cols-[auto,1fr] gap-x-2">
+               <div className="grid grid-cols-[auto,1fr] gap-x-2 text-xl">
                     <span className="font-semibold">വിഷയം:</span>
                     <span className="text-justify">{tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് {workOrderTitle} നൽകുന്നത്– സംബന്ധിച്ച്.</span>
                 </div>
-                <div className="grid grid-cols-[auto,1fr] gap-x-2">
+                <div className="grid grid-cols-[auto,1fr] gap-x-2 text-xl">
                     <span className="font-semibold">സൂചന:</span>
                     <span className="flex flex-col">
                         <span>1. ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfOpeningBid) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
@@ -102,18 +102,18 @@ export default function WorkOrderPrintPage() {
                     </span>
                 </div>
               
-              <p className="leading-relaxed text-justify indent-8">
+              <p className="leading-relaxed text-justify indent-8 text-xl">
                 {mainParagraph}
               </p>
 
-              <div className='pl-8 space-y-1'>
+              <div className='pl-8 space-y-1 text-xl'>
                 <p>എസ്റ്റിമേറ്റ് തുക : {tender.estimateAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
                 <p>എഗ്രിമെന്റ് തുക: {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
               </div>
 
               <div>
-                <p className="font-bold underline">നിബന്ധനകൾ</p>
-                <ol className="list-decimal list-outside ml-12 space-y-1 text-justify leading-relaxed">
+                <p className="font-bold underline text-xl">നിബന്ധനകൾ</p>
+                <ol className="list-decimal list-outside ml-12 space-y-1 text-justify leading-relaxed text-xl">
                     <li>എല്ലാ വർക്കുകളും തുടങ്ങേണ്ടതും പൂർത്തീകരിക്കേണ്ടതും വകുപ്പ് സൂപ്പർവിഷന് നിയോഗിക്കുന്ന ഉദ്യോഗസ്ഥന്റെ സാന്നിധ്യത്തിൽ ആയിരിക്കണം.</li>
                     <li>കുഴൽകിണർ നിർമ്മാണം, ട്യൂബ് വെൽ നിർമ്മാണം, കുടിവെള്ള പദ്ധതി, കൃത്രിമ ഭൂജലസംപോഷണ പദ്ധതി എന്നിവയ്ക്കായി ഉപയോഗിക്കുന്ന പൈപ്പുകളുടെ  ISI മുദ്ര, ബ്യൂറോ ഓഫ് ഇന്ത്യൻ സ്റ്റാൻഡേർഡ്‌സ്‌ അംഗീകരിച്ചിട്ടുള്ള ലിസ്റ്റിൽ ഉൾപ്പെടുന്നതായിരിക്കണം. ആയത് സംബന്ധിച്ച ഗുണനിലവാര സർട്ടിഫിക്കറ്റ് പ്രവൃത്തി നിർവഹണത്തിന് മുന്നോടിയായി ഓഫീസിൽ സമർപ്പിക്കേണ്ടതാണ്.</li>
                     <li>വർക്ക് ഓർഡർ ലഭിച്ചതിന് 5 ദിവസത്തിനകം വർക്ക് തുടങ്ങിയിരിക്കേണ്ടതും, വർക്ക് ഓർഡറിൽ പറഞ്ഞിരിക്കുന്ന നിശ്ചിത ദിവസത്തിനകം വർക്ക് പൂർത്തീകരിക്കുകയും ചെയ്യേണ്ടതാണ്.</li>
@@ -132,7 +132,7 @@ export default function WorkOrderPrintPage() {
                 </ol>
               </div>
 
-              <div className="pt-10 text-right">
+              <div className="pt-10 text-right text-xl">
                   <p>വിശ്വസ്തതയോടെ</p>
                   <div className="h-16" />
                   <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
