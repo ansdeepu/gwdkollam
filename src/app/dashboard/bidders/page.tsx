@@ -95,7 +95,7 @@ export default function BiddersListPage() {
     
     const handleOpenReorderDialog = (bidder: BidderType) => {
         setBidderToReorder(bidder);
-        const currentPosition = allBidders.findIndex(b => b.id === bidder.id) + 1;
+        const currentPosition = (bidder.order ?? allBidders.findIndex(b => b.id === bidder.id)) + 1;
         reorderForm.setValue('newPosition', currentPosition > 0 ? currentPosition : 1);
     };
     
@@ -104,23 +104,40 @@ export default function BiddersListPage() {
         setIsReordering(true);
     
         try {
+            // Fetch the most current data to guarantee consistency
             const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
             const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
             
-            const oldIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (oldIndex === -1) {
+            const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
+
+            if (!bidderToMove) {
                 throw new Error("Bidder to be moved was not found in the database. The list may be out of sync. Please refresh.");
             }
     
-            const reorderedBidders = Array.from(currentBidders);
-            const [movedItem] = reorderedBidders.splice(oldIndex, 1);
-            const newIndex = Math.max(0, Math.min(newPosition - 1, reorderedBidders.length));
-            reorderedBidders.splice(newIndex, 0, movedItem);
+            const otherBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
+            const reorderedList: BidderType[] = [];
+            
+            // Build the new list in the correct order
+            for (let i = 0; i < currentBidders.length; i++) {
+                if (i === newPosition - 1) {
+                    reorderedList.push(bidderToMove);
+                }
+                if (otherBidders.length > 0) {
+                   if (reorderedList.length <= i) {
+                     reorderedList.push(otherBidders.shift()!);
+                   }
+                }
+            }
+
+            // If newPosition is last, it might not have been added
+            if (reorderedList.length < currentBidders.length) {
+                reorderedList.push(bidderToMove);
+            }
     
             const batch = writeBatch(db);
-            reorderedBidders.forEach((bidder, index) => {
+            reorderedList.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                batch.set(docRef, { order: index }, { merge: true });
+                batch.update(docRef, { order: index });
             });
     
             await batch.commit();
@@ -137,10 +154,11 @@ export default function BiddersListPage() {
         }
     };
 
+
     return (
         <div className="space-y-6">
              <div className="flex justify-end">
-                <Button variant="destructive" size="sm" onClick={() => router.back()}>
+                <Button variant="destructive" size="sm" onClick={() => router.push('/dashboard/e-tender')}>
                     <ArrowLeft className="mr-2 h-4 w-4"/> Back
                 </Button>
             </div>
