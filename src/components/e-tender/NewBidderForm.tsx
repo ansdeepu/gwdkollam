@@ -21,6 +21,7 @@ const NewBidderSchema = z.object({
   phoneNo: z.string().optional(),
   secondaryPhoneNo: z.string().optional(),
   email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
+  order: z.number().optional(),
 });
 export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
 export type Bidder = z.infer<typeof NewBidderSchema>;
@@ -60,8 +61,8 @@ export default function NewBidderForm({ onSubmit, onCancel, isSubmitting, initia
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
-                    <DialogTitle>{initialData ? 'Edit Bidder Details' : 'Add New Bidder Details'}</DialogTitle>
-                    <DialogDescription>Enter the contact information for a bidder.</DialogDescription>
+                    <DialogTitle>{initialData ? 'Edit Bidder Details' : 'Add New Bidder'}</DialogTitle>
+                    <DialogDescription>Enter the contact information for the bidder.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">

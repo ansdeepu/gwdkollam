@@ -154,7 +154,12 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                             return a.name.localeCompare(b.name);
                         });
                     } else if (collectionName === 'bidders') {
-                        data.sort((a: MasterBidder, b: MasterBidder) => (a.name || '').localeCompare(b.name || ''));
+                        data.sort((a: MasterBidder, b: MasterBidder) => {
+                            const orderA = a.order ?? Infinity;
+                            const orderB = b.order ?? Infinity;
+                            if (orderA !== orderB) return orderA - orderB;
+                            return (a.name || '').localeCompare(b.name || '');
+                        });
                     }
                     setter(data);
                 }

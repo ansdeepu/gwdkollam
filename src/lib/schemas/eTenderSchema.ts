@@ -78,10 +78,13 @@ export const BidderSchema = z.object({
     name: z.string().optional(),
     address: z.string().optional(),
     phoneNo: z.string().optional(),
+    secondaryPhoneNo: z.string().optional(),
+    email: z.string().email().optional().or(z.literal('')),
     quotedAmount: optionalNumberSchema,
     quotedPercentage: optionalNumberSchema,
     aboveBelow: z.enum(['Above', 'Below']).optional(),
     status: z.enum(['Accepted', 'Rejected']).optional(),
+    order: z.number().optional(),
 });
 export type Bidder = z.infer<typeof BidderSchema>;
 

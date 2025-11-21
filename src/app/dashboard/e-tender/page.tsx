@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Edit } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Edit, ArrowUpDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,12 +24,22 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import NewBidderForm, { type NewBidderFormData, type Bidder as BidderType } from '@/components/e-tender/NewBidderForm';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useDataStore } from '@/hooks/use-data-store';
+
 
 const db = getFirestore(app);
+
+const ReorderFormSchema = z.object({
+    newPosition: z.coerce.number().int().min(1, "Position must be 1 or greater."),
+});
 
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
@@ -37,6 +47,7 @@ export default function ETenderListPage() {
     const { tenders, isLoading, deleteTender } = useE_tenders();
     const { toast } = useToast();
     const { user } = useAuth();
+    const { allBidders, refetchBidders } = useDataStore();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
@@ -46,7 +57,6 @@ export default function ETenderListPage() {
     const [isSubmittingBidder, setIsSubmittingBidder] = useState(false);
 
     const [isBiddersListOpen, setIsBiddersListOpen] = useState(false);
-    const [allBidders, setAllBidders] = useState<BidderType[]>([]);
     const [biddersLoading, setBiddersLoading] = useState(false);
     const [bidderSearchTerm, setBidderSearchTerm] = useState('');
 
@@ -54,31 +64,21 @@ export default function ETenderListPage() {
     const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
     const [isDeletingBidder, setIsDeletingBidder] = useState(false);
 
+    const [bidderToReorder, setBidderToReorder] = useState<BidderType | null>(null);
+    const [isReordering, setIsReordering] = useState(false);
+    const reorderForm = useForm<{ newPosition: number }>({
+      resolver: zodResolver(ReorderFormSchema),
+    });
 
     React.useEffect(() => {
         setHeader('e-Tenders', 'Manage all electronic tenders for the department.');
     }, [setHeader]);
     
-    const fetchBidders = async () => {
-        setBiddersLoading(true);
-        try {
-            const biddersSnapshot = await getDocs(query(collection(db, "bidders")));
-            const biddersList = biddersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BidderType));
-            biddersList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            setAllBidders(biddersList);
-        } catch (error) {
-            console.error("Error fetching bidders:", error);
-            toast({ title: "Error", description: "Could not fetch bidder list.", variant: "destructive" });
-        } finally {
-            setBiddersLoading(false);
-        }
-    };
-    
     useEffect(() => {
         if (isBiddersListOpen) {
-            fetchBidders();
+            refetchBidders();
         }
-    }, [isBiddersListOpen]);
+    }, [isBiddersListOpen, refetchBidders]);
 
     const filteredTenders = useMemo(() => {
         if (!searchTerm) return tenders;
@@ -134,16 +134,15 @@ export default function ETenderListPage() {
         setIsSubmittingBidder(true);
         try {
             if (bidderToEdit) {
-                // Update existing bidder
                 const bidderDocRef = doc(db, "bidders", bidderToEdit.id);
                 await updateDoc(bidderDocRef, { ...data });
                 toast({ title: "Bidder Updated", description: `Bidder "${data.name}" has been updated.` });
             } else {
-                // Add new bidder
-                await addDoc(collection(db, "bidders"), { ...data });
+                const newOrder = allBidders.length > 0 ? Math.max(...allBidders.map(b => b.order ?? 0)) + 1 : 0;
+                await addDoc(collection(db, "bidders"), { ...data, order: newOrder });
                 toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             }
-            await fetchBidders(); // Refresh the list
+            refetchBidders();
             setIsNewBidderDialogOpen(false);
             setBidderToEdit(null);
         } catch (error: any) {
@@ -160,13 +159,45 @@ export default function ETenderListPage() {
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            await fetchBidders();
+            refetchBidders();
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
         } finally {
             setIsDeletingBidder(false);
             setBidderToDelete(null);
+        }
+    };
+    
+    const handleOpenReorderDialog = (bidder: BidderType) => {
+        setBidderToReorder(bidder);
+        const currentPosition = allBidders.findIndex(b => b.id === bidder.id) + 1;
+        reorderForm.setValue('newPosition', currentPosition);
+    };
+
+    const handleReorderSubmit = async ({ newPosition }: { newPosition: number }) => {
+        if (!bidderToReorder) return;
+        setIsReordering(true);
+    
+        const reorderedList = Array.from(allBidders);
+        const oldIndex = reorderedList.findIndex(b => b.id === bidderToReorder.id);
+        const [movedItem] = reorderedList.splice(oldIndex, 1);
+        reorderedList.splice(newPosition - 1, 0, movedItem);
+    
+        try {
+            const batch = writeBatch(db);
+            reorderedList.forEach((bidder, index) => {
+                const docRef = doc(db, 'bidders', bidder.id);
+                batch.update(docRef, { order: index });
+            });
+            await batch.commit();
+            refetchBidders();
+            toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
+        } catch (error: any) {
+            toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
+        } finally {
+            setIsReordering(false);
+            setBidderToReorder(null);
         }
     };
 
@@ -333,6 +364,9 @@ export default function ETenderListPage() {
                                                         <TableCell>{bidder.phoneNo}{bidder.secondaryPhoneNo ? `, ${bidder.secondaryPhoneNo}` : ''}</TableCell>
                                                         <TableCell>{bidder.email}</TableCell>
                                                         <TableCell className="text-center">
+                                                            <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(bidder)} disabled={isReordering}>
+                                                                <ArrowUpDown className="h-4 w-4" />
+                                                            </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}>
                                                                 <Edit className="h-4 w-4" />
                                                             </Button>
@@ -376,6 +410,39 @@ export default function ETenderListPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            {bidderToReorder && (
+              <Dialog open={!!bidderToReorder} onOpenChange={() => setBidderToReorder(null)}>
+                  <DialogContent>
+                      <DialogHeader>
+                          <DialogTitle>Move Bidder</DialogTitle>
+                          <DialogDescription>Move "{bidderToReorder?.name}" to a new position.</DialogDescription>
+                      </DialogHeader>
+                      <Form {...reorderForm}>
+                          <form onSubmit={reorderForm.handleSubmit(handleReorderSubmit)} className="space-y-4 py-4">
+                              <FormField
+                                  control={reorderForm.control}
+                                  name="newPosition"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>New Position (1 to {allBidders.length})</FormLabel>
+                                          <FormControl>
+                                              <Input type="number" min="1" max={allBidders.length} {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                              <DialogFooter>
+                                  <Button type="button" variant="outline" onClick={() => setBidderToReorder(null)}>Cancel</Button>
+                                  <Button type="submit" disabled={isReordering}>
+                                      {isReordering ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Move"}
+                                  </Button>
+                              </DialogFooter>
+                          </form>
+                      </Form>
+                  </DialogContent>
+              </Dialog>
+            )}
         </div>
     );
 }
