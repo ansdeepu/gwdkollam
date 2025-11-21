@@ -33,10 +33,10 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const agreementText = `Agreement executed on ${agreementDateFormatted} between the District officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala on the first part and ${bidderDetails} on the other part for the ${workName}. The second party agrees to execute the work in the sanctioned rate as per tender schedule and complete the same within ${completionPeriod} days from the date of receipt of work order and the contract approved by the District Officer, Groundwater Department, Kollam.`;
 
     const fieldMappings: Record<string, any> = {
-        'file_no_header': `GKT/${tender.fileNo || ''}`,
-        'e_tender_no_header': tender.eTenderNo,
+        'file_no': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no': tender.eTenderNo,
         'agreement_date': formatDateSafe(tender.agreementDate),
-        'agreement': agreementText,
+        'agreement_text': agreementText,
     };
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
@@ -44,10 +44,10 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
             const field = form.getTextField(fieldName);
             field.setText(String(value || ''));
             
-            if (fieldName === 'agreement') {
+            if (fieldName === 'agreement_text') {
                 field.setAlignment(TextAlignment.Justify);
-                field.updateAppearances(timesRomanFont);
             }
+            field.updateAppearances(timesRomanFont);
         } catch (e) {
             console.warn(`Could not fill field ${fieldName}:`, e);
         }
