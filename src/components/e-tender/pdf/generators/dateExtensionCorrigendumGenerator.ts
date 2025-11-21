@@ -39,7 +39,7 @@ export async function generateDateExtensionCorrigendum(
     const fieldMappings: Record<string, string> = {
         file_no_header: `GKT/${tender.fileNo || ""}`,
         e_tender_no_header: tender.eTenderNo || "",
-        tender_date_header: formatDateSafe(corrigendum.corrigendumDate),
+        tender_date_header: `Dated ${formatDateSafe(tender.tenderDate)}`,
         name_of_work: tender.nameOfWork || "",
         date_ext: fullParagraph, // multiline box (4096 flag)
         date: formatDateSafe(corrigendum.corrigendumDate),
