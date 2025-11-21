@@ -26,6 +26,7 @@ import { generateFinancialSummary } from './generators/financialSummaryGenerator
 import { generateRetenderCorrigendum } from './generators/retenderCorrigendumGenerator';
 import { generateDateExtensionCorrigendum } from './generators/dateExtensionCorrigendumGenerator';
 import { generateCancelCorrigendum } from './generators/cancelCorrigendumGenerator';
+import { generateWorkAgreement } from './generators/workAgreementGenerator';
 import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
 
 
@@ -194,7 +195,11 @@ export default function PdfReportDialogs() {
                             disabled={!tender.id || tender.id === 'new'}
                         />
                     )}
-                    <PlaceholderReportButton label="Work Agreement" />
+                    <ReportButton
+                        label="Work Agreement"
+                        onClick={() => handleGeneratePdf(generateWorkAgreement, 'Work_Agreement', 'Your Work Agreement has been downloaded.')}
+                        disabled={!tender.id || tender.id === 'new'}
+                    />
                 </div>
             </CardContent>
         </Card>
