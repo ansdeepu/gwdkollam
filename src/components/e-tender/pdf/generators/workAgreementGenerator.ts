@@ -49,10 +49,10 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
 
     // 1. Draw the heading
     let currentY = height - cm(17);
-    const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
-    const indentText = " ".repeat(10);
+    const indentText = "          "; // 10 spaces
     const indentWidth = timesRomanBoldFont.widthOfTextAtSize(indentText, headingFontSize);
-
+    const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
+    
     page.drawText(headingText, {
         x: leftMargin + indentWidth,
         y: currentY,
@@ -74,20 +74,42 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     currentY -= cm(1); // Space after heading
     const paragraphIndent = "     ";
     const paragraphText = `${paragraphIndent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
-    
-    page.drawText(paragraphText, {
-        x: leftMargin,
-        y: currentY,
-        font: timesRomanFont,
-        size: regularFontSize,
-        lineHeight: lineHeight,
-        textAlign: TextAlignment.Justify,
-        maxWidth: paragraphWidth,
-        color: rgb(0, 0, 0),
+
+    // Manual line wrapping logic for justification
+    const words = paragraphText.split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    for (const word of words) {
+        const testLine = currentLine.length > 0 ? `${currentLine} ${word}` : word;
+        const testWidth = timesRomanFont.widthOfTextAtSize(testLine, regularFontSize);
+        if (testWidth <= paragraphWidth) {
+            currentLine = testLine;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    lines.push(currentLine); // Add the last line
+
+    // Draw each line
+    lines.forEach((line, index) => {
+        const isLastLine = index === lines.length - 1;
+        page.drawText(line, {
+            x: leftMargin,
+            y: currentY,
+            font: timesRomanFont,
+            size: regularFontSize,
+            textAlign: isLastLine ? TextAlignment.Left : TextAlignment.Justify,
+            wordBreaks: [' '], // Required for justification to work on a single line
+            maxWidth: paragraphWidth,
+            color: rgb(0, 0, 0),
+        });
+        currentY -= lineHeight; // Move down for the next line
     });
-    
+
     // 3. Draw the witness text
-    currentY -= cm(4) + (5 * lineHeight); // Move down for witness text plus five line spaces
+    currentY -= (5 * lineHeight); // 5 line spaces
 
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
     page.drawText(witnessText, {
