@@ -16,16 +16,19 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     const form = pdfDoc.getForm();
 
     const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true);
-    const reasonText = corrigendum.reason || `The time period for submitting e-tenders expired at ${lastDate}, and no bids were received. Hence, it has been decided to retender the above work.`;
+    const reasonText = corrigendum.reason || `no bids were received`;
+
+    const fullParagraph = `     The time period for submitting e-tenders expired at ${lastDate}, and ${reasonText}. Hence, it has been decided to retender the above work.`;
 
     const fieldMappings: Record<string, any> = {
-        'e_tender_no_header': tender.eTenderNo,
-        'file_no_header': `GKT/${tender.fileNo || ''}`,
-        'corrigendum_date': formatDateSafe(corrigendum.corrigendumDate),
+        'file_no': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no': tender.eTenderNo,
+        'date': formatDateSafe(corrigendum.corrigendumDate),
         'name_of_work': tender.nameOfWork,
-        'retender': reasonText,
+        'retender': fullParagraph,
         'new_last_date': formatDateSafe(corrigendum.lastDateOfReceipt, true, true),
         'new_opening_date': formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true),
+        'date_2': formatDateSafe(corrigendum.corrigendumDate),
     };
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
