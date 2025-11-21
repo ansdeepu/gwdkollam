@@ -24,7 +24,7 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': tender.eTenderNo,
-        'tender_date_header': formatDateSafe(corrigendum.corrigendumDate),
+        'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
         'retender': fullParagraph,
         'new_last_date': formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false),
