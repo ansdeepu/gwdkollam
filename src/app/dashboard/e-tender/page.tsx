@@ -161,7 +161,7 @@ export default function ETenderListPage() {
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            refetchBidders(); // This will trigger the data store to refetch and update the UI
+            refetchBidders();
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
@@ -173,8 +173,8 @@ export default function ETenderListPage() {
     
     const handleOpenReorderDialog = (bidder: BidderType) => {
         setBidderToReorder(bidder);
-        const currentPosition = allBidders.findIndex(b => b.id === bidder.id) + 1;
-        reorderForm.setValue('newPosition', currentPosition);
+        const currentPosition = filteredBidders.findIndex(b => b.id === bidder.id) + 1;
+        reorderForm.setValue('newPosition', currentPosition > 0 ? currentPosition : 1);
     };
 
     const handleReorderSubmit = async ({ newPosition }: { newPosition: number }) => {
@@ -182,39 +182,39 @@ export default function ETenderListPage() {
         setIsReordering(true);
     
         try {
-            const freshBiddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
-            let freshBidders: BidderType[] = freshBiddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
+            const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
+            let currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
+            
+            const oldIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
+            if (oldIndex === -1) throw new Error("Bidder to be moved was not found in the database. The list may be out of date.");
     
-            const oldIndex = freshBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (oldIndex === -1) {
-                throw new Error("Bidder to be moved was not found in the database. The list may be out of date.");
-            }
-    
-            const [movedItem] = freshBidders.splice(oldIndex, 1);
-            const newIndex = newPosition - 1;
-            freshBidders.splice(newIndex, 0, movedItem);
+            const [movedItem] = currentBidders.splice(oldIndex, 1);
+            
+            const newIndex = Math.max(0, Math.min(newPosition - 1, currentBidders.length));
+            
+            currentBidders.splice(newIndex, 0, movedItem);
     
             const batch = writeBatch(db);
-            freshBidders.forEach((bidder, index) => {
+            currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Use set with merge to create if it doesn't exist, or update if it does.
                 batch.set(docRef, { order: index }, { merge: true });
             });
     
             await batch.commit();
             
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
-            refetchBidders(); // Force a refresh from the data store
+            refetchBidders();
     
         } catch (error: any) {
             console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-            refetchBidders(); // Refresh even on error to sync state
+            refetchBidders();
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
         }
     };
+
 
     if (isLoading) {
         return (

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
@@ -120,18 +120,17 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        const collections: Record<string, { setter: React.Dispatch<React.SetStateAction<any>>, loaderKey: keyof typeof loadingStates }> = {
-            fileEntries: { setter: setAllFileEntries, loaderKey: 'files' },
-            arsEntries: { setter: setAllArsEntries, loaderKey: 'ars' },
-            staffMembers: { setter: setAllStaffMembers, loaderKey: 'staff' },
-            agencyApplications: { setter: setAllAgencyApplications, loaderKey: 'agencies' },
-            localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg' },
-            rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates' },
-            bidders: { setter: setAllBidders, loaderKey: 'bidders' },
+        const collections: Record<string, { setter: React.Dispatch<React.SetStateAction<any>>, loaderKey: keyof typeof loadingStates, q: any }> = {
+            fileEntries: { setter: setAllFileEntries, loaderKey: 'files', q: query(collection(db, 'fileEntries')) },
+            arsEntries: { setter: setAllArsEntries, loaderKey: 'ars', q: query(collection(db, 'arsEntries')) },
+            staffMembers: { setter: setAllStaffMembers, loaderKey: 'staff', q: query(collection(db, 'staffMembers')) },
+            agencyApplications: { setter: setAllAgencyApplications, loaderKey: 'agencies', q: query(collection(db, 'agencyApplications')) },
+            localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg', q: query(collection(db, 'localSelfGovernments')) },
+            rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates', q: query(collection(db, 'rateDescriptions')) },
+            bidders: { setter: setAllBidders, loaderKey: 'bidders', q: query(collection(db, 'bidders'), orderBy("order")) },
         };
 
-        const unsubscribes = Object.entries(collections).map(([collectionName, { setter, loaderKey }]) => {
-            const q = query(collection(db, collectionName));
+        const unsubscribes = Object.entries(collections).map(([collectionName, { setter, loaderKey, q }]) => {
             return onSnapshot(q, (snapshot) => {
                 if (collectionName === 'rateDescriptions') {
                     if (snapshot.empty) {
@@ -152,13 +151,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                             const orderB = b.designation ? designationSortOrder[b.designation] ?? designationOptions.length : designationOptions.length;
                             if (orderA !== orderB) return orderA - orderB;
                             return a.name.localeCompare(b.name);
-                        });
-                    } else if (collectionName === 'bidders') {
-                        data.sort((a: MasterBidder, b: MasterBidder) => {
-                            const orderA = a.order ?? Infinity;
-                            const orderB = b.order ?? Infinity;
-                            if (orderA !== orderB) return orderA - orderB;
-                            return (a.name || '').localeCompare(b.name || '');
                         });
                     }
                     setter(data);
