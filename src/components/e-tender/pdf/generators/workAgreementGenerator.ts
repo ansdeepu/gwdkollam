@@ -3,7 +3,6 @@ import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-l
 import type { E_tender } from '@/hooks/useE_tenders';
 import { format, isValid } from 'date-fns';
 
-// Helper to convert cm to points (1 cm = 28.3465 points)
 const cm = (cmValue: number) => cmValue * 28.3465;
 
 export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Array> {
