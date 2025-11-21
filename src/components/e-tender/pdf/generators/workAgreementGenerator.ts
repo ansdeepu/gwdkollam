@@ -1,13 +1,17 @@
-
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
-import { PDFDocument, StandardFonts, TextAlignment, rgb, cm } from 'pdf-lib';
+import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
 import { format } from 'date-fns';
+import { numberToWords } from './utils';
+
+
+// Helper function to convert cm to points (1 cm = 28.3465 points)
+const cm = (cmValue: number) => cmValue * 28.3465;
 
 export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Array> {
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([cm(21), cm(29.7)]); // A4 dimensions in cm
+    const page = pdfDoc.addPage(PageSizes.A4);
     const { width, height } = page.getSize();
     
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
@@ -34,7 +38,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const completionPeriod = tender.periodOfCompletion || '___';
 
     // 1. Draw the heading 17cm from the top
-    const headingTopMargin = 17 * cm(1); // 17cm in points
+    const headingTopMargin = cm(17); // 17cm in points
     const headingY = height - headingTopMargin;
     const headingText = `AGREEMENT NO. GKT/${fileNo} / ${eTenderNo} DATED ${agreementDateForHeading}`;
     
@@ -48,10 +52,10 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     });
     
     // 2. Draw the main agreement paragraph below the heading
-    const paragraphTopMargin = 1 * cm(1);
+    const paragraphTopMargin = cm(1);
     const paragraphY = headingY - paragraphTopMargin;
-    const leftMargin = 1.5 * cm(1);
-    const rightMargin = 1.5 * cm(1);
+    const leftMargin = cm(1.5);
+    const rightMargin = cm(1.5);
     const paragraphWidth = width - leftMargin - rightMargin;
     const indent = "     "; // 5 spaces for indentation
 
@@ -69,11 +73,10 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     });
 
     // 3. Draw the witness text
-    // We need to estimate the height of the paragraph to place the witness text below it.
     // This is an approximation. A more robust solution would calculate the exact height.
     const approximateLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth) + (paragraphText.split('\n').length -1);
     const paragraphHeight = approximateLines * 15; // lines * lineHeight
-    const witnessY = paragraphY - paragraphHeight - (1 * cm(1)); // 1cm below paragraph
+    const witnessY = paragraphY - paragraphHeight - cm(1); // 1cm below paragraph
     
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
     page.drawText(witnessText, {
@@ -85,7 +88,6 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
       textAlign: TextAlignment.Left,
       color: rgb(0, 0, 0),
     });
-
 
     return await pdfDoc.save();
 }
