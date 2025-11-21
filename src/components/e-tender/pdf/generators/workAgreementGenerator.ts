@@ -1,8 +1,7 @@
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
 import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
-import { format } from 'date-fns';
-import { numberToWords } from './utils';
+import { format, isValid } from 'date-fns';
 
 // Helper to convert cm to points (1 cm = 28.3465 points)
 const cm = (cmValue: number) => cmValue * 28.3465;
@@ -44,14 +43,15 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     }
     
     const completionPeriod = tender.periodOfCompletion || '___';
+    const leftMargin = cm(2.5);
+    const rightMargin = cm(1.5);
+    const paragraphWidth = width - leftMargin - rightMargin;
 
-    // 1. Draw the heading 17cm from the top
+    // 1. Draw the heading 17cm from the top, centered and underlined
     const headingTopMargin = cm(17);
     const headingY = height - headingTopMargin;
-    const headingText = `AGREEMENT NO. GKT/${fileNo} / ${eTenderNo} DATED ${agreementDateForHeading}`;
+    const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
-    
-    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     
     page.drawText(headingText, {
         x: width / 2,
@@ -62,6 +62,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         textAlign: TextAlignment.Center,
     });
     
+    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     page.drawLine({
         start: { x: (width - textWidth) / 2, y: headingY - 2 },
         end: { x: (width + textWidth) / 2, y: headingY - 2 },
@@ -71,17 +72,14 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
 
     // 2. Draw the main agreement paragraph below the heading
     const paragraphTopMargin = cm(1);
-    const paragraphY = headingY - paragraphTopMargin - 20; // Adjusted Y position
-    const leftMargin = cm(2.5);
-    const rightMargin = cm(1.5);
-    const paragraphWidth = width - leftMargin - rightMargin;
+    let currentY = headingY - paragraphTopMargin - 20; // Start below the heading
     const indent = "     ";
 
     const paragraphText = `${indent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
     
     page.drawText(paragraphText, {
         x: leftMargin,
-        y: paragraphY,
+        y: currentY,
         font: timesRomanFont,
         size: 12,
         lineHeight: 18,
@@ -90,16 +88,16 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         color: rgb(0, 0, 0),
     });
 
+    // Estimate height of the paragraph to position the next element
+    // This is an approximation. A more robust solution might involve a text layout library.
+    const approximateLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth) + 1;
+    currentY -= approximateLines * 18 + cm(2); // Move Y down based on estimated lines + a margin
+
     // 3. Draw the witness text
-    const { height: paragraphHeight } = timesRomanFont.heightAtSize(12);
-    // A rough estimation of lines needed
-    const approximateLines = Math.ceil((timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth)) * 2;
-    const witnessY = paragraphY - (approximateLines * paragraphHeight) - cm(2);
-    
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
     page.drawText(witnessText, {
       x: leftMargin,
-      y: witnessY,
+      y: currentY,
       font: timesRomanFont,
       size: 12,
       lineHeight: 18,
