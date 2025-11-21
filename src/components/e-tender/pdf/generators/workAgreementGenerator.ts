@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
 import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -31,7 +32,13 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const fileNo = tender.fileNo || '__________';
     const eTenderNo = tender.eTenderNo || '__________';
     const bidderDetails = (l1Bidder && l1Bidder.name) ? `${l1Bidder.name}, ${l1Bidder.address || ''}` : '____________________';
-    const workName = tender.nameOfWork || '____________________';
+    
+    let workName = tender.nameOfWork || '____________________';
+    // Logic to prevent double full stops
+    if (workName.endsWith('.')) {
+        workName = workName.slice(0, -1);
+    }
+    
     const completionPeriod = tender.periodOfCompletion || '___';
 
     // 1. Draw the heading 17cm from the top
@@ -40,19 +47,17 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const headingText = `AGREEMENT NO. GKT/${fileNo} / ${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
     
-    // Draw the centered heading
+    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
+    const textX = (width - textWidth) / 2;
+    
     page.drawText(headingText, {
-        x: width / 2,
+        x: textX,
         y: headingY,
         font: timesRomanBoldFont,
         size: headingFontSize,
         color: rgb(0, 0, 0),
-        textAlign: TextAlignment.Center,
     });
     
-    // Draw the underline for the heading
-    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
-    const textX = (width - textWidth) / 2;
     page.drawLine({
         start: { x: textX, y: headingY - 2 },
         end: { x: textX + textWidth, y: headingY - 2 },
