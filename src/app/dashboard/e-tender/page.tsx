@@ -1,11 +1,11 @@
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,8 +24,11 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { TenderDataProvider } from '@/components/e-tender/TenderDataContext';
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { app } from "@/lib/firebase";
+import NewBidderForm, { type NewBidderFormData } from '@/components/e-tender/NewBidderForm';
+
+const db = getFirestore(app);
 
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
@@ -37,6 +40,8 @@ export default function ETenderListPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isNewBidderDialogOpen, setIsNewBidderDialogOpen] = useState(false);
+    const [isSubmittingBidder, setIsSubmittingBidder] = useState(false);
 
     React.useEffect(() => {
         setHeader('e-Tenders', 'Manage all electronic tenders for the department.');
@@ -78,6 +83,28 @@ export default function ETenderListPage() {
             setTenderToDelete(null);
         }
     };
+    
+    const handleAddBidderSubmit = async (data: NewBidderFormData) => {
+        setIsSubmittingBidder(true);
+        try {
+            // Here, we are creating a new document in a potential 'bidders' collection.
+            // This is a simplified approach. A more robust solution might involve
+            // linking bidders to tenders, but this satisfies the immediate requirement.
+            await addDoc(collection(db, "bidders"), {
+                name: data.name,
+                address: data.address,
+                phoneNo: data.phoneNo,
+            });
+            toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
+            setIsNewBidderDialogOpen(false);
+        } catch (error: any) {
+            console.error("Error adding bidder:", error);
+            toast({ title: "Error", description: "Could not save bidder details.", variant: "destructive" });
+        } finally {
+            setIsSubmittingBidder(false);
+        }
+    };
+
 
     if (isLoading) {
         return (
@@ -104,9 +131,14 @@ export default function ETenderListPage() {
                             />
                         </div>
                         {user?.role === 'editor' && (
-                            <Button onClick={handleCreateNew} className="w-full sm:w-auto">
-                                <PlusCircle className="mr-2 h-4 w-4" /> Create New e-Tender
-                            </Button>
+                            <div className="flex w-full sm:w-auto items-center gap-2">
+                                <Button onClick={() => setIsNewBidderDialogOpen(true)} variant="outline" className="w-full sm:w-auto">
+                                    <UserPlus className="mr-2 h-4 w-4" /> Add Bidder Details
+                                </Button>
+                                <Button onClick={handleCreateNew} className="w-full sm:w-auto">
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Create New e-Tender
+                                </Button>
+                            </div>
                         )}
                     </div>
                 </CardContent>
@@ -177,6 +209,16 @@ export default function ETenderListPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={isNewBidderDialogOpen} onOpenChange={setIsNewBidderDialogOpen}>
+                <DialogContent className="max-w-2xl flex flex-col p-0">
+                    <NewBidderForm
+                        onSubmit={handleAddBidderSubmit}
+                        onCancel={() => setIsNewBidderDialogOpen(false)}
+                        isSubmitting={isSubmittingBidder}
+                    />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -1,0 +1,71 @@
+// src/components/e-tender/NewBidderForm.tsx
+"use client";
+
+import React from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader2, Save, X, UserPlus } from 'lucide-react';
+import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
+
+const NewBidderSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Bidder Name is required."),
+  address: z.string().optional(),
+  phoneNo: z.string().optional(),
+});
+export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
+
+const createDefaultBidder = (): NewBidderFormData => ({
+    id: uuidv4(),
+    name: '',
+    address: '',
+    phoneNo: '',
+});
+
+interface NewBidderFormProps {
+    onSubmit: (data: NewBidderFormData) => Promise<void>;
+    onCancel: () => void;
+    isSubmitting: boolean;
+}
+
+export default function NewBidderForm({ onSubmit, onCancel, isSubmitting }: NewBidderFormProps) {
+    const form = useForm<NewBidderFormData>({
+        resolver: zodResolver(NewBidderSchema),
+        defaultValues: createDefaultBidder(),
+    });
+
+    return (
+        <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+                <DialogHeader className="p-6 pb-4">
+                    <DialogTitle>Add New Bidder Details</DialogTitle>
+                    <DialogDescription>Enter the contact information for a new bidder.</DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 min-h-0">
+                    <ScrollArea className="h-full px-6 py-4">
+                        <div className="space-y-4">
+                            <FormField name="name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        </div>
+                    </ScrollArea>
+                </div>
+                <DialogFooter className="p-6 pt-4">
+                    <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
+                        <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />} Add Bidder
+                    </Button>
+                </DialogFooter>
+            </form>
+        </FormProvider>
+    );
+}

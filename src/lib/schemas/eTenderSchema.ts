@@ -76,6 +76,7 @@ export const BidderSchema = z.object({
     id: z.string(),
     name: z.string().optional(),
     address: z.string().optional(),
+    phoneNo: z.string().optional(),
     quotedAmount: optionalNumberSchema,
     quotedPercentage: optionalNumberSchema,
     aboveBelow: z.enum(['Above', 'Below']).optional(),
