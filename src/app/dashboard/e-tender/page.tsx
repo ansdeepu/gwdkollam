@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Edit } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { getFirestore, collection, addDoc, getDocs, query } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import NewBidderForm, { type NewBidderFormData, type Bidder as BidderType } from '@/components/e-tender/NewBidderForm';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -40,7 +40,7 @@ export default function ETenderListPage() {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeletingTender, setIsDeletingTender] = useState(false);
     
     const [isNewBidderDialogOpen, setIsNewBidderDialogOpen] = useState(false);
     const [isSubmittingBidder, setIsSubmittingBidder] = useState(false);
@@ -49,6 +49,11 @@ export default function ETenderListPage() {
     const [allBidders, setAllBidders] = useState<BidderType[]>([]);
     const [biddersLoading, setBiddersLoading] = useState(false);
     const [bidderSearchTerm, setBidderSearchTerm] = useState('');
+
+    const [bidderToEdit, setBidderToEdit] = useState<BidderType | null>(null);
+    const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
+    const [isDeletingBidder, setIsDeletingBidder] = useState(false);
+
 
     React.useEffect(() => {
         setHeader('e-Tenders', 'Manage all electronic tenders for the department.');
@@ -113,35 +118,55 @@ export default function ETenderListPage() {
 
     const confirmDelete = async () => {
         if (!tenderToDelete) return;
-        setIsDeleting(true);
+        setIsDeletingTender(true);
         try {
             await deleteTender(tenderToDelete.id);
             toast({ title: "Tender Deleted", description: `Tender "${tenderToDelete.eTenderNo}" has been removed.` });
         } catch (error: any) {
             toast({ title: "Error", description: error.message, variant: 'destructive' });
         } finally {
-            setIsDeleting(false);
+            setIsDeletingTender(false);
             setTenderToDelete(null);
         }
     };
     
-    const handleAddBidderSubmit = async (data: NewBidderFormData) => {
+    const handleAddOrEditBidderSubmit = async (data: NewBidderFormData) => {
         setIsSubmittingBidder(true);
         try {
-            await addDoc(collection(db, "bidders"), {
-                name: data.name,
-                address: data.address,
-                phoneNo: data.phoneNo,
-                secondaryPhoneNo: data.secondaryPhoneNo,
-                email: data.email,
-            });
-            toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
+            if (bidderToEdit) {
+                // Update existing bidder
+                const bidderDocRef = doc(db, "bidders", bidderToEdit.id);
+                await updateDoc(bidderDocRef, { ...data });
+                toast({ title: "Bidder Updated", description: `Bidder "${data.name}" has been updated.` });
+            } else {
+                // Add new bidder
+                await addDoc(collection(db, "bidders"), { ...data });
+                toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
+            }
+            await fetchBidders(); // Refresh the list
             setIsNewBidderDialogOpen(false);
+            setBidderToEdit(null);
         } catch (error: any) {
-            console.error("Error adding bidder:", error);
+            console.error("Error saving bidder:", error);
             toast({ title: "Error", description: "Could not save bidder details.", variant: "destructive" });
         } finally {
             setIsSubmittingBidder(false);
+        }
+    };
+    
+    const confirmDeleteBidder = async () => {
+        if (!bidderToDelete) return;
+        setIsDeletingBidder(true);
+        try {
+            await deleteDoc(doc(db, "bidders", bidderToDelete.id));
+            toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
+            await fetchBidders();
+        } catch (error: any) {
+            console.error("Error deleting bidder:", error);
+            toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
+        } finally {
+            setIsDeletingBidder(false);
+            setBidderToDelete(null);
         }
     };
 
@@ -175,8 +200,8 @@ export default function ETenderListPage() {
                                 <Button onClick={() => setIsBiddersListOpen(true)} variant="secondary" className="w-full sm:w-auto">
                                     <Users className="mr-2 h-4 w-4" /> Bidders List
                                 </Button>
-                                <Button onClick={() => setIsNewBidderDialogOpen(true)} variant="secondary" className="w-full sm:w-auto">
-                                    <UserPlus className="mr-2 h-4 w-4" /> Add Bidder Details
+                                <Button onClick={() => { setBidderToEdit(null); setIsNewBidderDialogOpen(true); }} variant="secondary" className="w-full sm:w-auto">
+                                    <UserPlus className="mr-2 h-4 w-4" /> Add Bidder
                                 </Button>
                                 <Button onClick={handleCreateNew} className="w-full sm:w-auto">
                                     <PlusCircle className="mr-2 h-4 w-4" /> Create New e-Tender
@@ -245,9 +270,9 @@ export default function ETenderListPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Delete"}
+                        <AlertDialogCancel disabled={isDeletingTender}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} disabled={isDeletingTender} className="bg-destructive hover:bg-destructive/90">
+                            {isDeletingTender ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Delete"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -256,15 +281,16 @@ export default function ETenderListPage() {
             <Dialog open={isNewBidderDialogOpen} onOpenChange={setIsNewBidderDialogOpen}>
                 <DialogContent className="max-w-2xl flex flex-col p-0">
                     <NewBidderForm
-                        onSubmit={handleAddBidderSubmit}
-                        onCancel={() => setIsNewBidderDialogOpen(false)}
+                        onSubmit={handleAddOrEditBidderSubmit}
+                        onCancel={() => { setIsNewBidderDialogOpen(false); setBidderToEdit(null); }}
                         isSubmitting={isSubmittingBidder}
+                        initialData={bidderToEdit}
                     />
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isBiddersListOpen} onOpenChange={setIsBiddersListOpen}>
-                <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
                     <DialogHeader className="p-6 pb-4 border-b">
                         <DialogTitle>Bidders List</DialogTitle>
                         <DialogDescription>A list of all registered bidders. Search by name, address, or phone.</DialogDescription>
@@ -293,8 +319,8 @@ export default function ETenderListPage() {
                                                 <TableHead>Name</TableHead>
                                                 <TableHead>Address</TableHead>
                                                 <TableHead>Phone No.</TableHead>
-                                                <TableHead>Secondary Phone No.</TableHead>
                                                 <TableHead>Email</TableHead>
+                                                <TableHead className="text-center">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -304,9 +330,16 @@ export default function ETenderListPage() {
                                                         <TableCell>{index + 1}</TableCell>
                                                         <TableCell className="font-medium">{bidder.name}</TableCell>
                                                         <TableCell className="text-sm text-muted-foreground whitespace-pre-wrap">{bidder.address}</TableCell>
-                                                        <TableCell>{bidder.phoneNo}</TableCell>
-                                                        <TableCell>{bidder.secondaryPhoneNo}</TableCell>
+                                                        <TableCell>{bidder.phoneNo}{bidder.secondaryPhoneNo ? `, ${bidder.secondaryPhoneNo}` : ''}</TableCell>
                                                         <TableCell>{bidder.email}</TableCell>
+                                                        <TableCell className="text-center">
+                                                            <Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}>
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TableCell>
                                                     </TableRow>
                                                 ))
                                             ) : (
@@ -329,6 +362,20 @@ export default function ETenderListPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <AlertDialog open={!!bidderToDelete} onOpenChange={() => setBidderToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This will permanently delete the bidder <strong>{bidderToDelete?.name}</strong>. This cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeletingBidder}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteBidder} disabled={isDeletingBidder} className="bg-destructive hover:bg-destructive/90">
+                            {isDeletingBidder ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

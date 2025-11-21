@@ -1,7 +1,7 @@
 // src/components/e-tender/NewBidderForm.tsx
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -39,20 +39,29 @@ interface NewBidderFormProps {
     onSubmit: (data: NewBidderFormData) => Promise<void>;
     onCancel: () => void;
     isSubmitting: boolean;
+    initialData?: Bidder | null;
 }
 
-export default function NewBidderForm({ onSubmit, onCancel, isSubmitting }: NewBidderFormProps) {
+export default function NewBidderForm({ onSubmit, onCancel, isSubmitting, initialData }: NewBidderFormProps) {
     const form = useForm<NewBidderFormData>({
         resolver: zodResolver(NewBidderSchema),
-        defaultValues: createDefaultBidder(),
+        defaultValues: initialData || createDefaultBidder(),
     });
+
+    useEffect(() => {
+        if (initialData) {
+            form.reset(initialData);
+        } else {
+            form.reset(createDefaultBidder());
+        }
+    }, [initialData, form]);
 
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
-                    <DialogTitle>Add New Bidder Details</DialogTitle>
-                    <DialogDescription>Enter the contact information for a new bidder.</DialogDescription>
+                    <DialogTitle>{initialData ? 'Edit Bidder Details' : 'Add New Bidder Details'}</DialogTitle>
+                    <DialogDescription>Enter the contact information for a bidder.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
@@ -70,7 +79,7 @@ export default function NewBidderForm({ onSubmit, onCancel, isSubmitting }: NewB
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />} Add Bidder
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {initialData ? 'Save Changes' : 'Add Bidder'}
                     </Button>
                 </DialogFooter>
             </form>
