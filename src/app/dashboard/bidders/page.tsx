@@ -104,35 +104,19 @@ export default function BiddersListPage() {
         setIsReordering(true);
     
         try {
-            // Fetch the most current data to guarantee consistency
             const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
             const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
             
             const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
-
+    
             if (!bidderToMove) {
                 throw new Error("Bidder to be moved was not found in the database. The list may be out of sync. Please refresh.");
             }
     
-            const otherBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
-            const reorderedList: BidderType[] = [];
+            let otherBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
             
-            // Build the new list in the correct order
-            for (let i = 0; i < currentBidders.length; i++) {
-                if (i === newPosition - 1) {
-                    reorderedList.push(bidderToMove);
-                }
-                if (otherBidders.length > 0) {
-                   if (reorderedList.length <= i) {
-                     reorderedList.push(otherBidders.shift()!);
-                   }
-                }
-            }
-
-            // If newPosition is last, it might not have been added
-            if (reorderedList.length < currentBidders.length) {
-                reorderedList.push(bidderToMove);
-            }
+            otherBidders.splice(newPosition - 1, 0, bidderToMove);
+            const reorderedList = otherBidders;
     
             const batch = writeBatch(db);
             reorderedList.forEach((bidder, index) => {
@@ -158,16 +142,12 @@ export default function BiddersListPage() {
     return (
         <div className="space-y-6">
              <div className="flex justify-end">
-                <Button variant="destructive" size="sm" onClick={() => router.push('/dashboard/e-tender')}>
+                <Button variant="destructive" onClick={() => router.push('/dashboard/e-tender')}>
                     <ArrowLeft className="mr-2 h-4 w-4"/> Back
                 </Button>
             </div>
             <Card>
-                <CardHeader>
-                    <CardTitle>Bidders Master List</CardTitle>
-                    <CardDescription>A centralized list of all bidders for e-tendering.</CardDescription>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     <div className="flex justify-end mb-4">
                          <Button onClick={() => { setBidderToEdit(null); setIsNewBidderDialogOpen(true); }}>
                             <UserPlus className="mr-2 h-4 w-4" /> Add New Bidder

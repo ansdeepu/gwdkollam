@@ -15,18 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { app } from "@/lib/firebase";
-import NewBidderForm, { type NewBidderFormData, type Bidder as BidderType } from '@/components/e-tender/NewBidderForm';
-import { useDataStore } from '@/hooks/use-data-store';
 import Link from 'next/link';
 
-
-const db = getFirestore(app);
 
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
@@ -34,14 +24,10 @@ export default function ETenderListPage() {
     const { tenders, isLoading, deleteTender } = useE_tenders();
     const { toast } = useToast();
     const { user } = useAuth();
-    const { refetchBidders } = useDataStore();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
     const [isDeletingTender, setIsDeletingTender] = useState(false);
-    
-    const [isNewBidderDialogOpen, setIsNewBidderDialogOpen] = useState(false);
-    const [isSubmittingBidder, setIsSubmittingBidder] = useState(false);
 
 
     React.useEffect(() => {
@@ -86,24 +72,6 @@ export default function ETenderListPage() {
             setTenderToDelete(null);
         }
     };
-    
-    const handleAddOrEditBidderSubmit = async (data: NewBidderFormData) => {
-        setIsSubmittingBidder(true);
-        try {
-            // In this simplified view, we are only adding new bidders
-            const newOrder = tenders.length > 0 ? Math.max(...tenders.map(t => (t.bidders?.length ?? 0))) + 1 : 0;
-            await addDoc(collection(db, "bidders"), { ...data, order: newOrder });
-            toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
-            
-            refetchBidders();
-            setIsNewBidderDialogOpen(false);
-        } catch (error: any) {
-            console.error("Error saving bidder:", error);
-            toast({ title: "Error", description: "Could not save bidder details.", variant: "destructive" });
-        } finally {
-            setIsSubmittingBidder(false);
-        }
-    };
 
 
     if (isLoading) {
@@ -134,9 +102,6 @@ export default function ETenderListPage() {
                             <div className="flex w-full sm:w-auto items-center gap-2">
                                 <Button asChild variant="secondary" className="w-full sm:w-auto">
                                     <Link href="/dashboard/bidders"><Users className="mr-2 h-4 w-4" /> Bidders List</Link>
-                                </Button>
-                                <Button onClick={() => setIsNewBidderDialogOpen(true)} variant="secondary" className="w-full sm:w-auto">
-                                    <UserPlus className="mr-2 h-4 w-4" /> Add Bidder
                                 </Button>
                                 <Button onClick={handleCreateNew} className="w-full sm:w-auto">
                                     <PlusCircle className="mr-2 h-4 w-4" /> Create New e-Tender
@@ -212,16 +177,6 @@ export default function ETenderListPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            <Dialog open={isNewBidderDialogOpen} onOpenChange={setIsNewBidderDialogOpen}>
-                <DialogContent className="max-w-2xl flex flex-col p-0">
-                    <NewBidderForm
-                        onSubmit={handleAddOrEditBidderSubmit}
-                        onCancel={() => setIsNewBidderDialogOpen(false)}
-                        isSubmitting={isSubmittingBidder}
-                    />
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }
