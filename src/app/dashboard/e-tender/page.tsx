@@ -188,7 +188,9 @@ export default function ETenderListPage() {
             const batch = writeBatch(db);
             reorderedList.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                batch.update(docRef, { order: index });
+                // Use set with merge to create the document if it doesn't exist, or update it if it does.
+                // This makes the operation more robust against inconsistencies.
+                batch.set(docRef, { order: index }, { merge: true });
             });
             await batch.commit();
             refetchBidders();
