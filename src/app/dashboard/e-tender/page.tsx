@@ -100,9 +100,6 @@ export default function ETenderListPage() {
                         </div>
                         {user?.role === 'editor' && (
                             <div className="flex w-full sm:w-auto items-center gap-2">
-                                <Button asChild variant="secondary" className="w-full sm:w-auto">
-                                    <Link href="/dashboard/bidders"><Users className="mr-2 h-4 w-4" /> Bidders List</Link>
-                                </Button>
                                 <Button onClick={handleCreateNew} className="w-full sm:w-auto">
                                     <PlusCircle className="mr-2 h-4 w-4" /> Create New e-Tender
                                 </Button>

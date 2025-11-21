@@ -25,10 +25,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 
 const db = getFirestore(app);
 
-const ReorderFormSchema = z.object({
-    newPosition: z.coerce.number().int().min(1, "Position must be 1 or greater."),
-});
-
 export default function BiddersListPage() {
     const { setHeader } = usePageHeader();
     const router = useRouter();
@@ -42,13 +38,6 @@ export default function BiddersListPage() {
     const [bidderToEdit, setBidderToEdit] = useState<BidderType | null>(null);
     const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
     const [isDeletingBidder, setIsDeletingBidder] = useState(false);
-
-    const [bidderToReorder, setBidderToReorder] = useState<BidderType | null>(null);
-    const [isReordering, setIsReordering] = useState(false);
-    
-    const reorderForm = useForm<{ newPosition: number }>({
-      resolver: zodResolver(ReorderFormSchema),
-    });
 
     useEffect(() => {
         setHeader('Bidders Management', '');
@@ -92,49 +81,6 @@ export default function BiddersListPage() {
             setBidderToDelete(null);
         }
     };
-    
-    const handleOpenReorderDialog = (bidder: BidderType) => {
-        const currentPosition = allBidders.findIndex(b => b.id === bidder.id) + 1;
-        setBidderToReorder(bidder);
-        reorderForm.setValue('newPosition', currentPosition > 0 ? currentPosition : 1);
-    };
-    
-    const handleReorderSubmit = async ({ newPosition }: { newPosition: number }) => {
-        if (!bidderToReorder) return;
-        setIsReordering(true);
-    
-        try {
-            const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
-            const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
-            
-            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (bidderToMoveIndex === -1) {
-                throw new Error("Bidder to be moved was not found. The list may be out of sync. Please refresh.");
-            }
-    
-            const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
-            currentBidders.splice(newPosition - 1, 0, bidderToMove);
-    
-            const batch = writeBatch(db);
-            currentBidders.forEach((bidder, index) => {
-                const docRef = doc(db, 'bidders', bidder.id);
-                batch.set(docRef, { order: index }, { merge: true });
-            });
-    
-            await batch.commit();
-            
-            toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
-            router.push('/dashboard/bidders');
-    
-        } catch (error: any) {
-            console.error("Reordering failed:", error);
-            toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-        } finally {
-            setIsReordering(false);
-            setBidderToReorder(null);
-        }
-    };
-
 
     return (
         <div className="space-y-6">
@@ -183,7 +129,6 @@ export default function BiddersListPage() {
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <div className="flex items-center justify-center space-x-1">
-                                                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(bidder)} disabled={isReordering}><ArrowUpDown className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Move Bidder</p></TooltipContent></Tooltip>
                                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}><Edit className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Edit Bidder</p></TooltipContent></Tooltip>
                                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Bidder</p></TooltipContent></Tooltip>
                                                     </div>
@@ -218,36 +163,6 @@ export default function BiddersListPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            {bidderToReorder && (
-              <Dialog open={!!bidderToReorder} onOpenChange={() => setBidderToReorder(null)}>
-                  <DialogContent>
-                      <DialogHeader>
-                          <DialogTitle>Move Bidder</DialogTitle>
-                          <DialogDescription>Move "{bidderToReorder?.name}" to a new position.</DialogDescription>
-                      </DialogHeader>
-                      <Form {...reorderForm}>
-                          <form onSubmit={reorderForm.handleSubmit(handleReorderSubmit)} className="space-y-4 py-4">
-                              <FormField
-                                  control={reorderForm.control}
-                                  name="newPosition"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel>New Position (1 to {allBidders.length})</FormLabel>
-                                          <FormControl><Input type="number" min="1" max={allBidders.length} {...field} /></FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                              <DialogFooter>
-                                  <Button type="button" variant="outline" onClick={() => setBidderToReorder(null)}>Cancel</Button>
-                                  <Button type="submit" disabled={isReordering}>{isReordering ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Move"}</Button>
-                              </DialogFooter>
-                          </form>
-                      </Form>
-                  </DialogContent>
-              </Dialog>
-            )}
         </div>
     );
 }

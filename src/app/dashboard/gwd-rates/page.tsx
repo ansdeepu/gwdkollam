@@ -260,10 +260,6 @@ export default function GwdRatesPage() {
   const [editingItem, setEditingItem] = useState<GwdRateItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<GwdRateItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMoving, setIsMoving] = useState(false);
-
-  const [isReorderDialogOpen, setIsReorderDialogOpen] = useState(false);
-  const [itemToReorder, setItemToReorder] = useState<GwdRateItem | null>(null);
 
   const canManage = user?.role === 'editor';
   
@@ -315,63 +311,8 @@ export default function GwdRatesPage() {
       fetchData();
     }
   }, [user, authLoading, fetchData]);
-  
-  const handleReorderItem = async ({ newPosition }: { newPosition: number }) => {
-      if (!itemToReorder) return;
-      setIsMoving(true);
-
-      try {
-          const ratesSnapshot = await getDocs(query(collection(db, RATES_COLLECTION), orderBy("order")));
-          let currentItems: GwdRateItem[] = ratesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as GwdRateItem));
-          
-          const itemToMoveIndex = currentItems.findIndex(i => i.id === itemToReorder.id);
-          if (itemToMoveIndex === -1) throw new Error("Item to move not found.");
-
-          const [itemToMove] = currentItems.splice(itemToMoveIndex, 1);
-          currentItems.splice(newPosition - 1, 0, itemToMove);
-
-          const batch = writeBatch(db);
-          currentItems.forEach((item, index) => {
-              const docRef = doc(db, RATES_COLLECTION, item.id);
-              batch.set(docRef, { order: index }, { merge: true });
-          });
-
-          await batch.commit();
-          toast({ title: 'Item Moved', description: `${itemToReorder.itemName} moved to position ${newPosition}.` });
-          await fetchData();
-      } catch (error: any) {
-          console.error("Reordering failed:", error);
-          toast({ title: 'Error', description: `Could not move item: ${error.message}`, variant: 'destructive' });
-      } finally {
-          setIsMoving(false);
-          setItemToReorder(null);
-          setIsReorderDialogOpen(false);
-      }
-  };
-
 
   const itemForm = useForm<GwdRateItemFormData>({ resolver: zodResolver(GwdRateItemFormDataSchema) });
-  
-  const reorderFormSchema = z.object({
-    newPosition: z.coerce
-      .number({ invalid_type_error: "Please enter a valid number." })
-      .int("Position must be a whole number.")
-      .min(1, "Position cannot be less than 1.")
-      .max(rateItems.length, `Position cannot be greater than ${rateItems.length}.`),
-  });
-  type ReorderFormData = z.infer<typeof reorderFormSchema>;
-
-  const reorderForm = useForm<ReorderFormData>({
-    resolver: zodResolver(reorderFormSchema),
-  });
-
-  const handleOpenReorderDialog = (item: GwdRateItem) => {
-    if (!canManage) return;
-    const currentPosition = rateItems.findIndex(i => i.id === item.id) + 1;
-    setItemToReorder(item);
-    reorderForm.reset({ newPosition: currentPosition });
-    setIsReorderDialogOpen(true);
-  };
 
   const handleOpenItemForm = (item: GwdRateItem | null) => {
     if (!canManage) return;
@@ -510,7 +451,6 @@ export default function GwdRatesPage() {
                               {canManage ? (
                                 <div className="flex items-center justify-center space-x-1">
                                   <Button variant="ghost" size="icon" onClick={() => handleOpenItemForm(item)}><Edit className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(item)} disabled={isMoving}><ArrowUpDown className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}><Trash2 className="h-4 w-4" /></Button>
                                 </div>
                               ) : (
@@ -622,53 +562,6 @@ export default function GwdRatesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={isReorderDialogOpen} onOpenChange={setIsReorderDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Move Item</DialogTitle>
-            <DialogDescription>
-              Move "{itemToReorder?.itemName}" to a new position.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...reorderForm}>
-            <form onSubmit={reorderForm.handleSubmit(handleReorderItem)} className="space-y-4 py-4">
-              <FormField
-                control={reorderForm.control}
-                name="newPosition"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Serial Number</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        max={rateItems.length}
-                        placeholder={`Enter a number from 1 to ${rateItems.length}`}
-                        {...field}
-                        onChange={e => field.onChange(e.target.value === '' ? '' : +e.target.value)}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      The list will be re-arranged accordingly.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsReorderDialogOpen(false)} disabled={isMoving}>
-                  <X className="mr-2 h-4 w-4" />Cancel
-                </Button>
-                <Button type="submit" disabled={isMoving}>
-                  {isMoving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowUpDown className="mr-2 h-4 w-4" />}
-                  Move
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
       
       {editingRate && (
         <EditRateDescriptionDialog
