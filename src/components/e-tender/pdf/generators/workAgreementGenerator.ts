@@ -5,7 +5,6 @@ import { formatDateSafe } from '../../utils';
 import { format } from 'date-fns';
 import { numberToWords } from './utils';
 
-
 // Helper function to convert cm to points (1 cm = 28.3465 points)
 const cm = (cmValue: number) => cmValue * 28.3465;
 
@@ -38,13 +37,14 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const completionPeriod = tender.periodOfCompletion || '___';
 
     // 1. Draw the heading 17cm from the top
-    const headingTopMargin = cm(17); 
+    const headingTopMargin = cm(17);
     const headingY = height - headingTopMargin;
     const headingText = `AGREEMENT NO. GKT/${fileNo} / ${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
     
+    // Draw the centered heading
     page.drawText(headingText, {
-        x: width / 2,
+        x: width / 2, // Center align using x and textAlign
         y: headingY,
         font: timesRomanBoldFont,
         size: headingFontSize,
@@ -54,7 +54,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     
     // Draw the underline for the heading
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
-    const textX = (width - textWidth) / 2;
+    const textX = (width - textWidth) / 2; // Calculate start position for underline
     page.drawLine({
         start: { x: textX, y: headingY - 2 },
         end: { x: textX + textWidth, y: headingY - 2 },
@@ -71,15 +71,15 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const indent = "     "; // 5 spaces for indentation
 
     const paragraphText = `${indent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
-
+    
     page.drawText(paragraphText, {
         x: leftMargin,
         y: paragraphY,
         font: timesRomanFont,
         size: 12,
         lineHeight: 15,
-        textAlign: TextAlignment.Justify,
-        maxWidth: paragraphWidth,
+        textAlign: TextAlignment.Justify, // Set text alignment to Justify
+        maxWidth: paragraphWidth, // Provide maxWidth for justification to work
         color: rgb(0, 0, 0),
     });
 
