@@ -1,3 +1,4 @@
+
 // src/app/dashboard/bidders/page.tsx
 "use client";
 
@@ -36,18 +37,16 @@ export default function BiddersListPage() {
     const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
     const [bidderToReorder, setBidderToReorder] = useState<BidderType | null>(null);
 
-    const [renderTrigger, setRenderTrigger] = useState(0);
+    const validBidders = useMemo(() => {
+        return allBidders
+            .filter(bidder => bidder && bidder.id && bidder.name)
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    }, [allBidders]);
 
 
     useEffect(() => {
         setHeader('Bidders Management', '');
     }, [setHeader]);
-    
-    const validBidders = useMemo(() => {
-        return allBidders
-            .filter(bidder => bidder && bidder.id && bidder.name)
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    }, [allBidders, renderTrigger]);
 
     const handleAddOrEditBidderSubmit = async (data: NewBidderFormData) => {
         setIsSubmitting(true);
@@ -89,47 +88,43 @@ export default function BiddersListPage() {
     };
     
     const handleReorderSubmit = async (newPosition: number) => {
-        if (!bidderToReorder || newPosition < 1 || newPosition > validBidders.length) {
-            toast({ title: "Invalid Position", description: `Please enter a valid position number between 1 and ${validBidders.length}.`, variant: "destructive" });
-            return;
-        }
-    
+        if (!bidderToReorder) return;
+        
         setIsSubmitting(true);
         try {
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
             const biddersSnapshot = await getDocs(biddersQuery);
-    
+
             const currentBidders: BidderType[] = biddersSnapshot.docs
                 .map(docSnap => {
                     const data = docSnap.data();
-                    // Explicitly filter out empty/invalid documents
                     if (!data || Object.keys(data).length === 0 || !data.name) {
                         console.warn("Skipping empty Firestore doc:", docSnap.id);
                         return null;
                     }
-                    return { id: docSnap.id, order: data.order ?? 0, ...data } as BidderType;
+                    return { id: docSnap.id, ...data } as BidderType;
                 })
-                .filter((b): b is BidderType => b !== null);
-    
+                .filter((b): b is BidderType => b !== null)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
             const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (bidderToMoveIndex === -1) throw new Error("The bidder you are trying to move could not be found.");
-            
+            if (bidderToMoveIndex === -1) throw new Error("The bidder to move could not be found in the current list.");
+
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
             currentBidders.splice(newPosition - 1, 0, bidderToMove);
-    
+
             const batch = writeBatch(db);
             currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
                 batch.set(docRef, { order: index }, { merge: true });
             });
-    
+
             await batch.commit();
             
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
-
-            // Directly refetch data and force a re-render.
-            await refetchBidders();
-            setRenderTrigger(prev => prev + 1);
+            
+            // Force a full page reload to ensure UI consistency
+            router.refresh();
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
