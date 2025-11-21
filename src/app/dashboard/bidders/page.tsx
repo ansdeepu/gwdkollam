@@ -80,7 +80,7 @@ export default function BiddersListPage() {
         }
     };
     
-     const handleReorderSubmit = async (newPosition: number) => {
+    const handleReorderSubmit = async (newPosition: number) => {
         if (!bidderToReorder || newPosition < 1) {
             toast({ title: "Invalid Position", description: "Please enter a valid position number.", variant: "destructive" });
             return;
@@ -94,14 +94,13 @@ export default function BiddersListPage() {
             const currentBidders: BidderType[] = biddersSnapshot.docs
                 .map(docSnap => {
                     const data = docSnap.data();
-                    // Filter out empty or invalid documents
                     if (!data || Object.keys(data).length === 0) {
-                        console.warn("Skipping empty or invalid Firestore doc:", docSnap.id);
+                        console.warn("Skipping empty Firestore doc:", docSnap.id);
                         return null;
                     }
                     return {
                         id: docSnap.id,
-                        order: data.order ?? 0, // Ensure order is a number
+                        order: data.order ?? 0,
                         ...data
                     } as BidderType;
                 })
@@ -120,20 +119,13 @@ export default function BiddersListPage() {
 
             const listWithoutMovedBidder = currentBidders.filter(b => b.id !== bidderToReorder.id);
             
-            // Insert the bidder into the new position
             listWithoutMovedBidder.splice(newPosition - 1, 0, bidderToMove);
             
-            // Re-assign sequential order to the entire list to ensure consistency
-            listWithoutMovedBidder.forEach((b, index) => {
-                b.order = index;
-            });
-
-            // Atomically update all documents in a batch
             const batch = writeBatch(db);
-            listWithoutMovedBidder.forEach((bidder) => {
+            listWithoutMovedBidder.forEach((bidder, index) => {
                 if (bidder.id) {
                     const docRef = doc(db, 'bidders', bidder.id);
-                    batch.set(docRef, { order: bidder.order }, { merge: true });
+                    batch.set(docRef, { order: index }, { merge: true });
                 }
             });
 
@@ -151,7 +143,6 @@ export default function BiddersListPage() {
             setBidderToReorder(null);
         }
     };
-
 
     return (
         <div className="space-y-6">
@@ -179,7 +170,7 @@ export default function BiddersListPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {allBidders.length > 0 ? (
-                                        allBidders.map((bidder, index) => (
+                                        allBidders.filter(bidder => bidder && bidder.id && bidder.name).map((bidder, index) => (
                                             <TableRow key={bidder.id}>
                                                 <TableCell>{index + 1}</TableCell>
                                                 <TableCell className="font-medium">{bidder.name}</TableCell>
