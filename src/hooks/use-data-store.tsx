@@ -153,6 +153,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                             if (orderA !== orderB) return orderA - orderB;
                             return a.name.localeCompare(b.name);
                         });
+                    } else if (collectionName === 'bidders') {
+                        data.sort((a: MasterBidder, b: MasterBidder) => (a.name || '').localeCompare(b.name || ''));
                     }
                     setter(data);
                 }
