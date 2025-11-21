@@ -179,31 +179,31 @@ export default function ETenderListPage() {
     const handleReorderSubmit = async ({ newPosition }: { newPosition: number }) => {
         if (!bidderToReorder) return;
         setIsReordering(true);
-    
-        const localBidders = [...allBidders];
-        const oldIndex = localBidders.findIndex(b => b.id === bidderToReorder.id);
-    
-        if (oldIndex === -1) {
-            toast({ title: 'Error', description: 'Bidder not found in the list.', variant: 'destructive' });
-            setIsReordering(false);
-            return;
-        }
-    
-        const [movedItem] = localBidders.splice(oldIndex, 1);
-        localBidders.splice(newPosition - 1, 0, movedItem);
-    
+
         try {
+            // Create a mutable copy and remove the item to be moved.
+            const mutableBidders = [...allBidders];
+            const oldIndex = mutableBidders.findIndex(b => b.id === bidderToReorder.id);
+            if (oldIndex === -1) throw new Error("Bidder to move not found in the list.");
+            const [movedItem] = mutableBidders.splice(oldIndex, 1);
+
+            // Insert the item at the new position.
+            mutableBidders.splice(newPosition - 1, 0, movedItem);
+
+            // Create a Firestore batch to update the 'order' of every item.
             const batch = writeBatch(db);
-            localBidders.forEach((bidder, index) => {
+            mutableBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Use set with merge to create if it doesn't exist, or update if it does.
-                batch.set(docRef, { ...bidder, order: index }, { merge: true });
+                batch.update(docRef, { order: index });
             });
+
             await batch.commit();
-            refetchBidders(); 
+            refetchBidders();
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
         } catch (error: any) {
+            console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
+            // Refetch to get back to a consistent state from the database
             refetchBidders(); 
         } finally {
             setIsReordering(false);
@@ -392,15 +392,30 @@ export default function ETenderListPage() {
                                                             </TableCell>
                                                             <TableCell className="text-center">
                                                                 <div className="flex items-center justify-center space-x-1">
-                                                                    <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(bidder)} disabled={isReordering}>
-                                                                        <ArrowUpDown className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}>
-                                                                        <Edit className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}>
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(bidder)} disabled={isReordering}>
+                                                                                <ArrowUpDown className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent><p>Move Bidder</p></TooltipContent>
+                                                                    </Tooltip>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}>
+                                                                                <Edit className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent><p>Edit Bidder</p></TooltipContent>
+                                                                    </Tooltip>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}>
+                                                                                <Trash2 className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent><p>Delete Bidder</p></TooltipContent>
+                                                                    </Tooltip>
                                                                 </div>
                                                             </TableCell>
                                                         </TableRow>
