@@ -56,10 +56,18 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         }
     });
 
+    // Remove the original 'agreement' field to prevent overlap.
+    try {
+      const agreementField = form.getField('agreement');
+      form.removeField(agreementField);
+    } catch (e) {
+      // It's okay if the field doesn't exist.
+    }
+
     // Draw the main agreement text directly for justification
     firstPage.drawText(agreementText, {
       x: 72, // Left margin (1 inch)
-      y: firstPage.getHeight() - 250, // Starting Y position from top
+      y: firstPage.getHeight() - 350, // Adjusted Y position to be lower on the page
       font: timesRomanFont,
       size: 12,
       lineHeight: 15,
