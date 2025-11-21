@@ -12,8 +12,19 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     });
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const form = pdfDoc.getForm();
+
+    // --- Diagnostic Code ---
+    // This will log the names of all fields in your PDF to the server console.
+    const fields = form.getFields();
+    console.log('--- DIAGNOSTIC: Found Fillable Fields in Agreement.pdf ---');
+    fields.forEach(field => {
+        const type = field.constructor.name;
+        const name = field.getName();
+        console.log(`${type}: ${name}`);
+    });
+    console.log('---------------------------------------------------------');
+    // --- End Diagnostic Code ---
 
     const l1Bidder = (tender.bidders || []).find(b => b.status === 'Accepted') || 
                      ((tender.bidders || []).length > 0 ? (tender.bidders || []).reduce((prev, curr) => (prev.quotedAmount ?? Infinity) < (curr.quotedAmount ?? Infinity) ? prev : curr, {} as any) : null);
@@ -39,19 +50,18 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         'agreement': agreementText,
     };
 
+    // Attempt to fill fields based on the assumed names. This may still result in a blank PDF.
+    // The important part is the console log above.
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const field = form.getTextField(fieldName);
             field.setText(String(value || ''));
-            if (fieldName === 'agreement') {
-                field.setAlignment(TextAlignment.Justify);
-            }
-            field.updateAppearances(timesRomanFont);
         } catch (e) {
-            console.warn(`Could not fill field ${fieldName}:`, e);
+            // Suppress errors for now, as we just want the diagnostic output.
         }
     });
 
-    form.flatten();
-    return await pdfDoc.save();
+    // To avoid confusion, we will return the original blank template for now.
+    // The console will have the information we need.
+    return existingPdfBytes;
 }
