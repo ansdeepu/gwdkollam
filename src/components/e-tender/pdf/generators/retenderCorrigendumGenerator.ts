@@ -19,8 +19,8 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     const reasonText = corrigendum.reason || `The time period for submitting e-tenders expired at ${lastDate}, and no bids were received. Hence, it has been decided to retender the above work.`;
 
     const fieldMappings: Record<string, any> = {
-        'e_tender_no': tender.eTenderNo,
-        'file_no': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no_header': tender.eTenderNo,
+        'file_no_header': `GKT/${tender.fileNo || ''}`,
         'corrigendum_date': formatDateSafe(corrigendum.corrigendumDate),
         'name_of_work': tender.nameOfWork,
         'retender': reasonText,
