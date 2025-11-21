@@ -4,14 +4,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, UserPlus, Users, Edit, Trash2, ArrowUpDown, ArrowLeft } from 'lucide-react';
+import { Loader2, UserPlus, Users, Edit, Trash2, ArrowUpDown, ArrowLeft, Move } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, writeBatch, setDoc, orderBy } from "firebase/firestore";
 import { app } from "@/lib/firebase";
@@ -33,18 +32,19 @@ export default function BiddersListPage() {
     const { toast } = useToast();
 
     const [isNewBidderDialogOpen, setIsNewBidderDialogOpen] = useState(false);
-    const [isSubmittingBidder, setIsSubmittingBidder] = useState(false);
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
     const [bidderToEdit, setBidderToEdit] = useState<BidderType | null>(null);
     const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
-    const [isDeletingBidder, setIsDeletingBidder] = useState(false);
+    const [bidderToReorder, setBidderToReorder] = useState<BidderType | null>(null);
+
 
     useEffect(() => {
         setHeader('Bidders Management', '');
     }, [setHeader]);
 
     const handleAddOrEditBidderSubmit = async (data: NewBidderFormData) => {
-        setIsSubmittingBidder(true);
+        setIsSubmitting(true);
         try {
             if (bidderToEdit) {
                 const bidderDocRef = doc(db, "bidders", bidderToEdit.id);
@@ -62,31 +62,76 @@ export default function BiddersListPage() {
             console.error("Error saving bidder:", error);
             toast({ title: "Error", description: "Could not save bidder details.", variant: "destructive" });
         } finally {
-            setIsSubmittingBidder(false);
+            setIsSubmitting(false);
         }
     };
     
     const confirmDeleteBidder = async () => {
         if (!bidderToDelete) return;
-        setIsDeletingBidder(true);
+        setIsSubmitting(true);
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            refetchBidders(); // Force a refresh
+            refetchBidders();
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
         } finally {
-            setIsDeletingBidder(false);
+            setIsSubmitting(false);
             setBidderToDelete(null);
         }
     };
+    
+    const handleReorderSubmit = async (newPosition: number) => {
+        if (!bidderToReorder || newPosition < 1 || newPosition > allBidders.length) {
+            toast({ title: "Invalid Position", description: "Please enter a valid position number.", variant: "destructive" });
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            // 1. Fetch fresh data to avoid race conditions
+            const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
+            const biddersSnapshot = await getDocs(biddersQuery);
+            const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
+
+            // Find the bidder to move from the fresh list
+            const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
+            if (!bidderToMove) throw new Error("The bidder you are trying to move could not be found.");
+            
+            // 2. Safely reorder in memory
+            const reorderedBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
+            reorderedBidders.splice(newPosition - 1, 0, bidderToMove);
+
+            // 3. Atomic batch update with set({ merge: true })
+            const batch = writeBatch(db);
+            reorderedBidders.forEach((bidder, index) => {
+                const docRef = doc(db, 'bidders', bidder.id);
+                // Use set with merge to safely update or create the order field
+                batch.set(docRef, { order: index }, { merge: true });
+            });
+
+            await batch.commit();
+            toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
+            
+            // 4. Force a UI refresh
+            refetchBidders();
+
+        } catch (error: any) {
+            console.error("Could not move bidder:", error);
+            toast({ title: "Error", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+            setBidderToReorder(null);
+        }
+    };
+
 
     return (
         <div className="space-y-6">
             <Card>
                 <CardContent className="pt-6">
-                    <div className="flex justify-between items-center mb-4">
+                     <div className="flex justify-between items-center mb-4">
                         <Button onClick={() => { setBidderToEdit(null); setIsNewBidderDialogOpen(true); }}>
                             <UserPlus className="mr-2 h-4 w-4" /> Add New Bidder
                         </Button>
@@ -130,6 +175,7 @@ export default function BiddersListPage() {
                                                 <TableCell className="text-center">
                                                     <div className="flex items-center justify-center space-x-1">
                                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}><Edit className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Edit Bidder</p></TooltipContent></Tooltip>
+                                                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => setBidderToReorder(bidder)}><Move className="h-4 w-4"/></Button></TooltipTrigger><TooltipContent><p>Move Bidder</p></TooltipContent></Tooltip>
                                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Bidder</p></TooltipContent></Tooltip>
                                                     </div>
                                                 </TableCell>
@@ -147,7 +193,7 @@ export default function BiddersListPage() {
 
             <Dialog open={isNewBidderDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) { setIsNewBidderDialogOpen(false); setBidderToEdit(null); } }}>
                 <DialogContent className="max-w-2xl flex flex-col p-0">
-                    <NewBidderForm onSubmit={handleAddOrEditBidderSubmit} onCancel={() => { setIsNewBidderDialogOpen(false); setBidderToEdit(null); }} isSubmitting={isSubmittingBidder} initialData={bidderToEdit}/>
+                    <NewBidderForm onSubmit={handleAddOrEditBidderSubmit} onCancel={() => { setIsNewBidderDialogOpen(false); setBidderToEdit(null); }} isSubmitting={isSubmitting} initialData={bidderToEdit}/>
                 </DialogContent>
             </Dialog>
 
@@ -158,11 +204,38 @@ export default function BiddersListPage() {
                         <AlertDialogDescription>This will permanently delete the bidder <strong>{bidderToDelete?.name}</strong>. This cannot be undone.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeletingBidder}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteBidder} disabled={isDeletingBidder} className="bg-destructive hover:bg-destructive/90">{isDeletingBidder ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Delete"}</AlertDialogAction>
+                        <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteBidder} disabled={isSubmitting} className="bg-destructive hover:bg-destructive/90">{isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Delete"}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            
+            {bidderToReorder && (
+              <Dialog open={!!bidderToReorder} onOpenChange={() => setBidderToReorder(null)}>
+                  <DialogContent>
+                      <DialogHeader>
+                          <DialogTitle>Move Bidder</DialogTitle>
+                          <DialogDescription>Move "{bidderToReorder?.name}" to a new position.</DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={(e) => {
+                          e.preventDefault();
+                          const newPosition = parseInt((e.target as any).position.value);
+                          handleReorderSubmit(newPosition);
+                      }}>
+                          <div className="py-4">
+                              <label htmlFor="position" className="text-sm font-medium">New Position (1 to {allBidders.length})</label>
+                              <Input id="position" type="number" min="1" max={allBidders.length} required className="mt-2" />
+                          </div>
+                          <DialogFooter>
+                              <Button type="button" variant="outline" onClick={() => setBidderToReorder(null)} disabled={isSubmitting}>Cancel</Button>
+                              <Button type="submit" disabled={isSubmitting}>
+                                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Move"}
+                              </Button>
+                          </DialogFooter>
+                      </form>
+                  </DialogContent>
+              </Dialog>
+            )}
         </div>
     );
 }
