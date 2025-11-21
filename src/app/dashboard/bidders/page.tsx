@@ -117,14 +117,16 @@ export default function BiddersListPage() {
             await batch.commit();
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
             
-            refetchBidders();
+            setBidderToReorder(null);
+            // Force a full data reload by navigating away and back
+            router.push('/dashboard');
+            setTimeout(() => router.push('/dashboard/bidders'), 50);
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
         } finally {
             setIsSubmitting(false);
-            setBidderToReorder(null);
         }
     };
 
