@@ -25,7 +25,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, writeBatch, setDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, writeBatch, setDoc, orderBy } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import NewBidderForm, { type NewBidderFormData, type Bidder as BidderType } from '@/components/e-tender/NewBidderForm';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -161,7 +161,7 @@ export default function ETenderListPage() {
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            refetchBidders();
+            refetchBidders(); // This will trigger the data store to refetch and update the UI
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
@@ -182,28 +182,32 @@ export default function ETenderListPage() {
         setIsReordering(true);
     
         try {
-            const reorderedList = [...allBidders]; // Make a mutable copy
+            // 1. Fetch fresh data from Firestore to avoid sync issues.
+            const freshBiddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
+            const freshBidders: BidderType[] = freshBiddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
     
-            // Find and remove the item to be moved
-            const oldIndex = reorderedList.findIndex(b => b.id === bidderToReorder.id);
-            if (oldIndex === -1) throw new Error("Bidder not found in the list.");
-            const [movedItem] = reorderedList.splice(oldIndex, 1);
+            const oldIndex = freshBidders.findIndex(b => b.id === bidderToReorder.id);
+            if (oldIndex === -1) {
+                throw new Error("Bidder to be moved was not found in the database. The list may be out of date.");
+            }
     
-            // Insert it at the new position
+            // 2. Remove the bidder and re-insert at the new position.
+            const [movedItem] = freshBidders.splice(oldIndex, 1);
             const newIndex = newPosition - 1;
-            reorderedList.splice(newIndex, 0, movedItem);
+            freshBidders.splice(newIndex, 0, movedItem);
     
-            // Update the order of all items in a batch
+            // 3. Update the 'order' for all bidders in a single batch.
             const batch = writeBatch(db);
-            reorderedList.forEach((bidder, index) => {
+            freshBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                batch.update(docRef, { order: index });
+                // Use set with merge to create if missing, or update if existing.
+                batch.set(docRef, { order: index }, { merge: true });
             });
     
             await batch.commit();
             
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
-            refetchBidders(); // Refresh the data from the store
+            refetchBidders(); // Refresh the central data store
     
         } catch (error: any) {
             console.error("Reordering failed:", error);
@@ -369,7 +373,6 @@ export default function ETenderListPage() {
                                                     <TableHead>Name</TableHead>
                                                     <TableHead>Address</TableHead>
                                                     <TableHead>Contact</TableHead>
-                                                    <TableHead>Email</TableHead>
                                                     <TableHead className="text-center">Actions</TableHead>
                                                 </TableRow>
                                             </TableHeader>
@@ -392,9 +395,7 @@ export default function ETenderListPage() {
                                                             <TableCell>
                                                                 <div className="text-sm">{bidder.phoneNo}</div>
                                                                 {bidder.secondaryPhoneNo && <div className="text-xs text-muted-foreground">{bidder.secondaryPhoneNo}</div>}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div className="text-xs text-muted-foreground">{bidder.email}</div>
+                                                                {bidder.email && <div className="text-xs text-muted-foreground mt-1">{bidder.email}</div>}
                                                             </TableCell>
                                                             <TableCell className="text-center">
                                                                 <div className="flex items-center justify-center space-x-1">
