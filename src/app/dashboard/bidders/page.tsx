@@ -40,6 +40,8 @@ export default function BiddersListPage() {
     useEffect(() => {
         setHeader('Bidders Management', '');
     }, [setHeader]);
+    
+    const validBidders = useMemo(() => allBidders.filter(bidder => bidder && bidder.id && bidder.name), [allBidders]);
 
     const handleAddOrEditBidderSubmit = async (data: NewBidderFormData) => {
         setIsSubmitting(true);
@@ -49,7 +51,7 @@ export default function BiddersListPage() {
                 await updateDoc(bidderDocRef, { ...data });
                 toast({ title: "Bidder Updated", description: `Bidder "${data.name}" has been updated.` });
             } else {
-                const newOrder = allBidders.length > 0 ? Math.max(...allBidders.map(b => b.order ?? 0)) + 1 : 0;
+                const newOrder = validBidders.length > 0 ? Math.max(...validBidders.map(b => b.order ?? 0)) + 1 : 0;
                 await addDoc(collection(db, "bidders"), { ...data, order: newOrder });
                 toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             }
@@ -81,57 +83,43 @@ export default function BiddersListPage() {
     };
     
     const handleReorderSubmit = async (newPosition: number) => {
-        if (!bidderToReorder || newPosition < 1) {
-            toast({ title: "Invalid Position", description: "Please enter a valid position number.", variant: "destructive" });
+        if (!bidderToReorder || newPosition < 1 || newPosition > validBidders.length) {
+            toast({ title: "Invalid Position", description: `Please enter a valid position number between 1 and ${validBidders.length}.`, variant: "destructive" });
             return;
         }
-    
+
         setIsSubmitting(true);
         try {
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
             const biddersSnapshot = await getDocs(biddersQuery);
-            
+
             const currentBidders: BidderType[] = biddersSnapshot.docs
                 .map(docSnap => {
                     const data = docSnap.data();
                     if (!data || Object.keys(data).length === 0 || !data.name) {
+                        console.warn("Skipping empty Firestore doc:", docSnap.id);
                         return null;
                     }
-                    return {
-                        id: docSnap.id,
-                        order: data.order ?? 0,
-                        ...data
-                    } as BidderType;
+                    return { id: docSnap.id, order: data.order ?? 0, ...data } as BidderType;
                 })
                 .filter((b): b is BidderType => b !== null);
 
-            if (newPosition > currentBidders.length) {
-                toast({ title: "Invalid Position", description: `Position must be between 1 and ${currentBidders.length}.`, variant: "destructive" });
-                setIsSubmitting(false);
-                return;
-            }
-    
             const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
-            if (!bidderToMove) {
-                throw new Error("The bidder you are trying to move could not be found.");
-            }
-    
+            if (!bidderToMove) throw new Error("The bidder you are trying to move could not be found.");
+
             const listWithoutMovedBidder = currentBidders.filter(b => b.id !== bidderToReorder.id);
-            
             listWithoutMovedBidder.splice(newPosition - 1, 0, bidderToMove);
-            
+
             const batch = writeBatch(db);
             listWithoutMovedBidder.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
                 batch.set(docRef, { order: index }, { merge: true });
             });
-    
+
             await batch.commit();
-            
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
-            await refetchBidders(); // Await the refetch
-    
+            await refetchBidders();
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
@@ -166,8 +154,8 @@ export default function BiddersListPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {allBidders.length > 0 ? (
-                                        allBidders.filter(bidder => bidder && bidder.id && bidder.name).map((bidder, index) => (
+                                    {validBidders.length > 0 ? (
+                                        validBidders.map((bidder, index) => (
                                             <TableRow key={bidder.id}>
                                                 <TableCell>{index + 1}</TableCell>
                                                 <TableCell className="font-medium">{bidder.name}</TableCell>
@@ -237,8 +225,8 @@ export default function BiddersListPage() {
                           handleReorderSubmit(newPosition);
                       }}>
                           <div className="py-4">
-                              <label htmlFor="position" className="text-sm font-medium">New Position (1 to {allBidders.length})</label>
-                              <Input id="position" type="number" min="1" max={allBidders.length} required className="mt-2" />
+                              <label htmlFor="position" className="text-sm font-medium">New Position (1 to {validBidders.length})</label>
+                              <Input id="position" type="number" min="1" max={validBidders.length} required className="mt-2" />
                           </div>
                           <DialogFooter>
                               <Button type="button" variant="outline" onClick={() => setBidderToReorder(null)} disabled={isSubmitting}>Cancel</Button>
