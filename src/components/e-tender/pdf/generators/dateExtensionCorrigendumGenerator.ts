@@ -45,7 +45,7 @@ export async function generateDateExtensionCorrigendum(
         date: formatDateSafe(corrigendum.corrigendumDate),
     };
     
-    const boldFields = ['name_of_work'];
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header', 'name_of_work'];
 
     // Fill fields safely
     for (const [fieldName, value] of Object.entries(fieldMappings)) {

@@ -13,6 +13,7 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
     
     const defaultReason = "the said work has been allotted to the Departmental Rig for execution";
@@ -29,15 +30,18 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
         'date': formatDateSafe(corrigendum.corrigendumDate),
     };
 
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header', 'name_of_work'];
+
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const textField = form.getTextField(fieldName);
+            const isBold = boldFields.includes(fieldName);
             textField.setText(String(value || ''));
             if (fieldName === 'cancel') {
                 textField.setAlignment(TextAlignment.Justify);
                 textField.setFontSize(10); // Set smaller font size for the main paragraph
             }
-            textField.updateAppearances(timesRomanFont);
+            textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
         } catch (e) {
             console.warn(`Could not fill field ${fieldName}:`, e);
         }
