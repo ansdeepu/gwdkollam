@@ -20,6 +20,7 @@ const NewBidderSchema = z.object({
   address: z.string().optional(),
   phoneNo: z.string().optional(),
   secondaryPhoneNo: z.string().optional(),
+  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
 });
 export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
 export type Bidder = z.infer<typeof NewBidderSchema>;
@@ -31,6 +32,7 @@ const createDefaultBidder = (): NewBidderFormData => ({
     address: '',
     phoneNo: '',
     secondaryPhoneNo: '',
+    email: '',
 });
 
 interface NewBidderFormProps {
@@ -59,6 +61,7 @@ export default function NewBidderForm({ onSubmit, onCancel, isSubmitting }: NewB
                             <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="secondaryPhoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Secondary Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                             <FormField name="email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email ID</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                     </ScrollArea>
                 </div>

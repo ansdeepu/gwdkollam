@@ -93,7 +93,8 @@ export default function ETenderListPage() {
             (bidder.name?.toLowerCase().includes(lowercasedFilter)) ||
             (bidder.address?.toLowerCase().includes(lowercasedFilter)) ||
             (bidder.phoneNo?.toLowerCase().includes(lowercasedFilter)) ||
-            (bidder.secondaryPhoneNo?.toLowerCase().includes(lowercasedFilter))
+            (bidder.secondaryPhoneNo?.toLowerCase().includes(lowercasedFilter)) ||
+            (bidder.email?.toLowerCase().includes(lowercasedFilter))
         );
     }, [allBidders, bidderSearchTerm]);
 
@@ -132,6 +133,7 @@ export default function ETenderListPage() {
                 address: data.address,
                 phoneNo: data.phoneNo,
                 secondaryPhoneNo: data.secondaryPhoneNo,
+                email: data.email,
             });
             toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             setIsNewBidderDialogOpen(false);
@@ -292,6 +294,7 @@ export default function ETenderListPage() {
                                                 <TableHead>Address</TableHead>
                                                 <TableHead>Phone No.</TableHead>
                                                 <TableHead>Secondary Phone No.</TableHead>
+                                                <TableHead>Email</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -303,11 +306,12 @@ export default function ETenderListPage() {
                                                         <TableCell className="text-sm text-muted-foreground whitespace-pre-wrap">{bidder.address}</TableCell>
                                                         <TableCell>{bidder.phoneNo}</TableCell>
                                                         <TableCell>{bidder.secondaryPhoneNo}</TableCell>
+                                                        <TableCell>{bidder.email}</TableCell>
                                                     </TableRow>
                                                 ))
                                             ) : (
                                                 <TableRow>
-                                                    <TableCell colSpan={5} className="h-24 text-center">
+                                                    <TableCell colSpan={6} className="h-24 text-center">
                                                         {bidderSearchTerm ? "No bidders found matching your search." : "No bidders found."}
                                                     </TableCell>
                                                 </TableRow>
