@@ -85,5 +85,21 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         yPosition -= lineHeight;
     });
 
+    // Signatures at the bottom
+    const signatureY = 150;
+    const signatureLineHeight = 15;
+    
+    // First Party (Right side)
+    const rightX = width - 250;
+    firstPage.drawText("First Party", { x: rightX, y: signatureY, font: timesRomanFont, size: 12 });
+    firstPage.drawText("District Officer", { x: rightX, y: signatureY - signatureLineHeight, font: timesRomanFont, size: 12 });
+
+    // Second Party (Left side)
+    const leftX = 72;
+    firstPage.drawText("Second Party", { x: leftX, y: signatureY, font: timesRomanFont, size: 12 });
+    if (l1Bidder?.name) {
+        firstPage.drawText(l1Bidder.name, { x: leftX, y: signatureY - signatureLineHeight, font: timesRomanFont, size: 12 });
+    }
+
     return await pdfDoc.save();
 }
