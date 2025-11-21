@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -181,7 +182,7 @@ export default function ETenderListPage() {
         setIsReordering(true);
 
         try {
-            const mutableBidders = [...allBidders];
+            let mutableBidders = [...allBidders];
             const oldIndex = mutableBidders.findIndex(b => b.id === bidderToReorder.id);
             if (oldIndex === -1) throw new Error("Bidder to move was not found in the list.");
             
@@ -191,6 +192,7 @@ export default function ETenderListPage() {
             const batch = writeBatch(db);
             mutableBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
+                // Use set with merge to create if not exists, or update if it does.
                 batch.set(docRef, { order: index }, { merge: true });
             });
 
@@ -201,6 +203,7 @@ export default function ETenderListPage() {
         } catch (error: any) {
             console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
+            // Refetch to get the correct state from the database in case of error
             refetchBidders();
         } finally {
             setIsReordering(false);
@@ -363,6 +366,7 @@ export default function ETenderListPage() {
                                                     <TableHead>Name</TableHead>
                                                     <TableHead>Address</TableHead>
                                                     <TableHead>Contact</TableHead>
+                                                    <TableHead>Email</TableHead>
                                                     <TableHead className="text-center">Actions</TableHead>
                                                 </TableRow>
                                             </TableHeader>
@@ -385,7 +389,9 @@ export default function ETenderListPage() {
                                                             <TableCell>
                                                                 <div className="text-sm">{bidder.phoneNo}</div>
                                                                 {bidder.secondaryPhoneNo && <div className="text-xs text-muted-foreground">{bidder.secondaryPhoneNo}</div>}
-                                                                {bidder.email && <div className="text-xs text-muted-foreground">{bidder.email}</div>}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="text-xs text-muted-foreground">{bidder.email}</div>
                                                             </TableCell>
                                                             <TableCell className="text-center">
                                                                 <div className="flex items-center justify-center space-x-1">
@@ -419,7 +425,7 @@ export default function ETenderListPage() {
                                                     ))
                                                 ) : (
                                                     <TableRow>
-                                                        <TableCell colSpan={5} className="h-24 text-center">
+                                                        <TableCell colSpan={6} className="h-24 text-center">
                                                             {bidderSearchTerm ? "No bidders found matching your search." : "No bidders found."}
                                                         </TableCell>
                                                     </TableRow>
