@@ -17,7 +17,6 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const l1Bidder = (tender.bidders || []).find(b => b.status === 'Accepted') || 
                      ((tender.bidders || []).length > 0 ? (tender.bidders || []).reduce((prev, curr) => (prev.quotedAmount ?? Infinity) < (curr.quotedAmount ?? Infinity) ? prev : curr, {} as any) : null);
 
-    // Format the date
     let agreementDateFormatted = '__________';
     let agreementDateForHeading = '__________';
     if (tender.agreementDate) {
@@ -37,7 +36,6 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const bidderDetails = (l1Bidder && l1Bidder.name) ? `${l1Bidder.name}, ${l1Bidder.address || ''}` : '____________________';
     
     let workName = tender.nameOfWork || '____________________';
-    // Logic to prevent double full stops
     if (workName.endsWith('.')) {
         workName = workName.slice(0, -1);
     }
@@ -49,13 +47,13 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
 
     // 1. Draw the heading 17cm from the top, centered and underlined
     const headingTopMargin = cm(17);
-    const headingY = height - headingTopMargin;
+    let currentY = height - headingTopMargin;
     const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
     
     page.drawText(headingText, {
         x: width / 2,
-        y: headingY,
+        y: currentY,
         font: timesRomanBoldFont,
         size: headingFontSize,
         color: rgb(0, 0, 0),
@@ -64,17 +62,15 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     page.drawLine({
-        start: { x: (width - textWidth) / 2, y: headingY - 2 },
-        end: { x: (width + textWidth) / 2, y: headingY - 2 },
+        start: { x: (width - textWidth) / 2, y: currentY - 2 },
+        end: { x: (width + textWidth) / 2, y: currentY - 2 },
         thickness: 1,
         color: rgb(0, 0, 0),
     });
 
     // 2. Draw the main agreement paragraph below the heading
-    const paragraphTopMargin = cm(1);
-    let currentY = headingY - paragraphTopMargin - 20; // Start below the heading
+    currentY -= cm(1) + 20; // Move Y down for the next element
     const indent = "     ";
-
     const paragraphText = `${indent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
     
     page.drawText(paragraphText, {
@@ -87,11 +83,9 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         maxWidth: paragraphWidth,
         color: rgb(0, 0, 0),
     });
-
-    // Estimate height of the paragraph to position the next element
-    // This is an approximation. A more robust solution might involve a text layout library.
-    const approximateLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth) + 1;
-    currentY -= approximateLines * 18 + cm(2); // Move Y down based on estimated lines + a margin
+    
+    const approximateLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth);
+    currentY -= (approximateLines * 18) + cm(2);
 
     // 3. Draw the witness text
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
