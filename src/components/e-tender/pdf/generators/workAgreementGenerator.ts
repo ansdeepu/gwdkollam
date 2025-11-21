@@ -1,5 +1,5 @@
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
-import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts, TextAlignment, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
 import { format } from 'date-fns';
@@ -31,8 +31,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const workName = tender.nameOfWork || '____________________';
     const completionPeriod = tender.periodOfCompletion || '___';
     
-    const INDENT = "     ";
-    const agreementText = `${INDENT}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
+    const agreementText = `     Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'agreement_date'];
 
@@ -40,24 +39,43 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         'file_no_header': `GKT/${tender.fileNo || '__________'}`,
         'e_tender_no_header': tender.eTenderNo || '__________',
         'agreement_date': formatDateSafe(tender.agreementDate),
-        'agreement': agreementText,
     };
-    
+
+    // Fill header fields
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const field = form.getField(fieldName);
             if (field instanceof PDFTextField) {
                 const isBold = boldFields.includes(fieldName);
                 field.setText(String(value || ''));
-                if (fieldName === 'agreement') {
-                    field.setAlignment(TextAlignment.Justify);
-                }
                 field.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             }
         } catch (e) {
             console.warn(`Could not fill field ${fieldName}:`, e);
         }
     });
+
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+    
+    // Draw the main agreement text directly for full justification control
+    firstPage.drawText(agreementText, {
+        x: 72, // Left margin (1 inch)
+        y: firstPage.getHeight() - 350, // Approximate vertical position
+        font: timesRomanFont,
+        size: 12,
+        lineHeight: 15,
+        textAlign: TextAlignment.Justify,
+        maxWidth: firstPage.getWidth() - 144, // Page width minus 2-inch margins
+        color: rgb(0, 0, 0),
+    });
+
+    // Remove the old 'agreement' field if it exists, to prevent overlap
+    try {
+        form.removeField(form.getTextField('agreement'));
+    } catch(e) {
+        // Field doesn't exist, which is fine.
+    }
 
     form.flatten();
     return await pdfDoc.save();
