@@ -95,7 +95,7 @@ export default function BiddersListPage() {
                 .map(docSnap => {
                     const data = docSnap.data();
                     // Filter out empty or invalid documents
-                    if (!data || Object.keys(data).length === 0 || !data.name) {
+                    if (!data || Object.keys(data).length === 0) {
                         console.warn("Skipping empty or invalid Firestore doc:", docSnap.id);
                         return null;
                     }
