@@ -29,6 +29,8 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
         'retender': fullParagraph,
         'new_last_date': formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false),
         'new_opening_date': formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true),
+        // Adding both `date` and `date_2` as fallbacks for the bottom date
+        'date': formatDateSafe(corrigendum.corrigendumDate),
         'date_2': formatDateSafe(corrigendum.corrigendumDate),
     };
     
@@ -36,15 +38,20 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
-            const textField = form.getTextField(fieldName);
-            const isBold = boldFields.includes(fieldName);
-            textField.setText(String(value || ''));
-             if (fieldName === 'retender') {
-                textField.setAlignment(TextAlignment.Justify);
+            const field = form.getField(fieldName);
+            if (field instanceof PDFTextField) {
+                const isBold = boldFields.includes(fieldName);
+                field.setText(String(value || ''));
+                 if (fieldName === 'retender') {
+                    field.setAlignment(TextAlignment.Justify);
+                }
+                field.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             }
-            textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
         } catch (e) {
-            console.warn(`Could not fill field ${fieldName}:`, e);
+            // It's okay if a field doesn't exist, especially the fallback date fields
+            if (!['date', 'date_2'].includes(fieldName)) {
+                 console.warn(`Could not fill field ${fieldName}:`, e);
+            }
         }
     });
 
