@@ -5,6 +5,7 @@ const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null |
 
 export const eTenderStatusOptions = [
     "Tender Process",
+    "Bid Opened",
     "Selection Notice Issued",
     "Work Order Issued",
 ] as const;
@@ -181,6 +182,7 @@ export const E_tenderSchema = z.object({
     supervisor3Phone: z.string().optional().nullable(),
 
     presentStatus: z.enum(eTenderStatusOptions).optional(),
+    remarks: z.string().optional(),
     
     // Historical Descriptions
     tenderFeeDescription: z.string().optional(),

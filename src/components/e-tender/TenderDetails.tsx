@@ -33,6 +33,7 @@ import CorrigendumForm from './CorrigendumForm';
 import { useDataStore } from '@/hooks/use-data-store';
 import PdfReportDialogs from './pdf/PdfReportDialogs'; 
 import CorrigendumReports from './pdf/CorrigendumReports';
+import { Textarea } from '../ui/textarea';
 
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
@@ -501,10 +502,10 @@ export default function TenderDetails() {
                         </div>
 
                         <Card className="mt-4">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between gap-4">
+                            <CardContent className="p-4 space-y-4">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <h3 className="text-lg font-semibold flex items-center gap-3 text-primary"><FileText className="h-5 w-5"/>Present Status</h3>
-                                    <div className="w-full max-w-sm">
+                                    <div className="w-full sm:w-auto sm:max-w-xs">
                                         <FormField
                                             name="presentStatus"
                                             control={control}
@@ -520,6 +521,27 @@ export default function TenderDetails() {
                                         />
                                     </div>
                                 </div>
+                                <FormField
+                                    name="remarks"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Remarks</FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    {...field}
+                                                    value={field.value ?? ""}
+                                                    onChange={(e) => {
+                                                        field.onChange(e);
+                                                        updateTender({ remarks: e.target.value });
+                                                    }}
+                                                    placeholder="Add any remarks about the current status..."
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </CardContent>
                         </Card>
                         
