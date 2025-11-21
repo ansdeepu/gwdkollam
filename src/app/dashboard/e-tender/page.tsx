@@ -24,7 +24,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, writeBatch, setDoc } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import NewBidderForm, { type NewBidderFormData, type Bidder as BidderType } from '@/components/e-tender/NewBidderForm';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -184,7 +184,7 @@ export default function ETenderListPage() {
             // Create a mutable copy and remove the item to be moved.
             const mutableBidders = [...allBidders];
             const oldIndex = mutableBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (oldIndex === -1) throw new Error("Bidder to move not found in the list.");
+            if (oldIndex === -1) throw new Error("Bidder to move was not found in the list.");
             const [movedItem] = mutableBidders.splice(oldIndex, 1);
 
             // Insert the item at the new position.
@@ -194,11 +194,12 @@ export default function ETenderListPage() {
             const batch = writeBatch(db);
             mutableBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                batch.update(docRef, { order: index });
+                // Use set with merge to handle cases where a doc might not exist yet, preventing the "No document to update" error.
+                batch.set(docRef, { order: index }, { merge: true });
             });
 
             await batch.commit();
-            refetchBidders();
+            refetchBidders(); // This will fetch the newly ordered list from the backend
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
         } catch (error: any) {
             console.error("Reordering failed:", error);
