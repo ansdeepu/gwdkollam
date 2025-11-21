@@ -33,59 +33,31 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     
     const agreementText = `     Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
 
-    // Remove any existing fields to avoid overlap before drawing text manually
-    const fieldNames = form.getFields().map(f => f.getName());
-    fieldNames.forEach(fieldName => {
-        try { form.removeField(form.getField(fieldName)); } catch (e) { /* Ignore errors */ }
-    });
-
-    const pages = pdfDoc.getPages();
-    const firstPage = pages[0];
+    const fieldMappings: Record<string, any> = {
+        'file_no_header': `GKT/${tender.fileNo || '__________'}`,
+        'e_tender_no_header': tender.eTenderNo || '__________',
+        'agreement_date': formatDateSafe(tender.agreementDate),
+        'agreement': agreementText,
+    };
     
-    // Draw the main agreement paragraph at the top of the page
-    firstPage.drawText(agreementText, {
-        x: 72, // Left margin (1 inch)
-        y: firstPage.getHeight() - 120, // Vertical position from top
-        font: timesRomanFont,
-        size: 12,
-        lineHeight: 18,
-        textAlign: TextAlignment.Justify,
-        maxWidth: firstPage.getWidth() - 144, // Page width minus 2-inch margins
-        color: rgb(0, 0, 0),
-        wordBreaks: [' '],
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'agreement_date'];
+
+    Object.entries(fieldMappings).forEach(([fieldName, value]) => {
+        try {
+            const field = form.getField(fieldName);
+            if (field instanceof PDFTextField) {
+                const isBold = boldFields.includes(fieldName);
+                field.setText(String(value || ''));
+                if (fieldName === 'agreement') {
+                    field.setAlignment(TextAlignment.Justify);
+                }
+                field.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
+            }
+        } catch (e) {
+            console.warn(`Could not fill field ${fieldName}:`, e);
+        }
     });
 
-    // Construct and draw the AGREEMENT NO heading
-    const headingText = `AGREEMENT NO. GKT/${tender.fileNo || '__________'} / ${tender.eTenderNo || '__________'}   DATED ${formatDateSafe(tender.agreementDate)}`;
-    firstPage.drawText(headingText, {
-        x: firstPage.getWidth() / 2, // Centered
-        y: firstPage.getHeight() - 450, // Positioned below the main text
-        font: timesRomanBoldFont,
-        size: 12,
-        color: rgb(0, 0, 0),
-        textAlign: TextAlignment.Center,
-    });
-    
-    // Draw signature lines at the bottom
-    const contractorSignatureY = firstPage.getHeight() - 650;
-    firstPage.drawText(`Signed and delivered by the contractor in the presence of witness`, {
-        x: 72,
-        y: contractorSignatureY,
-        font: timesRomanFont,
-        size: 12,
-    });
-
-    const officerSignatureY = firstPage.getHeight() - 650;
-    firstPage.drawText(`For and on behalf of the Governor of Kerala\nDistrict Officer`, {
-        x: firstPage.getWidth() - 250,
-        y: officerSignatureY,
-        font: timesRomanFont,
-        size: 12,
-        textAlign: TextAlignment.Center,
-        lineHeight: 15,
-    });
-
-    // Flatten to make the drawn text part of the page content
     form.flatten();
     return await pdfDoc.save();
 }
