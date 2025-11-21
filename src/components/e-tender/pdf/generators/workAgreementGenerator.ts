@@ -48,8 +48,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     let currentY = height - cm(17);
     const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
-    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
-    const indent = cm(0.5); // 5 character spaces approx
+    const indent = timesRomanBoldFont.widthOfTextAtSize("     ", headingFontSize);
 
     page.drawText(headingText, {
         x: leftMargin + indent,
@@ -60,6 +59,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         textAlign: TextAlignment.Left,
     });
     
+    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     page.drawLine({
         start: { x: leftMargin + indent, y: currentY - 2 },
         end: { x: leftMargin + indent + textWidth, y: currentY - 2 },
@@ -83,8 +83,8 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         color: rgb(0, 0, 0),
     });
     
-    const paragraphLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth);
-    currentY -= (paragraphLines * 18) + cm(2);
+    const paragraphHeight = timesRomanFont.heightAtSize(12) * Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth);
+    currentY -= paragraphHeight + cm(2);
 
     // 3. Draw the witness text
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
