@@ -87,7 +87,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     });
     
     // 3. Draw the witness text
-    currentY -= cm(4); // Move down for witness text
+    currentY -= cm(4) + (5 * lineHeight); // Move down for witness text plus five line spaces
 
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
     page.drawText(witnessText, {
