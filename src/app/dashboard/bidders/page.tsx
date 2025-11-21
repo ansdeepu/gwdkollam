@@ -95,7 +95,7 @@ export default function BiddersListPage() {
     
     const handleOpenReorderDialog = (bidder: BidderType) => {
         const currentPosition = allBidders.findIndex(b => b.id === bidder.id) + 1;
-        setItemToReorder(bidder);
+        setBidderToReorder(bidder);
         reorderForm.setValue('newPosition', currentPosition > 0 ? currentPosition : 1);
     };
     
@@ -140,16 +140,14 @@ export default function BiddersListPage() {
 
     return (
         <div className="space-y-6">
-             <div className="flex justify-end">
-                <Button variant="destructive" onClick={() => router.back()}>
-                    <ArrowLeft className="mr-2 h-4 w-4"/> Back
-                </Button>
-            </div>
             <Card>
                 <CardContent className="pt-6">
-                    <div className="flex justify-end mb-4">
-                         <Button onClick={() => { setBidderToEdit(null); setIsNewBidderDialogOpen(true); }}>
+                    <div className="flex justify-between items-center mb-4">
+                        <Button onClick={() => { setBidderToEdit(null); setIsNewBidderDialogOpen(true); }}>
                             <UserPlus className="mr-2 h-4 w-4" /> Add New Bidder
+                        </Button>
+                        <Button variant="destructive" onClick={() => router.back()}>
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
                         </Button>
                     </div>
                      <div className="max-h-[70vh] overflow-auto">
