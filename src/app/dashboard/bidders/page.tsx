@@ -88,39 +88,49 @@ export default function BiddersListPage() {
 
         setIsSubmitting(true);
         try {
+            // 1. Fetch the most current data directly from Firestore
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
             const biddersSnapshot = await getDocs(biddersQuery);
-            
-            let currentBidders: BidderType[] = biddersSnapshot.docs.map(docSnap => {
-                const data = docSnap.data();
-                return { id: docSnap.id, order: data.order ?? 0, ...data } as BidderType;
-            });
+            const currentBidders: BidderType[] = biddersSnapshot.docs.map(docSnap => ({
+                id: docSnap.id,
+                ...docSnap.data()
+            } as BidderType));
 
+            // 2. Find the bidder to move and its original index
             const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (bidderToMoveIndex === -1) throw new Error("The bidder you are trying to move could not be found.");
-
+            if (bidderToMoveIndex === -1) {
+                throw new Error("Could not find the bidder to move. The list may be out of sync.");
+            }
+            
+            // 3. Perform a safe reorder operation
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
-            
-            const newIndex = newPosition - 1;
-            currentBidders.splice(newIndex, 0, bidderToMove);
-            
+            currentBidders.splice(newPosition - 1, 0, bidderToMove);
+
+            // 4. Create a batch write to update the 'order' of all documents atomically
             const batch = writeBatch(db);
             currentBidders.forEach((bidder, index) => {
-                const docRef = doc(db, 'bidders', bidder.id);
-                batch.set(docRef, { order: index }, { merge: true });
+                if (bidder && bidder.id) {
+                    const docRef = doc(db, 'bidders', bidder.id);
+                    batch.set(docRef, { order: index }, { merge: true });
+                }
             });
 
+            // 5. Commit the batch
             await batch.commit();
+
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
-            
-            setBidderToReorder(null);
-            refetchBidders();
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
-            toast({ title: "Error", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
+            toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
         } finally {
             setIsSubmitting(false);
+            setBidderToReorder(null);
+            // 6. Force a data refresh to ensure UI consistency
+            refetchBidders();
+             // A more forceful refresh to avoid race conditions
+            router.push('/dashboard');
+            setTimeout(() => router.push('/dashboard/bidders'), 50);
         }
     };
 
