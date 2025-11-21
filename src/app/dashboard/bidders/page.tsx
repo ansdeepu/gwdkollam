@@ -120,6 +120,7 @@ export default function BiddersListPage() {
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
             router.refresh();
+
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
