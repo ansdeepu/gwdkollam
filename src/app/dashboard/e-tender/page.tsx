@@ -191,25 +191,25 @@ export default function ETenderListPage() {
             }
     
             const [movedItem] = freshBidders.splice(oldIndex, 1);
-            
             const newIndex = newPosition - 1;
             freshBidders.splice(newIndex, 0, movedItem);
     
             const batch = writeBatch(db);
             freshBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
+                // Use set with merge to create if it doesn't exist, or update if it does.
                 batch.set(docRef, { order: index }, { merge: true });
             });
     
             await batch.commit();
             
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
-            refetchBidders();
+            refetchBidders(); // Force a refresh from the data store
     
         } catch (error: any) {
             console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-            refetchBidders();
+            refetchBidders(); // Refresh even on error to sync state
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
