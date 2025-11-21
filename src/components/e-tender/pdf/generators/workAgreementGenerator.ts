@@ -1,8 +1,8 @@
-
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
 import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { format } from 'date-fns';
+import { numberToWords } from './utils';
 
 // Helper to convert cm to points (1 cm = 28.3465 points)
 const cm = (cmValue: number) => cmValue * 28.3465;
@@ -22,10 +22,14 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     let agreementDateFormatted = '__________';
     let agreementDateForHeading = '__________';
     if (tender.agreementDate) {
-        const d = new Date(tender.agreementDate);
-        if (!isNaN(d.getTime())) {
-            agreementDateFormatted = format(d, 'dd MMMM yyyy');
-            agreementDateForHeading = format(d, 'dd/MM/yyyy');
+        try {
+            const d = new Date(tender.agreementDate);
+            if (!isNaN(d.getTime())) {
+                agreementDateFormatted = format(d, 'dd MMMM yyyy');
+                agreementDateForHeading = format(d, 'dd/MM/yyyy');
+            }
+        } catch (e) {
+            console.warn("Could not parse agreement date:", tender.agreementDate);
         }
     }
 
@@ -48,27 +52,27 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const headingFontSize = 12;
     
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
-    const textX = (width - textWidth) / 2;
     
     page.drawText(headingText, {
-        x: textX,
+        x: width / 2,
         y: headingY,
         font: timesRomanBoldFont,
         size: headingFontSize,
         color: rgb(0, 0, 0),
+        textAlign: TextAlignment.Center,
     });
     
     page.drawLine({
-        start: { x: textX, y: headingY - 2 },
-        end: { x: textX + textWidth, y: headingY - 2 },
+        start: { x: (width - textWidth) / 2, y: headingY - 2 },
+        end: { x: (width + textWidth) / 2, y: headingY - 2 },
         thickness: 1,
         color: rgb(0, 0, 0),
     });
 
     // 2. Draw the main agreement paragraph below the heading
     const paragraphTopMargin = cm(1);
-    const paragraphY = headingY - paragraphTopMargin - 15;
-    const leftMargin = cm(1.5);
+    const paragraphY = headingY - paragraphTopMargin - 20; // Adjusted Y position
+    const leftMargin = cm(2.5);
     const rightMargin = cm(1.5);
     const paragraphWidth = width - leftMargin - rightMargin;
     const indent = "     ";
@@ -80,16 +84,17 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         y: paragraphY,
         font: timesRomanFont,
         size: 12,
-        lineHeight: 15,
+        lineHeight: 18,
         textAlign: TextAlignment.Justify,
         maxWidth: paragraphWidth,
         color: rgb(0, 0, 0),
     });
 
     // 3. Draw the witness text
-    const approximateLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth) + (paragraphText.split('\n').length -1);
-    const paragraphHeight = approximateLines * 15;
-    const witnessY = paragraphY - paragraphHeight - cm(1);
+    const { height: paragraphHeight } = timesRomanFont.heightAtSize(12);
+    // A rough estimation of lines needed
+    const approximateLines = Math.ceil((timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth)) * 2;
+    const witnessY = paragraphY - (approximateLines * paragraphHeight) - cm(2);
     
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
     page.drawText(witnessText, {
