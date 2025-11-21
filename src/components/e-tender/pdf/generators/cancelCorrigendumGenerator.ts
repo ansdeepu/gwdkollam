@@ -25,7 +25,7 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
         'e_tender_no_header': tender.eTenderNo,
         'tender_date_header': formatDateSafe(corrigendum.corrigendumDate),
         'name_of_work': tender.nameOfWork,
-        'paragraph': reasonText,
+        'cancel': reasonText,
         'date': formatDateSafe(corrigendum.corrigendumDate),
     };
 
@@ -33,7 +33,7 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
         try {
             const textField = form.getTextField(fieldName);
             textField.setText(String(value || ''));
-            if (fieldName === 'paragraph') {
+            if (fieldName === 'cancel') {
                 textField.setAlignment(TextAlignment.Justify);
             }
             textField.updateAppearances(timesRomanFont);
