@@ -41,16 +41,15 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     
     const completionPeriod = tender.periodOfCompletion || '___';
     const leftMargin = cm(2.5);
-    const rightMargin = cm(1.5);
+    const rightMargin = cm(2.5);
     const paragraphWidth = width - leftMargin - rightMargin;
 
     // 1. Draw the heading
-    const headingTopMargin = cm(17);
-    let currentY = height - headingTopMargin;
+    let currentY = height - cm(17);
     const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
-    const indent = cm(0.5); // Indent for the heading
+    const indent = cm(0.5); // 5 character spaces approx
 
     page.drawText(headingText, {
         x: leftMargin + indent,
