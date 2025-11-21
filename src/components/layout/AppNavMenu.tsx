@@ -34,6 +34,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/ars', label: 'ARS', icon: Waves },
   { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList, roles: ['editor', 'viewer', 'supervisor'] },
   { href: '/dashboard/e-tender', label: 'e-Tender', icon: Hammer, roles: ['editor', 'viewer'] },
+  { href: '/dashboard/bidders', label: 'Bidders', icon: Users, roles: ['editor', 'viewer'] },
   { href: '/dashboard/pending-updates', label: 'Pending Updates', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
