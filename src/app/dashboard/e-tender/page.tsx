@@ -182,37 +182,34 @@ export default function ETenderListPage() {
         setIsReordering(true);
     
         try {
-            // 1. Fetch fresh data from Firestore to avoid sync issues.
             const freshBiddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
-            const freshBidders: BidderType[] = freshBiddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
+            let freshBidders: BidderType[] = freshBiddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
     
             const oldIndex = freshBidders.findIndex(b => b.id === bidderToReorder.id);
             if (oldIndex === -1) {
                 throw new Error("Bidder to be moved was not found in the database. The list may be out of date.");
             }
     
-            // 2. Remove the bidder and re-insert at the new position.
             const [movedItem] = freshBidders.splice(oldIndex, 1);
+            
             const newIndex = newPosition - 1;
             freshBidders.splice(newIndex, 0, movedItem);
     
-            // 3. Update the 'order' for all bidders in a single batch.
             const batch = writeBatch(db);
             freshBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Use set with merge to create if missing, or update if existing.
                 batch.set(docRef, { order: index }, { merge: true });
             });
     
             await batch.commit();
             
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
-            refetchBidders(); // Refresh the central data store
+            refetchBidders();
     
         } catch (error: any) {
             console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-            refetchBidders(); // Refresh on error to sync state
+            refetchBidders();
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
@@ -429,7 +426,7 @@ export default function ETenderListPage() {
                                                     ))
                                                 ) : (
                                                     <TableRow>
-                                                        <TableCell colSpan={6} className="h-24 text-center">
+                                                        <TableCell colSpan={5} className="h-24 text-center">
                                                             {bidderSearchTerm ? "No bidders found matching your search." : "No bidders found."}
                                                         </TableCell>
                                                     </TableRow>
