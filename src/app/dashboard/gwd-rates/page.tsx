@@ -1,4 +1,3 @@
-
 // src/app/dashboard/gwd-rates/page.tsx
 "use client";
 
@@ -68,7 +67,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import ExcelJS from "exceljs";
 import { format } from "date-fns";
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, getDocs, query, writeBatch, setDoc } from "firebase/firestore";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, getDocs, query, writeBatch, setDoc, orderBy } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import { GwdRateItemFormDataSchema, type GwdRateItem, type GwdRateItemFormData } from "@/lib/schemas";
 import { z } from 'zod';
@@ -78,6 +77,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useDataStore, type RateDescriptionId } from "@/hooks/use-data-store";
+import { useRouter } from "next/navigation";
+
 
 export const dynamic = 'force-dynamic';
 
@@ -249,6 +250,8 @@ export default function GwdRatesPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { allRateDescriptions, refetchRateDescriptions } = useDataStore();
+  const router = useRouter();
+
 
   const [rateItems, setRateItems] = useState<GwdRateItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -275,7 +278,7 @@ export default function GwdRatesPage() {
     setIsLoading(true);
 
     try {
-      const itemsQuery = query(collection(db, RATES_COLLECTION));
+      const itemsQuery = query(collection(db, RATES_COLLECTION), orderBy("order"));
       const itemsSnapshot = await getDocs(itemsQuery);
       
       const items = itemsSnapshot.docs.map(doc => {
@@ -290,15 +293,6 @@ export default function GwdRatesPage() {
           createdAt,
           updatedAt,
         } as GwdRateItem;
-      });
-
-      items.sort((a, b) => {
-        const orderA = a.order ?? Infinity;
-        const orderB = b.order ?? Infinity;
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-        return (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0);
       });
       
       const finalItems = items.map((item, index) => ({...item, order: item.order ?? index}));
@@ -322,47 +316,37 @@ export default function GwdRatesPage() {
     }
   }, [user, authLoading, fetchData]);
   
+  const handleReorderItem = async ({ newPosition }: { newPosition: number }) => {
+      if (!itemToReorder) return;
+      setIsMoving(true);
 
-  const handleReorderItem = async (itemId: string, newPosition: number) => {
-    if (!canManage || isMoving) return;
+      try {
+          const ratesSnapshot = await getDocs(query(collection(db, RATES_COLLECTION), orderBy("order")));
+          let currentItems: GwdRateItem[] = ratesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as GwdRateItem));
+          
+          const itemToMoveIndex = currentItems.findIndex(i => i.id === itemToReorder.id);
+          if (itemToMoveIndex === -1) throw new Error("Item to move not found.");
 
-    const oldIndex = rateItems.findIndex(item => item.id === itemId);
-    if (oldIndex === -1) {
-      toast({ title: "Error", description: "Item to move was not found.", variant: "destructive" });
-      return;
-    }
+          const [itemToMove] = currentItems.splice(itemToMoveIndex, 1);
+          currentItems.splice(newPosition - 1, 0, itemToMove);
 
-    const newIndex = newPosition - 1;
+          const batch = writeBatch(db);
+          currentItems.forEach((item, index) => {
+              const docRef = doc(db, RATES_COLLECTION, item.id);
+              batch.set(docRef, { order: index }, { merge: true });
+          });
 
-    if (newIndex < 0 || newIndex >= rateItems.length) {
-      toast({ title: "Error", description: "The new position is outside the valid range.", variant: "destructive" });
-      return;
-    }
-
-    setIsMoving(true);
-
-    const reorderedItems = Array.from(rateItems);
-    const [movedItem] = reorderedItems.splice(oldIndex, 1);
-    reorderedItems.splice(newIndex, 0, movedItem);
-
-    try {
-      const batch = writeBatch(db);
-      reorderedItems.forEach((item, index) => {
-        const docRef = doc(db, RATES_COLLECTION, item.id);
-        batch.update(docRef, { order: index });
-      });
-      await batch.commit();
-      
-      toast({ title: "Item Moved", description: "The item order has been successfully updated." });
-      await fetchData();
-    } catch (error: any)
-    {
-      console.error("Item reorder error:", error);
-      toast({ title: "Error", description: error.message || "Could not reorder the items.", variant: "destructive" });
-      await fetchData();
-    } finally {
-      setIsMoving(false);
-    }
+          await batch.commit();
+          toast({ title: 'Item Moved', description: `${itemToReorder.itemName} moved to position ${newPosition}.` });
+          await fetchData();
+      } catch (error: any) {
+          console.error("Reordering failed:", error);
+          toast({ title: 'Error', description: `Could not move item: ${error.message}`, variant: 'destructive' });
+      } finally {
+          setIsMoving(false);
+          setItemToReorder(null);
+          setIsReorderDialogOpen(false);
+      }
   };
 
 
@@ -387,13 +371,6 @@ export default function GwdRatesPage() {
     setItemToReorder(item);
     reorderForm.reset({ newPosition: currentPosition });
     setIsReorderDialogOpen(true);
-  };
-  
-  const onReorderSubmit: SubmitHandler<ReorderFormData> = async (data) => {
-    if (!itemToReorder) return;
-    await handleReorderItem(itemToReorder.id, data.newPosition);
-    setIsReorderDialogOpen(false);
-    setItemToReorder(null);
   };
 
   const handleOpenItemForm = (item: GwdRateItem | null) => {
@@ -506,6 +483,12 @@ export default function GwdRatesPage() {
             </TabsList>
             <TabsContent value="gwdRates" className="mt-4">
                <Card>
+                 <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle>Master Rate List</CardTitle>
+                        {canManage && <Button size="sm" onClick={() => handleOpenItemForm(null)}><PlusCircle className="mr-2 h-4 w-4"/>Add New Item</Button>}
+                    </div>
+                </CardHeader>
                 <CardContent className="pt-6">
                   <div className="max-h-[60vh] overflow-auto">
                     <Table>
@@ -649,7 +632,7 @@ export default function GwdRatesPage() {
             </DialogDescription>
           </DialogHeader>
           <Form {...reorderForm}>
-            <form onSubmit={reorderForm.handleSubmit(onReorderSubmit)} className="space-y-4 py-4">
+            <form onSubmit={reorderForm.handleSubmit(handleReorderItem)} className="space-y-4 py-4">
               <FormField
                 control={reorderForm.control}
                 name="newPosition"
