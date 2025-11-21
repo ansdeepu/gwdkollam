@@ -13,32 +13,36 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
 
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
 
-    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true);
+    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
     const reasonText = corrigendum.reason || `no bids were received`;
 
     const fullParagraph = `     The time period for submitting e-tenders expired at ${lastDate}, and ${reasonText}. Hence, it has been decided to retender the above work.`;
 
     const fieldMappings: Record<string, any> = {
-        'file_no': `GKT/${tender.fileNo || ''}`,
-        'e_tender_no': tender.eTenderNo,
-        'date': formatDateSafe(corrigendum.corrigendumDate),
+        'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'e_tender_no_header': tender.eTenderNo,
+        'tender_date_header': formatDateSafe(corrigendum.corrigendumDate),
         'name_of_work': tender.nameOfWork,
         'retender': fullParagraph,
-        'new_last_date': formatDateSafe(corrigendum.lastDateOfReceipt, true, true),
+        'new_last_date': formatDateSafe(corrigendum.lastDateOfReceipt, true, true, false),
         'new_opening_date': formatDateSafe(corrigendum.dateOfOpeningTender, true, false, true),
         'date_2': formatDateSafe(corrigendum.corrigendumDate),
     };
+    
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const textField = form.getTextField(fieldName);
+            const isBold = boldFields.includes(fieldName);
             textField.setText(String(value || ''));
              if (fieldName === 'retender') {
                 textField.setAlignment(TextAlignment.Justify);
             }
-            textField.updateAppearances(timesRomanFont);
+            textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
         } catch (e) {
             console.warn(`Could not fill field ${fieldName}:`, e);
         }
