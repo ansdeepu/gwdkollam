@@ -1,11 +1,11 @@
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,9 +24,10 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query } from "firebase/firestore";
 import { app } from "@/lib/firebase";
-import NewBidderForm, { type NewBidderFormData } from '@/components/e-tender/NewBidderForm';
+import NewBidderForm, { type NewBidderFormData, type Bidder as BidderType } from '@/components/e-tender/NewBidderForm';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const db = getFirestore(app);
 
@@ -40,12 +41,39 @@ export default function ETenderListPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    
     const [isNewBidderDialogOpen, setIsNewBidderDialogOpen] = useState(false);
     const [isSubmittingBidder, setIsSubmittingBidder] = useState(false);
+
+    const [isBiddersListOpen, setIsBiddersListOpen] = useState(false);
+    const [allBidders, setAllBidders] = useState<BidderType[]>([]);
+    const [biddersLoading, setBiddersLoading] = useState(false);
+    const [bidderSearchTerm, setBidderSearchTerm] = useState('');
 
     React.useEffect(() => {
         setHeader('e-Tenders', 'Manage all electronic tenders for the department.');
     }, [setHeader]);
+    
+    const fetchBidders = async () => {
+        setBiddersLoading(true);
+        try {
+            const biddersSnapshot = await getDocs(query(collection(db, "bidders")));
+            const biddersList = biddersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BidderType));
+            biddersList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            setAllBidders(biddersList);
+        } catch (error) {
+            console.error("Error fetching bidders:", error);
+            toast({ title: "Error", description: "Could not fetch bidder list.", variant: "destructive" });
+        } finally {
+            setBiddersLoading(false);
+        }
+    };
+    
+    useEffect(() => {
+        if (isBiddersListOpen) {
+            fetchBidders();
+        }
+    }, [isBiddersListOpen]);
 
     const filteredTenders = useMemo(() => {
         if (!searchTerm) return tenders;
@@ -57,6 +85,17 @@ export default function ETenderListPage() {
             (`GKT/${tender.fileNo}/${tender.eTenderNo}`.toLowerCase().includes(lowercasedFilter))
         );
     }, [tenders, searchTerm]);
+
+    const filteredBidders = useMemo(() => {
+        if (!bidderSearchTerm) return allBidders;
+        const lowercasedFilter = bidderSearchTerm.toLowerCase();
+        return allBidders.filter(bidder =>
+            (bidder.name?.toLowerCase().includes(lowercasedFilter)) ||
+            (bidder.address?.toLowerCase().includes(lowercasedFilter)) ||
+            (bidder.phoneNo?.toLowerCase().includes(lowercasedFilter))
+        );
+    }, [allBidders, bidderSearchTerm]);
+
 
     const handleCreateNew = () => {
         router.push('/dashboard/e-tender/new');
@@ -87,9 +126,6 @@ export default function ETenderListPage() {
     const handleAddBidderSubmit = async (data: NewBidderFormData) => {
         setIsSubmittingBidder(true);
         try {
-            // Here, we are creating a new document in a potential 'bidders' collection.
-            // This is a simplified approach. A more robust solution might involve
-            // linking bidders to tenders, but this satisfies the immediate requirement.
             await addDoc(collection(db, "bidders"), {
                 name: data.name,
                 address: data.address,
@@ -132,6 +168,9 @@ export default function ETenderListPage() {
                         </div>
                         {user?.role === 'editor' && (
                             <div className="flex w-full sm:w-auto items-center gap-2">
+                                <Button onClick={() => setIsBiddersListOpen(true)} variant="outline" className="w-full sm:w-auto">
+                                    <Users className="mr-2 h-4 w-4" /> Bidders List
+                                </Button>
                                 <Button onClick={() => setIsNewBidderDialogOpen(true)} variant="outline" className="w-full sm:w-auto">
                                     <UserPlus className="mr-2 h-4 w-4" /> Add Bidder Details
                                 </Button>
@@ -217,6 +256,69 @@ export default function ETenderListPage() {
                         onCancel={() => setIsNewBidderDialogOpen(false)}
                         isSubmitting={isSubmittingBidder}
                     />
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isBiddersListOpen} onOpenChange={setIsBiddersListOpen}>
+                <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                    <DialogHeader className="p-6 pb-4 border-b">
+                        <DialogTitle>Bidders List</DialogTitle>
+                        <DialogDescription>A list of all registered bidders. Search by name, address, or phone.</DialogDescription>
+                        <div className="relative pt-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                placeholder="Search bidders..."
+                                value={bidderSearchTerm}
+                                onChange={(e) => setBidderSearchTerm(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
+                    </DialogHeader>
+                    <div className="flex-1 min-h-0">
+                        <ScrollArea className="h-full">
+                            <div className="px-6 py-4">
+                                {biddersLoading ? (
+                                    <div className="flex items-center justify-center p-10">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Sl. No.</TableHead>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Address</TableHead>
+                                                <TableHead>Phone No.</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredBidders.length > 0 ? (
+                                                filteredBidders.map((bidder, index) => (
+                                                    <TableRow key={bidder.id}>
+                                                        <TableCell>{index + 1}</TableCell>
+                                                        <TableCell className="font-medium">{bidder.name}</TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground whitespace-pre-wrap">{bidder.address}</TableCell>
+                                                        <TableCell>{bidder.phoneNo}</TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="h-24 text-center">
+                                                        {bidderSearchTerm ? "No bidders found matching your search." : "No bidders found."}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                     <DialogFooter className="p-6 pt-4 border-t">
+                        <DialogClose asChild>
+                            <Button variant="outline">Close</Button>
+                        </DialogClose>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

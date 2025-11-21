@@ -21,6 +21,8 @@ const NewBidderSchema = z.object({
   phoneNo: z.string().optional(),
 });
 export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
+export type Bidder = z.infer<typeof NewBidderSchema>;
+
 
 const createDefaultBidder = (): NewBidderFormData => ({
     id: uuidv4(),
