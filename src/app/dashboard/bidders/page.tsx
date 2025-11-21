@@ -104,14 +104,14 @@ export default function BiddersListPage() {
                 })
                 .filter((b): b is BidderType => b !== null);
 
-            const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
-            if (!bidderToMove) throw new Error("The bidder you are trying to move could not be found.");
-
-            const listWithoutMovedBidder = currentBidders.filter(b => b.id !== bidderToReorder.id);
-            listWithoutMovedBidder.splice(newPosition - 1, 0, bidderToMove);
+            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
+            if (bidderToMoveIndex === -1) throw new Error("The bidder you are trying to move could not be found.");
+            
+            const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
+            currentBidders.splice(newPosition - 1, 0, bidderToMove);
 
             const batch = writeBatch(db);
-            listWithoutMovedBidder.forEach((bidder, index) => {
+            currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
                 batch.set(docRef, { order: index }, { merge: true });
             });
@@ -119,7 +119,7 @@ export default function BiddersListPage() {
             await batch.commit();
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
-            await refetchBidders();
+            router.refresh();
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
