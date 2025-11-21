@@ -31,7 +31,8 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const completionPeriod = tender.periodOfCompletion || '___';
 
     const agreementText = `Agreement executed on ${agreementDateFormatted} between the District officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala on the first part and ${bidderDetails} on the other part for the ${workName}. The second party agrees to execute the work in the sanctioned rate as per tender schedule and complete the same within ${completionPeriod} days from the date of receipt of work order and the contract approved by the District Officer, Groundwater Department, Kollam.`;
-
+    
+    // Fallback data mapping in case the robust logic fails
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': tender.eTenderNo,
@@ -39,17 +40,32 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         'agreement': agreementText,
     };
 
-    Object.entries(fieldMappings).forEach(([fieldName, value]) => {
-        try {
-            const field = form.getTextField(fieldName);
-            field.setText(String(value || ''));
-            
-            if (fieldName === 'agreement') {
+    const allFields = form.getFields();
+    
+    allFields.forEach(field => {
+        if (field instanceof PDFTextField) {
+            const fieldName = field.getName();
+            const text = field.getText() || '';
+
+            // Robustly fill based on placeholder content
+            if (text.includes('GKT/')) {
+                field.setText(`GKT/${tender.fileNo || ''}`);
+            } else if (text.toLowerCase().includes('e-tender no')) {
+                field.setText(tender.eTenderNo || '');
+            } else if (text.toLowerCase().includes('agreement executed on')) {
+                field.setText(agreementText);
                 field.setAlignment(TextAlignment.Justify);
+            } else if (text.includes('Dated:')) { // Assuming a simple date field placeholder
+                 field.setText(formatDateSafe(tender.agreementDate));
             }
-            field.updateAppearances(timesRomanFont);
-        } catch (e) {
-            console.warn(`Could not fill field ${fieldName}:`, e);
+            // Fallback for explicitly named fields if the above fails
+            else if (fieldName in fieldMappings) {
+                 field.setText(String(fieldMappings[fieldName] || ''));
+                 if (fieldName === 'agreement') {
+                    field.setAlignment(TextAlignment.Justify);
+                 }
+            }
+             field.updateAppearances(timesRomanFont);
         }
     });
 
