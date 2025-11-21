@@ -19,7 +19,7 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, false, true); // Using openingFormat to get 'at'
     const reasonText = corrigendum.reason || `no bids were received`;
 
-    const fullParagraph = `     The time period for submitting e-tenders expired at ${lastDate}, and ${reasonText}. Hence, it has been decided to retender the above work.`;
+    const fullParagraph = `     The time period for submitting e-tenders expired on ${lastDate}, and ${reasonText}. Hence, it has been decided to retender the above work.`;
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
