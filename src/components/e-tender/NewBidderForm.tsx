@@ -66,10 +66,14 @@ export default function NewBidderForm({ onSubmit, onCancel, isSubmitting, initia
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                            <FormField name="name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="secondaryPhoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Secondary Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField name="name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
+                            </div>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="secondaryPhoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Secondary Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                             </div>
                              <FormField name="email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email ID</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                     </ScrollArea>
