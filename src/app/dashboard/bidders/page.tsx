@@ -83,7 +83,7 @@ export default function BiddersListPage() {
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            refetchBidders(); // Force a refresh of the data from the store
+            refetchBidders();
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
@@ -104,25 +104,28 @@ export default function BiddersListPage() {
         setIsReordering(true);
     
         try {
-            // Fetch the latest data to avoid sync issues
+            // 1. Fetch fresh data from Firestore to ensure consistency
             const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
             let currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
             
+            // 2. Find the index of the bidder to move
             const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-    
             if (bidderToMoveIndex === -1) {
-                throw new Error("Bidder to be moved was not found in the database. The list may be out of sync. Please refresh.");
+                throw new Error("Bidder to be moved was not found in the database. The list may be out of sync. Please refresh the page.");
             }
-            
+    
+            // 3. Safely reorder the array in memory
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
             currentBidders.splice(newPosition - 1, 0, bidderToMove);
     
+            // 4. Create a batch write to update the 'order' of all documents
             const batch = writeBatch(db);
             currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
                 batch.update(docRef, { order: index });
             });
     
+            // 5. Commit the batch and refetch data
             await batch.commit();
             
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
