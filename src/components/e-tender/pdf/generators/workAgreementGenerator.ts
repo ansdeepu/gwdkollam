@@ -30,8 +30,9 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const bidderDetails = (l1Bidder && l1Bidder.name) ? `${l1Bidder.name}, ${l1Bidder.address || ''}` : '____________________';
     const workName = tender.nameOfWork || '____________________';
     const completionPeriod = tender.periodOfCompletion || '___';
-
-    const agreementText = `     Agreement executed on ${agreementDateFormatted} between the District officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala on the first part and ${bidderDetails} on the other part for the ${workName}. The second party agrees to execute the work in the sanctioned rate as per tender schedule and complete the same within ${completionPeriod} days from the date of receipt of work order and the contract approved by the District Officer, Groundwater Department, Kollam.`;
+    
+    const INDENT = "     ";
+    const agreementText = `${INDENT}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'agreement_date'];
 
