@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, UserPlus, Users, Edit, Trash2, ArrowUpDown, ArrowLeft, Move } from 'lucide-react';
+import { Loader2, UserPlus, Users, Edit, Trash2, ArrowLeft, Move } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +53,7 @@ export default function BiddersListPage() {
                 await addDoc(collection(db, "bidders"), { ...data, order: newOrder });
                 toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             }
-            refetchBidders();
+            await refetchBidders();
             setIsNewBidderDialogOpen(false);
             setBidderToEdit(null);
         } catch (error: any) {
@@ -70,7 +70,7 @@ export default function BiddersListPage() {
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            refetchBidders();
+            await refetchBidders();
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
@@ -85,7 +85,7 @@ export default function BiddersListPage() {
             toast({ title: "Invalid Position", description: "Please enter a valid position number.", variant: "destructive" });
             return;
         }
-
+    
         setIsSubmitting(true);
         try {
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
@@ -94,8 +94,7 @@ export default function BiddersListPage() {
             const currentBidders: BidderType[] = biddersSnapshot.docs
                 .map(docSnap => {
                     const data = docSnap.data();
-                    if (!data || Object.keys(data).length === 0) {
-                        console.warn("Skipping empty Firestore doc:", docSnap.id);
+                    if (!data || Object.keys(data).length === 0 || !data.name) {
                         return null;
                     }
                     return {
@@ -111,30 +110,28 @@ export default function BiddersListPage() {
                 setIsSubmitting(false);
                 return;
             }
-
+    
             const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
             if (!bidderToMove) {
-                throw new Error("The bidder you are trying to move could not be found in the current database list.");
+                throw new Error("The bidder you are trying to move could not be found.");
             }
-
+    
             const listWithoutMovedBidder = currentBidders.filter(b => b.id !== bidderToReorder.id);
             
             listWithoutMovedBidder.splice(newPosition - 1, 0, bidderToMove);
             
             const batch = writeBatch(db);
             listWithoutMovedBidder.forEach((bidder, index) => {
-                if (bidder.id) {
-                    const docRef = doc(db, 'bidders', bidder.id);
-                    batch.set(docRef, { order: index }, { merge: true });
-                }
+                const docRef = doc(db, 'bidders', bidder.id);
+                batch.set(docRef, { order: index }, { merge: true });
             });
-
+    
             await batch.commit();
-
+            
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
-            refetchBidders();
-
+            await refetchBidders(); // Await the refetch
+    
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
