@@ -180,37 +180,40 @@ export default function ETenderListPage() {
     const handleReorderSubmit = async ({ newPosition }: { newPosition: number }) => {
         if (!bidderToReorder) return;
         setIsReordering(true);
-
+    
         try {
-            let mutableBidders = [...allBidders];
-            const oldIndex = mutableBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (oldIndex === -1) throw new Error("Bidder to move was not found in the list.");
-            
-            const [movedItem] = mutableBidders.splice(oldIndex, 1);
-            mutableBidders.splice(newPosition - 1, 0, movedItem);
-
+            const reorderedList = [...allBidders]; // Make a mutable copy
+    
+            // Find and remove the item to be moved
+            const oldIndex = reorderedList.findIndex(b => b.id === bidderToReorder.id);
+            if (oldIndex === -1) throw new Error("Bidder not found in the list.");
+            const [movedItem] = reorderedList.splice(oldIndex, 1);
+    
+            // Insert it at the new position
+            const newIndex = newPosition - 1;
+            reorderedList.splice(newIndex, 0, movedItem);
+    
+            // Update the order of all items in a batch
             const batch = writeBatch(db);
-            mutableBidders.forEach((bidder, index) => {
+            reorderedList.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Use set with merge to create if not exists, or update if it does.
-                batch.set(docRef, { order: index }, { merge: true });
+                batch.update(docRef, { order: index });
             });
-
+    
             await batch.commit();
             
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
-            refetchBidders();
+            refetchBidders(); // Refresh the data from the store
+    
         } catch (error: any) {
             console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-            // Refetch to get the correct state from the database in case of error
-            refetchBidders();
+            refetchBidders(); // Refresh on error to sync state
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
         }
     };
-
 
     if (isLoading) {
         return (
