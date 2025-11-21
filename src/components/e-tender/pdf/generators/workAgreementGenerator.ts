@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
 import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -80,7 +81,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     let currentLine = paragraphIndent; // Start the first line with an indent
 
     for (const word of words) {
-        const testLine = currentLine.length > paragraphIndent.length ? `${currentLine} ${word}` : `${currentLine}${word}`;
+        const testLine = currentLine === paragraphIndent ? `${currentLine}${word}` : `${currentLine} ${word}`;
         const testWidth = timesRomanFont.widthOfTextAtSize(testLine, regularFontSize);
 
         if (testWidth <= paragraphWidth) {
@@ -111,7 +112,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     // 3. Draw the witness text
     currentY -= (2 * lineHeight); // 2 line spaces
 
-    const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
+    const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n\n1.\n\n2.";
     page.drawText(witnessText, {
       x: leftMargin,
       y: currentY,
