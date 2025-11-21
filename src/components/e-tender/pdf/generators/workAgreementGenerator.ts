@@ -49,9 +49,11 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     let currentY = height - headingTopMargin;
     const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
-    
+    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
+    const indent = cm(0.5); // Indent for the heading
+
     page.drawText(headingText, {
-        x: leftMargin,
+        x: leftMargin + indent,
         y: currentY,
         font: timesRomanBoldFont,
         size: headingFontSize,
@@ -59,18 +61,17 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         textAlign: TextAlignment.Left,
     });
     
-    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     page.drawLine({
-        start: { x: leftMargin, y: currentY - 2 },
-        end: { x: leftMargin + textWidth, y: currentY - 2 },
+        start: { x: leftMargin + indent, y: currentY - 2 },
+        end: { x: leftMargin + indent + textWidth, y: currentY - 2 },
         thickness: 1,
         color: rgb(0, 0, 0),
     });
 
     // 2. Draw the main agreement paragraph below the heading
     currentY -= cm(1) + 20;
-    const indent = "     ";
-    const paragraphText = `${indent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
+    const paragraphIndent = "     ";
+    const paragraphText = `${paragraphIndent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
     
     page.drawText(paragraphText, {
         x: leftMargin,
@@ -83,8 +84,8 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         color: rgb(0, 0, 0),
     });
     
-    const approximateLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth);
-    currentY -= (approximateLines * 18) + cm(2);
+    const paragraphLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth);
+    currentY -= (paragraphLines * 18) + cm(2);
 
     // 3. Draw the witness text
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
