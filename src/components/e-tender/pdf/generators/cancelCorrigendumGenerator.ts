@@ -35,6 +35,7 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
             textField.setText(String(value || ''));
             if (fieldName === 'cancel') {
                 textField.setAlignment(TextAlignment.Justify);
+                textField.setFontSize(10); // Set smaller font size for the main paragraph
             }
             textField.updateAppearances(timesRomanFont);
         } catch (e) {
