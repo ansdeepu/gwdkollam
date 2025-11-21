@@ -81,7 +81,7 @@ export default function BiddersListPage() {
     };
     
      const handleReorderSubmit = async (newPosition: number) => {
-        if (!bidderToReorder || newPosition < 1 || newPosition > allBidders.length) {
+        if (!bidderToReorder || newPosition < 1) {
             toast({ title: "Invalid Position", description: "Please enter a valid position number.", variant: "destructive" });
             return;
         }
@@ -89,32 +89,59 @@ export default function BiddersListPage() {
         setIsSubmitting(true);
         try {
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
-            const snapshot = await getDocs(biddersQuery);
-            const currentBidders: BidderType[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
+            const biddersSnapshot = await getDocs(biddersQuery);
+            
+            const currentBidders: BidderType[] = biddersSnapshot.docs
+                .map(docSnap => {
+                    const data = docSnap.data();
+                    // Filter out empty or invalid documents
+                    if (!data || Object.keys(data).length === 0 || !data.name) {
+                        console.warn("Skipping empty or invalid Firestore doc:", docSnap.id);
+                        return null;
+                    }
+                    return {
+                        id: docSnap.id,
+                        order: data.order ?? 0, // Ensure order is a number
+                        ...data
+                    } as BidderType;
+                })
+                .filter((b): b is BidderType => b !== null);
 
-            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (bidderToMoveIndex === -1) {
-                throw new Error("Could not find the bidder to move.");
+            if (newPosition > currentBidders.length) {
+                toast({ title: "Invalid Position", description: `Position must be between 1 and ${currentBidders.length}.`, variant: "destructive" });
+                setIsSubmitting(false);
+                return;
             }
 
-            // Remove the bidder from its current position
-            const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
+            const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
+            if (!bidderToMove) {
+                throw new Error("The bidder you are trying to move could not be found in the current database list.");
+            }
 
-            // Insert it into the new position
-            currentBidders.splice(newPosition - 1, 0, bidderToMove);
+            const listWithoutMovedBidder = currentBidders.filter(b => b.id !== bidderToReorder.id);
+            
+            // Insert the bidder into the new position
+            listWithoutMovedBidder.splice(newPosition - 1, 0, bidderToMove);
+            
+            // Re-assign sequential order to the entire list to ensure consistency
+            listWithoutMovedBidder.forEach((b, index) => {
+                b.order = index;
+            });
 
-            // Create a batch write to update the 'order' of all documents atomically
+            // Atomically update all documents in a batch
             const batch = writeBatch(db);
-            currentBidders.forEach((bidder, index) => {
-                if (bidder && bidder.id) {
+            listWithoutMovedBidder.forEach((bidder) => {
+                if (bidder.id) {
                     const docRef = doc(db, 'bidders', bidder.id);
-                    // Use set with merge to safely update or create the order field
-                    batch.set(docRef, { order: index }, { merge: true });
+                    batch.set(docRef, { order: bidder.order }, { merge: true });
                 }
             });
 
             await batch.commit();
+
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
+
+            refetchBidders();
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
@@ -122,9 +149,6 @@ export default function BiddersListPage() {
         } finally {
             setIsSubmitting(false);
             setBidderToReorder(null);
-            // Force a clean refresh by navigating
-            router.push('/dashboard');
-            setTimeout(() => router.push('/dashboard/bidders'), 50);
         }
     };
 
