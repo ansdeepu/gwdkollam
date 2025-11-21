@@ -181,6 +181,11 @@ export default function PdfReportDialogs() {
                         href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}
                         disabled={!tender.id || tender.id === 'new'}
                     />
+                    <ReportButton
+                        label="Work Agreement"
+                        onClick={() => handleGeneratePdf(generateWorkAgreement, 'Work_Agreement', 'Your Work Agreement has been downloaded.')}
+                        disabled={!tender.id || tender.id === 'new'}
+                    />
                     {tender.tenderType === 'Work' && (
                         <ReportButton 
                             label="Work Order"
@@ -195,11 +200,6 @@ export default function PdfReportDialogs() {
                             disabled={!tender.id || tender.id === 'new'}
                         />
                     )}
-                    <ReportButton
-                        label="Work Agreement"
-                        onClick={() => handleGeneratePdf(generateWorkAgreement, 'Work_Agreement', 'Your Work Agreement has been downloaded.')}
-                        disabled={!tender.id || tender.id === 'new'}
-                    />
                 </div>
             </CardContent>
         </Card>
