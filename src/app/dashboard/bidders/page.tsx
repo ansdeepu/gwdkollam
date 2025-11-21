@@ -17,11 +17,8 @@ import { app } from "@/lib/firebase";
 import NewBidderForm, { type NewBidderFormData, type Bidder as BidderType } from '@/components/e-tender/NewBidderForm';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/hooks/useAuth';
+
 
 const db = getFirestore(app);
 
@@ -93,21 +90,28 @@ export default function BiddersListPage() {
         try {
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
             const biddersSnapshot = await getDocs(biddersQuery);
-            const currentBidders: BidderType[] = biddersSnapshot.docs.map(docSnap => {
+            
+            let currentBidders: BidderType[] = biddersSnapshot.docs.map(docSnap => {
                 const data = docSnap.data();
-                return {
-                    id: docSnap.id,
-                    order: data.order ?? 0,
-                    ...data
-                } as BidderType;
+                return { id: docSnap.id, order: data.order ?? 0, ...data } as BidderType;
             });
             
             const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
             if (!bidderToMove) throw new Error("The bidder you are trying to move could not be found.");
             
-            const reorderedBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
-            reorderedBidders.splice(newPosition - 1, 0, bidderToMove);
+            const reorderedBidders: BidderType[] = [];
+            const otherBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
 
+            let otherBiddersIndex = 0;
+            for (let i = 0; i < currentBidders.length; i++) {
+                if (i === newPosition - 1) {
+                    reorderedBidders.push(bidderToMove);
+                } else {
+                    reorderedBidders.push(otherBidders[otherBiddersIndex]);
+                    otherBiddersIndex++;
+                }
+            }
+            
             const batch = writeBatch(db);
             reorderedBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
@@ -118,9 +122,7 @@ export default function BiddersListPage() {
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
             
             setBidderToReorder(null);
-            // Force a full data reload by navigating away and back
-            router.push('/dashboard');
-            setTimeout(() => router.push('/dashboard/bidders'), 50);
+            refetchBidders();
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
