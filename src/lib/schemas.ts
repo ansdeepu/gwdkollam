@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
 export * from './schemas/DataEntrySchema';
+export * from './schemas/eTenderSchema';
 
 const toDateOrNull = (value: any): Date | null => {
   if (value === null || value === undefined || value === '') return null;
@@ -336,6 +337,17 @@ export const StaffMemberSchema = StaffMemberFormDataSchema.extend({
   dateOfBirth: dateOrString.nullable().optional(),
 });
 export type StaffMember = z.infer<typeof StaffMemberSchema>;
+
+// Bidders Schema
+const NewBidderSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Bidder Name is required."),
+  address: z.string().optional(),
+  phoneNo: z.string().optional(),
+  secondaryPhoneNo: z.string().optional(),
+  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
+});
+export type Bidder = z.infer<typeof NewBidderSchema>;
 
 // GWD Rates Schemas
 export const GwdRateItemFormDataSchema = z.object({

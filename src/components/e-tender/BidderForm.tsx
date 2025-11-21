@@ -1,7 +1,7 @@
 // src/components/e-tender/BidderForm.tsx
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Loader2, Save, X } from 'lucide-react';
 import { BidderSchema, type Bidder } from '@/lib/schemas/eTenderSchema';
 import { v4 as uuidv4 } from 'uuid';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useDataStore } from '@/hooks/use-data-store';
 
 interface BidderFormProps {
     onSubmit: (data: Bidder) => void;
@@ -34,13 +35,15 @@ const createDefaultBidder = (): Bidder => ({
 });
 
 export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialData, tenderAmount }: BidderFormProps) {
+    const { allBidders } = useDataStore();
+    
     const form = useForm<Bidder>({
         resolver: zodResolver(BidderSchema),
         defaultValues: initialData || createDefaultBidder(),
     });
 
     const { control, setValue, watch } = form;
-    const [quotedPercentage, aboveBelow] = watch(['quotedPercentage', 'aboveBelow']);
+    const [quotedPercentage, aboveBelow, selectedBidderName] = watch(['quotedPercentage', 'aboveBelow', 'name']);
 
 
     useEffect(() => {
@@ -63,6 +66,17 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
             setValue('quotedAmount', Math.round(calculatedAmount * 100) / 100);
         }
     }, [tenderAmount, quotedPercentage, aboveBelow, setValue]);
+    
+    const handleBidderSelect = (bidderName: string) => {
+        const selected = allBidders.find(b => b.name === bidderName);
+        if (selected) {
+            setValue('name', selected.name, { shouldValidate: true });
+            setValue('address', selected.address, { shouldValidate: true });
+        } else {
+            setValue('name', '', { shouldValidate: true });
+            setValue('address', '', { shouldValidate: true });
+        }
+    };
 
     return (
         <FormProvider {...form}>
@@ -75,8 +89,24 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <FormField name="name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                               <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
+                               <FormField
+                                  name="name"
+                                  control={form.control}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Bidder Name</FormLabel>
+                                      <Select onValueChange={(value) => handleBidderSelect(value)} value={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select a Bidder"/></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); handleBidderSelect(''); }}>-- Clear Selection --</SelectItem>
+                                          {allBidders.map(bidder => <SelectItem key={bidder.id} value={bidder.name}>{bidder.name}</SelectItem>)}
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                               <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]" readOnly disabled={!!selectedBidderName} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="quotedPercentage" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Percentage</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>

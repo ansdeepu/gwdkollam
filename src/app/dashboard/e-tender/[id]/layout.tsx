@@ -13,7 +13,7 @@ export default function TenderLayout({ children }: { children: ReactNode }) {
     const params = useParams();
     const { id } = params;
     const { getTender, isLoading } = useE_tenders();
-    const { allStaffMembers, allRateDescriptions } = useDataStore(); // Ensure data store is loaded
+    const { allStaffMembers, allRateDescriptions, allBidders } = useDataStore(); // Ensure data store is loaded
     const [tender, setTender] = useState<E_tender | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
 
@@ -36,7 +36,7 @@ export default function TenderLayout({ children }: { children: ReactNode }) {
                 supervisor1Id: undefined, supervisor1Name: undefined, supervisor1Phone: undefined,
                 supervisor2Id: undefined, supervisor2Name: undefined, supervisor2Phone: undefined,
                 supervisor3Id: undefined, supervisor3Name: undefined, supervisor3Phone: undefined,
-                nameOfSupervisor: undefined, supervisorPhoneNo: undefined,
+                nameOfSupervisor: undefined, supervisorPhoneNo: undefined, remarks: '',
             };
             setTender(newTenderData);
             setIsLayoutLoading(false);

@@ -7,7 +7,7 @@ import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
 import type { ArsEntry } from './useArsEntries';
-import type { StaffMember, LsgConstituencyMap, Designation } from '@/lib/schemas';
+import type { StaffMember, LsgConstituencyMap, Designation, Bidder as MasterBidder } from '@/lib/schemas';
 import type { AgencyApplication } from './useAgencyApplications';
 import { toast } from './use-toast';
 import { designationOptions } from '@/lib/schemas';
@@ -55,6 +55,7 @@ interface DataStoreContextType {
     allAgencyApplications: AgencyApplication[];
     allLsgConstituencyMaps: LsgConstituencyMap[];
     allRateDescriptions: Record<RateDescriptionId, string>;
+    allBidders: MasterBidder[];
     isLoading: boolean;
     refetchFileEntries: () => void;
     refetchArsEntries: () => void;
@@ -62,6 +63,7 @@ interface DataStoreContextType {
     refetchAgencyApplications: () => void;
     refetchLsgConstituencyMaps: () => void;
     refetchRateDescriptions: () => void;
+    refetchBidders: () => void;
 }
 
 const DataStoreContext = createContext<DataStoreContextType | undefined>(undefined);
@@ -74,6 +76,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const [allAgencyApplications, setAllAgencyApplications] = useState<AgencyApplication[]>([]);
     const [allLsgConstituencyMaps, setAllLsgConstituencyMaps] = useState<LsgConstituencyMap[]>([]);
     const [allRateDescriptions, setAllRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultRateDescriptions);
+    const [allBidders, setAllBidders] = useState<MasterBidder[]>([]);
+
     const [loadingStates, setLoadingStates] = useState({
         files: true,
         ars: true,
@@ -81,6 +85,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         agencies: true,
         lsg: true,
         rates: true,
+        bidders: true,
     });
     
     const [refetchCounters, setRefetchCounters] = useState({
@@ -90,6 +95,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         agencies: 0,
         lsg: 0,
         rates: 0,
+        bidders: 0,
     });
 
     const refetchFileEntries = useCallback(() => setRefetchCounters(c => ({...c, files: c.files + 1})), []);
@@ -98,6 +104,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const refetchAgencyApplications = useCallback(() => setRefetchCounters(c => ({...c, agencies: c.agencies + 1})), []);
     const refetchLsgConstituencyMaps = useCallback(() => setRefetchCounters(c => ({ ...c, lsg: c.lsg + 1 })), []);
     const refetchRateDescriptions = useCallback(() => setRefetchCounters(c => ({ ...c, rates: c.rates + 1 })), []);
+    const refetchBidders = useCallback(() => setRefetchCounters(c => ({ ...c, bidders: c.bidders + 1 })), []);
 
 
     useEffect(() => {
@@ -108,7 +115,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             setAllAgencyApplications([]);
             setAllLsgConstituencyMaps([]);
             setAllRateDescriptions(defaultRateDescriptions);
-            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false });
+            setAllBidders([]);
+            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false, bidders: false });
             return;
         }
 
@@ -119,6 +127,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             agencyApplications: { setter: setAllAgencyApplications, loaderKey: 'agencies' },
             localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg' },
             rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates' },
+            bidders: { setter: setAllBidders, loaderKey: 'bidders' },
         };
 
         const unsubscribes = Object.entries(collections).map(([collectionName, { setter, loaderKey }]) => {
@@ -172,6 +181,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             allAgencyApplications,
             allLsgConstituencyMaps,
             allRateDescriptions,
+            allBidders,
             isLoading,
             refetchFileEntries,
             refetchArsEntries,
@@ -179,6 +189,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             refetchAgencyApplications,
             refetchLsgConstituencyMaps,
             refetchRateDescriptions,
+            refetchBidders,
         }}>
             {children}
         </DataStoreContext.Provider>
