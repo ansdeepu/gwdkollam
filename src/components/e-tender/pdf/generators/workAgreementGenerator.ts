@@ -43,15 +43,18 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const leftMargin = cm(2.5);
     const rightMargin = cm(2.5);
     const paragraphWidth = width - leftMargin - rightMargin;
+    const headingFontSize = 12;
+    const regularFontSize = 12;
+    const lineHeight = 18;
 
     // 1. Draw the heading
     let currentY = height - cm(17);
     const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
-    const headingFontSize = 12;
-    const indent = timesRomanBoldFont.widthOfTextAtSize("     ", headingFontSize);
+    const indentText = "     ";
+    const indentWidth = timesRomanBoldFont.widthOfTextAtSize(indentText, headingFontSize);
 
     page.drawText(headingText, {
-        x: leftMargin + indent,
+        x: leftMargin + indentWidth,
         y: currentY,
         font: timesRomanBoldFont,
         size: headingFontSize,
@@ -61,14 +64,14 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     page.drawLine({
-        start: { x: leftMargin + indent, y: currentY - 2 },
-        end: { x: leftMargin + indent + textWidth, y: currentY - 2 },
+        start: { x: leftMargin + indentWidth, y: currentY - 2 },
+        end: { x: leftMargin + indentWidth + textWidth, y: currentY - 2 },
         thickness: 1,
         color: rgb(0, 0, 0),
     });
 
     // 2. Draw the main agreement paragraph below the heading
-    currentY -= cm(1) + 20;
+    currentY -= cm(1); // Space after heading
     const paragraphIndent = "     ";
     const paragraphText = `${paragraphIndent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
     
@@ -76,15 +79,20 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         x: leftMargin,
         y: currentY,
         font: timesRomanFont,
-        size: 12,
-        lineHeight: 18,
+        size: regularFontSize,
+        lineHeight: lineHeight,
         textAlign: TextAlignment.Justify,
         maxWidth: paragraphWidth,
         color: rgb(0, 0, 0),
     });
     
-    const paragraphHeight = timesRomanFont.heightAtSize(12) * Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, 12) / paragraphWidth);
-    currentY -= paragraphHeight + cm(2);
+    // Estimate paragraph height and move Y position down
+    const paragraphLines = Math.ceil(timesRomanFont.widthOfTextAtSize(paragraphText, regularFontSize) / paragraphWidth);
+    const paragraphHeight = paragraphLines * lineHeight;
+    currentY -= paragraphHeight;
+
+    // Add one line space and move down for witness text
+    currentY -= lineHeight * 2; // Extra line space + space for witness text itself
 
     // 3. Draw the witness text
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
@@ -92,8 +100,8 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
       x: leftMargin,
       y: currentY,
       font: timesRomanFont,
-      size: 12,
-      lineHeight: 18,
+      size: regularFontSize,
+      lineHeight: lineHeight,
       textAlign: TextAlignment.Left,
       color: rgb(0, 0, 0),
     });
