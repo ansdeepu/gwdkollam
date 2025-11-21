@@ -45,9 +45,9 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const paragraphWidth = width - leftMargin - rightMargin;
     const headingFontSize = 12;
     const regularFontSize = 12;
-    const lineHeight = 18;
+    const lineHeight = 14; // Reduced line height to fit more content vertically
 
-    // 1. Draw the heading
+    // 1. Draw the heading at exactly 17cm from the top
     let currentY = height - cm(17);
     const indentText = "          "; // 10 spaces
     const indentWidth = timesRomanBoldFont.widthOfTextAtSize(indentText, headingFontSize);
@@ -58,8 +58,8 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         y: currentY,
         font: timesRomanBoldFont,
         size: headingFontSize,
-        color: rgb(0, 0, 0),
         textAlign: TextAlignment.Left,
+        color: rgb(0, 0, 0),
     });
     
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
@@ -71,11 +71,10 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     });
 
     // 2. Draw the main agreement paragraph below the heading
-    currentY -= cm(1); // Space after heading
+    currentY -= (2 * lineHeight); // Reduced space after heading
     const paragraphIndent = "     ";
     const paragraphText = `${paragraphIndent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
 
-    // Manual line wrapping logic for justification
     const words = paragraphText.split(' ');
     const lines = [];
     let currentLine = '';
@@ -90,9 +89,8 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
             currentLine = word;
         }
     }
-    lines.push(currentLine); // Add the last line
+    lines.push(currentLine);
 
-    // Draw each line
     lines.forEach((line, index) => {
         const isLastLine = index === lines.length - 1;
         page.drawText(line, {
@@ -101,15 +99,16 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
             font: timesRomanFont,
             size: regularFontSize,
             textAlign: isLastLine ? TextAlignment.Left : TextAlignment.Justify,
-            wordBreaks: [' '], // Required for justification to work on a single line
+            wordBreaks: [' '],
             maxWidth: paragraphWidth,
             color: rgb(0, 0, 0),
+            lineHeight: lineHeight,
         });
-        currentY -= lineHeight; // Move down for the next line
+        currentY -= lineHeight;
     });
 
     // 3. Draw the witness text
-    currentY -= (5 * lineHeight); // 5 line spaces
+    currentY -= (2 * lineHeight); // Reduced to 2 line spaces
 
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n1.\n2.";
     page.drawText(witnessText, {
