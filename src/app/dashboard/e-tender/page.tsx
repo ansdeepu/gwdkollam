@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -33,6 +34,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDataStore } from '@/hooks/use-data-store';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const db = getFirestore(app);
@@ -339,56 +341,71 @@ export default function ETenderListPage() {
                     </DialogHeader>
                     <div className="flex-1 min-h-0">
                         <ScrollArea className="h-full">
-                            <div className="px-6 py-4">
-                                {biddersLoading ? (
-                                    <div className="flex items-center justify-center p-10">
-                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                    </div>
-                                ) : (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Sl. No.</TableHead>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Address</TableHead>
-                                                <TableHead>Phone No.</TableHead>
-                                                <TableHead>Email</TableHead>
-                                                <TableHead className="text-center">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredBidders.length > 0 ? (
-                                                filteredBidders.map((bidder, index) => (
-                                                    <TableRow key={bidder.id}>
-                                                        <TableCell>{index + 1}</TableCell>
-                                                        <TableCell className="font-medium">{bidder.name}</TableCell>
-                                                        <TableCell className="text-sm text-muted-foreground whitespace-pre-wrap">{bidder.address}</TableCell>
-                                                        <TableCell>{bidder.phoneNo}{bidder.secondaryPhoneNo ? `, ${bidder.secondaryPhoneNo}` : ''}</TableCell>
-                                                        <TableCell>{bidder.email}</TableCell>
-                                                        <TableCell className="text-center">
-                                                            <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(bidder)} disabled={isReordering}>
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}>
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}>
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                            <TooltipProvider>
+                                <div className="px-6 py-4">
+                                    {biddersLoading ? (
+                                        <div className="flex items-center justify-center p-10">
+                                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                        </div>
+                                    ) : (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Sl. No.</TableHead>
+                                                    <TableHead>Name</TableHead>
+                                                    <TableHead>Address</TableHead>
+                                                    <TableHead>Contact</TableHead>
+                                                    <TableHead className="text-center">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredBidders.length > 0 ? (
+                                                    filteredBidders.map((bidder, index) => (
+                                                        <TableRow key={bidder.id}>
+                                                            <TableCell>{index + 1}</TableCell>
+                                                            <TableCell className="font-medium">{bidder.name}</TableCell>
+                                                            <TableCell>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <p className="text-sm text-muted-foreground line-clamp-2">{bidder.address}</p>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent className="max-w-xs">
+                                                                        <p className="whitespace-pre-wrap">{bidder.address}</p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="text-sm">{bidder.phoneNo}</div>
+                                                                {bidder.secondaryPhoneNo && <div className="text-xs text-muted-foreground">{bidder.secondaryPhoneNo}</div>}
+                                                                {bidder.email && <div className="text-xs text-muted-foreground">{bidder.email}</div>}
+                                                            </TableCell>
+                                                            <TableCell className="text-center">
+                                                                <div className="flex items-center justify-center space-x-1">
+                                                                    <Button variant="ghost" size="icon" onClick={() => handleOpenReorderDialog(bidder)} disabled={isReordering}>
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}>
+                                                                        <Edit className="h-4 w-4" />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}>
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                ) : (
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} className="h-24 text-center">
+                                                            {bidderSearchTerm ? "No bidders found matching your search." : "No bidders found."}
                                                         </TableCell>
                                                     </TableRow>
-                                                ))
-                                            ) : (
-                                                <TableRow>
-                                                    <TableCell colSpan={6} className="h-24 text-center">
-                                                        {bidderSearchTerm ? "No bidders found matching your search." : "No bidders found."}
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                )}
-                            </div>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    )}
+                                </div>
+                            </TooltipProvider>
                         </ScrollArea>
                     </div>
                      <DialogFooter className="p-6 pt-4 border-t">
