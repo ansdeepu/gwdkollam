@@ -38,22 +38,33 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const completionPeriod = tender.periodOfCompletion || '___';
 
     // 1. Draw the heading 17cm from the top
-    const headingTopMargin = cm(17); // 17cm in points
+    const headingTopMargin = cm(17); 
     const headingY = height - headingTopMargin;
     const headingText = `AGREEMENT NO. GKT/${fileNo} / ${eTenderNo} DATED ${agreementDateForHeading}`;
+    const headingFontSize = 12;
     
     page.drawText(headingText, {
         x: width / 2,
         y: headingY,
         font: timesRomanBoldFont,
-        size: 12,
+        size: headingFontSize,
         color: rgb(0, 0, 0),
         textAlign: TextAlignment.Center,
     });
     
+    // Draw the underline for the heading
+    const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
+    const textX = (width - textWidth) / 2;
+    page.drawLine({
+        start: { x: textX, y: headingY - 2 },
+        end: { x: textX + textWidth, y: headingY - 2 },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+    });
+
     // 2. Draw the main agreement paragraph below the heading
     const paragraphTopMargin = cm(1);
-    const paragraphY = headingY - paragraphTopMargin;
+    const paragraphY = headingY - paragraphTopMargin - 15; // Adjust Y position
     const leftMargin = cm(1.5);
     const rightMargin = cm(1.5);
     const paragraphWidth = width - leftMargin - rightMargin;
