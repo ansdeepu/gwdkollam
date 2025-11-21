@@ -92,7 +92,8 @@ export default function ETenderListPage() {
         return allBidders.filter(bidder =>
             (bidder.name?.toLowerCase().includes(lowercasedFilter)) ||
             (bidder.address?.toLowerCase().includes(lowercasedFilter)) ||
-            (bidder.phoneNo?.toLowerCase().includes(lowercasedFilter))
+            (bidder.phoneNo?.toLowerCase().includes(lowercasedFilter)) ||
+            (bidder.secondaryPhoneNo?.toLowerCase().includes(lowercasedFilter))
         );
     }, [allBidders, bidderSearchTerm]);
 
@@ -130,6 +131,7 @@ export default function ETenderListPage() {
                 name: data.name,
                 address: data.address,
                 phoneNo: data.phoneNo,
+                secondaryPhoneNo: data.secondaryPhoneNo,
             });
             toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             setIsNewBidderDialogOpen(false);
@@ -168,10 +170,10 @@ export default function ETenderListPage() {
                         </div>
                         {user?.role === 'editor' && (
                             <div className="flex w-full sm:w-auto items-center gap-2">
-                                <Button onClick={() => setIsBiddersListOpen(true)} variant="outline" className="w-full sm:w-auto">
+                                <Button onClick={() => setIsBiddersListOpen(true)} variant="secondary" className="w-full sm:w-auto">
                                     <Users className="mr-2 h-4 w-4" /> Bidders List
                                 </Button>
-                                <Button onClick={() => setIsNewBidderDialogOpen(true)} variant="outline" className="w-full sm:w-auto">
+                                <Button onClick={() => setIsNewBidderDialogOpen(true)} variant="secondary" className="w-full sm:w-auto">
                                     <UserPlus className="mr-2 h-4 w-4" /> Add Bidder Details
                                 </Button>
                                 <Button onClick={handleCreateNew} className="w-full sm:w-auto">
@@ -289,6 +291,7 @@ export default function ETenderListPage() {
                                                 <TableHead>Name</TableHead>
                                                 <TableHead>Address</TableHead>
                                                 <TableHead>Phone No.</TableHead>
+                                                <TableHead>Secondary Phone No.</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -299,11 +302,12 @@ export default function ETenderListPage() {
                                                         <TableCell className="font-medium">{bidder.name}</TableCell>
                                                         <TableCell className="text-sm text-muted-foreground whitespace-pre-wrap">{bidder.address}</TableCell>
                                                         <TableCell>{bidder.phoneNo}</TableCell>
+                                                        <TableCell>{bidder.secondaryPhoneNo}</TableCell>
                                                     </TableRow>
                                                 ))
                                             ) : (
                                                 <TableRow>
-                                                    <TableCell colSpan={4} className="h-24 text-center">
+                                                    <TableCell colSpan={5} className="h-24 text-center">
                                                         {bidderSearchTerm ? "No bidders found matching your search." : "No bidders found."}
                                                     </TableCell>
                                                 </TableRow>
