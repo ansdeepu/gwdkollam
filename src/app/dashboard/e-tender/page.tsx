@@ -196,14 +196,15 @@ export default function ETenderListPage() {
             const batch = writeBatch(db);
             localBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                batch.set(docRef, { ...bidder, order: index });
+                // Use set with merge to create if it doesn't exist, or update if it does.
+                batch.set(docRef, { ...bidder, order: index }, { merge: true });
             });
             await batch.commit();
-            refetchBidders(); // This will fetch the newly ordered list from Firestore
+            refetchBidders(); 
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
         } catch (error: any) {
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-            refetchBidders(); // Refetch to revert to the original state on error
+            refetchBidders(); 
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
@@ -318,7 +319,12 @@ export default function ETenderListPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <Dialog open={isNewBidderDialogOpen} onOpenChange={setIsNewBidderDialogOpen}>
+            <Dialog open={isNewBidderDialogOpen} onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    setIsNewBidderDialogOpen(false);
+                    setBidderToEdit(null);
+                }
+            }}>
                 <DialogContent className="max-w-2xl flex flex-col p-0">
                     <NewBidderForm
                         onSubmit={handleAddOrEditBidderSubmit}
