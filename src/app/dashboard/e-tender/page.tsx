@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -181,22 +180,30 @@ export default function ETenderListPage() {
         if (!bidderToReorder) return;
         setIsReordering(true);
     
-        const reorderedList = Array.from(allBidders);
-        const oldIndex = reorderedList.findIndex(b => b.id === bidderToReorder.id);
-        const [movedItem] = reorderedList.splice(oldIndex, 1);
-        reorderedList.splice(newPosition - 1, 0, movedItem);
+        const localBidders = [...allBidders];
+        const oldIndex = localBidders.findIndex(b => b.id === bidderToReorder.id);
+    
+        if (oldIndex === -1) {
+            toast({ title: 'Error', description: 'Bidder not found in the list.', variant: 'destructive' });
+            setIsReordering(false);
+            return;
+        }
+    
+        const [movedItem] = localBidders.splice(oldIndex, 1);
+        localBidders.splice(newPosition - 1, 0, movedItem);
     
         try {
             const batch = writeBatch(db);
-            reorderedList.forEach((bidder, index) => {
+            localBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                batch.set(docRef, { order: index }, { merge: true });
+                batch.set(docRef, { ...bidder, order: index });
             });
             await batch.commit();
-            refetchBidders();
+            refetchBidders(); // This will fetch the newly ordered list from Firestore
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
         } catch (error: any) {
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
+            refetchBidders(); // Refetch to revert to the original state on error
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
