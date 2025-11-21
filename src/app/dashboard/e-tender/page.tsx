@@ -181,31 +181,27 @@ export default function ETenderListPage() {
         setIsReordering(true);
 
         try {
-            // Create a mutable copy and remove the item to be moved.
             const mutableBidders = [...allBidders];
             const oldIndex = mutableBidders.findIndex(b => b.id === bidderToReorder.id);
             if (oldIndex === -1) throw new Error("Bidder to move was not found in the list.");
+            
             const [movedItem] = mutableBidders.splice(oldIndex, 1);
-
-            // Insert the item at the new position.
             mutableBidders.splice(newPosition - 1, 0, movedItem);
 
-            // Create a Firestore batch to update the 'order' of every item.
             const batch = writeBatch(db);
             mutableBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Use set with merge to handle cases where a doc might not exist yet, preventing the "No document to update" error.
                 batch.set(docRef, { order: index }, { merge: true });
             });
 
             await batch.commit();
-            refetchBidders(); // This will fetch the newly ordered list from the backend
+            
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
+            refetchBidders();
         } catch (error: any) {
             console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-            // Refetch to get back to a consistent state from the database
-            refetchBidders(); 
+            refetchBidders();
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
