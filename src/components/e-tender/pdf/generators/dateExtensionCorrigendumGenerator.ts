@@ -46,6 +46,7 @@ export async function generateDateExtensionCorrigendum(
     };
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header', 'name_of_work'];
+    const justifyFields = ['name_of_work', 'date_ext'];
 
     // Fill fields safely
     for (const [fieldName, value] of Object.entries(fieldMappings)) {
@@ -54,8 +55,8 @@ export async function generateDateExtensionCorrigendum(
             field.setText(value);
             
             const selectedFont = boldFields.includes(fieldName) ? boldFont : font;
-
-            if (fieldName === "date_ext") {
+            
+            if (justifyFields.includes(fieldName)) {
                 field.setAlignment(TextAlignment.Justify);
             }
 

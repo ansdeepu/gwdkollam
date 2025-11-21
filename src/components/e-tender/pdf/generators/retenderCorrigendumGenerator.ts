@@ -16,7 +16,7 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
 
-    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, false, false).replace('up to', 'on'); 
+    const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false).replace('at', 'on'); 
     const reasonText = corrigendum.reason || `no bids were received`;
 
     const fullParagraph = `     The time period for submitting e-tenders expired on ${lastDate}, and ${reasonText}. Hence, it has been decided to retender the above work.`;
@@ -34,6 +34,7 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     };
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header', 'name_of_work'];
+    const justifyFields = ['name_of_work', 'retender'];
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
@@ -41,7 +42,7 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
             if (field instanceof PDFTextField) {
                 const isBold = boldFields.includes(fieldName);
                 field.setText(String(value || ''));
-                 if (fieldName === 'retender') {
+                 if (justifyFields.includes(fieldName)) {
                     field.setAlignment(TextAlignment.Justify);
                 }
                 field.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);

@@ -31,15 +31,18 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
     };
 
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header', 'name_of_work'];
+    const justifyFields = ['name_of_work', 'cancel'];
 
     Object.entries(fieldMappings).forEach(([fieldName, value]) => {
         try {
             const textField = form.getTextField(fieldName);
             const isBold = boldFields.includes(fieldName);
             textField.setText(String(value || ''));
-            if (fieldName === 'cancel') {
+            if (justifyFields.includes(fieldName)) {
                 textField.setAlignment(TextAlignment.Justify);
-                textField.setFontSize(10); // Set smaller font size for the main paragraph
+            }
+            if (fieldName === 'cancel') {
+                textField.setFontSize(10);
             }
             textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
         } catch (e) {
