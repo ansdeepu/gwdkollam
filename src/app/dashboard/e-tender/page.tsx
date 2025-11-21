@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -183,15 +182,15 @@ export default function ETenderListPage() {
     
         try {
             const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
-            let currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
+            const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
             
             const oldIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (oldIndex === -1) throw new Error("Bidder to be moved was not found in the database. The list may be out of date.");
+            if (oldIndex === -1) {
+                throw new Error("Bidder to be moved was not found in the database. Please try again.");
+            }
     
             const [movedItem] = currentBidders.splice(oldIndex, 1);
-            
             const newIndex = Math.max(0, Math.min(newPosition - 1, currentBidders.length));
-            
             currentBidders.splice(newIndex, 0, movedItem);
     
             const batch = writeBatch(db);
@@ -208,7 +207,6 @@ export default function ETenderListPage() {
         } catch (error: any) {
             console.error("Reordering failed:", error);
             toast({ title: 'Error', description: `Could not move bidder: ${error.message}`, variant: 'destructive' });
-            refetchBidders();
         } finally {
             setIsReordering(false);
             setBidderToReorder(null);
