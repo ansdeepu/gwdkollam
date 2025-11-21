@@ -104,27 +104,31 @@ export default function BiddersListPage() {
         setIsReordering(true);
     
         try {
+            // 1. Fetch the most current data directly from Firestore
             const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
             const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
             
+            // 2. Safely perform the reordering in memory on the fresh data
             const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
             if (bidderToMoveIndex === -1) {
-                throw new Error("Bidder to be moved was not found in the database. The list may be out of sync. Please refresh the page.");
+                throw new Error("Bidder to be moved was not found. The list may be out of sync. Please refresh.");
             }
     
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
             currentBidders.splice(newPosition - 1, 0, bidderToMove);
     
+            // 3. Atomically update the 'order' for all bidders using set with merge
             const batch = writeBatch(db);
             currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                batch.update(docRef, { order: index });
+                // Use set with merge to safely update or create the order field
+                batch.set(docRef, { order: index }, { merge: true });
             });
     
             await batch.commit();
             
             toast({ title: 'Bidder Moved', description: `${bidderToReorder.name} moved to position ${newPosition}.` });
-            refetchBidders();
+            refetchBidders(); // 4. Force a UI refresh
     
         } catch (error: any) {
             console.error("Reordering failed:", error);
