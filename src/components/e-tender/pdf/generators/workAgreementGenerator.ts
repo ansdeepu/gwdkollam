@@ -15,6 +15,8 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const form = pdfDoc.getForm();
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const firstPage = pdfDoc.getPages()[0];
+
 
     const l1Bidder = (tender.bidders || []).find(b => b.status === 'Accepted') || 
                      ((tender.bidders || []).length > 0 ? (tender.bidders || []).reduce((prev, curr) => (prev.quotedAmount ?? Infinity) < (curr.quotedAmount ?? Infinity) ? prev : curr, {} as any) : null);
@@ -37,7 +39,6 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
         'file_no_header': `GKT/${tender.fileNo || '__________'}`,
         'e_tender_no_header': tender.eTenderNo || '__________',
         'agreement_date': formatDateSafe(tender.agreementDate),
-        'agreement': agreementText,
     };
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'agreement_date'];
@@ -48,14 +49,23 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
             if (field instanceof PDFTextField) {
                 const isBold = boldFields.includes(fieldName);
                 field.setText(String(value || ''));
-                if (fieldName === 'agreement') {
-                    field.setAlignment(TextAlignment.Justify);
-                }
                 field.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             }
         } catch (e) {
             console.warn(`Could not fill field ${fieldName}:`, e);
         }
+    });
+
+    // Draw the main agreement text directly for justification
+    firstPage.drawText(agreementText, {
+      x: 72, // Left margin (1 inch)
+      y: firstPage.getHeight() - 250, // Starting Y position from top
+      font: timesRomanFont,
+      size: 12,
+      lineHeight: 15,
+      textAlign: TextAlignment.Justify,
+      maxWidth: firstPage.getWidth() - 144, // Page width - 2 inches of margin
+      color: rgb(0, 0, 0),
     });
 
     form.flatten();
