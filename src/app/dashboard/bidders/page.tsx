@@ -95,25 +95,17 @@ export default function BiddersListPage() {
                 const data = docSnap.data();
                 return { id: docSnap.id, order: data.order ?? 0, ...data } as BidderType;
             });
-            
-            const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
-            if (!bidderToMove) throw new Error("The bidder you are trying to move could not be found.");
-            
-            const reorderedBidders: BidderType[] = [];
-            const otherBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
 
-            let otherBiddersIndex = 0;
-            for (let i = 0; i < currentBidders.length; i++) {
-                if (i === newPosition - 1) {
-                    reorderedBidders.push(bidderToMove);
-                } else {
-                    reorderedBidders.push(otherBidders[otherBiddersIndex]);
-                    otherBiddersIndex++;
-                }
-            }
+            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
+            if (bidderToMoveIndex === -1) throw new Error("The bidder you are trying to move could not be found.");
+
+            const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
+            
+            const newIndex = newPosition - 1;
+            currentBidders.splice(newIndex, 0, bidderToMove);
             
             const batch = writeBatch(db);
-            reorderedBidders.forEach((bidder, index) => {
+            currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
                 batch.set(docRef, { order: index }, { merge: true });
             });
