@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useAuth } from '@/hooks/useAuth';
 
 const db = getFirestore(app);
 
@@ -90,31 +91,32 @@ export default function BiddersListPage() {
 
         setIsSubmitting(true);
         try {
-            // 1. Fetch fresh data to avoid race conditions
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
             const biddersSnapshot = await getDocs(biddersQuery);
-            const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
-
-            // Find the bidder to move from the fresh list
+            const currentBidders: BidderType[] = biddersSnapshot.docs.map(docSnap => {
+                const data = docSnap.data();
+                return {
+                    id: docSnap.id,
+                    order: data.order ?? 0,
+                    ...data
+                } as BidderType;
+            });
+            
             const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
             if (!bidderToMove) throw new Error("The bidder you are trying to move could not be found.");
             
-            // 2. Safely reorder in memory
             const reorderedBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
             reorderedBidders.splice(newPosition - 1, 0, bidderToMove);
 
-            // 3. Atomic batch update with set({ merge: true })
             const batch = writeBatch(db);
             reorderedBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Use set with merge to safely update or create the order field
                 batch.set(docRef, { order: index }, { merge: true });
             });
 
             await batch.commit();
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
             
-            // 4. Force a UI refresh
             refetchBidders();
 
         } catch (error: any) {
