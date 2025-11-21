@@ -44,31 +44,31 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     const rightMargin = cm(1.5);
     const paragraphWidth = width - leftMargin - rightMargin;
 
-    // 1. Draw the heading 17cm from the top, centered and underlined
+    // 1. Draw the heading
     const headingTopMargin = cm(17);
     let currentY = height - headingTopMargin;
     const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
     const headingFontSize = 12;
     
     page.drawText(headingText, {
-        x: width / 2,
+        x: leftMargin,
         y: currentY,
         font: timesRomanBoldFont,
         size: headingFontSize,
         color: rgb(0, 0, 0),
-        textAlign: TextAlignment.Center,
+        textAlign: TextAlignment.Left,
     });
     
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     page.drawLine({
-        start: { x: (width - textWidth) / 2, y: currentY - 2 },
-        end: { x: (width + textWidth) / 2, y: currentY - 2 },
+        start: { x: leftMargin, y: currentY - 2 },
+        end: { x: leftMargin + textWidth, y: currentY - 2 },
         thickness: 1,
         color: rgb(0, 0, 0),
     });
 
     // 2. Draw the main agreement paragraph below the heading
-    currentY -= cm(1) + 20; // Move Y down for the next element
+    currentY -= cm(1) + 20;
     const indent = "     ";
     const paragraphText = `${indent}Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
     
