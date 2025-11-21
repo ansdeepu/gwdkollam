@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Loader2, UserPlus, Users, Edit, Trash2, ArrowUpDown, ArrowLeft } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -83,7 +83,7 @@ export default function BiddersListPage() {
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            refetchBidders();
+            refetchBidders(); // Force a refresh of the data from the store
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
@@ -94,8 +94,8 @@ export default function BiddersListPage() {
     };
     
     const handleOpenReorderDialog = (bidder: BidderType) => {
-        setBidderToReorder(bidder);
-        const currentPosition = (bidder.order ?? allBidders.findIndex(b => b.id === bidder.id)) + 1;
+        const currentPosition = allBidders.findIndex(b => b.id === bidder.id) + 1;
+        setItemToReorder(bidder);
         reorderForm.setValue('newPosition', currentPosition > 0 ? currentPosition : 1);
     };
     
@@ -104,22 +104,21 @@ export default function BiddersListPage() {
         setIsReordering(true);
     
         try {
+            // Fetch the latest data to avoid sync issues
             const biddersSnapshot = await getDocs(query(collection(db, "bidders"), orderBy("order")));
-            const currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
+            let currentBidders: BidderType[] = biddersSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as BidderType));
             
-            const bidderToMove = currentBidders.find(b => b.id === bidderToReorder.id);
+            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
     
-            if (!bidderToMove) {
+            if (bidderToMoveIndex === -1) {
                 throw new Error("Bidder to be moved was not found in the database. The list may be out of sync. Please refresh.");
             }
-    
-            let otherBidders = currentBidders.filter(b => b.id !== bidderToReorder.id);
             
-            otherBidders.splice(newPosition - 1, 0, bidderToMove);
-            const reorderedList = otherBidders;
+            const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
+            currentBidders.splice(newPosition - 1, 0, bidderToMove);
     
             const batch = writeBatch(db);
-            reorderedList.forEach((bidder, index) => {
+            currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
                 batch.update(docRef, { order: index });
             });
@@ -142,7 +141,7 @@ export default function BiddersListPage() {
     return (
         <div className="space-y-6">
              <div className="flex justify-end">
-                <Button variant="destructive" onClick={() => router.push('/dashboard/e-tender')}>
+                <Button variant="destructive" onClick={() => router.back()}>
                     <ArrowLeft className="mr-2 h-4 w-4"/> Back
                 </Button>
             </div>
