@@ -1,4 +1,3 @@
-
 // src/app/dashboard/bidders/page.tsx
 "use client";
 
@@ -89,7 +88,7 @@ export default function BiddersListPage() {
     
     const handleReorderSubmit = async (newPosition: number) => {
         if (!bidderToReorder) return;
-        
+
         setIsSubmitting(true);
         try {
             const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
@@ -104,15 +103,14 @@ export default function BiddersListPage() {
                     }
                     return { id: docSnap.id, ...data } as BidderType;
                 })
-                .filter((b): b is BidderType => b !== null)
-                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                .filter((b): b is BidderType => b !== null);
 
             const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
             if (bidderToMoveIndex === -1) throw new Error("The bidder to move could not be found in the current list.");
 
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
             currentBidders.splice(newPosition - 1, 0, bidderToMove);
-
+            
             const batch = writeBatch(db);
             currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
@@ -122,9 +120,9 @@ export default function BiddersListPage() {
             await batch.commit();
             
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
-            
-            // Force a full page reload to ensure UI consistency
-            router.refresh();
+
+            await refetchBidders(); 
+            window.location.reload();
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
