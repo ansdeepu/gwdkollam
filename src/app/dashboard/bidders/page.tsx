@@ -91,23 +91,13 @@ export default function BiddersListPage() {
 
         setIsSubmitting(true);
         try {
-            const biddersQuery = query(collection(db, "bidders"), orderBy("order", "asc"));
-            const biddersSnapshot = await getDocs(biddersQuery);
-
-            const currentBidders: BidderType[] = biddersSnapshot.docs
-                .map(docSnap => {
-                    const data = docSnap.data();
-                    if (!data || Object.keys(data).length === 0 || !data.name) {
-                        console.warn("Skipping empty Firestore doc:", docSnap.id);
-                        return null;
-                    }
-                    return { id: docSnap.id, ...data } as BidderType;
-                })
-                .filter((b): b is BidderType => b !== null);
-
+            const currentBidders = [...validBidders];
             const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-            if (bidderToMoveIndex === -1) throw new Error("The bidder to move could not be found in the current list.");
-
+            
+            if (bidderToMoveIndex === -1) {
+                throw new Error("Bidder to move was not found in the current list.");
+            }
+            
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
             currentBidders.splice(newPosition - 1, 0, bidderToMove);
             
@@ -118,10 +108,9 @@ export default function BiddersListPage() {
             });
 
             await batch.commit();
-            
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
-            await refetchBidders(); 
+            await refetchBidders();
             window.location.reload();
 
         } catch (error: any) {
