@@ -92,56 +92,38 @@ export default function BiddersListPage() {
 
         setIsSubmitting(true);
         try {
-            const biddersCollection = collection(db, 'bidders');
-            const q = query(biddersCollection, orderBy('order'));
-            const snapshot = await getDocs(q);
-
-            const currentBidders: BidderType[] = snapshot.docs
-                .map(docSnap => {
-                    const data = docSnap.data();
-                    // Filter out empty/invalid documents
-                    if (!data || !data.name) {
-                        return null;
-                    }
-                    return {
-                        id: docSnap.id,
-                        order: data.order ?? 0,
-                        ...data
-                    } as BidderType;
-                })
-                .filter((b): b is BidderType => b !== null);
+            const biddersToReorder = [...validBidders];
             
-            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
-
-            if (bidderToMoveIndex === -1) {
-                throw new Error("Bidder to move was not found in the current list.");
+            const fromIndex = biddersToReorder.findIndex(b => b.id === bidderToReorder.id);
+            if (fromIndex === -1) {
+                throw new Error("Bidder to move was not found.");
             }
 
-            const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
-            currentBidders.splice(newPosition - 1, 0, bidderToMove);
+            // Remove the bidder and re-insert it at the new position
+            const [movedBidder] = biddersToReorder.splice(fromIndex, 1);
+            biddersToReorder.splice(newPosition - 1, 0, movedBidder);
 
             const batch = writeBatch(db);
-            
-            // Re-assign the 'order' property for every document to ensure it's a clean sequence
-            currentBidders.forEach((bidder, index) => {
+            biddersToReorder.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
+                // Use set with merge to create 'order' field if it doesn't exist
                 batch.set(docRef, { order: index }, { merge: true });
             });
 
             await batch.commit();
-            await refetchBidders();
             
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
+
+            // Wait for the data store to be updated, then force a full reload
+            await refetchBidders();
             window.location.reload();
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
-        } finally {
-            setIsSubmitting(false);
-            setBidderToReorder(null);
+            setIsSubmitting(false); // Only set this on error
         }
-    }, [bidderToReorder, isSubmitting, refetchBidders, toast]);
+    }, [bidderToReorder, isSubmitting, refetchBidders, toast, validBidders]);
 
     return (
         <div className="space-y-6">
