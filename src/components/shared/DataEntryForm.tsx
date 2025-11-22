@@ -73,7 +73,7 @@ const db = getFirestore(app);
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
-const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
+const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: optionalNumber(), arsAwardedAmount: optionalNumber(), arsNumberOfStructures: optionalNumber(), arsStorageCapacity: optionalNumber(), arsNumberOfFillings: optionalNumber(), isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
   if (!payment) return 0;
@@ -342,14 +342,14 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-          <DialogHeader className="p-6 pb-4">
+            <DialogHeader className="p-6 pb-4">
                 <DialogTitle>{initialData?.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
             </DialogHeader>
-          <div className="flex-1 min-h-0">
-            <ScrollArea className="h-full px-6 py-4">
-              <Form {...form}>
-                <div className="space-y-4">
-                    <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
+            <div className="flex-1 min-h-0">
+                <ScrollArea className="h-full px-6 py-4">
+                    <Form {...form}>
+                        <form onSubmit={handleSubmit(handleDialogSubmit)} className="space-y-4">
+                            <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="nameOfSite" control={control} render={({ field }) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                             <FormField name="purpose" control={control} render={({ field }) => <FormItem><FormLabel>Purpose <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Purpose" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{sitePurposeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
@@ -408,10 +408,11 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         </FormItem>
                                     )}
                                 />
-                                <FormField name="supervisorDesignation" control={form.control} render={({ field }) => (
+                                 <FormField name="supervisorDesignation" control={form.control} render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Designation</FormLabel>
-                                        <FormControl><Input {...field} value={field.value || ''} readOnly className="bg-muted/50" /></FormControl>
+                                        <FormControl><Input {...field} value={field.value ?? ""} readOnly className="bg-muted/50" /></FormControl>
+                                        <FormMessage />
                                     </FormItem>
                                 )}/>
                             </div>
@@ -484,8 +485,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             </div>
                         </CardContent>
                     </Card>
-
-                </div>
+                </form>
               </Form>
             </ScrollArea>
             </div>
@@ -601,7 +601,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         if (fileIdToEdit) {
             // This is an edit operation. Check for fileNo collision only if it has changed.
             if (fileNoToEdit?.trim().toUpperCase() !== fileNoTrimmed) {
-                const q = query(collection(db, "fileEntries"), where("fileNo", "==", fileNoTrimmed));
+                const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNoTrimmed));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     toast({
@@ -617,7 +617,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
         } else {
             // This is a create operation
-            const q = query(collection(db, "fileEntries"), where("fileNo", "==", fileNoTrimmed));
+            const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNoTrimmed));
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
                 toast({
@@ -1052,11 +1052,5 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
-
-    
-
-    
-
-    
 
     
