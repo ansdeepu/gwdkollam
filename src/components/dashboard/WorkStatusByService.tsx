@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Activity } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, UserRole } from '@/lib/schemas';
 
-const dashboardWorkStatusOrder: SiteWorkStatus[] = ["Under Process", "Addl. AS Awaited", "To be Refunded", "Awaiting Dept. Rig", "To be Tendered", "TS Pending", "Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Failed", "Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
+const dashboardWorkStatusOrder: SiteWorkStatus[] = ["Under Process", "Addl. AS Awaited", "To be Refunded", "Awaiting Dept. Rig", "To be Tendered", "TS Pending", "Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
 const dashboardServiceOrder: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR"];
 
 const serviceHeaderLabels: Record<string, string> = {

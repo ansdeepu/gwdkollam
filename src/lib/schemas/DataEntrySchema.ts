@@ -153,9 +153,6 @@ export const siteWorkStatusOptions = [
   "Work in Progress",
   "Work Failed",
   "Work Completed",
-  "Bill Prepared",
-  "Payment Completed",
-  "Utilization Certificate Issued",
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
 
@@ -232,7 +229,7 @@ export const rigAccessibilityOptions = [
 export type RigAccessibility = typeof rigAccessibilityOptions[number];
 
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
-const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
 
 export const SiteDetailSchema = z.object({
   nameOfSite: z.string().min(1, "Name of Site is required."),

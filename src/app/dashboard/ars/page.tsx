@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 50;
-const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
 
 
 const formatDateSafe = (dateInput: any): string => {
@@ -748,5 +748,3 @@ export default function ArsPage() {
     </div>
   );
 }
-
-    

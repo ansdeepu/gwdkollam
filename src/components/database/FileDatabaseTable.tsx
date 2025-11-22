@@ -55,7 +55,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 const ITEMS_PER_PAGE = 50;
-const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', 'Bill Prepared', 'Payment Completed', 'Utilization Certificate Issued'];
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
 const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
 
 
@@ -709,5 +709,3 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     </TooltipProvider>
   );
 }
-
-    

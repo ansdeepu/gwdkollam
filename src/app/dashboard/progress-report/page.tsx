@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, XCircle, Loader2, Play, FileDown, Landmark } from 'lucide-react';
 import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter } from 'date-fns';
-import { useFileEntries } from '@/hooks/useFileEntries';
 import { cn } from "@/lib/utils";
 import {
   applicationTypeOptions,
@@ -950,7 +949,3 @@ export default function ProgressReportPage() {
     </div>
   );
 }
-
-
-
-    
