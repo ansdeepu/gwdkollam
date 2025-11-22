@@ -71,7 +71,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const db = getFirestore(app);
 
-const optionalNumber = () => z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : val), z.coerce.number().optional());
+const optionalNumber = () => z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : val), z.coerce.number().min(0, "Cannot be negative.").optional());
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
@@ -1053,4 +1053,3 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
-
