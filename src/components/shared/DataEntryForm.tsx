@@ -1053,5 +1053,3 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
-
-    
