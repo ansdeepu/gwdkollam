@@ -36,12 +36,18 @@ export default function BiddersListPage() {
     const [bidderToEdit, setBidderToEdit] = useState<BidderType | null>(null);
     const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
     const [bidderToReorder, setBidderToReorder] = useState<BidderType | null>(null);
+    
+    const [displayedBidders, setDisplayedBidders] = useState<BidderType[]>([]);
 
     const validBidders = useMemo(() => {
         return allBidders
             .filter(bidder => bidder && bidder.id && bidder.name)
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     }, [allBidders]);
+
+    useEffect(() => {
+        setDisplayedBidders(validBidders);
+    }, [validBidders]);
 
 
     useEffect(() => {
@@ -56,7 +62,7 @@ export default function BiddersListPage() {
                 await updateDoc(bidderDocRef, { ...data });
                 toast({ title: "Bidder Updated", description: `Bidder "${data.name}" has been updated.` });
             } else {
-                const newOrder = validBidders.length > 0 ? Math.max(...validBidders.map(b => b.order ?? 0)) + 1 : 0;
+                const newOrder = displayedBidders.length > 0 ? Math.max(...displayedBidders.map(b => b.order ?? 0)) + 1 : 0;
                 await addDoc(collection(db, "bidders"), { ...data, order: newOrder });
                 toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             }
@@ -91,39 +97,47 @@ export default function BiddersListPage() {
         if (!bidderToReorder || isSubmitting) return;
 
         setIsSubmitting(true);
+
+        // Create a mutable copy for client-side reordering
+        const reorderedBidders = [...displayedBidders];
+        const fromIndex = reorderedBidders.findIndex(b => b.id === bidderToReorder.id);
+        
+        if (fromIndex === -1) {
+            toast({ title: "Error", description: "Bidder to move not found.", variant: "destructive" });
+            setIsSubmitting(false);
+            return;
+        }
+        
+        // Perform the reorder on the local array
+        const [movedItem] = reorderedBidders.splice(fromIndex, 1);
+        reorderedBidders.splice(newPosition - 1, 0, movedItem);
+
         try {
-            const biddersToReorder = [...validBidders];
-            
-            const fromIndex = biddersToReorder.findIndex(b => b.id === bidderToReorder.id);
-            if (fromIndex === -1) {
-                throw new Error("Bidder to move was not found.");
-            }
-
-            // Remove the bidder and re-insert it at the new position
-            const [movedBidder] = biddersToReorder.splice(fromIndex, 1);
-            biddersToReorder.splice(newPosition - 1, 0, movedBidder);
-
+            // Create a batch write to update Firestore atomically
             const batch = writeBatch(db);
-            biddersToReorder.forEach((bidder, index) => {
+            reorderedBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Use set with merge to create 'order' field if it doesn't exist
-                batch.set(docRef, { order: index }, { merge: true });
+                // Update the order field based on the new array index
+                batch.update(docRef, { order: index });
             });
 
             await batch.commit();
-            
-            toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
-            // Wait for the data store to be updated, then force a full reload
-            await refetchBidders();
-            window.location.reload();
+            // Update the local state to trigger an instant UI re-render
+            setDisplayedBidders(reorderedBidders);
+            setBidderToReorder(null);
+
+            toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
-            setIsSubmitting(false); // Only set this on error
+            // If the database fails, revert the local state to match the original
+            setDisplayedBidders(displayedBidders);
+        } finally {
+            setIsSubmitting(false);
         }
-    }, [bidderToReorder, isSubmitting, refetchBidders, toast, validBidders]);
+    }, [bidderToReorder, isSubmitting, displayedBidders, toast]);
 
     return (
         <div className="space-y-6">
@@ -150,8 +164,8 @@ export default function BiddersListPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {validBidders.length > 0 ? (
-                                        validBidders.map((bidder, index) => (
+                                    {displayedBidders.length > 0 ? (
+                                        displayedBidders.map((bidder, index) => (
                                             <TableRow key={bidder.id}>
                                                 <TableCell>{index + 1}</TableCell>
                                                 <TableCell className="font-medium">{bidder.name}</TableCell>
@@ -218,15 +232,15 @@ export default function BiddersListPage() {
                       <form onSubmit={(e) => {
                           e.preventDefault();
                           const newPosition = parseInt((e.target as any).position.value);
-                          if (newPosition >= 1 && newPosition <= validBidders.length) {
+                          if (newPosition >= 1 && newPosition <= displayedBidders.length) {
                             handleReorderSubmit(newPosition);
                           } else {
-                            toast({ title: "Invalid Position", description: `Please enter a number between 1 and ${validBidders.length}.`, variant: "destructive" });
+                            toast({ title: "Invalid Position", description: `Please enter a number between 1 and ${displayedBidders.length}.`, variant: "destructive" });
                           }
                       }}>
                           <div className="p-6 pt-2 space-y-2">
-                              <Label htmlFor="position">New Position (1 to {validBidders.length})</Label>
-                              <Input id="position" type="number" min="1" max={validBidders.length} required />
+                              <Label htmlFor="position">New Position (1 to {displayedBidders.length})</Label>
+                              <Input id="position" type="number" min="1" max={displayedBidders.length} required />
                           </div>
                           <DialogFooter className="p-6 pt-4">
                               <Button type="button" variant="outline" onClick={() => setBidderToReorder(null)} disabled={isSubmitting}>Cancel</Button>
