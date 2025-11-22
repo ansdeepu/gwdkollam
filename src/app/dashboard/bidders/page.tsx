@@ -1,13 +1,14 @@
 // src/app/dashboard/bidders/page.tsx
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Loader2, UserPlus, Users, Edit, Trash2, ArrowLeft, Move } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -86,7 +87,7 @@ export default function BiddersListPage() {
         }
     };
     
-    const handleReorderSubmit = async (newPosition: number) => {
+    const handleReorderSubmit = useCallback(async (newPosition: number) => {
         if (!bidderToReorder || isSubmitting) return;
 
         setIsSubmitting(true);
@@ -94,7 +95,7 @@ export default function BiddersListPage() {
             const biddersCollection = collection(db, 'bidders');
             const q = query(biddersCollection, orderBy('order'));
             const snapshot = await getDocs(q);
-            
+
             const currentBidders: BidderType[] = snapshot.docs
                 .map(docSnap => {
                     const data = docSnap.data();
@@ -102,20 +103,21 @@ export default function BiddersListPage() {
                     if (!data || !data.name) {
                         return null;
                     }
-                    return { id: docSnap.id, ...data } as BidderType;
+                    return {
+                        id: docSnap.id,
+                        order: data.order ?? 0,
+                        ...data
+                    } as BidderType;
                 })
                 .filter((b): b is BidderType => b !== null);
-
+            
             const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
 
             if (bidderToMoveIndex === -1) {
                 throw new Error("Bidder to move was not found in the current list.");
             }
 
-            // Remove the bidder from the array
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
-            
-            // Insert it at the new position (adjusting for 1-based input)
             currentBidders.splice(newPosition - 1, 0, bidderToMove);
 
             const batch = writeBatch(db);
@@ -127,10 +129,9 @@ export default function BiddersListPage() {
             });
 
             await batch.commit();
-
-            toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}. Refreshing list...` });
+            await refetchBidders();
             
-            // Force a full reload to ensure the UI reflects the new order from the database
+            toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
             window.location.reload();
 
         } catch (error: any) {
@@ -140,7 +141,7 @@ export default function BiddersListPage() {
             setIsSubmitting(false);
             setBidderToReorder(null);
         }
-    };
+    }, [bidderToReorder, isSubmitting, refetchBidders, toast]);
 
     return (
         <div className="space-y-6">
@@ -227,10 +228,10 @@ export default function BiddersListPage() {
             
             {bidderToReorder && (
               <Dialog open={!!bidderToReorder} onOpenChange={() => setBidderToReorder(null)}>
-                  <DialogContent>
-                      <DialogHeader>
+                  <DialogContent className="sm:max-w-md">
+                      <DialogHeader className="p-6 pb-2">
                           <DialogTitle>Move Bidder</DialogTitle>
-                          <DialogDescription>Move "{bidderToReorder?.name}" to a new position.</DialogDescription>
+                          <DialogDescription>Move "{bidderToReorder?.name}" to a new position in the list.</DialogDescription>
                       </DialogHeader>
                       <form onSubmit={(e) => {
                           e.preventDefault();
@@ -241,11 +242,11 @@ export default function BiddersListPage() {
                             toast({ title: "Invalid Position", description: `Please enter a number between 1 and ${validBidders.length}.`, variant: "destructive" });
                           }
                       }}>
-                          <div className="py-4">
-                              <label htmlFor="position" className="text-sm font-medium">New Position (1 to {validBidders.length})</label>
-                              <Input id="position" type="number" min="1" max={validBidders.length} required className="mt-2" />
+                          <div className="p-6 pt-2 space-y-2">
+                              <Label htmlFor="position">New Position (1 to {validBidders.length})</Label>
+                              <Input id="position" type="number" min="1" max={validBidders.length} required />
                           </div>
-                          <DialogFooter>
+                          <DialogFooter className="p-6 pt-4">
                               <Button type="button" variant="outline" onClick={() => setBidderToReorder(null)} disabled={isSubmitting}>Cancel</Button>
                               <Button type="submit" disabled={isSubmitting}>
                                   {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Move"}
