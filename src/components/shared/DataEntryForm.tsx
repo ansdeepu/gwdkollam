@@ -75,6 +75,8 @@ const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountR
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: optionalNumber(), arsAwardedAmount: optionalNumber(), arsNumberOfStructures: optionalNumber(), arsStorageCapacity: optionalNumber(), arsNumberOfFillings: optionalNumber(), isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
+const optionalNumber = () => z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : val), z.coerce.number().optional());
+
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
   if (!payment) return 0;
   return (Number(payment.revenueHead) || 0) + (Number(payment.contractorsPayment) || 0) + (Number(payment.gst) || 0) + (Number(payment.incomeTax) || 0) + (Number(payment.kbcwb) || 0) + (Number(payment.refundToParty) || 0);
@@ -485,9 +487,9 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             </div>
                         </CardContent>
                     </Card>
-                </form>
-              </Form>
-            </ScrollArea>
+                        </form>
+                    </Form>
+                </ScrollArea>
             </div>
           <DialogFooter className="p-6 pt-4">
             <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
@@ -586,6 +588,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   
   const onSubmit = async (data: DataEntryFormData) => {
     setIsSubmitting(true);
+    const FILE_ENTRIES_COLLECTION = 'fileEntries';
     try {
         if (!user) throw new Error("Authentication error. Please log in again.");
 
@@ -599,7 +602,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         const fileNoTrimmed = data.fileNo.trim().toUpperCase();
 
         if (fileIdToEdit) {
-            // This is an edit operation. Check for fileNo collision only if it has changed.
             if (fileNoToEdit?.trim().toUpperCase() !== fileNoTrimmed) {
                 const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNoTrimmed));
                 const querySnapshot = await getDocs(q);
@@ -616,7 +618,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             await updateFileEntry(fileIdToEdit, { ...data, fileNo: fileNoTrimmed });
             toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
         } else {
-            // This is a create operation
             const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNoTrimmed));
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
@@ -815,6 +816,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <DetailRow label="Total Expenditure (₹)" value={site.totalExpenditure} />
                                             <DetailRow label="Contractor" value={site.contractorName} />
                                             <DetailRow label="Supervisor" value={site.supervisorName} />
+                                            <DetailRow label="Designation" value={site.supervisorDesignation} />
                                             <DetailRow label="Completion Date" value={site.dateOfCompletion ? format(new Date(site.dateOfCompletion), 'dd/MM/yyyy') : 'N/A'} />
                                             <div className="md:col-span-4"><DetailRow label="Work Remarks" value={site.workRemarks} /></div>
                                         </dl>
@@ -1052,5 +1054,6 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
+    
 
     
