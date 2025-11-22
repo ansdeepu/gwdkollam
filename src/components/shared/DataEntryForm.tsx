@@ -71,11 +71,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 const db = getFirestore(app);
 
+const optionalNumber = () => z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : val), z.coerce.number().optional());
+
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: optionalNumber(), arsAwardedAmount: optionalNumber(), arsNumberOfStructures: optionalNumber(), arsStorageCapacity: optionalNumber(), arsNumberOfFillings: optionalNumber(), isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
-const optionalNumber = () => z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : val), z.coerce.number().optional());
 
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
   if (!payment) return 0;
@@ -288,6 +289,10 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     });
     
     const { control, setValue, trigger, watch, handleSubmit, getValues } = form;
+
+    const handleDialogSubmit = (data: SiteDetailFormData) => {
+        onConfirm(data);
+    };
     
     const watchedPurpose = watch('purpose');
     const watchedWorkStatus = watch('workStatus');
@@ -346,7 +351,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4">
                     <Form {...form}>
-                        <form onSubmit={handleSubmit(onConfirm)} id="site-dialog-form" className="space-y-4">
+                        <form onSubmit={handleSubmit(handleDialogSubmit)} id="site-dialog-form" className="space-y-4">
                             <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="nameOfSite" control={control} render={({ field }) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -508,7 +513,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | undefined>(undefined);
   const [dialogState, setDialogState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
   const [itemToDelete, setItemToDelete<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
-  const [siteToCopy, setSiteToCopy<number | null>(null);
+  const [siteToCopy, setSiteToCopy] = useState<number | null>(null);
 
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
@@ -970,6 +975,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
     const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
     const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
     const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
+    const isARSPurpose = ['ARS'].includes(purpose);
 
     const allDetails = {
         "Main Details": {
@@ -1047,8 +1053,5 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
-    
-
-    
 
     
