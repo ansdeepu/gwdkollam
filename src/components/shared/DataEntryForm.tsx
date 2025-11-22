@@ -240,7 +240,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
 
 const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
     const [data, setData] = useState({ ...initialData, dateOfPayment: formatDateForInput(initialData?.dateOfPayment) });
-    const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
+    const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }),);
     const handleNumberChange = (key: string, value: string) => {
         const num = value === '' ? undefined : parseFloat(value);
         handleChange(key, num);
@@ -338,10 +338,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         }
     }, [watchedLsg, allLsgConstituencyMaps, setValue, watch, getValues]);
     
-    const handleDialogSubmit = (data: SiteDetailFormData) => {
-        onConfirm(data);
-    };
-
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <DialogHeader className="p-6 pb-4">
@@ -350,7 +346,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4">
                     <Form {...form}>
-                        <form onSubmit={handleSubmit(handleDialogSubmit)} className="space-y-4">
+                        <form onSubmit={handleSubmit(onConfirm)} id="site-dialog-form" className="space-y-4">
                             <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="nameOfSite" control={control} render={({ field }) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -410,7 +406,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         </FormItem>
                                     )}
                                 />
-                                 <FormField name="supervisorDesignation" control={form.control} render={({ field }) => (
+                                <FormField name="supervisorDesignation" control={form.control} render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Designation</FormLabel>
                                         <FormControl><Input {...field} value={field.value ?? ""} readOnly className="bg-muted/50" /></FormControl>
@@ -480,7 +476,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                         <CardHeader><CardTitle>Work Status</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly && !isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+                                <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly && !isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : siteWorkStatusOptions).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                 <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date {isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                                 {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
                                 <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
@@ -491,10 +487,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     </Form>
                 </ScrollArea>
             </div>
-          <DialogFooter className="p-6 pt-4">
-            <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={handleSubmit(handleDialogSubmit)}>Save</Button>
-          </DialogFooter>
+          <DialogFooter className="p-6 pt-4"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit" form="site-dialog-form">Save</Button></DialogFooter>
         </div>
     );
 };
@@ -513,9 +506,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | undefined>(undefined);
-  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
-  const [itemToDelete, setItemToDelete] = useState<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
-  const [siteToCopy, setSiteToCopy] = useState<number | null>(null);
+  const [dialogState, setDialogState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
+  const [itemToDelete, setItemToDelete<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
+  const [siteToCopy, setSiteToCopy<number | null>(null);
 
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
@@ -1054,6 +1047,8 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
+    
+
     
 
     
