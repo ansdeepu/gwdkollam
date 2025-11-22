@@ -87,30 +87,50 @@ export default function BiddersListPage() {
     };
     
     const handleReorderSubmit = async (newPosition: number) => {
-        if (!bidderToReorder) return;
+        if (!bidderToReorder || isSubmitting) return;
 
         setIsSubmitting(true);
         try {
-            const currentBidders = [...validBidders];
-            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
+            const biddersCollection = collection(db, 'bidders');
+            const q = query(biddersCollection, orderBy('order'));
+            const snapshot = await getDocs(q);
             
+            const currentBidders: BidderType[] = snapshot.docs
+                .map(docSnap => {
+                    const data = docSnap.data();
+                    // Filter out empty/invalid documents
+                    if (!data || !data.name) {
+                        return null;
+                    }
+                    return { id: docSnap.id, ...data } as BidderType;
+                })
+                .filter((b): b is BidderType => b !== null);
+
+            const bidderToMoveIndex = currentBidders.findIndex(b => b.id === bidderToReorder.id);
+
             if (bidderToMoveIndex === -1) {
                 throw new Error("Bidder to move was not found in the current list.");
             }
-            
+
+            // Remove the bidder from the array
             const [bidderToMove] = currentBidders.splice(bidderToMoveIndex, 1);
-            currentBidders.splice(newPosition - 1, 0, bidderToMove);
             
+            // Insert it at the new position (adjusting for 1-based input)
+            currentBidders.splice(newPosition - 1, 0, bidderToMove);
+
             const batch = writeBatch(db);
+            
+            // Re-assign the 'order' property for every document to ensure it's a clean sequence
             currentBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
                 batch.set(docRef, { order: index }, { merge: true });
             });
 
             await batch.commit();
-            toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
-            await refetchBidders();
+            toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}. Refreshing list...` });
+            
+            // Force a full reload to ensure the UI reflects the new order from the database
             window.location.reload();
 
         } catch (error: any) {
@@ -121,7 +141,6 @@ export default function BiddersListPage() {
             setBidderToReorder(null);
         }
     };
-
 
     return (
         <div className="space-y-6">
@@ -216,7 +235,11 @@ export default function BiddersListPage() {
                       <form onSubmit={(e) => {
                           e.preventDefault();
                           const newPosition = parseInt((e.target as any).position.value);
-                          handleReorderSubmit(newPosition);
+                          if (newPosition >= 1 && newPosition <= validBidders.length) {
+                            handleReorderSubmit(newPosition);
+                          } else {
+                            toast({ title: "Invalid Position", description: `Please enter a number between 1 and ${validBidders.length}.`, variant: "destructive" });
+                          }
                       }}>
                           <div className="py-4">
                               <label htmlFor="position" className="text-sm font-medium">New Position (1 to {validBidders.length})</label>
