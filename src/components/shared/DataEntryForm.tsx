@@ -392,25 +392,37 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {!isSupervisor && (
-                                    <FormField name="supervisorUid" control={form.control} render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Supervisor</FormLabel>
-                                            <Select onValueChange={(uid) => {
-                                                field.onChange(uid);
-                                                const staff = supervisorList.find(s => s.uid === uid);
-                                                setValue('supervisorName', staff?.name || undefined);
-                                                setValue('supervisorDesignation', staff?.designation || undefined);
-                                            }} value={field.value || ''} disabled={isReadOnly}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue('supervisorName', undefined); setValue('supervisorDesignation', undefined); }}>-- Clear Selection --</SelectItem>
-                                                    {supervisorList.map(s => <SelectItem key={s.uid} value={s.uid}>{s.name}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage/>
-                                        </FormItem>
+                                <FormField
+                                    name="supervisorUid"
+                                    control={form.control}
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Supervisor</FormLabel>
+                                        <Select
+                                            onValueChange={(uid) => {
+                                                const staff = supervisorList.find((s) => s.uid === uid);
+                                                field.onChange(uid === '_clear_' ? undefined : uid);
+                                                setValue("supervisorName", staff?.name || "");
+                                                setValue("supervisorDesignation", staff?.designation || undefined);
+                                            }}
+                                            value={field.value || ""}
+                                            disabled={isReadOnly}
+                                        >
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue("supervisorName", ""); setValue("supervisorDesignation", undefined);}}>-- Clear Selection --</SelectItem>
+                                            {supervisorList.map((s) => (
+                                            <SelectItem key={s.uid} value={s.uid}>
+                                                {s.name}
+                                            </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
                                     )}
                                 />
+                                )}
                                 <FormField name="supervisorDesignation" control={form.control} render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Designation</FormLabel>
@@ -511,8 +523,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeAccordionItem, setActiveAccordionItem] = useState<string | undefined>(undefined);
-  const [dialogState, setDialogState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
-  const [itemToDelete, setItemToDelete<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
+  const [dialogState, setDialogState] = useState<{ type: null | 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite'; data: any, isView?: boolean }>({ type: null, data: null, isView: false });
+  const [itemToDelete, setItemToDelete] = useState<{ type: 'remittance' | 'payment' | 'site'; index: number } | null>(null);
   const [siteToCopy, setSiteToCopy] = useState<number | null>(null);
 
   const isEditor = userRole === 'editor';
@@ -878,7 +890,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                      </dl>
                 </div>
                  <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
-                    <FormField control={control} name="fileStatus" render={({ field }) => <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isViewer}><FormControl><SelectTrigger><SelectValue placeholder="Select final file status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                    <FormField control={control} name="fileStatus" render={({ field }) => <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isViewer}><FormControl><SelectTrigger><SelectValue placeholder="Select final file status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                     <FormField control={control} name="remarks" render={({ field }) => <FormItem><FormLabel>Final Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any final remarks for this file..." readOnly={isViewer} /></FormControl><FormMessage /></FormItem>} />
                 </div>
             </CardContent>
