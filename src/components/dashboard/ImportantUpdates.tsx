@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ImportantUpdates.tsx
 "use client";
 
@@ -77,7 +78,7 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
     <Card className="shadow-lg h-full flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />Important Updates ({alerts.length})
+            <Bell className="h-5 w-5 text-primary" />Pending Actions ({alerts.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
@@ -99,7 +100,7 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
                 </>
               ) : (
                 <div className="h-full flex items-center justify-center">
-                  <p className="text-sm text-muted-foreground italic">No important updates.</p>
+                  <p className="text-sm text-muted-foreground italic">No pending actions.</p>
                 </div>
               )}
             </div>
