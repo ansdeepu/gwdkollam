@@ -1,4 +1,3 @@
-
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -15,6 +14,7 @@ import { format, addYears, isValid, isWithinInterval, startOfMonth, endOfMonth }
 import FileStatusOverview from '@/components/dashboard/FileStatusOverview';
 import NoticeBoard from '@/components/dashboard/NoticeBoard';
 import ImportantUpdates from '@/components/dashboard/ImportantUpdates';
+import ETenderNoticeBoard from '@/components/dashboard/ETenderNoticeBoard'; // New import
 import WorkStatusByService from '@/components/dashboard/WorkStatusByService';
 import ArsStatusOverview from '@/components/dashboard/ArsStatusOverview';
 import RigRegistrationOverview from '@/components/dashboard/RigRegistrationOverview';
@@ -188,7 +188,8 @@ export default function DashboardPage() {
   return (
     <>
       <div className="space-y-6">
-        <div id="updates" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id="updates" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ETenderNoticeBoard />
           <ImportantUpdates allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries} />
           <NoticeBoard staffMembers={dashboardData.staffMembers} />
         </div>
