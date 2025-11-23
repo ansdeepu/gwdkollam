@@ -588,16 +588,17 @@ export default function TenderDetails() {
                             </CardContent>
                         </Card>
                         
+                         <div className="mt-6 text-center">
+                            <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                Save All Changes
+                            </Button>
+                        </div>
+
                         <div className="mt-6">
                             <PdfReportDialogs />
                         </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end">
-                        <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save All Changes
-                        </Button>
-                    </CardFooter>
                 </Card>
 
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
