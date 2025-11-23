@@ -23,7 +23,10 @@ import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
 const parseAmountString = (amountStr?: string): number => {
     if (!amountStr) return 0;
     const cleanedStr = amountStr.replace(/,/g, '').toLowerCase();
-    const num = parseFloat(cleanedStr);
+    
+    const numMatch = cleanedStr.match(/([\d.]+)/);
+    if (!numMatch) return 0;
+    const num = parseFloat(numMatch[1]);
     if (isNaN(num)) return 0;
 
     if (cleanedStr.includes('lakh')) return num * 100000;
@@ -31,61 +34,65 @@ const parseAmountString = (amountStr?: string): number => {
     return num;
 };
 
-const parseFeeRules = (description: string): Array<[number, number]> => {
-    const rules: Array<[number, number]> = [];
+type FeeRule = { limit: number; fee: number };
+const parseFeeRules = (description: string): FeeRule[] => {
+    const rules: FeeRule[] = [];
     if (!description) return rules;
     
     const lines = description.split('\n');
     for (const line of lines) {
-        const noFeeMatch = line.match(/up to rs\s*([\d,\s\w]+)/i);
-        const feeMatch = line.match(/:\s*rs\s*([\d,]+)/i);
-        
-        if (line.toLowerCase().includes('no fee') && noFeeMatch) {
-            rules.push([parseAmountString(noFeeMatch[1]), 0]);
+        const parts = line.split(':');
+        if (parts.length < 2) continue;
+
+        const condition = parts[0].toLowerCase();
+        const fee = parseAmountString(parts[1]);
+
+        if (condition.includes('no fee')) {
+            const limitMatch = condition.match(/up to ([\d,\s\w]+)/);
+            if (limitMatch) {
+                rules.push({ limit: parseAmountString(limitMatch[1]), fee: 0 });
+            }
             continue;
         }
 
-        if (!feeMatch) continue;
-        const fee = parseAmountString(feeMatch[1]);
-        
-        const overUpToMatch = line.match(/over\s*([\d,\s\w]+)\s*up to\s*([\d,\s\w]+)/i);
+        const overUpToMatch = condition.match(/over\s*([\d,\s\w]+)\s*up to\s*([\d,\s\w]+)/);
         if (overUpToMatch) {
-            rules.push([parseAmountString(overUpToMatch[2]), fee]);
+            rules.push({ limit: parseAmountString(overUpToMatch[2]), fee });
             continue;
         }
 
-        const upToMatch = line.match(/up to\s*([\d,\s\w]+)/i);
+        const upToMatch = condition.match(/up to\s*([\d,\s\w]+)/);
         if (upToMatch) {
-            rules.push([parseAmountString(upToMatch[1]), fee]);
+            rules.push({ limit: parseAmountString(upToMatch[1]), fee });
             continue;
         }
         
-        const aboveMatch = line.match(/above\s*([\d,\s\w]+)/i);
+        const aboveMatch = condition.match(/above\s*([\d,\s\w]+)/);
         if (aboveMatch) {
-            rules.push([Infinity, fee]); 
+            rules.push({ limit: Infinity, fee });
         }
     }
-    return rules.sort((a, b) => a[0] - b[0]);
+    return rules.sort((a, b) => a.limit - b.limit);
 };
 
-const parseEmdRules = (description: string): { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; }[] => {
-    const rules: { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; }[] = [];
+type EmdRule = { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; };
+const parseEmdRules = (description: string): EmdRule[] => {
+    const rules: EmdRule[] = [];
     if (!description) return rules;
-
     const lines = description.split('\n').filter(line => line.trim() !== '');
 
     for (const line of lines) {
-        const upToPercentageMatch = line.match(/up to rs\.\s*([\d,\s\w]+):\s*([\d.]+)%/i);
+        const upToPercentageMatch = line.match(/up to ([\d,\s\w]+):\s*([\d.]+)%/i);
         if (upToPercentageMatch) {
             const threshold = parseAmountString(upToPercentageMatch[1]);
             const rate = parseFloat(upToPercentageMatch[2]) / 100;
-            const maxMatch = line.match(/maximum of rs\.\s*([\d,]+)/i);
+            const maxMatch = line.match(/maximum of ([\d,\s\w]+)/i);
             const max = maxMatch ? parseAmountString(maxMatch[1]) : undefined;
             rules.push({ type: 'percentage', threshold, rate, max });
             continue;
         }
 
-        const aboveFixedMatch = line.match(/above rs\.\s*([\d,\s\w]+)\s*up to\s*([\d,\s\w]+):\s*rs.\s*([\d,]+)/i);
+        const aboveFixedMatch = line.match(/above ([\d,\s\w]+)\s*up to\s*([\d,\s\w]+):\s*([\d,\s\w]+)/i);
         if (aboveFixedMatch) {
             const threshold = parseAmountString(aboveFixedMatch[2]);
             const value = parseAmountString(aboveFixedMatch[3]);
@@ -93,46 +100,47 @@ const parseEmdRules = (description: string): { type: 'percentage' | 'fixed'; thr
             continue;
         }
 
-        const aboveFixedSingleMatch = line.match(/above rs.\s*([\d,\s\w]+):\s*rs.\s*([\d,]+)/i);
-         if (aboveFixedSingleMatch) {
-            const threshold = parseAmountString(aboveFixedSingleMatch[1]);
-            const value = parseAmountString(aboveFixedSingleMatch[2]);
-            rules.push({ type: 'fixed', threshold: Infinity, value }); // Represents 'above X'
+        const aboveFixedSingleMatch = line.match(/above ([\d,\s\w]+):\s*([\d,\s\w]+)/i);
+        if (aboveFixedSingleMatch) {
+            rules.push({ type: 'fixed', threshold: Infinity, value: parseAmountString(aboveFixedSingleMatch[2]) });
             continue;
         }
     }
     return rules.sort((a, b) => a.threshold - b.threshold);
 };
 
-const calculateFee = (amount: number, rules: Array<[number, number]>): number => {
+
+const calculateFee = (amount: number, rules: FeeRule[]): number => {
     if (amount <= 0) return 0;
-    for (const [limit, fee] of rules) {
-        if (amount <= limit) {
-            return fee;
+    for (const rule of rules) {
+        if (amount <= rule.limit) {
+            return rule.fee;
         }
     }
-    return rules.length > 0 ? rules[rules.length - 1][1] : 0;
+    return rules.length > 0 ? rules[rules.length - 1].fee : 0;
 };
 
-const calculateEmd = (amount: number, rules: { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; }[]): number => {
+const calculateEmd = (amount: number, rules: EmdRule[]): number => {
     if (amount <= 0) return 0;
     const roundToNearest100 = (num: number) => Math.ceil(num / 100) * 100;
 
     for (const rule of rules) {
-        if (rule.type === 'percentage' && amount <= rule.threshold) {
-            let emd = amount * (rule.rate || 0);
-            if (rule.max && emd > rule.max) emd = rule.max;
-            return roundToNearest100(emd);
-        }
-        if (rule.type === 'fixed' && amount <= rule.threshold) {
-            return rule.value || 0;
+        if (amount <= rule.threshold) {
+            if (rule.type === 'percentage') {
+                let emd = amount * (rule.rate || 0);
+                if (rule.max && emd > rule.max) emd = rule.max;
+                return roundToNearest100(emd);
+            }
+            if (rule.type === 'fixed') {
+                return rule.value || 0;
+            }
         }
     }
     
-    // Handle 'above' case
+    // This handles the "Above X" case which has a threshold of Infinity
     const lastRule = rules[rules.length - 1];
-    if (lastRule && lastRule.type === 'fixed' && lastRule.threshold === Infinity) {
-        return lastRule.value || 0;
+    if (lastRule && lastRule.threshold === Infinity) {
+        if (lastRule.type === 'fixed') return lastRule.value || 0;
     }
 
     return 0;
