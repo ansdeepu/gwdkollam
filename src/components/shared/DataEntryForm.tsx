@@ -423,13 +423,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                     )}
                                 />
                                 )}
-                                <FormField name="supervisorDesignation" control={form.control} render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Designation</FormLabel>
-                                        <FormControl><Input {...field} value={field.value ?? ""} readOnly className="bg-muted/50" /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
                             </div>
                         </CardContent>
                     </Card>
