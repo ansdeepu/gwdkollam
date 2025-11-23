@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -53,9 +52,10 @@ const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: stri
         const isReceipt = label.toLowerCase().includes('receipt');
         const isOpening = label.toLowerCase().includes('opening');
         const isCorrigendumNewLastDate = label === 'New Last Date & Time';
+        const isCorrigendumOpeningDate = label === 'New Opening Date & Time';
         
         // This combines all logic into one call
-        const formatted = formatDateSafe(value, isTimeIncluded, isReceipt || isCorrigendumNewLastDate, isOpening);
+        const formatted = formatDateSafe(value, isTimeIncluded, isReceipt || isCorrigendumNewLastDate, isOpening || isCorrigendumOpeningDate);
 
         if (formatted === 'N/A' && value) {
             displayValue = String(value);
@@ -319,16 +319,16 @@ export default function TenderDetails() {
                     </CardHeader>
                     <CardContent className="pt-0">
                         <div className="space-y-4">
-                            <Card className="border rounded-lg">
+                            <Card className="border rounded-lg bg-blue-500/5 border-blue-500/20">
                                 <CardHeader className="flex flex-row justify-between items-center p-4">
                                     <div className="flex items-center gap-3">
                                         <Building className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">Basic Details</CardTitle>
                                     </div>
-                                    <Button type="button" size="sm" variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    <Button type="button" size="sm" variant="outline" className="bg-white" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                                 </CardHeader>
-                                <CardContent className="p-6 pt-0">
-                                    {hasAnyBasicData ? (
+                                {hasAnyBasicData ? (
+                                    <CardContent className="p-6 pt-0">
                                         <div className="space-y-6 pt-4">
                                             <div className="space-y-2">
                                                 <h4 className="text-sm font-medium text-muted-foreground">Tender Identification</h4>
@@ -366,10 +366,12 @@ export default function TenderDetails() {
                                                 </div>
                                             </div>
                                         </div>
-                                    ) : (
+                                    </CardContent>
+                                ) : (
+                                    <CardContent>
                                         <p className="text-sm text-muted-foreground text-center py-4">No basic details have been added.</p>
-                                    )}
-                                </CardContent>
+                                    </CardContent>
+                                )}
                             </Card>
 
                             <Accordion type="single" collapsible value={activeAccordion} onValueChange={setActiveAccordion} className="w-full space-y-4">
@@ -553,7 +555,7 @@ export default function TenderDetails() {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value || undefined}>
-                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
+                                                        <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
                                                         <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
                                                     <FormMessage />

@@ -1,4 +1,3 @@
-
 // src/components/e-tender/utils.ts
 import { format, isValid, parseISO, toDate } from 'date-fns';
 
@@ -40,7 +39,7 @@ export const toDateOrNull = (value: any): Date | null => {
 };
 
 
-export const formatDateSafe = (date: any, includeTime: boolean = false, receiptFormat: boolean = false, openingFormat: boolean = false): string => {
+export const formatDateSafe = (date: any, includeTime: boolean = false, isReceiptFormat: boolean = false, isOpeningFormat: boolean = false): string => {
     if (date === null || date === undefined || date === '') {
         return 'N/A';
     }
@@ -50,12 +49,13 @@ export const formatDateSafe = (date: any, includeTime: boolean = false, receiptF
     if (!d || !isValid(d)) {
         return String(date); // Fallback to original string if parsing fails
     }
-
-    if (receiptFormat) {
+    
+    if (isReceiptFormat) {
         return format(d, "dd/MM/yyyy 'up to' hh:mm a");
     }
-    if (openingFormat) {
-        return format(d, "dd/MM/yyyy, hh:mm a");
+    
+    if (isOpeningFormat) {
+        return format(d, "dd/MM/yyyy 'at' hh:mm a");
     }
 
     return format(d, includeTime ? 'dd/MM/yyyy, hh:mm a' : 'dd/MM/yyyy');
