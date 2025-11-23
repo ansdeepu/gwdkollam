@@ -22,7 +22,7 @@ import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
 
 const parseAmountString = (amountStr?: string): number => {
     if (!amountStr) return 0;
-    const cleanedStr = amountStr.replace(/,/g, '').toLowerCase();
+    const cleanedStr = String(amountStr).replace(/,/g, '').toLowerCase();
     
     const numMatch = cleanedStr.match(/([\d.]+)/);
     if (!numMatch) return 0;
@@ -48,26 +48,26 @@ const parseFeeRules = (description: string): FeeRule[] => {
         const fee = parseAmountString(parts[1]);
 
         if (condition.includes('no fee')) {
-            const limitMatch = condition.match(/up to ([\d,\s\w]+)/);
+            const limitMatch = condition.match(/up to ([\d,.\s\w]+)/);
             if (limitMatch) {
                 rules.push({ limit: parseAmountString(limitMatch[1]), fee: 0 });
             }
             continue;
         }
 
-        const overUpToMatch = condition.match(/over\s*([\d,\s\w]+)\s*up to\s*([\d,\s\w]+)/);
+        const overUpToMatch = condition.match(/over\s*([\d,.\s\w]+)\s*up to\s*([\d,.\s\w]+)/);
         if (overUpToMatch) {
             rules.push({ limit: parseAmountString(overUpToMatch[2]), fee });
             continue;
         }
 
-        const upToMatch = condition.match(/up to\s*([\d,\s\w]+)/);
+        const upToMatch = condition.match(/up to\s*([\d,.\s\w]+)/);
         if (upToMatch) {
             rules.push({ limit: parseAmountString(upToMatch[1]), fee });
             continue;
         }
         
-        const aboveMatch = condition.match(/above\s*([\d,\s\w]+)/);
+        const aboveMatch = condition.match(/above\s*([\d,.\s\w]+)/);
         if (aboveMatch) {
             rules.push({ limit: Infinity, fee });
         }
@@ -82,17 +82,17 @@ const parseEmdRules = (description: string): EmdRule[] => {
     const lines = description.split('\n').filter(line => line.trim() !== '');
 
     for (const line of lines) {
-        const upToPercentageMatch = line.match(/up to ([\d,\s\w]+):\s*([\d.]+)%/i);
+        const upToPercentageMatch = line.match(/up to ([\d,.\s\w]+):\s*([\d.]+)%/i);
         if (upToPercentageMatch) {
             const threshold = parseAmountString(upToPercentageMatch[1]);
             const rate = parseFloat(upToPercentageMatch[2]) / 100;
-            const maxMatch = line.match(/maximum of ([\d,\s\w]+)/i);
+            const maxMatch = line.match(/maximum of ([\d,.\s\w]+)/i);
             const max = maxMatch ? parseAmountString(maxMatch[1]) : undefined;
             rules.push({ type: 'percentage', threshold, rate, max });
             continue;
         }
 
-        const aboveFixedMatch = line.match(/above ([\d,\s\w]+)\s*up to\s*([\d,\s\w]+):\s*([\d,\s\w]+)/i);
+        const aboveFixedMatch = line.match(/above ([\d,.\s\w]+)\s*up to\s*([\d,.\s\w]+):\s*([\d,.\s\w]+)/i);
         if (aboveFixedMatch) {
             const threshold = parseAmountString(aboveFixedMatch[2]);
             const value = parseAmountString(aboveFixedMatch[3]);
@@ -100,7 +100,7 @@ const parseEmdRules = (description: string): EmdRule[] => {
             continue;
         }
 
-        const aboveFixedSingleMatch = line.match(/above ([\d,\s\w]+):\s*([\d,\s\w]+)/i);
+        const aboveFixedSingleMatch = line.match(/above ([\d,.\s\w]+):\s*([\d,.\s\w]+)/i);
         if (aboveFixedSingleMatch) {
             rules.push({ type: 'fixed', threshold: Infinity, value: parseAmountString(aboveFixedSingleMatch[2]) });
             continue;
@@ -117,7 +117,8 @@ const calculateFee = (amount: number, rules: FeeRule[]): number => {
             return rule.fee;
         }
     }
-    return rules.length > 0 ? rules[rules.length - 1].fee : 0;
+    const lastRule = rules.find(r => r.limit === Infinity);
+    return lastRule?.fee ?? (rules.length > 0 ? rules[rules.length - 1].fee : 0);
 };
 
 const calculateEmd = (amount: number, rules: EmdRule[]): number => {
@@ -159,8 +160,12 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
     const { allRateDescriptions } = useDataStore();
 
     const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase } = useMemo(() => {
-        const [tenderFeeWork, tenderFeePurchase] = (allRateDescriptions.tenderFee || defaultRateDescriptions.tenderFee).split('\n\nFor Purchase:');
-        const [emdWork, emdPurchase] = (allRateDescriptions.emd || defaultRateDescriptions.emd).split('\n\nFor Purchase:');
+        const tenderFeeDesc = allRateDescriptions.tenderFee || defaultRateDescriptions.tenderFee;
+        const [tenderFeeWork, tenderFeePurchase] = tenderFeeDesc.split('\n\nFor Purchase:');
+
+        const emdDesc = allRateDescriptions.emd || defaultRateDescriptions.emd;
+        const [emdWork, emdPurchase] = emdDesc.split('\n\nFor Purchase:');
+
         return {
             tenderFeeRulesWork: parseFeeRules(tenderFeeWork),
             tenderFeeRulesPurchase: parseFeeRules(tenderFeePurchase || ''),
@@ -168,6 +173,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             emdRulesPurchase: parseEmdRules(emdPurchase || ''),
         };
     }, [allRateDescriptions]);
+
 
     const form = useForm<BasicDetailsFormData>({
         resolver: zodResolver(BasicDetailsSchema),
