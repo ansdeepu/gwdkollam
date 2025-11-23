@@ -39,7 +39,7 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
 
-const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: string; value: any; subValue?: string; isCurrency?: boolean }) => {
+const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left' }: { label: string; value: any; subValue?: string; isCurrency?: boolean, align?: 'left' | 'center' | 'right' }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
         return null;
     }
@@ -73,7 +73,12 @@ const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: stri
     return (
         <div>
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className={cn("text-sm font-semibold", label.toLowerCase().includes('malayalam') && "text-xs")}>
+            <dd className={cn(
+                "text-sm font-semibold",
+                label.toLowerCase().includes('malayalam') && "text-xs",
+                align === 'center' && 'text-center',
+                align === 'right' && 'text-right'
+            )}>
               {displayValue}
               {subValue && <span className="text-xs text-muted-foreground ml-1">({subValue})</span>}
             </dd>
@@ -332,7 +337,7 @@ export default function TenderDetails() {
                                                 <h4 className="text-sm font-medium text-muted-foreground">Tender Identification</h4>
                                                 <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                     <DetailRow label="eTender No." value={watch('eTenderNo')} />
-                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} />
+                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} align="center" />
                                                     <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
                                                 </div>
                                             </div>
@@ -586,19 +591,19 @@ export default function TenderDetails() {
                         </Card>
                         
                         <div className="mt-6 text-center">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
-                                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                            Save All Changes
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Persists all locally made changes to the database.</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                           <TooltipProvider>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
+                                          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                          Save All Changes
+                                      </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                      <p>Persists all locally made changes to the database.</p>
+                                  </TooltipContent>
+                              </Tooltip>
+                          </TooltipProvider>
                         </div>
 
                         <div className="mt-6">
