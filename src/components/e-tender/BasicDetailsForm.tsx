@@ -18,52 +18,93 @@ import { useTenderData } from './TenderDataContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
 
-// Helper to convert string amounts like "10 Lakhs" or "1 Crore" to numbers
-const parseAmountString = (amountStr: string): number => {
-    let num = parseFloat(amountStr.replace(/,/g, ''));
-    if (amountStr.toLowerCase().includes('lakh')) num *= 100000;
-    if (amountStr.toLowerCase().includes('crore')) num *= 10000000;
+const parseAmountString = (amountStr?: string): number => {
+    if (!amountStr) return 0;
+    const cleanedStr = amountStr.replace(/,/g, '');
+    const num = parseFloat(cleanedStr);
+    if (isNaN(num)) return 0;
+
+    if (amountStr.toLowerCase().includes('lakh')) return num * 100000;
+    if (amountStr.toLowerCase().includes('crore')) return num * 10000000;
     return num;
 };
 
-// Helper to parse rules from a description string
-const parseRules = (description: string): Array<[number, number]> => {
+const parseFeeRules = (description: string): Array<[number, number]> => {
     const rules: Array<[number, number]> = [];
     if (!description) return rules;
+
     const lines = description.split('\n');
     for (const line of lines) {
-        // Match format: "Over X up to Y: Rs Z" or "Up to X: Rs Z" or "Above X: Rs Z"
-        const feeMatch = line.match(/:\s*Rs\s*([\d,]+)/);
-        const noFeeMatch = line.match(/No Fee/i);
+        const noFeeMatch = line.match(/up to rs\s*([\d,]+)\s*:\s*no fee/i);
+        if (noFeeMatch) {
+            rules.push([parseAmountString(noFeeMatch[1]), 0]);
+            continue;
+        }
+        
+        const feeMatch = line.match(/:\s*rs\s*([\d,]+)/i);
+        if (!feeMatch) continue;
+        
+        const fee = parseAmountString(feeMatch[1]);
+        
+        const overUpToMatch = line.match(/over\s*([\d,\s\w]+)\s*up to\s*([\d,\s\w]+)/i);
+        if (overUpToMatch) {
+            rules.push([parseAmountString(overUpToMatch[2]), fee]);
+            continue;
+        }
 
-        if (feeMatch) {
-            const fee = parseInt(feeMatch[1].replace(/,/g, ''), 10);
-            const amountMatch = line.match(/(?:Over|up to|Above)\s*([\d,]+(?:\s*Lakhs?|\s*Crores?)?)/gi);
-
-            if (amountMatch) {
-                let maxAmount = Infinity;
-                for (const match of amountMatch) {
-                    if (match.toLowerCase().includes('up to')) {
-                        maxAmount = parseAmountString(match.split(' ').slice(2).join(' '));
-                    }
-                }
-                rules.push([maxAmount, fee]);
-            }
-        } else if (noFeeMatch) {
-             const amountMatchNoFee = line.match(/Up to Rs ([\d,]+)/);
-             if(amountMatchNoFee) {
-                rules.push([parseInt(amountMatchNoFee[1].replace(/,/g, ''), 10), 0]);
-             } else {
-                 const upToLakhsMatch = line.match(/Up to ([\d,]+\s*Lakhs?)/i);
-                 if (upToLakhsMatch) {
-                     rules.push([parseAmountString(upToLakhsMatch[1]), 0]);
-                 }
-             }
+        const upToMatch = line.match(/up to\s*([\d,\s\w]+)/i);
+        if (upToMatch) {
+            rules.push([parseAmountString(upToMatch[1]), fee]);
+            continue;
+        }
+        
+        const aboveMatch = line.match(/above\s*([\d,\s\w]+)/i);
+        if (aboveMatch) {
+            rules.push([Infinity, fee]);
         }
     }
-    rules.sort((a, b) => a[0] - b[0]);
+    return rules.sort((a, b) => a[0] - b[0]);
+};
+
+
+const parseEmdRules = (description: string): { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; fixedTiers?: Array<[number, number]> }[] => {
+    const rules: { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; fixedTiers?: Array<[number, number]> }[] = [];
+    if (!description) return rules;
+
+    const lines = description.split('\n').filter(line => line.trim() !== '');
+
+    for (const line of lines) {
+        const upToPercentageMatch = line.match(/up to rs.\s*([\d,\s\w]+):\s*([\d.]+)%/i);
+        if (upToPercentageMatch) {
+            const threshold = parseAmountString(upToPercentageMatch[1]);
+            const rate = parseFloat(upToPercentageMatch[2]) / 100;
+            const maxMatch = line.match(/maximum of rs.\s*([\d,]+)/i);
+            const max = maxMatch ? parseAmountString(maxMatch[1]) : undefined;
+            rules.push({ type: 'percentage', threshold, rate, max });
+            continue;
+        }
+        
+        const aboveFixedMatch = line.match(/above rs.\s*([\d,\s\w]+):\s*rs.\s*([\d,\s\w]+)/i);
+        if(aboveFixedMatch){
+            const threshold = parseAmountString(aboveFixedMatch[1]);
+            const fee = parseAmountString(aboveFixedMatch[2]);
+            if (!rules.some(r => r.type === 'fixed')) {
+                rules.push({ type: 'fixed', threshold: Infinity, fixedTiers: [[threshold, fee]] });
+            } else {
+                const fixedRule = rules.find(r => r.type === 'fixed');
+                fixedRule?.fixedTiers?.push([threshold, fee]);
+            }
+            continue;
+        }
+    }
+    rules.forEach(rule => {
+        if(rule.type === 'fixed' && rule.fixedTiers) {
+            rule.fixedTiers.sort((a,b) => b[0] - a[0]); // Sort descending for easier lookup
+        }
+    });
     return rules;
 };
+
 
 // Main calculation function using parsed rules
 const calculateFee = (amount: number, rules: Array<[number, number]>): number => {
@@ -74,42 +115,6 @@ const calculateFee = (amount: number, rules: Array<[number, number]>): number =>
         }
     }
     return rules.length > 0 ? rules[rules.length - 1][1] : 0; // Default to highest fee if above all limits
-};
-
-const parseEmdRules = (description: string): { type: 'percentage' | 'fixed', threshold: number, rate?: number, max?: number, fixedTiers?: Array<[number, number]>}[] => {
-    const rules: { type: 'percentage' | 'fixed', threshold: number, rate?: number, max?: number, fixedTiers?: Array<[number, number]>}[] = [];
-    if (!description) return rules;
-    const lines = description.split('\n');
-
-    for (const line of lines) {
-        const percentageMatch = line.match(/([\d.]+)%/);
-        const maxMatch = line.match(/maximum of Rs. ([\d,]+)/);
-        const upToMatch = line.match(/Up to ([\d,\s]+ Crore)/i);
-        
-        if (percentageMatch && upToMatch) {
-            const rate = parseFloat(percentageMatch[1]) / 100;
-            const threshold = parseAmountString(upToMatch[1]);
-            const max = maxMatch ? parseInt(maxMatch[1].replace(/,/g, ''), 10) : undefined;
-            rules.push({ type: 'percentage', threshold, rate, max });
-        } else {
-             const fixedTiers: Array<[number, number]> = [];
-             const fixedTierMatches = Array.from(line.matchAll(/Above Rs. ([\d,\s]+ Crore) up to Rs. ([\d,\s]+ Crore):\s*Rs. ([\d,\s]+ Lakh)/gi));
-             for (const match of fixedTierMatches) {
-                 const lowerBound = parseAmountString(match[1]);
-                 const fee = parseAmountString(match[3]);
-                 fixedTiers.push([lowerBound, fee]);
-             }
-             if(fixedTiers.length > 0) {
-                 rules.push({ type: 'fixed', threshold: Infinity, fixedTiers });
-             } else {
-                 const finalTierMatch = line.match(/Above Rs. ([\d,\s]+ Crore):\s*Rs. ([\d,\s]+ Lakh)/i);
-                 if (finalTierMatch) {
-                    rules.push({ type: 'fixed', threshold: Infinity, fixedTiers: [[parseAmountString(finalTierMatch[1]), parseAmountString(finalTierMatch[2])]] });
-                 }
-             }
-        }
-    }
-    return rules;
 };
 
 const calculateEmd = (amount: number, emdDesc: string): number => {
@@ -124,31 +129,32 @@ const calculateEmd = (amount: number, emdDesc: string): number => {
             return roundToNearest100(emd);
         }
         if (rule.type === 'fixed' && rule.fixedTiers) {
-            // Sort descending to find the correct tier
-            for (const [threshold, fee] of rule.fixedTiers.sort((a,b) => b[0] - a[0])) {
-                if(amount > threshold) {
-                    return fee;
-                }
+            for (const [threshold, fee] of rule.fixedTiers) {
+                if(amount > threshold) return fee;
             }
         }
     }
     return 0; // Default
 };
 
+interface BasicDetailsFormProps {
+    onSubmit: (data: Partial<E_tenderFormData>) => void;
+    onCancel: () => void;
+    isSubmitting: boolean;
+}
 
 export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
     const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
 
-    // Memoize the parsed rules to prevent re-parsing on every render
-    const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase } = useMemo(() => {
+    const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdDescWork, emdDescPurchase } = useMemo(() => {
         const [tenderFeeWork, tenderFeePurchase] = (allRateDescriptions.tenderFee || defaultRateDescriptions.tenderFee).split('\n\nFor Purchase:');
         const [emdWork, emdPurchase] = (allRateDescriptions.emd || defaultRateDescriptions.emd).split('\n\nFor Purchase:');
         return {
-            tenderFeeRulesWork: parseRules(tenderFeeWork),
-            tenderFeeRulesPurchase: parseRules(tenderFeePurchase || ''),
-            emdRulesWork: emdWork,
-            emdRulesPurchase: emdPurchase || '',
+            tenderFeeRulesWork: parseFeeRules(tenderFeeWork),
+            tenderFeeRulesPurchase: parseFeeRules(tenderFeePurchase || ''),
+            emdDescWork: emdWork || '',
+            emdDescPurchase: emdPurchase || '',
         };
     }, [allRateDescriptions]);
 
@@ -164,29 +170,25 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
     const tenderId = getValues('id');
     
     useEffect(() => {
+        const amount = estimateAmount || 0;
         let fee = 0;
         let emd = 0;
-        const amount = estimateAmount || 0;
 
         if (tenderType === 'Work') {
             fee = calculateFee(amount, tenderFeeRulesWork);
-            emd = calculateEmd(amount, emdRulesWork);
+            emd = calculateEmd(amount, emdDescWork);
         } else if (tenderType === 'Purchase') {
             fee = calculateFee(amount, tenderFeeRulesPurchase);
-            emd = calculateEmd(amount, emdRulesPurchase);
+            emd = calculateEmd(amount, emdDescPurchase);
         }
+        
+        setValue('tenderFormFee', fee, { shouldDirty: true });
+        setValue('emd', emd, { shouldDirty: true });
 
-        setValue('tenderFormFee', fee, { shouldValidate: true, shouldDirty: true });
-        setValue('emd', emd, { shouldValidate: true, shouldDirty: true });
-
-    }, [estimateAmount, tenderType, setValue, tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase]);
+    }, [estimateAmount, tenderType, setValue, tenderFeeRulesWork, tenderFeeRulesPurchase, emdDescWork, emdDescPurchase]);
      
-    const tenderFeeDescription = getValues('tenderFeeDescription') || allRateDescriptions.tenderFee;
-    const emdDescription = getValues('emdDescription') || allRateDescriptions.emd;
-
     const onFormSubmit = (data: BasicDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
-        // If this is a new tender or the descriptions haven't been set, snapshot them.
         if (tenderId === 'new' || !getValues('tenderFeeDescription')) {
             formData.tenderFeeDescription = allRateDescriptions.tenderFee;
         }
