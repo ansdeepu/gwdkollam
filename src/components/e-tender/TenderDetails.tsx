@@ -47,10 +47,10 @@ const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: stri
     let displayValue = String(value);
 
     // Custom formatting for specific labels
-    if (label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) {
+    if (label.toLowerCase().includes('date')) {
         const isTimeIncluded = label.toLowerCase().includes('time');
         const isReceipt = label.toLowerCase().includes('receipt');
-        const isOpening = label.toLowerCase().includes('opening');
+        const isOpening = label.toLowerCase().includes('opening') && !label.toLowerCase().includes('bid opening'); // Exclude bid opening for date only
         const isCorrigendumNewLastDate = label === 'New Last Date & Time';
         const isCorrigendumOpeningDate = label === 'New Opening Date & Time';
         
@@ -543,8 +543,8 @@ export default function TenderDetails() {
                                 </AccordionItem>
                             </Accordion>
                         </div>
-
-                        <Card className="mt-4">
+                        
+                         <Card className="mt-4">
                             <CardContent className="p-4 space-y-4">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <h3 className="text-lg font-semibold flex items-center gap-3 text-primary"><FileText className="h-5 w-5"/>Present Status</h3>
@@ -587,14 +587,14 @@ export default function TenderDetails() {
                                 />
                             </CardContent>
                         </Card>
-                        
-                         <div className="mt-6 text-center">
+
+                        <div className="mt-6 text-center">
                             <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
                                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                                 Save All Changes
                             </Button>
                         </div>
-
+                        
                         <div className="mt-6">
                             <PdfReportDialogs />
                         </div>

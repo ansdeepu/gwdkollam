@@ -7,6 +7,10 @@ export const formatDateForInput = (date: any, isDateTime: boolean = false): stri
     if (d && isValid(d)) {
         return format(d, isDateTime ? "yyyy-MM-dd'T'HH:mm" : 'yyyy-MM-dd');
     }
+    // Return the string itself if it's already in the correct format but not a Date object
+    if (typeof date === 'string' && (date.match(/^\d{4}-\d{2}-\d{2}$/) || date.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/))) {
+        return date;
+    }
     return '';
 };
 
