@@ -18,32 +18,34 @@ import { useTenderData } from './TenderDataContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
 
+// --- Start of Corrected Calculation Logic ---
+
 const parseAmountString = (amountStr?: string): number => {
     if (!amountStr) return 0;
-    const cleanedStr = amountStr.replace(/,/g, '');
+    const cleanedStr = amountStr.replace(/,/g, '').toLowerCase();
     const num = parseFloat(cleanedStr);
     if (isNaN(num)) return 0;
 
-    if (amountStr.toLowerCase().includes('lakh')) return num * 100000;
-    if (amountStr.toLowerCase().includes('crore')) return num * 10000000;
+    if (cleanedStr.includes('lakh')) return num * 100000;
+    if (cleanedStr.includes('crore')) return num * 10000000;
     return num;
 };
 
 const parseFeeRules = (description: string): Array<[number, number]> => {
     const rules: Array<[number, number]> = [];
     if (!description) return rules;
-
+    
     const lines = description.split('\n');
     for (const line of lines) {
-        const noFeeMatch = line.match(/up to rs\s*([\d,]+)\s*:\s*no fee/i);
-        if (noFeeMatch) {
+        const noFeeMatch = line.match(/up to rs\s*([\d,\s\w]+)/i);
+        const feeMatch = line.match(/:\s*rs\s*([\d,]+)/i);
+        
+        if (line.toLowerCase().includes('no fee') && noFeeMatch) {
             rules.push([parseAmountString(noFeeMatch[1]), 0]);
             continue;
         }
-        
-        const feeMatch = line.match(/:\s*rs\s*([\d,]+)/i);
+
         if (!feeMatch) continue;
-        
         const fee = parseAmountString(feeMatch[1]);
         
         const overUpToMatch = line.match(/over\s*([\d,\s\w]+)\s*up to\s*([\d,\s\w]+)/i);
@@ -60,53 +62,48 @@ const parseFeeRules = (description: string): Array<[number, number]> => {
         
         const aboveMatch = line.match(/above\s*([\d,\s\w]+)/i);
         if (aboveMatch) {
-            rules.push([Infinity, fee]);
+            rules.push([Infinity, fee]); 
         }
     }
     return rules.sort((a, b) => a[0] - b[0]);
 };
 
-
-const parseEmdRules = (description: string): { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; fixedTiers?: Array<[number, number]> }[] => {
-    const rules: { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; fixedTiers?: Array<[number, number]> }[] = [];
+const parseEmdRules = (description: string): { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; }[] => {
+    const rules: { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; }[] = [];
     if (!description) return rules;
 
     const lines = description.split('\n').filter(line => line.trim() !== '');
 
     for (const line of lines) {
-        const upToPercentageMatch = line.match(/up to rs.\s*([\d,\s\w]+):\s*([\d.]+)%/i);
+        const upToPercentageMatch = line.match(/up to rs\.\s*([\d,\s\w]+):\s*([\d.]+)%/i);
         if (upToPercentageMatch) {
             const threshold = parseAmountString(upToPercentageMatch[1]);
             const rate = parseFloat(upToPercentageMatch[2]) / 100;
-            const maxMatch = line.match(/maximum of rs.\s*([\d,]+)/i);
+            const maxMatch = line.match(/maximum of rs\.\s*([\d,]+)/i);
             const max = maxMatch ? parseAmountString(maxMatch[1]) : undefined;
             rules.push({ type: 'percentage', threshold, rate, max });
             continue;
         }
-        
-        const aboveFixedMatch = line.match(/above rs.\s*([\d,\s\w]+):\s*rs.\s*([\d,\s\w]+)/i);
-        if(aboveFixedMatch){
-            const threshold = parseAmountString(aboveFixedMatch[1]);
-            const fee = parseAmountString(aboveFixedMatch[2]);
-            if (!rules.some(r => r.type === 'fixed')) {
-                rules.push({ type: 'fixed', threshold: Infinity, fixedTiers: [[threshold, fee]] });
-            } else {
-                const fixedRule = rules.find(r => r.type === 'fixed');
-                fixedRule?.fixedTiers?.push([threshold, fee]);
-            }
+
+        const aboveFixedMatch = line.match(/above rs\.\s*([\d,\s\w]+)\s*up to\s*([\d,\s\w]+):\s*rs.\s*([\d,]+)/i);
+        if (aboveFixedMatch) {
+            const threshold = parseAmountString(aboveFixedMatch[2]);
+            const value = parseAmountString(aboveFixedMatch[3]);
+            rules.push({ type: 'fixed', threshold, value });
+            continue;
+        }
+
+        const aboveFixedSingleMatch = line.match(/above rs.\s*([\d,\s\w]+):\s*rs.\s*([\d,]+)/i);
+         if (aboveFixedSingleMatch) {
+            const threshold = parseAmountString(aboveFixedSingleMatch[1]);
+            const value = parseAmountString(aboveFixedSingleMatch[2]);
+            rules.push({ type: 'fixed', threshold: Infinity, value }); // Represents 'above X'
             continue;
         }
     }
-    rules.forEach(rule => {
-        if(rule.type === 'fixed' && rule.fixedTiers) {
-            rule.fixedTiers.sort((a,b) => b[0] - a[0]); // Sort descending for easier lookup
-        }
-    });
-    return rules;
+    return rules.sort((a, b) => a.threshold - b.threshold);
 };
 
-
-// Main calculation function using parsed rules
 const calculateFee = (amount: number, rules: Array<[number, number]>): number => {
     if (amount <= 0) return 0;
     for (const [limit, fee] of rules) {
@@ -114,12 +111,11 @@ const calculateFee = (amount: number, rules: Array<[number, number]>): number =>
             return fee;
         }
     }
-    return rules.length > 0 ? rules[rules.length - 1][1] : 0; // Default to highest fee if above all limits
+    return rules.length > 0 ? rules[rules.length - 1][1] : 0;
 };
 
-const calculateEmd = (amount: number, emdDesc: string): number => {
+const calculateEmd = (amount: number, rules: { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; }[]): number => {
     if (amount <= 0) return 0;
-    const rules = parseEmdRules(emdDesc);
     const roundToNearest100 = (num: number) => Math.ceil(num / 100) * 100;
 
     for (const rule of rules) {
@@ -128,14 +124,21 @@ const calculateEmd = (amount: number, emdDesc: string): number => {
             if (rule.max && emd > rule.max) emd = rule.max;
             return roundToNearest100(emd);
         }
-        if (rule.type === 'fixed' && rule.fixedTiers) {
-            for (const [threshold, fee] of rule.fixedTiers) {
-                if(amount > threshold) return fee;
-            }
+        if (rule.type === 'fixed' && amount <= rule.threshold) {
+            return rule.value || 0;
         }
     }
-    return 0; // Default
+    
+    // Handle 'above' case
+    const lastRule = rules[rules.length - 1];
+    if (lastRule && lastRule.type === 'fixed' && lastRule.threshold === Infinity) {
+        return lastRule.value || 0;
+    }
+
+    return 0;
 };
+
+// --- End of Corrected Calculation Logic ---
 
 interface BasicDetailsFormProps {
     onSubmit: (data: Partial<E_tenderFormData>) => void;
@@ -147,14 +150,14 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
     const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
 
-    const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdDescWork, emdDescPurchase } = useMemo(() => {
+    const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase } = useMemo(() => {
         const [tenderFeeWork, tenderFeePurchase] = (allRateDescriptions.tenderFee || defaultRateDescriptions.tenderFee).split('\n\nFor Purchase:');
         const [emdWork, emdPurchase] = (allRateDescriptions.emd || defaultRateDescriptions.emd).split('\n\nFor Purchase:');
         return {
             tenderFeeRulesWork: parseFeeRules(tenderFeeWork),
             tenderFeeRulesPurchase: parseFeeRules(tenderFeePurchase || ''),
-            emdDescWork: emdWork || '',
-            emdDescPurchase: emdPurchase || '',
+            emdRulesWork: parseEmdRules(emdWork || ''),
+            emdRulesPurchase: parseEmdRules(emdPurchase || ''),
         };
     }, [allRateDescriptions]);
 
@@ -176,16 +179,16 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
 
         if (tenderType === 'Work') {
             fee = calculateFee(amount, tenderFeeRulesWork);
-            emd = calculateEmd(amount, emdDescWork);
+            emd = calculateEmd(amount, emdRulesWork);
         } else if (tenderType === 'Purchase') {
             fee = calculateFee(amount, tenderFeeRulesPurchase);
-            emd = calculateEmd(amount, emdDescPurchase);
+            emd = calculateEmd(amount, emdRulesPurchase);
         }
         
         setValue('tenderFormFee', fee, { shouldDirty: true });
         setValue('emd', emd, { shouldDirty: true });
 
-    }, [estimateAmount, tenderType, setValue, tenderFeeRulesWork, tenderFeeRulesPurchase, emdDescWork, emdDescPurchase]);
+    }, [estimateAmount, tenderType, setValue, tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase]);
      
     const onFormSubmit = (data: BasicDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };

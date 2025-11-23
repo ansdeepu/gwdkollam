@@ -103,6 +103,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const { reset, handleSubmit, setValue } = form;
 
     useEffect(() => {
+        // Corrected rounding logic for performance guarantee
         const pg = l1Amount ? Math.ceil((l1Amount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(l1Amount);
         const additionalPg = calculateAdditionalPG(initialData?.estimateAmount, l1Amount);
