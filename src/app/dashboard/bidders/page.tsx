@@ -58,15 +58,16 @@ export default function BiddersListPage() {
         setIsSubmitting(true);
         try {
             if (bidderToEdit) {
+                const { id, ...dataToUpdate } = data; // Exclude ID from the update payload
                 const bidderDocRef = doc(db, "bidders", bidderToEdit.id);
-                await updateDoc(bidderDocRef, { ...data });
+                await updateDoc(bidderDocRef, dataToUpdate);
                 toast({ title: "Bidder Updated", description: `Bidder "${data.name}" has been updated.` });
             } else {
                 const newOrder = displayedBidders.length > 0 ? Math.max(...displayedBidders.map(b => b.order ?? 0)) + 1 : 0;
                 await addDoc(collection(db, "bidders"), { ...data, order: newOrder });
                 toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             }
-            refetchBidders(); // This will trigger the data store to refetch
+            refetchBidders(); 
             setIsNewBidderDialogOpen(false);
             setBidderToEdit(null);
         } catch (error: any) {
