@@ -192,7 +192,7 @@ export default function ETenderListPage() {
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell className="font-medium">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</TableCell>
                                             <TableCell>
-                                                <p className="truncate max-w-sm" title={tender.nameOfWork}>{tender.nameOfWork}</p>
+                                                <p className="whitespace-normal break-words">{tender.nameOfWork}</p>
                                             </TableCell>
                                             <TableCell>{formatDateSafe(tender.tenderDate)}</TableCell>
                                             <TableCell>
