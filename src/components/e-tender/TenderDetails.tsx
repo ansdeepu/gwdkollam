@@ -50,10 +50,10 @@ const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left' 
     if (label.toLowerCase().includes('date')) {
         const isTimeIncluded = label.toLowerCase().includes('time');
         const isReceipt = label.toLowerCase().includes('receipt');
-        const isOpening = label.toLowerCase().includes('opening');
+        const isOpening = label.toLowerCase().includes('opening') && label !== 'Date of Opening Bid' && label !== 'Date of Tech/Fin Bid Opening';
         
         // This combines all logic into one call
-        const formatted = formatDateSafe(value, isTimeIncluded, isReceipt, isOpening);
+        const formatted = formatDateSafe(value, isTimeIncluded || isOpening, isReceipt, isOpening);
 
         if (formatted === 'N/A' && value) {
             displayValue = String(value);
@@ -590,24 +590,22 @@ export default function TenderDetails() {
                             </CardContent>
                         </Card>
                         
-                        <div className="mt-6 text-center">
-                           <TooltipProvider>
-                              <Tooltip>
-                                  <TooltipTrigger asChild>
-                                      <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
-                                          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                          Save All Changes
-                                      </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                      <p>Persists all locally made changes to the database.</p>
-                                  </TooltipContent>
-                              </Tooltip>
-                          </TooltipProvider>
-                        </div>
+                         <div className="mt-6 flex flex-col items-center gap-6">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button type="button" size="lg" onClick={handleFinalSave} disabled={isSubmitting}>
+                                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                            Save All Changes
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Persists all locally made changes to the database.</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
 
-                        <div className="mt-6">
-                            <PdfReportDialogs />
+                             <PdfReportDialogs />
                         </div>
                     </CardContent>
                 </Card>
