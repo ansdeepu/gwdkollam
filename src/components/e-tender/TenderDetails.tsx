@@ -423,8 +423,8 @@ export default function TenderDetails() {
                                         {hasAnyOpeningData ? (
                                             <div className="space-y-4 pt-4 border-t">
                                                 <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                                    <DetailRow label="Date of Opening Bid" value={watch('dateOfOpeningBid')} />
-                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={watch('dateOfTechnicalAndFinancialBidOpening')} />
+                                                    <DetailRow label="Date of Opening Bid" value={formatDateSafe(watch('dateOfOpeningBid'))} />
+                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={formatDateSafe(watch('dateOfTechnicalAndFinancialBidOpening'))} />
                                                 </dl>
                                                 <div className="space-y-2">
                                                     <h4 className="font-semibold">Committee Members:</h4>
@@ -587,14 +587,14 @@ export default function TenderDetails() {
                                 />
                             </CardContent>
                         </Card>
-
+                        
                         <div className="mt-6 text-center">
                             <Button type="button" onClick={handleFinalSave} disabled={isSubmitting}>
                                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                                 Save All Changes
                             </Button>
                         </div>
-                        
+
                         <div className="mt-6">
                             <PdfReportDialogs />
                         </div>
