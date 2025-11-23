@@ -50,7 +50,7 @@ const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: stri
     if (label.toLowerCase().includes('date')) {
         const isTimeIncluded = label.toLowerCase().includes('time');
         const isReceipt = label.toLowerCase().includes('receipt');
-        const isOpening = label.toLowerCase().includes('opening') && !label.toLowerCase().includes('bid opening'); // Exclude bid opening for date only
+        const isOpening = label.toLowerCase().includes('opening');
         const isCorrigendumNewLastDate = label === 'New Last Date & Time';
         const isCorrigendumOpeningDate = label === 'New Opening Date & Time';
         
@@ -334,7 +334,7 @@ export default function TenderDetails() {
                                                 <h4 className="text-sm font-medium text-muted-foreground">Tender Identification</h4>
                                                 <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                     <DetailRow label="eTender No." value={watch('eTenderNo')} />
-                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} />
+                                                    <DetailRow label="Tender Date" value={formatDateSafe(watch('tenderDate'))} />
                                                     <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
                                                 </div>
                                             </div>
@@ -388,7 +388,6 @@ export default function TenderDetails() {
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
                                                          <div className="absolute top-2 right-2 flex items-center gap-1">
-                                                            <CorrigendumReports corrigendum={corrigendum} />
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                          </div>
@@ -508,7 +507,7 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnySelectionNoticeData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Selection Notice Date" value={watch('selectionNoticeDate')} />
+                                                 <DetailRow label="Selection Notice Date" value={formatDateSafe(watch('selectionNoticeDate'))} />
                                                  <DetailRow label="Performance Guarantee Amount" value={watch('performanceGuaranteeAmount')} isCurrency />
                                                  <DetailRow label="Additional Performance Guarantee Amount" value={watch('additionalPerformanceGuaranteeAmount')} isCurrency />
                                                  <DetailRow label="Stamp Paper required" value={watch('stampPaperAmount')} isCurrency />
@@ -529,8 +528,8 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                         {hasAnyWorkOrderData ? (
                                              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Agreement Date" value={watch('agreementDate')} />
-                                                 <DetailRow label="Date - Work / Supply Order" value={watch('dateWorkOrder')} />
+                                                 <DetailRow label="Agreement Date" value={formatDateSafe(watch('agreementDate'))} />
+                                                 <DetailRow label="Date - Work / Supply Order" value={formatDateSafe(watch('dateWorkOrder'))} />
                                                  <DetailRow label="Measurer" value={watch('nameOfAssistantEngineer')} subValue={assistantEngineerDesignation} />
                                                  <DetailRow label="Supervisor 1" value={watch('supervisor1Name')} subValue={supervisor1Designation} />
                                                  <DetailRow label="Supervisor 2" value={watch('supervisor2Name')} subValue={supervisor2Designation} />
