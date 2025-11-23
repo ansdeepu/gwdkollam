@@ -1,7 +1,7 @@
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useForm, FormProvider, useWatch, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
@@ -27,6 +27,7 @@ interface BasicDetailsFormProps {
 // Helper to parse rules from a description string
 const parseRules = (description: string): Array<[number, number]> => {
     const rules: Array<[number, number]> = [];
+    if (!description) return rules;
     const lines = description.split('\n');
     for (const line of lines) {
         const feeMatch = line.match(/Rs\s*([\d,]+)/);
@@ -68,6 +69,7 @@ const calculateFee = (amount: number, rules: Array<[number, number]>): number =>
 
 const parseEmdRules = (description: string): { type: 'percentage' | 'fixed', threshold: number, rate?: number, max?: number, fixedTiers?: Array<[number, number]>}[] => {
     const rules: { type: 'percentage' | 'fixed', threshold: number, rate?: number, max?: number, fixedTiers?: Array<[number, number]>}[] = [];
+    if (!description) return rules;
     const lines = description.split('\n');
 
     for (const line of lines) {
@@ -139,13 +141,19 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         'tenderType',
         'id'
     ]);
-    
-    const tenderFeeRulesWork = parseRules(allRateDescriptions.tenderFee.split('\n\nFor Purchase:')[0]);
-    const tenderFeeRulesPurchase = parseRules(allRateDescriptions.tenderFee.split('\n\nFor Purchase:')[1] || '');
-    
-    const emdRulesWork = allRateDescriptions.emd.split('\n\nFor Purchase:')[0];
-    const emdRulesPurchase = allRateDescriptions.emd.split('\n\nFor Purchase:')[1] || '';
 
+    // Memoize the parsed rules to prevent re-parsing on every render
+    const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase } = useMemo(() => {
+        const [tenderFeeWork, tenderFeePurchase] = allRateDescriptions.tenderFee.split('\n\nFor Purchase:');
+        const [emdWork, emdPurchase] = allRateDescriptions.emd.split('\n\nFor Purchase:');
+        return {
+            tenderFeeRulesWork: parseRules(tenderFeeWork),
+            tenderFeeRulesPurchase: parseRules(tenderFeePurchase || ''),
+            emdRulesWork: emdWork,
+            emdRulesPurchase: emdPurchase || '',
+        };
+    }, [allRateDescriptions]);
+    
     useEffect(() => {
         let fee = 0;
         let emd = 0;
