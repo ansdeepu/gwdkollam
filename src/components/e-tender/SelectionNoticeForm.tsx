@@ -103,7 +103,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const { reset, handleSubmit, setValue } = form;
 
     useEffect(() => {
-        const pg = l1Amount ? Math.round((l1Amount * 0.05) / 100) * 100 : 0;
+        const pg = l1Amount ? Math.ceil((l1Amount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(l1Amount);
         const additionalPg = calculateAdditionalPG(initialData?.estimateAmount, l1Amount);
 
@@ -145,7 +145,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                                 <FormItem>
                                     <FormLabel>Performance Guarantee Amount</FormLabel>
                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Based on 5% of the L1 contract value.</FormDescription>
+                                    <FormDescription className="text-xs">Based on 5% of the L1 contract value (rounded up).</FormDescription>
                                     <FormMessage />
                                 </FormItem> 
                             )}/>
