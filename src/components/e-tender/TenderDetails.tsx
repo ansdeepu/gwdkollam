@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -13,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell } from 'lucide-react';
+import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { toDateOrNull, formatDateSafe } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -294,7 +295,13 @@ export default function TenderDetails() {
         <FormProvider {...form}>
             <div className="space-y-6">
                 <Card>
-                    <CardContent className="pt-6">
+                    <CardHeader className="p-4 flex flex-row justify-end">
+                        <Button variant="destructive" onClick={() => router.back()}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="pt-0">
                         <div className="space-y-4">
                             <Card className="border rounded-lg">
                                 <CardHeader className="flex flex-row justify-between items-center p-4">

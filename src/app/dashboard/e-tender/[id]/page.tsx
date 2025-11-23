@@ -95,12 +95,6 @@ export default function TenderPage() {
     return (
         <TenderDataProvider initialTender={tender}>
             <div className="space-y-6">
-                <div className="flex justify-end no-print">
-                    <Button variant="destructive" onClick={() => router.back()}>
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
-                    </Button>
-                </div>
                 <TenderDetails />
             </div>
         </TenderDataProvider>
