@@ -1,3 +1,4 @@
+
 // src/components/e-tender/BidderForm.tsx
 "use client";
 
@@ -14,6 +15,7 @@ import { Loader2, Save, X } from 'lucide-react';
 import { BidderSchema, type Bidder } from '@/lib/schemas/eTenderSchema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useDataStore } from '@/hooks/use-data-store';
+import { v4 as uuidv4 } from 'uuid';
 
 interface BidderFormProps {
     onSubmit: (data: Bidder) => void;
@@ -24,6 +26,7 @@ interface BidderFormProps {
 }
 
 const createDefaultBidder = (): Partial<Bidder> => ({
+    id: uuidv4(), // Assign a temporary client-side ID
     name: '',
     address: '',
     quotedAmount: undefined,
@@ -40,17 +43,17 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
         defaultValues: initialData || createDefaultBidder(),
     });
 
-    const { control, setValue, watch } = form;
+    const { control, setValue, watch, reset } = form;
     const [quotedPercentage, aboveBelow, selectedBidderName] = watch(['quotedPercentage', 'aboveBelow', 'name']);
 
 
     useEffect(() => {
         if (initialData) {
-            form.reset(initialData);
+            reset(initialData);
         } else {
-            form.reset(createDefaultBidder());
+            reset(createDefaultBidder());
         }
-    }, [initialData, form]);
+    }, [initialData, reset]);
 
     useEffect(() => {
         if (tenderAmount && quotedPercentage !== undefined && aboveBelow) {
@@ -77,13 +80,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
     };
 
     const handleFormSubmit = (data: Bidder) => {
-        const payload = { ...data };
-        if (!payload.id) {
-          // If there is no ID, it's a new bidder, so we let Firestore generate one
-          // by not including an ID field at all.
-          delete (payload as any).id;
-        }
-        onSubmit(payload);
+        onSubmit(data);
     };
 
     return (

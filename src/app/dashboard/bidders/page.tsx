@@ -1,3 +1,4 @@
+
 // src/app/dashboard/bidders/page.tsx
 "use client";
 
@@ -60,10 +61,7 @@ export default function BiddersListPage() {
             if (bidderToEdit && bidderToEdit.id) {
                 const bidderDocRef = doc(db, "bidders", bidderToEdit.id);
                 // Ensure no 'id' field is in the data being updated
-                const dataToUpdate = { ...data };
-                if ('id' in dataToUpdate) {
-                    delete (dataToUpdate as any).id;
-                }
+                const dataToUpdate: Partial<NewBidderFormData> = { ...data };
                 await updateDoc(bidderDocRef, dataToUpdate);
                 toast({ title: "Bidder Updated", description: `Bidder "${data.name}" has been updated.` });
             } else {

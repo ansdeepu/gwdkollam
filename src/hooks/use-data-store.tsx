@@ -1,3 +1,4 @@
+
 // src/hooks/use-data-store.tsx
 "use client";
 
@@ -143,12 +144,10 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                         setter((prev: any) => ({...defaultRateDescriptions, ...descriptions}));
                     }
                 } else if (collectionName === 'bidders') {
-                    const data = snapshot.docs.map(doc => {
-                        return {
-                            id: doc.id,
-                            ...doc.data(),
-                        } as MasterBidder;
-                    });
+                    const data = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    })) as MasterBidder[];
                     setter(data);
                 }
                 else {
