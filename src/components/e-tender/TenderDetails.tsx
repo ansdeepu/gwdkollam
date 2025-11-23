@@ -309,7 +309,7 @@ export default function TenderDetails() {
                                         <Building className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">Basic Details</CardTitle>
                                     </div>
-                                    <Button type="button" size="sm" variant="secondary" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    <Button type="button" size="sm" variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                                 </CardHeader>
                                 <CardContent className="p-6 pt-0">
                                     {hasAnyBasicData ? (
@@ -370,6 +370,7 @@ export default function TenderDetails() {
                                                 {corrigendumFields.map((corrigendum, index) => (
                                                     <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
                                                          <div className="absolute top-2 right-2 flex items-center gap-1">
+                                                            <CorrigendumReports corrigendum={corrigendum} />
                                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
                                                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                          </div>
@@ -526,7 +527,7 @@ export default function TenderDetails() {
                             <CardContent className="p-4 space-y-4">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <h3 className="text-lg font-semibold flex items-center gap-3 text-primary"><FileText className="h-5 w-5"/>Present Status</h3>
-                                    <div className="w-full sm:w-auto sm:max-w-xs">
+                                    <div className="w-full sm:w-[250px]">
                                         <FormField
                                             name="presentStatus"
                                             control={control}
