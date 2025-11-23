@@ -7,15 +7,26 @@ import { ClipboardList } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { type DataEntryFormData, fileStatusOptions } from '@/lib/schemas';
 
-const AgeStatCard = ({ title, count, onClick }: { title: string; count: number; onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    disabled={count === 0}
-    className="p-2 text-center rounded-md border bg-secondary/30 hover:bg-secondary/50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+const AgeStatCard = ({ title, total, closed, balance, onClick, onClosedClick, onBalanceClick }: { title: string; total: number; closed: number; balance: number; onClick: () => void; onClosedClick: () => void; onBalanceClick: () => void; }) => (
+  <div
+    className="p-3 text-center rounded-md border bg-secondary/30 transition-colors"
   >
-    <p className="text-xs font-medium text-muted-foreground">{title}</p>
-    <p className="text-xl font-bold text-foreground">{count}</p>
-  </button>
+    <p className="text-xs font-semibold text-muted-foreground mb-2">{title}</p>
+    <div className="grid grid-cols-3 gap-1">
+        <button onClick={onClick} disabled={total === 0} className="flex flex-col items-center p-1 rounded-md hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed">
+            <span className="text-xs font-medium text-blue-600">Total</span>
+            <span className="text-lg font-bold text-blue-700">{total}</span>
+        </button>
+        <button onClick={onClosedClick} disabled={closed === 0} className="flex flex-col items-center p-1 rounded-md hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed">
+            <span className="text-xs font-medium text-red-600">Closed</span>
+            <span className="text-lg font-bold text-red-700">{closed}</span>
+        </button>
+        <button onClick={onBalanceClick} disabled={balance === 0} className="flex flex-col items-center p-1 rounded-md hover:bg-green-100 disabled:opacity-60 disabled:cursor-not-allowed">
+            <span className="text-xs font-medium text-green-600">Balance</span>
+            <span className="text-lg font-bold text-green-700">{balance}</span>
+        </button>
+    </div>
+  </div>
 );
 
 interface FileStatusOverviewProps {
@@ -58,6 +69,15 @@ export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: File
                 else if (ageInYears >= 5) ageGroups.above5.push(entry);
             }
         }
+        
+        const processAgeGroup = (group: DataEntryFormData[]) => {
+            const total = group.length;
+            const closedData = group.filter(e => e.fileStatus === 'File Closed');
+            const closed = closedData.length;
+            const balanceData = group.filter(e => e.fileStatus !== 'File Closed');
+            const balance = balanceData.length;
+            return { total, closed, balance, data: { total: group, closed: closedData, balance: balanceData } };
+        };
 
         return {
             fileStatusCountsData: fileStatusOptions.map(status => ({
@@ -65,15 +85,14 @@ export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: File
                 count: fileStatusCounts.get(status) || 0,
                 data: nonArsEntries.filter(e => e.fileStatus === status),
             })),
-            filesByAgeCounts: {
-                lessThan1: ageGroups.lessThan1.length,
-                between1And2: ageGroups.between1And2.length,
-                between2And3: ageGroups.between2And3.length,
-                between3And4: ageGroups.between3And4.length,
-                between4And5: ageGroups.between4And5.length,
-                above5: ageGroups.above5.length,
+            filesByAgeStats: {
+                lessThan1: processAgeGroup(ageGroups.lessThan1),
+                between1And2: processAgeGroup(ageGroups.between1And2),
+                between2And3: processAgeGroup(ageGroups.between2And3),
+                between3And4: processAgeGroup(ageGroups.between3And4),
+                between4And5: processAgeGroup(ageGroups.between4And5),
+                above5: processAgeGroup(ageGroups.above5),
             },
-            filesByAgeData: ageGroups,
             totalFiles: nonArsEntries.length,
         };
     }, [nonArsEntries]);
@@ -97,8 +116,10 @@ export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: File
     onOpenDialog(mappedData, `Files with Status: "${status}"`, columns, 'fileStatus');
   };
 
-  const handleAgeCardClick = (category: keyof typeof fileStatusData.filesByAgeData, title: string) => {
-    const dataForDialog = fileStatusData.filesByAgeData[category].map((entry, index) => {
+  const handleAgeCardClick = (data: DataEntryFormData[], title: string) => {
+     if (data.length === 0) return;
+    
+    const dataForDialog = data.map((entry, index) => {
       const latestRemittanceDate = entry.remittanceDetails?.map(rd => (rd.dateOfRemittance ? new Date(rd.dateOfRemittance) : null)).filter((d): d is Date => d !== null && isValid(d)).sort((a, b) => b.getTime() - a.getTime())[0];
       return {
         slNo: index + 1, fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A',
@@ -124,13 +145,37 @@ export default function FileStatusOverview({ onOpenDialog, nonArsEntries }: File
         <div className="mt-2"><div className="inline-flex items-baseline gap-2 p-3 rounded-lg shadow-sm bg-primary/10 border border-primary/20"><h4 className="text-sm font-medium text-primary">Total Visible Files</h4><p className="text-2xl font-bold text-primary">{fileStatusData.totalFiles}</p></div></div>
         <div className="mt-6 pt-6 border-t border-border/60">
           <div className="flex items-center justify-between mb-3"><h4 className="text-sm font-medium text-primary">Files by Age</h4><p className="text-xs text-muted-foreground">Based on last remittance or creation date</p></div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            <AgeStatCard title="< 1 Year" count={fileStatusData.filesByAgeCounts.lessThan1} onClick={() => handleAgeCardClick('lessThan1', 'Files Aged Less Than 1 Year')} />
-            <AgeStatCard title="1-2 Years" count={fileStatusData.filesByAgeCounts.between1And2} onClick={() => handleAgeCardClick('between1And2', 'Files Aged 1-2 Years')} />
-            <AgeStatCard title="2-3 Years" count={fileStatusData.filesByAgeCounts.between2And3} onClick={() => handleAgeCardClick('between2And3', 'Files Aged 2-3 Years')} />
-            <AgeStatCard title="3-4 Years" count={fileStatusData.filesByAgeCounts.between3And4} onClick={() => handleAgeCardClick('between3And4', 'Files Aged 3-4 Years')} />
-            <AgeStatCard title="4-5 Years" count={fileStatusData.filesByAgeCounts.between4And5} onClick={() => handleAgeCardClick('between4And5', 'Files Aged 4-5 Years')} />
-            <AgeStatCard title="> 5 Years" count={fileStatusData.filesByAgeCounts.above5} onClick={() => handleAgeCardClick('above5', 'Files Aged Over 5 Years')} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <AgeStatCard title="< 1 Year" {...fileStatusData.filesByAgeStats.lessThan1} 
+                onClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.lessThan1.data.total, 'Files Aged < 1 Year (Total)')} 
+                onClosedClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.lessThan1.data.closed, 'Files Aged < 1 Year (Closed)')} 
+                onBalanceClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.lessThan1.data.balance, 'Files Aged < 1 Year (Balance)')} 
+              />
+              <AgeStatCard title="1-2 Years" {...fileStatusData.filesByAgeStats.between1And2}
+                onClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between1And2.data.total, 'Files Aged 1-2 Years (Total)')}
+                onClosedClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between1And2.data.closed, 'Files Aged 1-2 Years (Closed)')}
+                onBalanceClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between1And2.data.balance, 'Files Aged 1-2 Years (Balance)')}
+              />
+              <AgeStatCard title="2-3 Years" {...fileStatusData.filesByAgeStats.between2And3}
+                onClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between2And3.data.total, 'Files Aged 2-3 Years (Total)')}
+                onClosedClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between2And3.data.closed, 'Files Aged 2-3 Years (Closed)')}
+                onBalanceClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between2And3.data.balance, 'Files Aged 2-3 Years (Balance)')}
+              />
+              <AgeStatCard title="3-4 Years" {...fileStatusData.filesByAgeStats.between3And4}
+                onClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between3And4.data.total, 'Files Aged 3-4 Years (Total)')}
+                onClosedClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between3And4.data.closed, 'Files Aged 3-4 Years (Closed)')}
+                onBalanceClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between3And4.data.balance, 'Files Aged 3-4 Years (Balance)')}
+              />
+              <AgeStatCard title="4-5 Years" {...fileStatusData.filesByAgeStats.between4And5}
+                onClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between4And5.data.total, 'Files Aged 4-5 Years (Total)')}
+                onClosedClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between4And5.data.closed, 'Files Aged 4-5 Years (Closed)')}
+                onBalanceClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.between4And5.data.balance, 'Files Aged 4-5 Years (Balance)')}
+              />
+              <AgeStatCard title="> 5 Years" {...fileStatusData.filesByAgeStats.above5}
+                onClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.above5.data.total, 'Files Aged > 5 Years (Total)')}
+                onClosedClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.above5.data.closed, 'Files Aged > 5 Years (Closed)')}
+                onBalanceClick={() => handleAgeCardClick(fileStatusData.filesByAgeStats.above5.data.balance, 'Files Aged > 5 Years (Balance)')}
+              />
           </div>
         </div>
       </CardHeader>
