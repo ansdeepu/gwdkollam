@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,15 @@ import Link from 'next/link';
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
     const router = useRouter();
-    const { tenders, isLoading, deleteTender } = useE_tenders();
+    const { tenders, isLoading, deleteTender, addTender } = useE_tenders();
     const { toast } = useToast();
     const { user } = useAuth();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
     const [isDeletingTender, setIsDeletingTender] = useState(false);
+    const [tenderToCopy, setTenderToCopy] = useState<E_tender | null>(null);
+    const [isCopying, setIsCopying] = useState(false);
 
 
     React.useEffect(() => {
@@ -58,6 +60,64 @@ export default function ETenderListPage() {
     const handleDeleteClick = (tender: E_tender) => {
         setTenderToDelete(tender);
     };
+    
+    const handleCopyClick = (tender: E_tender) => {
+        setTenderToCopy(tender);
+    };
+
+    const confirmCopy = async () => {
+        if (!tenderToCopy) return;
+        setIsCopying(true);
+        try {
+            const newTenderData: Partial<E_tender> = {
+                // Copy basic details
+                eTenderNo: `${tenderToCopy.eTenderNo}-COPY`,
+                tenderDate: tenderToCopy.tenderDate,
+                fileNo: tenderToCopy.fileNo,
+                nameOfWork: tenderToCopy.nameOfWork,
+                nameOfWorkMalayalam: tenderToCopy.nameOfWorkMalayalam,
+                location: tenderToCopy.location,
+                estimateAmount: tenderToCopy.estimateAmount,
+                tenderFormFee: tenderToCopy.tenderFormFee,
+                emd: tenderToCopy.emd,
+                periodOfCompletion: tenderToCopy.periodOfCompletion,
+                dateTimeOfReceipt: tenderToCopy.dateTimeOfReceipt,
+                dateTimeOfOpening: tenderToCopy.dateTimeOfOpening,
+                tenderType: tenderToCopy.tenderType,
+                tenderFeeDescription: tenderToCopy.tenderFeeDescription,
+                emdDescription: tenderToCopy.emdDescription,
+                // Reset other fields
+                presentStatus: 'Tender Process',
+                bidders: [],
+                corrigendums: [],
+                dateOfOpeningBid: null,
+                dateOfTechnicalAndFinancialBidOpening: null,
+                technicalCommitteeMember1: undefined,
+                technicalCommitteeMember2: undefined,
+                technicalCommitteeMember3: undefined,
+                selectionNoticeDate: null,
+                performanceGuaranteeAmount: undefined,
+                additionalPerformanceGuaranteeAmount: undefined,
+                stampPaperAmount: undefined,
+                agreementDate: null,
+                dateWorkOrder: null,
+                nameOfAssistantEngineer: undefined,
+                supervisor1Id: undefined, supervisor1Name: undefined, supervisor1Phone: undefined,
+                supervisor2Id: undefined, supervisor2Name: undefined, supervisor2Phone: undefined,
+                supervisor3Id: undefined, supervisor3Name: undefined, supervisor3Phone: undefined,
+                remarks: '',
+            };
+            const newTenderId = await addTender(newTenderData as any);
+            toast({ title: "Tender Copied", description: "A new tender has been created. Redirecting to edit..." });
+            router.push(`/dashboard/e-tender/${newTenderId}`);
+        } catch (error: any) {
+            toast({ title: "Copy Failed", description: error.message, variant: 'destructive' });
+        } finally {
+            setIsCopying(false);
+            setTenderToCopy(null);
+        }
+    };
+
 
     const confirmDelete = async () => {
         if (!tenderToDelete) return;
@@ -141,9 +201,14 @@ export default function ETenderListPage() {
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                                 {user?.role === 'editor' && (
-                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    <>
+                                                        <Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}>
+                                                            <Copy className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </>
                                                 )}
                                             </TableCell>
                                         </TableRow>
@@ -173,6 +238,23 @@ export default function ETenderListPage() {
                         <AlertDialogCancel disabled={isDeletingTender}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={confirmDelete} disabled={isDeletingTender} className="bg-destructive hover:bg-destructive/90">
                             {isDeletingTender ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            
+             <AlertDialog open={!!tenderToCopy} onOpenChange={() => setTenderToCopy(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Copy</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will create a new tender by copying the basic details from <strong>{tenderToCopy?.eTenderNo}</strong>.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isCopying}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmCopy} disabled={isCopying}>
+                            {isCopying ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Copy Tender"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
