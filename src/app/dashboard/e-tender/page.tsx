@@ -184,25 +184,27 @@ export default function ETenderListPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>Sl. No.</TableHead>
                                     <TableHead>eTender Ref. No.</TableHead>
                                     <TableHead>Name of Work</TableHead>
                                     <TableHead>Last Date of Receipt</TableHead>
                                     <TableHead>Date of Opening</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead className="w-[1%] whitespace-nowrap text-center">Actions</TableHead>
+                                    <TableHead className="w-[1%] text-center">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredTenders.length > 0 ? (
-                                    filteredTenders.map((tender) => (
+                                    filteredTenders.map((tender, index) => (
                                         <TableRow key={tender.id}>
-                                            <TableCell className="font-medium whitespace-nowrap">
+                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell className="font-medium">
                                                 <p>{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</p>
                                                 <p className="text-xs text-muted-foreground">Dated: {formatDateSafe(tender.tenderDate)}</p>
                                             </TableCell>
-                                            <TableCell className="whitespace-normal break-words max-w-sm">{tender.nameOfWork}</TableCell>
-                                            <TableCell className="whitespace-nowrap">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
-                                            <TableCell className="whitespace-nowrap">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
+                                            <TableCell className="whitespace-normal break-words">{tender.nameOfWork}</TableCell>
+                                            <TableCell className="whitespace-normal break-words">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
+                                            <TableCell className="whitespace-normal break-words">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
                                             <TableCell>{tender.presentStatus && <Badge>{tender.presentStatus}</Badge>}</TableCell>
                                             <TableCell className="text-center">
                                                 <div className="flex items-center justify-center space-x-1">
@@ -225,7 +227,7 @@ export default function ETenderListPage() {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center">
+                                        <TableCell colSpan={7} className="h-24 text-center">
                                             No tenders found.
                                         </TableCell>
                                     </TableRow>
