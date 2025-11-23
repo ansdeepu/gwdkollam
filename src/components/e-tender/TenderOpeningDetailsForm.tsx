@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderOpeningDetailsForm.tsx
 "use client";
 
@@ -31,7 +30,7 @@ const committeeMemberDesignations: Designation[] = [
 ];
 
 export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCancel, isSubmitting }: TenderOpeningDetailsFormProps) {
-    const { allStaffMembers } } = useDataStore();
+    const { allStaffMembers } = useDataStore();
 
     const committeeMemberList = useMemo(() => {
         return allStaffMembers
