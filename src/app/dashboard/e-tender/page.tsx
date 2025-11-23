@@ -177,12 +177,12 @@ export default function ETenderListPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Sl. No.</TableHead>
-                                    <TableHead>eTender Ref. No.</TableHead>
+                                    <TableHead className="w-[50px]">Sl. No.</TableHead>
+                                    <TableHead className="w-[200px]">eTender Ref. No.</TableHead>
                                     <TableHead>Name of Work</TableHead>
-                                    <TableHead>Tender Date</TableHead>
-                                    <TableHead>Present Status</TableHead>
-                                    <TableHead className="text-center">Actions</TableHead>
+                                    <TableHead className="w-[120px]">Tender Date</TableHead>
+                                    <TableHead className="w-[150px]">Present Status</TableHead>
+                                    <TableHead className="text-center w-[160px]">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -191,25 +191,29 @@ export default function ETenderListPage() {
                                         <TableRow key={tender.id}>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell className="font-medium">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</TableCell>
-                                            <TableCell>{tender.nameOfWork}</TableCell>
+                                            <TableCell>
+                                                <p className="truncate max-w-sm" title={tender.nameOfWork}>{tender.nameOfWork}</p>
+                                            </TableCell>
                                             <TableCell>{formatDateSafe(tender.tenderDate)}</TableCell>
                                             <TableCell>
                                                 {tender.presentStatus ? <Badge>{tender.presentStatus}</Badge> : 'N/A'}
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                {user?.role === 'editor' && (
-                                                    <>
-                                                        <Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}>
-                                                            <Copy className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </>
-                                                )}
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                    {user?.role === 'editor' && (
+                                                        <>
+                                                            <Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}>
+                                                                <Copy className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))
