@@ -15,7 +15,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
 const NewBidderSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(), // ID is optional now, will be supplied by Firestore
   name: z.string().min(1, "Bidder Name is required."),
   address: z.string().optional(),
   phoneNo: z.string().optional(),
@@ -24,11 +24,10 @@ const NewBidderSchema = z.object({
   order: z.number().optional(),
 });
 export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
-export type Bidder = z.infer<typeof NewBidderSchema>;
+export type Bidder = z.infer<typeof NewBidderSchema> & { id: string };
 
 
 const createDefaultBidder = (): NewBidderFormData => ({
-    id: uuidv4(),
     name: '',
     address: '',
     phoneNo: '',

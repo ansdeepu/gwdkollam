@@ -143,7 +143,13 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                         setter((prev: any) => ({...defaultRateDescriptions, ...descriptions}));
                     }
                 } else {
-                    const data = snapshot.docs.map(doc => processFirestoreDoc<any>({id: doc.id, data: () => doc.data()}));
+                    const data = snapshot.docs.map(doc => {
+                        const docData = doc.data();
+                        // This is the crucial fix: always use doc.id from Firestore
+                        const processedData = processFirestoreDoc<any>({id: doc.id, data: () => docData});
+                        processedData.id = doc.id; // Ensure the top-level ID is the Firestore doc ID
+                        return processedData;
+                    });
                     if (collectionName === 'staffMembers') {
                         const designationSortOrder: Record<string, number> = designationOptions.reduce((acc, curr, index) => ({ ...acc, [curr]: index }), {});
                         data.sort((a: StaffMember, b: StaffMember) => {

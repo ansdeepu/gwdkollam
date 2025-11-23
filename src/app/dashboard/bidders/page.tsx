@@ -57,7 +57,7 @@ export default function BiddersListPage() {
     const handleAddOrEditBidderSubmit = async (data: NewBidderFormData) => {
         setIsSubmitting(true);
         try {
-            if (bidderToEdit) {
+            if (bidderToEdit && bidderToEdit.id) {
                 const { id, ...dataToUpdate } = data; // Exclude ID from the update payload
                 const bidderDocRef = doc(db, "bidders", bidderToEdit.id);
                 await updateDoc(bidderDocRef, dataToUpdate);
