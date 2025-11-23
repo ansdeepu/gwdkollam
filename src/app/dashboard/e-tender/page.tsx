@@ -40,13 +40,13 @@ const getStatusBadgeClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
     switch (status) {
         case 'Tender Process':
-            return "border-gray-400 text-gray-700";
+            return "border-gray-400 bg-gray-100 text-gray-800";
         case 'Bid Opened':
-            return "border-orange-400 text-orange-700";
+            return "border-orange-400 bg-orange-100 text-orange-800";
         case 'Selection Notice Issued':
-            return "border-blue-400 text-blue-700";
+            return "border-blue-400 bg-blue-100 text-blue-800";
         case 'Work Order Issued':
-            return "border-green-400 text-green-700";
+            return "border-green-400 bg-green-100 text-green-800";
         default:
             return "border-border";
     }
@@ -246,7 +246,7 @@ export default function ETenderListPage() {
                                                 <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
                                                 <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
                                                 <TableCell className="align-top">
-                                                    {tender.presentStatus && <Badge variant="outline" className={cn("bg-background", getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
+                                                    {tender.presentStatus && <Badge variant="outline" className={getStatusBadgeClass(tender.presentStatus)}>{tender.presentStatus}</Badge>}
                                                 </TableCell>
                                                 <TableCell className="text-center align-top">
                                                     <div className="flex items-center justify-center space-x-1">
