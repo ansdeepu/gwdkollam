@@ -173,7 +173,7 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save Details
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Update Details
                     </Button>
                 </DialogFooter>
             </form>

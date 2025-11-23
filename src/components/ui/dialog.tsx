@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -39,9 +38,16 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       onPointerDownOutside={(e) => {
+        // Do not prevent default if the event target is inside a Radix-managed portal (like a Select dropdown)
+        if (e.target instanceof Element && e.target.closest('[data-radix-popper-content-wrapper]')) {
+          return;
+        }
         e.preventDefault();
       }}
       onInteractOutside={(e) => {
+        if (e.target instanceof Element && e.target.closest('[data-radix-popper-content-wrapper]')) {
+          return;
+        }
         e.preventDefault();
       }}
       className={cn(
