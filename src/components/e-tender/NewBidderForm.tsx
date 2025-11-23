@@ -15,7 +15,6 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
 const NewBidderSchema = z.object({
-  id: z.string().optional(), // ID is optional now, will be supplied by Firestore
   name: z.string().min(1, "Bidder Name is required."),
   address: z.string().optional(),
   phoneNo: z.string().optional(),

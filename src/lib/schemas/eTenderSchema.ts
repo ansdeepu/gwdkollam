@@ -74,7 +74,6 @@ export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 
 
 export const BidderSchema = z.object({
-  id: z.string().optional(), // ID is optional, will come from Firestore
   name: z.string().optional(),
   address: z.string().optional(),
   phoneNo: z.string().optional(),

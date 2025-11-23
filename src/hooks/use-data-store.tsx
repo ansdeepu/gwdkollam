@@ -142,7 +142,16 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                         });
                         setter((prev: any) => ({...defaultRateDescriptions, ...descriptions}));
                     }
-                } else {
+                } else if (collectionName === 'bidders') {
+                    const data = snapshot.docs.map(doc => {
+                        return {
+                            id: doc.id, // Correctly use Firestore's document ID
+                            ...doc.data(),
+                        } as MasterBidder;
+                    });
+                    setter(data);
+                }
+                else {
                     const data = snapshot.docs.map(doc => {
                         const docData = doc.data();
                         // This is the crucial fix: always use doc.id from Firestore
