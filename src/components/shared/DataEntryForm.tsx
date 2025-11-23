@@ -413,7 +413,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue("supervisorName", ""); setValue("supervisorDesignation", undefined);}}>-- Clear Selection --</SelectItem>
                                             {supervisorList.map((s) => (
                                             <SelectItem key={s.uid} value={s.uid}>
-                                                {s.name}
+                                                {s.name} ({s.designation})
                                             </SelectItem>
                                             ))}
                                         </SelectContent>
