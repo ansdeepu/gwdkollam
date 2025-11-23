@@ -47,10 +47,18 @@ const DetailRow = ({ label, value, subValue, isCurrency = false }: { label: stri
 
     let displayValue = String(value);
 
-    if ((label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) && !label.toLowerCase().includes('period')) {
-        const formatted = formatDateSafe(value, label.toLowerCase().includes('time'), label.toLowerCase().includes('receipt'), label.toLowerCase().includes('opening'));
+    // Custom formatting for specific labels
+    if (label.toLowerCase().includes('date') || label.toLowerCase().includes('time')) {
+        const isTimeIncluded = label.toLowerCase().includes('time');
+        const isReceipt = label.toLowerCase().includes('receipt');
+        const isOpening = label.toLowerCase().includes('opening');
+        const isCorrigendumNewLastDate = label === 'New Last Date & Time';
+        
+        // This combines all logic into one call
+        const formatted = formatDateSafe(value, isTimeIncluded, isReceipt || isCorrigendumNewLastDate, isOpening);
+
         if (formatted === 'N/A' && value) {
-           displayValue = String(value);
+            displayValue = String(value);
         } else if (formatted !== 'N/A') {
             displayValue = formatted;
         } else {

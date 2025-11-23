@@ -1,3 +1,4 @@
+
 // src/components/e-tender/utils.ts
 import { format, isValid, parseISO, toDate } from 'date-fns';
 
@@ -51,10 +52,10 @@ export const formatDateSafe = (date: any, includeTime: boolean = false, receiptF
     }
 
     if (receiptFormat) {
-        return format(d, "dd/MM/yyyy 'at' hh:mm a");
+        return format(d, "dd/MM/yyyy 'up to' hh:mm a");
     }
     if (openingFormat) {
-        return format(d, "dd/MM/yyyy 'at' hh:mm a");
+        return format(d, "dd/MM/yyyy, hh:mm a");
     }
 
     return format(d, includeTime ? 'dd/MM/yyyy, hh:mm a' : 'dd/MM/yyyy');
