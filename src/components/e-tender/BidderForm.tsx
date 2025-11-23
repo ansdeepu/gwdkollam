@@ -12,7 +12,6 @@ import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X } from 'lucide-react';
 import { BidderSchema, type Bidder } from '@/lib/schemas/eTenderSchema';
-import { v4 as uuidv4 } from 'uuid';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useDataStore } from '@/hooks/use-data-store';
 
@@ -24,8 +23,7 @@ interface BidderFormProps {
     tenderAmount?: number;
 }
 
-const createDefaultBidder = (): Bidder => ({
-    id: uuidv4(),
+const createDefaultBidder = (): Partial<Bidder> => ({
     name: '',
     address: '',
     quotedAmount: undefined,
@@ -78,9 +76,19 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
         }
     };
 
+    const handleFormSubmit = (data: Bidder) => {
+        const payload = { ...data };
+        if (!payload.id) {
+          // If there is no ID, it's a new bidder, so we let Firestore generate one
+          // by not including an ID field at all.
+          delete (payload as any).id;
+        }
+        onSubmit(payload);
+    };
+
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>{initialData ? 'Edit Bidder' : 'Add New Bidder'}</DialogTitle>
                     <DialogDescription>Enter the details for the bidder.</DialogDescription>

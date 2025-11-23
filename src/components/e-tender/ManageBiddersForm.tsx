@@ -1,4 +1,4 @@
-// src/components/e-tender/BiddersForm.tsx
+// src/components/e-tender/ManageBiddersForm.tsx
 "use client";
 
 import React, { useEffect } from 'react';
@@ -12,7 +12,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X, PlusCircle, Trash2 } from 'lucide-react';
 import type { E_tenderFormData, Bidder } from '@/lib/schemas/eTenderSchema';
 import { Separator } from '@/components/ui/separator';
-import { v4 as uuidv4 } from 'uuid';
 import { formatDateForInput } from './utils';
 
 interface ManageBiddersFormProps {
@@ -22,8 +21,7 @@ interface ManageBiddersFormProps {
     initialData?: Partial<E_tenderFormData>;
 }
 
-const createDefaultBidder = (): Bidder => ({
-    id: uuidv4(),
+const createDefaultBidder = (): Partial<Bidder> => ({
     name: '',
     address: '',
     quotedAmount: undefined,
@@ -67,7 +65,7 @@ export default function ManageBiddersForm({ initialData, onSubmit, onCancel, isS
                                     <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive h-7 w-7" onClick={() => remove(index)}><Trash2 className="h-4 w-4"/></Button>
                                     <FormField name={`bidders.${index}.name`} control={control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                     <FormField name={`bidders.${index}.address`} control={control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <FormField name={`bidders.${index}.quotedAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
                                         {/* Fields removed as per request */}
                                     </div>

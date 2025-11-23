@@ -58,8 +58,12 @@ export default function BiddersListPage() {
         setIsSubmitting(true);
         try {
             if (bidderToEdit && bidderToEdit.id) {
-                const { id, ...dataToUpdate } = data; // Exclude ID from the update payload
                 const bidderDocRef = doc(db, "bidders", bidderToEdit.id);
+                // Ensure no 'id' field is in the data being updated
+                const dataToUpdate = { ...data };
+                if ('id' in dataToUpdate) {
+                    delete (dataToUpdate as any).id;
+                }
                 await updateDoc(bidderDocRef, dataToUpdate);
                 toast({ title: "Bidder Updated", description: `Bidder "${data.name}" has been updated.` });
             } else {
@@ -72,7 +76,7 @@ export default function BiddersListPage() {
             setBidderToEdit(null);
         } catch (error: any) {
             console.error("Error saving bidder:", error);
-            toast({ title: "Error", description: "Could not save bidder details.", variant: "destructive" });
+            toast({ title: "Error", description: error.message || "Could not save bidder details.", variant: "destructive" });
         } finally {
             setIsSubmitting(false);
         }

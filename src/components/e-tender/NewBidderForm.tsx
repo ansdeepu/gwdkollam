@@ -12,7 +12,6 @@ import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X, UserPlus } from 'lucide-react';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
 
 const NewBidderSchema = z.object({
   name: z.string().min(1, "Bidder Name is required."),

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
@@ -145,7 +145,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                 } else if (collectionName === 'bidders') {
                     const data = snapshot.docs.map(doc => {
                         return {
-                            id: doc.id, // Correctly use Firestore's document ID
+                            id: doc.id,
                             ...doc.data(),
                         } as MasterBidder;
                     });
