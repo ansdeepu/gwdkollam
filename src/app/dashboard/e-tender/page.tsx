@@ -19,19 +19,20 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 
-const getStatusRowClass = (status?: E_tenderStatus): string => {
-    if (!status) return "";
+
+const getStatusTextColor = (status?: E_tenderStatus): string => {
+    if (!status) return "text-foreground"; // Default text color
     switch (status) {
         case 'Tender Process':
-            return "bg-gray-50 hover:bg-gray-100";
+            return "text-gray-800";
         case 'Bid Opened':
-            return "bg-orange-50 hover:bg-orange-100";
+            return "text-orange-600";
         case 'Selection Notice Issued':
-            return "bg-blue-50 hover:bg-blue-100";
+            return "text-blue-600";
         case 'Work Order Issued':
-            return "bg-green-50 hover:bg-green-100";
+            return "text-green-600";
         default:
-            return "";
+            return "text-foreground";
     }
 };
 
@@ -230,40 +231,43 @@ export default function ETenderListPage() {
                             </TableHeader>
                             <TableBody>
                                 {filteredTenders.length > 0 ? (
-                                    filteredTenders.map((tender, index) => (
-                                        <TableRow key={tender.id} className={cn(getStatusRowClass(tender.presentStatus))}>
-                                            <TableCell className="align-top">{index + 1}</TableCell>
-                                            <TableCell className="font-medium align-top">
-                                                <div className="flex flex-col">
-                                                    <span>{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
-                                                    <span className="text-xs text-muted-foreground">Dated: {formatDateSafe(tender.tenderDate)}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="whitespace-normal break-words align-top">{tender.nameOfWork}</TableCell>
-                                            <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
-                                            <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
-                                            <TableCell className="align-top">
-                                                {tender.presentStatus && <Badge variant="outline" className={cn("bg-background", getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
-                                            </TableCell>
-                                            <TableCell className="text-center align-top">
-                                                <div className="flex items-center justify-center space-x-1">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    {user?.role === 'editor' && (
-                                                        <>
-                                                            <Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}>
-                                                                <Copy className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
+                                    filteredTenders.map((tender, index) => {
+                                        const textColorClass = getStatusTextColor(tender.presentStatus);
+                                        return (
+                                            <TableRow key={tender.id}>
+                                                <TableCell className={cn("align-top", textColorClass)}>{index + 1}</TableCell>
+                                                <TableCell className={cn("font-medium align-top", textColorClass)}>
+                                                    <div className="flex flex-col">
+                                                        <span className="whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
+                                                        <span className="text-xs">Dated: {formatDateSafe(tender.tenderDate)}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{tender.nameOfWork}</TableCell>
+                                                <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
+                                                <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
+                                                <TableCell className="align-top">
+                                                    {tender.presentStatus && <Badge variant="outline" className={cn("bg-background", getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
+                                                </TableCell>
+                                                <TableCell className="text-center align-top">
+                                                    <div className="flex items-center justify-center space-x-1">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                        {user?.role === 'editor' && (
+                                                            <>
+                                                                <Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}>
+                                                                    <Copy className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )
+                                    })
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={7} className="h-24 text-center">
