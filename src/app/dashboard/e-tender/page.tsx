@@ -160,7 +160,7 @@ export default function ETenderListPage() {
                         </div>
                         {user?.role === 'editor' && (
                             <div className="flex w-full sm:w-auto items-center gap-2">
-                                <Button onClick={() => router.push('/dashboard/bidders')} variant="outline">
+                                <Button onClick={() => router.push('/dashboard/bidders')} variant="secondary">
                                     <Users className="mr-2 h-4 w-4" /> Bidders List
                                 </Button>
                                 <Button onClick={handleCreateNew} className="w-full sm:w-auto">
