@@ -243,6 +243,14 @@ export default function TenderDetails() {
         return watch('dateOfOpeningBid') || watch('dateOfTechnicalAndFinancialBidOpening') || committeeMemberDetails.length > 0;
     }, [watch, committeeMemberDetails]);
     
+    const sortedBidderFields = React.useMemo(() => {
+        return [...bidderFields].sort((a, b) => {
+            const amountA = a.quotedAmount ?? Infinity;
+            const amountB = b.quotedAmount ?? Infinity;
+            return amountA - amountB;
+        });
+    }, [bidderFields]);
+
     const hasAnyBidderData = useMemo(() => {
         return bidderFields.length > 0;
     }, [bidderFields]);
@@ -441,26 +449,29 @@ export default function TenderDetails() {
                                     <AccordionContent className="p-6 pt-0">
                                          {hasAnyBidderData ? (
                                             <div className="mt-4 pt-4 border-t space-y-2">
-                                                {bidderFields.map((bidder, index) => (
-                                                    <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative">
-                                                        <div className="flex items-start justify-between mb-2">
-                                                            <div className="flex items-center gap-2">
-                                                                <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
-                                                                {bidder.id === l1Bidder?.id && <Badge className="bg-green-600 text-white">L1</Badge>}
-                                                                {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
+                                                {sortedBidderFields.map((bidder, index) => {
+                                                    const originalIndex = bidderFields.findIndex(field => field.id === bidder.id);
+                                                    return (
+                                                        <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative">
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
+                                                                    {bidder.id === l1Bidder?.id && <Badge className="bg-green-600 text-white">L1</Badge>}
+                                                                    {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index: originalIndex }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
+                                                                    <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(originalIndex)}><Trash2 className="h-4 w-4"/></Button>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex items-center gap-1">
-                                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
-                                                                <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                            </div>
+                                                            <p className="text-xs text-muted-foreground">{bidder.address}</p>
+                                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
+                                                                <DetailRow label="Quoted Amount" value={bidder.quotedAmount} isCurrency/>
+                                                                <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
+                                                            </dl>
                                                         </div>
-                                                        <p className="text-xs text-muted-foreground">{bidder.address}</p>
-                                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
-                                                            <DetailRow label="Quoted Amount" value={bidder.quotedAmount} isCurrency/>
-                                                            <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
-                                                        </dl>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                })}
                                             </div>
                                          ) : (
                                             <p className="text-sm text-muted-foreground text-center py-4">No bidders have been added.</p>
