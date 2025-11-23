@@ -309,7 +309,7 @@ export default function TenderDetails() {
                                         <Building className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">Basic Details</CardTitle>
                                     </div>
-                                    <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    <Button type="button" size="sm" variant="secondary" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                                 </CardHeader>
                                 <CardContent className="p-6 pt-0">
                                     {hasAnyBasicData ? (
