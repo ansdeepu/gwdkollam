@@ -313,27 +313,41 @@ export default function TenderDetails() {
                                 </CardHeader>
                                 <CardContent className="p-6 pt-0">
                                     {hasAnyBasicData ? (
-                                        <div className="space-y-4 pt-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
-                                                <DetailRow label="eTender No." value={watch('eTenderNo')} />
-                                                <DetailRow label="Tender Date" value={watch('tenderDate')} />
-                                                <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
+                                        <div className="space-y-6 pt-4">
+                                            <div className="space-y-2">
+                                                <h4 className="text-sm font-medium text-muted-foreground">Tender Identification</h4>
+                                                <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+                                                    <DetailRow label="eTender No." value={watch('eTenderNo')} />
+                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} />
+                                                    <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
+                                                </div>
                                             </div>
-                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work" value={watch('nameOfWork')} /></div>
-                                            <div className="md:col-span-3 pt-2"><DetailRow label="Name of Work (in Malayalam)" value={watch('nameOfWorkMalayalam')} /></div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
-                                                <DetailRow label="Location" value={watch('location')} />
-                                                <DetailRow label="Period of Completion (Days)" value={watch('periodOfCompletion')} />
-                                                <DetailRow label="Type of Tender" value={watch('tenderType')} />
+                                             <div className="space-y-2">
+                                                <h4 className="text-sm font-medium text-muted-foreground">Work & Location</h4>
+                                                <div className="p-4 border rounded-md bg-slate-50 space-y-4">
+                                                    <DetailRow label="Name of Work" value={watch('nameOfWork')} />
+                                                    <DetailRow label="Name of Work (in Malayalam)" value={watch('nameOfWorkMalayalam')} />
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
+                                                        <DetailRow label="Location" value={watch('location')} />
+                                                        <DetailRow label="Period of Completion (Days)" value={watch('periodOfCompletion')} />
+                                                        <DetailRow label="Type of Tender" value={watch('tenderType')} />
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 pt-2">
-                                                <DetailRow label="Tender Amount (Rs.)" value={watch('estimateAmount')} isCurrency />
-                                                <DetailRow label="Tender Form Fee (Rs.)" value={displayTenderFormFee} />
-                                                <DetailRow label="EMD (Rs.)" value={watch('emd')} isCurrency/>
+                                            <div className="space-y-2">
+                                                <h4 className="text-sm font-medium text-muted-foreground">Financial Details</h4>
+                                                <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+                                                    <DetailRow label="Tender Amount (Rs.)" value={watch('estimateAmount')} isCurrency />
+                                                    <DetailRow label="Tender Form Fee (Rs.)" value={displayTenderFormFee} />
+                                                    <DetailRow label="EMD (Rs.)" value={watch('emd')} isCurrency/>
+                                                </div>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-2">
-                                                <DetailRow label="Last Date & Time of Receipt" value={watch('dateTimeOfReceipt')} />
-                                                <DetailRow label="Date & Time of Opening" value={watch('dateTimeOfOpening')} />
+                                             <div className="space-y-2">
+                                                <h4 className="text-sm font-medium text-muted-foreground">Key Dates</h4>
+                                                <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                                    <DetailRow label="Last Date & Time of Receipt" value={watch('dateTimeOfReceipt')} />
+                                                    <DetailRow label="Date & Time of Opening" value={watch('dateTimeOfOpening')} />
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
