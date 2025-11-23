@@ -13,7 +13,7 @@ import { Loader2, Save, X } from 'lucide-react';
 import type { E_tenderFormData, BasicDetailsFormData } from '@/lib/schemas/eTenderSchema';
 import { formatDateForInput } from './utils';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
-import { useDataStore } from '@/hooks/use-data-store';
+import { useDataStore, defaultRateDescriptions } from '@/hooks/use-data-store';
 import { useTenderData } from './TenderDataContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
@@ -129,23 +129,10 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
     const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
 
-    const form = useForm<BasicDetailsFormData>({
-        resolver: zodResolver(BasicDetailsSchema),
-        defaultValues: tender,
-    });
-    
-    const { control, setValue, handleSubmit, watch, getValues } = form;
-
-    const [estimateAmount, tenderType, id] = watch([
-        'estimateAmount',
-        'tenderType',
-        'id'
-    ]);
-
     // Memoize the parsed rules to prevent re-parsing on every render
     const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase } = useMemo(() => {
-        const [tenderFeeWork, tenderFeePurchase] = allRateDescriptions.tenderFee.split('\n\nFor Purchase:');
-        const [emdWork, emdPurchase] = allRateDescriptions.emd.split('\n\nFor Purchase:');
+        const [tenderFeeWork, tenderFeePurchase] = (allRateDescriptions.tenderFee || defaultRateDescriptions.tenderFee).split('\n\nFor Purchase:');
+        const [emdWork, emdPurchase] = (allRateDescriptions.emd || defaultRateDescriptions.emd).split('\n\nFor Purchase:');
         return {
             tenderFeeRulesWork: parseRules(tenderFeeWork),
             tenderFeeRulesPurchase: parseRules(tenderFeePurchase || ''),
@@ -153,6 +140,17 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             emdRulesPurchase: emdPurchase || '',
         };
     }, [allRateDescriptions]);
+
+    const form = useForm<BasicDetailsFormData>({
+        resolver: zodResolver(BasicDetailsSchema),
+        defaultValues: tender,
+    });
+    
+    const { control, setValue, handleSubmit, watch, getValues } = form;
+
+    const estimateAmount = watch('estimateAmount');
+    const tenderType = watch('tenderType');
+    const tenderId = getValues('id');
     
     useEffect(() => {
         let fee = 0;
@@ -178,10 +176,10 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
     const onFormSubmit = (data: BasicDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
         // If this is a new tender or the descriptions haven't been set, snapshot them.
-        if (id === 'new' || !getValues('tenderFeeDescription')) {
+        if (tenderId === 'new' || !getValues('tenderFeeDescription')) {
             formData.tenderFeeDescription = allRateDescriptions.tenderFee;
         }
-        if (id === 'new' || !getValues('emdDescription')) {
+        if (tenderId === 'new' || !getValues('emdDescription')) {
             formData.emdDescription = allRateDescriptions.emd;
         }
         onSubmit(formData);
