@@ -1,7 +1,7 @@
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useForm, FormProvider, useWatch, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
@@ -24,6 +24,105 @@ interface BasicDetailsFormProps {
   isSubmitting: boolean;
 }
 
+// Helper to parse rules from a description string
+const parseRules = (description: string): Array<[number, number]> => {
+    const rules: Array<[number, number]> = [];
+    const lines = description.split('\n');
+    for (const line of lines) {
+        const feeMatch = line.match(/Rs\s*([\d,]+)/);
+        const amountMatch = line.match(/(?:Over|up to|Above)\s*([\d,]+(?:\s*Lakhs?|\s*Crores?)?)/gi);
+        if (feeMatch && amountMatch) {
+            const fee = parseInt(feeMatch[1].replace(/,/g, ''), 10);
+            let maxAmount = Infinity;
+            for (const match of amountMatch) {
+                let numPart = parseFloat(match.replace(/,/g, '').split(' ')[1]);
+                if (match.toLowerCase().includes('lakh')) numPart *= 100000;
+                if (match.toLowerCase().includes('crore')) numPart *= 10000000;
+
+                if (match.toLowerCase().includes('up to') || match.toLowerCase().includes('upto')) {
+                    maxAmount = numPart;
+                }
+            }
+            rules.push([maxAmount, fee]);
+        } else if (line.toLowerCase().includes('no fee')) {
+             const amountMatchNoFee = line.match(/Up to Rs ([\d,]+)/);
+             if(amountMatchNoFee) {
+                rules.push([parseInt(amountMatchNoFee[1].replace(/,/g, ''), 10), 0]);
+             }
+        }
+    }
+    rules.sort((a, b) => a[0] - b[0]);
+    return rules;
+};
+
+// Main calculation function using parsed rules
+const calculateFee = (amount: number, rules: Array<[number, number]>): number => {
+    if (amount <= 0) return 0;
+    for (const [limit, fee] of rules) {
+        if (amount <= limit) {
+            return fee;
+        }
+    }
+    return rules.length > 0 ? rules[rules.length - 1][1] : 0; // Default to highest fee if above all limits
+};
+
+const parseEmdRules = (description: string): { type: 'percentage' | 'fixed', threshold: number, rate?: number, max?: number, fixedTiers?: Array<[number, number]>}[] => {
+    const rules: { type: 'percentage' | 'fixed', threshold: number, rate?: number, max?: number, fixedTiers?: Array<[number, number]>}[] = [];
+    const lines = description.split('\n');
+
+    for (const line of lines) {
+        const percentageMatch = line.match(/([\d.]+)%/);
+        const maxMatch = line.match(/maximum of Rs. ([\d,]+)/);
+        const upToMatch = line.match(/Up to Rs. ([\d,]+ Crore)/);
+        
+        if (percentageMatch && upToMatch) {
+            const rate = parseFloat(percentageMatch[1]) / 100;
+            const threshold = parseFloat(upToMatch[1].replace(/,/g, '').replace(' Crore', '')) * 10000000;
+            const max = maxMatch ? parseInt(maxMatch[1].replace(/,/g, ''), 10) : undefined;
+            rules.push({ type: 'percentage', threshold, rate, max });
+        } else {
+             const fixedTiers: Array<[number, number]> = [];
+             const fixedTierMatches = line.matchAll(/Above Rs. ([\d,]+ Crore) up to Rs. ([\d,]+ Crore): Rs. ([\d,]+ Lakh)/g);
+             for (const match of fixedTierMatches) {
+                 const lowerBound = parseFloat(match[1].replace(/,/g, '').replace(' Crore', '')) * 10000000;
+                 const fee = parseInt(match[3].replace(/,/g, ''), 10) * 100000;
+                 fixedTiers.push([lowerBound, fee]);
+             }
+             if(fixedTiers.length > 0) {
+                 rules.push({ type: 'fixed', threshold: Infinity, fixedTiers });
+             } else {
+                 const finalTierMatch = line.match(/Above Rs. ([\d,]+ Crore): Rs. ([\d,]+ Lakh)/);
+                 if (finalTierMatch) {
+                    rules.push({ type: 'fixed', threshold: Infinity, fixedTiers: [[parseFloat(finalTierMatch[1].replace(/,/g, '').replace(' Crore', ''))*10000000, parseInt(finalTierMatch[2].replace(/,/g, ''), 10)*100000]] });
+                 }
+             }
+        }
+    }
+    return rules;
+};
+
+const calculateEmd = (amount: number, emdDesc: string): number => {
+    const rules = parseEmdRules(emdDesc);
+    const roundToNearest100 = (num: number) => Math.ceil(num / 100) * 100;
+
+    for (const rule of rules) {
+        if (rule.type === 'percentage' && amount <= rule.threshold) {
+            let emd = amount * (rule.rate || 0);
+            if (rule.max && emd > rule.max) emd = rule.max;
+            return roundToNearest100(emd);
+        }
+        if (rule.type === 'fixed' && rule.fixedTiers) {
+            for (const [threshold, fee] of rule.fixedTiers.sort((a,b) => b[0] - a[0])) { // sort descending
+                if(amount > threshold) {
+                    return fee;
+                }
+            }
+        }
+    }
+    return 0; // Default
+};
+
+
 export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: BasicDetailsFormProps) {
     const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
@@ -40,46 +139,30 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         'tenderType',
         'id'
     ]);
+    
+    const tenderFeeRulesWork = parseRules(allRateDescriptions.tenderFee.split('\n\nFor Purchase:')[0]);
+    const tenderFeeRulesPurchase = parseRules(allRateDescriptions.tenderFee.split('\n\nFor Purchase:')[1] || '');
+    
+    const emdRulesWork = allRateDescriptions.emd.split('\n\nFor Purchase:')[0];
+    const emdRulesPurchase = allRateDescriptions.emd.split('\n\nFor Purchase:')[1] || '';
 
     useEffect(() => {
         let fee = 0;
         let emd = 0;
         const amount = estimateAmount || 0;
-        const roundToNearest100 = (num: number) => Math.ceil(num / 100) * 100;
 
         if (tenderType === 'Work') {
-            // Tender Form Fee Calculation for Work
-            if (amount <= 100000) fee = 0;
-            else if (amount > 100000 && amount <= 1000000) fee = 500;
-            else if (amount > 1000000 && amount <= 5000000) fee = 2500;
-            else if (amount > 5000000 && amount <= 10000000) fee = 5000;
-            else fee = 10000;
-
-            // EMD Calculation for Work
-            if (amount <= 20000000) emd = roundToNearest100(Math.min(amount * 0.025, 50000));
-            else if (amount > 20000000 && amount <= 50000000) emd = 100000;
-            else if (amount > 50000000 && amount <= 100000000) emd = 200000;
-            else emd = 500000;
-
+            fee = calculateFee(amount, tenderFeeRulesWork);
+            emd = calculateEmd(amount, emdRulesWork);
         } else if (tenderType === 'Purchase') {
-            // Tender Form Fee Calculation for Purchase
-            if (amount <= 100000) fee = 0;
-            else if (amount > 100000 && amount <= 1000000) fee = 800;
-            else if (amount > 1000000 && amount <= 2500000) fee = 1600;
-            else fee = 3000;
-            
-            // EMD Calculation for Purchase - 1% of amount, rounded up to nearest 100, up to 2 Crore
-            if (amount > 0 && amount <= 20000000) {
-              emd = Math.ceil((amount * 0.01) / 100) * 100;
-            } else {
-              emd = 0; // No EMD for purchase tenders above 2 Crore
-            }
+            fee = calculateFee(amount, tenderFeeRulesPurchase);
+            emd = calculateEmd(amount, emdRulesPurchase);
         }
 
         setValue('tenderFormFee', fee, { shouldValidate: true, shouldDirty: true });
         setValue('emd', emd, { shouldValidate: true, shouldDirty: true });
 
-    }, [estimateAmount, tenderType, setValue]);
+    }, [estimateAmount, tenderType, setValue, tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase]);
      
     const tenderFeeDescription = getValues('tenderFeeDescription') || allRateDescriptions.tenderFee;
     const emdDescription = getValues('emdDescription') || allRateDescriptions.emd;
