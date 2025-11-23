@@ -66,7 +66,7 @@ export default function BiddersListPage() {
                 await addDoc(collection(db, "bidders"), { ...data, order: newOrder });
                 toast({ title: "Bidder Added", description: `Bidder "${data.name}" has been saved.` });
             }
-            await refetchBidders();
+            refetchBidders(); // This will trigger the data store to refetch
             setIsNewBidderDialogOpen(false);
             setBidderToEdit(null);
         } catch (error: any) {
@@ -83,7 +83,7 @@ export default function BiddersListPage() {
         try {
             await deleteDoc(doc(db, "bidders", bidderToDelete.id));
             toast({ title: "Bidder Deleted", description: `Bidder "${bidderToDelete.name}" has been removed.` });
-            await refetchBidders();
+            refetchBidders();
         } catch (error: any) {
             console.error("Error deleting bidder:", error);
             toast({ title: "Error", description: "Could not delete bidder.", variant: "destructive" });
@@ -98,9 +98,8 @@ export default function BiddersListPage() {
 
         setIsSubmitting(true);
 
-        // Create a mutable copy for client-side reordering
-        const reorderedBidders = [...displayedBidders];
-        const fromIndex = reorderedBidders.findIndex(b => b.id === bidderToReorder.id);
+        const localBidders = [...displayedBidders];
+        const fromIndex = localBidders.findIndex(b => b.id === bidderToReorder.id);
         
         if (fromIndex === -1) {
             toast({ title: "Error", description: "Bidder to move not found.", variant: "destructive" });
@@ -108,36 +107,29 @@ export default function BiddersListPage() {
             return;
         }
         
-        // Perform the reorder on the local array
-        const [movedItem] = reorderedBidders.splice(fromIndex, 1);
-        reorderedBidders.splice(newPosition - 1, 0, movedItem);
+        const [movedItem] = localBidders.splice(fromIndex, 1);
+        localBidders.splice(newPosition - 1, 0, movedItem);
 
         try {
-            // Create a batch write to update Firestore atomically
             const batch = writeBatch(db);
-            reorderedBidders.forEach((bidder, index) => {
+            localBidders.forEach((bidder, index) => {
                 const docRef = doc(db, 'bidders', bidder.id);
-                // Update the order field based on the new array index
                 batch.update(docRef, { order: index });
             });
 
             await batch.commit();
-
-            // Update the local state to trigger an instant UI re-render
-            setDisplayedBidders(reorderedBidders);
+            refetchBidders();
             setBidderToReorder(null);
-
             toast({ title: "Reorder Successful", description: `"${bidderToReorder.name}" moved to position ${newPosition}.` });
 
         } catch (error: any) {
             console.error("Could not move bidder:", error);
             toast({ title: "Error Reordering", description: `Could not move bidder: ${error.message}`, variant: "destructive" });
-            // If the database fails, revert the local state to match the original
             setDisplayedBidders(displayedBidders);
         } finally {
             setIsSubmitting(false);
         }
-    }, [bidderToReorder, isSubmitting, displayedBidders, toast]);
+    }, [bidderToReorder, isSubmitting, displayedBidders, toast, refetchBidders]);
 
     return (
         <div className="space-y-6">
