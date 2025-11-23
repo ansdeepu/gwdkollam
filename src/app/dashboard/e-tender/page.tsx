@@ -178,9 +178,10 @@ export default function ETenderListPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[50px]">Sl. No.</TableHead>
-                                    <TableHead className="w-[200px]">eTender Ref. No.</TableHead>
+                                    <TableHead className="w-[200px]">eTender Ref. No. & Date</TableHead>
                                     <TableHead>Name of Work</TableHead>
-                                    <TableHead className="w-[120px]">Tender Date</TableHead>
+                                    <TableHead className="w-[150px]">Last Date of Receipt</TableHead>
+                                    <TableHead className="w-[150px]">Date of Opening</TableHead>
                                     <TableHead className="w-[150px]">Present Status</TableHead>
                                     <TableHead className="text-center w-[160px]">Actions</TableHead>
                                 </TableRow>
@@ -190,11 +191,12 @@ export default function ETenderListPage() {
                                     filteredTenders.map((tender, index) => (
                                         <TableRow key={tender.id}>
                                             <TableCell>{index + 1}</TableCell>
-                                            <TableCell className="font-medium">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</TableCell>
+                                            <TableCell className="font-medium whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`} Dated {formatDateSafe(tender.tenderDate)}</TableCell>
                                             <TableCell>
                                                 <p className="whitespace-normal break-words">{tender.nameOfWork}</p>
                                             </TableCell>
-                                            <TableCell>{formatDateSafe(tender.tenderDate)}</TableCell>
+                                            <TableCell>{formatDateSafe(tender.dateTimeOfReceipt, true, true, false)}</TableCell>
+                                            <TableCell>{formatDateSafe(tender.dateTimeOfOpening, true, false, true)}</TableCell>
                                             <TableCell>
                                                 {tender.presentStatus ? <Badge>{tender.presentStatus}</Badge> : 'N/A'}
                                             </TableCell>
@@ -219,7 +221,7 @@ export default function ETenderListPage() {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center">
+                                        <TableCell colSpan={7} className="h-24 text-center">
                                             No tenders found.
                                         </TableCell>
                                     </TableRow>
