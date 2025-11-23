@@ -18,11 +18,13 @@ import { useTenderData } from './TenderDataContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
 
-interface BasicDetailsFormProps {
-  onSubmit: (data: Partial<E_tenderFormData>) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-}
+// Helper to convert string amounts like "10 Lakhs" or "1 Crore" to numbers
+const parseAmountString = (amountStr: string): number => {
+    let num = parseFloat(amountStr.replace(/,/g, ''));
+    if (amountStr.toLowerCase().includes('lakh')) num *= 100000;
+    if (amountStr.toLowerCase().includes('crore')) num *= 10000000;
+    return num;
+};
 
 // Helper to parse rules from a description string
 const parseRules = (description: string): Array<[number, number]> => {
@@ -30,25 +32,32 @@ const parseRules = (description: string): Array<[number, number]> => {
     if (!description) return rules;
     const lines = description.split('\n');
     for (const line of lines) {
-        const feeMatch = line.match(/Rs\s*([\d,]+)/);
-        const amountMatch = line.match(/(?:Over|up to|Above)\s*([\d,]+(?:\s*Lakhs?|\s*Crores?)?)/gi);
-        if (feeMatch && amountMatch) {
-            const fee = parseInt(feeMatch[1].replace(/,/g, ''), 10);
-            let maxAmount = Infinity;
-            for (const match of amountMatch) {
-                let numPart = parseFloat(match.replace(/,/g, '').split(' ')[1]);
-                if (match.toLowerCase().includes('lakh')) numPart *= 100000;
-                if (match.toLowerCase().includes('crore')) numPart *= 10000000;
+        // Match format: "Over X up to Y: Rs Z" or "Up to X: Rs Z" or "Above X: Rs Z"
+        const feeMatch = line.match(/:\s*Rs\s*([\d,]+)/);
+        const noFeeMatch = line.match(/No Fee/i);
 
-                if (match.toLowerCase().includes('up to') || match.toLowerCase().includes('upto')) {
-                    maxAmount = numPart;
+        if (feeMatch) {
+            const fee = parseInt(feeMatch[1].replace(/,/g, ''), 10);
+            const amountMatch = line.match(/(?:Over|up to|Above)\s*([\d,]+(?:\s*Lakhs?|\s*Crores?)?)/gi);
+
+            if (amountMatch) {
+                let maxAmount = Infinity;
+                for (const match of amountMatch) {
+                    if (match.toLowerCase().includes('up to')) {
+                        maxAmount = parseAmountString(match.split(' ').slice(2).join(' '));
+                    }
                 }
+                rules.push([maxAmount, fee]);
             }
-            rules.push([maxAmount, fee]);
-        } else if (line.toLowerCase().includes('no fee')) {
+        } else if (noFeeMatch) {
              const amountMatchNoFee = line.match(/Up to Rs ([\d,]+)/);
              if(amountMatchNoFee) {
                 rules.push([parseInt(amountMatchNoFee[1].replace(/,/g, ''), 10), 0]);
+             } else {
+                 const upToLakhsMatch = line.match(/Up to ([\d,]+\s*Lakhs?)/i);
+                 if (upToLakhsMatch) {
+                     rules.push([parseAmountString(upToLakhsMatch[1]), 0]);
+                 }
              }
         }
     }
@@ -75,27 +84,27 @@ const parseEmdRules = (description: string): { type: 'percentage' | 'fixed', thr
     for (const line of lines) {
         const percentageMatch = line.match(/([\d.]+)%/);
         const maxMatch = line.match(/maximum of Rs. ([\d,]+)/);
-        const upToMatch = line.match(/Up to Rs. ([\d,]+ Crore)/);
+        const upToMatch = line.match(/Up to ([\d,\s]+ Crore)/i);
         
         if (percentageMatch && upToMatch) {
             const rate = parseFloat(percentageMatch[1]) / 100;
-            const threshold = parseFloat(upToMatch[1].replace(/,/g, '').replace(' Crore', '')) * 10000000;
+            const threshold = parseAmountString(upToMatch[1]);
             const max = maxMatch ? parseInt(maxMatch[1].replace(/,/g, ''), 10) : undefined;
             rules.push({ type: 'percentage', threshold, rate, max });
         } else {
              const fixedTiers: Array<[number, number]> = [];
-             const fixedTierMatches = line.matchAll(/Above Rs. ([\d,]+ Crore) up to Rs. ([\d,]+ Crore): Rs. ([\d,]+ Lakh)/g);
+             const fixedTierMatches = Array.from(line.matchAll(/Above Rs. ([\d,\s]+ Crore) up to Rs. ([\d,\s]+ Crore):\s*Rs. ([\d,\s]+ Lakh)/gi));
              for (const match of fixedTierMatches) {
-                 const lowerBound = parseFloat(match[1].replace(/,/g, '').replace(' Crore', '')) * 10000000;
-                 const fee = parseInt(match[3].replace(/,/g, ''), 10) * 100000;
+                 const lowerBound = parseAmountString(match[1]);
+                 const fee = parseAmountString(match[3]);
                  fixedTiers.push([lowerBound, fee]);
              }
              if(fixedTiers.length > 0) {
                  rules.push({ type: 'fixed', threshold: Infinity, fixedTiers });
              } else {
-                 const finalTierMatch = line.match(/Above Rs. ([\d,]+ Crore): Rs. ([\d,]+ Lakh)/);
+                 const finalTierMatch = line.match(/Above Rs. ([\d,\s]+ Crore):\s*Rs. ([\d,\s]+ Lakh)/i);
                  if (finalTierMatch) {
-                    rules.push({ type: 'fixed', threshold: Infinity, fixedTiers: [[parseFloat(finalTierMatch[1].replace(/,/g, '').replace(' Crore', ''))*10000000, parseInt(finalTierMatch[2].replace(/,/g, ''), 10)*100000]] });
+                    rules.push({ type: 'fixed', threshold: Infinity, fixedTiers: [[parseAmountString(finalTierMatch[1]), parseAmountString(finalTierMatch[2])]] });
                  }
              }
         }
@@ -104,6 +113,7 @@ const parseEmdRules = (description: string): { type: 'percentage' | 'fixed', thr
 };
 
 const calculateEmd = (amount: number, emdDesc: string): number => {
+    if (amount <= 0) return 0;
     const rules = parseEmdRules(emdDesc);
     const roundToNearest100 = (num: number) => Math.ceil(num / 100) * 100;
 
@@ -114,7 +124,8 @@ const calculateEmd = (amount: number, emdDesc: string): number => {
             return roundToNearest100(emd);
         }
         if (rule.type === 'fixed' && rule.fixedTiers) {
-            for (const [threshold, fee] of rule.fixedTiers.sort((a,b) => b[0] - a[0])) { // sort descending
+            // Sort descending to find the correct tier
+            for (const [threshold, fee] of rule.fixedTiers.sort((a,b) => b[0] - a[0])) {
                 if(amount > threshold) {
                     return fee;
                 }
