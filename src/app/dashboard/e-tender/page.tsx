@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -18,19 +19,35 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 
+const getStatusRowClass = (status?: E_tenderStatus): string => {
+    if (!status) return "";
+    switch (status) {
+        case 'Tender Process':
+            return "bg-gray-50 hover:bg-gray-100";
+        case 'Bid Opened':
+            return "bg-orange-50 hover:bg-orange-100";
+        case 'Selection Notice Issued':
+            return "bg-blue-50 hover:bg-blue-100";
+        case 'Work Order Issued':
+            return "bg-green-50 hover:bg-green-100";
+        default:
+            return "";
+    }
+};
+
 const getStatusBadgeClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
     switch (status) {
         case 'Tender Process':
-            return "bg-gray-100 text-gray-800 border-gray-300";
+            return "border-gray-400 text-gray-700";
         case 'Bid Opened':
-            return "bg-orange-100 text-orange-800 border-orange-300";
+            return "border-orange-400 text-orange-700";
         case 'Selection Notice Issued':
-            return "bg-blue-100 text-blue-800 border-blue-300";
+            return "border-blue-400 text-blue-700";
         case 'Work Order Issued':
-            return "bg-green-100 text-green-800 border-green-300";
+            return "border-green-400 text-green-700";
         default:
-            return "bg-secondary text-secondary-foreground";
+            return "border-border";
     }
 };
 
@@ -214,7 +231,7 @@ export default function ETenderListPage() {
                             <TableBody>
                                 {filteredTenders.length > 0 ? (
                                     filteredTenders.map((tender, index) => (
-                                        <TableRow key={tender.id}>
+                                        <TableRow key={tender.id} className={cn(getStatusRowClass(tender.presentStatus))}>
                                             <TableCell className="align-top">{index + 1}</TableCell>
                                             <TableCell className="font-medium align-top">
                                                 <div className="flex flex-col">
@@ -226,7 +243,7 @@ export default function ETenderListPage() {
                                             <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
                                             <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
                                             <TableCell className="align-top">
-                                                {tender.presentStatus && <Badge className={getStatusBadgeClass(tender.presentStatus)}>{tender.presentStatus}</Badge>}
+                                                {tender.presentStatus && <Badge variant="outline" className={cn("bg-background", getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
                                             </TableCell>
                                             <TableCell className="text-center align-top">
                                                 <div className="flex items-center justify-center space-x-1">
