@@ -337,7 +337,7 @@ export default function TenderDetails() {
                                                 <h4 className="text-sm font-medium text-muted-foreground">Tender Identification</h4>
                                                 <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                     <DetailRow label="eTender No." value={watch('eTenderNo')} />
-                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} align="center" />
+                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} align="center"/>
                                                     <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
                                                 </div>
                                             </div>
