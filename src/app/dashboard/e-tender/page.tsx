@@ -5,8 +5,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy, FileText, Calendar, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
 
 
 export default function ETenderListPage() {
@@ -178,67 +177,64 @@ export default function ETenderListPage() {
                     </div>
                 </CardContent>
             </Card>
-            <div className="grid grid-cols-1 gap-4">
-                 {filteredTenders.length > 0 ? (
-                    filteredTenders.map((tender, index) => (
-                        <Card key={tender.id} className="shadow-md hover:shadow-lg transition-shadow">
-                            <CardHeader className="pb-4">
-                               <div className="flex justify-between items-start gap-4">
-                                    <div>
-                                        <p className="text-sm font-semibold text-primary">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</p>
-                                        <p className="text-xs text-muted-foreground">{`Dated: ${formatDateSafe(tender.tenderDate)}`}</p>
-                                    </div>
-                                    {tender.presentStatus && <Badge>{tender.presentStatus}</Badge>}
-                               </div>
-                            </CardHeader>
-                            <CardContent className="space-y-3 pb-4">
-                                <p className="font-semibold text-foreground leading-snug">{tender.nameOfWork}</p>
-                                <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
-                                    <div className="flex items-start gap-2">
-                                        <Calendar className="h-4 w-4 mt-0.5"/>
-                                        <div>
-                                            <p className="font-medium">Last Date of Receipt</p>
-                                            <p>{formatDateSafe(tender.dateTimeOfReceipt, true)}</p>
-                                        </div>
-                                    </div>
-                                     <div className="flex items-start gap-2">
-                                        <Clock className="h-4 w-4 mt-0.5"/>
-                                        <div>
-                                            <p className="font-medium">Date of Opening</p>
-                                            <p>{formatDateSafe(tender.dateTimeOfOpening, true)}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="p-4 bg-secondary/30 flex justify-end">
-                                <div className="flex items-center space-x-1">
-                                    <Button variant="ghost" size="sm" onClick={() => handleViewAndEdit(tender.id)}>
-                                        <Eye className="h-4 w-4 mr-2" />View / Edit
-                                    </Button>
-                                    {user?.role === 'editor' && (
-                                        <>
-                                            <Button variant="ghost" size="sm" onClick={() => handleCopyClick(tender)}>
-                                                <Copy className="h-4 w-4 mr-2" />Copy
-                                            </Button>
-                                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
-                                                <Trash2 className="h-4 w-4 mr-2" />Delete
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </CardFooter>
-                        </Card>
-                    ))
-                ) : (
-                    <Card>
-                       <CardContent className="py-20 text-center">
-                            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
-                            <h3 className="text-lg font-semibold">No Tenders Found</h3>
-                            <p className="text-muted-foreground">No tenders match your current search.</p>
-                       </CardContent>
-                    </Card>
-                )}
-            </div>
+
+            <Card>
+                <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>eTender Ref. No.</TableHead>
+                                    <TableHead>Name of Work</TableHead>
+                                    <TableHead>Last Date of Receipt</TableHead>
+                                    <TableHead>Date of Opening</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="w-[1%] whitespace-nowrap text-center">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredTenders.length > 0 ? (
+                                    filteredTenders.map((tender) => (
+                                        <TableRow key={tender.id}>
+                                            <TableCell className="font-medium whitespace-nowrap">
+                                                <p>{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</p>
+                                                <p className="text-xs text-muted-foreground">Dated: {formatDateSafe(tender.tenderDate)}</p>
+                                            </TableCell>
+                                            <TableCell className="whitespace-normal break-words max-w-sm">{tender.nameOfWork}</TableCell>
+                                            <TableCell className="whitespace-nowrap">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
+                                            <TableCell className="whitespace-nowrap">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
+                                            <TableCell>{tender.presentStatus && <Badge>{tender.presentStatus}</Badge>}</TableCell>
+                                            <TableCell className="text-center">
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                    {user?.role === 'editor' && (
+                                                        <>
+                                                            <Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}>
+                                                                <Copy className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="h-24 text-center">
+                                            No tenders found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
             
              <AlertDialog open={!!tenderToDelete} onOpenChange={() => setTenderToDelete(null)}>
                 <AlertDialogContent>
