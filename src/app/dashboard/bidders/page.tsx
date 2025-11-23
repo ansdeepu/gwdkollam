@@ -160,6 +160,7 @@ export default function BiddersListPage() {
                                         <TableHead>Name</TableHead>
                                         <TableHead>Address</TableHead>
                                         <TableHead>Contact</TableHead>
+                                        <TableHead>Email</TableHead>
                                         <TableHead className="text-center">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -172,7 +173,7 @@ export default function BiddersListPage() {
                                                 <TableCell>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <p className="text-sm text-muted-foreground line-clamp-2">{bidder.address}</p>
+                                                            <p className="text-sm text-muted-foreground line-clamp-2 max-w-[200px]">{bidder.address}</p>
                                                         </TooltipTrigger>
                                                         <TooltipContent className="max-w-xs">
                                                             <p className="whitespace-pre-wrap">{bidder.address}</p>
@@ -182,7 +183,9 @@ export default function BiddersListPage() {
                                                 <TableCell>
                                                     <div className="text-sm">{bidder.phoneNo}</div>
                                                     {bidder.secondaryPhoneNo && <div className="text-xs text-muted-foreground">{bidder.secondaryPhoneNo}</div>}
-                                                    {bidder.email && <div className="text-xs text-muted-foreground mt-1">{bidder.email}</div>}
+                                                </TableCell>
+                                                <TableCell>
+                                                     {bidder.email && <div className="text-sm text-muted-foreground">{bidder.email}</div>}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <div className="flex items-center justify-center space-x-1">
@@ -194,7 +197,7 @@ export default function BiddersListPage() {
                                             </TableRow>
                                         ))
                                     ) : (
-                                        <TableRow><TableCell colSpan={5} className="h-24 text-center">No bidders found. Add one to get started.</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={6} className="h-24 text-center">No bidders found. Add one to get started.</TableCell></TableRow>
                                     )}
                                 </TableBody>
                             </Table>
