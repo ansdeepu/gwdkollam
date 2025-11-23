@@ -144,10 +144,12 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                         setter((prev: any) => ({...defaultRateDescriptions, ...descriptions}));
                     }
                 } else if (collectionName === 'bidders') {
-                    const data = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data(),
-                    })) as MasterBidder[];
+                    const data = snapshot.docs.map(doc => {
+                        return {
+                            ...doc.data(),
+                            id: doc.id, // Ensure Firestore ID is used
+                        } as MasterBidder;
+                    });
                     setter(data);
                 }
                 else {
