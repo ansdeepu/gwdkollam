@@ -15,6 +15,24 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
+
+const getStatusBadgeClass = (status?: E_tenderStatus): string => {
+    if (!status) return "";
+    switch (status) {
+        case 'Tender Process':
+            return "bg-gray-100 text-gray-800 border-gray-300";
+        case 'Bid Opened':
+            return "bg-orange-100 text-orange-800 border-orange-300";
+        case 'Selection Notice Issued':
+            return "bg-blue-100 text-blue-800 border-blue-300";
+        case 'Work Order Issued':
+            return "bg-green-100 text-green-800 border-green-300";
+        default:
+            return "bg-secondary text-secondary-foreground";
+    }
+};
 
 
 export default function ETenderListPage() {
@@ -197,16 +215,20 @@ export default function ETenderListPage() {
                                 {filteredTenders.length > 0 ? (
                                     filteredTenders.map((tender, index) => (
                                         <TableRow key={tender.id}>
-                                            <TableCell>{index + 1}</TableCell>
-                                            <TableCell className="font-medium">
-                                                <p>{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</p>
-                                                <p className="text-xs text-muted-foreground">Dated: {formatDateSafe(tender.tenderDate)}</p>
+                                            <TableCell className="align-top">{index + 1}</TableCell>
+                                            <TableCell className="font-medium align-top">
+                                                <div className="flex flex-col">
+                                                    <span>{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
+                                                    <span className="text-xs text-muted-foreground">Dated: {formatDateSafe(tender.tenderDate)}</span>
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="whitespace-normal break-words">{tender.nameOfWork}</TableCell>
-                                            <TableCell className="whitespace-normal break-words">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
-                                            <TableCell className="whitespace-normal break-words">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
-                                            <TableCell>{tender.presentStatus && <Badge>{tender.presentStatus}</Badge>}</TableCell>
-                                            <TableCell className="text-center">
+                                            <TableCell className="whitespace-normal break-words align-top">{tender.nameOfWork}</TableCell>
+                                            <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
+                                            <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
+                                            <TableCell className="align-top">
+                                                {tender.presentStatus && <Badge className={getStatusBadgeClass(tender.presentStatus)}>{tender.presentStatus}</Badge>}
+                                            </TableCell>
+                                            <TableCell className="text-center align-top">
                                                 <div className="flex items-center justify-center space-x-1">
                                                     <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
                                                         <Eye className="h-4 w-4" />
