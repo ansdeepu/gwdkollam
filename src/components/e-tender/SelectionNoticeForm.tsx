@@ -1,6 +1,4 @@
-
 // src/components/e-tender/SelectionNoticeForm.tsx
-"use client";
 
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -109,13 +107,13 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
         const stamp = calculateStampPaperValue(l1Amount);
         const additionalPg = calculateAdditionalPG(initialData?.estimateAmount, l1Amount);
 
-        reset({
-            selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
-            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount ?? pg,
-            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount ?? additionalPg,
-            stampPaperAmount: initialData?.stampPaperAmount ?? stamp,
-        });
-    }, [initialData, l1Amount, calculateStampPaperValue, calculateAdditionalPG, reset]);
+        // Use setValue to update fields reactively instead of reset
+        setValue('selectionNoticeDate', formatDateForInput(initialData?.selectionNoticeDate));
+        setValue('performanceGuaranteeAmount', pg, { shouldValidate: true });
+        setValue('additionalPerformanceGuaranteeAmount', additionalPg, { shouldValidate: true });
+        setValue('stampPaperAmount', stamp, { shouldValidate: true });
+
+    }, [initialData, l1Amount, calculateStampPaperValue, calculateAdditionalPG, setValue]);
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
