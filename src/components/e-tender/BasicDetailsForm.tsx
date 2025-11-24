@@ -1,7 +1,7 @@
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useForm, FormProvider, useWatch, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
@@ -33,21 +33,20 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         defaultValues: tender,
     });
     
-    const { control, setValue, handleSubmit, watch, getValues } = form;
+    const { control, setValue, handleSubmit, watch } = form;
 
     const [estimateAmount, tenderType] = watch([
         'estimateAmount',
         'tenderType',
     ]);
 
-    useEffect(() => {
+    const calculateFees = useCallback(() => {
         const amount = estimateAmount || 0;
         let fee = 0;
         let emd = 0;
         const roundToNext100 = (num: number) => Math.ceil(num / 100) * 100;
 
         if (tenderType === 'Work') {
-            // Tender Fee for Work
             if (amount <= 50000) fee = 300;
             else if (amount <= 1000000) fee = Math.max(500, Math.min(amount * 0.002, 2000));
             else if (amount <= 10000000) fee = 2500;
@@ -56,8 +55,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             else if (amount <= 100000000) fee = 10000;
             else fee = 15000;
             fee = roundToNext100(fee);
-
-            // EMD for Work
+            
             if (amount <= 20000000) emd = Math.min(amount * 0.025, 50000);
             else if (amount <= 50000000) emd = 100000;
             else if (amount <= 100000000) emd = 200000;
@@ -65,25 +63,23 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
             emd = roundToNext100(emd);
 
         } else if (tenderType === 'Purchase') {
-            // Tender Fee for Purchase
             if (amount <= 100000) fee = 0;
             else if (amount <= 1000000) fee = Math.max(400, Math.min(amount * 0.002, 1500));
             else fee = Math.min(amount * 0.0015, 25000);
             fee = roundToNext100(fee);
 
-            // EMD for Purchase
             if (amount > 0 && amount <= 20000000) emd = roundToNext100(amount * 0.01);
             else emd = 0;
         }
 
         setValue('tenderFormFee', fee, { shouldValidate: true, shouldDirty: true });
         setValue('emd', emd, { shouldValidate: true, shouldDirty: true });
-
     }, [estimateAmount, tenderType, setValue]);
-     
-    const tenderFeeDescription = getValues('tenderFeeDescription') || allRateDescriptions.tenderFee;
-    const emdDescription = getValues('emdDescription') || allRateDescriptions.emd;
 
+    useEffect(() => {
+        calculateFees();
+    }, [calculateFees]);
+     
     const onFormSubmit = (data: BasicDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
         onSubmit(formData);
@@ -129,7 +125,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                 <FormField name="estimateAmount" control={control} render={({ field }) => ( <FormItem><FormLabel>Tender Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="tenderFormFee" control={control} render={({ field }) => ( 
                                     <FormItem>
-                                        <FormLabel>Tender Form Fee (Rs.)</FormLabel>
+                                        <FormLabel>Tender Fee (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} className="bg-muted/50 font-semibold" /></FormControl>
                                         <FormDescription className="text-xs">Auto-calculated. Includes GST for 'Purchase' type.</FormDescription>
                                         <FormMessage />
