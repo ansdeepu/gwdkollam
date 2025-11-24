@@ -355,7 +355,7 @@ export default function TenderDetails() {
                                                 <h4 className="text-sm font-medium text-muted-foreground">Financial Details</h4>
                                                 <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
                                                     <DetailRow label="Tender Amount (Rs.)" value={watch('estimateAmount')} isCurrency />
-                                                    <DetailRow label="Tender Form Fee (Rs.)" value={displayTenderFormFee} />
+                                                    <DetailRow label="Tender Fee (Rs.)" value={displayTenderFormFee} />
                                                     <DetailRow label="EMD (Rs.)" value={watch('emd')} isCurrency/>
                                                 </div>
                                             </div>
@@ -610,7 +610,7 @@ export default function TenderDetails() {
 
                 <Dialog open={activeModal === 'basic'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                        <BasicDetailsForm onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} initialData={getValues()} />
+                        <BasicDetailsForm onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} />
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'opening'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
