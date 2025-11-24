@@ -588,60 +588,29 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   };
   
   const onSubmit = async (data: DataEntryFormData) => {
-    setIsSubmitting(true);
-    const FILE_ENTRIES_COLLECTION = 'fileEntries';
-    try {
-        if (!user) throw new Error("Authentication error. Please log in again.");
+      setIsSubmitting(true);
+      try {
+          if (!user) throw new Error("Authentication error. Please log in again.");
 
-        if (isSupervisor) {
-            await createPendingUpdate(data.fileNo, data.siteDetails!, user, {});
-            toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
-            router.push(returnPath);
-            return;
-        }
-        
-        const fileNoTrimmed = data.fileNo.trim().toUpperCase();
-
-        if (fileIdToEdit) {
-            if (fileNoToEdit?.trim().toUpperCase() !== fileNoTrimmed) {
-                const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNoTrimmed));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    toast({
-                        title: "Duplicate File Number",
-                        description: `File No. "${data.fileNo}" already exists. Please use a unique file number.`,
-                        variant: "destructive",
-                    });
-                    setIsSubmitting(false);
-                    return;
-                }
-            }
-            await updateFileEntry(fileIdToEdit, { ...data, fileNo: fileNoTrimmed });
-            toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
-        } else {
-            const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNoTrimmed));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                toast({
-                    title: "Duplicate File Number",
-                    description: `File No. "${data.fileNo}" already exists. Please use a unique file number.`,
-                    variant: "destructive",
-                });
-                setIsSubmitting(false);
-                return;
-            }
-            await addFileEntry({ ...data, fileNo: fileNoTrimmed });
-            toast({ title: "File Created", description: `File No. ${data.fileNo} has been successfully created.` });
-        }
-        router.push(returnPath);
-
-    } catch (error: any) {
-        console.error("Form submission error:", error);
-        toast({ title: "Submission Failed", description: error.message || "An unknown error occurred.", variant: "destructive" });
-    } finally {
-        setIsSubmitting(false);
-    }
+          if (isSupervisor) {
+              await createPendingUpdate(data.fileNo, data.siteDetails!, user, {});
+              toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
+          } else if (fileIdToEdit) {
+              await updateFileEntry(fileIdToEdit, data);
+              toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
+          } else {
+              await addFileEntry(data);
+              toast({ title: "File Created", description: `File No. ${data.fileNo} has been successfully created.` });
+          }
+          router.push(returnPath);
+      } catch (error: any) {
+          console.error("Form submission error:", error);
+          toast({ title: "Submission Failed", description: error.message || "An unknown error occurred.", variant: "destructive" });
+      } finally {
+          setIsSubmitting(false);
+      }
   };
+
 
   const openDialog = (type: 'application' | 'remittance' | 'payment' | 'site' | 'reorderSite' | 'viewSite', data: any, isView: boolean = false) => {
     setDialogState({ type, data, isView });
@@ -665,55 +634,78 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     }
     setSiteToCopy(null);
   };
+  
+  const handleSaveAndContinue = async (updatedData: Partial<DataEntryFormData>) => {
+    try {
+        const currentData = getValues();
+        const mergedData = { ...currentData, ...updatedData };
 
-  const handleDialogConfirm = (data: any) => {
-    const { type, data: originalData } = dialogState;
-    if (!type) return;
-
-    switch (type) {
-      case 'application':
-        setValue('fileNo', data.fileNo);
-        setValue('applicantName', data.applicantName);
-        setValue('phoneNo', data.phoneNo);
-        setValue('secondaryMobileNo', data.secondaryMobileNo);
-        setValue('applicationType', data.applicationType);
-        break;
-      case 'remittance':
-        if (originalData.index !== undefined) {
-          updateRemittance(originalData.index, data);
+        if (!fileIdToEdit) {
+            const newId = await addFileEntry(mergedData);
+            toast({ title: "File Created", description: `File No. ${mergedData.fileNo} has been saved.` });
+            router.replace(`/dashboard/data-entry?id=${newId}&workType=${workTypeContext}`);
         } else {
-          appendRemittance(data);
+            await updateFileEntry(fileIdToEdit, mergedData);
+            toast({ title: "File Updated", description: `Changes to File No. ${mergedData.fileNo} have been saved.` });
         }
-        break;
-      case 'payment':
-        if (originalData.index !== undefined) {
-          updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-        } else {
-          appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-        }
-        break;
-      case 'site':
-        if (originalData.index !== undefined) {
-          updateSite(originalData.index, data);
-          toast({ title: "Site details updated." });
-        } else {
-          appendSite(data);
-        }
-        break;
-      case 'reorderSite':
-        moveSite(data.from, data.to);
-        toast({ title: "Site Moved", description: `Site moved to position ${data.to + 1}.` });
-        break;
+    } catch (error: any) {
+        console.error("Save and continue error:", error);
+        toast({ title: "Save Failed", description: error.message, variant: "destructive" });
     }
-    closeDialog();
   };
 
-  const handleDeleteItem = () => {
+
+  const handleDialogConfirm = async (data: any) => {
+      const { type, data: originalData } = dialogState;
+      if (!type) return;
+
+      closeDialog();
+
+      // Update local form state immediately for UI responsiveness
+      switch (type) {
+          case 'application':
+              setValue('fileNo', data.fileNo);
+              setValue('applicantName', data.applicantName);
+              setValue('phoneNo', data.phoneNo);
+              setValue('secondaryMobileNo', data.secondaryMobileNo);
+              setValue('applicationType', data.applicationType);
+              break;
+          case 'remittance':
+              if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+              else appendRemittance(data);
+              break;
+          case 'payment':
+               if (originalData.index !== undefined) updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
+               else appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
+              break;
+          case 'site':
+              if (originalData.index !== undefined) updateSite(originalData.index, data);
+              else appendSite(data);
+              break;
+          case 'reorderSite':
+              moveSite(data.from, data.to);
+              break;
+      }
+      
+      // Now, save to the database
+      if (isEditor) {
+         await handleSaveAndContinue(getValues());
+      }
+  };
+
+
+  const handleDeleteItem = async () => {
     if (!itemToDelete) return;
     const { type, index } = itemToDelete;
     if (type === 'remittance') removeRemittance(index);
     if (type === 'payment') removePayment(index);
     if (type === 'site') removeSite(index);
+    
+    // After removing locally, save the entire form state to persist the deletion
+    if (isEditor && fileIdToEdit) {
+        await handleSaveAndContinue(getValues());
+    }
+
     toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} Removed`, description: "The entry has been removed from this file.", variant: "destructive" });
     setItemToDelete(null);
   };
@@ -890,7 +882,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         {!isViewer && (
             <CardFooter className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => router.push(returnPath)} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
-                <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : (fileIdToEdit ? 'Save Changes' : 'Save New File')}</Button>
+                <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : (fileIdToEdit ? 'Save Changes & Exit' : 'Save New File & Exit')}</Button>
             </CardFooter>
         )}
         
