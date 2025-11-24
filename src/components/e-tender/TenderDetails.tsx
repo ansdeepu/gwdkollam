@@ -71,13 +71,11 @@ const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left' 
     }
 
     return (
-        <div>
+        <div className={cn(align === 'center' && 'text-center')}>
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
             <dd className={cn(
                 "text-sm font-semibold",
                 label.toLowerCase().includes('malayalam') && "text-xs",
-                align === 'center' && 'text-center',
-                align === 'right' && 'text-right'
             )}>
               {displayValue}
               {subValue && <span className="text-xs text-muted-foreground ml-1">({subValue})</span>}
