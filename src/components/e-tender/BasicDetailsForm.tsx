@@ -1,3 +1,4 @@
+
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
@@ -23,7 +24,6 @@ import { BasicDetailsSchema } from '@/lib/schemas/eTenderSchema';
 const parseAmountString = (amountStr?: string | null): number => {
     if (!amountStr) return 0;
     const cleanedStr = String(amountStr).replace(/,/g, '').toLowerCase();
-    
     const numMatch = cleanedStr.match(/([\d.]+)/);
     if (!numMatch) return 0;
     
@@ -85,7 +85,6 @@ const calculateFee = (amount: number, rules: FeeRule[]): number => {
             return rule.fee;
         }
     }
-    // Fallback for amounts greater than the highest defined "up to" limit
     const lastRule = rules.find(r => r.limit === Infinity);
     return lastRule?.fee ?? (rules.length > 0 ? rules[rules.length - 1].fee : 0);
 };
@@ -142,7 +141,6 @@ const calculateEmd = (amount: number, rules: EmdRule[]): number => {
         }
     }
     
-    // Fallback for amounts greater than all defined thresholds
     const lastRule = rules.find(r => r.threshold === Infinity);
     if (lastRule && lastRule.type === 'fixed' && lastRule.value !== undefined) {
       return lastRule.value;
@@ -257,7 +255,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>Tender Form Fee (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription className="text-xs">Based on tender amount and type.</FormDescription>
+                                        <FormDescription className="text-xs">Auto-calculated. GST (18%) is extra.</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
@@ -265,7 +263,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                     <FormItem>
                                         <FormLabel>EMD (Rs.)</FormLabel>
                                         <FormControl><Input readOnly type="number" {...field} value={field.value ?? ''} /></FormControl>
-                                        <FormDescription className="text-xs">Based on tender amount and type.</FormDescription>
+                                        <FormDescription className="text-xs">Auto-calculated. Rounded up.</FormDescription>
                                         <FormMessage />
                                     </FormItem> 
                                 )}/>
