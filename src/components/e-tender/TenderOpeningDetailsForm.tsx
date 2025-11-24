@@ -18,7 +18,7 @@ import { useDataStore } from '@/hooks/use-data-store';
 
 interface TenderOpeningDetailsFormProps {
     initialData?: Partial<E_tenderFormData>;
-    onSubmit: (data: Partial<E_tenderFormData>) => void;
+    onSubmit: (data: Partial<E_tenderFormData>) => Promise<void>;
     onCancel: () => void;
     isSubmitting: boolean;
 }
@@ -65,9 +65,14 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
         });
     }, [initialData, form]);
 
+    const handleFormSubmit = async (data: TenderOpeningDetailsFormData) => {
+        await onSubmit(data);
+        onCancel(); // Close the dialog on successful submission
+    };
+
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Tender Opening Details</DialogTitle>
                     <DialogDescription>Manage dates and committee members for the tender opening process.</DialogDescription>
