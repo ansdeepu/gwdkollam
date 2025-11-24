@@ -1,4 +1,3 @@
-
 // src/components/e-tender/WorkOrderDetailsForm.tsx
 "use client";
 
@@ -53,15 +52,15 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         }
     });
     
-    const { setValue, watch, control } = form;
+    const { setValue, watch, control, reset } = form;
 
     useEffect(() => {
-        form.reset({
+        reset({
              ...initialData,
             agreementDate: formatDateForInput(initialData?.agreementDate),
             dateWorkOrder: formatDateForInput(initialData?.dateWorkOrder),
         });
-    }, [initialData, form]);
+    }, [initialData, reset]);
 
     const title = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
     
@@ -94,7 +93,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                         <FormLabel>Measurer</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value || ""}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select an Engineer" /></SelectTrigger></FormControl>
-                                            <SelectContent>
+                                            <SelectContent position="popper">
                                                 <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
                                                 {assistantEngineerList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
                                             </SelectContent>
@@ -111,7 +110,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                         <FormLabel>Name of Supervisor 1</FormLabel>
                                         <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, 1)} value={field.value || ""}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
-                                            <SelectContent>
+                                            <SelectContent position="popper">
                                                 <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
                                                 {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
                                             </SelectContent>
@@ -135,7 +134,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                         <FormLabel>Name of Supervisor 2</FormLabel>
                                         <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, 2)} value={field.value || ""}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
-                                            <SelectContent>
+                                            <SelectContent position="popper">
                                                 <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
                                                 {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
                                             </SelectContent>
@@ -159,7 +158,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                         <FormLabel>Name of Supervisor 3</FormLabel>
                                         <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, 3)} value={field.value || ""}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
-                                            <SelectContent>
+                                            <SelectContent position="popper">
                                                 <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
                                                 {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
                                             </SelectContent>
