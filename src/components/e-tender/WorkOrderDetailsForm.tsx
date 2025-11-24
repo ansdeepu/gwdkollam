@@ -56,7 +56,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         }
     });
     
-    const { setValue, watch, control, reset } = form;
+    const { setValue, watch, control, reset, handleSubmit } = form;
 
     useEffect(() => {
         reset({
@@ -75,9 +75,14 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         setValue(`supervisor${fieldIndex}Phone`, selectedStaff?.phoneNo || null);
     };
 
+    const handleFormSubmit = async (data: WorkOrderDetailsFormData) => {
+        await onSubmit(data);
+        onCancel();
+    };
+
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
                 <DialogHeader className="p-6 pb-4 shrink-0">
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Enter details related to the final order.</DialogDescription>
