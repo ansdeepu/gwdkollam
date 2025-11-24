@@ -264,10 +264,10 @@ export default function TenderDetails() {
         return bidderFields.length > 0;
     }, [bidderFields]);
 
+    const watchedSelectionNoticeFields = watch(['selectionNoticeDate', 'performanceGuaranteeAmount', 'additionalPerformanceGuaranteeAmount', 'stampPaperAmount']);
     const hasAnySelectionNoticeData = useMemo(() => {
-        const values = watch(['selectionNoticeDate', 'performanceGuaranteeAmount', 'additionalPerformanceGuaranteeAmount', 'stampPaperAmount']);
-        return values.some(v => v);
-    }, [watch]);
+        return watchedSelectionNoticeFields.some(v => v);
+    }, [watchedSelectionNoticeFields]);
     
     const assistantEngineerName = watch('nameOfAssistantEngineer');
 
@@ -636,7 +636,7 @@ export default function TenderDetails() {
                 </Dialog>
                 <Dialog open={activeModal === 'selectionNotice'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent className="max-w-2xl flex flex-col p-0">
-                        <SelectionNoticeForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} l1Amount={l1Bidder?.quotedAmount} />
+                        <SelectionNoticeForm onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} l1Amount={l1Bidder?.quotedAmount} />
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
