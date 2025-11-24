@@ -76,13 +76,13 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)}>
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Enter details related to the final order.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full px-6 py-4">
+                    <ScrollArea className="h-[calc(90vh-14rem)] px-6 py-4">
                         <div className="space-y-6">
                             <Card>
                                 <CardHeader><CardTitle className="text-base">Dates</CardTitle></CardHeader>
@@ -106,7 +106,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                                 <Select onValueChange={field.onChange} value={field.value || ""}>
                                                     <FormControl><SelectTrigger><SelectValue placeholder="Select an Engineer" /></SelectTrigger></FormControl>
                                                     <SelectContent position="popper">
-                                                        <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
+                                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
                                                         {assistantEngineerList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
                                                     </SelectContent>
                                                 </Select>
