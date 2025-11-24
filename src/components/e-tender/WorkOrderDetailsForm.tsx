@@ -135,7 +135,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                                         <FormLabel>Supervisor {i}</FormLabel>
                                                         <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, i)} value={field.value || ""}>
                                                             <FormControl><SelectTrigger><SelectValue placeholder={`Select Supervisor ${i}`} /></SelectTrigger></FormControl>
-                                                            <SelectContent position="popper">
+                                                            <SelectContent position="popper" className="max-h-80">
                                                                 <SelectItem value="_clear_" >-- Clear Selection --</SelectItem>
                                                                 {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
                                                             </SelectContent>
