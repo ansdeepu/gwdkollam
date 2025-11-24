@@ -1,3 +1,4 @@
+
 // src/components/e-tender/SelectionNoticeForm.tsx
 
 import React, { useEffect, useMemo, useCallback } from 'react';
@@ -12,9 +13,9 @@ import { Loader2, Save, X } from 'lucide-react';
 import { SelectionNoticeDetailsSchema, type E_tenderFormData, type SelectionNoticeDetailsFormData } from '@/lib/schemas/eTenderSchema';
 import { formatDateForInput } from './utils';
 import { useDataStore, defaultRateDescriptions } from '@/hooks/use-data-store';
+import { useTenderData } from './TenderDataContext';
 
 interface SelectionNoticeFormProps {
-    initialData?: Partial<E_tenderFormData>;
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
@@ -50,21 +51,22 @@ const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
 };
 
 
-export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
+export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
+    const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
-    const isNewTender = initialData?.id === 'new';
+    const isNewTender = tender?.id === 'new';
 
     const stampPaperDescription = useMemo(() => {
-        return initialData?.stampPaperDescription || allRateDescriptions.stampPaper || defaultRateDescriptions.stampPaper;
-    }, [initialData?.stampPaperDescription, allRateDescriptions.stampPaper]);
+        return tender?.stampPaperDescription || allRateDescriptions.stampPaper || defaultRateDescriptions.stampPaper;
+    }, [tender?.stampPaperDescription, allRateDescriptions.stampPaper]);
     
     const performanceGuaranteeDescription = useMemo(() => {
-        return initialData?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee || defaultRateDescriptions.performanceGuarantee;
-    }, [initialData?.performanceGuaranteeDescription, allRateDescriptions.performanceGuarantee]);
+        return tender?.performanceGuaranteeDescription || allRateDescriptions.performanceGuarantee || defaultRateDescriptions.performanceGuarantee;
+    }, [tender?.performanceGuaranteeDescription, allRateDescriptions.performanceGuarantee]);
     
     const additionalPerformanceGuaranteeDescription = useMemo(() => {
-        return initialData?.additionalPerformanceGuaranteeDescription || allRateDescriptions.additionalPerformanceGuarantee || defaultRateDescriptions.additionalPerformanceGuarantee;
-    }, [initialData?.additionalPerformanceGuaranteeDescription, allRateDescriptions.additionalPerformanceGuarantee]);
+        return tender?.additionalPerformanceGuaranteeDescription || allRateDescriptions.additionalPerformanceGuarantee || defaultRateDescriptions.additionalPerformanceGuarantee;
+    }, [tender?.additionalPerformanceGuaranteeDescription, allRateDescriptions.additionalPerformanceGuarantee]);
 
     const calculateStampPaperValue = useCallback((amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
@@ -93,38 +95,38 @@ export default function SelectionNoticeForm({ initialData, onSubmit, onCancel, i
     const form = useForm<SelectionNoticeDetailsFormData>({
         resolver: zodResolver(SelectionNoticeDetailsSchema),
         defaultValues: {
-            selectionNoticeDate: formatDateForInput(initialData?.selectionNoticeDate),
-            performanceGuaranteeAmount: initialData?.performanceGuaranteeAmount,
-            additionalPerformanceGuaranteeAmount: initialData?.additionalPerformanceGuaranteeAmount,
-            stampPaperAmount: initialData?.stampPaperAmount,
+            selectionNoticeDate: formatDateForInput(tender?.selectionNoticeDate),
+            performanceGuaranteeAmount: tender?.performanceGuaranteeAmount,
+            additionalPerformanceGuaranteeAmount: tender?.additionalPerformanceGuaranteeAmount,
+            stampPaperAmount: tender?.stampPaperAmount,
         }
     });
     
-    const { reset, handleSubmit, setValue } = form;
+    const { handleSubmit, setValue } = form;
 
     useEffect(() => {
         // Use Math.ceil to round up to the nearest hundred
         const pg = l1Amount ? Math.ceil((l1Amount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(l1Amount);
-        const additionalPg = calculateAdditionalPG(initialData?.estimateAmount, l1Amount);
+        const additionalPg = calculateAdditionalPG(tender?.estimateAmount, l1Amount);
 
         // Use setValue to update fields reactively instead of reset
-        setValue('selectionNoticeDate', formatDateForInput(initialData?.selectionNoticeDate));
+        setValue('selectionNoticeDate', formatDateForInput(tender?.selectionNoticeDate));
         setValue('performanceGuaranteeAmount', pg, { shouldValidate: true });
         setValue('additionalPerformanceGuaranteeAmount', additionalPg, { shouldValidate: true });
         setValue('stampPaperAmount', stamp, { shouldValidate: true });
 
-    }, [initialData, l1Amount, calculateStampPaperValue, calculateAdditionalPG, setValue]);
+    }, [tender, l1Amount, calculateStampPaperValue, calculateAdditionalPG, setValue]);
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
-        if (isNewTender || !initialData?.performanceGuaranteeDescription) {
+        if (isNewTender || !tender?.performanceGuaranteeDescription) {
             formData.performanceGuaranteeDescription = performanceGuaranteeDescription;
         }
-        if (isNewTender || !initialData?.additionalPerformanceGuaranteeDescription) {
+        if (isNewTender || !tender?.additionalPerformanceGuaranteeDescription) {
             formData.additionalPerformanceGuaranteeDescription = additionalPerformanceGuaranteeDescription;
         }
-        if (isNewTender || !initialData?.stampPaperDescription) {
+        if (isNewTender || !tender?.stampPaperDescription) {
             formData.stampPaperDescription = stampPaperDescription;
         }
 
