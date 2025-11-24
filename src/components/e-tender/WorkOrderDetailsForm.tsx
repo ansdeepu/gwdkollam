@@ -94,7 +94,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                         <Select onValueChange={field.onChange} value={field.value || ""}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select an Engineer" /></SelectTrigger></FormControl>
                                             <SelectContent position="popper">
-                                                <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>
+                                                <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
                                                 {assistantEngineerList.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
                                             </SelectContent>
                                         </Select>
