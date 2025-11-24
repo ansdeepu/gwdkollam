@@ -16,7 +16,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useDataStore } from '@/hooks/use-data-store';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Separator } from '../ui/separator';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 
 interface WorkOrderDetailsFormProps {
@@ -128,27 +127,13 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                             <FormField name="supervisor1Id" control={control} render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Name of Supervisor</FormLabel>
-                                                     <Popover>
-                                                        <PopoverTrigger asChild>
-                                                            <FormControl>
-                                                                <Button variant="outline" role="combobox" className="w-full justify-between">
-                                                                    {field.value ? supervisorList.find(s => s.id === field.value)?.name : "Select a Supervisor"}
-                                                                </Button>
-                                                            </FormControl>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0">
-                                                            <ScrollArea className="h-72">
-                                                            <div className="p-2">
-                                                                <Button variant="ghost" className="w-full justify-start" onClick={() => handleSupervisorChange(null, 1)}>-- Clear Selection --</Button>
-                                                                {supervisorList.map(staff => (
-                                                                    <Button key={staff.id} variant="ghost" className="w-full justify-start" onClick={() => handleSupervisorChange(staff.id, 1)}>
-                                                                        {staff.name} ({staff.designation})
-                                                                    </Button>
-                                                                ))}
-                                                            </div>
-                                                            </ScrollArea>
-                                                        </PopoverContent>
-                                                    </Popover>
+                                                     <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, 1)} value={field.value || ""}>
+                                                        <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
+                                                        <SelectContent position="popper">
+                                                            <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
+                                                            {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}/>
