@@ -75,9 +75,9 @@ export default function ETenderListPage() {
     const filteredTenders = useMemo(() => {
         const getTenderNumber = (tenderNo: string | undefined | null): number => {
             if (!tenderNo) return 0;
-            const matches = tenderNo.match(/\d+/g);
-            if (!matches) return 0;
-            return parseInt(matches[matches.length - 1], 10);
+            // Matches "T-" followed by one or more digits. Extracts the digits.
+            const match = tenderNo.match(/T-(\d+)/);
+            return match ? parseInt(match[1], 10) : 0;
         };
         
         const sortedTenders = [...tenders].sort((a, b) => {
@@ -85,9 +85,10 @@ export default function ETenderListPage() {
             const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
 
             if (dateA !== dateB) {
-                return dateB - dateA;
+                return dateB - dateA; // Sort by date descending first
             }
             
+            // If dates are the same, sort by tender number descending
             const numA = getTenderNumber(a.eTenderNo);
             const numB = getTenderNumber(b.eTenderNo);
             return numB - numA;
