@@ -1,7 +1,7 @@
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useForm, FormProvider, useWatch, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
@@ -26,11 +26,13 @@ const parseAmountString = (amountStr?: string): number => {
     
     const numMatch = cleanedStr.match(/([\d.]+)/);
     if (!numMatch) return 0;
-    const num = parseFloat(numMatch[1]);
+    
+    let num = parseFloat(numMatch[1]);
     if (isNaN(num)) return 0;
 
-    if (cleanedStr.includes('lakh')) return num * 100000;
-    if (cleanedStr.includes('crore')) return num * 10000000;
+    if (cleanedStr.includes('lakh')) num *= 100000;
+    if (cleanedStr.includes('crore')) num *= 10000000;
+    
     return num;
 };
 
@@ -54,7 +56,7 @@ const parseFeeRules = (description: string): FeeRule[] => {
             }
             continue;
         }
-
+        
         const overUpToMatch = condition.match(/over\s*([\d,.\s\w]+)\s*up to\s*([\d,.\s\w]+)/);
         if (overUpToMatch) {
             rules.push({ limit: parseAmountString(overUpToMatch[2]), fee });
@@ -74,6 +76,7 @@ const parseFeeRules = (description: string): FeeRule[] => {
     }
     return rules.sort((a, b) => a.limit - b.limit);
 };
+
 
 type EmdRule = { type: 'percentage' | 'fixed'; threshold: number; rate?: number; max?: number; value?: number; };
 const parseEmdRules = (description: string): EmdRule[] => {
@@ -109,7 +112,6 @@ const parseEmdRules = (description: string): EmdRule[] => {
     return rules.sort((a, b) => a.threshold - b.threshold);
 };
 
-
 const calculateFee = (amount: number, rules: FeeRule[]): number => {
     if (amount <= 0) return 0;
     for (const rule of rules) {
@@ -127,8 +129,8 @@ const calculateEmd = (amount: number, rules: EmdRule[]): number => {
 
     for (const rule of rules) {
         if (amount <= rule.threshold) {
-            if (rule.type === 'percentage') {
-                let emd = amount * (rule.rate || 0);
+            if (rule.type === 'percentage' && rule.rate) {
+                let emd = amount * rule.rate;
                 if (rule.max && emd > rule.max) emd = rule.max;
                 return roundToNearest100(emd);
             }
@@ -138,7 +140,6 @@ const calculateEmd = (amount: number, rules: EmdRule[]): number => {
         }
     }
     
-    // This handles the "Above X" case which has a threshold of Infinity
     const lastRule = rules[rules.length - 1];
     if (lastRule && lastRule.threshold === Infinity) {
         if (lastRule.type === 'fixed') return lastRule.value || 0;
@@ -146,7 +147,6 @@ const calculateEmd = (amount: number, rules: EmdRule[]): number => {
 
     return 0;
 };
-
 // --- End of Corrected Calculation Logic ---
 
 interface BasicDetailsFormProps {
@@ -159,7 +159,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
     const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
 
-    const { tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase } = useMemo(() => {
+    const calculationRules = useMemo(() => {
         const tenderFeeDesc = allRateDescriptions.tenderFee || defaultRateDescriptions.tenderFee;
         const [tenderFeeWork, tenderFeePurchase] = tenderFeeDesc.split('\n\nFor Purchase:');
 
@@ -192,17 +192,17 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
         let emd = 0;
 
         if (tenderType === 'Work') {
-            fee = calculateFee(amount, tenderFeeRulesWork);
-            emd = calculateEmd(amount, emdRulesWork);
+            fee = calculateFee(amount, calculationRules.tenderFeeRulesWork);
+            emd = calculateEmd(amount, calculationRules.emdRulesWork);
         } else if (tenderType === 'Purchase') {
-            fee = calculateFee(amount, tenderFeeRulesPurchase);
-            emd = calculateEmd(amount, emdRulesPurchase);
+            fee = calculateFee(amount, calculationRules.tenderFeeRulesPurchase);
+            emd = calculateEmd(amount, calculationRules.emdRulesPurchase);
         }
         
         setValue('tenderFormFee', fee, { shouldDirty: true });
         setValue('emd', emd, { shouldDirty: true });
 
-    }, [estimateAmount, tenderType, setValue, tenderFeeRulesWork, tenderFeeRulesPurchase, emdRulesWork, emdRulesPurchase]);
+    }, [estimateAmount, tenderType, setValue, calculationRules]);
      
     const onFormSubmit = (data: BasicDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
