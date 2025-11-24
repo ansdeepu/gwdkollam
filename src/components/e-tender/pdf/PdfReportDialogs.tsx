@@ -156,6 +156,12 @@ export default function PdfReportDialogs() {
     const hasSelectionNotice = !!tender.selectionNoticeDate;
     const hasWorkOrder = !!tender.agreementDate;
 
+    const workOrderButtonLabel = tender.tenderType === 'Work'
+        ? 'Work Order'
+        : tender.tenderType === 'Purchase'
+        ? 'Supply Order'
+        : 'Work / Supply Order';
+
     return (
         <Card>
             <CardHeader>
@@ -231,7 +237,7 @@ export default function PdfReportDialogs() {
                         tooltipContent={!isTenderSaved ? "Save the tender first." : "Add Work Order Details first."}
                     />
                      <ReportButton 
-                        label="Work / Supply Order"
+                        label={workOrderButtonLabel}
                         href={tender.id && tender.tenderType ? `/dashboard/e-tender/${tender.id}/${tender.tenderType === 'Work' ? 'work-order' : 'supply-order'}` : '#'}
                         disabled={!isTenderSaved || !hasWorkOrder || !tender.tenderType}
                         tooltipContent={!isTenderSaved ? "Save the tender first." : !hasWorkOrder ? "Add Work Order Details first." : "Select a 'Type of Tender' in Basic Details."}
