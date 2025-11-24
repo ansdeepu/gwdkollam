@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDateSafe } from '@/components/e-tender/utils';
+import { formatDateSafe, toDateOrNull } from '@/components/e-tender/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
@@ -73,10 +73,24 @@ export default function ETenderListPage() {
     
 
     const filteredTenders = useMemo(() => {
+        const getTenderNumber = (tenderNo: string | undefined | null): number => {
+            if (!tenderNo) return 0;
+            const matches = tenderNo.match(/\d+/g);
+            if (!matches) return 0;
+            return parseInt(matches[matches.length - 1], 10);
+        };
+        
         const sortedTenders = [...tenders].sort((a, b) => {
-            const dateA = a.tenderDate ? new Date(a.tenderDate).getTime() : 0;
-            const dateB = b.tenderDate ? new Date(b.tenderDate).getTime() : 0;
-            return dateB - dateA;
+            const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
+            const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
+
+            if (dateA !== dateB) {
+                return dateB - dateA;
+            }
+            
+            const numA = getTenderNumber(a.eTenderNo);
+            const numB = getTenderNumber(b.eTenderNo);
+            return numB - numA;
         });
 
         if (!searchTerm) return sortedTenders;
