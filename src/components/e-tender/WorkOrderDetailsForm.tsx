@@ -54,18 +54,6 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
     
     const { setValue, watch } = form;
 
-    const [
-        supervisor1Id,
-        supervisor2Id,
-        supervisor3Id,
-    ] = watch(['supervisor1Id', 'supervisor2Id', 'supervisor3Id']);
-
-    const availableSupervisors = useMemo(() => {
-        const selectedIds = [supervisor1Id, supervisor2Id, supervisor3Id].filter(Boolean);
-        return supervisorList.filter(s => !selectedIds.includes(s.id));
-    }, [supervisor1Id, supervisor2Id, supervisor3Id, supervisorList]);
-
-
     useEffect(() => {
         form.reset({
              ...initialData,
@@ -88,26 +76,19 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         const fieldName = `supervisor${index}Name` as const;
         const fieldPhone = `supervisor${index}Phone` as const;
         
-        const currentId = watch(fieldId);
-        const currentStaffMember = currentId ? supervisorList.find(s => s.id === currentId) : null;
-
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
                  <FormField
-                    name={fieldName}
+                    name={fieldId}
                     control={form.control}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Name of Supervisor {index}</FormLabel>
-                             <Select onValueChange={(value) => {
-                                 const staff = supervisorList.find(s => s.name === value);
-                                 handleSupervisorChange(staff?.id || null, index);
-                             }} value={field.value || ""}>
+                             <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, index)} value={field.value || ""}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
                                 <SelectContent>
-                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); handleSupervisorChange(null, index); }}>-- Clear Selection --</SelectItem>
-                                    {currentStaffMember && <SelectItem key={currentStaffMember.id} value={currentStaffMember.name}>{currentStaffMember.name} ({currentStaffMember.designation})</SelectItem>}
-                                    {availableSupervisors.map(staff => <SelectItem key={staff.id} value={staff.name}>{staff.name} ({staff.designation})</SelectItem>)}
+                                    <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
+                                    {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             <FormMessage />
