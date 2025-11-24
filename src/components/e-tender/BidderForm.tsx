@@ -104,7 +104,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select a Bidder"/></SelectTrigger></FormControl>
                                         <SelectContent>
                                           <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); handleBidderSelect(''); }}>-- Clear Selection --</SelectItem>
-                                          {allBidders.map(bidder => <SelectItem key={bidder.id} value={bidder.name}>{bidder.name}</SelectItem>)}
+                                          {allBidders.filter(b => b.name).map(bidder => <SelectItem key={bidder.id} value={bidder.name}>{bidder.name}</SelectItem>)}
                                         </SelectContent>
                                       </Select>
                                       <FormMessage />
