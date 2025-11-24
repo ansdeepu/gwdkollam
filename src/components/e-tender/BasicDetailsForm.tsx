@@ -27,8 +27,8 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting, ini
         defaultValues: {
             ...initialData,
             tenderDate: formatDateForInput(initialData?.tenderDate),
-            lastDateOfReceipt: formatDateForInput(initialData?.lastDateOfReceipt, true),
-            dateOfOpeningTender: formatDateForInput(initialData?.dateOfOpeningTender, true),
+            dateTimeOfReceipt: formatDateForInput(initialData?.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(initialData?.dateTimeOfOpening, true),
         },
     });
     
@@ -63,8 +63,8 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting, ini
                                 <FormField name="emd" control={control} render={({ field }) => ( <FormItem><FormLabel>EMD (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField name="lastDateOfReceipt" control={control} render={({ field }) => ( <FormItem><FormLabel>Last Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="dateOfOpeningTender" control={control} render={({ field }) => ( <FormItem><FormLabel>Date & Time of Opening</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="dateTimeOfReceipt" control={control} render={({ field }) => ( <FormItem><FormLabel>Last Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="dateTimeOfOpening" control={control} render={({ field }) => ( <FormItem><FormLabel>Date & Time of Opening</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                         </div>
                     </ScrollArea>
