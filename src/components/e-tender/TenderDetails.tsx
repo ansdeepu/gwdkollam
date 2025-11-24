@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -220,15 +221,15 @@ export default function TenderDetails() {
         setIsClearSelectionNoticeConfirmOpen(false);
     };
     
-    const watchedFields = watch([
+    const watchedBasicFields = watch([
         'eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'nameOfWorkMalayalam',
         'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion',
         'dateTimeOfReceipt', 'dateTimeOfOpening', 'tenderType'
     ]);
 
     const hasAnyBasicData = useMemo(() => {
-        return watchedFields.some(v => v);
-    }, [watchedFields]);
+        return watchedBasicFields.some(v => v);
+    }, [watchedBasicFields]);
 
     const hasAnyCorrigendumData = corrigendumFields.length > 0;
     
@@ -280,11 +281,11 @@ export default function TenderDetails() {
     const supervisor2Designation = useMemo(() => allStaffMembers.find(s => s.name === supervisor2Name)?.designation, [supervisor2Name, allStaffMembers]);
     const supervisor3Designation = useMemo(() => allStaffMembers.find(s => s.name === supervisor3Name)?.designation, [supervisor3Name, allStaffMembers]);
 
-
+    const watchedWorkOrderFields = watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'supervisor1Name', 'supervisor2Name', 'supervisor3Name']);
     const hasAnyWorkOrderData = useMemo(() => {
-        const values = watch(['agreementDate', 'dateWorkOrder', 'nameOfAssistantEngineer', 'supervisor1Name', 'supervisor2Name', 'supervisor3Name']);
-        return values.some(v => v);
-    }, [watch]);
+        return watchedWorkOrderFields.some(v => v);
+    }, [watchedWorkOrderFields]);
+
 
     const tenderType = watch('tenderType');
     const workOrderTitle = tenderType === 'Purchase' ? 'Supply Order Details' : 'Work Order Details';
