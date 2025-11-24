@@ -109,80 +109,90 @@ export default function TenderDetails() {
     const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({ control, name: "corrigendums" });
 
     const handleFinalSave = async () => {
-      setIsSubmitting(true);
-      try {
-          const currentTenderData = getValues();
-          const dataForSave = {
-              ...currentTenderData,
-              tenderDate: toDateOrNull(currentTenderData.tenderDate),
-              dateTimeOfReceipt: toDateOrNull(currentTenderData.dateTimeOfReceipt),
-              dateTimeOfOpening: toDateOrNull(currentTenderData.dateTimeOfOpening),
-              dateOfOpeningBid: toDateOrNull(currentTenderData.dateOfOpeningBid),
-              dateOfTechnicalAndFinancialBidOpening: toDateOrNull(currentTenderData.dateOfTechnicalAndFinancialBidOpening),
-              selectionNoticeDate: toDateOrNull(currentTenderData.selectionNoticeDate),
-              agreementDate: toDateOrNull(currentTenderData.agreementDate),
-              dateWorkOrder: toDateOrNull(currentTenderData.dateWorkOrder),
-              corrigendums: (currentTenderData.corrigendums || []).map(c => ({
+        setIsSubmitting(true);
+        try {
+            await handleSave(getValues(), true);
+            toast({ title: "Tender Saved", description: "All changes have been saved." });
+            router.push('/dashboard/e-tender');
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleSave = async (data: Partial<E_tenderFormData>, isFinalSave = false) => {
+        setIsSubmitting(true);
+        try {
+            const currentData = getValues();
+            const updatedData = { ...currentData, ...data };
+            
+            const dataForSave = {
+              ...updatedData,
+              tenderDate: toDateOrNull(updatedData.tenderDate),
+              dateTimeOfReceipt: toDateOrNull(updatedData.dateTimeOfReceipt),
+              dateTimeOfOpening: toDateOrNull(updatedData.dateTimeOfOpening),
+              dateOfOpeningBid: toDateOrNull(updatedData.dateOfOpeningBid),
+              dateOfTechnicalAndFinancialBidOpening: toDateOrNull(updatedData.dateOfTechnicalAndFinancialBidOpening),
+              selectionNoticeDate: toDateOrNull(updatedData.selectionNoticeDate),
+              agreementDate: toDateOrNull(updatedData.agreementDate),
+              dateWorkOrder: toDateOrNull(updatedData.dateWorkOrder),
+              corrigendums: (updatedData.corrigendums || []).map(c => ({
                   ...c,
                   corrigendumDate: toDateOrNull(c.corrigendumDate),
                   lastDateOfReceipt: toDateOrNull(c.lastDateOfReceipt),
                   dateOfOpeningTender: toDateOrNull(c.dateOfOpeningTender),
               }))
-          };
+            };
 
-          if (tender.id === 'new') {
-              const newTenderId = await addTender(dataForSave);
-              toast({ title: "Tender Created", description: "The new e-Tender has been created and saved." });
-              router.replace(`/dashboard/e-tender/${newTenderId}`);
-          } else {
-              await saveTenderToDb(tender.id, dataForSave);
-              toast({ title: "All Changes Saved", description: "All tender details have been successfully updated." });
-              router.push('/dashboard/e-tender');
-          }
-      } catch (error: any) {
-          console.error("Save Error:", error);
-          toast({ title: "Error Saving Changes", description: error.message || "An unknown error occurred.", variant: "destructive" });
-      } finally {
-          setIsSubmitting(false);
-      }
+            if (tender.id === 'new') {
+                const newTenderId = await addTender(dataForSave);
+                toast({ title: "Tender Created", description: "The new e-Tender has been saved. You can now edit other sections." });
+                if (!isFinalSave) {
+                    router.replace(`/dashboard/e-tender/${newTenderId}`, { scroll: false });
+                }
+            } else {
+                await saveTenderToDb(tender.id, dataForSave);
+                updateTender(dataForSave);
+                if (!isFinalSave) {
+                   toast({ title: "Details Saved", description: "Your changes have been saved to the database." });
+                }
+            }
+        } catch (error: any) {
+            console.error("Save Error:", error);
+            toast({ title: "Error Saving", description: error.message || "An unknown error occurred.", variant: "destructive" });
+            throw error;
+        } finally {
+            setIsSubmitting(false);
+            if (!isFinalSave) {
+               setActiveModal(null);
+            }
+        }
     };
+
 
     useEffect(() => {
         form.reset(tender);
     }, [tender, form]);
 
-    const handleSave = (data: Partial<E_tenderFormData>) => {
-        const currentData = getValues();
-        const updatedData = { ...currentData, ...data };
-        updateTender(updatedData);
-        form.reset(updatedData); // Immediately reset the form to reflect changes
-        toast({ title: "Details Updated Locally", description: "Click 'Save All Changes' to persist." });
-        setActiveModal(null);
-    };
-
     const handleBidderSave = (bidderData: Bidder) => {
         if (activeModal === 'addBidder') {
             appendBidder(bidderData);
-            toast({ title: "Bidder Added Locally" });
         } else if (activeModal === 'editBidder' && modalData?.index !== undefined) {
             updateBidder(modalData.index, bidderData);
-            toast({ title: "Bidder Updated Locally" });
         }
+        handleSave({ bidders: getValues('bidders') });
         setActiveModal(null);
         setModalData(null);
     };
     
     const handleCorrigendumSave = (corrigendumData: Corrigendum) => {
-        const dataToSave = {
-            ...corrigendumData,
-        };
         if (activeModal === 'addCorrigendum') {
-            appendCorrigendum(dataToSave);
-            toast({ title: "Corrigendum Added Locally" });
+            appendCorrigendum(corrigendumData);
         } else if (activeModal === 'editCorrigendum' && modalData?.index !== undefined) {
-            updateCorrigendum(modalData.index, dataToSave);
-            toast({ title: "Corrigendum Updated Locally" });
+            updateCorrigendum(modalData.index, corrigendumData);
         }
+        handleSave({ corrigendums: getValues('corrigendums') });
         setActiveModal(null);
         setModalData(null);
     };
@@ -192,7 +202,7 @@ export default function TenderDetails() {
         setActiveModal('editCorrigendum');
     };
     
-    const handleClearOpeningDetails = () => {
+    const handleClearOpeningDetails = async () => {
         const clearedData = {
             dateOfOpeningBid: null,
             dateOfTechnicalAndFinancialBidOpening: null,
@@ -200,24 +210,22 @@ export default function TenderDetails() {
             technicalCommitteeMember2: undefined,
             technicalCommitteeMember3: undefined,
         };
-        updateTender(clearedData);
-        form.reset({ ...form.getValues(), ...clearedData });
-        toast({ title: "Opening Details Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
+        await handleSave(clearedData);
+        toast({ title: "Opening Details Cleared", description: "The details have been cleared and saved." });
         setIsClearOpeningDetailsConfirmOpen(false);
     };
     
-    const handleClearSelectionNotice = () => {
+    const handleClearSelectionNotice = async () => {
         const clearedData = {
             selectionNoticeDate: null,
             performanceGuaranteeAmount: undefined,
             additionalPerformanceGuaranteeAmount: undefined,
             stampPaperAmount: undefined,
-            performanceGuaranteeDescription: undefined, // Also clear the description
-            stampPaperDescription: undefined, // Also clear the description
+            performanceGuaranteeDescription: undefined,
+            stampPaperDescription: undefined,
         };
-        updateTender(clearedData);
-        form.reset({ ...form.getValues(), ...clearedData });
-        toast({ title: "Selection Notice Cleared", description: "The details have been cleared locally. Save all changes to make it permanent." });
+        await handleSave(clearedData);
+        toast({ title: "Selection Notice Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
     };
     
@@ -595,11 +603,11 @@ export default function TenderDetails() {
                                     <TooltipTrigger asChild>
                                         <Button type="button" size="lg" onClick={handleFinalSave} disabled={isSubmitting}>
                                             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                            Save All Changes
+                                            Save All Changes & Exit
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        <p>Persists all locally made changes to the database.</p>
+                                        <p>Persists all locally made changes to the database and returns to the list.</p>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>

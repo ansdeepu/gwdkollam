@@ -1,3 +1,4 @@
+
 // src/components/e-tender/CorrigendumForm.tsx
 "use client";
 
@@ -34,7 +35,12 @@ const createDefaultCorrigendum = (): Corrigendum => ({
 export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, initialData }: CorrigendumFormProps) {
     const form = useForm<Corrigendum>({
         resolver: zodResolver(CorrigendumSchema),
-        defaultValues: initialData || createDefaultCorrigendum(),
+        defaultValues: initialData ? {
+            ...initialData,
+            corrigendumDate: formatDateForInput(initialData.corrigendumDate),
+            lastDateOfReceipt: formatDateForInput(initialData.lastDateOfReceipt, true),
+            dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
+        } : createDefaultCorrigendum(),
     });
 
     useEffect(() => {

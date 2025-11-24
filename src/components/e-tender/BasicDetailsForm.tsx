@@ -1,3 +1,4 @@
+
 // src/components/e-tender/BasicDetailsForm.tsx
 "use client";
 
@@ -30,7 +31,12 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
 
     const form = useForm<BasicDetailsFormData>({
         resolver: zodResolver(BasicDetailsSchema),
-        defaultValues: tender,
+        defaultValues: {
+            ...tender,
+            tenderDate: formatDateForInput(tender.tenderDate),
+            dateTimeOfReceipt: formatDateForInput(tender.dateTimeOfReceipt, true),
+            dateTimeOfOpening: formatDateForInput(tender.dateTimeOfOpening, true),
+        }
     });
     
     const { control, setValue, handleSubmit, watch } = form;

@@ -1,3 +1,4 @@
+
 // src/components/e-tender/SelectionNoticeForm.tsx
 
 import React, { useEffect, useMemo, useCallback } from 'react';
@@ -104,12 +105,10 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
     const { handleSubmit, setValue } = form;
 
     useEffect(() => {
-        // Use Math.ceil to round up to the nearest hundred
         const pg = l1Amount ? Math.ceil((l1Amount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(l1Amount);
         const additionalPg = calculateAdditionalPG(tender?.estimateAmount, l1Amount);
 
-        // Use setValue to update fields reactively instead of reset
         setValue('selectionNoticeDate', formatDateForInput(tender?.selectionNoticeDate));
         setValue('performanceGuaranteeAmount', pg, { shouldValidate: true });
         setValue('additionalPerformanceGuaranteeAmount', additionalPg, { shouldValidate: true });
