@@ -53,7 +53,7 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         }
     });
     
-    const { setValue, watch } = form;
+    const { setValue, watch, control } = form;
 
     useEffect(() => {
         form.reset({
@@ -71,45 +71,6 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         setValue(`supervisor${fieldIndex}Name`, selectedStaff?.name || null);
         setValue(`supervisor${fieldIndex}Phone`, selectedStaff?.phoneNo || null);
     };
-
-    const SupervisorSelector = ({ index }: { index: 1 | 2 | 3 }) => {
-        const fieldId = `supervisor${index}Id` as const;
-        const fieldName = `supervisor${index}Name` as const;
-        const fieldPhone = `supervisor${index}Phone` as const;
-        
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-                 <FormField
-                    name={fieldId}
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Name of Supervisor {index}</FormLabel>
-                             <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, index)} value={field.value || ""}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
-                                    {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    name={fieldPhone}
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Supervisor Phone No. {index}</FormLabel>
-                            <FormControl><Input {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-        )
-    }
 
     return (
         <FormProvider {...form}>
@@ -142,9 +103,78 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
                                     </FormItem>
                                 )}
                             />
-                            <SupervisorSelector index={1} />
-                            <SupervisorSelector index={2} />
-                            <SupervisorSelector index={3} />
+                            
+                            {/* Supervisor 1 */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                                <FormField name="supervisor1Id" control={control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name of Supervisor 1</FormLabel>
+                                        <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, 1)} value={field.value || ""}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
+                                                {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                <FormField name="supervisor1Phone" control={control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Supervisor Phone No. 1</FormLabel>
+                                        <FormControl><Input {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            </div>
+
+                            {/* Supervisor 2 */}
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                                <FormField name="supervisor2Id" control={control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name of Supervisor 2</FormLabel>
+                                        <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, 2)} value={field.value || ""}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
+                                                {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                <FormField name="supervisor2Phone" control={control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Supervisor Phone No. 2</FormLabel>
+                                        <FormControl><Input {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            </div>
+
+                            {/* Supervisor 3 */}
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                                <FormField name="supervisor3Id" control={control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name of Supervisor 3</FormLabel>
+                                        <Select onValueChange={(value) => handleSupervisorChange(value === '_clear_' ? null : value, 3)} value={field.value || ""}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
+                                                {supervisorList.map(staff => <SelectItem key={staff.id} value={staff.id}>{staff.name} ({staff.designation})</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                <FormField name="supervisor3Phone" control={control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Supervisor Phone No. 3</FormLabel>
+                                        <FormControl><Input {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            </div>
                         </div>
                     </ScrollArea>
                 </div>
