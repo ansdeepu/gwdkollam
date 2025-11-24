@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -16,6 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 // Import the new generator functions
 import { generateNIT } from './generators/nitGenerator';
@@ -35,11 +43,13 @@ const ReportButton = ({
   onClick,
   disabled,
   href,
+  tooltipContent,
 }: {
   label: string;
   onClick?: () => Promise<void>;
   disabled?: boolean;
   href?: string;
+  tooltipContent?: React.ReactNode;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,26 +60,37 @@ const ReportButton = ({
     setIsLoading(false);
   };
   
-  const content = (
+  const buttonContent = (
       <Button onClick={handleClick} variant="outline" className="justify-start w-full" disabled={disabled || isLoading}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
           {label}
       </Button>
   );
-  
-  if (href) {
-      return <Link href={href} passHref target="_blank" rel="noopener noreferrer">{content}</Link>;
+
+  const renderButton = () => {
+    if (href) {
+        return <Link href={href} passHref target="_blank" rel="noopener noreferrer" className={disabled ? 'pointer-events-none' : ''}>{buttonContent}</Link>;
+    }
+    return buttonContent;
+  };
+
+  if (disabled && tooltipContent) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="w-full">{renderButton()}</div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltipContent}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   }
 
-  return content;
+  return renderButton();
 };
-
-const PlaceholderReportButton = ({ label }: { label: string }) => (
-  <Button variant="outline" className="justify-start" disabled>
-    <Download className="mr-2 h-4 w-4" />
-    {label} (WIP)
-  </Button>
-);
 
 
 export default function PdfReportDialogs() {
@@ -130,6 +151,8 @@ export default function PdfReportDialogs() {
         }
     };
 
+    const isOrderDisabled = !tender.id || tender.id === 'new';
+    const orderTooltip = isOrderDisabled ? "Save the tender first to enable this report." : !tender.tenderType ? "Select a 'Type of Tender' in Basic Details." : undefined;
 
     return (
         <Card>
@@ -166,6 +189,7 @@ export default function PdfReportDialogs() {
                         label="Bid Opening Summary"
                         onClick={() => handleGeneratePdf(generateBidOpeningSummary, 'Bid_Opening_Summary', 'Your Bid Opening Summary has been downloaded.')}
                         disabled={(tender.bidders || []).length === 0}
+                        tooltipContent={(tender.bidders || []).length === 0 ? "Add at least one bidder to enable." : undefined}
                     />
                     <ReportButton
                         label="Technical Summary"
@@ -175,31 +199,26 @@ export default function PdfReportDialogs() {
                         label="Financial Summary"
                         onClick={() => handleGeneratePdf(generateFinancialSummary, 'Financial_Summary', 'Your Financial Summary has been downloaded.')}
                         disabled={(tender.bidders || []).length === 0}
+                        tooltipContent={(tender.bidders || []).length === 0 ? "Add at least one bidder to enable." : undefined}
                     />
                     <ReportButton 
                         label="Selection Notice"
                         href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}
-                        disabled={!tender.id || tender.id === 'new'}
+                        disabled={isOrderDisabled}
+                        tooltipContent={isOrderDisabled ? "Save the tender first to enable." : undefined}
                     />
                     <ReportButton
                         label="Work Agreement"
                         onClick={() => handleGeneratePdf(generateWorkAgreement, 'Work_Agreement', 'Your Work Agreement has been downloaded.')}
-                        disabled={!tender.id || tender.id === 'new'}
+                        disabled={isOrderDisabled}
+                        tooltipContent={isOrderDisabled ? "Save the tender first to enable." : undefined}
                     />
-                    {tender.tenderType === 'Work' && (
-                        <ReportButton 
-                            label="Work Order"
-                            href={tender.id ? `/dashboard/e-tender/${tender.id}/work-order` : '#'}
-                            disabled={!tender.id || tender.id === 'new'}
-                        />
-                    )}
-                    {tender.tenderType === 'Purchase' && (
-                        <ReportButton 
-                            label="Supply Order"
-                            href={tender.id ? `/dashboard/e-tender/${tender.id}/supply-order` : '#'}
-                            disabled={!tender.id || tender.id === 'new'}
-                        />
-                    )}
+                    <ReportButton 
+                        label="Work / Supply Order"
+                        href={tender.id && tender.tenderType ? `/dashboard/e-tender/${tender.id}/${tender.tenderType === 'Work' ? 'work-order' : 'supply-order'}` : '#'}
+                        disabled={isOrderDisabled || !tender.tenderType}
+                        tooltipContent={orderTooltip}
+                    />
                 </div>
             </CardContent>
         </Card>
