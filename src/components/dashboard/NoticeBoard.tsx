@@ -1,4 +1,3 @@
-
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
