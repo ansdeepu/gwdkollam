@@ -11,36 +11,13 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDateSafe, toDateOrNull } from '@/components/e-tender/utils';
+import { formatDateSafe, toDateOrNull, getStatusBadgeClass } from '@/components/e-tender/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
-
-
-const getStatusBadgeClass = (status?: E_tenderStatus): string => {
-    if (!status) return "";
-    switch (status) {
-        case 'Tender Process':
-            return "border-gray-400 bg-gray-100 text-gray-800";
-        case 'Bid Opened':
-            return "border-orange-400 bg-orange-100 text-orange-800";
-        case 'Retender':
-            return "border-yellow-400 bg-yellow-100 text-yellow-800";
-        case 'Tender Cancelled':
-            return "border-red-400 bg-red-100 text-red-800";
-        case 'Selection Notice Issued':
-            return "border-blue-400 bg-blue-100 text-blue-800";
-        case 'Work Order Issued':
-            return "border-green-400 bg-green-100 text-green-800";
-        case 'Supply Order Issued':
-            return "border-purple-400 bg-purple-100 text-purple-800";
-        default:
-            return "border-border";
-    }
-};
 
 
 export default function ETenderListPage() {
@@ -250,7 +227,7 @@ export default function ETenderListPage() {
                                                 <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
                                                 <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
                                                 <TableCell className="align-top">
-                                                    {tender.presentStatus && <Badge className={getStatusBadgeClass(tender.presentStatus)}>{tender.presentStatus}</Badge>}
+                                                    {tender.presentStatus && <Badge className={cn(getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
                                                 </TableCell>
                                                 <TableCell className="text-center align-top">
                                                     <div className="flex items-center justify-center space-x-1">

@@ -1,5 +1,6 @@
 // src/components/e-tender/utils.ts
 import { format, isValid, parseISO, toDate } from 'date-fns';
+import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 
 export const formatDateForInput = (date: any, isDateTime: boolean = false): string => {
     if (!date) return '';
@@ -63,4 +64,26 @@ export const formatDateSafe = (date: any, includeTime: boolean = false, isReceip
     }
 
     return format(d, includeTime ? 'dd/MM/yyyy, hh:mm a' : 'dd/MM/yyyy');
+};
+
+export const getStatusBadgeClass = (status?: E_tenderStatus): string => {
+    if (!status) return "";
+    switch (status) {
+        case 'Tender Process':
+            return "border-gray-400 bg-gray-100 text-gray-800";
+        case 'Bid Opened':
+            return "border-orange-400 bg-orange-100 text-orange-800";
+        case 'Retender':
+            return "border-yellow-400 bg-yellow-100 text-yellow-800";
+        case 'Tender Cancelled':
+            return "border-red-400 bg-red-100 text-red-800";
+        case 'Selection Notice Issued':
+            return "border-blue-400 bg-blue-100 text-blue-800";
+        case 'Work Order Issued':
+            return "border-green-400 bg-green-100 text-green-800";
+        case 'Supply Order Issued':
+            return "border-purple-400 bg-purple-100 text-purple-800";
+        default:
+            return "border-border";
+    }
 };

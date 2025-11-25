@@ -16,7 +16,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { toDateOrNull, formatDateSafe } from './utils';
+import { toDateOrNull, formatDateSafe, getStatusBadgeClass } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -578,22 +578,25 @@ export default function TenderDetails() {
                         
                          <Card className="mt-4">
                             <CardContent className="p-4 space-y-4">
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <h3 className="text-lg font-semibold flex items-center gap-3 text-primary"><FileText className="h-5 w-5"/>Present Status</h3>
-                                    <div className="w-full sm:w-[250px]">
-                                        <FormField
-                                            name="presentStatus"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value || undefined}>
-                                                        <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
-                                                        <SelectContent>{dynamicStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                                    <div className="flex items-center gap-2">
+                                        {tender.presentStatus && <Badge className={cn(getStatusBadgeClass(tender.presentStatus), "h-6")}>{tender.presentStatus}</Badge>}
+                                        <div className="w-full sm:w-[250px]">
+                                            <FormField
+                                                name="presentStatus"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value || undefined}>
+                                                            <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
+                                                            <SelectContent>{dynamicStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <FormField
