@@ -316,6 +316,13 @@ export default function TenderDetails() {
         );
     }, [bidderFields]);
 
+    const dynamicStatusOptions = useMemo(() => {
+        if (tenderType === 'Purchase') {
+            return eTenderStatusOptions.map(opt => opt === 'Work Order Issued' ? 'Supply Order Issued' : opt);
+        }
+        return eTenderStatusOptions;
+    }, [tenderType]);
+
 
     return (
         <FormProvider {...form}>
@@ -577,7 +584,7 @@ export default function TenderDetails() {
                                                 <FormItem>
                                                     <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value || undefined}>
                                                         <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
-                                                        <SelectContent>{eTenderStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                                        <SelectContent>{dynamicStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                     </Select>
                                                     <FormMessage />
                                                 </FormItem>
