@@ -10,6 +10,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
+import { isValid } from 'date-fns';
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '') return null;
@@ -34,9 +35,9 @@ export default function ETenderNoticeBoard() {
   const categorizedTenders = useMemo(() => {
     const now = new Date();
     const review: E_tender[] = [];
-    let toBeOpened: E_tender[] = [];
-    let pendingSelection: E_tender[] = [];
-    let pendingWorkOrder: E_tender[] = [];
+    const toBeOpened: E_tender[] = [];
+    const pendingSelection: E_tender[] = [];
+    const pendingWorkOrder: E_tender[] = [];
 
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
@@ -44,12 +45,12 @@ export default function ETenderNoticeBoard() {
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
 
-        // Review list is independent and time-based
+        // This is a separate, time-based check. A tender can be in review AND in another category.
         if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
             review.push(tender);
         }
 
-        // Prioritized logic: A tender appears in only one of the following lists.
+        // Prioritized categorization
         if (!tender.dateOfOpeningBid) {
             toBeOpened.push(tender);
         } else if (!tender.selectionNoticeDate) {
@@ -111,15 +112,15 @@ export default function ETenderNoticeBoard() {
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
            <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className="text-xs px-1">
-                               <div className="flex items-center gap-1">
+                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className="text-xs px-1 py-1.5 md:py-2">
+                               <div className="flex items-center justify-center gap-1.5">
                                     <Icon className="h-3 w-3 hidden sm:inline-block" />
-                                    <span>{tab.label}</span>
-                                    <span className="ml-1 font-bold">({tab.count})</span>
+                                    <span className="truncate">{tab.label}</span>
+                                    <span className="font-bold">({tab.count})</span>
                                </div>
                             </TabsTrigger>
                         );
