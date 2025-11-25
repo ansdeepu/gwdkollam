@@ -635,62 +635,60 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setSiteToCopy(null);
   };
   
-  const handleSaveAndContinue = async (updatedData: Partial<DataEntryFormData>) => {
-    try {
-        const currentData = getValues();
-        const mergedData = { ...currentData, ...updatedData };
-
-        if (!fileIdToEdit) {
-            const newId = await addFileEntry(mergedData);
-            toast({ title: "File Created", description: `File No. ${mergedData.fileNo} has been saved.` });
-            router.replace(`/dashboard/data-entry?id=${newId}&workType=${workTypeContext}`);
-        } else {
-            await updateFileEntry(fileIdToEdit, mergedData);
-            toast({ title: "File Updated", description: `Changes to File No. ${mergedData.fileNo} have been saved.` });
-        }
-    } catch (error: any) {
-        console.error("Save and continue error:", error);
-        toast({ title: "Save Failed", description: error.message, variant: "destructive" });
-    }
-  };
-
-
   const handleDialogConfirm = async (data: any) => {
-      const { type, data: originalData } = dialogState;
-      if (!type) return;
+    const { type, data: originalData } = dialogState;
+    if (!type) return;
 
-      closeDialog();
+    closeDialog();
 
-      // Update local form state immediately for UI responsiveness
-      switch (type) {
-          case 'application':
-              setValue('fileNo', data.fileNo);
-              setValue('applicantName', data.applicantName);
-              setValue('phoneNo', data.phoneNo);
-              setValue('secondaryMobileNo', data.secondaryMobileNo);
-              setValue('applicationType', data.applicationType);
-              break;
-          case 'remittance':
-              if (originalData.index !== undefined) updateRemittance(originalData.index, data);
-              else appendRemittance(data);
-              break;
-          case 'payment':
-               if (originalData.index !== undefined) updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-               else appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-              break;
-          case 'site':
-              if (originalData.index !== undefined) updateSite(originalData.index, data);
-              else appendSite(data);
-              break;
-          case 'reorderSite':
-              moveSite(data.from, data.to);
-              break;
-      }
-      
-      // Now, save to the database
-      if (isEditor) {
-         await handleSaveAndContinue(getValues());
-      }
+    // Update local form state immediately
+    switch (type) {
+        case 'application':
+            setValue('fileNo', data.fileNo);
+            setValue('applicantName', data.applicantName);
+            setValue('phoneNo', data.phoneNo);
+            setValue('secondaryMobileNo', data.secondaryMobileNo);
+            setValue('applicationType', data.applicationType);
+            break;
+        case 'remittance':
+            if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+            else appendRemittance(data);
+            break;
+        case 'payment':
+            if (originalData.index !== undefined) updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
+            else appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
+            break;
+        case 'site':
+            if (originalData.index !== undefined) updateSite(originalData.index, data);
+            else appendSite(data);
+            break;
+        case 'reorderSite':
+            moveSite(data.from, data.to);
+            break;
+    }
+    
+    // For editors, persist changes to DB immediately after local update
+    if (isEditor) {
+        setIsSubmitting(true);
+        try {
+            const currentData = getValues();
+            if (!fileIdToEdit) {
+                 if (type === 'application') {
+                    const newId = await addFileEntry(currentData);
+                    toast({ title: "File Created", description: `File No. ${currentData.fileNo} has been created.` });
+                    router.replace(`/dashboard/data-entry?id=${newId}&workType=${workTypeContext || 'public'}`);
+                }
+            } else {
+                await updateFileEntry(fileIdToEdit, currentData);
+                toast({ title: "File Updated", description: "Your changes have been saved." });
+            }
+        } catch (error: any) {
+            console.error("Save and continue error:", error);
+            toast({ title: "Save Failed", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
   };
 
 
@@ -701,12 +699,20 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     if (type === 'payment') removePayment(index);
     if (type === 'site') removeSite(index);
     
-    // After removing locally, save the entire form state to persist the deletion
     if (isEditor && fileIdToEdit) {
-        await handleSaveAndContinue(getValues());
+        setIsSubmitting(true);
+        try {
+            await updateFileEntry(fileIdToEdit, getValues());
+            toast({ title: "Item Removed", description: "The entry has been removed and the file has been updated.", variant: "default" });
+        } catch (error: any) {
+            toast({ title: "Error Removing Item", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    } else {
+        toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} Removed`, description: "The entry has been removed locally. Save the file to confirm.", variant: "default" });
     }
-
-    toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} Removed`, description: "The entry has been removed from this file.", variant: "destructive" });
+    
     setItemToDelete(null);
   };
   
