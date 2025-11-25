@@ -11,6 +11,7 @@ import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
 import { isValid } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '') return null;
@@ -34,7 +35,7 @@ export default function ETenderNoticeBoard() {
 
   const categorizedTenders = useMemo(() => {
     const now = new Date();
-    const review: E_tender[] = [];
+    let review: E_tender[] = [];
     let toBeOpened: E_tender[] = [];
     let pendingSelection: E_tender[] = [];
     let pendingWorkOrder: E_tender[] = [];
@@ -42,25 +43,20 @@ export default function ETenderNoticeBoard() {
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
+        // Time-sensitive Review category
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
-        
-        // This is a separate, time-sensitive category
         if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
             review.push(tender);
         }
-        
-        // Prioritized categories
-        if (!tender.agreementDate || !tender.dateWorkOrder) {
-             if (!tender.selectionNoticeDate) {
-                 if (!tender.dateOfOpeningBid) {
-                     toBeOpened.push(tender);
-                 } else {
-                     pendingSelection.push(tender);
-                 }
-             } else {
-                 pendingWorkOrder.push(tender);
-             }
+
+        // Prioritized action categories
+        if (!tender.dateOfOpeningBid) {
+            toBeOpened.push(tender);
+        } else if (!tender.selectionNoticeDate) {
+            pendingSelection.push(tender);
+        } else if (!tender.agreementDate || !tender.dateWorkOrder) {
+            pendingWorkOrder.push(tender);
         }
     });
     
@@ -100,10 +96,10 @@ export default function ETenderNoticeBoard() {
   };
   
   const tabTriggers = [
-    { value: 'review', label: 'Review', count: categorizedTenders.review.length },
-    { value: 'toBeOpened', label: 'To Be Opened', count: categorizedTenders.toBeOpened.length },
-    { value: 'pendingSelection', label: 'Selection', count: categorizedTenders.pendingSelection.length },
-    { value: 'pendingWorkOrder', label: 'Work Order', count: categorizedTenders.pendingWorkOrder.length },
+    { value: 'review', label: 'Review', count: categorizedTenders.review.length, colorClass: "bg-amber-100/60 text-amber-800 data-[state=active]:bg-amber-500 data-[state=active]:text-white" },
+    { value: 'toBeOpened', label: 'To Be Opened', count: categorizedTenders.toBeOpened.length, colorClass: "bg-sky-100/60 text-sky-800 data-[state=active]:bg-sky-500 data-[state=active]:text-white" },
+    { value: 'pendingSelection', label: 'Selection', count: categorizedTenders.pendingSelection.length, colorClass: "bg-indigo-100/60 text-indigo-800 data-[state=active]:bg-indigo-500 data-[state=active]:text-white" },
+    { value: 'pendingWorkOrder', label: 'Work Order', count: categorizedTenders.pendingWorkOrder.length, colorClass: "bg-emerald-100/60 text-emerald-800 data-[state=active]:bg-emerald-500 data-[state=active]:text-white" },
   ];
 
   return (
@@ -116,11 +112,11 @@ export default function ETenderNoticeBoard() {
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
            <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
-                <TabsList className="grid w-full grid-cols-2 h-auto gap-1">
+                <TabsList className="grid grid-cols-2 h-auto gap-1">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className="text-xs px-1 py-1.5 md:py-2">
+                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-1 py-1.5 md:py-2 flex-1 transition-colors", tab.colorClass)}>
                                <div className="flex items-center justify-center gap-1.5">
                                     <Icon className="h-3 w-3 hidden sm:inline-block" />
                                     <span className="truncate">{tab.label}</span>
