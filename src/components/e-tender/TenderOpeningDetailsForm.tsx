@@ -63,7 +63,8 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
             technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
             technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
         });
-    }, [initialData, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleFormSubmit = async (data: TenderOpeningDetailsFormData) => {
         await onSubmit(data);
