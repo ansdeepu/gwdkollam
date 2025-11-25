@@ -31,6 +31,8 @@ const getStatusTextColor = (status?: E_tenderStatus): string => {
             return "text-blue-600";
         case 'Work Order Issued':
             return "text-green-600";
+        case 'Supply Order Issued':
+            return "text-purple-600";
         default:
             return "text-foreground";
     }
@@ -47,6 +49,8 @@ const getStatusBadgeClass = (status?: E_tenderStatus): string => {
             return "border-blue-400 bg-blue-100 text-blue-800";
         case 'Work Order Issued':
             return "border-green-400 bg-green-100 text-green-800";
+        case 'Supply Order Issued':
+            return "border-purple-400 bg-purple-100 text-purple-800";
         default:
             return "border-border";
     }

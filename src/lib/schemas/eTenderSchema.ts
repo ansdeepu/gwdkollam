@@ -8,6 +8,7 @@ export const eTenderStatusOptions = [
     "Bid Opened",
     "Selection Notice Issued",
     "Work Order Issued",
+    "Supply Order Issued",
 ] as const;
 export type E_tenderStatus = typeof eTenderStatusOptions[number];
 
