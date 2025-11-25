@@ -237,20 +237,17 @@ export default function ETenderListPage() {
                                     ))}
                                 </SelectContent>
                             </Select>
-                             <Button onClick={() => { setSearchTerm(''); setStatusFilter('all'); }} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear</Button>
+                            {user?.role === 'editor' && (
+                                <>
+                                    <Button onClick={() => router.push('/dashboard/bidders')} variant="secondary" className="shrink-0">
+                                        <Users className="mr-2 h-4 w-4" /> Bidders List
+                                    </Button>
+                                    <Button onClick={handleCreateNew} className="w-full sm:w-auto shrink-0">
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Create New
+                                    </Button>
+                                </>
+                            )}
                         </div>
-                    </div>
-                     <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-4 border-t">
-                        {user?.role === 'editor' && (
-                            <div className="flex w-full sm:w-auto items-center gap-2">
-                                <Button onClick={() => router.push('/dashboard/bidders')} variant="secondary">
-                                    <Users className="mr-2 h-4 w-4" /> Bidders List
-                                </Button>
-                                <Button onClick={handleCreateNew} className="w-full sm:w-auto">
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Create New e-Tender
-                                </Button>
-                            </div>
-                        )}
                     </div>
                 </CardContent>
             </Card>
