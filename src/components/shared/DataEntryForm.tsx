@@ -49,7 +49,7 @@ import {
   type SiteWorkStatus,
   constituencyOptions,
   type Constituency,
-  optionalNumber,
+  optionalNumber as schemaOptionalNumber, // aliasing to avoid conflict
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -71,6 +71,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 const db = getFirestore(app);
+
+// Helper for robust optional numeric fields
+const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
+  z.preprocess((val) => {
+    if (val === null || val === undefined || val === "") return undefined;
+    if (typeof val === 'string' && isNaN(Number(val))) return undefined;
+    return val;
+}, z.coerce.number({ invalid_type_error: errorMessage }).min(0, "Cannot be negative.").optional());
+
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
@@ -674,7 +683,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             try {
                 const newId = await addFileEntry(getValues());
                 toast({ title: "File Created", description: `File No. ${getValues('fileNo')} created. You can now add other details.` });
-                router.replace(`/dashboard/data-entry?id=${newId}&workType=${workTypeContext || 'public'}&page=${pageToReturnTo || '1'}`);
+                router.replace(`${returnPath.split('?')[0]}?id=${newId}&workType=${workTypeContext || 'public'}${pageToReturnTo ? `&page=${pageToReturnTo}` : ''}`);
             } catch (error: any) {
                 toast({ title: "Error Creating File", description: error.message, variant: "destructive" });
             } finally {
