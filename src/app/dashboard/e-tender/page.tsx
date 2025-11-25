@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,26 +18,28 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
+import { eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { toDateOrNull } from '@/components/e-tender/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const getStatusRowClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
     switch (status) {
         case 'Tender Process':
-            return "text-gray-600"; // Neutral gray
+            return "text-gray-600";
         case 'Bid Opened':
-            return "text-orange-600"; // Vibrant orange
+            return "text-orange-600";
         case 'Retender':
-            return "text-yellow-600"; // Vibrant yellow
+            return "text-yellow-600";
         case 'Tender Cancelled':
-            return "text-red-600"; // Strong red
+            return "text-red-600";
         case 'Selection Notice Issued':
-            return "text-blue-600"; // Strong blue
+            return "text-blue-600";
         case 'Work Order Issued':
-            return "text-green-600"; // Strong green
+            return "text-green-600";
         case 'Supply Order Issued':
-            return "text-purple-600"; // Vibrant purple
+            return "text-purple-600";
         default:
             return "";
     }
@@ -52,6 +54,7 @@ export default function ETenderListPage() {
     const { user } = useAuth();
     
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<E_tenderStatus | 'all'>('all');
     const [tenderToDelete, setTenderToDelete] = useState<E_tender | null>(null);
     const [isDeletingTender, setIsDeletingTender] = useState(false);
     const [tenderToCopy, setTenderToCopy] = useState<E_tender | null>(null);
@@ -66,7 +69,6 @@ export default function ETenderListPage() {
     const filteredTenders = useMemo(() => {
         const getTenderNumber = (tenderNo: string | undefined | null): number => {
             if (!tenderNo) return 0;
-            // Matches "T-" followed by one or more digits. Extracts the digits.
             const match = tenderNo.match(/T-(\d+)/);
             return match ? parseInt(match[1], 10) : 0;
         };
@@ -74,27 +76,44 @@ export default function ETenderListPage() {
         const sortedTenders = [...tenders].sort((a, b) => {
             const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
             const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
-
-            if (dateA !== dateB) {
-                return dateB - dateA; // Sort by date descending first
-            }
-            
-            // If dates are the same, sort by tender number descending
+            if (dateA !== dateB) return dateB - dateA;
             const numA = getTenderNumber(a.eTenderNo);
             const numB = getTenderNumber(b.eTenderNo);
             return numB - numA;
         });
 
-        if (!searchTerm) return sortedTenders;
+        let filtered = sortedTenders;
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(tender => tender.presentStatus === statusFilter);
+        }
+        
+        if (!searchTerm) return filtered;
 
         const lowercasedFilter = searchTerm.toLowerCase();
-        return sortedTenders.filter(tender =>
-            (tender.eTenderNo?.toLowerCase().includes(lowercasedFilter)) ||
-            (tender.nameOfWork?.toLowerCase().includes(lowercasedFilter)) ||
-            (tender.fileNo?.toLowerCase().includes(lowercasedFilter)) ||
-            (`GKT/${tender.fileNo}/${tender.eTenderNo}`.toLowerCase().includes(lowercasedFilter))
-        );
-    }, [tenders, searchTerm]);
+        return filtered.filter(tender => {
+            const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
+
+            const searchableContent = [
+                tender.eTenderNo,
+                `GKT/${tender.fileNo}/${tender.eTenderNo}`,
+                tender.fileNo,
+                tender.nameOfWork,
+                tender.nameOfWorkMalayalam,
+                tender.location,
+                tender.tenderType,
+                tender.presentStatus,
+                tender.periodOfCompletion,
+                tender.estimateAmount?.toString(),
+                formatDateSafe(tender.tenderDate),
+                formatDateSafe(tender.dateTimeOfOpening, true),
+                formatDateSafe(tender.dateTimeOfReceipt, true),
+                bidderNames
+            ].filter(Boolean).map(String).join(' ').toLowerCase();
+            
+            return searchableContent.includes(lowercasedFilter);
+        });
+    }, [tenders, searchTerm, statusFilter]);
 
 
     const handleCreateNew = () => {
@@ -194,18 +213,34 @@ export default function ETenderListPage() {
     return (
         <div className="space-y-6">
             <Card>
-                <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <CardContent className="p-4 space-y-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                         <div className="relative flex-grow w-full">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <Input
                                 type="search"
-                                placeholder="Search by eTender Ref. No, Name of Work, or File No..."
+                                placeholder="Search across all fields..."
                                 className="w-full pl-10"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as E_tenderStatus | 'all')}>
+                                <SelectTrigger className="w-full sm:w-[200px]">
+                                    <SelectValue placeholder="Filter by Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Statuses</SelectItem>
+                                    {eTenderStatusOptions.map(status => (
+                                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                             <Button onClick={() => { setSearchTerm(''); setStatusFilter('all'); }} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear</Button>
+                        </div>
+                    </div>
+                     <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-4 border-t">
                         {user?.role === 'editor' && (
                             <div className="flex w-full sm:w-auto items-center gap-2">
                                 <Button onClick={() => router.push('/dashboard/bidders')} variant="secondary">
