@@ -49,6 +49,7 @@ import {
   type SiteWorkStatus,
   constituencyOptions,
   type Constituency,
+  optionalNumber,
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -73,7 +74,7 @@ const db = getFirestore(app);
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
-const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: optionalNumber(), arsAwardedAmount: optionalNumber(), arsNumberOfStructures: optionalNumber(), arsStorageCapacity: optionalNumber(), arsNumberOfFillings: optionalNumber(), isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
+const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
 
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
@@ -641,15 +642,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
     closeDialog();
 
+    if (type === 'application') {
+        setValue('fileNo', data.fileNo);
+        setValue('applicantName', data.applicantName);
+        setValue('phoneNo', data.phoneNo);
+        setValue('secondaryMobileNo', data.secondaryMobileNo);
+        setValue('applicationType', data.applicationType);
+    }
     // Update local form state immediately
     switch (type) {
-        case 'application':
-            setValue('fileNo', data.fileNo);
-            setValue('applicantName', data.applicantName);
-            setValue('phoneNo', data.phoneNo);
-            setValue('secondaryMobileNo', data.secondaryMobileNo);
-            setValue('applicationType', data.applicationType);
-            break;
         case 'remittance':
             if (originalData.index !== undefined) updateRemittance(originalData.index, data);
             else appendRemittance(data);
@@ -668,21 +669,19 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     }
     
     if (isEditor) {
-        if (!fileIdToEdit) {
-            if (type === 'application') {
-                setIsSubmitting(true);
-                try {
-                    const newId = await addFileEntry(getValues());
-                    toast({ title: "File Created", description: `File No. ${getValues('fileNo')} has been created. You may now add other details.` });
-                    router.replace(`/dashboard/data-entry?id=${newId}&workType=${workTypeContext || 'public'}`);
-                } catch (error: any) {
-                    toast({ title: "Error Creating File", description: error.message, variant: "destructive" });
-                } finally {
-                    setIsSubmitting(false);
-                }
+        if (!fileIdToEdit && type === 'application') {
+            setIsSubmitting(true);
+            try {
+                const newId = await addFileEntry(getValues());
+                toast({ title: "File Created", description: `File No. ${getValues('fileNo')} created. You can now add other details.` });
+                router.replace(`/dashboard/data-entry?id=${newId}&workType=${workTypeContext || 'public'}&page=${pageToReturnTo || '1'}`);
+            } catch (error: any) {
+                toast({ title: "Error Creating File", description: error.message, variant: "destructive" });
+            } finally {
+                setIsSubmitting(false);
             }
-        } else {
-             setIsSubmitting(true);
+        } else if (fileIdToEdit) {
+            setIsSubmitting(true);
             try {
                 await updateFileEntry(fileIdToEdit, getValues());
                 toast({ title: "File Updated", description: "Your changes have been saved." });
@@ -883,7 +882,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                      </dl>
                 </div>
                  <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
-                    <FormField control={control} name="fileStatus" render={({ field }) => <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isViewer}><FormControl><SelectTrigger><SelectValue placeholder="Select final file status" /></SelectTrigger></FormControl><SelectContent>{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                    <FormField control={control} name="fileStatus" render={({ field }) => <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isViewer}><FormControl><SelectTrigger><SelectValue placeholder="Select final file status" /></SelectTrigger></FormControl><SelectContent className="max-h-80">{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                     <FormField control={control} name="remarks" render={({ field }) => <FormItem><FormLabel>Final Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any final remarks for this file..." readOnly={isViewer} /></FormControl><FormMessage /></FormItem>} />
                 </div>
             </CardContent>
