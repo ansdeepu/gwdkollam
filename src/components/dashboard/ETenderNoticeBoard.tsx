@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -43,29 +42,28 @@ export default function ETenderNoticeBoard() {
       const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
       const openingDate = toDateOrNull(tender.dateTimeOfOpening);
       
-      // 1. Tender Status Review
+      // 1. Tender Status Review (Time-sensitive, independent category)
       if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
         review.push(tender);
       }
 
-      // 2. To Be Opened
-      if (!tender.dateOfOpeningBid && !tender.dateOfTechnicalAndFinancialBidOpening) {
-        toBeOpened.push(tender);
-      }
-      
-      // 3. Pending Selection Notice
-      if (!tender.selectionNoticeDate) {
-        pendingSelection.push(tender);
-      }
+      // 2. Prioritized Pending Actions
+      const isPendingWorkOrder = !tender.agreementDate || !tender.dateWorkOrder;
+      const isPendingSelectionNotice = !tender.selectionNoticeDate;
+      const isToBeOpened = !tender.dateOfOpeningBid && !tender.dateOfTechnicalAndFinancialBidOpening;
 
-      // 4. Pending Work Order
-      if (!tender.agreementDate || !tender.dateWorkOrder) {
-        pendingWorkOrder.push(tender);
+      if (isPendingWorkOrder) {
+          pendingWorkOrder.push(tender);
+      } else if (isPendingSelectionNotice) {
+          pendingSelection.push(tender);
+      } else if (isToBeOpened) {
+          toBeOpened.push(tender);
       }
     }
 
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
+
 
   const handleTenderClick = (tender: E_tender) => {
     setSelectedTender(tender);
