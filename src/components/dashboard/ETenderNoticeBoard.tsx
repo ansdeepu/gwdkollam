@@ -43,26 +43,27 @@ export default function ETenderNoticeBoard() {
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
-        // Time-sensitive Review category
-        const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
-        const openingDate = toDateOrNull(tender.dateTimeOfOpening);
-        if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
-            review.push(tender);
-        }
+      // Time-sensitive Review category
+      const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
+      const openingDate = toDateOrNull(tender.dateTimeOfOpening);
+      if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
+        review.push(tender);
+      }
 
-        // Prioritized action categories
-        if (!tender.dateOfOpeningBid) {
-            toBeOpened.push(tender);
-        } else if (!tender.selectionNoticeDate) {
-            pendingSelection.push(tender);
-        } else if (!tender.agreementDate || !tender.dateWorkOrder) {
-            pendingWorkOrder.push(tender);
-        }
+      // Prioritized action categories
+      if (!tender.dateOfOpeningBid) {
+        toBeOpened.push(tender);
+      } else if (!tender.selectionNoticeDate) {
+        pendingSelection.push(tender);
+      } else if (!tender.agreementDate || !tender.dateWorkOrder) {
+        pendingWorkOrder.push(tender);
+      }
     });
-    
+
     // De-duplication logic
     const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
     const selectionIds = new Set(pendingSelection.map(t => t.id));
+    const toBeOpenedIds = new Set(toBeOpened.map(t => t.id));
 
     pendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
     toBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
@@ -124,9 +125,9 @@ export default function ETenderNoticeBoard() {
                         const Icon = iconMapping[tab.value];
                         return (
                             <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-1 py-1.5 md:py-2 flex-1 transition-colors", tab.colorClass)}>
-                               <div className="flex items-center justify-center gap-1.5">
+                               <div className="flex items-center justify-center gap-1.5 flex-wrap">
                                     <Icon className="h-3 w-3 hidden sm:inline-block" />
-                                    <span className="truncate">{tab.label}</span>
+                                    <span className="whitespace-normal break-words leading-tight text-center">{tab.label}</span>
                                     <span className="font-bold">({tab.count})</span>
                                </div>
                             </TabsTrigger>
