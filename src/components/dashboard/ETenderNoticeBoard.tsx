@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -35,8 +36,10 @@ export default function ETenderNoticeBoard() {
     const toBeOpened: E_tender[] = [];
     const pendingSelection: E_tender[] = [];
     const pendingWorkOrder: E_tender[] = [];
+    
+    const activeTenders = tenders.filter(tender => tender.presentStatus !== 'Tender Cancelled' && tender.presentStatus !== 'Retender');
 
-    for (const tender of tenders) {
+    for (const tender of activeTenders) {
       const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
       const openingDate = toDateOrNull(tender.dateTimeOfOpening);
       
