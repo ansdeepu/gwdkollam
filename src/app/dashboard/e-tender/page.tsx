@@ -250,7 +250,7 @@ export default function ETenderListPage() {
                                                 <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
                                                 <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
                                                 <TableCell className="align-top">
-                                                    {tender.presentStatus && <Badge variant="outline" className={getStatusBadgeClass(tender.presentStatus)}>{tender.presentStatus}</Badge>}
+                                                    {tender.presentStatus && <Badge className={getStatusBadgeClass(tender.presentStatus)}>{tender.presentStatus}</Badge>}
                                                 </TableCell>
                                                 <TableCell className="text-center align-top">
                                                     <div className="flex items-center justify-center space-x-1">
