@@ -1,4 +1,3 @@
-
 // src/components/e-tender/CorrigendumForm.tsx
 "use client";
 
@@ -43,6 +42,8 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
         } : createDefaultCorrigendum(),
     });
 
+    const watchedType = form.watch("corrigendumType");
+
     useEffect(() => {
         if (initialData) {
             form.reset({
@@ -81,14 +82,16 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                                     <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
                                 )}/>
                             </div>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
-                                )}/>
-                                <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
-                                )}/>
-                            </div>
+                            {watchedType === 'Date Extension' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                </div>
+                            )}
                             <FormField name="reason" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Reason</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                             )}/>
