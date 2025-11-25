@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -20,24 +19,6 @@ import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 
 
-const getStatusTextColor = (status?: E_tenderStatus): string => {
-    if (!status) return "text-foreground"; // Default text color
-    switch (status) {
-        case 'Tender Process':
-            return "text-gray-800";
-        case 'Bid Opened':
-            return "text-orange-600";
-        case 'Selection Notice Issued':
-            return "text-blue-600";
-        case 'Work Order Issued':
-            return "text-green-600";
-        case 'Supply Order Issued':
-            return "text-purple-600";
-        default:
-            return "text-foreground";
-    }
-};
-
 const getStatusBadgeClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
     switch (status) {
@@ -45,6 +26,10 @@ const getStatusBadgeClass = (status?: E_tenderStatus): string => {
             return "border-gray-400 bg-gray-100 text-gray-800";
         case 'Bid Opened':
             return "border-orange-400 bg-orange-100 text-orange-800";
+        case 'Retender':
+            return "border-yellow-400 bg-yellow-100 text-yellow-800";
+        case 'Tender Cancelled':
+            return "border-red-400 bg-red-100 text-red-800";
         case 'Selection Notice Issued':
             return "border-blue-400 bg-blue-100 text-blue-800";
         case 'Work Order Issued':
@@ -251,19 +236,18 @@ export default function ETenderListPage() {
                             <TableBody>
                                 {filteredTenders.length > 0 ? (
                                     filteredTenders.map((tender, index) => {
-                                        const textColorClass = getStatusTextColor(tender.presentStatus);
                                         return (
                                             <TableRow key={tender.id}>
-                                                <TableCell className={cn("align-top", textColorClass)}>{index + 1}</TableCell>
-                                                <TableCell className={cn("font-medium align-top", textColorClass)}>
+                                                <TableCell className="align-top">{index + 1}</TableCell>
+                                                <TableCell className="font-medium align-top">
                                                     <div className="flex flex-col">
                                                         <span className="whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
                                                         <span className="text-xs">Dated: {formatDateSafe(tender.tenderDate)}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{tender.nameOfWork}</TableCell>
-                                                <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
-                                                <TableCell className={cn("whitespace-normal break-words align-top", textColorClass)}>{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
+                                                <TableCell className="whitespace-normal break-words align-top">{tender.nameOfWork}</TableCell>
+                                                <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
+                                                <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
                                                 <TableCell className="align-top">
                                                     {tender.presentStatus && <Badge variant="outline" className={getStatusBadgeClass(tender.presentStatus)}>{tender.presentStatus}</Badge>}
                                                 </TableCell>

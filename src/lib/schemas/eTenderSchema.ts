@@ -6,6 +6,8 @@ const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null |
 export const eTenderStatusOptions = [
     "Tender Process",
     "Bid Opened",
+    "Retender",
+    "Tender Cancelled",
     "Selection Notice Issued",
     "Work Order Issued",
     "Supply Order Issued",
