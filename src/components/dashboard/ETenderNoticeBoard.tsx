@@ -42,14 +42,13 @@ export default function ETenderNoticeBoard() {
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
-        // This is a separate, time-based check. A tender can be in review AND in another category.
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
+        
         if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
             review.push(tender);
         }
 
-        // Prioritized categorization
         if (!tender.dateOfOpeningBid) {
             toBeOpened.push(tender);
         } else if (!tender.selectionNoticeDate) {
@@ -58,9 +57,14 @@ export default function ETenderNoticeBoard() {
             pendingWorkOrder.push(tender);
         }
     });
+    
+    // Ensure uniqueness
+    const uniqueToBeOpened = toBeOpened.filter(t => !pendingSelection.some(ps => ps.id === t.id) && !pendingWorkOrder.some(pwo => pwo.id === t.id));
+    const uniquePendingSelection = pendingSelection.filter(t => !pendingWorkOrder.some(pwo => pwo.id === t.id));
 
-    return { review, toBeOpened, pendingSelection, pendingWorkOrder };
+    return { review, toBeOpened: uniqueToBeOpened, pendingSelection: uniquePendingSelection, pendingWorkOrder };
   }, [tenders]);
+
 
   const handleTenderClick = (tender: E_tender) => {
     setSelectedTender(tender);
@@ -106,12 +110,11 @@ export default function ETenderNoticeBoard() {
         <CardTitle className="flex items-center gap-2">
             <Hammer className="h-5 w-5 text-primary" />e-Tender Actions
         </CardTitle>
-        <CardDescription>Tenders requiring attention at various stages.</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
            <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+                <TabsList className="grid w-full grid-cols-2 h-auto gap-1">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
