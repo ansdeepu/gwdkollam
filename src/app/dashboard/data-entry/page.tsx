@@ -222,17 +222,18 @@ export default function DataEntryPage() {
     const isCreatingNew = !fileIdToEdit;
 
     if (user?.role === 'editor') {
-      if (isCreatingNew) {
-        title = "New File Data Entry";
-        description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
-      } else if (approveUpdateId) {
-        title = "Approve Pending Updates";
-        description = `Reviewing and approving updates for File No: ${fileNoForHeader}. Click "Save Changes" to finalize.`;
-      }
-      else {
-        title = "Edit File Data";
-        description = `Editing details for File No: ${fileNoForHeader}. Please make your changes and submit.`;
-      }
+        if (isCreatingNew) {
+            title = workType === 'private'
+                ? "New File Data Entry - Private Deposit"
+                : "New File Data Entry - Deposit Work";
+            description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
+        } else if (approveUpdateId) {
+            title = "Approve Pending Updates";
+            description = `Reviewing and approving updates for File No: ${fileNoForHeader}. Click "Save Changes" to finalize.`;
+        } else {
+            title = "Edit File Data";
+            description = `Editing details for File No: ${fileNoForHeader}. Please make your changes and submit.`;
+        }
     } else if (user?.role === 'supervisor') {
        if (isCreatingNew) {
          title = "Access Denied";
@@ -247,7 +248,7 @@ export default function DataEntryPage() {
     }
 
     setHeader(title, description); // Update the main header
-  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader]);
+  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType]);
 
 
   const supervisorList = useMemo(() => {
