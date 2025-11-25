@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -34,32 +35,28 @@ export default function ETenderNoticeBoard() {
   const categorizedTenders = useMemo(() => {
     const now = new Date();
     const review: E_tender[] = [];
-    const toBeOpened: E_tender[] = [];
-    const pendingSelection: E_tender[] = [];
-    const pendingWorkOrder: E_tender[] = [];
+    let toBeOpened: E_tender[] = [];
+    let pendingSelection: E_tender[] = [];
+    let pendingWorkOrder: E_tender[] = [];
 
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
-        
-        // 1. Pending Work Order - Highest Priority
-        if (!tender.agreementDate || !tender.dateWorkOrder) {
-            pendingWorkOrder.push(tender);
-        }
-        // 2. Pending Selection Notice
-        else if (!tender.selectionNoticeDate) {
-            pendingSelection.push(tender);
-        }
-        // 3. To Be Opened
-        else if (!tender.dateOfOpeningBid) {
-            toBeOpened.push(tender);
-        }
-        
-        // 4. Tender Status Review (Independent Category)
+
+        // This list is independent. A tender can be in review and also pending another action.
         if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
             review.push(tender);
+        }
+
+        // Prioritized logic: A tender appears in only one of the following lists.
+        if (!tender.agreementDate || !tender.dateWorkOrder) {
+            pendingWorkOrder.push(tender);
+        } else if (!tender.selectionNoticeDate) {
+            pendingSelection.push(tender);
+        } else if (!tender.dateOfOpeningBid) {
+            toBeOpened.push(tender);
         }
     });
 
@@ -151,23 +148,25 @@ export default function ETenderNoticeBoard() {
                 </div>
             </Tabs>
 
-          <DialogContent className="sm:max-w-xl">
-            <DialogHeader>
+          <DialogContent className="sm:max-w-xl p-0">
+            <DialogHeader className="p-6 pb-4 border-b">
               <DialogTitle>Tender Details: {selectedTender?.eTenderNo}</DialogTitle>
               <DialogDescription>{selectedTender?.nameOfWork}</DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-[60vh] pr-4">
-                <div className="space-y-4 py-4">
-                    <DetailRow label="File No" value={selectedTender?.fileNo ? `GKT/${selectedTender.fileNo}` : null} />
-                    <DetailRow label="Tender Date" value={selectedTender?.tenderDate} />
-                    <DetailRow label="Location" value={selectedTender?.location} />
-                    <DetailRow label="Tender Amount" value={selectedTender?.estimateAmount} isCurrency />
-                    <DetailRow label="Last Date of Receipt" value={selectedTender?.dateTimeOfReceipt} />
-                    <DetailRow label="Date of Opening" value={selectedTender?.dateTimeOfOpening} />
-                    <DetailRow label="Present Status" value={selectedTender?.presentStatus} />
-                </div>
-            </ScrollArea>
-            <DialogFooter>
+            <div className="p-6 py-4">
+                <ScrollArea className="max-h-[60vh] pr-4">
+                    <div className="space-y-4">
+                        <DetailRow label="File No" value={selectedTender?.fileNo ? `GKT/${selectedTender.fileNo}` : null} />
+                        <DetailRow label="Tender Date" value={selectedTender?.tenderDate} />
+                        <DetailRow label="Location" value={selectedTender?.location} />
+                        <DetailRow label="Tender Amount" value={selectedTender?.estimateAmount} />
+                        <DetailRow label="Last Date of Receipt" value={selectedTender?.dateTimeOfReceipt} />
+                        <DetailRow label="Date of Opening" value={selectedTender?.dateTimeOfOpening} />
+                        <DetailRow label="Present Status" value={selectedTender?.presentStatus} />
+                    </div>
+                </ScrollArea>
+            </div>
+            <DialogFooter className="p-6 pt-4 border-t">
                 <DialogClose asChild>
                     <Button variant="secondary">Close</Button>
                 </DialogClose>
