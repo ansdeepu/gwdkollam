@@ -11,31 +11,33 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDateSafe, toDateOrNull, getStatusBadgeClass } from '@/components/e-tender/utils';
+import { formatDateSafe, getStatusBadgeClass } from '@/components/e-tender/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
+import { toDateOrNull } from '@/components/e-tender/utils';
+
 
 const getStatusRowClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
     switch (status) {
         case 'Tender Process':
-            return "bg-gray-50 hover:bg-gray-100";
+            return "text-gray-800";
         case 'Bid Opened':
-            return "bg-orange-50 hover:bg-orange-100";
+            return "text-orange-800";
         case 'Retender':
-            return "bg-yellow-50 hover:bg-yellow-100";
+            return "text-yellow-800";
         case 'Tender Cancelled':
-            return "bg-red-50 hover:bg-red-100 text-red-900";
+            return "text-red-800";
         case 'Selection Notice Issued':
-            return "bg-blue-50 hover:bg-blue-100";
+            return "text-blue-800";
         case 'Work Order Issued':
-            return "bg-green-50 hover:bg-green-100";
+            return "text-green-800";
         case 'Supply Order Issued':
-            return "bg-purple-50 hover:bg-purple-100";
+            return "text-purple-800";
         default:
             return "";
     }
