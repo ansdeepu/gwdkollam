@@ -42,10 +42,9 @@ export default function ETenderNoticeBoard() {
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
+        // This is a separate, time-based check. A tender can be in review AND in another category.
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
-
-        // This is a separate, time-based check. A tender can be in review AND in another category.
         if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
             review.push(tender);
         }
@@ -136,7 +135,11 @@ export default function ETenderNoticeBoard() {
                             )}
                         </TabsContent>
                         <TabsContent value="toBeOpened">
-                            {renderTenderList(categorizedTenders.toBeOpened, (t) => t.eTenderNo || 'N/A')}
+                            {renderTenderList(
+                                categorizedTenders.toBeOpened, 
+                                (t) => t.eTenderNo || 'N/A',
+                                (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}`
+                            )}
                         </TabsContent>
                         <TabsContent value="pendingSelection">
                             {renderTenderList(categorizedTenders.pendingSelection, (t) => t.eTenderNo || 'N/A')}
