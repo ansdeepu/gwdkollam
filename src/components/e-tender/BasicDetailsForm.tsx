@@ -97,14 +97,14 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                     <DialogTitle>Basic Tender Details</DialogTitle>
                     <DialogDescription>Enter the fundamental details for this tender.</DialogDescription>
                 </DialogHeader>
-                <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+                <div className="flex-1 min-h-0 px-6 py-4">
                     <div className="space-y-4">
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="eTenderNo" control={control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="tenderDate" control={control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="fileNo" control={control} render={({ field }) => ( <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                            <FormField name="nameOfWork" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
                            <FormField name="nameOfWorkMalayalam" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work (in Malayalam)</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
                         </div>
