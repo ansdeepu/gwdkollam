@@ -317,10 +317,14 @@ export default function TenderDetails() {
     }, [bidderFields]);
 
     const dynamicStatusOptions = useMemo(() => {
-        if (tenderType === 'Purchase') {
-            return eTenderStatusOptions.map(opt => opt === 'Work Order Issued' ? 'Supply Order Issued' : opt);
+        if (tenderType === 'Work') {
+            return eTenderStatusOptions.filter(opt => opt !== 'Supply Order Issued');
         }
-        return eTenderStatusOptions;
+        if (tenderType === 'Purchase') {
+            return eTenderStatusOptions.filter(opt => opt !== 'Work Order Issued');
+        }
+        // If no type is selected, show options common to both, excluding type-specific ones
+        return eTenderStatusOptions.filter(opt => opt !== 'Work Order Issued' && opt !== 'Supply Order Issued');
     }, [tenderType]);
 
 
