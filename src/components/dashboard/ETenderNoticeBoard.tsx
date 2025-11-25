@@ -60,6 +60,13 @@ export default function ETenderNoticeBoard() {
         }
     });
     
+    // De-duplication logic
+    const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
+    const selectionIds = new Set(pendingSelection.map(t => t.id));
+
+    pendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
+    toBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
+    
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
 
@@ -98,8 +105,8 @@ export default function ETenderNoticeBoard() {
   const tabTriggers = [
     { value: 'review', label: 'Review', count: categorizedTenders.review.length, colorClass: "bg-amber-100/60 text-amber-800 data-[state=active]:bg-amber-500 data-[state=active]:text-white" },
     { value: 'toBeOpened', label: 'To Be Opened', count: categorizedTenders.toBeOpened.length, colorClass: "bg-sky-100/60 text-sky-800 data-[state=active]:bg-sky-500 data-[state=active]:text-white" },
-    { value: 'pendingSelection', label: 'Selection', count: categorizedTenders.pendingSelection.length, colorClass: "bg-indigo-100/60 text-indigo-800 data-[state=active]:bg-indigo-500 data-[state=active]:text-white" },
-    { value: 'pendingWorkOrder', label: 'Work Order', count: categorizedTenders.pendingWorkOrder.length, colorClass: "bg-emerald-100/60 text-emerald-800 data-[state=active]:bg-emerald-500 data-[state=active]:text-white" },
+    { value: 'pendingSelection', label: 'Selection Notice Pending', count: categorizedTenders.pendingSelection.length, colorClass: "bg-indigo-100/60 text-indigo-800 data-[state=active]:bg-indigo-500 data-[state=active]:text-white" },
+    { value: 'pendingWorkOrder', label: 'Work Order Pending', count: categorizedTenders.pendingWorkOrder.length, colorClass: "bg-emerald-100/60 text-emerald-800 data-[state=active]:bg-emerald-500 data-[state=active]:text-white" },
   ];
 
   return (
@@ -136,8 +143,8 @@ export default function ETenderNoticeBoard() {
                             )}
                         </TabsContent>
                         <TabsContent value="toBeOpened">
-                            {renderTenderList(
-                                categorizedTenders.toBeOpened, 
+                             {renderTenderList(
+                                categorizedTenders.toBeOpened,
                                 (t) => t.eTenderNo || 'N/A',
                                 (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}`
                             )}
