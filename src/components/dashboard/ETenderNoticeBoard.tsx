@@ -43,19 +43,23 @@ export default function ETenderNoticeBoard() {
     activeTenders.forEach(tender => {
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
-
-        // Tender Status Review
-        if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
-            review.push(tender);
-        }
-
-        // Prioritized Pending Actions
+        
+        // 1. Pending Work Order - Highest Priority
         if (!tender.agreementDate || !tender.dateWorkOrder) {
             pendingWorkOrder.push(tender);
-        } else if (!tender.selectionNoticeDate) {
+        }
+        // 2. Pending Selection Notice
+        else if (!tender.selectionNoticeDate) {
             pendingSelection.push(tender);
-        } else if (!tender.dateOfOpeningBid) {
+        }
+        // 3. To Be Opened
+        else if (!tender.dateOfOpeningBid) {
             toBeOpened.push(tender);
+        }
+        
+        // 4. Tender Status Review (Independent Category)
+        if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
+            review.push(tender);
         }
     });
 
@@ -101,7 +105,7 @@ export default function ETenderNoticeBoard() {
   ];
 
   return (
-    <Card className="shadow-lg h-full flex flex-col col-span-1 lg:col-span-2">
+    <Card className="shadow-lg h-full flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Hammer className="h-5 w-5 text-primary" />e-Tender Actions
