@@ -384,173 +384,185 @@ export default function TenderDetails() {
                                 )}
                             </Card>
 
-                            <Accordion type="single" collapsible value={activeAccordion} onValueChange={setActiveAccordion} className="w-full space-y-4">
-                                <AccordionItem value="corrigendum-details" className="border rounded-lg">
-                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="flex items-center gap-3"><GitBranch className="h-5 w-5"/>Corrigendum Details ({corrigendumFields.length})</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('addCorrigendum'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-6 pt-0">
-                                       {hasAnyCorrigendumData ? (
-                                            <div className="mt-4 pt-4 border-t space-y-2">
-                                                {corrigendumFields.map((corrigendum, index) => (
-                                                    <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
-                                                         <div className="absolute top-2 right-2 flex items-center gap-1">
-                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
-                                                            <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
-                                                         </div>
-                                                         <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
-                                                         <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 mt-1">
-                                                            <DetailRow label="Type" value={corrigendum.corrigendumType} />
-                                                            <DetailRow label="Date" value={corrigendum.corrigendumDate} />
-                                                            <DetailRow label="Reason" value={corrigendum.reason} />
-                                                            <DetailRow label="New Last Date & Time" value={corrigendum.lastDateOfReceipt} />
-                                                            <DetailRow label="New Opening Date & Time" value={corrigendum.dateOfOpeningTender} />
-                                                         </dl>
+                            <Card className="border rounded-lg">
+                                <CardHeader className="flex flex-row justify-between items-center p-4">
+                                    <div className="flex items-center gap-3">
+                                        <GitBranch className="h-5 w-5 text-primary"/>
+                                        <CardTitle className="text-lg font-semibold text-primary">Corrigendum Details ({corrigendumFields.length})</CardTitle>
+                                    </div>
+                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('addCorrigendum'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>
+                                </CardHeader>
+                                {hasAnyCorrigendumData ? (
+                                    <CardContent className="p-6 pt-0">
+                                        <div className="mt-4 pt-4 border-t space-y-2">
+                                            {corrigendumFields.map((corrigendum, index) => (
+                                                <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
+                                                    <div className="absolute top-2 right-2 flex items-center gap-1">
+                                                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
+                                                        <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
                                                     </div>
-                                                ))}
-                                            </div>
-                                         ) : (
-                                            <p className="text-sm text-muted-foreground text-center py-4">No corrigendums have been added.</p>
-                                         )}
-                                    </AccordionContent>
-                                </AccordionItem>
-                                
-                                <AccordionItem value="opening-details" className="border rounded-lg">
-                                    <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="flex items-center gap-3"><FolderOpen className="h-5 w-5"/>Tender Opening Details</span>
-                                            <div className="flex items-center gap-2 mr-4">
-                                                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
-                                            </div>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-6 pt-0">
-                                        {hasAnyOpeningData ? (
-                                            <div className="space-y-4 pt-4 border-t">
-                                                <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                                    <DetailRow label="Date of Opening Bid" value={watch('dateOfOpeningBid')} />
-                                                    <DetailRow label="Date of Tech/Fin Bid Opening" value={watch('dateOfTechnicalAndFinancialBidOpening')} />
-                                                </dl>
-                                                <div className="space-y-2">
-                                                    <h4 className="font-semibold">Committee Members:</h4>
-                                                    {committeeMemberDetails.length > 0 ? (
-                                                        <ol className="list-decimal list-inside text-sm space-y-1">
-                                                          {committeeMemberDetails.map((member, i) => (
-                                                            <li key={i}>
-                                                              <span className="font-semibold">{member.name}</span>
-                                                              <span className="text-muted-foreground"> ({member.designation})</span>
-                                                            </li>
-                                                          ))}
-                                                        </ol>
-                                                    ) : (
-                                                        <p className="text-sm text-muted-foreground">No committee members assigned.</p>
-                                                    )}
+                                                    <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
+                                                    <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 mt-1">
+                                                        <DetailRow label="Type" value={corrigendum.corrigendumType} />
+                                                        <DetailRow label="Date" value={corrigendum.corrigendumDate} />
+                                                        <DetailRow label="Reason" value={corrigendum.reason} />
+                                                        <DetailRow label="New Last Date & Time" value={corrigendum.lastDateOfReceipt} />
+                                                        <DetailRow label="New Opening Date & Time" value={corrigendum.dateOfOpeningTender} />
+                                                    </dl>
                                                 </div>
-                                            </div>
-                                        ) : (
-                                             <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
-                                        )}
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                
-                                <AccordionItem value="bidders-details" className="border rounded-lg">
-                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="flex items-center gap-3"><Users className="h-5 w-5"/>Bidders ({bidderFields.length})</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setModalData(null); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
+                                            ))}
                                         </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-6 pt-0">
-                                         {hasAnyBidderData ? (
-                                            <div className="mt-4 pt-4 border-t space-y-2">
-                                                {sortedBidderFields.map((bidder, index) => {
-                                                    const originalIndex = bidderFields.findIndex(field => field.id === bidder.id);
-                                                    return (
-                                                        <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative">
-                                                            <div className="flex items-start justify-between mb-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
-                                                                    {bidder.id === l1Bidder?.id && <Badge className="bg-green-600 text-white">L1</Badge>}
-                                                                    {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
-                                                                </div>
-                                                                <div className="flex items-center gap-1">
-                                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index: originalIndex }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
-                                                                    <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(originalIndex)}><Trash2 className="h-4 w-4"/></Button>
-                                                                </div>
-                                                            </div>
-                                                            <p className="text-xs text-muted-foreground">{bidder.address}</p>
-                                                            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
-                                                                <DetailRow label="Quoted Amount" value={bidder.quotedAmount} isCurrency/>
-                                                                <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
-                                                            </dl>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                         ) : (
-                                            <p className="text-sm text-muted-foreground text-center py-4">No bidders have been added.</p>
-                                         )}
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                <AccordionItem value="selection-notice-details" className="border rounded-lg">
-                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="flex items-center gap-3"><Bell className="h-5 w-5"/>Selection Notice Details</span>
-                                            <div className="flex items-center gap-2 mr-4">
-                                                {hasAnySelectionNoticeData ? (
-                                                    <>
-                                                        <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                                        <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
-                                                    </>
+                                    </CardContent>
+                                ) : (
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground text-center py-4">No corrigendums have been added.</p>
+                                    </CardContent>
+                                )}
+                            </Card>
+                            
+                            <Card className="border rounded-lg">
+                                <CardHeader className="flex flex-row justify-between items-center p-4">
+                                    <div className="flex items-center gap-3">
+                                        <FolderOpen className="h-5 w-5 text-primary"/>
+                                        <CardTitle className="text-lg font-semibold text-primary">Tender Opening Details</CardTitle>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                        <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
+                                    </div>
+                                </CardHeader>
+                                {hasAnyOpeningData ? (
+                                    <CardContent className="p-6 pt-0">
+                                        <div className="space-y-4 pt-4 border-t">
+                                            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                                <DetailRow label="Date of Opening Bid" value={watch('dateOfOpeningBid')} />
+                                                <DetailRow label="Date of Tech/Fin Bid Opening" value={watch('dateOfTechnicalAndFinancialBidOpening')} />
+                                            </dl>
+                                            <div className="space-y-2">
+                                                <h4 className="font-semibold">Committee Members:</h4>
+                                                {committeeMemberDetails.length > 0 ? (
+                                                    <ol className="list-decimal list-inside text-sm space-y-1">
+                                                        {committeeMemberDetails.map((member, i) => (
+                                                        <li key={i}>
+                                                            <span className="font-semibold">{member.name}</span>
+                                                            <span className="text-muted-foreground"> ({member.designation})</span>
+                                                        </li>
+                                                        ))}
+                                                    </ol>
                                                 ) : (
-                                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                                    <p className="text-sm text-muted-foreground">No committee members assigned.</p>
                                                 )}
                                             </div>
                                         </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-6 pt-0">
-                                        {hasAnySelectionNoticeData ? (
-                                             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Selection Notice Date" value={watch('selectionNoticeDate')} />
-                                                 <DetailRow label="Performance Guarantee Amount" value={watch('performanceGuaranteeAmount')} isCurrency />
-                                                 <DetailRow label="Additional Performance Guarantee Amount" value={watch('additionalPerformanceGuaranteeAmount')} isCurrency />
-                                                 <DetailRow label="Stamp Paper required" value={watch('stampPaperAmount')} isCurrency />
-                                             </dl>
-                                        ) : (
-                                             <p className="text-sm text-muted-foreground text-center py-4">No selection notice details have been added.</p>
-                                        )}
-                                    </AccordionContent>
-                                </AccordionItem>
-                                
-                                 <AccordionItem value="work-order-details" className="border rounded-lg">
-                                   <AccordionTrigger className="p-4 text-lg font-semibold text-primary data-[state=closed]:hover:bg-secondary/20">
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="flex items-center gap-3"><ScrollText className="h-5 w-5"/>{workOrderTitle}</span>
-                                            <Button type="button" size="sm" variant="outline" className="mr-4" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    </CardContent>
+                                ) : (
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground text-center py-4">No tender opening details have been added.</p>
+                                    </CardContent>
+                                )}
+                            </Card>
+
+                            <Card className="border rounded-lg">
+                                <CardHeader className="flex flex-row justify-between items-center p-4">
+                                    <div className="flex items-center gap-3">
+                                        <Users className="h-5 w-5 text-primary"/>
+                                        <CardTitle className="text-lg font-semibold text-primary">Bidders ({bidderFields.length})</CardTitle>
+                                    </div>
+                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setModalData(null); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
+                                </CardHeader>
+                                {hasAnyBidderData ? (
+                                    <CardContent className="p-6 pt-0">
+                                        <div className="mt-4 pt-4 border-t space-y-2">
+                                            {sortedBidderFields.map((bidder, index) => {
+                                                const originalIndex = bidderFields.findIndex(field => field.id === bidder.id);
+                                                return (
+                                                    <div key={bidder.id} className="p-3 border rounded-md bg-secondary/30 relative">
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
+                                                                {bidder.id === l1Bidder?.id && <Badge className="bg-green-600 text-white">L1</Badge>}
+                                                                {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index: originalIndex }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
+                                                                <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(originalIndex)}><Trash2 className="h-4 w-4"/></Button>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs text-muted-foreground">{bidder.address}</p>
+                                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
+                                                            <DetailRow label="Quoted Amount" value={bidder.quotedAmount} isCurrency/>
+                                                            <DetailRow label="Quoted Percentage" value={bidder.quotedPercentage ? `${bidder.quotedPercentage}% ${bidder.aboveBelow || ''}`: ''} />
+                                                        </dl>
+                                                    </div>
+                                                )
+                                            })}
                                         </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-6 pt-0">
-                                        {hasAnyWorkOrderData ? (
-                                             <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
-                                                 <DetailRow label="Agreement Date" value={watch('agreementDate')} />
-                                                 <DetailRow label="Date - Work / Supply Order" value={watch('dateWorkOrder')} />
-                                                 <DetailRow label="Measurer" value={watch('nameOfAssistantEngineer')} subValue={assistantEngineerDesignation} />
-                                                 <DetailRow label="Supervisor 1" value={watch('supervisor1Name')} subValue={supervisor1Designation} />
-                                                 <DetailRow label="Supervisor 2" value={watch('supervisor2Name')} subValue={supervisor2Designation} />
-                                                 <DetailRow label="Supervisor 3" value={watch('supervisor3Name')} subValue={supervisor3Designation} />
-                                             </dl>
+                                    </CardContent>
+                                ) : (
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground text-center py-4">No bidders have been added.</p>
+                                    </CardContent>
+                                )}
+                            </Card>
+
+                            <Card className="border rounded-lg">
+                                <CardHeader className="flex flex-row justify-between items-center p-4">
+                                    <div className="flex items-center gap-3">
+                                        <Bell className="h-5 w-5 text-primary"/>
+                                        <CardTitle className="text-lg font-semibold text-primary">Selection Notice Details</CardTitle>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {hasAnySelectionNoticeData ? (
+                                            <>
+                                                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
+                                            </>
                                         ) : (
-                                             <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>
+                                            <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
                                         )}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
+                                    </div>
+                                </CardHeader>
+                                {hasAnySelectionNoticeData ? (
+                                    <CardContent className="p-6 pt-0">
+                                        <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                            <DetailRow label="Selection Notice Date" value={watch('selectionNoticeDate')} />
+                                            <DetailRow label="Performance Guarantee Amount" value={watch('performanceGuaranteeAmount')} isCurrency />
+                                            <DetailRow label="Additional Performance Guarantee Amount" value={watch('additionalPerformanceGuaranteeAmount')} isCurrency />
+                                            <DetailRow label="Stamp Paper required" value={watch('stampPaperAmount')} isCurrency />
+                                        </dl>
+                                    </CardContent>
+                                ) : (
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground text-center py-4">No selection notice details have been added.</p>
+                                    </CardContent>
+                                )}
+                            </Card>
+
+                            <Card className="border rounded-lg">
+                                <CardHeader className="flex flex-row justify-between items-center p-4">
+                                    <div className="flex items-center gap-3">
+                                        <ScrollText className="h-5 w-5 text-primary"/>
+                                        <CardTitle className="text-lg font-semibold text-primary">{workOrderTitle}</CardTitle>
+                                    </div>
+                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                </CardHeader>
+                                {hasAnyWorkOrderData ? (
+                                    <CardContent className="p-6 pt-0">
+                                        <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                            <DetailRow label="Agreement Date" value={watch('agreementDate')} />
+                                            <DetailRow label="Date - Work / Supply Order" value={watch('dateWorkOrder')} />
+                                            <DetailRow label="Measurer" value={watch('nameOfAssistantEngineer')} subValue={assistantEngineerDesignation} />
+                                            <DetailRow label="Supervisor 1" value={watch('supervisor1Name')} subValue={supervisor1Designation} />
+                                            <DetailRow label="Supervisor 2" value={watch('supervisor2Name')} subValue={supervisor2Designation} />
+                                            <DetailRow label="Supervisor 3" value={watch('supervisor3Name')} subValue={supervisor3Designation} />
+                                        </dl>
+                                    </CardContent>
+                                ) : (
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground text-center py-4">No work order details have been added.</p>
+                                    </CardContent>
+                                )}
+                            </Card>
                         </div>
                         
                          <Card className="mt-4">
