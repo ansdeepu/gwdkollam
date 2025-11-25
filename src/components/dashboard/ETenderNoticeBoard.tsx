@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
 import { format, isValid } from 'date-fns';
+import { toDateOrNull } from '../e-tender/utils';
 
 export default function ETenderNoticeBoard() {
   const { tenders, isLoading } = useE_tenders();
@@ -17,11 +18,13 @@ export default function ETenderNoticeBoard() {
   const sortedTenders = React.useMemo(() => {
     return [...tenders]
         .sort((a, b) => {
-            const dateA = a.tenderDate ? new Date(a.tenderDate) : null;
-            const dateB = b.tenderDate ? new Date(b.tenderDate) : null;
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-            return dateB.getTime() - a.getTime();
+            const dateA = toDateOrNull(a.tenderDate);
+            const dateB = toDateOrNull(b.tenderDate);
+            
+            if (!dateA || !isValid(dateA)) return 1;
+            if (!dateB || !isValid(dateB)) return -1;
+            
+            return dateB.getTime() - dateA.getTime();
         })
         .slice(0, 15); // Show latest 15 tenders
   }, [tenders]);
