@@ -35,9 +35,9 @@ export default function ETenderNoticeBoard() {
   const categorizedTenders = useMemo(() => {
     const now = new Date();
     const review: E_tender[] = [];
-    const toBeOpened: E_tender[] = [];
-    const pendingSelection: E_tender[] = [];
-    const pendingWorkOrder: E_tender[] = [];
+    let toBeOpened: E_tender[] = [];
+    let pendingSelection: E_tender[] = [];
+    let pendingWorkOrder: E_tender[] = [];
 
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
@@ -45,24 +45,26 @@ export default function ETenderNoticeBoard() {
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
         
+        // This is a separate, time-sensitive category
         if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
             review.push(tender);
         }
-
-        if (!tender.dateOfOpeningBid) {
-            toBeOpened.push(tender);
-        } else if (!tender.selectionNoticeDate) {
-            pendingSelection.push(tender);
-        } else if (!tender.agreementDate || !tender.dateWorkOrder) {
-            pendingWorkOrder.push(tender);
+        
+        // Prioritized categories
+        if (!tender.agreementDate || !tender.dateWorkOrder) {
+             if (!tender.selectionNoticeDate) {
+                 if (!tender.dateOfOpeningBid) {
+                     toBeOpened.push(tender);
+                 } else {
+                     pendingSelection.push(tender);
+                 }
+             } else {
+                 pendingWorkOrder.push(tender);
+             }
         }
     });
     
-    // Ensure uniqueness
-    const uniqueToBeOpened = toBeOpened.filter(t => !pendingSelection.some(ps => ps.id === t.id) && !pendingWorkOrder.some(pwo => pwo.id === t.id));
-    const uniquePendingSelection = pendingSelection.filter(t => !pendingWorkOrder.some(pwo => pwo.id === t.id));
-
-    return { review, toBeOpened: uniqueToBeOpened, pendingSelection: uniquePendingSelection, pendingWorkOrder };
+    return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
 
 
