@@ -97,7 +97,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                     <DialogTitle>Basic Tender Details</DialogTitle>
                     <DialogDescription>Enter the fundamental details for this tender.</DialogDescription>
                 </DialogHeader>
-                <div className="px-6 py-4">
+                <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
                     <div className="space-y-4">
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="eTenderNo" control={control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
