@@ -19,6 +19,28 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 
+const getStatusRowClass = (status?: E_tenderStatus): string => {
+    if (!status) return "";
+    switch (status) {
+        case 'Tender Process':
+            return "bg-gray-50 hover:bg-gray-100";
+        case 'Bid Opened':
+            return "bg-orange-50 hover:bg-orange-100";
+        case 'Retender':
+            return "bg-yellow-50 hover:bg-yellow-100";
+        case 'Tender Cancelled':
+            return "bg-red-50 hover:bg-red-100 text-red-900";
+        case 'Selection Notice Issued':
+            return "bg-blue-50 hover:bg-blue-100";
+        case 'Work Order Issued':
+            return "bg-green-50 hover:bg-green-100";
+        case 'Supply Order Issued':
+            return "bg-purple-50 hover:bg-purple-100";
+        default:
+            return "";
+    }
+};
+
 
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
@@ -215,7 +237,7 @@ export default function ETenderListPage() {
                                 {filteredTenders.length > 0 ? (
                                     filteredTenders.map((tender, index) => {
                                         return (
-                                            <TableRow key={tender.id}>
+                                            <TableRow key={tender.id} className={getStatusRowClass(tender.presentStatus)}>
                                                 <TableCell className="align-top">{index + 1}</TableCell>
                                                 <TableCell className="font-medium align-top">
                                                     <div className="flex flex-col">
