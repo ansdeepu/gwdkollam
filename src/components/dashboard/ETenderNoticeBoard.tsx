@@ -1,10 +1,9 @@
-
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Hammer, Clock, FolderOpen, Bell, FileSignature, AlertCircle } from "lucide-react";
+import { Hammer, Clock, FolderOpen, Bell, FileSignature } from "lucide-react";
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { toDateOrNull, formatDateSafe } from '../e-tender/utils';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '../ui/dialog';
@@ -45,18 +44,18 @@ export default function ETenderNoticeBoard() {
         const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
         const openingDate = toDateOrNull(tender.dateTimeOfOpening);
 
-        // This list is independent. A tender can be in review and also pending another action.
+        // Review list is independent and time-based
         if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
             review.push(tender);
         }
 
         // Prioritized logic: A tender appears in only one of the following lists.
-        if (!tender.agreementDate || !tender.dateWorkOrder) {
-            pendingWorkOrder.push(tender);
+        if (!tender.dateOfOpeningBid) {
+            toBeOpened.push(tender);
         } else if (!tender.selectionNoticeDate) {
             pendingSelection.push(tender);
-        } else if (!tender.dateOfOpeningBid) {
-            toBeOpened.push(tender);
+        } else if (!tender.agreementDate || !tender.dateWorkOrder) {
+            pendingWorkOrder.push(tender);
         }
     });
 
