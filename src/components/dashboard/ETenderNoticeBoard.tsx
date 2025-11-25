@@ -21,7 +21,7 @@ export default function ETenderNoticeBoard() {
             const dateB = b.tenderDate ? new Date(b.tenderDate) : null;
             if (!dateA) return 1;
             if (!dateB) return -1;
-            return dateB.getTime() - dateA.getTime();
+            return dateB.getTime() - a.getTime();
         })
         .slice(0, 15); // Show latest 15 tenders
   }, [tenders]);
@@ -32,7 +32,7 @@ export default function ETenderNoticeBoard() {
     <Card className="shadow-lg h-full flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-            <Hammer className="h-5 w-5 text-primary" />e-Tender Updates ({sortedTenders.length})
+            <Hammer className="h-5 w-5 text-primary" />e-Tender Updates
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
