@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Activity } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, UserRole } from '@/lib/schemas';
+import { cn } from '@/lib/utils';
 
 const dashboardWorkStatusOrder: SiteWorkStatus[] = ["Under Process", "Addl. AS Awaited", "To be Refunded", "Awaiting Dept. Rig", "To be Tendered", "TS Pending", "Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
 const dashboardServiceOrder: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR"];
@@ -128,28 +129,30 @@ export default function WorkStatusByService({ allFileEntries, onOpenDialog, curr
               <TableRow>
                 <TableHead className="font-semibold p-2">Work Category</TableHead>
                 {[...dashboardServiceOrder, 'Total'].map(service => (
-                  <TableHead key={service} className="text-center font-semibold p-1" dangerouslySetInnerHTML={{ __html: service === 'Total' ? service : (serviceHeaderLabels[service] || service) }} />
+                  <TableHead key={service} className={cn("text-center font-semibold p-1", service === 'Total' && 'text-primary bg-primary/10')} dangerouslySetInnerHTML={{ __html: service === 'Total' ? service : (serviceHeaderLabels[service] || service) }} />
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {workStatusByServiceData.map((row) => (
-                <TableRow key={row.statusCategory}>
-                  <TableCell className="font-medium p-2 whitespace-normal break-words">{row.statusCategory}</TableCell>
+              {workStatusByServiceData.map((row) => {
+                const isTotalRow = row.statusCategory === "Total No. of Works/Files";
+                return (
+                <TableRow key={row.statusCategory} className={cn(isTotalRow && 'bg-primary/10 hover:bg-primary/20')}>
+                  <TableCell className={cn("font-medium p-2 whitespace-normal break-words", isTotalRow && 'text-primary font-bold')}>{row.statusCategory}</TableCell>
                   {dashboardServiceOrder.map(service => (
-                    <TableCell key={service} className="text-center p-2">
+                    <TableCell key={service} className={cn("text-center p-2", isTotalRow && "font-bold")}>
                       {(row as any)[service].count > 0 ? (
-                        <Button variant="link" className="p-0 h-auto font-semibold" onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
+                        <Button variant="link" className={cn("p-0 h-auto font-semibold", isTotalRow && 'font-bold text-primary')} onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
                       ) : (0)}
                     </TableCell>
                   ))}
-                  <TableCell className="text-center p-2 font-bold">
+                  <TableCell className="text-center p-2 font-bold bg-primary/10 text-primary">
                     {(row as any)['total'].count > 0 ? (
-                      <Button variant="link" className="p-0 h-auto font-bold" onClick={() => handleWorkStatusCellClick((row as any)['total'].data, `${row.statusCategory} - Total`)}>{(row as any)['total'].count}</Button>
+                      <Button variant="link" className="p-0 h-auto font-bold text-primary" onClick={() => handleWorkStatusCellClick((row as any)['total'].data, `${row.statusCategory} - Total`)}>{(row as any)['total'].count}</Button>
                     ) : (0)}
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         ) : (
