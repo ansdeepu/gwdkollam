@@ -51,7 +51,7 @@ export default function ETenderNoticeBoard() {
         // Prioritized pending actions
         const isPendingWorkOrder = !tender.agreementDate || !tender.dateWorkOrder;
         const isPendingSelectionNotice = !tender.selectionNoticeDate;
-        const isToBeOpened = !tender.dateOfOpeningBid && !tender.dateOfTechnicalAndFinancialBidOpening;
+        const isToBeOpened = !tender.dateOfOpeningBid;
 
         if (isPendingWorkOrder) {
             pendingWorkOrder.push(tender);
