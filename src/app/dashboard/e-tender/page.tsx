@@ -25,19 +25,19 @@ const getStatusRowClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
     switch (status) {
         case 'Tender Process':
-            return "text-gray-800";
+            return "text-gray-600"; // Neutral gray
         case 'Bid Opened':
-            return "text-orange-800";
+            return "text-orange-600"; // Vibrant orange
         case 'Retender':
-            return "text-yellow-800";
+            return "text-yellow-600"; // Vibrant yellow
         case 'Tender Cancelled':
-            return "text-red-800";
+            return "text-red-600"; // Strong red
         case 'Selection Notice Issued':
-            return "text-blue-800";
+            return "text-blue-600"; // Strong blue
         case 'Work Order Issued':
-            return "text-green-800";
+            return "text-green-600"; // Strong green
         case 'Supply Order Issued':
-            return "text-purple-800";
+            return "text-purple-600"; // Vibrant purple
         default:
             return "";
     }
@@ -241,10 +241,10 @@ export default function ETenderListPage() {
                                         return (
                                             <TableRow key={tender.id} className={getStatusRowClass(tender.presentStatus)}>
                                                 <TableCell className="align-top">{index + 1}</TableCell>
-                                                <TableCell className="font-medium align-top">
+                                                <TableCell className="font-bold align-top">
                                                     <div className="flex flex-col">
                                                         <span className="whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
-                                                        <span className="text-xs">Dated: {formatDateSafe(tender.tenderDate)}</span>
+                                                        <span className="text-xs font-normal">Dated: {formatDateSafe(tender.tenderDate)}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="whitespace-normal break-words align-top">{tender.nameOfWork}</TableCell>
