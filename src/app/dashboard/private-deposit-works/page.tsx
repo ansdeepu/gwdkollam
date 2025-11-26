@@ -5,7 +5,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, FilePlus2 } from "lucide-react";
+import { Search, FilePlus2, Clock } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,7 +13,7 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData, ApplicationType } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates';
-import { parseISO, isValid } from 'date-fns';
+import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 
@@ -58,7 +58,7 @@ export default function PrivateDepositWorksPage() {
   
   const canCreate = user?.role === 'editor';
 
-  const privateDepositWorkEntries = useMemo(() => {
+  const { privateDepositWorkEntries, lastCreatedDate } = useMemo(() => {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
@@ -94,7 +94,15 @@ export default function PrivateDepositWorksPage() {
       return dateB.getTime() - dateA.getTime();
     });
 
-    return sortedEntries;
+    const lastCreated = sortedEntries.reduce((latest, entry) => {
+        const createdAt = (entry as any).createdAt ? safeParseDate((entry as any).createdAt) : null;
+        if (createdAt && (!latest || createdAt > latest)) {
+            return createdAt;
+        }
+        return latest;
+    }, null as Date | null);
+    
+    return { privateDepositWorkEntries: sortedEntries, lastCreatedDate: lastCreated };
   }, [fileEntries, user?.role, user?.uid]);
 
 
@@ -122,6 +130,12 @@ export default function PrivateDepositWorksPage() {
               <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                 Total Files: <span className="font-bold text-primary">{privateDepositWorkEntries.length}</span>
               </div>
+               {lastCreatedDate && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                        <Clock className="h-3.5 w-3.5"/>
+                        Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
+                    </div>
+                )}
               {canCreate && (
                 <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
                   <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
