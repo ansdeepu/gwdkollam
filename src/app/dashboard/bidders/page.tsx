@@ -35,7 +35,7 @@ export default function BiddersListPage() {
     const [isNewBidderDialogOpen, setIsNewBidderDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    const [bidderToEdit, setBidderToEdit] = useState<BidderType | null>(null);
+    const [bidderToEdit, setBidderToEdit] = useState<Partial<BidderType> | null>(null);
     const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
     const [bidderToReorder, setBidderToReorder] = useState<BidderType | null>(null);
     
@@ -204,7 +204,23 @@ export default function BiddersListPage() {
 
             <Dialog open={isNewBidderDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) { setIsNewBidderDialogOpen(false); setBidderToEdit(null); } }}>
                 <DialogContent className="max-w-2xl flex flex-col p-0">
-                    <NewBidderForm onSubmit={handleAddOrEditBidderSubmit} onCancel={() => { setIsNewBidderDialogOpen(false); setBidderToEdit(null); }} isSubmitting={isSubmitting} initialData={bidderToEdit}/>
+                    <NewBidderForm
+                        onSubmit={handleAddOrEditBidderSubmit}
+                        onCancel={() => { setIsNewBidderDialogOpen(false); setBidderToEdit(null); }}
+                        isSubmitting={isSubmitting}
+                        initialData={
+                            bidderToEdit
+                              ? {
+                                  id: bidderToEdit.id,
+                                  name: bidderToEdit.name ?? "",
+                                  address: bidderToEdit.address ?? "",
+                                  phoneNo: bidderToEdit.phoneNo ?? "",
+                                  secondaryPhoneNo: bidderToEdit.secondaryPhoneNo ?? "",
+                                  email: bidderToEdit.email ?? "",
+                                }
+                              : null
+                          }
+                    />
                 </DialogContent>
             </Dialog>
 
