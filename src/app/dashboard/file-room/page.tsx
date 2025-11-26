@@ -124,34 +124,34 @@ export default function FileManagerPage() {
   return (
     <div className="space-y-6">
        <Card>
-        <CardContent className="p-4 space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="relative flex-grow w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search all fields by File No, Applicant, Site, Purpose, Status..."
-                className="w-full rounded-lg bg-background pl-10 shadow-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            {canCreate && (
-              <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
-                <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
-              </Button>
-            )}
-          </div>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t text-sm font-medium text-muted-foreground">
-                <div className="whitespace-nowrap">
+        <CardContent className="p-4">
+           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative flex-grow w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search all fields..."
+                  className="w-full rounded-lg bg-background pl-10 shadow-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+               <div className="flex items-center gap-4 w-full sm:w-auto">
+                 <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
                 </div>
                 {lastCreatedDate && (
-                    <div className="flex items-center gap-1.5 text-xs">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
                         <Clock className="h-3.5 w-3.5"/>
-                        Last file created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yyyy, hh:mm a')}</span>
+                        Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
                     </div>
                 )}
+                {canCreate && (
+                    <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
+                        <FilePlus2 className="mr-2 h-5 w-5" /> New File
+                    </Button>
+                )}
+               </div>
             </div>
         </CardContent>
       </Card>
