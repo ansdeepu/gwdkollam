@@ -35,6 +35,7 @@ import { generateDateExtensionCorrigendum } from './generators/dateExtensionCorr
 import { generateCancelCorrigendum } from './generators/cancelCorrigendumGenerator';
 import { generateWorkAgreement } from './generators/workAgreementGenerator';
 import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
+import { formatTenderNoForFilename } from '../utils';
 
 
 const ReportButton = ({
@@ -99,16 +100,15 @@ export default function PdfReportDialogs() {
 
     const handleGeneratePdf = useCallback(async (
         generator: (tender: typeof tender, staff?: typeof allStaffMembers) => Promise<Uint8Array>,
-        fileNamePrefix: string,
+        fileName: string,
         successMessage: string
     ) => {
         try {
             const pdfBytes = await generator(tender, allStaffMembers);
-            const fileName = `${fileNamePrefix}_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: successMessage });
         } catch (error: any) {
-            console.error(`${fileNamePrefix} Generation Error:`, error);
+            console.error(`${fileName} Generation Error:`, error);
             toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
         }
     }, [tender, allStaffMembers]);
@@ -117,20 +117,20 @@ export default function PdfReportDialogs() {
         setIsLoading(true);
         try {
           let pdfBytes: Uint8Array;
-          let fileNamePrefix: string;
+          let fileNamePrefix: string = '';
           
           switch (corrigendum.corrigendumType) {
             case 'Retender':
               pdfBytes = await generateRetenderCorrigendum(tender, corrigendum);
-              fileNamePrefix = 'Corrigendum_Retender';
+              fileNamePrefix = 'RetenderCorrigendum';
               break;
             case 'Date Extension':
               pdfBytes = await generateDateExtensionCorrigendum(tender, corrigendum);
-              fileNamePrefix = 'Corrigendum_DateExtension';
+              fileNamePrefix = 'DateCorrigendum';
               break;
             case 'Cancel':
               pdfBytes = await generateCancelCorrigendum(tender, corrigendum);
-              fileNamePrefix = 'Corrigendum_Cancel';
+              fileNamePrefix = 'CancelCorrigendum';
               break;
             default:
               toast({ title: "Generation Not Supported", description: `PDF generation for type '${corrigendum.corrigendumType}' is not implemented.`, variant: 'destructive' });
@@ -138,7 +138,8 @@ export default function PdfReportDialogs() {
               return;
           }
           
-          const fileName = `${fileNamePrefix}_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+          const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+          const fileName = `${fileNamePrefix}${formattedTenderNo}.pdf`;
           download(pdfBytes, fileName, 'application/pdf');
           toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
     
@@ -161,6 +162,8 @@ export default function PdfReportDialogs() {
         : tender.tenderType === 'Purchase'
         ? 'Supply Order'
         : 'Work / Supply Order';
+        
+    const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
 
     return (
         <Card>
@@ -172,13 +175,13 @@ export default function PdfReportDialogs() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <ReportButton 
                         label="Notice Inviting Tender (NIT)"
-                        onClick={() => handleGeneratePdf(generateNIT, 'NIT', 'Your Notice Inviting Tender has been downloaded.')}
+                        onClick={() => handleGeneratePdf(generateNIT, `aNIT${formattedTenderNo}.pdf`, 'Your Notice Inviting Tender has been downloaded.')}
                         disabled={!isTenderSaved}
                         tooltipContent="Save the Basic Details first to enable."
                     />
                      <ReportButton 
                         label="Tender Form"
-                        onClick={() => handleGeneratePdf(generateTenderForm, 'TenderForm', 'Your Tender Form has been downloaded.')}
+                        onClick={() => handleGeneratePdf(generateTenderForm, `bTenderForm${formattedTenderNo}.pdf`, 'Your Tender Form has been downloaded.')}
                         disabled={!isTenderSaved}
                         tooltipContent="Save the Basic Details first to enable."
                     />
@@ -208,19 +211,19 @@ export default function PdfReportDialogs() {
                     </DropdownMenu>
                     <ReportButton 
                         label="Bid Opening Summary"
-                        onClick={() => handleGeneratePdf(generateBidOpeningSummary, 'Bid_Opening_Summary', 'Your Bid Opening Summary has been downloaded.')}
+                        onClick={() => handleGeneratePdf(generateBidOpeningSummary, `aBidOpening${formattedTenderNo}.pdf`, 'Your Bid Opening Summary has been downloaded.')}
                         disabled={!hasOpeningDetails || !hasBidders}
                         tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
                     />
                     <ReportButton
                         label="Technical Summary"
-                        onClick={() => handleGeneratePdf(generateTechnicalSummary, 'Technical_Summary', 'Your Technical Summary has been downloaded.')}
+                        onClick={() => handleGeneratePdf(generateTechnicalSummary, `cTechEvaluation${formattedTenderNo}.pdf`, 'Your Technical Summary has been downloaded.')}
                         disabled={!hasOpeningDetails || !hasBidders}
                         tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
                     />
                     <ReportButton
                         label="Financial Summary"
-                        onClick={() => handleGeneratePdf(generateFinancialSummary, 'Financial_Summary', 'Your Financial Summary has been downloaded.')}
+                        onClick={() => handleGeneratePdf(generateFinancialSummary, `bFinEvaluation${formattedTenderNo}.pdf`, 'Your Financial Summary has been downloaded.')}
                         disabled={!hasOpeningDetails || !hasBidders}
                         tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
                     />
@@ -232,7 +235,7 @@ export default function PdfReportDialogs() {
                     />
                     <ReportButton
                         label="Work Agreement"
-                        onClick={() => handleGeneratePdf(generateWorkAgreement, 'Work_Agreement', 'Your Work Agreement has been downloaded.')}
+                        onClick={() => handleGeneratePdf(generateWorkAgreement, `WorkAgreement${formattedTenderNo}.pdf`, 'Your Work Agreement has been downloaded.')}
                         disabled={!isTenderSaved || !hasWorkOrder}
                         tooltipContent={!isTenderSaved ? "Save the tender first." : "Add Work Order Details first."}
                     />

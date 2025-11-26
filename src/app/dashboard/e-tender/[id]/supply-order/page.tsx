@@ -1,10 +1,9 @@
-
 // src/app/dashboard/e-tender/[id]/supply-order/page.tsx
 "use client";
 
 import React, { useEffect, useMemo } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
-import { formatDateSafe } from '@/components/e-tender/utils';
+import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 import { useDataStore } from '@/hooks/use-data-store';
 import type { StaffMember } from '@/lib/schemas';
 import { numberToWords } from '@/components/e-tender/pdf/generators/utils';
@@ -14,10 +13,9 @@ export default function SupplyOrderPrintPage() {
     const { officeAddress, allStaffMembers } = useDataStore();
 
     useEffect(() => {
-        if (tender) {
-            document.title = `Supply_Order_${tender.eTenderNo?.replace(/\//g, '_') || 'Tender'}`;
-            setTimeout(() => window.print(), 500);
-        }
+        const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+        document.title = `eSupplyOrder${formattedTenderNo}`;
+        setTimeout(() => window.print(), 500);
     }, [tender]);
 
     const l1Bidder = useMemo(() => {

@@ -15,6 +15,19 @@ export const formatDateForInput = (date: any, isDateTime: boolean = false): stri
     return '';
 };
 
+export const formatTenderNoForFilename = (tenderNo: string | undefined | null): string => {
+    if (!tenderNo) return 'Tender';
+    // Example: GWD/Q/T-25/2024-25 -> T25Y202425
+    const tenderIdMatch = tenderNo.match(/T-(\d+)/);
+    const yearMatch = tenderNo.match(/(\d{4})-(\d{2})/);
+
+    const tenderId = tenderIdMatch ? `T${tenderIdMatch[1]}` : 'Tender';
+    const year = yearMatch ? `Y${yearMatch[1]}${yearMatch[2]}` : '';
+
+    return `${tenderId}${year}`;
+};
+
+
 export const toDateOrNull = (value: any): Date | null => {
   if (value === null || value === undefined || value === '') return null;
   if (value instanceof Date && !isNaN(value.getTime())) return value;

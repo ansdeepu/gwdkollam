@@ -11,6 +11,7 @@ import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
 import { generateRetenderCorrigendum } from './generators/retenderCorrigendumGenerator';
 import { generateDateExtensionCorrigendum } from './generators/dateExtensionCorrigendumGenerator';
 import { generateCancelCorrigendum } from './generators/cancelCorrigendumGenerator';
+import { formatTenderNoForFilename } from '../utils';
 
 interface CorrigendumReportsProps {
   corrigendum: Corrigendum;
@@ -24,20 +25,20 @@ export default function CorrigendumReports({ corrigendum }: CorrigendumReportsPr
     setIsLoading(true);
     try {
       let pdfBytes: Uint8Array;
-      let fileNamePrefix: string;
+      let fileNamePrefix: string = '';
       
       switch (corrigendum.corrigendumType) {
         case 'Retender':
           pdfBytes = await generateRetenderCorrigendum(tender, corrigendum);
-          fileNamePrefix = 'Corrigendum_Retender';
+          fileNamePrefix = 'RetenderCorrigendum';
           break;
         case 'Date Extension':
           pdfBytes = await generateDateExtensionCorrigendum(tender, corrigendum);
-          fileNamePrefix = 'Corrigendum_DateExtension';
+          fileNamePrefix = 'DateCorrigendum';
           break;
         case 'Cancel':
           pdfBytes = await generateCancelCorrigendum(tender, corrigendum);
-          fileNamePrefix = 'Corrigendum_Cancel';
+          fileNamePrefix = 'CancelCorrigendum';
           break;
         default:
           toast({ title: "Generation Not Supported", description: `PDF generation for type '${corrigendum.corrigendumType}' is not implemented.`, variant: 'destructive' });
@@ -45,7 +46,8 @@ export default function CorrigendumReports({ corrigendum }: CorrigendumReportsPr
           return;
       }
       
-      const fileName = `${fileNamePrefix}_${tender.eTenderNo?.replace(/\//g, '_') || 'generated'}.pdf`;
+      const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+      const fileName = `${fileNamePrefix}${formattedTenderNo}.pdf`;
       download(pdfBytes, fileName, 'application/pdf');
       toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
 

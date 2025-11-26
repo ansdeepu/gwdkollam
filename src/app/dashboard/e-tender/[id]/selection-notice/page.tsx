@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
-import { formatDateSafe } from '@/components/e-tender/utils';
+import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 import { useDataStore } from '@/hooks/use-data-store';
 
 export default function SelectionNoticePrintPage() {
@@ -11,11 +11,8 @@ export default function SelectionNoticePrintPage() {
     const { officeAddress } = useDataStore();
 
     useEffect(() => {
-        if (tender && tender.eTenderNo) {
-            document.title = `Selection_Notice_${tender.eTenderNo.replace(/\//g, '_')}`;
-        } else {
-            document.title = 'Selection_Notice';
-        }
+        const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+        document.title = `dSelectionNotice${formattedTenderNo}`;
         // Automatically trigger print dialog
         setTimeout(() => window.print(), 500);
     }, [tender]);

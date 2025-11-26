@@ -3,6 +3,7 @@
 import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { format, isValid } from 'date-fns';
+import { formatTenderNoForFilename } from '../../utils';
 
 const cm = (cmValue: number) => cmValue * 28.3465;
 
@@ -32,7 +33,7 @@ export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Arra
     }
 
     const fileNo = tender.fileNo || '__________';
-    const eTenderNo = tender.eTenderNo || '__________';
+    const eTenderNo = formatTenderNoForFilename(tender.eTenderNo);
     const bidderDetails = (l1Bidder && l1Bidder.name) ? `${l1Bidder.name}, ${l1Bidder.address || ''}` : '____________________';
     
     let workName = tender.nameOfWork || '____________________';

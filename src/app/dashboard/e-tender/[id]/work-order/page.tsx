@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
-import { formatDateSafe } from '@/components/e-tender/utils';
+import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 import { useDataStore } from '@/hooks/use-data-store';
 import type { StaffMember } from '@/lib/schemas';
 import { numberToWords } from '@/components/e-tender/pdf/generators/utils';
@@ -13,10 +13,9 @@ export default function WorkOrderPrintPage() {
     const { officeAddress, allStaffMembers } = useDataStore();
 
     useEffect(() => {
-        if (tender) {
-            document.title = `Work_Order_${tender.eTenderNo?.replace(/\//g, '_') || 'Tender'}`;
-            setTimeout(() => window.print(), 500); // Automatically trigger print
-        }
+        const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+        document.title = `eWorkOrder${formattedTenderNo}`;
+        setTimeout(() => window.print(), 500); // Automatically trigger print
     }, [tender]);
 
     const l1Bidder = useMemo(() => {
