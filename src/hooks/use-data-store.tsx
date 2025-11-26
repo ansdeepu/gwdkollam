@@ -49,6 +49,20 @@ export const defaultRateDescriptions: Record<RateDescriptionId, string> = {
     stampPaper: "For agreements or memorandums, stamp duty shall be ₹1 for every ₹1,000 (or part) of the contract amount, subject to a minimum of ₹200 and a maximum of ₹1,00,000. For supplementary deeds, duty shall be based on the amount in the supplementary agreement.",
 };
 
+export interface OfficeAddress {
+  id: string;
+  officeName?: string;
+  address?: string;
+  phoneNo?: string;
+  email?: string;
+  districtOfficerStaffId?: string;
+  districtOfficer?: string;
+  districtOfficerPhotoUrl?: string;
+  gstNo?: string;
+  panNo?: string;
+  otherDetails?: string;
+}
+
 interface DataStoreContextType {
     allFileEntries: DataEntryFormData[];
     allArsEntries: ArsEntry[];
@@ -57,6 +71,7 @@ interface DataStoreContextType {
     allLsgConstituencyMaps: LsgConstituencyMap[];
     allRateDescriptions: Record<RateDescriptionId, string>;
     allBidders: MasterBidder[];
+    officeAddress: OfficeAddress | null;
     isLoading: boolean;
     refetchFileEntries: () => void;
     refetchArsEntries: () => void;
@@ -78,6 +93,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const [allLsgConstituencyMaps, setAllLsgConstituencyMaps] = useState<LsgConstituencyMap[]>([]);
     const [allRateDescriptions, setAllRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultRateDescriptions);
     const [allBidders, setAllBidders] = useState<MasterBidder[]>([]);
+    const [officeAddress, setOfficeAddress] = useState<OfficeAddress | null>(null);
 
     const [loadingStates, setLoadingStates] = useState({
         files: true,
@@ -87,6 +103,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         lsg: true,
         rates: true,
         bidders: true,
+        officeAddress: true,
     });
     
     const [refetchCounters, setRefetchCounters] = useState({
@@ -117,7 +134,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             setAllLsgConstituencyMaps([]);
             setAllRateDescriptions(defaultRateDescriptions);
             setAllBidders([]);
-            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false, bidders: false });
+            setOfficeAddress(null);
+            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false, bidders: false, officeAddress: false });
             return;
         }
 
@@ -129,6 +147,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg', q: query(collection(db, 'localSelfGovernments')) },
             rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates', q: query(collection(db, 'rateDescriptions')) },
             bidders: { setter: setAllBidders, loaderKey: 'bidders', q: query(collection(db, 'bidders'), orderBy("order")) },
+            officeAddress: { setter: setOfficeAddress, loaderKey: 'officeAddress', q: query(collection(db, 'officeAddresses')) },
         };
 
         const unsubscribes = Object.entries(collections).map(([collectionName, { setter, loaderKey, q }]) => {
@@ -143,7 +162,15 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                         });
                         setter((prev: any) => ({...defaultRateDescriptions, ...descriptions}));
                     }
-                } else if (collectionName === 'bidders') {
+                } else if (collectionName === 'officeAddress') {
+                    if (snapshot.empty) {
+                        setter(null);
+                    } else {
+                        const doc = snapshot.docs[0];
+                        setter({ id: doc.id, ...doc.data() } as OfficeAddress);
+                    }
+                }
+                else if (collectionName === 'bidders') {
                     const data = snapshot.docs.map(doc => {
                         return {
                             ...doc.data(),
@@ -197,6 +224,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             allLsgConstituencyMaps,
             allRateDescriptions,
             allBidders,
+            officeAddress,
             isLoading,
             refetchFileEntries,
             refetchArsEntries,
