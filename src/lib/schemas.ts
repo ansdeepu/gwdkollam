@@ -338,17 +338,6 @@ export const StaffMemberSchema = StaffMemberFormDataSchema.extend({
 });
 export type StaffMember = z.infer<typeof StaffMemberSchema>;
 
-// Bidders Schema
-const NewBidderSchema = z.object({
-  id: z.string(),
-  name: z.string().min(1, "Bidder Name is required."),
-  address: z.string().optional(),
-  phoneNo: z.string().optional(),
-  secondaryPhoneNo: z.string().optional(),
-  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
-});
-export type Bidder = z.infer<typeof NewBidderSchema>;
-
 // GWD Rates Schemas
 export const GwdRateItemFormDataSchema = z.object({
   itemName: z.string().min(1, 'Item name is required.'),
