@@ -2,16 +2,21 @@
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin, ImageUp } from "lucide-react";
+import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin, ImageUp, Hammer } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+
 
 export const dynamic = 'force-dynamic';
 
 export default function HelpPage() {
   const { setHeader } = usePageHeader();
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
   useEffect(() => {
     setHeader("Help & About", "Find answers to common questions and learn more about the application.");
+    setLastUpdated(new Date());
   }, [setHeader]);
 
   return (
@@ -100,6 +105,19 @@ export default function HelpPage() {
                     </ul>
                 </AccordionContent>
             </AccordionItem>
+             <AccordionItem value="item-12">
+              <AccordionTrigger>What is the e-Tender module for?</AccordionTrigger>
+              <AccordionContent>
+                The e-Tender module is a complete system for managing the tendering process electronically.
+                 <ul className="list-disc pl-6 mt-2 space-y-2 text-sm">
+                  <li><strong>Tender Creation:</strong> Editors can create new tenders, inputting all basic details, financial information, and key dates.</li>
+                  <li><strong>Bidder Management:</strong> Add and manage bidders for each tender, including their quoted amounts and status.</li>
+                  <li><strong>Automated Fee Calculation:</strong> Tender Fees and EMD are automatically calculated based on the tender amount and type (Work or Purchase).</li>
+                  <li><strong>PDF Generation:</strong> The system can generate all necessary documents, such as the Notice Inviting Tender (NIT), Tender Form, Bid Summaries, Selection Notices, and Work/Supply Orders, with all data pre-filled.</li>
+                  <li><strong>Status Tracking:</strong> The present status of each tender can be updated throughout its lifecycle, from "Tender Process" to "Work Order Issued".</li>
+                 </ul>
+              </AccordionContent>
+            </AccordionItem>
             <AccordionItem value="item-5">
               <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
               <AccordionContent>
@@ -169,10 +187,15 @@ export default function HelpPage() {
             If you encounter technical issues or have questions not covered in the FAQ, please contact the administrator.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2">
            <p className="text-sm">
             <strong>Administrator Contact:</strong> 8547650853
           </p>
+           {lastUpdated && (
+            <p className="text-xs text-muted-foreground">
+              Help page last updated: {format(lastUpdated, 'dd MMM yyyy, hh:mm a')}
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
