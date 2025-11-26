@@ -512,7 +512,7 @@ export default function ArsPage() {
     <div className="space-y-6">
       <TooltipProvider>
        <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="relative flex-grow min-w-[250px] order-2 sm:order-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -532,46 +532,48 @@ export default function ArsPage() {
                   </> )}
                 </div>
             </div>
-            <div className="flex flex-wrap items-center gap-4 pt-4 border-t mt-4">
-              <div className="font-medium text-sm pr-4">Total Sites: {arsEntries.length}</div>
-                <Input
-                    type="date"
-                    placeholder="dd-mm-yyyy"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-auto"
-                />
-                <Input
-                    type="date"
-                    placeholder="dd-mm-yyyy"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-auto"
-                />
-                 <Select value={schemeTypeFilter} onValueChange={setSchemeTypeFilter}>
-                    <SelectTrigger className="w-auto min-w-[200px]">
-                        <SelectValue placeholder="Filter by Type of Scheme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Scheme Types</SelectItem>
-                        {arsTypeOfSchemeOptions.map((scheme) => (
-                        <SelectItem key={scheme} value={scheme}>{scheme}</SelectItem>
-                        ))}
-                    </SelectContent>
-                 </Select>
-                 <Select value={constituencyFilter} onValueChange={setConstituencyFilter}>
-                    <SelectTrigger className="w-auto min-w-[200px]">
-                        <SelectValue placeholder="Filter by Constituency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Constituencies</SelectItem>
-                        {[...constituencyOptions].sort((a,b) => a.localeCompare(b)).map((constituency) => (
-                        <SelectItem key={constituency} value={constituency}>{constituency}</SelectItem>
-                        ))}
-                    </SelectContent>
-                 </Select>
-              <Button onClick={() => {setStartDate(""); setEndDate(""); setSchemeTypeFilter("all"); setConstituencyFilter("all");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Filters</Button>
-              <p className="text-xs text-muted-foreground flex-grow text-center sm:text-left">Filter by completion date, scheme, and/or constituency</p>
+            <div className="border-t pt-4 mt-4 space-y-3">
+              <div className="font-medium text-sm">Total Sites: {arsEntries.length}</div>
+              <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                      type="date"
+                      placeholder="dd-mm-yyyy"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-auto"
+                  />
+                  <Input
+                      type="date"
+                      placeholder="dd-mm-yyyy"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-auto"
+                  />
+                  <Select value={schemeTypeFilter} onValueChange={setSchemeTypeFilter}>
+                      <SelectTrigger className="w-auto min-w-[200px]">
+                          <SelectValue placeholder="Filter by Type of Scheme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">All Scheme Types</SelectItem>
+                          {arsTypeOfSchemeOptions.map((scheme) => (
+                          <SelectItem key={scheme} value={scheme}>{scheme}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                  <Select value={constituencyFilter} onValueChange={setConstituencyFilter}>
+                      <SelectTrigger className="w-auto min-w-[200px]">
+                          <SelectValue placeholder="Filter by Constituency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">All Constituencies</SelectItem>
+                          {[...constituencyOptions].sort((a,b) => a.localeCompare(b)).map((constituency) => (
+                          <SelectItem key={constituency} value={constituency}>{constituency}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                <Button onClick={() => {setStartDate(""); setEndDate(""); setSchemeTypeFilter("all"); setConstituencyFilter("all");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Filters</Button>
+              </div>
+               <p className="text-xs text-muted-foreground">Filter by completion date, scheme, and/or constituency</p>
             </div>
         </CardContent>
        </Card>
