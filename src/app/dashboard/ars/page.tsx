@@ -33,16 +33,27 @@ export const dynamic = 'force-dynamic';
 const ITEMS_PER_PAGE = 50;
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
 
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date && isValid(dateValue)) {
+    return dateValue;
+  }
+  if (typeof dateValue === 'string') {
+    const parsed = new Date(dateValue);
+    if (isValid(parsed)) return parsed;
+  }
+  // Fallback for other potential date-like objects from Firestore
+  if (typeof dateValue === 'object' && dateValue.toDate) {
+    const parsed = dateValue.toDate();
+    if (isValid(parsed)) return parsed;
+  }
+  return null;
+};
 
 const formatDateSafe = (dateInput: any): string => {
   if (!dateInput) return '';
-  // Handle pre-formatted strings
-  if (typeof dateInput === 'string') {
-      const parsed = parse(dateInput, 'dd/MM/yyyy', new Date());
-      if (isValid(parsed)) return dateInput;
-  }
-  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  return date instanceof Date && !isNaN(date.getTime()) ? format(date, 'dd/MM/yyyy') : '';
+  const date = safeParseDate(dateInput);
+  return date ? format(date, 'dd/MM/yyyy') : '';
 };
 
 
@@ -122,7 +133,7 @@ export default function ArsPage() {
     router.push(`/dashboard/ars/entry?id=${siteId}${pageParam ? `&${pageParam.substring(1)}` : ''}`);
   };
 
-  const filteredSites = useMemo(() => {
+  const { filteredSites, lastCreatedDate } = useMemo(() => {
     let sites = [...arsEntries];
 
     if (isSupervisor) {
@@ -148,14 +159,9 @@ export default function ArsPage() {
         const completionValue = site.dateOfCompletion;
         if (!completionValue) return false;
         
-        let completionDate: Date;
-        if (completionValue instanceof Date) {
-          completionDate = completionValue;
-        } else {
-          completionDate = parse(String(completionValue), 'dd/MM/yyyy', new Date());
-        }
+        const completionDate = safeParseDate(completionValue);
 
-        if (!isValid(completionDate)) return false;
+        if (!completionDate || !isValid(completionDate)) return false;
 
         if (sDate && eDate) return isWithinInterval(completionDate, { start: sDate, end: eDate });
         if (sDate) return completionDate >= sDate;
@@ -185,8 +191,8 @@ export default function ArsPage() {
     }
     
     sites.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt) : null;
-        const dateB = b.createdAt ? new Date(b.createdAt) : null;
+        const dateA = a.createdAt ? safeParseDate(a.createdAt) : null;
+        const dateB = b.createdAt ? safeParseDate(b.createdAt) : null;
 
         if (!dateA && !dateB) return 0;
         if (!dateA) return 1;
@@ -197,7 +203,15 @@ export default function ArsPage() {
         return dateB.getTime() - dateA.getTime();
     });
 
-    return sites;
+    const lastCreated = sites.reduce((latest, entry) => {
+        const createdAt = (entry as any).createdAt ? safeParseDate((entry as any).createdAt) : null;
+        if (createdAt && (!latest || createdAt > latest)) {
+            return createdAt;
+        }
+        return latest;
+    }, null as Date | null);
+
+    return { filteredSites: sites, lastCreatedDate: lastCreated };
   }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter, constituencyFilter]);
 
   useEffect(() => {
@@ -532,7 +546,17 @@ export default function ArsPage() {
                 </div>
             </div>
             <div className="border-t pt-4 mt-4 space-y-3">
-              <div className="font-medium text-sm">Total Sites: {arsEntries.length}</div>
+              <div className="flex flex-wrap items-center gap-4">
+                  <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                      Total Sites: <span className="font-bold text-primary">{arsEntries.length}</span>
+                  </div>
+                  {lastCreatedDate && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                          <Clock className="h-3.5 w-3.5"/>
+                          Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
+                      </div>
+                  )}
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                   <Input
                       type="date"
