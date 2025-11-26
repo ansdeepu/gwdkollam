@@ -77,6 +77,7 @@ export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 
 
 export const BidderSchema = z.object({
+  id: z.string(),
   name: z.string().optional(),
   address: z.string().optional(),
   phoneNo: z.string().optional(),
@@ -88,7 +89,7 @@ export const BidderSchema = z.object({
   status: z.enum(['Accepted', 'Rejected']).optional(),
   order: z.number().optional(),
 });
-export type Bidder = z.infer<typeof BidderSchema> & { id: string };
+export type Bidder = z.infer<typeof BidderSchema>;
 
 export const committeeMemberDesignations: Designation[] = [
     "Assistant Executive Engineer",
