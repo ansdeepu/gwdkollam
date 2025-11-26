@@ -5,7 +5,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import FileDatabaseTable from "@/components/database/FileDatabaseTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, FilePlus2 } from "lucide-react";
+import { Search, FilePlus2, Clock } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,7 +13,7 @@ import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData, ApplicationType } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates';
-import { parseISO, isValid } from 'date-fns';
+import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 
@@ -59,7 +59,7 @@ export default function FileManagerPage() {
   
   const canCreate = user?.role === 'editor';
   
-  const depositWorkEntries = useMemo(() => {
+  const { depositWorkEntries, lastCreatedDate } = useMemo(() => {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
@@ -91,25 +91,28 @@ export default function FileManagerPage() {
         });
     }
 
-    // Clone the array before sorting to avoid mutating the original
     const sortedEntries = [...entries];
 
-    // Sort all entries by the first remittance date, newest first.
     sortedEntries.sort((a, b) => {
       const dateAValue = a.remittanceDetails?.[0]?.dateOfRemittance;
       const dateBValue = b.remittanceDetails?.[0]?.dateOfRemittance;
-
       const dateA = safeParseDate(dateAValue);
       const dateB = safeParseDate(dateBValue);
-      
       if (!dateA && !dateB) return 0;
       if (!dateA) return 1; 
       if (!dateB) return -1;
-      
       return dateB.getTime() - dateA.getTime();
     });
 
-    return sortedEntries;
+    const lastCreated = sortedEntries.reduce((latest, entry) => {
+        const createdAt = (entry as any).createdAt ? safeParseDate((entry as any).createdAt) : null;
+        if (createdAt && (!latest || createdAt > latest)) {
+            return createdAt;
+        }
+        return latest;
+    }, null as Date | null);
+    
+    return { depositWorkEntries: sortedEntries, lastCreatedDate: lastCreated };
   }, [fileEntries, user?.role, user?.uid]);
 
 
@@ -121,7 +124,7 @@ export default function FileManagerPage() {
   return (
     <div className="space-y-6">
        <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative flex-grow w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -134,9 +137,6 @@ export default function FileManagerPage() {
               />
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
-              </div>
               {canCreate && (
                 <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
                   <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
@@ -144,6 +144,17 @@ export default function FileManagerPage() {
               )}
             </div>
           </div>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t text-sm font-medium text-muted-foreground">
+                <div className="whitespace-nowrap">
+                    Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
+                </div>
+                {lastCreatedDate && (
+                    <div className="flex items-center gap-1.5 text-xs">
+                        <Clock className="h-3.5 w-3.5"/>
+                        Last file created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yyyy, hh:mm a')}</span>
+                    </div>
+                )}
+            </div>
         </CardContent>
       </Card>
       
