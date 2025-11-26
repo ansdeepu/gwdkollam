@@ -153,6 +153,9 @@ export const siteWorkStatusOptions = [
   "Work in Progress",
   "Work Failed",
   "Work Completed",
+  "Bill Prepared",
+  "Payment Completed",
+  "Utilization Certificate Issued",
 ] as const;
 export type SiteWorkStatus = typeof siteWorkStatusOptions[number];
 
