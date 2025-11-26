@@ -117,7 +117,7 @@ export default function ArsPage() {
     router.push('/dashboard/ars/entry');
   };
   
-  const handleEditClick = (siteId: string) => {
+  const handleViewClick = (siteId: string) => {
     setIsNavigating(true);
     const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
     router.push(`/dashboard/ars/entry?id=${siteId}${pageParam}`);
@@ -617,17 +617,14 @@ export default function ArsPage() {
                                             <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
                                             <TableCell className="text-center w-[120px]">
                                                 <div className="flex items-center justify-center space-x-1">
-                                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setViewingSite(site); setIsViewDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Details</p></TooltipContent></Tooltip>
-                                                    {(canEdit || (isSupervisor && site.supervisorUid === user.uid)) && (
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button variant="ghost" size="icon" onClick={() => handleEditClick(site.id!)} disabled={isEditDisabled}>
-                                                                    {isSitePendingForSupervisor ? <Clock className="h-4 w-4 text-orange-500" /> : <Edit className="h-4 w-4" />}
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent><p>{isSitePendingForSupervisor ? 'Pending Approval' : 'Edit Site'}</p></TooltipContent>
-                                                        </Tooltip>
-                                                    )}
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" onClick={() => handleViewClick(site.id!)}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>{canEdit ? "View / Edit" : "View Details"}</p></TooltipContent>
+                                                    </Tooltip>
                                                     {canEdit && (
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
