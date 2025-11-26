@@ -211,7 +211,7 @@ export default function BiddersListPage() {
                         initialData={
                             bidderToEdit
                               ? {
-                                  id: bidderToEdit.id,
+                                  id: bidderToEdit.id ?? "",
                                   name: bidderToEdit.name ?? "",
                                   address: bidderToEdit.address ?? "",
                                   phoneNo: bidderToEdit.phoneNo ?? "",
