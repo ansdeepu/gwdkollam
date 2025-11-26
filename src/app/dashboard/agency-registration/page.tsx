@@ -207,7 +207,6 @@ const processDataForSaving = (data: any): any => {
 const RegistrationTable = ({ 
   applications, 
   onView,
-  onEdit, 
   onDelete, 
   searchTerm,
   canEdit,
@@ -217,7 +216,6 @@ const RegistrationTable = ({
 }: { 
   applications: AgencyApplication[],
   onView: (id: string) => void,
-  onEdit: (id: string) => void, 
   onDelete: (id: string) => void,
   searchTerm: string,
   canEdit: boolean,
@@ -252,10 +250,7 @@ const RegistrationTable = ({
                               <div className="flex items-center justify-center">
                                   <Button variant="ghost" size="icon" onClick={() => onView(app.id!)}><Eye className="h-4 w-4" /></Button>
                                   {canEdit && (
-                                    <>
-                                    <Button variant="ghost" size="icon" onClick={() => onEdit(app.id!)}><Edit className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90" onClick={() => onDelete(app.id!)}><Trash2 className="h-4 w-4" /></Button>
-                                    </>
                                   )}
                               </div>
                           </TableCell>
@@ -534,7 +529,7 @@ export default function AgencyRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   
-  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'addRig' | 'editAgencyReg' | 'addPartner' | 'editPartner'; data: any }>({ type: null, data: null });
+  const [dialogState, setDialogState] = useState<{ type: null | 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'editFee' | 'addFee' | 'editRigDetails' | 'addRig' | 'editAgencyReg' | 'addPartner' | 'editPartner'; data: any }>({ type: null, data: null });
   
   const [deletingRenewal, setDeletingRenewal] = useState<{ rigIndex: number; renewalId: string } | null>(null);
   
@@ -545,6 +540,7 @@ export default function AgencyRegistrationPage() {
   const ITEMS_PER_PAGE = 50;
   const [currentPage, setCurrentPage] = useState(1);
   const pageFromUrl = searchParams.get('page');
+  const idFromUrl = searchParams.get('id');
 
   useEffect(() => {
     if (pageFromUrl) {
@@ -553,15 +549,17 @@ export default function AgencyRegistrationPage() {
         setCurrentPage(pageNum);
       }
     }
-  }, [pageFromUrl]);
+    if (idFromUrl) {
+      setSelectedApplicationId(idFromUrl);
+    }
+  }, [pageFromUrl, idFromUrl]);
 
   const isEditor = user?.role === 'editor';
   const isSupervisor = user?.role === 'supervisor';
   const isViewer = user?.role === 'viewer';
   
-  const isViewing = dialogState.type === 'view';
-
-  const isReadOnlyForForm = isViewing || isSupervisor || isViewer;
+  const isViewing = isViewer || isSupervisor;
+  const isReadOnlyForForm = isViewing;
   const canEdit = isEditor;
 
   useEffect(() => {
@@ -759,17 +757,10 @@ export default function AgencyRegistrationPage() {
     setSelectedApplicationId('new');
   }
 
-  const handleEdit = (id: string) => {
+  const handleView = (id: string) => {
     const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
     router.push(`/dashboard/agency-registration?id=${id}${pageParam}`);
     setSelectedApplicationId(id);
-  }
-  
-  const handleView = (id: string) => {
-    const appToView = applications.find(a => a.id === id);
-    if(appToView) {
-      openDialog('view', appToView);
-    }
   }
 
   const handleCancelForm = () => {
@@ -832,7 +823,7 @@ export default function AgencyRegistrationPage() {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Pending Verification');
   }, [filteredApplications]);
   
-  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'view' | 'editFee' | 'addFee' | 'editRigDetails' | 'addRig' | 'editAgencyReg' | 'addPartner' | 'editPartner', data: any) => {
+  const openDialog = (type: 'renew' | 'cancel' | 'activate' | 'editRenewal' | 'deleteRig' | 'editFee' | 'addFee' | 'editRigDetails' | 'addRig' | 'editAgencyReg' | 'addPartner' | 'editPartner', data: any) => {
     setDialogState({ type, data });
   };
 
@@ -1637,7 +1628,6 @@ export default function AgencyRegistrationPage() {
                 <RegistrationTable 
                     applications={paginatedCompletedApplications}
                     onView={handleView}
-                    onEdit={handleEdit}
                     onDelete={handleDeleteApplication}
                     searchTerm={searchTerm}
                     canEdit={canEdit}
@@ -1659,7 +1649,6 @@ export default function AgencyRegistrationPage() {
                 <RegistrationTable 
                     applications={paginatedPendingApplications}
                     onView={handleView}
-                    onEdit={handleEdit}
                     onDelete={handleDeleteApplication}
                     searchTerm={searchTerm}
                     canEdit={canEdit}
@@ -1692,12 +1681,6 @@ export default function AgencyRegistrationPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <ViewDialog
-        isOpen={dialogState.type === 'view'}
-        onClose={closeDialog}
-        application={dialogState.type === 'view' ? dialogState.data : null}
-      />
     </div>
   );
 }
@@ -1928,141 +1911,6 @@ const ViewDetailRow = ({ label, value }: { label: string; value: any }) => {
 };
 
 
-function ViewDialog({ isOpen, onClose, application }: { isOpen: boolean; onClose: () => void; application: AgencyApplication | null }) {
-    if (!application) return null;
-
-    const detailSections = [
-        { title: "Application Details", data: { "File No": application.fileNo, "Agency Name & Address": application.agencyName, Status: application.status } },
-        { title: "Owner Details", data: application.owner },
-        ...(application.partners?.map((p, i) => ({ title: `Partner #${i + 1}`, data: p })) || []),
-        { title: "Agency Registration", data: { "Agency Reg. No": application.agencyRegistrationNo, "Reg. Date": application.agencyRegistrationDate, "Reg. Fee": application.agencyRegistrationFee, "Payment Date": application.agencyPaymentDate, "Challan No": application.agencyChallanNo, "Additional Reg. Fee": application.agencyAdditionalRegFee, "Additional Payment Date": application.agencyAdditionalPaymentDate, "Additional Challan No.": application.agencyAdditionalChallanNo, } },
-    ];
-    
-    const camelCaseToTitle = (s: string) => {
-        const result = s.replace(/([A-Z])/g, ' $1');
-        return result.charAt(0).toUpperCase() + result.slice(1);
-    };
-
-    const activeRigs = (application.rigs || []).filter(rig => rig.status === 'Active');
-    const cancelledRigs = (application.rigs || []).filter(rig => rig.status === 'Cancelled');
-    
-    const RigDetails = ({ rig, index }: { rig: RigRegistrationType; index: number }) => {
-        const lastEffDate = rig.renewals && rig.renewals.length > 0 ? [...rig.renewals].sort((a,b) => new Date(b.renewalDate).getTime() - new Date(a.renewalDate).getTime())[0].renewalDate : rig.registrationDate;
-        const validityDate = lastEffDate ? new Date(addYears(new Date(lastEffDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
-
-        const rigDetails = [
-            { title: `Rig #${index + 1} - ${rig.typeOfRig || 'N/A'} (${rig.status})`, data: { "Rig Reg. No": rig.rigRegistrationNo, "Type": rig.typeOfRig, "Last Reg./Renewal": rig.registrationDate, "Validity Upto": validityDate, "Reg. Fee": rig.registrationFee, "Payment Date": rig.paymentDate, "Challan No": rig.challanNo, "Additional Fee": rig.additionalRegistrationFee, "Additional Payment Date": rig.additionalPaymentDate, "Additional Challan No.": rig.additionalChallanNo, "Status": rig.status} },
-            { title: "Cancellation Details", data: { "Reason": rig.cancellationReason, "Date": rig.cancellationDate }, condition: rig.status === 'Cancelled' },
-            { title: "Rig Vehicle", data: rig.rigVehicle },
-            { title: "Compressor Vehicle", data: rig.compressorVehicle },
-            { title: "Supporting Vehicle", data: rig.supportingVehicle },
-            { title: "Compressor", data: rig.compressorDetails },
-            { title: "Generator", data: rig.generatorDetails },
-        ];
-
-        return (
-            <div className="mt-4 pt-4 border-t">
-                {rigDetails.filter(s => s.condition !== false).map((section, sIdx) => {
-                    if (!section.data || Object.values(section.data).every(v => v === null || v === undefined || v === '')) return null;
-                    return (
-                    <div key={sIdx} className="mb-4">
-                        <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>
-                        <dl className="space-y-1">
-                            {Object.entries(section.data).map(([key, value]) => <ViewDetailRow key={key} label={camelCaseToTitle(key)} value={value} />)}
-                        </dl>
-                    </div>
-                )})}
-                
-                 {rig.renewals && rig.renewals.length > 0 && (
-                    <div>
-                        <h4 className="text-base font-semibold text-primary mb-2">Renewal History</h4>
-                        <Table>
-                            <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Date</TableHead><TableHead>Validity</TableHead><TableHead>Fee</TableHead></TableRow></TableHeader>
-                            <TableBody>
-                                {rig.renewals.map((r, rIdx) => {
-                                    const validity = r.renewalDate ? new Date(addYears(new Date(r.renewalDate), 1).getTime() - 24 * 60 * 60 * 1000) : null;
-                                    return (
-                                    <TableRow key={r.id}>
-                                        <TableCell>{rIdx + 1}</TableCell>
-                                        <TableCell>{r.renewalDate ? format(new Date(r.renewalDate), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                        <TableCell>{validity ? format(validity, 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                                        <TableCell>{r.renewalFee?.toLocaleString('en-IN') ?? 'N/A'}</TableCell>
-                                    </TableRow>
-                                )})}
-                            </TableBody>
-                        </Table>
-                    </div>
-                )}
-            </div>
-        )
-    }
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl p-0 flex flex-col h-[90vh]">
-                <DialogHeader className="p-6 pb-4 border-b">
-                    <DialogTitle>View Registration: {application.agencyName}</DialogTitle>
-                    <DialogDescription>A summary of the registration details.</DialogDescription>
-                </DialogHeader>
-                <div className="flex-1 min-h-0">
-                  <ScrollArea className="h-full">
-                      <div className="space-y-6 px-6 py-4">
-                        {detailSections.map((section, idx) => (
-                            <div key={idx}>
-                                <h4 className="text-base font-semibold text-primary mb-2">{section.title}</h4>
-                                <dl className="space-y-1">
-                                    {Object.entries(section.data).map(([key, value]) => <ViewDetailRow key={key} label={camelCaseToTitle(key)} value={value} />)}
-                                </dl>
-                            </div>
-                        ))}
-                        
-                        {(application.applicationFees && application.applicationFees.length > 0) && (
-                            <div>
-                                <h4 className="text-base font-semibold text-primary mb-2">Application Fees</h4>
-                                {application.applicationFees.map((fee, idx) => (
-                                    <div key={fee.id} className="mb-2 p-2 border-t">
-                                        <ViewDetailRow label={`Fee #${idx + 1} Type`} value={fee.applicationFeeType} />
-                                        <ViewDetailRow label="Fee Amount" value={fee.applicationFeeAmount} />
-                                        <ViewDetailRow label="Payment Date" value={fee.applicationFeePaymentDate} />
-                                        <ViewDetailRow label="Challan No." value={fee.applicationFeeChallanNo} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        
-                        {activeRigs.length > 0 && (
-                          <div className="pt-4 mt-4 border-t">
-                            <h3 className="text-xl font-bold text-primary mb-2">Active Rigs ({activeRigs.length})</h3>
-                            {activeRigs.map((rig, idx) => <RigDetails key={rig.id} rig={rig} index={idx} />)}
-                          </div>
-                        )}
-
-                        {cancelledRigs.length > 0 && (
-                           <div className="pt-4 mt-4 border-t">
-                             <h3 className="text-xl font-bold text-destructive mb-2">Cancelled Rigs ({cancelledRigs.length})</h3>
-                             {cancelledRigs.map((rig, idx) => <RigDetails key={rig.id} rig={rig} index={idx} />)}
-                           </div>
-                        )}
-
-                         {application.remarks && (
-                            <div className="pt-4 mt-4 border-t">
-                                <h3 className="text-base font-semibold text-primary mb-2">Remarks</h3>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{application.remarks}</p>
-                            </div>
-                         )}
-                    </div>
-                  </ScrollArea>
-                </div>
-                <DialogFooter className="p-6 pt-4 border-t">
-                    <DialogClose asChild>
-                        <Button>Close</Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
 function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel, isAdding }: { form: UseFormReturn<any>, rigIndex?: number, onConfirm: (data: any) => void, onCancel: () => void, isAdding?: boolean }) {
     const currentRigData = rigIndex !== undefined ? form.getValues(`rigs.${rigIndex}`) : createDefaultRig();
     const [localRigData, setLocalRigData] = useState<RigRegistrationType>(currentRigData);
@@ -2211,3 +2059,8 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
 
+
+
+    
+
+    
