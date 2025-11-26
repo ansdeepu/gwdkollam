@@ -610,7 +610,7 @@ export default function ArsPage() {
                                         <TableRow key={site.id}>
                                             <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                             <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                            <TableCell className={cn("font-medium whitespace-normal break-words", isFinalStatus ? "text-red-600" : "text-green-600")}>
+                                            <TableCell className={cn("font-medium whitespace-normal break-words", isFinalStatus ? "text-destructive" : "text-primary")}>
                                               {site.nameOfSite}
                                             </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
