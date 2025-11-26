@@ -67,16 +67,27 @@ export default function ETenderListPage() {
     }, [setHeader]);
     
 
-    const { filteredTenders, lastCreatedDate } = useMemo(() => {
-        const getTenderNumber = (tenderNo: string | undefined | null): number => {
-            if (!tenderNo) return 0;
-            const match = tenderNo.match(/T-(\d+)/);
-            return match ? parseInt(match[1], 10) : 0;
+    const processedTenders = useMemo(() => {
+      return tenders.map(tender => {
+        const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
+        const searchableContent = [
+          tender.eTenderNo, `GKT/${tender.fileNo}/${tender.eTenderNo}`,
+          tender.fileNo, tender.nameOfWork, tender.nameOfWorkMalayalam, tender.location, tender.tenderType,
+          tender.presentStatus, tender.periodOfCompletion, tender.estimateAmount?.toString(),
+          formatDateSafe(tender.tenderDate), formatDateSafe(tender.dateTimeOfOpening, true),
+          formatDateSafe(tender.dateTimeOfReceipt, true), bidderNames
+        ].filter(Boolean).map(String).join(' ').toLowerCase();
+        return {
+          ...tender,
+          _searchableContent: searchableContent,
         };
-        
+      });
+    }, [tenders]);
+
+    const { filteredTenders, lastCreatedDate } = useMemo(() => {
         let lastCreated: Date | null = null;
-        if (tenders.length > 0) {
-            lastCreated = tenders.reduce((latest, current) => {
+        if (processedTenders.length > 0) {
+            lastCreated = processedTenders.reduce((latest, current) => {
                 const currentCreatedAt = toDateOrNull(current.createdAt);
                 if (currentCreatedAt && (!latest || currentCreatedAt > latest)) {
                     return currentCreatedAt;
@@ -85,7 +96,7 @@ export default function ETenderListPage() {
             }, null as Date | null);
         }
 
-        let filtered = [...tenders];
+        let filtered = processedTenders;
         
         if (statusFilter !== 'all') {
             filtered = filtered.filter(tender => tender.presentStatus === statusFilter);
@@ -93,41 +104,26 @@ export default function ETenderListPage() {
         
         if (searchTerm) {
           const lowercasedFilter = searchTerm.toLowerCase();
-          filtered = filtered.filter(tender => {
-              const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
-
-              const searchableContent = [
-                  tender.eTenderNo,
-                  `GKT/${tender.fileNo}/${tender.eTenderNo}`,
-                  tender.fileNo,
-                  tender.nameOfWork,
-                  tender.nameOfWorkMalayalam,
-                  tender.location,
-                  tender.tenderType,
-                  tender.presentStatus,
-                  tender.periodOfCompletion,
-                  tender.estimateAmount?.toString(),
-                  formatDateSafe(tender.tenderDate),
-                  formatDateSafe(tender.dateTimeOfOpening, true),
-                  formatDateSafe(tender.dateTimeOfReceipt, true),
-                  bidderNames
-              ].filter(Boolean).map(String).join(' ').toLowerCase();
-              
-              return searchableContent.includes(lowercasedFilter);
-          });
+          filtered = filtered.filter(tender => tender._searchableContent.includes(lowercasedFilter));
         }
         
         filtered.sort((a, b) => {
             const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
             const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
             if (dateA !== dateB) return dateB - dateA;
+            
+            const getTenderNumber = (tenderNo: string | undefined | null): number => {
+                if (!tenderNo) return 0;
+                const match = tenderNo.match(/T-(\d+)/);
+                return match ? parseInt(match[1], 10) : 0;
+            };
             const numA = getTenderNumber(a.eTenderNo);
             const numB = getTenderNumber(b.eTenderNo);
             return numB - numA;
         });
 
         return { filteredTenders: filtered, lastCreatedDate: lastCreated };
-    }, [tenders, searchTerm, statusFilter]);
+    }, [processedTenders, searchTerm, statusFilter]);
 
 
     const handleCreateNew = () => {
