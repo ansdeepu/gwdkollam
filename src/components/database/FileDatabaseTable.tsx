@@ -189,7 +189,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     router.push(`?${params.toString()}`);
   };
 
-  const handleViewOrEditClick = (item: DataEntryFormData) => {
+  const handleViewClick = (item: DataEntryFormData) => {
     if (!item.id) return;
     const workTypeParam = item.applicationType?.startsWith("Private_") ? "private" : "public";
     const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
@@ -365,13 +365,13 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                       <div className="flex items-center justify-end space-x-1">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleViewOrEditClick(entry)}>
-                              {canEdit ? <Edit3 className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              <span className="sr-only">{canEdit ? "Edit" : "View"} Details</span>
+                            <Button variant="ghost" size="icon" onClick={() => handleViewClick(entry)}>
+                               <Eye className="h-4 w-4" />
+                               <span className="sr-only">View Details</span>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{canEdit ? (isFilePendingForSupervisor ? "Pending Approval" : "View / Edit") : "View Details"}</p>
+                            <p>{canEdit ? "View / Edit" : "View Details"}</p>
                           </TooltipContent>
                         </Tooltip>
                         {canCopy && (
@@ -469,4 +469,3 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     </TooltipProvider>
   );
 }
-
