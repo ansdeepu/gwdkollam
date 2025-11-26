@@ -88,6 +88,12 @@ export const BidderSchema = z.object({
   aboveBelow: z.enum(['Above', 'Below']).optional(),
   status: z.enum(['Accepted', 'Rejected']).optional(),
   order: z.number().optional(),
+  // Deprecated fields - keep for compatibility if needed
+  securityDepositType: z.string().optional(),
+  securityDepositAmount: optionalNumberSchema,
+  agreementAmount: optionalNumberSchema,
+  additionalSecurityDeposit: optionalNumberSchema,
+  dateSelectionNotice: z.any().optional().nullable(),
 });
 export type Bidder = z.infer<typeof BidderSchema>;
 
