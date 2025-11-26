@@ -119,7 +119,7 @@ export default function ArsPage() {
   
   const handleViewClick = (siteId: string) => {
     setIsNavigating(true);
-    const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
+    const pageParam = currentPage > 1 ? `?page=${currentPage}` : '';
     router.push(`/dashboard/ars/entry?id=${siteId}${pageParam}`);
   };
 
@@ -604,13 +604,13 @@ export default function ArsPage() {
                                 paginatedSites.map((site, index) => {
                                     const isSitePendingForSupervisor = isSupervisor && site.isPending;
                                     const isEditDisabled = isSitePendingForSupervisor || (isSupervisor && site.supervisorUid !== user?.uid);
-                                    const isFinalStatus = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                                    const isFailed = site.workStatus === 'Work Failed';
                                     
                                     return (
                                         <TableRow key={site.id}>
                                             <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                             <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                            <TableCell className={cn("font-medium whitespace-normal break-words", isFinalStatus ? "text-destructive" : "text-primary")}>
+                                            <TableCell className={cn("font-medium whitespace-normal break-words", isFailed ? 'text-destructive' : 'text-primary')}>
                                               {site.nameOfSite}
                                             </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
