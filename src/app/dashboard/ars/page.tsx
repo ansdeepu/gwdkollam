@@ -603,14 +603,13 @@ export default function ArsPage() {
                                 paginatedSites.map((site, index) => {
                                     const isSitePendingForSupervisor = isSupervisor && site.isPending;
                                     const isEditDisabled = isSitePendingForSupervisor || (isSupervisor && site.supervisorUid !== user?.uid);
-                                    const isCompleted = site.workStatus === 'Work Completed';
-                                    const isFailed = site.workStatus === 'Work Failed';
+                                    const isCompleted = !!site.dateOfCompletion;
                                     
                                     return (
                                         <TableRow key={site.id}>
                                             <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                             <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                            <TableCell className={cn("font-medium whitespace-normal break-words", (isCompleted || isFailed) ? 'text-destructive' : 'text-green-600')}>
+                                            <TableCell className={cn("font-medium whitespace-normal break-words", isCompleted ? 'text-destructive' : 'text-green-600')}>
                                               {site.nameOfSite}
                                             </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
