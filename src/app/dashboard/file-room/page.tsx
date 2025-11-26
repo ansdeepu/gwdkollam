@@ -136,13 +136,11 @@ export default function FileManagerPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              {canCreate && (
-                <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
-                  <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
-                </Button>
-              )}
-            </div>
+            {canCreate && (
+              <Button onClick={handleAddNewClick} className="w-full sm:w-auto shrink-0">
+                <FilePlus2 className="mr-2 h-5 w-5" /> New File Entry
+              </Button>
+            )}
           </div>
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t text-sm font-medium text-muted-foreground">
                 <div className="whitespace-nowrap">
