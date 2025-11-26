@@ -585,17 +585,19 @@ export default function ArsPage() {
                   </Select>
                 <Button onClick={() => {setStartDate(""); setEndDate(""); setSchemeTypeFilter("all"); setConstituencyFilter("all");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Filters</Button>
               </div>
-               <p className="text-xs text-muted-foreground">Filter by completion date, scheme, and/or constituency</p>
-               <div className="flex flex-wrap items-center gap-4">
-                  <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                      Total Sites: <span className="font-bold text-primary">{arsEntries.length}</span>
-                  </div>
-                  {lastCreatedDate && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
-                          <Clock className="h-3.5 w-3.5"/>
-                          Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
-                      </div>
-                  )}
+              <div className="flex justify-between items-center gap-4">
+                  <p className="text-xs text-muted-foreground">Filter by completion date, scheme, and/or constituency</p>
+                   <div className="flex items-center gap-4">
+                        <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                            Total Sites: <span className="font-bold text-primary">{arsEntries.length}</span>
+                        </div>
+                        {lastCreatedDate && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                                <Clock className="h-3.5 w-3.5"/>
+                                Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
+                            </div>
+                        )}
+                    </div>
               </div>
             </div>
         </CardContent>
