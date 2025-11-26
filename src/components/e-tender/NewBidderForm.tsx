@@ -31,6 +31,7 @@ const createDefaultBidder = (): NewBidderFormData => ({
     phoneNo: '',
     secondaryPhoneNo: '',
     email: '',
+    order: 0,
 });
 
 interface NewBidderFormProps {
