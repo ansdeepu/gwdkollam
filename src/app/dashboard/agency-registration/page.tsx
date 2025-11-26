@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye, FileDown } from "lucide-react";
+import { Loader2, Search, PlusCircle, Save, X, Edit, Trash2, ShieldAlert, UserPlus, FilePlus, ChevronsUpDown, RotateCcw, RefreshCw, CheckCircle, Info, Ban, Edit2, FileUp, MoreVertical, ArrowLeft, Eye, FileDown, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -776,18 +776,18 @@ export default function AgencyRegistrationPage() {
     openDialog('addRig', {});
   };
 
-  const filteredApplications = useMemo(() => {
+  const { filteredApplications, lastCreatedDate } = useMemo(() => {
     let sortedApps = [...applications].sort((a, b) => {
-        const dateA = toDateOrNull(a.agencyRegistrationDate)?.getTime() ?? 0;
-        const dateB = toDateOrNull(b.agencyRegistrationDate)?.getTime() ?? 0;
-        return dateA - dateB;
+        const dateA = toDateOrNull((a as any).createdAt)?.getTime() ?? 0;
+        const dateB = toDateOrNull((b as any).createdAt)?.getTime() ?? 0;
+        return dateB - dateA; // Sort descending for newest first
     });
 
     const lowercasedFilter = searchTerm.toLowerCase();
-    if (!lowercasedFilter) return sortedApps;
-
-    return sortedApps.filter((app: AgencyApplication) => {
-        const searchableContent = [
+    
+    let filtered = lowercasedFilter
+      ? sortedApps.filter((app: AgencyApplication) => {
+          const searchableContent = [
             app.agencyName,
             app.fileNo,
             app.agencyRegistrationNo,
@@ -809,10 +809,21 @@ export default function AgencyRegistrationPage() {
                 rig.supportingVehicle?.regNo,
                 ...(rig.renewals || []).map(r => r.challanNo)
             ]),
-        ].filter(Boolean).map(String).join(' ').toLowerCase();
+          ].filter(Boolean).map(String).join(' ').toLowerCase();
 
-        return searchableContent.includes(lowercasedFilter);
-    });
+          return searchableContent.includes(lowercasedFilter);
+        })
+      : sortedApps;
+      
+    const lastCreated = sortedApps.reduce((latest, entry) => {
+        const createdAt = (entry as any).createdAt ? toDateOrNull((entry as any).createdAt) : null;
+        if (createdAt && (!latest || createdAt > latest)) {
+            return createdAt;
+        }
+        return latest;
+    }, null as Date | null);
+
+    return { filteredApplications: filtered, lastCreatedDate: lastCreated };
   }, [applications, searchTerm]);
 
   const completedApplications = useMemo(() => {
@@ -1588,7 +1599,7 @@ export default function AgencyRegistrationPage() {
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardContent className="p-4 space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="relative flex-grow w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
@@ -1599,13 +1610,19 @@ export default function AgencyRegistrationPage() {
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                 {lastCreatedDate && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                        <Clock className="h-3.5 w-3.5"/>
+                        Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
+                    </div>
+                )}
                 {canEdit && (
-                  <Button onClick={handleAddNew} className="shrink-0 w-full sm:w-auto">
+                  <Button onClick={handleAddNew} className="shrink-0">
                       <FilePlus className="mr-2 h-4 w-4" /> Add New Registration
                   </Button>
                 )}
-                <Button onClick={handleExportExcel} variant="outline" className="shrink-0 w-full sm:w-auto">
+                <Button onClick={handleExportExcel} variant="outline" className="shrink-0">
                     <FileDown className="mr-2 h-4 w-4" /> Export Excel
                 </Button>
               </div>
