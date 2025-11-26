@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy, XCircle } from 'lucide-react';
+import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy, XCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 import { eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { toDateOrNull } from '@/components/e-tender/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
 
 
 const getStatusRowClass = (status?: E_tenderStatus): string => {
@@ -66,14 +67,22 @@ export default function ETenderListPage() {
     }, [setHeader]);
     
 
-    const filteredTenders = useMemo(() => {
+    const { filteredTenders, lastCreatedDate } = useMemo(() => {
         const getTenderNumber = (tenderNo: string | undefined | null): number => {
             if (!tenderNo) return 0;
             const match = tenderNo.match(/T-(\d+)/);
             return match ? parseInt(match[1], 10) : 0;
         };
         
-        const sortedTenders = [...tenders].sort((a, b) => {
+        const sortedByCreation = [...tenders].sort((a, b) => {
+            const dateA = a.createdAt ? toDateOrNull(a.createdAt)?.getTime() ?? 0 : 0;
+            const dateB = b.createdAt ? toDateOrNull(b.createdAt)?.getTime() ?? 0 : 0;
+            return dateB - dateA;
+        });
+        
+        const lastCreated = sortedByCreation[0]?.createdAt ? toDateOrNull(sortedByCreation[0].createdAt) : null;
+
+        const sortedByDateAndTenderNo = [...tenders].sort((a, b) => {
             const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
             const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
             if (dateA !== dateB) return dateB - dateA;
@@ -82,16 +91,16 @@ export default function ETenderListPage() {
             return numB - numA;
         });
 
-        let filtered = sortedTenders;
+        let filtered = sortedByDateAndTenderNo;
 
         if (statusFilter !== 'all') {
             filtered = filtered.filter(tender => tender.presentStatus === statusFilter);
         }
         
-        if (!searchTerm) return filtered;
+        if (!searchTerm) return { filteredTenders: filtered, lastCreatedDate: lastCreated };
 
         const lowercasedFilter = searchTerm.toLowerCase();
-        return filtered.filter(tender => {
+        const finalFiltered = filtered.filter(tender => {
             const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
 
             const searchableContent = [
@@ -113,6 +122,8 @@ export default function ETenderListPage() {
             
             return searchableContent.includes(lowercasedFilter);
         });
+        
+        return { filteredTenders: finalFiltered, lastCreatedDate: lastCreated };
     }, [tenders, searchTerm, statusFilter]);
 
 
@@ -238,14 +249,22 @@ export default function ETenderListPage() {
                                 </SelectContent>
                             </Select>
                             {user?.role === 'editor' && (
-                                <>
-                                    <Button onClick={() => router.push('/dashboard/bidders')} variant="secondary" className="shrink-0">
-                                        <Users className="mr-2 h-4 w-4" /> Bidders List
-                                    </Button>
-                                    <Button onClick={handleCreateNew} className="w-full sm:w-auto shrink-0">
-                                        <PlusCircle className="mr-2 h-4 w-4" /> Create New
-                                    </Button>
-                                </>
+                                <div className="flex flex-col items-end gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <Button onClick={() => router.push('/dashboard/bidders')} variant="secondary" className="shrink-0">
+                                            <Users className="mr-2 h-4 w-4" /> Bidders List
+                                        </Button>
+                                        <Button onClick={handleCreateNew} className="w-full sm:w-auto shrink-0">
+                                            <PlusCircle className="mr-2 h-4 w-4" /> Create New
+                                        </Button>
+                                    </div>
+                                    {lastCreatedDate && (
+                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground self-end mt-1">
+                                            <Clock className="h-3 w-3"/>
+                                            Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
