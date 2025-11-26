@@ -74,15 +74,50 @@ export default function ETenderListPage() {
             return match ? parseInt(match[1], 10) : 0;
         };
         
-        const sortedByCreation = [...tenders].sort((a, b) => {
-            const dateA = a.createdAt ? toDateOrNull(a.createdAt)?.getTime() ?? 0 : 0;
-            const dateB = b.createdAt ? toDateOrNull(b.createdAt)?.getTime() ?? 0 : 0;
-            return dateB - dateA;
-        });
-        
-        const lastCreated = sortedByCreation[0]?.createdAt ? toDateOrNull(sortedByCreation[0].createdAt) : null;
+        let lastCreated: Date | null = null;
+        if (tenders.length > 0) {
+            lastCreated = tenders.reduce((latest, current) => {
+                const currentCreatedAt = toDateOrNull(current.createdAt);
+                if (currentCreatedAt && (!latest || currentCreatedAt > latest)) {
+                    return currentCreatedAt;
+                }
+                return latest;
+            }, null as Date | null);
+        }
 
-        const sortedByDateAndTenderNo = [...tenders].sort((a, b) => {
+        let filtered = [...tenders];
+        
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(tender => tender.presentStatus === statusFilter);
+        }
+        
+        if (searchTerm) {
+          const lowercasedFilter = searchTerm.toLowerCase();
+          filtered = filtered.filter(tender => {
+              const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
+
+              const searchableContent = [
+                  tender.eTenderNo,
+                  `GKT/${tender.fileNo}/${tender.eTenderNo}`,
+                  tender.fileNo,
+                  tender.nameOfWork,
+                  tender.nameOfWorkMalayalam,
+                  tender.location,
+                  tender.tenderType,
+                  tender.presentStatus,
+                  tender.periodOfCompletion,
+                  tender.estimateAmount?.toString(),
+                  formatDateSafe(tender.tenderDate),
+                  formatDateSafe(tender.dateTimeOfOpening, true),
+                  formatDateSafe(tender.dateTimeOfReceipt, true),
+                  bidderNames
+              ].filter(Boolean).map(String).join(' ').toLowerCase();
+              
+              return searchableContent.includes(lowercasedFilter);
+          });
+        }
+        
+        filtered.sort((a, b) => {
             const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
             const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
             if (dateA !== dateB) return dateB - dateA;
@@ -91,39 +126,7 @@ export default function ETenderListPage() {
             return numB - numA;
         });
 
-        let filtered = sortedByDateAndTenderNo;
-
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(tender => tender.presentStatus === statusFilter);
-        }
-        
-        if (!searchTerm) return { filteredTenders: filtered, lastCreatedDate: lastCreated };
-
-        const lowercasedFilter = searchTerm.toLowerCase();
-        const finalFiltered = filtered.filter(tender => {
-            const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
-
-            const searchableContent = [
-                tender.eTenderNo,
-                `GKT/${tender.fileNo}/${tender.eTenderNo}`,
-                tender.fileNo,
-                tender.nameOfWork,
-                tender.nameOfWorkMalayalam,
-                tender.location,
-                tender.tenderType,
-                tender.presentStatus,
-                tender.periodOfCompletion,
-                tender.estimateAmount?.toString(),
-                formatDateSafe(tender.tenderDate),
-                formatDateSafe(tender.dateTimeOfOpening, true),
-                formatDateSafe(tender.dateTimeOfReceipt, true),
-                bidderNames
-            ].filter(Boolean).map(String).join(' ').toLowerCase();
-            
-            return searchableContent.includes(lowercasedFilter);
-        });
-        
-        return { filteredTenders: finalFiltered, lastCreatedDate: lastCreated };
+        return { filteredTenders: filtered, lastCreatedDate: lastCreated };
     }, [tenders, searchTerm, statusFilter]);
 
 
