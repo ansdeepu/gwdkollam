@@ -34,7 +34,7 @@ import { generateRetenderCorrigendum } from './generators/retenderCorrigendumGen
 import { generateDateExtensionCorrigendum } from './generators/dateExtensionCorrigendumGenerator';
 import { generateCancelCorrigendum } from './generators/cancelCorrigendumGenerator';
 import { generateWorkAgreement } from './generators/workAgreementGenerator';
-import type { Corrigendum, StaffMember } from '@/lib/schemas/eTenderSchema';
+import type { Corrigendum, StaffMember } from '@/lib/schemas';
 import { formatTenderNoForFilename } from '../utils';
 import type { E_tender } from '@/hooks/useE_tenders';
 
@@ -77,7 +77,6 @@ const ReportButton = ({
 
   if (disabled && tooltipContent) {
     return (
-      <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="w-full">{renderButton()}</div>
@@ -86,7 +85,6 @@ const ReportButton = ({
             <p>{tooltipContent}</p>
           </TooltipContent>
         </Tooltip>
-      </TooltipProvider>
     );
   }
 
@@ -173,21 +171,21 @@ export default function PdfReportDialogs() {
                 <CardDescription>Generate and download PDF documents for this tender.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <ReportButton 
-                        label="Notice Inviting Tender (NIT)"
-                        onClick={() => handleGeneratePdf(generateNIT, `aNIT${formattedTenderNo}.pdf`, 'Your Notice Inviting Tender has been downloaded.')}
-                        disabled={!isTenderSaved}
-                        tooltipContent="Save the Basic Details first to enable."
-                    />
-                     <ReportButton 
-                        label="Tender Form"
-                        onClick={() => handleGeneratePdf(generateTenderForm, `bTenderForm${formattedTenderNo}.pdf`, 'Your Tender Form has been downloaded.')}
-                        disabled={!isTenderSaved}
-                        tooltipContent="Save the Basic Details first to enable."
-                    />
-                    <DropdownMenu>
-                        <TooltipProvider>
+                <TooltipProvider>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <ReportButton 
+                            label="Notice Inviting Tender (NIT)"
+                            onClick={() => handleGeneratePdf(generateNIT, `aNIT${formattedTenderNo}.pdf`, 'Your Notice Inviting Tender has been downloaded.')}
+                            disabled={!isTenderSaved}
+                            tooltipContent="Save the Basic Details first to enable."
+                        />
+                        <ReportButton 
+                            label="Tender Form"
+                            onClick={() => handleGeneratePdf(generateTenderForm, `bTenderForm${formattedTenderNo}.pdf`, 'Your Tender Form has been downloaded.')}
+                            disabled={!isTenderSaved}
+                            tooltipContent="Save the Basic Details first to enable."
+                        />
+                        <DropdownMenu>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <DropdownMenuTrigger asChild>
@@ -201,52 +199,52 @@ export default function PdfReportDialogs() {
                                     <TooltipContent><p>Add a corrigendum to enable.</p></TooltipContent>
                                 )}
                             </Tooltip>
-                        </TooltipProvider>
-                        <DropdownMenuContent>
-                            {(tender.corrigendums || []).map((corrigendum, index) => (
-                                <DropdownMenuItem key={corrigendum.id} onSelect={() => handleCorrigendumGenerate(corrigendum)}>
-                                    Corrigendum No. {index + 1}
-                                </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <ReportButton 
-                        label="Bid Opening Summary"
-                        onClick={() => handleGeneratePdf(generateBidOpeningSummary, `aBidOpening${formattedTenderNo}.pdf`, 'Your Bid Opening Summary has been downloaded.')}
-                        disabled={!hasOpeningDetails || !hasBidders}
-                        tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
-                    />
-                    <ReportButton
-                        label="Technical Summary"
-                        onClick={() => handleGeneratePdf(generateTechnicalSummary, `cTechEvaluation${formattedTenderNo}.pdf`, 'Your Technical Summary has been downloaded.')}
-                        disabled={!hasOpeningDetails || !hasBidders}
-                        tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
-                    />
-                    <ReportButton
-                        label="Financial Summary"
-                        onClick={() => handleGeneratePdf(generateFinancialSummary, `bFinEvaluation${formattedTenderNo}.pdf`, 'Your Financial Summary has been downloaded.')}
-                        disabled={!hasOpeningDetails || !hasBidders}
-                        tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
-                    />
-                    <ReportButton 
-                        label="Selection Notice"
-                        href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}
-                        disabled={!isTenderSaved || !hasSelectionNotice}
-                        tooltipContent={!isTenderSaved ? "Save the tender first." : "Add Selection Notice Details first."}
-                    />
-                    <ReportButton
-                        label="Work Agreement"
-                        onClick={() => handleGeneratePdf(generateWorkAgreement, `WorkAgreement${formattedTenderNo}.pdf`, 'Your Work Agreement has been downloaded.')}
-                        disabled={!isTenderSaved || !hasWorkOrder}
-                        tooltipContent={!isTenderSaved ? "Save the tender first." : "Add Work Order Details first."}
-                    />
-                     <ReportButton 
-                        label={workOrderButtonLabel}
-                        href={tender.id && tender.tenderType ? `/dashboard/e-tender/${tender.id}/${tender.tenderType === 'Work' ? 'work-order' : 'supply-order'}` : '#'}
-                        disabled={!isTenderSaved || !hasWorkOrder || !tender.tenderType}
-                        tooltipContent={!isTenderSaved ? "Save the tender first." : !hasWorkOrder ? "Add Work Order Details first." : "Select a 'Type of Tender' in Basic Details."}
-                    />
-                </div>
+                            <DropdownMenuContent>
+                                {(tender.corrigendums || []).map((corrigendum, index) => (
+                                    <DropdownMenuItem key={corrigendum.id} onSelect={() => handleCorrigendumGenerate(corrigendum)}>
+                                        Corrigendum No. {index + 1}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <ReportButton 
+                            label="Bid Opening Summary"
+                            onClick={() => handleGeneratePdf(generateBidOpeningSummary, `aBidOpening${formattedTenderNo}.pdf`, 'Your Bid Opening Summary has been downloaded.')}
+                            disabled={!hasOpeningDetails || !hasBidders}
+                            tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
+                        />
+                        <ReportButton
+                            label="Technical Summary"
+                            onClick={() => handleGeneratePdf(generateTechnicalSummary, `cTechEvaluation${formattedTenderNo}.pdf`, 'Your Technical Summary has been downloaded.')}
+                            disabled={!hasOpeningDetails || !hasBidders}
+                            tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
+                        />
+                        <ReportButton
+                            label="Financial Summary"
+                            onClick={() => handleGeneratePdf(generateFinancialSummary, `bFinEvaluation${formattedTenderNo}.pdf`, 'Your Financial Summary has been downloaded.')}
+                            disabled={!hasOpeningDetails || !hasBidders}
+                            tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
+                        />
+                        <ReportButton 
+                            label="Selection Notice"
+                            href={tender.id ? `/dashboard/e-tender/${tender.id}/selection-notice` : '#'}
+                            disabled={!isTenderSaved || !hasSelectionNotice}
+                            tooltipContent={!isTenderSaved ? "Save the tender first." : "Add Selection Notice Details first."}
+                        />
+                        <ReportButton
+                            label="Work Agreement"
+                            onClick={() => handleGeneratePdf(generateWorkAgreement, `WorkAgreement${formattedTenderNo}.pdf`, 'Your Work Agreement has been downloaded.')}
+                            disabled={!isTenderSaved || !hasWorkOrder}
+                            tooltipContent={!isTenderSaved ? "Save the tender first." : "Add Work Order Details first."}
+                        />
+                        <ReportButton 
+                            label={workOrderButtonLabel}
+                            href={tender.id && tender.tenderType ? `/dashboard/e-tender/${tender.id}/${tender.tenderType === 'Work' ? 'work-order' : 'supply-order'}` : '#'}
+                            disabled={!isTenderSaved || !hasWorkOrder || !tender.tenderType}
+                            tooltipContent={!isTenderSaved ? "Save the tender first." : !hasWorkOrder ? "Add Work Order Details first." : "Select a 'Type of Tender' in Basic Details."}
+                        />
+                    </div>
+                </TooltipProvider>
             </CardContent>
         </Card>
     );
