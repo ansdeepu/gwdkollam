@@ -3,7 +3,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
@@ -151,60 +151,61 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         };
 
         const unsubscribes = Object.entries(collections).map(([collectionName, { setter, loaderKey, q }]) => {
-            return onSnapshot(q, (snapshot) => {
-                if (collectionName === 'rateDescriptions') {
-                    if (snapshot.empty) {
-                        setter(defaultRateDescriptions);
-                    } else {
-                        const descriptions: Partial<Record<RateDescriptionId, string>> = {};
-                        snapshot.forEach(doc => {
-                            descriptions[doc.id as RateDescriptionId] = doc.data().description;
-                        });
-                        setter((prev: any) => ({...defaultRateDescriptions, ...descriptions}));
-                    }
-                } else if (collectionName === 'officeAddress') {
-                    if (snapshot.empty) {
-                        setter(null);
-                    } else {
-                        const doc = snapshot.docs[0];
-                        setter({ id: doc.id, ...doc.data() } as OfficeAddress);
-                    }
-                }
-                else if (collectionName === 'bidders') {
-                    const data = snapshot.docs.map(doc => {
-                        return {
+            return onSnapshot(
+                q,
+                (snapshot: QuerySnapshot<DocumentData>) => {
+                    if (collectionName === 'rateDescriptions') {
+                        if (snapshot.empty) {
+                            setter(defaultRateDescriptions);
+                        } else {
+                            const descriptions: Partial<Record<RateDescriptionId, string>> = {};
+                            snapshot.forEach(doc => {
+                                descriptions[doc.id as RateDescriptionId] = doc.data().description;
+                            });
+                            setter((prev: Record<RateDescriptionId, string>) => ({ ...defaultRateDescriptions, ...prev, ...descriptions }));
+                        }
+                    } else if (collectionName === 'officeAddress') {
+                        if (snapshot.empty) {
+                            setter(null);
+                        } else {
+                            const doc = snapshot.docs[0];
+                            setter({ id: doc.id, ...doc.data() } as OfficeAddress);
+                        }
+                    } else if (collectionName === 'bidders') {
+                        const data = snapshot.docs.map(doc => ({
                             ...doc.data(),
-                            id: doc.id, // Ensure Firestore ID is used
-                        } as MasterBidder;
-                    });
-                    setter(data);
-                }
-                else {
-                    const data = snapshot.docs.map(doc => {
-                        const docData = doc.data();
-                        // This is the crucial fix: always use doc.id from Firestore
-                        const processedData = processFirestoreDoc<any>({id: doc.id, data: () => docData});
-                        processedData.id = doc.id; // Ensure the top-level ID is the Firestore doc ID
-                        return processedData;
-                    });
-                    if (collectionName === 'staffMembers') {
-                        const designationSortOrder: Record<string, number> = designationOptions.reduce((acc, curr, index) => ({ ...acc, [curr]: index }), {});
-                        data.sort((a: StaffMember, b: StaffMember) => {
-                            const orderA = a.designation ? designationSortOrder[a.designation] ?? designationOptions.length : designationOptions.length;
-                            const orderB = b.designation ? designationSortOrder[b.designation] ?? designationOptions.length : designationOptions.length;
-                            if (orderA !== orderB) return orderA - orderB;
-                            return a.name.localeCompare(b.name);
+                            id: doc.id,
+                        })) as MasterBidder[];
+                        setter(data);
+                    } else {
+                        const data = snapshot.docs.map(doc => {
+                            const docData = doc.data();
+                            const processed = processFirestoreDoc<any>({ id: doc.id, data: () => docData });
+                            processed.id = doc.id;
+                            return processed;
                         });
-                    }
-                    setter(data);
-                }
 
-                setLoadingStates(prev => ({ ...prev, [loaderKey]: false }));
-            }, (error) => {
-                console.error(`Error fetching ${collectionName}:`, error);
-                toast({ title: `Error Loading ${collectionName}`, description: error.message, variant: "destructive" });
-                setLoadingStates(prev => ({ ...prev, [loaderKey]: false }));
-            });
+                        if (collectionName === 'staffMembers') {
+                            const designationSortOrder = designationOptions.reduce((acc, curr, index) => ({ ...acc, [curr]: index }), {} as Record<string, number>);
+                            data.sort((a: StaffMember, b: StaffMember) => {
+                                const orderA = a.designation ? designationSortOrder[a.designation] ?? designationOptions.length : designationOptions.length;
+                                const orderB = b.designation ? designationSortOrder[b.designation] ?? designationOptions.length : designationOptions.length;
+                                if (orderA !== orderB) return orderA - orderB;
+                                return a.name.localeCompare(b.name);
+                            });
+                        }
+
+                        setter(data);
+                    }
+
+                    setLoadingStates(prev => ({ ...prev, [loaderKey]: false }));
+                },
+                (error) => {
+                    console.error(`Error fetching ${collectionName}:`, error);
+                    toast({ title: `Error Loading ${collectionName}`, description: error.message, variant: "destructive" });
+                    setLoadingStates(prev => ({ ...prev, [loaderKey]: false }));
+                }
+            );
         });
 
         return () => {

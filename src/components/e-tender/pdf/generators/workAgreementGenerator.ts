@@ -4,7 +4,7 @@ import type { E_tender } from '@/hooks/useE_tenders';
 import { format, isValid } from 'date-fns';
 import { formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
-import { numberToWords } from './utils'; // Added missing import
+import { numberToWords } from './utils';
 
 const cm = (cmValue: number) => cmValue * 28.3465;
 
@@ -48,7 +48,7 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
     const paragraphWidth = width - leftMargin - rightMargin;
     const headingFontSize = 12;
     const regularFontSize = 12;
-    const lineHeight = 14;
+    const paragraphLineHeight = 14;
 
     // 1. Draw the heading at exactly 17cm from the top
     let currentY = height - cm(17);
@@ -73,7 +73,7 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
     });
 
     // 2. Draw the main agreement paragraph below the heading
-    currentY -= (2 * lineHeight); // Two lines of space after heading
+    currentY -= (2 * paragraphLineHeight); // Two lines of space after heading
     const paragraphIndent = "     ";
     const paragraphText = `Agreement executed on ${agreementDateFormatted} between the District Officer, Groundwater Department, Kollam, for and on behalf of the Governor of Kerala, on the first part, and ${bidderDetails}, on the other part, for the ${workName}. The second party agrees to execute the work at the sanctioned rate as per the approved tender schedule and to complete the same within ${completionPeriod} days from the date of receipt of the work order, in accordance with the contract conditions approved by the District Officer, Groundwater Department, Kollam.`;
 
@@ -102,13 +102,12 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
             size: regularFontSize,
             maxWidth: paragraphWidth,
             color: rgb(0, 0, 0),
-            lineHeight: lineHeight,
         });
-        currentY -= lineHeight;
+        currentY -= paragraphLineHeight;
     });
 
     // 3. Draw the witness text
-    currentY -= (2 * lineHeight); // 2 line spaces
+    currentY -= (2 * paragraphLineHeight); // 2 line spaces
 
     const witnessText = "Signed and delivered by the above mentioned in the presence of witness\n\n1.\n\n2.";
     page.drawText(witnessText, {
@@ -116,7 +115,7 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
       y: currentY,
       font: timesRomanFont,
       size: regularFontSize,
-      lineHeight: lineHeight,
+      lineHeight: paragraphLineHeight,
       color: rgb(0, 0, 0),
     });
 
