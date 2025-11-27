@@ -30,6 +30,12 @@ const committeeMemberDesignations: Designation[] = [
     "Senior Driller",
 ];
 
+const committeeMemberFields = [
+  "technicalCommitteeMember1",
+  "technicalCommitteeMember2",
+  "technicalCommitteeMember3",
+] as const;
+
 export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCancel, isSubmitting }: TenderOpeningDetailsFormProps) {
     const { allStaffMembers } = useDataStore();
 
@@ -84,14 +90,14 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
                             <FormField name="dateOfOpeningBid" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Bid</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="dateOfTechnicalAndFinancialBidOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Technical and Financial Bid Opening</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl><FormMessage /></FormItem> )}/>
                             
-                            {[1, 2, 3].map(i => (
+                            {committeeMemberFields.map((fieldName, index) => (
                                 <FormField
-                                    key={i}
-                                    name={`technicalCommitteeMember${i}` as const}
+                                    key={fieldName}
+                                    name={fieldName}
                                     control={form.control}
                                     render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Committee Member {i}</FormLabel>
+                                        <FormLabel>Committee Member {index + 1}</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value || ""}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select a Member" /></SelectTrigger></FormControl>
                                             <SelectContent>
