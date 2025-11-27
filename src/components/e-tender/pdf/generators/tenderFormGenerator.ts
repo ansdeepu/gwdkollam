@@ -2,8 +2,9 @@
 import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
+import type { StaffMember } from '@/lib/schemas';
 
-export async function generateTenderForm(tender: E_tender): Promise<Uint8Array> {
+export async function generateTenderForm(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Tender-Form.pdf';
     const existingPdfBytes = await fetch(templatePath).then(res => {
         if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);

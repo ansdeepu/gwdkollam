@@ -1,13 +1,13 @@
-
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
 import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { format, isValid } from 'date-fns';
 import { formatTenderNoForFilename } from '../../utils';
+import type { StaffMember } from '@/lib/schemas';
 
 const cm = (cmValue: number) => cmValue * 28.3465;
 
-export async function generateWorkAgreement(tender: E_tender): Promise<Uint8Array> {
+export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage(PageSizes.A4);
     const { width, height } = page.getSize();
