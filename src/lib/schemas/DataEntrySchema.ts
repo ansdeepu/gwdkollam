@@ -269,6 +269,7 @@ export const SiteDetailSchema = z.object({
   contractorName: z.string().optional(),
   supervisorUid: z.string().optional().nullable(),
   supervisorName: z.string().optional().nullable(),
+  supervisorDesignation: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
   workStatus: z.enum(siteWorkStatusOptions).optional(),
   workRemarks: z.string().optional().nullable().default(""),
