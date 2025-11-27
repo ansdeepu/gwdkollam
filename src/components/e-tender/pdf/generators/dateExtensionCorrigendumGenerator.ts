@@ -2,7 +2,7 @@
 import { PDFDocument, StandardFonts, TextAlignment } from "pdf-lib";
 import type { E_tender } from "@/hooks/useE_tenders";
 import type { Corrigendum, StaffMember } from "@/lib/schemas";
-import { formatDateSafe } from "./utils";
+import { formatDateSafe } from "../../utils";
 
 export async function generateDateExtensionCorrigendum(
     tender: E_tender,
