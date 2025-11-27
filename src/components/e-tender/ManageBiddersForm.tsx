@@ -13,6 +13,7 @@ import { Loader2, Save, X, PlusCircle, Trash2 } from 'lucide-react';
 import type { E_tenderFormData, Bidder } from '@/lib/schemas/eTenderSchema';
 import { Separator } from '@/components/ui/separator';
 import { formatDateForInput } from './utils';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ManageBiddersFormProps {
     onSubmit: (data: Partial<E_tenderFormData>) => void;
@@ -21,13 +22,23 @@ interface ManageBiddersFormProps {
     initialData?: Partial<E_tenderFormData>;
 }
 
-const createDefaultBidder = (): Partial<Bidder> => ({
+const createDefaultBidder = (): Bidder => ({
+    id: uuidv4(),
     name: '',
     address: '',
     quotedAmount: undefined,
     quotedPercentage: undefined,
     aboveBelow: undefined,
     status: undefined,
+    order: undefined,
+    phoneNo: '',
+    secondaryPhoneNo: '',
+    email: '',
+    securityDepositType: '',
+    securityDepositAmount: undefined,
+    agreementAmount: undefined,
+    additionalSecurityDeposit: undefined,
+    dateSelectionNotice: undefined,
 });
 
 export default function ManageBiddersForm({ initialData, onSubmit, onCancel, isSubmitting }: ManageBiddersFormProps) {
