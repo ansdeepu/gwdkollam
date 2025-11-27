@@ -43,7 +43,7 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
                 const isBold = boldFields.includes(fieldName);
                 field.setText(String(value || ''));
                  if (justifyFields.includes(fieldName)) {
-                    field.setAlignment(TextAlignment.Justify);
+                    field.setAlignment(TextAlignment.Left);
                 }
                 field.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             }

@@ -39,7 +39,7 @@ export async function generateCancelCorrigendum(tender: E_tender, corrigendum: C
             const isBold = boldFields.includes(fieldName);
             textField.setText(String(value || ''));
             if (justifyFields.includes(fieldName)) {
-                textField.setAlignment(TextAlignment.Justify);
+                textField.setAlignment(TextAlignment.Left);
             }
             if (fieldName === 'cancel') {
                 textField.setFontSize(10);
