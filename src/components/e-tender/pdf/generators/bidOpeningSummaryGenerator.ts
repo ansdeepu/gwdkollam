@@ -3,7 +3,7 @@ import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
 import { numberToWords } from './utils';
-import type { StaffMember } from '@/lib/schemas';
+import type { StaffMember } from '@/hooks/use-data-store';
 
 export async function generateBidOpeningSummary(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Bid-Opening-Summary.pdf';
@@ -51,7 +51,7 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
                 textField.setText(String(fieldMappings[fieldName] || ''));
 
                 if (fieldName === 'bid_opening') {
-                    textField.setAlignment(TextAlignment.Justify);
+                    textField.setAlignment(TextAlignment.Left);
                 }
                 
                 textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
