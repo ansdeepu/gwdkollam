@@ -34,8 +34,9 @@ import { generateRetenderCorrigendum } from './generators/retenderCorrigendumGen
 import { generateDateExtensionCorrigendum } from './generators/dateExtensionCorrigendumGenerator';
 import { generateCancelCorrigendum } from './generators/cancelCorrigendumGenerator';
 import { generateWorkAgreement } from './generators/workAgreementGenerator';
-import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
+import type { Corrigendum, StaffMember } from '@/lib/schemas/eTenderSchema';
 import { formatTenderNoForFilename } from '../utils';
+import type { E_tender } from '@/hooks/useE_tenders';
 
 
 const ReportButton = ({
@@ -99,7 +100,7 @@ export default function PdfReportDialogs() {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleGeneratePdf = useCallback(async (
-        generator: (tender: typeof tender, staff?: typeof allStaffMembers) => Promise<Uint8Array>,
+        generator: (tender: E_tender, staff?: StaffMember[]) => Promise<Uint8Array>,
         fileName: string,
         successMessage: string
     ) => {
