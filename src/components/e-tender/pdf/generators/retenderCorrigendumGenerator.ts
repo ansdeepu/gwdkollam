@@ -2,9 +2,9 @@
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
-import type { Corrigendum } from '@/lib/schemas/eTenderSchema';
+import type { Corrigendum, StaffMember } from '@/lib/schemas';
 
-export async function generateRetenderCorrigendum(tender: E_tender, corrigendum: Corrigendum): Promise<Uint8Array> {
+export async function generateRetenderCorrigendum(tender: E_tender, corrigendum: Corrigendum, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Corrigendum-Retender.pdf';
     const existingPdfBytes = await fetch(templatePath).then(res => {
         if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);

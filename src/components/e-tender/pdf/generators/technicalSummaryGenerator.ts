@@ -2,9 +2,9 @@
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
-import type { StaffMember } from '@/hooks/use-data-store';
+import type { StaffMember } from '@/lib/schemas';
 
-export async function generateTechnicalSummary(tender: E_tender, allStaffMembers: StaffMember[]): Promise<Uint8Array> {
+export async function generateTechnicalSummary(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Technical-Summary.pdf';
     const existingPdfBytes = await fetch(templatePath).then(res => {
         if (!res.ok) throw new Error(`Template file not found: ${templatePath.split('/').pop()}`);
@@ -25,7 +25,7 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
     
     const committeeMemberNames = [tender.technicalCommitteeMember1, tender.technicalCommitteeMember2, tender.technicalCommitteeMember3].filter(Boolean) as string[];
     const committeeMembersText = committeeMemberNames.map((name, index) => {
-        const staffInfo = allStaffMembers.find(s => s.name === name);
+        const staffInfo = allStaffMembers?.find(s => s.name === name);
         return `${index + 1}. ${name}, ${staffInfo?.designation || 'N/A'}`;
     }).join('\n');
 

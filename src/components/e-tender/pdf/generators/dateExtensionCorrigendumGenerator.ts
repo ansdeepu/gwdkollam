@@ -1,12 +1,13 @@
 // src/components/e-tender/pdf/generators/dateExtensionCorrigendumGenerator.ts
 import { PDFDocument, StandardFonts, TextAlignment } from "pdf-lib";
 import type { E_tender } from "@/hooks/useE_tenders";
-import type { Corrigendum } from "@/lib/schemas/eTenderSchema";
+import type { Corrigendum, StaffMember } from "@/lib/schemas";
 import { formatDateSafe } from "../../utils";
 
 export async function generateDateExtensionCorrigendum(
     tender: E_tender,
-    corrigendum: Corrigendum
+    corrigendum: Corrigendum,
+    allStaffMembers?: StaffMember[]
 ): Promise<Uint8Array> {
     
     const templatePath = "/Corrigendum-DateExt.pdf";
@@ -52,14 +53,13 @@ export async function generateDateExtensionCorrigendum(
     for (const [fieldName, value] of Object.entries(fieldMappings)) {
         try {
             const field = form.getTextField(fieldName);
-            field.setText(value);
-            
             const selectedFont = boldFields.includes(fieldName) ? boldFont : font;
             
             if (justifyFields.includes(fieldName)) {
                 field.setAlignment(TextAlignment.Justify);
             }
 
+            field.setText(value);
             field.updateAppearances(selectedFont);
         } catch (err) {
             console.warn(`⚠️ Could not fill field '${fieldName}':`, err);
