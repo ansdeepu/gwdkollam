@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/technicalSummaryGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -52,7 +53,7 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
             textField.setText(String(fieldMappings[fieldName] || ''));
             
             if (fieldName === 'tech_summary') {
-                textField.setAlignment(TextAlignment.Justify);
+                textField.setAlignment(TextAlignment.Left);
             }
             
             textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
