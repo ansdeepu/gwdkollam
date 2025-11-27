@@ -2,7 +2,7 @@
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
-import type { StaffMember } from '@/lib/schemas';
+import type { StaffMember } from '@/hooks/use-data-store';
 
 export async function generateTechnicalSummary(tender: E_tender, allStaffMembers: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Technical-Summary.pdf';
@@ -30,7 +30,7 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
     }).join('\n');
 
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
-
+    
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': tender.eTenderNo,
