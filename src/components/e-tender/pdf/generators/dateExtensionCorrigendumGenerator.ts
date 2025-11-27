@@ -56,7 +56,7 @@ export async function generateDateExtensionCorrigendum(
             const selectedFont = boldFields.includes(fieldName) ? boldFont : font;
             
             if (justifyFields.includes(fieldName)) {
-                field.setAlignment(TextAlignment.Justify);
+                field.setAlignment(TextAlignment.Left); // Use Left since Justify is not supported
             }
 
             field.setText(value);
