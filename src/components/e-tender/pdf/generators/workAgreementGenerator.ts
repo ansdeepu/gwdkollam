@@ -1,9 +1,10 @@
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
-import { PDFDocument, StandardFonts, TextAlignment, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { format, isValid } from 'date-fns';
 import { formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
+import { numberToWords } from './utils'; // Added missing import
 
 const cm = (cmValue: number) => cmValue * 28.3465;
 
@@ -60,7 +61,6 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
         y: currentY,
         font: timesRomanBoldFont,
         size: headingFontSize,
-        textAlign: TextAlignment.Left,
         color: rgb(0, 0, 0),
     });
     
@@ -94,15 +94,12 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
     }
     lines.push(currentLine);
 
-    lines.forEach((line, index) => {
-        const isLastLine = index === lines.length - 1;
+    lines.forEach((line) => {
         page.drawText(line, {
             x: leftMargin,
             y: currentY,
             font: timesRomanFont,
             size: regularFontSize,
-            textAlign: isLastLine ? TextAlignment.Left : TextAlignment.Justify,
-            wordBreaks: [' '],
             maxWidth: paragraphWidth,
             color: rgb(0, 0, 0),
             lineHeight: lineHeight,
@@ -120,7 +117,6 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
       font: timesRomanFont,
       size: regularFontSize,
       lineHeight: lineHeight,
-      textAlign: TextAlignment.Left,
       color: rgb(0, 0, 0),
     });
 
