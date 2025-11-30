@@ -176,22 +176,25 @@ const formatDateForInput = (date: Date | string | null | undefined): string => {
 // Dialog Content Components
 const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOptions }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, formOptions: readonly ApplicationType[] | ApplicationType[] }) => {
     const [data, setData] = useState(initialData);
-    const [errors, setErrors] = useState<{ fileNo?: string, applicantName?: string }>({});
+    const [errors, setErrors] = useState<{ fileNo?: string; applicantName?: string; applicationType?: string; }>({});
 
     const handleChange = (key: string, value: any) => {
         setData((prev: any) => ({ ...prev, [key]: value }));
-        if (value.trim()) {
+        if (value && String(value).trim()) {
             setErrors(prev => ({...prev, [key]: undefined}));
         }
     };
     
     const handleSave = () => {
-        const newErrors: { fileNo?: string, applicantName?: string } = {};
+        const newErrors: { fileNo?: string, applicantName?: string, applicationType?: string } = {};
         if (!data.fileNo?.trim()) {
             newErrors.fileNo = "File No is required.";
         }
         if (!data.applicantName?.trim()) {
             newErrors.applicantName = "Applicant Name is required.";
+        }
+        if (!data.applicationType) {
+            newErrors.applicationType = "Type of Application is required.";
         }
         
         if (Object.keys(newErrors).length > 0) {
@@ -231,6 +234,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                             {formOptions.map(o => <SelectItem key={o} value={o}>{applicationTypeDisplayMap[o] || o}</SelectItem>)}
                         </SelectContent>
                     </Select>
+                     {errors.applicationType && <p className="text-xs text-destructive mt-1">{errors.applicationType}</p>}
                 </div>
             </div>
         </div>
