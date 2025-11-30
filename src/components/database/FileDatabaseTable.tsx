@@ -203,26 +203,25 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   };
 
   const confirmDelete = async () => {
-    if (!canDelete) return; 
-    if (deleteItem && deleteItem.fileNo) {
-      setIsDeleting(true);
-      try {
-        await deleteFileEntry(deleteItem.fileNo);
+    if (!canDelete || !deleteItem || !deleteItem.id) return;
+    
+    setIsDeleting(true);
+    try {
+        await deleteFileEntry(deleteItem.id);
         toast({
-          title: "File Entry Deleted",
-          description: `File No: ${deleteItem.fileNo} has been deleted.`,
+            title: "File Entry Deleted",
+            description: `File No: ${deleteItem.fileNo || deleteItem.id} has been deleted.`,
         });
-      } catch (error: any) {
-         toast({
-          title: "Error Deleting File",
-          description: error.message || `Could not delete File No: ${deleteItem.fileNo}.`,
-          variant: "destructive",
+    } catch (error: any) {
+        toast({
+            title: "Error Deleting File",
+            description: error.message || `Could not delete the file.`,
+            variant: "destructive",
         });
-      } finally {
+    } finally {
         setIsDeleting(false);
-      }
+        setDeleteItem(null);
     }
-    setDeleteItem(null);
   };
 
   const handleCopyClick = (item: DataEntryFormData) => {
@@ -388,8 +387,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                         {canDelete && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(entry)} disabled={isDeleting && deleteItem?.fileNo === entry.fileNo}>
-                                {isDeleting && deleteItem?.fileNo === entry.fileNo ? <Loader2 className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(entry)} disabled={isDeleting && deleteItem?.id === entry.id}>
+                                {isDeleting && deleteItem?.id === entry.id ? <Loader2 className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                                 <span className="sr-only">Delete Entry</span>
                               </Button>
                             </TooltipTrigger>
@@ -427,7 +426,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                 This action will delete the file entry for
-                <strong> {deleteItem?.fileNo}</strong>. This cannot be undone.
+                <strong> {deleteItem?.fileNo || deleteItem?.id}</strong>. This cannot be undone.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

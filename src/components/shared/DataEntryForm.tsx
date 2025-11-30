@@ -175,7 +175,32 @@ const formatDateForInput = (date: Date | string | null | undefined): string => {
 // Dialog Content Components
 const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOptions }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, formOptions: readonly ApplicationType[] | ApplicationType[] }) => {
     const [data, setData] = useState(initialData);
-    const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
+    const [errors, setErrors] = useState<{ fileNo?: string, applicantName?: string }>({});
+
+    const handleChange = (key: string, value: any) => {
+        setData((prev: any) => ({ ...prev, [key]: value }));
+        if (value.trim()) {
+            setErrors(prev => ({...prev, [key]: undefined}));
+        }
+    };
+    
+    const handleSave = () => {
+        const newErrors: { fileNo?: string, applicantName?: string } = {};
+        if (!data.fileNo?.trim()) {
+            newErrors.fileNo = "File No is required.";
+        }
+        if (!data.applicantName?.trim()) {
+            newErrors.applicantName = "Applicant Name is required.";
+        }
+        
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        onConfirm(data);
+    };
+
     return (
       <div className="flex flex-col h-auto">
         <DialogHeader className="p-6 pb-4">
@@ -183,8 +208,16 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
         </DialogHeader>
         <div className="p-6 pt-0 space-y-4 flex-1">
              <div className="grid grid-cols-3 gap-4 items-start">
-                <div className="space-y-2 col-span-1"><Label>File No *</Label><Input value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} /></div>
-                <div className="space-y-2 col-span-2"><Label>Name & Address of Institution/Applicant *</Label><Textarea value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} className="min-h-[40px]"/></div>
+                <div className="space-y-2 col-span-1">
+                    <Label htmlFor="fileNo">File No *</Label>
+                    <Input id="fileNo" value={data.fileNo} onChange={(e) => handleChange('fileNo', e.target.value)} />
+                    {errors.fileNo && <p className="text-xs text-destructive mt-1">{errors.fileNo}</p>}
+                </div>
+                <div className="space-y-2 col-span-2">
+                    <Label htmlFor="applicantName">Name & Address of Institution/Applicant *</Label>
+                    <Textarea id="applicantName" value={data.applicantName} onChange={(e) => handleChange('applicantName', e.target.value)} className="min-h-[40px]"/>
+                    {errors.applicantName && <p className="text-xs text-destructive mt-1">{errors.applicantName}</p>}
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2"><Label>Phone No.</Label><Input value={data.phoneNo} onChange={(e) => handleChange('phoneNo', e.target.value)} /></div>
@@ -200,7 +233,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 </div>
             </div>
         </div>
-        <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
+        <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={handleSave}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -806,7 +839,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             Site #{index + 1}: <span className={headerColor}>{site.nameOfSite || "Unnamed Site"}</span> ({site.purpose || "No Purpose"})
                                         </div>
                                         <div className="flex items-center space-x-1 mr-2">
-                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }, true); }}><Eye className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }, true); }}><Eye className="h-4 w-4"/></Button>
                                             {!isViewer && (
                                                 <>
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopySite(index); }}><Copy className="h-4 w-4" /></Button>

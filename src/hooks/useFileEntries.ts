@@ -110,25 +110,21 @@ export function useFileEntries() {
     }, [user, refetchFileEntries]);
 
 
-  const deleteFileEntry = useCallback(async (fileNo: string): Promise<void> => {
+  const deleteFileEntry = useCallback(async (docId: string): Promise<void> => {
     if (user?.role !== 'editor') {
-      toast({ title: "Permission Denied", description: "You don't have permission to delete entries.", variant: "destructive" });
-      return;
+        toast({ title: "Permission Denied", description: "You don't have permission to delete entries.", variant: "destructive" });
+        return;
+    }
+    if (!docId) {
+        toast({ title: "Deletion Failed", description: "Invalid item ID provided.", variant: "destructive" });
+        return;
     }
     try {
-        const q = query(collection(db, FILE_ENTRIES_COLLECTION), where("fileNo", "==", fileNo));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            const docId = querySnapshot.docs[0].id;
-            await deleteDoc(doc(db, FILE_ENTRIES_COLLECTION, docId));
-            refetchFileEntries(); // Trigger a refetch
-            toast({ title: "Entry Deleted", description: `File No. ${fileNo} has been removed.` });
-        } else {
-            toast({ title: "Deletion Failed", description: `File No. ${fileNo} not found.`, variant: "destructive" });
-        }
+        await deleteDoc(doc(db, FILE_ENTRIES_COLLECTION, docId));
+        refetchFileEntries();
+        toast({ title: "Entry Deleted", description: "The file entry has been removed." });
     } catch (error: any) {
-        console.error(`Error deleting file ${fileNo}:`, error);
+        console.error(`Error deleting file with ID ${docId}:`, error);
         toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   }, [user?.role, toast, refetchFileEntries]);
