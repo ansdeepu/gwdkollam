@@ -39,6 +39,7 @@ import {
   type RemittanceDetailFormData,
   RemittanceDetailSchema,
   type PaymentDetailFormData,
+  PaymentDetailSchema,
   SiteDetailSchema,
   type SiteDetailFormData,
   applicationTypeOptions,
@@ -282,41 +283,45 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
 };
 
 const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
-    const [data, setData] = useState({ ...initialData, dateOfPayment: formatDateForInput(initialData?.dateOfPayment) });
-    const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }),);
-    const handleNumberChange = (key: string, value: string) => {
-        const num = value === '' ? undefined : parseFloat(value);
-        handleChange(key, num);
-    };
+    const form = useForm<PaymentDetailFormData>({
+      resolver: zodResolver(PaymentDetailSchema),
+      defaultValues: {
+        ...createDefaultPaymentDetail(),
+        ...initialData,
+        dateOfPayment: formatDateForInput(initialData?.dateOfPayment),
+      },
+    });
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
-            <DialogHeader className="p-6 pb-4">
-                <DialogTitle>Payment Details</DialogTitle>
-            </DialogHeader>
-            <div className="flex-1 min-h-0">
-              <ScrollArea className="h-full px-6 py-4">
-                  <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2"><Label>Date of Payment</Label><Input type="date" value={data.dateOfPayment} onChange={e => handleChange('dateOfPayment', e.target.value)} /></div>
-                          <div className="space-y-2"><Label>Payment Account</Label><Select onValueChange={value => handleChange('paymentAccount', value)} value={data.paymentAccount}><SelectTrigger><SelectValue placeholder="Select Account"/></SelectTrigger><SelectContent>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onConfirm)} className="flex flex-col h-full overflow-hidden">
+                <DialogHeader className="p-6 pb-4">
+                    <DialogTitle>Payment Details</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 min-h-0">
+                  <ScrollArea className="h-full px-6 py-4">
+                      <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField name="dateOfPayment" control={form.control} render={({ field }) => <FormItem><FormLabel>Date of Payment <span className="text-destructive">*</span></FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>} />
+                              <FormField name="paymentAccount" control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Account <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Account"/></SelectTrigger></FormControl><SelectContent>{paymentAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                          </div>
+                          <Separator/>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                              <FormField name="revenueHead" control={form.control} render={({ field }) => <FormItem><FormLabel>Revenue Head (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>} />
+                              <FormField name="contractorsPayment" control={form.control} render={({ field }) => <FormItem><FormLabel>Contractor's Payment (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>} />
+                              <FormField name="gst" control={form.control} render={({ field }) => <FormItem><FormLabel>GST (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>} />
+                              <FormField name="incomeTax" control={form.control} render={({ field }) => <FormItem><FormLabel>Income Tax (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>} />
+                              <FormField name="kbcwb" control={form.control} render={({ field }) => <FormItem><FormLabel>KBCWB (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>} />
+                              <FormField name="refundToParty" control={form.control} render={({ field }) => <FormItem><FormLabel>Refund to Party (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>} />
+                          </div>
+                          <Separator/>
+                          <FormField name="paymentRemarks" control={form.control} render={({ field }) => <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this payment entry..." /></FormControl><FormMessage /></FormItem>} />
                       </div>
-                      <Separator/>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          <div className="space-y-2"><Label>Revenue Head (₹)</Label><Input type="number" value={data.revenueHead ?? ''} onChange={e => handleNumberChange('revenueHead', e.target.value)} /></div>
-                          <div className="space-y-2"><Label>Contractor's Payment (₹)</Label><Input type="number" value={data.contractorsPayment ?? ''} onChange={e => handleNumberChange('contractorsPayment', e.target.value)} /></div>
-                          <div className="space-y-2"><Label>GST (₹)</Label><Input type="number" value={data.gst ?? ''} onChange={e => handleNumberChange('gst', e.target.value)} /></div>
-                          <div className="space-y-2"><Label>Income Tax (₹)</Label><Input type="number" value={data.incomeTax ?? ''} onChange={e => handleNumberChange('incomeTax', e.target.value)} /></div>
-                          <div className="space-y-2"><Label>KBCWB (₹)</Label><Input type="number" value={data.kbcwb ?? ''} onChange={e => handleNumberChange('kbcwb', e.target.value)} /></div>
-                          <div className="space-y-2"><Label>Refund to Party (₹)</Label><Input type="number" value={data.refundToParty ?? ''} onChange={e => handleNumberChange('refundToParty', e.target.value)} /></div>
-                      </div>
-                      <Separator/>
-                      <div className="space-y-2"><Label>Remarks</Label><Textarea value={data.paymentRemarks} onChange={e => handleChange('paymentRemarks', e.target.value)} placeholder="Add any remarks for this payment entry..." /></div>
-                  </div>
-              </ScrollArea>
-            </div>
-            <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
-        </div>
+                  </ScrollArea>
+                </div>
+                <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button type="submit">Save</Button></DialogFooter>
+            </form>
+        </Form>
     );
 };
 
