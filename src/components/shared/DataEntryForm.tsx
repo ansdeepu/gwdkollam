@@ -405,7 +405,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4">
                     <Form {...form}>
-                        <form onSubmit={handleSubmit(handleDialogSubmit)} id="site-dialog-form" className="space-y-4">
+                        <div className="space-y-4">
                             <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="nameOfSite" control={control} render={({ field }) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -547,11 +547,14 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             </div>
                         </CardContent>
                     </Card>
-                        </form>
+                        </div>
                     </Form>
                 </ScrollArea>
             </div>
-          <DialogFooter className="p-6 pt-4"><Button variant="outline" type="button" onClick={onCancel}>Cancel</Button><Button type="submit" form="site-dialog-form">Save</Button></DialogFooter>
+            <DialogFooter className="p-6 pt-4">
+                <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+                <Button type="button" onClick={handleSubmit(handleDialogSubmit)}>Save</Button>
+            </DialogFooter>
         </div>
     );
 };
@@ -1121,5 +1124,3 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel
         </DialogContent>
     );
 };
-
-    
