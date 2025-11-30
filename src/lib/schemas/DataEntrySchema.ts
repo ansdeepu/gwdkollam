@@ -64,6 +64,7 @@ export const remittedAccountOptions = [
   "SBI",
   "STSB",
   "RevenueHead",
+  "Plan Fund",
 ] as const;
 export type RemittedAccount = typeof remittedAccountOptions[number];
 
@@ -77,15 +78,14 @@ export const RemittanceDetailSchema = z.object({
   remittanceRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
     // If an amount or account is present, date is strictly required.
-    // The base schema already handles this, but we can add more complex checks here if needed.
-    if ((data.amountRemitted && data.amountRemitted > 0) || data.remittedAccount) {
-        if (!data.dateOfRemittance) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "is required when an amount or account is entered.",
-                path: ["dateOfRemittance"],
-            });
-        }
+    const hasAnyValue = (data.amountRemitted && data.amountRemitted > 0) || data.remittedAccount || (data.remittanceRemarks && data.remittanceRemarks.trim() !== '');
+
+    if (hasAnyValue && !data.dateOfRemittance) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "is required when any other remittance detail is entered.",
+            path: ["dateOfRemittance"],
+        });
     }
 });
 export type RemittanceDetailFormData = z.infer<typeof RemittanceDetailSchema>;
