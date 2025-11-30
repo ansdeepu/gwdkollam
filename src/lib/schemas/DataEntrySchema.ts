@@ -63,7 +63,7 @@ export type Constituency = typeof constituencyOptions[number];
 export const remittedAccountOptions = [
   "SBI",
   "STSB",
-  "RevenueHead",
+  "Revenue Head",
   "Plan Fund",
 ] as const;
 export type RemittedAccount = typeof remittedAccountOptions[number];
@@ -74,18 +74,27 @@ export const RemittanceDetailSchema = z.object({
     (val) => (val === "" || val === null ? undefined : val),
     z.string().min(1, "Date of remittance is required.")
   ),
-  remittedAccount: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(remittedAccountOptions).optional()),
+  remittedAccount: z.enum(remittedAccountOptions, { required_error: "Account is required." }),
   remittanceRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
     // If an amount or account is present, date is strictly required.
-    const hasAnyValue = (data.amountRemitted && data.amountRemitted > 0) || data.remittedAccount || (data.remittanceRemarks && data.remittanceRemarks.trim() !== '');
+    const hasAnyValue = (data.amountRemitted && data.amountRemitted > 0) || (data.remittanceRemarks && data.remittanceRemarks.trim() !== '');
 
-    if (hasAnyValue && !data.dateOfRemittance) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "is required when any other remittance detail is entered.",
-            path: ["dateOfRemittance"],
-        });
+    if (hasAnyValue && (!data.dateOfRemittance || !data.remittedAccount)) {
+        if (!data.dateOfRemittance) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "is required when any other remittance detail is entered.",
+                path: ["dateOfRemittance"],
+            });
+        }
+        if (!data.remittedAccount) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "is required when any other remittance detail is entered.",
+                path: ["remittedAccount"],
+            });
+        }
     }
 });
 export type RemittanceDetailFormData = z.infer<typeof RemittanceDetailSchema>;
