@@ -69,23 +69,21 @@ export type RemittedAccount = typeof remittedAccountOptions[number];
 
 export const RemittanceDetailSchema = z.object({
   amountRemitted: optionalNumber("Amount Remitted must be a valid number."),
-  dateOfRemittance: nativeDateSchema,
+  dateOfRemittance: z.preprocess(
+    (val) => (val === "" || val === null ? undefined : val),
+    z.string().min(1, "Date of remittance is required.")
+  ),
   remittedAccount: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(remittedAccountOptions).optional()),
   remittanceRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
-    if (data.amountRemitted && data.amountRemitted > 0) {
+    // If an amount or account is present, date is strictly required.
+    // The base schema already handles this, but we can add more complex checks here if needed.
+    if ((data.amountRemitted && data.amountRemitted > 0) || data.remittedAccount) {
         if (!data.dateOfRemittance) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "is required when an amount is entered.",
+                message: "is required when an amount or account is entered.",
                 path: ["dateOfRemittance"],
-            });
-        }
-        if (!data.remittedAccount) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "is required when an amount is entered.",
-                path: ["remittedAccount"],
             });
         }
     }

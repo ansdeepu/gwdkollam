@@ -37,6 +37,7 @@ import {
   remittedAccountOptions,
   paymentAccountOptions,
   type RemittanceDetailFormData,
+  RemittanceDetailSchema,
   type PaymentDetailFormData,
   SiteDetailSchema,
   type SiteDetailFormData,
@@ -71,7 +72,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const db = getFirestore(app);
 
-const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: undefined, remittedAccount: undefined, remittanceRemarks: "" });
+const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: "", remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
 const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, additionalAS: 'No', tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
@@ -239,34 +240,40 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
 };
 
 const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initialData?: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
-    const [data, setData] = useState({ ...initialData, dateOfRemittance: formatDateForInput(initialData?.dateOfRemittance) });
-    const handleChange = (key: string, value: any) => setData((prev: any) => ({ ...prev, [key]: value }));
+    const { toast } = useToast();
+    const form = useForm<RemittanceDetailFormData>({
+      resolver: zodResolver(RemittanceDetailSchema),
+      defaultValues: {
+          ...createDefaultRemittanceDetail(),
+          ...initialData,
+          dateOfRemittance: formatDateForInput(initialData?.dateOfRemittance),
+      },
+    });
+
+    const handleConfirmSubmit = (data: RemittanceDetailFormData) => {
+        onConfirm(data);
+    };
+
     return (
-      <div className="flex flex-col h-auto">
-        <DialogHeader className="p-6 pb-4">
-            <DialogTitle>Remittance Details</DialogTitle>
-        </DialogHeader>
-        <div className="p-6 pt-0 space-y-4 flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2"><Label>Date</Label><Input type="date" value={data.dateOfRemittance || ""} onChange={(e) => handleChange('dateOfRemittance', e.target.value)} /></div>
-                <div className="space-y-2"><Label>Amount (₹)</Label><Input type="number" value={data.amountRemitted} onChange={(e) => handleChange('amountRemitted', e.target.valueAsNumber)} /></div>
-                <div className="space-y-2">
-                    <Label>Account</Label>
-                    <Select onValueChange={(value) => handleChange('remittedAccount', value)} value={data.remittedAccount}>
-                        <SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger>
-                        <SelectContent>
-                            {remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleConfirmSubmit)} className="flex flex-col h-auto">
+                <DialogHeader className="p-6 pb-4">
+                    <DialogTitle>Remittance Details</DialogTitle>
+                </DialogHeader>
+                <div className="p-6 pt-0 space-y-4 flex-1">
+                    <FormField name="dateOfRemittance" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date <span className="text-destructive">*</span></FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField name="amountRemitted" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField name="remittedAccount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Account</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent>{remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                    </div>
+                    <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this remittance entry..." /></FormControl><FormMessage /></FormItem> )}/>
                 </div>
-            </div>
-             <div className="space-y-2">
-                <Label>Remarks</Label>
-                <Textarea value={data.remittanceRemarks} onChange={(e) => handleChange('remittanceRemarks', e.target.value)} placeholder="Add any remarks for this remittance entry..." />
-            </div>
-        </div>
-        <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={() => onConfirm(data)}>Save</Button></DialogFooter>
-      </div>
+                <DialogFooter className="p-6 pt-4">
+                    <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                    <Button type="submit">Save</Button>
+                </DialogFooter>
+            </form>
+        </Form>
     );
 };
 
