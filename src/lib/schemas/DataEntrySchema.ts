@@ -242,7 +242,7 @@ export const SiteDetailSchema = z.object({
   constituency: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(constituencyOptions).optional()),
   latitude: optionalNumber("Latitude must be a valid number."),
   longitude: optionalNumber("Longitude must be a valid number."),
-  purpose: z.enum(sitePurposeOptions).optional(),
+  purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required." }),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
@@ -273,7 +273,7 @@ export const SiteDetailSchema = z.object({
   supervisorName: z.string().optional().nullable(),
   supervisorDesignation: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
-  workStatus: z.enum(siteWorkStatusOptions).optional(),
+  workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required." }),
   workRemarks: z.string().optional().nullable().default(""),
 
   // Survey fields (Actuals)
@@ -307,13 +307,6 @@ export const SiteDetailSchema = z.object({
   isPending: z.boolean().optional(), // Internal state, not part of form
 
 }).superRefine((data, ctx) => {
-    if (!data.workStatus) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Work Status is required.",
-            path: ["workStatus"],
-        });
-    }
     if (data.workStatus && FINAL_WORK_STATUSES.includes(data.workStatus as SiteWorkStatus) && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
