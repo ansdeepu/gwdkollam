@@ -264,25 +264,25 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     };
     
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleConfirmSubmit)} className="flex flex-col h-auto">
-                <DialogHeader className="p-6 pb-4">
-                    <DialogTitle>Remittance Details</DialogTitle>
-                </DialogHeader>
-                <div className="p-6 pt-0 space-y-4 flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <FormField name="dateOfRemittance" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date <span className="text-destructive">*</span></FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                        <FormField name="amountRemitted" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem> )}/>
-                        <FormField name="remittedAccount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Account <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent>{remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                    </div>
-                    <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this remittance entry..." /></FormControl><FormMessage /></FormItem> )}/>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleConfirmSubmit)}>
+            <DialogHeader className="p-6 pb-4">
+                <DialogTitle>Remittance Details</DialogTitle>
+            </DialogHeader>
+            <div className="p-6 pt-0 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField name="dateOfRemittance" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date <span className="text-destructive">*</span></FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField name="amountRemitted" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField name="remittedAccount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Account <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent>{remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                 </div>
-                <DialogFooter className="p-6 pt-4">
-                    <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-                    <Button type="submit">Save</Button>
-                </DialogFooter>
-            </form>
-        </Form>
+                <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this remittance entry..." /></FormControl><FormMessage /></FormItem> )}/>
+            </div>
+            <DialogFooter className="p-6 pt-4">
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button type="submit">Save</Button>
+            </DialogFooter>
+        </form>
+    </Form>
     );
 };
 
@@ -302,7 +302,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleConfirmSubmit)} className="flex flex-col h-full overflow-hidden">
+            <form onSubmit={form.handleSubmit(handleConfirmSubmit)}>
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Payment Details</DialogTitle>
                 </DialogHeader>
@@ -516,7 +516,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
                              <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                         </div>
-                        </CardContent></Card>
+                    </CardContent></Card>
                     ) : null}
                     
                     {isSchemePurpose ? (
@@ -560,6 +560,93 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 <Button type="submit" form="site-dialog-form">Save</Button>
             </DialogFooter>
         </div>
+    );
+};
+
+const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, onCancel: () => void }) => {
+    if (!site) return null; // Add null check here
+    
+    const purpose = site.purpose as SitePurpose;
+    const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
+    const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
+    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
+    const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
+    const isARSPurpose = ['ARS'].includes(purpose);
+
+    const allDetails = {
+        "Main Details": {
+            "Name of Site": site.nameOfSite, "Purpose": site.purpose, "Local Self Govt.": site.localSelfGovt,
+            "Constituency (LAC)": site.constituency, "Latitude": site.latitude, "Longitude": site.longitude,
+        },
+        "Work Implementation": {
+            "Site Conditions": site.siteConditions, "Rig Accessibility": site.accessibleRig,
+            "Estimate Amount (₹)": site.estimateAmount, "Remitted for Site (₹)": site.remittedAmount,
+            "TS Amount (₹)": site.tsAmount, "Tender No.": site.tenderNo, "Contractor Name": site.contractorName,
+            "Assigned Supervisor": site.supervisorName,
+            "Supervisor Designation": site.supervisorDesignation,
+        },
+        "Survey Details": isWellPurpose && {
+            "Recommended Diameter (mm)": site.surveyRecommendedDiameter, "Recommended TD (m)": site.surveyRecommendedTD,
+            ...(purpose === 'BWC' && { "Recommended OB (m)": site.surveyRecommendedOB, "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
+            ...(purpose === 'TWC' && { "Recommended Plain Pipe (m)": site.surveyRecommendedPlainPipe, "Recommended Slotted Pipe (m)": site.surveyRecommendedSlottedPipe, "MS Casing Pipe (m)": site.surveyRecommendedMsCasingPipe }),
+            ...(purpose === 'FPW' && { "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
+            "Survey Location": site.surveyLocation, "Survey Remarks": site.surveyRemarks,
+        },
+        "Drilling Details": isWellPurpose && {
+            "Actual Diameter (mm)": site.diameter, ...(purpose === 'TWC' && { "Pilot Drilling Depth (m)": site.pilotDrillingDepth }),
+            "Actual TD (m)": site.totalDepth, ...(purpose === 'BWC' && { "Actual OB (m)": site.surveyOB }),
+            "Actual Casing Pipe (m)": site.casingPipeUsed, ...(purpose === 'BWC' && { "Outer Casing (m)": site.outerCasingPipe, "Inner Casing (m)": site.innerCasingPipe }),
+            ...(purpose === 'TWC' && { "Plain Pipe (m)": site.surveyPlainPipe, "Slotted Pipe (m)": site.surveySlottedPipe, "MS Casing Pipe (m)": site.outerCasingPipe }),
+            "Yield (LPH)": site.yieldDischarge, "Zone Details (m)": site.zoneDetails, "Static Water (m)": site.waterLevel,
+            "Type of Rig": site.typeOfRig, "Drilling Remarks": site.drillingRemarks,
+        },
+        "Developing Details": isDevPurpose && {
+            "Diameter (mm)": site.diameter, "TD (m)": site.totalDepth, "Discharge (LPH)": site.yieldDischarge,
+            "Water Level (m)": site.waterLevel, "Remarks": site.workRemarks,
+        },
+        "Scheme Details": (isMWSSSchemePurpose || isHPSPurpose) && {
+            ...(isMWSSSchemePurpose && { "Well Discharge (LPH)": site.yieldDischarge, "Pump Details": site.pumpDetails, "Pumping Line (m)": site.pumpingLineLength, "Delivery Line (m)": site.deliveryLineLength, "Tank Capacity (L)": site.waterTankCapacity, "# Taps": site.noOfTapConnections }),
+            ...(isHPSPurpose && { "Depth Erected (m)": site.totalDepth, "Water Level (m)": site.waterLevel }),
+            "# Beneficiaries": site.noOfBeneficiary, "Remarks": site.workRemarks,
+        },
+        "Work Status": {
+            "Status": site.workStatus, "Completion Date": site.dateOfCompletion,
+            "Total Expenditure (₹)": site.totalExpenditure, "Work Remarks": site.workRemarks,
+        }
+    };
+    
+    return (
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+            <DialogHeader className="p-6 pb-4">
+                <DialogTitle>View Site: {site.nameOfSite}</DialogTitle>
+                <DialogDescription>A read-only summary of all available details for this site.</DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 min-h-0">
+                <ScrollArea className="h-full pr-4 px-6 py-4">
+                    <div className="space-y-6">
+                        {Object.entries(allDetails).map(([sectionTitle, details]) => {
+                            if (!details || Object.values(details).every(v => v === null || v === undefined || v === '')) return null;
+                            return (
+                                <Card key={sectionTitle}>
+                                    <CardHeader className="p-4"><CardTitle className="text-base">{sectionTitle}</CardTitle></CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+                                            {Object.entries(details).map(([key, value]) => {
+                                                if (value === null || value === undefined || value === '') return null;
+                                                return <DetailRow key={key} label={key} value={value} />;
+                                            })}
+                                        </dl>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                </ScrollArea>
+            </div>
+            <DialogFooter className="p-6 pt-4">
+                <Button variant="outline" type="button" onClick={onCancel}>Close</Button>
+            </DialogFooter>
+        </DialogContent>
     );
 };
 
@@ -976,7 +1063,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <DialogContent className="max-w-6xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={isReadOnly(dialogState.data?.fieldName)} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
         </Dialog>
          <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
-            <DialogContent className="max-w-4xl h-[90vh]"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
+            <DialogContent className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
         </Dialog>
         {dialogState.type === 'reorderSite' && dialogState.data && (
             <Dialog open={true} onOpenChange={closeDialog}>
@@ -1037,91 +1124,6 @@ const ReorderSiteDialog = ({ fromIndex, siteCount, onConfirm, onCancel }: { from
             <DialogFooter className="p-6 pt-4">
                 <Button variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button onClick={handleConfirm}>Move</Button>
-            </DialogFooter>
-        </DialogContent>
-    );
-};
-
-const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData, onCancel: () => void }) => {
-    const purpose = site.purpose as SitePurpose;
-    const isWellPurpose = ['BWC', 'TWC', 'FPW'].includes(purpose);
-    const isDevPurpose = ['BW Dev', 'TW Dev', 'FPW Dev'].includes(purpose);
-    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
-    const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
-    const isARSPurpose = ['ARS'].includes(purpose);
-
-    const allDetails = {
-        "Main Details": {
-            "Name of Site": site.nameOfSite, "Purpose": site.purpose, "Local Self Govt.": site.localSelfGovt,
-            "Constituency (LAC)": site.constituency, "Latitude": site.latitude, "Longitude": site.longitude,
-        },
-        "Work Implementation": {
-            "Site Conditions": site.siteConditions, "Rig Accessibility": site.accessibleRig,
-            "Estimate Amount (₹)": site.estimateAmount, "Remitted for Site (₹)": site.remittedAmount,
-            "TS Amount (₹)": site.tsAmount, "Tender No.": site.tenderNo, "Contractor Name": site.contractorName,
-            "Assigned Supervisor": site.supervisorName,
-            "Supervisor Designation": site.supervisorDesignation,
-        },
-        "Survey Details": isWellPurpose && {
-            "Recommended Diameter (mm)": site.surveyRecommendedDiameter, "Recommended TD (m)": site.surveyRecommendedTD,
-            ...(purpose === 'BWC' && { "Recommended OB (m)": site.surveyRecommendedOB, "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
-            ...(purpose === 'TWC' && { "Recommended Plain Pipe (m)": site.surveyRecommendedPlainPipe, "Recommended Slotted Pipe (m)": site.surveyRecommendedSlottedPipe, "MS Casing Pipe (m)": site.surveyRecommendedMsCasingPipe }),
-            ...(purpose === 'FPW' && { "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
-            "Survey Location": site.surveyLocation, "Survey Remarks": site.surveyRemarks,
-        },
-        "Drilling Details": isWellPurpose && {
-            "Actual Diameter (mm)": site.diameter, ...(purpose === 'TWC' && { "Pilot Drilling Depth (m)": site.pilotDrillingDepth }),
-            "Actual TD (m)": site.totalDepth, ...(purpose === 'BWC' && { "Actual OB (m)": site.surveyOB }),
-            "Actual Casing Pipe (m)": site.casingPipeUsed, ...(purpose === 'BWC' && { "Outer Casing (m)": site.outerCasingPipe, "Inner Casing (m)": site.innerCasingPipe }),
-            ...(purpose === 'TWC' && { "Plain Pipe (m)": site.surveyPlainPipe, "Slotted Pipe (m)": site.surveySlottedPipe, "MS Casing Pipe (m)": site.outerCasingPipe }),
-            "Yield (LPH)": site.yieldDischarge, "Zone Details (m)": site.zoneDetails, "Static Water (m)": site.waterLevel,
-            "Type of Rig": site.typeOfRig, "Drilling Remarks": site.drillingRemarks,
-        },
-        "Developing Details": isDevPurpose && {
-            "Diameter (mm)": site.diameter, "TD (m)": site.totalDepth, "Discharge (LPH)": site.yieldDischarge,
-            "Water Level (m)": site.waterLevel, "Remarks": site.workRemarks,
-        },
-        "Scheme Details": (isMWSSSchemePurpose || isHPSPurpose) && {
-            ...(isMWSSSchemePurpose && { "Well Discharge (LPH)": site.yieldDischarge, "Pump Details": site.pumpDetails, "Pumping Line (m)": site.pumpingLineLength, "Delivery Line (m)": site.deliveryLineLength, "Tank Capacity (L)": site.waterTankCapacity, "# Taps": site.noOfTapConnections }),
-            ...(isHPSPurpose && { "Depth Erected (m)": site.totalDepth, "Water Level (m)": site.waterLevel }),
-            "# Beneficiaries": site.noOfBeneficiary, "Remarks": site.workRemarks,
-        },
-        "Work Status": {
-            "Status": site.workStatus, "Completion Date": site.dateOfCompletion,
-            "Total Expenditure (₹)": site.totalExpenditure, "Work Remarks": site.workRemarks,
-        }
-    };
-    
-    return (
-        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-            <DialogHeader className="p-6 pb-4">
-                <DialogTitle>View Site: {site.nameOfSite}</DialogTitle>
-                <DialogDescription>A read-only summary of all available details for this site.</DialogDescription>
-            </DialogHeader>
-            <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full pr-4 px-6 py-4">
-                    <div className="space-y-6">
-                        {Object.entries(allDetails).map(([sectionTitle, details]) => {
-                            if (!details || Object.values(details).every(v => v === null || v === undefined || v === '')) return null;
-                            return (
-                                <Card key={sectionTitle}>
-                                    <CardHeader className="p-4"><CardTitle className="text-base">{sectionTitle}</CardTitle></CardHeader>
-                                    <CardContent className="p-4 pt-0">
-                                        <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
-                                            {Object.entries(details).map(([key, value]) => {
-                                                if (value === null || value === undefined || value === '') return null;
-                                                return <DetailRow key={key} label={key} value={value} />;
-                                            })}
-                                        </dl>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
-                    </div>
-                </ScrollArea>
-            </div>
-            <DialogFooter className="p-6 pt-4">
-                <Button variant="outline" type="button" onClick={onCancel}>Close</Button>
             </DialogFooter>
         </DialogContent>
     );
