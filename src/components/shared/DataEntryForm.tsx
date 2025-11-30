@@ -557,7 +557,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             </div>
             <DialogFooter className="p-6 pt-4">
                 <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-                <Button type="button" form="site-dialog-form">Save</Button>
+                <Button type="submit" form="site-dialog-form">Save</Button>
             </DialogFooter>
         </div>
     );
@@ -983,11 +983,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <ReorderSiteDialog fromIndex={dialogState.data.from} siteCount={siteFields.length} onConfirm={handleDialogConfirm} onCancel={closeDialog} />
             </Dialog>
         )}
-        {dialogState.type === 'viewSite' && dialogState.data && (
-            <Dialog open={true} onOpenChange={closeDialog}>
-                <ViewSiteDialog site={dialogState.data} onCancel={closeDialog}/>
-            </Dialog>
-        )}
+        <Dialog open={dialogState.type === 'viewSite'} onOpenChange={closeDialog}>
+            <ViewSiteDialog site={dialogState.data} onCancel={closeDialog} />
+        </Dialog>
 
         <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
             <AlertDialogContent>
