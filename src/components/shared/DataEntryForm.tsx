@@ -737,7 +737,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     });
   };
   
-  const onSubmit = async (data: DataEntryFormData) => {
+    const onSubmit = async (data: DataEntryFormData) => {
       setIsSubmitting(true);
       try {
           if (!user) throw new Error("Authentication error. Please log in again.");
@@ -749,7 +749,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
               await updateFileEntry(fileIdToEdit, data);
               toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
           } else {
-              await addFileEntry(data);
+              const newId = await addFileEntry(data);
               toast({ title: "File Created", description: `File No. ${data.fileNo} has been successfully created.` });
           }
           router.push(returnPath);
@@ -817,9 +817,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 updateSite(originalData.index, data);
             } else {
                 appendSite(data);
-                // Do not redirect after adding a site
-                shouldSubmitFile = false; 
-                if (isEditor && fileIdToEdit) { // Still save the update in the background
+                if (isEditor && fileIdToEdit) { 
                     setIsSubmitting(true);
                     try {
                         await updateFileEntry(fileIdToEdit, getValues());
@@ -830,7 +828,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         setIsSubmitting(false);
                     }
                 }
-                return; // Explicitly return to prevent further processing
+                return;
             }
             shouldSubmitFile = true;
             break;
