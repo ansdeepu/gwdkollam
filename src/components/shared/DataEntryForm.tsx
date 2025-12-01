@@ -789,55 +789,45 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     const { type, data: originalData } = dialogState;
     if (!type) return;
 
-    // Update form state first
-    if (type === 'application') {
-      setValue('fileNo', data.fileNo);
-      setValue('applicantName', data.applicantName);
-      setValue('phoneNo', data.phoneNo);
-      setValue('secondaryMobileNo', data.secondaryMobileNo);
-      setValue('applicationType', data.applicationType);
-    } else if (type === 'remittance') {
+    if (type === "application") {
+      setValue("fileNo", data.fileNo);
+      setValue("applicantName", data.applicantName);
+      setValue("phoneNo", data.phoneNo);
+      setValue("secondaryMobileNo", data.secondaryMobileNo);
+      setValue("applicationType", data.applicationType);
+    }
+  
+    if (type === "remittance") {
       if (originalData.index !== undefined) updateRemittance(originalData.index, data);
       else appendRemittance(data);
-    } else if (type === 'payment') {
-      const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+    }
+  
+    if (type === "payment") {
+      const paymentData = {
+        ...data,
+        totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data)
+      };
       if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
       else appendPayment(paymentData);
-    } else if (type === 'site') {
+    }
+  
+    if (type === "site") {
       if (originalData.index !== undefined) updateSite(originalData.index, data);
       else appendSite(data);
-    } else if (type === 'reorderSite') {
+    }
+  
+    if (type === "reorderSite") {
       moveSite(data.from, data.to);
     }
-
+  
+    // Close dialog
     closeDialog();
-
-    // Now handle persistence
-    if (isEditor) {
-      setIsSubmitting(true);
-      try {
-        if (!fileIdToEdit) { // This is a new file, create it
-          const newId = await addFileEntry(getValues());
-          toast({ title: "File Created", description: `File No. ${getValues('fileNo')} created. You can now add other details.` });
-          const queryParams = new URLSearchParams({
-            id: newId,
-            ...(workTypeContext && { workType: workTypeContext }),
-            ...(pageToReturnTo && { page: pageToReturnTo }),
-          }).toString();
-          router.replace(`/dashboard/data-entry?${queryParams}`);
-        } else { // This is an existing file, update it
-          // No redirect for existing files, just save in the background
-          await updateFileEntry(fileIdToEdit, getValues());
-          toast({ title: "File Updated", description: "Your changes have been saved." });
-        }
-      } catch (error: any) {
-        toast({ title: "Save Failed", description: error.message, variant: "destructive" });
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
+  
+    toast({
+      title: "Saved",
+      description: "Entry added locally. Click 'Save Changes & Exit' to update permanently."
+    });
   };
-
 
   const handleDeleteItem = async () => {
     if (!itemToDelete) return;
