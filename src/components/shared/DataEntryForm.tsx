@@ -737,7 +737,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     });
   };
   
-    const onSubmit = async (data: DataEntryFormData) => {
+  const onSubmit = async (data: DataEntryFormData) => {
       setIsSubmitting(true);
       try {
           if (!user) throw new Error("Authentication error. Please log in again.");
@@ -749,7 +749,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
               await updateFileEntry(fileIdToEdit, data);
               toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
           } else {
-              const newId = await addFileEntry(data);
+              await addFileEntry(data);
               toast({ title: "File Created", description: `File No. ${data.fileNo} has been successfully created.` });
           }
           router.push(returnPath);
@@ -785,92 +785,76 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setSiteToCopy(null);
   };
   
-  const handleDialogConfirm = async (data: any) => {
-    const { type, data: originalData } = dialogState;
-    if (!type) return;
+    const handleDialogConfirm = async (data: any) => {
+        const { type, data: originalData } = dialogState;
+        if (!type) return;
 
-    closeDialog();
-    let shouldSubmitFile = false;
+        closeDialog();
+        let shouldSubmitFile = false;
 
-    if (type === 'application') {
-        setValue('fileNo', data.fileNo);
-        setValue('applicantName', data.applicantName);
-        setValue('phoneNo', data.phoneNo);
-        setValue('secondaryMobileNo', data.secondaryMobileNo);
-        setValue('applicationType', data.applicationType);
-        shouldSubmitFile = true;
-    }
-    
-    switch (type) {
-        case 'remittance':
-            if (originalData.index !== undefined) updateRemittance(originalData.index, data);
-            else appendRemittance(data);
-            shouldSubmitFile = true;
-            break;
-        case 'payment':
-            if (originalData.index !== undefined) updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-            else appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-            shouldSubmitFile = true;
-            break;
-        case 'site':
-            if (originalData.index !== undefined) {
-                updateSite(originalData.index, data);
-            } else {
-                appendSite(data);
-                if (isEditor && fileIdToEdit) { 
-                    setIsSubmitting(true);
-                    try {
-                        await updateFileEntry(fileIdToEdit, getValues());
-                        toast({ title: "Site Added", description: "The new site has been saved to the file." });
-                    } catch (error: any) {
-                        toast({ title: "Save Failed", description: error.message, variant: "destructive" });
-                    } finally {
-                        setIsSubmitting(false);
-                    }
+        switch (type) {
+            case 'application':
+                setValue('fileNo', data.fileNo);
+                setValue('applicantName', data.applicantName);
+                setValue('phoneNo', data.phoneNo);
+                setValue('secondaryMobileNo', data.secondaryMobileNo);
+                setValue('applicationType', data.applicationType);
+                shouldSubmitFile = true;
+                break;
+            case 'remittance':
+                if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+                else appendRemittance(data);
+                shouldSubmitFile = true;
+                break;
+            case 'payment':
+                if (originalData.index !== undefined) updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
+                else appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
+                shouldSubmitFile = true;
+                break;
+            case 'site':
+                if (originalData.index !== undefined) {
+                    updateSite(originalData.index, data);
+                } else {
+                    appendSite(data);
                 }
-                return;
-            }
-            shouldSubmitFile = true;
-            break;
-        case 'reorderSite':
-            moveSite(data.from, data.to);
-            shouldSubmitFile = true;
-            break;
-    }
-    
-    if (isEditor && shouldSubmitFile) {
-        if (!fileIdToEdit && type === 'application') {
-            setIsSubmitting(true);
-            try {
-                const newId = await addFileEntry(getValues());
-                toast({ title: "File Created", description: `File No. ${getValues('fileNo')} created. You can now add other details.` });
-                
-                const queryParams = new URLSearchParams({
-                    id: newId,
-                    ...(workTypeContext && { workType: workTypeContext }),
-                    ...(pageToReturnTo && { page: pageToReturnTo }),
-                }).toString();
-                
-                router.replace(`/dashboard/data-entry?${queryParams}`);
+                shouldSubmitFile = true;
+                break;
+            case 'reorderSite':
+                moveSite(data.from, data.to);
+                shouldSubmitFile = true;
+                break;
+        }
 
-            } catch (error: any) {
-                toast({ title: "Error Creating File", description: error.message, variant: "destructive" });
-            } finally {
-                setIsSubmitting(false);
-            }
-        } else if (fileIdToEdit) {
-            setIsSubmitting(true);
-            try {
-                await updateFileEntry(fileIdToEdit, getValues());
-                toast({ title: "File Updated", description: "Your changes have been saved." });
-            } catch (error: any) {
-                 toast({ title: "Save Failed", description: error.message, variant: "destructive" });
-            } finally {
-                setIsSubmitting(false);
+        if (isEditor && shouldSubmitFile) {
+            if (!fileIdToEdit && type === 'application') {
+                setIsSubmitting(true);
+                try {
+                    const newId = await addFileEntry(getValues());
+                    toast({ title: "File Created", description: `File No. ${getValues('fileNo')} created. You can now add other details.` });
+                    const queryParams = new URLSearchParams({
+                        id: newId,
+                        ...(workTypeContext && { workType: workTypeContext }),
+                        ...(pageToReturnTo && { page: pageToReturnTo }),
+                    }).toString();
+                    router.replace(`/dashboard/data-entry?${queryParams}`);
+                } catch (error: any) {
+                    toast({ title: "Error Creating File", description: error.message, variant: "destructive" });
+                } finally {
+                    setIsSubmitting(false);
+                }
+            } else if (fileIdToEdit) {
+                setIsSubmitting(true);
+                try {
+                    await updateFileEntry(fileIdToEdit, getValues());
+                    toast({ title: "File Updated", description: "Your changes have been saved." });
+                } catch (error: any) {
+                    toast({ title: "Save Failed", description: error.message, variant: "destructive" });
+                } finally {
+                    setIsSubmitting(false);
+                }
             }
         }
-    }
-  };
+    };
 
 
   const handleDeleteItem = async () => {
