@@ -54,7 +54,7 @@ export default function AdminRegisterPage() {
         <div className="flex w-full max-w-4xl flex-col items-center space-y-8 rounded-xl bg-card p-8 shadow-2xl md:flex-row md:space-y-0 md:space-x-10 md:p-12">
           <div className="flex w-full flex-col items-center text-center md:w-1/2 md:items-start md:text-left">
             <Image
-              src="https://placehold.co/120x120/2563EB/FFFFFF.png?text=GWD%0A--%0AKOLLAM&font=lato&fontWeight=900"
+              src="https://placehold.co/120x120/2563EB/FFFFFF.png?text=G&font=lato"
               alt="GWD Kollam Logo"
               width={100}
               height={100}
