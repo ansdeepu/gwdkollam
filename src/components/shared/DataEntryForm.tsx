@@ -803,43 +803,57 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   };
   
   const handleDialogConfirm = async (data: any) => {
-      const { type, data: originalData } = dialogState;
-      if (!type) return;
-
-      if (type === "application") {
-        setValue("fileNo", data.fileNo);
-        setValue("applicantName", data.applicantName);
-        setValue("phoneNo", data.phoneNo);
-        setValue("secondaryMobileNo", data.secondaryMobileNo);
-        setValue("applicationType", data.applicationType);
+    const { type, data: originalData } = dialogState;
+    if (!type) return;
+  
+    // Update form locally
+    if (type === 'application') {
+      setValue('fileNo', data.fileNo);
+      setValue('applicantName', data.applicantName);
+      setValue('phoneNo', data.phoneNo);
+      setValue('secondaryMobileNo', data.secondaryMobileNo);
+      setValue('applicationType', data.applicationType);
+    }
+  
+    if (type === 'remittance') {
+      if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+      else appendRemittance(data);
+    }
+  
+    if (type === 'payment') {
+      const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+      if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
+      else appendPayment(paymentData);
+    }
+  
+    if (type === 'site') {
+      if (originalData.index !== undefined) updateSite(originalData.index, data);
+      else appendSite(data);
+    }
+  
+    if (type === 'reorderSite') {
+      moveSite(data.from, data.to);
+    }
+  
+    // Close the dialog
+    closeDialog();
+  
+    // 🚀 AUTO SAVE TO FIRESTORE — NO REDIRECT
+    if (isEditor && fileIdToEdit) {
+      try {
+        await updateFileEntry(fileIdToEdit, getValues());
+        toast({
+          title: "Saved",
+          description: "Changes have been saved permanently.",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Auto-save Failed",
+          description: error.message,
+          variant: "destructive",
+        });
       }
-    
-      if (type === "remittance") {
-        if (originalData.index !== undefined) updateRemittance(originalData.index, data);
-        else appendRemittance(data);
-      }
-    
-      if (type === "payment") {
-        const paymentData = {
-          ...data,
-          totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data)
-        };
-        if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
-        else appendPayment(paymentData);
-      }
-    
-      if (type === "site") {
-        if (originalData.index !== undefined) updateSite(originalData.index, data);
-        else appendSite(data);
-      }
-    
-      if (type === "reorderSite") {
-        moveSite(data.from, data.to);
-      }
-
-      // Close dialog
-      closeDialog();
-      toast({ title: "Saved", description: "Entry updated locally. Click 'Save Changes & Exit' to persist." });
+    }
   };
 
 
