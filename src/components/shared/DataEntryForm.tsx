@@ -789,69 +789,54 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     const { type, data: originalData } = dialogState;
     if (!type) return;
 
+    // Update form state first
+    if (type === 'application') {
+      setValue('fileNo', data.fileNo);
+      setValue('applicantName', data.applicantName);
+      setValue('phoneNo', data.phoneNo);
+      setValue('secondaryMobileNo', data.secondaryMobileNo);
+      setValue('applicationType', data.applicationType);
+    } else if (type === 'remittance') {
+      if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+      else appendRemittance(data);
+    } else if (type === 'payment') {
+      const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+      if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
+      else appendPayment(paymentData);
+    } else if (type === 'site') {
+      if (originalData.index !== undefined) updateSite(originalData.index, data);
+      else appendSite(data);
+    } else if (type === 'reorderSite') {
+      moveSite(data.from, data.to);
+    }
+
     closeDialog();
 
-    // Logic for updating the form state based on dialog type
-    if (type === 'application') {
-        setValue('fileNo', data.fileNo);
-        setValue('applicantName', data.applicantName);
-        setValue('phoneNo', data.phoneNo);
-        setValue('secondaryMobileNo', data.secondaryMobileNo);
-        setValue('applicationType', data.applicationType);
-    } else if (type === 'remittance') {
-        if (originalData.index !== undefined) {
-            updateRemittance(originalData.index, data);
-        } else {
-            appendRemittance(data);
-        }
-    } else if (type === 'payment') {
-        const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
-        if (originalData.index !== undefined) {
-            updatePayment(originalData.index, paymentData);
-        } else {
-            appendPayment(paymentData);
-        }
-    } else if (type === 'site') {
-        if (originalData.index !== undefined) {
-            updateSite(originalData.index, data);
-        } else {
-            appendSite(data);
-        }
-    } else if (type === 'reorderSite') {
-        moveSite(data.from, data.to);
-    }
-
-    // After updating form state, decide whether to save to DB
+    // Now handle persistence
     if (isEditor) {
+      setIsSubmitting(true);
+      try {
         if (!fileIdToEdit) { // This is a new file, create it
-            setIsSubmitting(true);
-            try {
-                const newId = await addFileEntry(getValues());
-                toast({ title: "File Created", description: `File No. ${getValues('fileNo')} created. You can now add other details.` });
-                const queryParams = new URLSearchParams({
-                    id: newId,
-                    ...(workTypeContext && { workType: workTypeContext }),
-                    ...(pageToReturnTo && { page: pageToReturnTo }),
-                }).toString();
-                router.replace(`/dashboard/data-entry?${queryParams}`);
-            } catch (error: any) {
-                toast({ title: "Error Creating File", description: error.message, variant: "destructive" });
-            } finally {
-                setIsSubmitting(false);
-            }
+          const newId = await addFileEntry(getValues());
+          toast({ title: "File Created", description: `File No. ${getValues('fileNo')} created. You can now add other details.` });
+          const queryParams = new URLSearchParams({
+            id: newId,
+            ...(workTypeContext && { workType: workTypeContext }),
+            ...(pageToReturnTo && { page: pageToReturnTo }),
+          }).toString();
+          router.replace(`/dashboard/data-entry?${queryParams}`);
         } else { // This is an existing file, update it
-            setIsSubmitting(true);
-            try {
-                await updateFileEntry(fileIdToEdit, getValues());
-                toast({ title: "File Updated", description: "Your changes have been saved." });
-            } catch (error: any) {
-                toast({ title: "Save Failed", description: error.message, variant: "destructive" });
-            } finally {
-                setIsSubmitting(false);
-            }
+          // No redirect for existing files, just save in the background
+          await updateFileEntry(fileIdToEdit, getValues());
+          toast({ title: "File Updated", description: "Your changes have been saved." });
         }
+      } catch (error: any) {
+        toast({ title: "Save Failed", description: error.message, variant: "destructive" });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
-};
+  };
 
 
   const handleDeleteItem = async () => {
