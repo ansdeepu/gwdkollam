@@ -785,76 +785,45 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setSiteToCopy(null);
   };
   
-    const handleDialogConfirm = async (data: any) => {
+  const handleDialogConfirm = async (data: any) => {
     const { type, data: originalData } = dialogState;
     if (!type) return;
 
     closeDialog();
-    let shouldSubmitFile = false;
 
-    switch (type) {
-        case 'application':
-            setValue('fileNo', data.fileNo);
-            setValue('applicantName', data.applicantName);
-            setValue('phoneNo', data.phoneNo);
-            setValue('secondaryMobileNo', data.secondaryMobileNo);
-            setValue('applicationType', data.applicationType);
-            shouldSubmitFile = true;
-            break;
-        case 'remittance':
-            if (originalData.index !== undefined) {
-                updateRemittance(originalData.index, data);
-            } else {
-                appendRemittance(data);
-            }
-            if (fileIdToEdit) { // Only auto-save if editing an existing file
-                setIsSubmitting(true);
-                try {
-                    await updateFileEntry(fileIdToEdit, getValues());
-                    toast({ title: "Remittance Saved", description: "The remittance detail has been saved." });
-                } catch (error: any) {
-                    toast({ title: "Save Failed", description: error.message, variant: "destructive" });
-                } finally {
-                    setIsSubmitting(false);
-                }
-                return; // Prevent full form submission
-            }
-            shouldSubmitFile = true;
-            break;
-        case 'payment':
-            if (originalData.index !== undefined) updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-            else appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
-            shouldSubmitFile = true;
-            break;
-        case 'site':
-            if (originalData.index !== undefined) {
-                updateSite(originalData.index, data);
-            } else {
-                appendSite(data);
-            }
-            if (fileIdToEdit) { // Only auto-save if editing an existing file
-                 setIsSubmitting(true);
-                try {
-                    await updateFileEntry(fileIdToEdit, getValues());
-                    toast({ title: "Site Details Saved", description: "The site details have been saved." });
-                } catch (error: any) {
-                    toast({ title: "Save Failed", description: error.message, variant: "destructive" });
-                } finally {
-                    setIsSubmitting(false);
-                }
-                return; // Prevent full form submission
-            }
-            shouldSubmitFile = true;
-            break;
-        case 'reorderSite':
-            moveSite(data.from, data.to);
-            shouldSubmitFile = true;
-            break;
+    // Logic for updating the form state based on dialog type
+    if (type === 'application') {
+        setValue('fileNo', data.fileNo);
+        setValue('applicantName', data.applicantName);
+        setValue('phoneNo', data.phoneNo);
+        setValue('secondaryMobileNo', data.secondaryMobileNo);
+        setValue('applicationType', data.applicationType);
+    } else if (type === 'remittance') {
+        if (originalData.index !== undefined) {
+            updateRemittance(originalData.index, data);
+        } else {
+            appendRemittance(data);
+        }
+    } else if (type === 'payment') {
+        const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+        if (originalData.index !== undefined) {
+            updatePayment(originalData.index, paymentData);
+        } else {
+            appendPayment(paymentData);
+        }
+    } else if (type === 'site') {
+        if (originalData.index !== undefined) {
+            updateSite(originalData.index, data);
+        } else {
+            appendSite(data);
+        }
+    } else if (type === 'reorderSite') {
+        moveSite(data.from, data.to);
     }
 
-    // This part is now mainly for initial file creation
-    if (isEditor && shouldSubmitFile) {
-        if (!fileIdToEdit) {
+    // After updating form state, decide whether to save to DB
+    if (isEditor) {
+        if (!fileIdToEdit) { // This is a new file, create it
             setIsSubmitting(true);
             try {
                 const newId = await addFileEntry(getValues());
@@ -870,7 +839,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             } finally {
                 setIsSubmitting(false);
             }
-        } else if (fileIdToEdit) { // This handles payment and other non-redirecting saves
+        } else { // This is an existing file, update it
             setIsSubmitting(true);
             try {
                 await updateFileEntry(fileIdToEdit, getValues());
@@ -989,9 +958,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             Site #{index + 1}: <span className={headerColor}>{site.nameOfSite || "Unnamed Site"}</span> ({site.purpose || "No Purpose"})
                                         </div>
                                         <div className="flex items-center space-x-1 mr-2">
-                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}><Eye className="h-4 w-4"/></Button>
+                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }); }}><Eye className="h-4 w-4"/></Button>
                                             {!isViewer && (
                                                 <>
+                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}><Edit className="h-4 w-4"/></Button>
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopySite(index); }}><Copy className="h-4 w-4" /></Button>
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('reorderSite', { from: index }); }}><ArrowUpDown className="h-4 w-4" /></Button>
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
