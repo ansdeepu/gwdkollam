@@ -790,6 +790,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     if (!type) return;
 
     closeDialog();
+    let shouldSubmitFile = false;
 
     if (type === 'application') {
         setValue('fileNo', data.fileNo);
@@ -797,27 +798,49 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         setValue('phoneNo', data.phoneNo);
         setValue('secondaryMobileNo', data.secondaryMobileNo);
         setValue('applicationType', data.applicationType);
+        shouldSubmitFile = true;
     }
-    // Update local form state immediately
+    
     switch (type) {
         case 'remittance':
             if (originalData.index !== undefined) updateRemittance(originalData.index, data);
             else appendRemittance(data);
+            shouldSubmitFile = true;
             break;
         case 'payment':
             if (originalData.index !== undefined) updatePayment(originalData.index, { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
             else appendPayment({ ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) });
+            shouldSubmitFile = true;
             break;
         case 'site':
-            if (originalData.index !== undefined) updateSite(originalData.index, data);
-            else appendSite(data);
+            if (originalData.index !== undefined) {
+                updateSite(originalData.index, data);
+            } else {
+                appendSite(data);
+                // Do not redirect after adding a site
+                shouldSubmitFile = false; 
+                if (isEditor && fileIdToEdit) { // Still save the update in the background
+                    setIsSubmitting(true);
+                    try {
+                        await updateFileEntry(fileIdToEdit, getValues());
+                        toast({ title: "Site Added", description: "The new site has been saved to the file." });
+                    } catch (error: any) {
+                        toast({ title: "Save Failed", description: error.message, variant: "destructive" });
+                    } finally {
+                        setIsSubmitting(false);
+                    }
+                }
+                return; // Explicitly return to prevent further processing
+            }
+            shouldSubmitFile = true;
             break;
         case 'reorderSite':
             moveSite(data.from, data.to);
+            shouldSubmitFile = true;
             break;
     }
     
-    if (isEditor) {
+    if (isEditor && shouldSubmitFile) {
         if (!fileIdToEdit && type === 'application') {
             setIsSubmitting(true);
             try {
