@@ -1,4 +1,5 @@
 
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -47,7 +48,6 @@ import {
   type ApplicationType,
   siteConditionsOptions,
   type UserRole,
-  rigAccessibilityOptions,
   type SiteWorkStatus,
   constituencyOptions,
   type Constituency,
@@ -75,7 +75,7 @@ const db = getFirestore(app);
 
 const createDefaultRemittanceDetail = (): RemittanceDetailFormData => ({ amountRemitted: undefined, dateOfRemittance: "", remittedAccount: undefined, remittanceRemarks: "" });
 const createDefaultPaymentDetail = (): PaymentDetailFormData => ({ dateOfPayment: undefined, paymentAccount: undefined, revenueHead: undefined, contractorsPayment: undefined, gst: undefined, incomeTax: undefined, kbcwb: undefined, refundToParty: undefined, totalPaymentPerEntry: 0, paymentRemarks: "" });
-const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, accessibleRig: undefined, tsAmount: undefined, tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
+const createDefaultSiteDetail = (): z.infer<typeof SiteDetailSchema> => ({ nameOfSite: "", localSelfGovt: "", constituency: undefined, latitude: undefined, longitude: undefined, purpose: undefined, estimateAmount: undefined, remittedAmount: undefined, siteConditions: undefined, tsAmount: undefined, tenderNo: "", diameter: undefined, totalDepth: undefined, casingPipeUsed: "", outerCasingPipe: "", innerCasingPipe: "", yieldDischarge: "", zoneDetails: "", waterLevel: "", drillingRemarks: "", pumpDetails: "", waterTankCapacity: "", noOfTapConnections: undefined, noOfBeneficiary: "", dateOfCompletion: undefined, typeOfRig: undefined, contractorName: "", supervisorUid: undefined, supervisorName: undefined, supervisorDesignation: undefined, totalExpenditure: undefined, workStatus: undefined, workRemarks: "", surveyOB: "", surveyLocation: "", surveyPlainPipe: "", surveySlottedPipe: "", surveyRemarks: "", surveyRecommendedDiameter: "", surveyRecommendedTD: "", surveyRecommendedOB: "", surveyRecommendedCasingPipe: "", surveyRecommendedPlainPipe: "", surveyRecommendedSlottedPipe: "", surveyRecommendedMsCasingPipe: "", arsTypeOfScheme: undefined, arsPanchayath: undefined, arsBlock: undefined, arsAsTsDetails: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined, arsAwardedAmount: undefined, arsNumberOfStructures: undefined, arsStorageCapacity: undefined, arsNumberOfFillings: undefined, isArsImport: false, pilotDrillingDepth: "", pumpingLineLength: "", deliveryLineLength: "" });
 
 
 const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undefined): number => {
@@ -410,6 +410,13 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             setValue('constituency', constituencies[0] as Constituency);
         }
     }, [watchedLsg, allLsgConstituencyMaps, setValue, watch, getValues]);
+
+    const siteConditionOptionsForPurpose = useMemo(() => {
+        if (watchedPurpose && PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(watchedPurpose as SitePurpose)) {
+            return siteConditionsOptions;
+        }
+        return ['Land Dispute', 'Work Disputes and Conflicts'];
+    }, [watchedPurpose]);
     
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -459,6 +466,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                         <CardHeader><CardTitle>Work Implementation</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField name="siteConditions" control={control} render={({ field }) => <FormItem><FormLabel>{PURPOSES_REQUIRING_RIG_ACCESSIBILITY.includes(watchedPurpose as SitePurpose) ? "Rig and Site Accessibility" : "Site Conditions"}</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Condition" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteConditionOptionsForPurpose.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                 <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                 {!isSupervisor && <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
@@ -596,7 +604,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
             "Constituency (LAC)": site.constituency, "Latitude": site.latitude, "Longitude": site.longitude,
         },
         "Work Implementation": {
-            "Site Conditions": site.siteConditions, "Rig Accessibility": site.accessibleRig,
+            "Site Conditions": site.siteConditions,
             "Estimate Amount (₹)": site.estimateAmount, "Remitted for Site (₹)": site.remittedAmount,
             "TS Amount (₹)": site.tsAmount, "Tender No.": site.tenderNo, "Contractor Name": site.contractorName,
             "Assigned Supervisor": site.supervisorName,
@@ -802,64 +810,57 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setSiteToCopy(null);
   };
   
-    const handleDialogConfirm = async (data: any) => {
+  const handleDialogConfirm = async (data: any) => {
     const { type, data: originalData } = dialogState;
     if (!type) return;
 
-    // Update form locally
-    if (type === "application") {
-        setValue("fileNo", data.fileNo);
-        setValue("applicantName", data.applicantName);
-        setValue("phoneNo", data.phoneNo);
-        setValue("secondaryMobileNo", data.secondaryMobileNo);
-        setValue("applicationType", data.applicationType);
+    if (type === 'application') {
+      setValue("fileNo", data.fileNo);
+      setValue("applicantName", data.applicantName);
+      setValue("phoneNo", data.phoneNo);
+      setValue("secondaryMobileNo", data.secondaryMobileNo);
+      setValue("applicationType", data.applicationType);
+    }
+    if (type === 'remittance') {
+      if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+      else appendRemittance(data);
+    }
+    if (type === 'payment') {
+      const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+      if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
+      else appendPayment(paymentData);
+    }
+    if (type === 'site') {
+      if (originalData.index !== undefined) updateSite(originalData.index, data);
+      else appendSite(data);
+    }
+    if (type === 'reorderSite') {
+      moveSite(data.from, data.to);
     }
 
-    if (type === "remittance") {
-        if (originalData.index !== undefined) updateRemittance(originalData.index, data);
-        else appendRemittance(data);
-    }
-
-    if (type === "payment") {
-        const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
-        if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
-        else appendPayment(paymentData);
-    }
-
-    if (type === "site") {
-        if (originalData.index !== undefined) updateSite(originalData.index, data);
-        else appendSite(data);
-    }
-
-    if (type === "reorderSite") {
-        moveSite(data.from, data.to);
-    }
-
-    // Close the dialog
     closeDialog();
 
-    // 🚀 AUTO SAVE TO FIRESTORE — NO REDIRECT
     if (isEditor && fileIdToEdit) {
-        try {
+      try {
         await updateFileEntry(fileIdToEdit, getValues());
         toast({
-            title: "Saved",
-            description: "Changes have been saved permanently.",
+          title: "Saved",
+          description: "Changes have been saved permanently.",
         });
-        } catch (error: any) {
+      } catch (error: any) {
         toast({
-            title: "Auto-save Failed",
-            description: error.message,
-            variant: "destructive",
+          title: "Auto-save Failed",
+          description: error.message,
+          variant: "destructive",
         });
-        }
+      }
     } else if (!fileIdToEdit && type !== 'application') {
-         toast({
-            title: "Saved Locally",
-            description: "Entry added/updated. Click 'Save New File' to make it permanent."
-        });
+      toast({
+        title: "Saved Locally",
+        description: "Entry added/updated. Click 'Save New File' to make it permanent."
+      });
     }
-    };
+  };
 
 
   const handleDeleteItem = async () => {
@@ -950,7 +951,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                         const hasError = (isFinalStatus && !site.dateOfCompletion) || !!siteErrors;
                         
                         let headerColor = 'text-green-600';
-                        if (site.accessibleRig === 'Inaccessible to Other Rigs' || site.accessibleRig === 'Land Dispute') {
+                        if (site.siteConditions === 'Inaccessible to Other Rigs' || site.siteConditions === 'Land Dispute') {
                             headerColor = 'text-yellow-600';
                         } else if (isFinalStatus) {
                             headerColor = 'text-red-600';
@@ -966,7 +967,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             Site #{index + 1}: <span className={headerColor}>{site.nameOfSite || "Unnamed Site"}</span> ({site.purpose || "No Purpose"})
                                         </div>
                                         <div className="flex items-center space-x-1 mr-2">
-                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isViewer ? openDialog('viewSite', { index, ...site }) : openDialog('site', { index, ...site }); }}>
+                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isViewer ? openDialog('viewSite', { index, ...site }) : openDialog('site', { index, ...site }); }}>
                                                 <Eye className="h-4 w-4"/>
                                             </Button>
                                             {!isViewer && (

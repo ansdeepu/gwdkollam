@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -217,21 +218,13 @@ export const siteTypeOfRigOptions = [
 export type SiteTypeOfRig = typeof siteTypeOfRigOptions[number];
 
 export const siteConditionsOptions = [
-  "Land Dispute",
-  "Inaccessible to Other Rigs",
-  "Work Disputes and Conflicts",
-  "Accessible to Dept. Rig",
-  "Accessible to Private Rig",
-] as const;
-export type SiteConditions = typeof siteConditionsOptions[number];
-
-export const rigAccessibilityOptions = [
   'Accessible to Dept. Rig',
   'Accessible to Private Rig',
   'Inaccessible to Other Rigs',
   'Land Dispute',
+  'Work Disputes and Conflicts',
 ] as const;
-export type RigAccessibility = typeof rigAccessibilityOptions[number];
+export type SiteConditions = typeof siteConditionsOptions[number];
 
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
@@ -246,7 +239,6 @@ export const SiteDetailSchema = z.object({
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
-  accessibleRig: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(rigAccessibilityOptions).optional()),
   tsAmount: optionalNumber("TS Amount must be a valid number."),
   additionalAS: z.enum(['Yes', 'No']).optional().nullable().default('No'),
   tenderNo: z.string().optional(),
