@@ -130,7 +130,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
            </div>
         </div>
         
-        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 min-h-0")}>
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
            <ScrollArea className="flex-1 pr-3">
            <div className={cn("space-y-2", enableUpcomingScrolling && "marquee-container-birthdays")}>
