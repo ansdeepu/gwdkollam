@@ -802,59 +802,64 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setSiteToCopy(null);
   };
   
-  const handleDialogConfirm = async (data: any) => {
+    const handleDialogConfirm = async (data: any) => {
     const { type, data: originalData } = dialogState;
     if (!type) return;
-  
+
     // Update form locally
-    if (type === 'application') {
-      setValue('fileNo', data.fileNo);
-      setValue('applicantName', data.applicantName);
-      setValue('phoneNo', data.phoneNo);
-      setValue('secondaryMobileNo', data.secondaryMobileNo);
-      setValue('applicationType', data.applicationType);
+    if (type === "application") {
+        setValue("fileNo", data.fileNo);
+        setValue("applicantName", data.applicantName);
+        setValue("phoneNo", data.phoneNo);
+        setValue("secondaryMobileNo", data.secondaryMobileNo);
+        setValue("applicationType", data.applicationType);
     }
-  
-    if (type === 'remittance') {
-      if (originalData.index !== undefined) updateRemittance(originalData.index, data);
-      else appendRemittance(data);
+
+    if (type === "remittance") {
+        if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+        else appendRemittance(data);
     }
-  
-    if (type === 'payment') {
-      const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
-      if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
-      else appendPayment(paymentData);
+
+    if (type === "payment") {
+        const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+        if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
+        else appendPayment(paymentData);
     }
-  
-    if (type === 'site') {
-      if (originalData.index !== undefined) updateSite(originalData.index, data);
-      else appendSite(data);
+
+    if (type === "site") {
+        if (originalData.index !== undefined) updateSite(originalData.index, data);
+        else appendSite(data);
     }
-  
-    if (type === 'reorderSite') {
-      moveSite(data.from, data.to);
+
+    if (type === "reorderSite") {
+        moveSite(data.from, data.to);
     }
-  
+
     // Close the dialog
     closeDialog();
-  
+
     // 🚀 AUTO SAVE TO FIRESTORE — NO REDIRECT
     if (isEditor && fileIdToEdit) {
-      try {
+        try {
         await updateFileEntry(fileIdToEdit, getValues());
         toast({
-          title: "Saved",
-          description: "Changes have been saved permanently.",
+            title: "Saved",
+            description: "Changes have been saved permanently.",
         });
-      } catch (error: any) {
+        } catch (error: any) {
         toast({
-          title: "Auto-save Failed",
-          description: error.message,
-          variant: "destructive",
+            title: "Auto-save Failed",
+            description: error.message,
+            variant: "destructive",
         });
-      }
+        }
+    } else if (!fileIdToEdit && type !== 'application') {
+         toast({
+            title: "Saved Locally",
+            description: "Entry added/updated. Click 'Save New File' to make it permanent."
+        });
     }
-  };
+    };
 
 
   const handleDeleteItem = async () => {
@@ -961,10 +966,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             Site #{index + 1}: <span className={headerColor}>{site.nameOfSite || "Unnamed Site"}</span> ({site.purpose || "No Purpose"})
                                         </div>
                                         <div className="flex items-center space-x-1 mr-2">
-                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }); }}><Eye className="h-4 w-4"/></Button>
+                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isViewer ? openDialog('viewSite', { index, ...site }) : openDialog('site', { index, ...site }); }}>
+                                                <Eye className="h-4 w-4"/>
+                                            </Button>
                                             {!isViewer && (
                                                 <>
-                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}><Edit className="h-4 w-4"/></Button>
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopySite(index); }}><Copy className="h-4 w-4" /></Button>
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('reorderSite', { from: index }); }}><ArrowUpDown className="h-4 w-4" /></Button>
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
