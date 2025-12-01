@@ -80,7 +80,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
   }, [staffMembers]);
   
   const enableTodayScrolling = noticeData.todaysBirthdays.length > 2;
-  const enableUpcomingScrolling = noticeData.upcomingBirthdays.length > 2;
+  const enableUpcomingScrolling = noticeData.upcomingBirthdays.length > 3;
   const todayBirthdayList = enableTodayScrolling ? [...noticeData.todaysBirthdays, ...noticeData.todaysBirthdays] : noticeData.todaysBirthdays;
   const upcomingBirthdayList = enableUpcomingScrolling ? [...noticeData.upcomingBirthdays, ...noticeData.upcomingBirthdays] : noticeData.upcomingBirthdays;
 
@@ -91,9 +91,9 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
         <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" />Birthday Updates</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0 flex-1 min-h-0">
-        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 basis-1/2 min-h-0", enableTodayScrolling && "marquee-container-birthdays")}>
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.todaysBirthdays.length})</h3>
-           <ScrollArea className="flex-1 pr-3">
+           <div className={cn("pr-3", enableTodayScrolling ? "h-28 marquee-container-birthdays" : "h-auto")}>
             {todayBirthdayList.length > 0 ? (
               <div className={cn("space-y-3", enableTodayScrolling && "marquee-content-birthdays")}>
                 <Dialog open={!!selectedBirthday} onOpenChange={() => setSelectedBirthday(null)}>
@@ -123,16 +123,17 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                 </Dialog>
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-center justify-center py-6">
                 <p className="text-sm text-muted-foreground italic">No birthdays today.</p>
               </div>
             )}
-           </ScrollArea>
+           </div>
         </div>
         
-        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 basis-1/2 min-h-0", enableUpcomingScrolling && "marquee-container-birthdays")}>
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 min-h-0")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
            <ScrollArea className="flex-1 pr-3">
+           <div className={cn("space-y-2", enableUpcomingScrolling && "marquee-container-birthdays")}>
            {upcomingBirthdayList.length > 0 ? (
              <div className={cn("space-y-2", enableUpcomingScrolling && "marquee-content-birthdays")}>
                 {upcomingBirthdayList.map((staff, index) => (
@@ -157,6 +158,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                     <p className="text-sm text-muted-foreground italic">No other birthdays this month.</p>
                 </div>
             )}
+            </div>
            </ScrollArea>
         </div>
       </CardContent>
