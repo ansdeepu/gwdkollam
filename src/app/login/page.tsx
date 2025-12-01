@@ -39,7 +39,7 @@ export default function LoginPage() {
           {/* Left Column: Branding */}
           <div className="flex w-full flex-col items-center text-center md:w-1/2 md:items-start md:text-left">
             <Image
-              src="https://placehold.co/120x120/3F51B5/FFFFFF.png?text=GWD" 
+              src="https://placehold.co/120x120/3F51B5/FFFFFF.png?text=GWD%0AKOLLAM" 
               alt="GWD Kollam Logo"
               width={100}
               height={100}
