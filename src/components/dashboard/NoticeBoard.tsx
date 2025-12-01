@@ -1,3 +1,4 @@
+
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
@@ -54,8 +55,10 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
     const today = new Date();
     const todayMonth = today.getMonth();
     const todayDate = today.getDate();
+    
+    const activeStaff = staffMembers.filter(s => s.status === 'Active');
 
-    for (const staff of staffMembers) {
+    for (const staff of activeStaff) {
       if (!staff.dateOfBirth) continue;
       const dob = new Date(staff.dateOfBirth);
       if (isValid(dob)) {
