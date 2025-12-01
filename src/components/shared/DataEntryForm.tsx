@@ -265,7 +265,12 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
     
     return (
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleConfirmSubmit)}>
+        <form
+          onSubmit={(e) => {
+            e.stopPropagation();
+            form.handleSubmit(handleConfirmSubmit)(e);
+          }}
+        >
             <DialogHeader className="p-6 pb-4">
                 <DialogTitle>Remittance Details</DialogTitle>
             </DialogHeader>
@@ -302,7 +307,12 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleConfirmSubmit)}>
+            <form
+              onSubmit={(e) => {
+                e.stopPropagation();
+                form.handleSubmit(handleConfirmSubmit)(e);
+              }}
+            >
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>Payment Details</DialogTitle>
                 </DialogHeader>
@@ -409,7 +419,14 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
             <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4">
                     <Form {...form}>
-                        <form id="site-dialog-form" onSubmit={handleSubmit(handleDialogSubmit)} className="space-y-4">
+                        <form
+                          id="site-dialog-form"
+                          onSubmit={(e) => {
+                            e.stopPropagation();
+                            handleSubmit(handleDialogSubmit)(e);
+                          }}
+                          className="space-y-4"
+                        >
                             <Card><CardHeader><CardTitle>Main Details</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="nameOfSite" control={control} render={({ field }) => <FormItem><FormLabel>Name of Site <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -786,48 +803,45 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   };
   
   const handleDialogConfirm = async (data: any) => {
-    const { type, data: originalData } = dialogState;
-    if (!type) return;
+      const { type, data: originalData } = dialogState;
+      if (!type) return;
 
-    if (type === "application") {
-      setValue("fileNo", data.fileNo);
-      setValue("applicantName", data.applicantName);
-      setValue("phoneNo", data.phoneNo);
-      setValue("secondaryMobileNo", data.secondaryMobileNo);
-      setValue("applicationType", data.applicationType);
-    }
-  
-    if (type === "remittance") {
-      if (originalData.index !== undefined) updateRemittance(originalData.index, data);
-      else appendRemittance(data);
-    }
-  
-    if (type === "payment") {
-      const paymentData = {
-        ...data,
-        totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data)
-      };
-      if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
-      else appendPayment(paymentData);
-    }
-  
-    if (type === "site") {
-      if (originalData.index !== undefined) updateSite(originalData.index, data);
-      else appendSite(data);
-    }
-  
-    if (type === "reorderSite") {
-      moveSite(data.from, data.to);
-    }
-  
-    // Close dialog
-    closeDialog();
-  
-    toast({
-      title: "Saved",
-      description: "Entry added locally. Click 'Save Changes & Exit' to update permanently."
-    });
+      if (type === "application") {
+        setValue("fileNo", data.fileNo);
+        setValue("applicantName", data.applicantName);
+        setValue("phoneNo", data.phoneNo);
+        setValue("secondaryMobileNo", data.secondaryMobileNo);
+        setValue("applicationType", data.applicationType);
+      }
+    
+      if (type === "remittance") {
+        if (originalData.index !== undefined) updateRemittance(originalData.index, data);
+        else appendRemittance(data);
+      }
+    
+      if (type === "payment") {
+        const paymentData = {
+          ...data,
+          totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data)
+        };
+        if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
+        else appendPayment(paymentData);
+      }
+    
+      if (type === "site") {
+        if (originalData.index !== undefined) updateSite(originalData.index, data);
+        else appendSite(data);
+      }
+    
+      if (type === "reorderSite") {
+        moveSite(data.from, data.to);
+      }
+
+      // Close dialog
+      closeDialog();
+      toast({ title: "Saved", description: "Entry updated locally. Click 'Save Changes & Exit' to persist." });
   };
+
 
   const handleDeleteItem = async () => {
     if (!itemToDelete) return;
