@@ -268,6 +268,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
         <form
           onSubmit={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             form.handleSubmit(handleConfirmSubmit)(e);
           }}
         >
@@ -310,6 +311,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
             <form
               onSubmit={(e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 form.handleSubmit(handleConfirmSubmit)(e);
               }}
             >
@@ -430,6 +432,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                           id="site-dialog-form"
                           onSubmit={(e) => {
                             e.stopPropagation();
+                            e.preventDefault();
                             handleSubmit(handleDialogSubmit)(e);
                           }}
                           className="space-y-4"
@@ -503,6 +506,26 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             </Select>
                                             <FormMessage />
                                         </FormItem>
+                                        )}
+                                    />
+                                )}
+                                 {!isSupervisor && (
+                                    <FormField
+                                        control={form.control}
+                                        name="workRemarks"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-3">
+                                                <FormLabel>Work Remarks</FormLabel>
+                                                <FormControl>
+                                                    <Textarea
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                        readOnly={isReadOnly}
+                                                        placeholder="Add any remarks for this site..."
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
                                         )}
                                     />
                                 )}
@@ -609,6 +632,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
             "TS Amount (₹)": site.tsAmount, "Tender No.": site.tenderNo, "Contractor Name": site.contractorName,
             "Assigned Supervisor": site.supervisorName,
             "Supervisor Designation": site.supervisorDesignation,
+            "Work Remarks": site.workRemarks
         },
         "Survey Details": isWellPurpose && {
             "Recommended Diameter (mm)": site.surveyRecommendedDiameter, "Recommended TD (m)": site.surveyRecommendedTD,
@@ -813,7 +837,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const handleDialogConfirm = async (data: any) => {
     const { type, data: originalData } = dialogState;
     if (!type) return;
-
+  
+    // Update form state locally first
     if (type === 'application') {
       setValue("fileNo", data.fileNo);
       setValue("applicantName", data.applicantName);
@@ -821,25 +846,31 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
       setValue("secondaryMobileNo", data.secondaryMobileNo);
       setValue("applicationType", data.applicationType);
     }
+  
     if (type === 'remittance') {
       if (originalData.index !== undefined) updateRemittance(originalData.index, data);
       else appendRemittance(data);
     }
+  
     if (type === 'payment') {
       const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
       if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
       else appendPayment(paymentData);
     }
+  
     if (type === 'site') {
       if (originalData.index !== undefined) updateSite(originalData.index, data);
       else appendSite(data);
     }
+  
     if (type === 'reorderSite') {
       moveSite(data.from, data.to);
     }
-
+  
+    // Close the dialog
     closeDialog();
-
+  
+    // Then, attempt to save to Firestore without redirecting if we are editing
     if (isEditor && fileIdToEdit) {
       try {
         await updateFileEntry(fileIdToEdit, getValues());
@@ -855,10 +886,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         });
       }
     } else if (!fileIdToEdit && type !== 'application') {
-      toast({
-        title: "Saved Locally",
-        description: "Entry added/updated. Click 'Save New File' to make it permanent."
-      });
+        toast({
+            title: "Saved Locally",
+            description: "Entry added/updated. Click 'Save New File' to make it permanent."
+        });
     }
   };
 
@@ -967,7 +998,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             Site #{index + 1}: <span className={headerColor}>{site.nameOfSite || "Unnamed Site"}</span> ({site.purpose || "No Purpose"})
                                         </div>
                                         <div className="flex items-center space-x-1 mr-2">
-                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isViewer ? openDialog('viewSite', { index, ...site }) : openDialog('site', { index, ...site }); }}>
+                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isViewer || isReadOnly() ? openDialog('viewSite', { index, ...site }) : openDialog('site', { index, ...site }); }}>
                                                 <Eye className="h-4 w-4"/>
                                             </Button>
                                             {!isViewer && (
