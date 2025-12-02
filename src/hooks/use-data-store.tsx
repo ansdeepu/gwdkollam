@@ -1,4 +1,3 @@
-
 // src/hooks/use-data-store.tsx
 "use client";
 
@@ -12,7 +11,6 @@ import type { StaffMember, LsgConstituencyMap, Designation, Bidder as MasterBidd
 import type { AgencyApplication } from './useAgencyApplications';
 import { toast } from './use-toast';
 import { designationOptions } from '@/lib/schemas';
-import type { E_tender } from './useE_tenders'; // Import E_tender type
 
 const db = getFirestore(app);
 
@@ -72,7 +70,6 @@ interface DataStoreContextType {
     allLsgConstituencyMaps: LsgConstituencyMap[];
     allRateDescriptions: Record<RateDescriptionId, string>;
     allBidders: MasterBidder[];
-    allE_tenders: E_tender[]; // Add this
     officeAddress: OfficeAddress | null;
     isLoading: boolean;
     refetchFileEntries: () => void;
@@ -82,7 +79,6 @@ interface DataStoreContextType {
     refetchLsgConstituencyMaps: () => void;
     refetchRateDescriptions: () => void;
     refetchBidders: () => void;
-    refetchE_tenders: () => void; // Add this
 }
 
 const DataStoreContext = createContext<DataStoreContextType | undefined>(undefined);
@@ -96,7 +92,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const [allLsgConstituencyMaps, setAllLsgConstituencyMaps] = useState<LsgConstituencyMap[]>([]);
     const [allRateDescriptions, setAllRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultRateDescriptions);
     const [allBidders, setAllBidders] = useState<MasterBidder[]>([]);
-    const [allE_tenders, setAllE_tenders] = useState<E_tender[]>([]); // Add this
     const [officeAddress, setOfficeAddress] = useState<OfficeAddress | null>(null);
 
     const [loadingStates, setLoadingStates] = useState({
@@ -107,7 +102,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         lsg: true,
         rates: true,
         bidders: true,
-        eTenders: true, // Add this
         officeAddress: true,
     });
     
@@ -119,7 +113,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         lsg: 0,
         rates: 0,
         bidders: 0,
-        eTenders: 0, // Add this
     });
 
     const refetchFileEntries = useCallback(() => setRefetchCounters(c => ({...c, files: c.files + 1})), []);
@@ -129,7 +122,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const refetchLsgConstituencyMaps = useCallback(() => setRefetchCounters(c => ({ ...c, lsg: c.lsg + 1 })), []);
     const refetchRateDescriptions = useCallback(() => setRefetchCounters(c => ({ ...c, rates: c.rates + 1 })), []);
     const refetchBidders = useCallback(() => setRefetchCounters(c => ({ ...c, bidders: c.bidders + 1 })), []);
-    const refetchE_tenders = useCallback(() => setRefetchCounters(c => ({ ...c, eTenders: c.eTenders + 1 })), []); // Add this
 
 
     useEffect(() => {
@@ -141,9 +133,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             setAllLsgConstituencyMaps([]);
             setAllRateDescriptions(defaultRateDescriptions);
             setAllBidders([]);
-            setAllE_tenders([]); // Reset on logout
             setOfficeAddress(null);
-            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false, bidders: false, eTenders: false, officeAddress: false });
+            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false, bidders: false, officeAddress: false });
             return;
         }
 
@@ -155,7 +146,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg', q: query(collection(db, 'localSelfGovernments')) },
             rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates', q: query(collection(db, 'rateDescriptions')) },
             bidders: { setter: setAllBidders, loaderKey: 'bidders', q: query(collection(db, 'bidders'), orderBy("order")) },
-            eTenders: { setter: setAllE_tenders, loaderKey: 'eTenders', q: query(collection(db, 'eTenders')) }, // Add this
             officeAddress: { setter: setOfficeAddress, loaderKey: 'officeAddress', q: query(collection(db, 'officeAddresses')) },
         };
 
@@ -234,7 +224,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             allLsgConstituencyMaps,
             allRateDescriptions,
             allBidders,
-            allE_tenders, // Add this
             officeAddress,
             isLoading,
             refetchFileEntries,
@@ -244,7 +233,6 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             refetchLsgConstituencyMaps,
             refetchRateDescriptions,
             refetchBidders,
-            refetchE_tenders, // Add this
         }}>
             {children}
         </DataStoreContext.Provider>

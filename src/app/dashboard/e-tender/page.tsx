@@ -1,10 +1,9 @@
-
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { type E_tender } from '@/hooks/useE_tenders';
+import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy, XCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -21,8 +20,6 @@ import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 import { eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { useDataStore } from '@/hooks/use-data-store';
-import { useE_tenders } from '@/hooks/useE_tenders';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
@@ -52,8 +49,7 @@ const getStatusRowClass = (status?: E_tenderStatus): string => {
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
     const router = useRouter();
-    const { allE_tenders, isLoading } = useDataStore(); // Use data from the central store
-    const { deleteTender, addTender } = useE_tenders();
+    const { tenders: allE_tenders, isLoading, deleteTender, addTender } = useE_tenders();
     const { toast } = useToast();
     const { user } = useAuth();
     
