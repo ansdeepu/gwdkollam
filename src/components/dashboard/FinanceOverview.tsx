@@ -64,8 +64,8 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
             eDate = endOfDay(dates.end);
         }
 
-        let sbiCredit = 0, stsbCredit = 0, revenueHeadCreditDirect = 0;
-        let sbiDebit = 0, stsbDebit = 0;
+        let sbiCredit = 0, stsbCredit = 0, planFundCredit = 0, revenueHeadCreditDirect = 0;
+        let sbiDebit = 0, stsbDebit = 0, planFundDebit = 0;
 
         allFileEntries.forEach(entry => {
           entry.remittanceDetails?.forEach(rd => {
@@ -75,6 +75,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
               const amount = Number(rd.amountRemitted) || 0;
               if (rd.remittedAccount === 'SBI') sbiCredit += amount;
               else if (rd.remittedAccount === 'STSB') stsbCredit += amount;
+              else if (rd.remittedAccount === 'Plan Fund') planFundCredit += amount;
               else if (rd.remittedAccount === 'RevenueHead') revenueHeadCreditDirect += amount;
             }
           });
@@ -86,6 +87,8 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
               const currentPaymentDebitAmount = (Number(pd.contractorsPayment) || 0) + (Number(pd.gst) || 0) + (Number(pd.incomeTax) || 0) + (Number(pd.kbcwb) || 0) + (Number(pd.refundToParty) || 0);
               if (pd.paymentAccount === 'SBI') sbiDebit += currentPaymentDebitAmount;
               else if (pd.paymentAccount === 'STSB') stsbDebit += currentPaymentDebitAmount;
+              else if (pd.paymentAccount === 'Plan Fund') planFundDebit += currentPaymentDebitAmount;
+              
               if (pd.revenueHead) revenueHeadCreditDirect += Number(pd.revenueHead) || 0;
             }
           });
@@ -94,6 +97,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
         return {
           sbiCredit, sbiDebit, sbiBalance: sbiCredit - sbiDebit,
           stsbCredit, stsbDebit, stsbBalance: stsbCredit - stsbDebit,
+          planFundCredit, planFundDebit, planFundBalance: planFundCredit - planFundDebit,
           revenueHeadCredit: revenueHeadCreditDirect, revenueHeadBalance: revenueHeadCreditDirect,
         };
     }, [dates.start, dates.end, allFileEntries, isReportLoading]);
@@ -103,7 +107,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
         onSetDates({ start: undefined, end: undefined });
     };
     
-    const handleAmountClick = (account: 'SBI' | 'STSB' | 'RevenueHead', type: 'credit' | 'debit') => {
+    const handleAmountClick = (account: 'SBI' | 'STSB' | 'Plan Fund' | 'RevenueHead', type: 'credit' | 'debit') => {
         let title = '';
         const dataForDialog: Array<Record<string, any>> = [];
         let columnsForDialog: Array<{ key: string; label: string; isNumeric?: boolean; }> = [];
@@ -124,7 +128,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
           const siteNames = entry.siteDetails?.map(sd => sd.nameOfSite || 'N/A').filter(Boolean).join(', ') || 'N/A';
           const sitePurposes = entry.siteDetails?.map(sd => sd.purpose || 'N/A').filter(Boolean).join(', ') || 'N/A';
       
-          if ((account === 'SBI' || account === 'STSB') && type === 'credit') {
+          if ((account === 'SBI' || account === 'STSB' || account === 'Plan Fund') && type === 'credit') {
             title = `${account} - Credit Details`;
             columnsForDialog = [
               { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
@@ -140,7 +144,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                 });
               }
             });
-          } else if ((account === 'SBI' || account === 'STSB') && type === 'debit') {
+          } else if ((account === 'SBI' || account === 'STSB' || account === 'Plan Fund') && type === 'debit') {
             title = `${account} - Withdrawal Details`;
             columnsForDialog = [
               { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' }, { key: 'applicantName', label: 'Applicant Name' },
@@ -234,6 +238,12 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                                   <TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.stsbBalance.toLocaleString('en-IN')}</TableCell>
                               </TableRow>
                               <TableRow>
+                                  <TableCell className="font-medium">Plan Fund</TableCell>
+                                  <TableCell className="text-right font-mono"><Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('Plan Fund', 'credit')} disabled={!transformedFinanceMetrics.planFundCredit}>{transformedFinanceMetrics.planFundCredit.toLocaleString('en-IN')}</Button></TableCell>
+                                  <TableCell className="text-right font-mono"><Button variant="link" className="text-red-600 p-0 h-auto" onClick={() => handleAmountClick('Plan Fund', 'debit')} disabled={!transformedFinanceMetrics.planFundDebit}>{transformedFinanceMetrics.planFundDebit.toLocaleString('en-IN')}</Button></TableCell>
+                                  <TableCell className="text-right font-mono font-semibold">{transformedFinanceMetrics.planFundBalance.toLocaleString('en-IN')}</TableCell>
+                              </TableRow>
+                              <TableRow>
                                   <TableCell className="font-medium">Revenue Head</TableCell>
                                   <TableCell className="text-right font-mono">
                                       <Button variant="link" className="text-green-600 p-0 h-auto" onClick={() => handleAmountClick('RevenueHead', 'credit')} disabled={!transformedFinanceMetrics.revenueHeadCredit}>{transformedFinanceMetrics.revenueHeadCredit.toLocaleString('en-IN')}</Button>
@@ -242,7 +252,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
                                   <TableCell></TableCell>
                               </TableRow>
                           </TableBody>
-                          <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
+                          <TableFooter><TableRow className="bg-muted/80"><TableCell className="font-bold">Total Balance</TableCell><TableCell colSpan={3} className="text-right font-bold text-lg text-primary">₹{(transformedFinanceMetrics.sbiBalance + transformedFinanceMetrics.stsbBalance + transformedFinanceMetrics.planFundBalance).toLocaleString('en-IN')}</TableCell></TableRow></TableFooter>
                       </Table>
                   ) : (<div className="h-40 flex items-center justify-center"><p className="text-muted-foreground">Calculating financial data...</p></div>)}
               </CardContent>
@@ -250,7 +260,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
         </Card>
         <CardFooter className="flex-shrink-0">
               <p className="text-xs text-muted-foreground">
-                  Note: Withdrawals for SBI/STSB are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.
+                  Note: Withdrawals are based on the 'Payment Account' selected for each payment entry. Revenue Head credits include direct remittances and amounts specified in the 'Revenue Head' field of payment details. Balance = Credits - Withdrawals.
               </p>
         </CardFooter>
       </div>
