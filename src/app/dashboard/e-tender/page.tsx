@@ -70,7 +70,7 @@ export default function ETenderListPage() {
     
 
     const processedTenders = useMemo(() => {
-      return allE_tenders.map(tender => {
+      return (allE_tenders || []).map(tender => {
         const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
         const searchableContent = [
           tender.eTenderNo, `GKT/${tender.fileNo}/${tender.eTenderNo}`,
