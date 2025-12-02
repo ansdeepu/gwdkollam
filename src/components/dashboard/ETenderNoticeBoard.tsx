@@ -11,12 +11,7 @@ import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { isValid, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
@@ -115,10 +110,10 @@ export default function ETenderNoticeBoard() {
   );
   
   const categories = [
-    { type: 'review', label: 'Tender Status Review', data: categorizedTenders.review, icon: Clock, color: "bg-amber-500/10 text-amber-800 border-amber-500/20" },
-    { type: 'toBeOpened', label: 'To Be Opened', data: categorizedTenders.toBeOpened, icon: FolderOpen, color: "bg-sky-500/10 text-sky-800 border-sky-500/20" },
-    { type: 'pendingSelection', label: 'Pending Selection Notice', data: categorizedTenders.pendingSelection, icon: Bell, color: "bg-indigo-500/10 text-indigo-800 border-indigo-500/20" },
-    { type: 'pendingWorkOrder', label: 'Pending Work Order', data: categorizedTenders.pendingWorkOrder, icon: FileSignature, color: "bg-emerald-500/10 text-emerald-800 border-emerald-500/20" },
+    { type: 'review', label: 'Tender Status Review', data: categorizedTenders.review, icon: Clock, color: "text-amber-800" },
+    { type: 'toBeOpened', label: 'To Be Opened', data: categorizedTenders.toBeOpened, icon: FolderOpen, color: "text-sky-800" },
+    { type: 'pendingSelection', label: 'Pending Selection Notice', data: categorizedTenders.pendingSelection, icon: Bell, color: "text-indigo-800" },
+    { type: 'pendingWorkOrder', label: 'Pending Work Order', data: categorizedTenders.pendingWorkOrder, icon: FileSignature, color: "text-emerald-800" },
   ];
 
   return (
@@ -128,33 +123,37 @@ export default function ETenderNoticeBoard() {
             <Hammer className="h-5 w-5 text-primary" />e-Tender Actions
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-auto p-2">
+      <CardContent className="flex-1 flex flex-col min-h-0 p-4">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-           <Accordion type="single" collapsible className="w-full space-y-2">
-             {categories.map((cat) => {
-               const Icon = cat.icon;
-               return (
-                <AccordionItem value={cat.type} key={cat.type} className={cn("border rounded-lg", cat.color)}>
-                  <AccordionTrigger className="px-4 py-3 text-base hover:no-underline">
-                     <div className="flex items-center gap-3">
-                        <Icon className="h-5 w-5" />
-                        <span className="font-semibold">{cat.label}</span>
-                        <span className="font-bold text-lg">({cat.data.length})</span>
-                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="p-4 pt-0">
-                    <div className="border-t border-current/20 pt-3">
-                        {renderTenderList(
-                            cat.data,
-                            (t) => t.eTenderNo || 'N/A',
-                            cat.type === 'review' ? (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}` : undefined
-                        )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-               )
-             })}
-           </Accordion>
+          <Tabs defaultValue="review" className="flex flex-col h-full">
+            <TabsList className="grid grid-cols-2 gap-2 h-auto">
+              {categories.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center gap-1 data-[state=active]:shadow-md">
+                      <div className={cn("flex items-center gap-2 font-semibold", cat.color)}>
+                        <Icon className="h-4 w-4" />
+                        <span className="text-sm">{cat.label}</span>
+                      </div>
+                      <span className={cn("text-2xl font-bold", cat.color)}>({cat.data.length})</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+            <div className="flex-1 mt-4 min-h-0">
+                {categories.map((cat) => (
+                    <TabsContent key={cat.type} value={cat.type} className="h-full m-0">
+                        <ScrollArea className="h-[22rem] pr-3">
+                           {renderTenderList(
+                                cat.data,
+                                (t) => t.eTenderNo || 'N/A',
+                                cat.type === 'review' ? (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}` : undefined
+                            )}
+                        </ScrollArea>
+                    </TabsContent>
+                ))}
+            </div>
+          </Tabs>
 
           <DialogContent className="sm:max-w-xl p-0">
             <DialogHeader className="p-6 pb-4 border-b">
