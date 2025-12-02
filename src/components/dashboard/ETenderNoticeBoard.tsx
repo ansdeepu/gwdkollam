@@ -66,8 +66,7 @@ export default function ETenderNoticeBoard() {
         const receipt = toDateOrNull(t.dateTimeOfReceipt);
         const opening = toDateOrNull(t.dateTimeOfOpening);
         
-        const isReviewable = receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening;
-        if (isReviewable) {
+        if (receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening) {
             review.push(t);
         }
 
@@ -140,12 +139,12 @@ export default function ETenderNoticeBoard() {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-           <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
-                <TabsList className="grid grid-cols-1 w-[280px] h-auto gap-1">
+           <Tabs defaultValue="review" className="flex-1 grid grid-cols-3 gap-4 min-h-0">
+                <TabsList className="col-span-1 flex flex-col h-auto gap-1 bg-transparent p-0">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2 transition-colors justify-start", tab.colorClass)}>
+                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2 transition-colors justify-start w-full", tab.colorClass)}>
                                <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -166,8 +165,8 @@ export default function ETenderNoticeBoard() {
                         );
                     })}
                 </TabsList>
-                <div className="flex-1 min-h-0 mt-2 h-[22rem]">
-                    <ScrollArea className="h-full pr-3">
+                <div className="col-span-2 min-h-0">
+                    <ScrollArea className="h-full pr-3 h-[22rem]">
                         <TabsContent value="review">
                             {renderTenderList(
                                 categorizedTenders.review,
