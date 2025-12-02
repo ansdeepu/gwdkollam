@@ -43,59 +43,50 @@ export default function ETenderNoticeBoard() {
 
   const categorizedTenders = useMemo(() => {
     const now = new Date();
-  
-    // ensure tenders is always an array
     const list = Array.isArray(tenders) ? tenders : [];
-  
-    // Remove Cancelled / Retender
-    const activeTenders = list.filter(
-      t =>
-        t.presentStatus !== "Tender Cancelled" &&
-        t.presentStatus !== "Retender"
-    );
-  
+
+    const activeTenders = list.filter(t => t.presentStatus !== "Tender Cancelled" && t.presentStatus !== "Retender");
+
     const review: E_tender[] = [];
     const toBeOpened: E_tender[] = [];
     const pendingSelection: E_tender[] = [];
     const pendingWorkOrder: E_tender[] = [];
-  
+
     activeTenders.forEach(t => {
-      const receipt = toDateOrNull(t.dateTimeOfReceipt);
-      const opening = toDateOrNull(t.dateTimeOfOpening);
-  
-      // 1️⃣ Tender Status Review
-      if (receipt && opening && now >= receipt && now < opening) {
-        review.push(t);
-      }
-  
-      // 2️⃣ To Be Opened (Tender Opening blank)
-      if (!t.dateOfOpeningBid) {
-        toBeOpened.push(t);
-      }
-  
-      // 3️⃣ Pending Selection Notice (Selection Notice blank)
-      if (!t.selectionNoticeDate) {
-        pendingSelection.push(t);
-      }
-  
-      // 4️⃣ Pending Work Order (Agreement or Work Order blank)
-      if (!t.agreementDate || !t.dateWorkOrder) {
-        pendingWorkOrder.push(t);
-      }
+        const receipt = toDateOrNull(t.dateTimeOfReceipt);
+        const opening = toDateOrNull(t.dateTimeOfOpening);
+
+        // 1. Tender Status Review
+        if (receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening) {
+            review.push(t);
+        }
+
+        // 2. To Be Opened
+        if (!t.dateOfOpeningBid) {
+            toBeOpened.push(t);
+        }
+
+        // 3. Pending Selection Notice
+        if (!t.selectionNoticeDate) {
+            pendingSelection.push(t);
+        }
+
+        // 4. Pending Work Order
+        if (!t.agreementDate || !t.dateWorkOrder) {
+            pendingWorkOrder.push(t);
+        }
     });
-    
-    // De-duplication to ensure a tender appears only in the most advanced category possible, preventing overlaps
+
     const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
     const selectionIds = new Set(pendingSelection.map(t => t.id));
     const openIds = new Set(toBeOpened.map(t => t.id));
-
-    // A tender pending a work order is no longer pending selection or opening
-    const finalPendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
-    // A tender pending selection is no longer considered "to be opened"
+    
+    // De-duplicate: A tender in a later stage shouldn't be in an earlier one.
     const finalToBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
+    const finalPendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
 
     return { review, toBeOpened: finalToBeOpened, pendingSelection: finalPendingSelection, pendingWorkOrder };
-}, [tenders]);
+  }, [tenders]);
 
 
   const handleTenderClick = (tender: E_tender) => {
@@ -169,7 +160,7 @@ export default function ETenderNoticeBoard() {
                         );
                     })}
                 </TabsList>
-                <div className="flex-1 min-h-0 mt-2">
+                <div className="flex-1 min-h-0 mt-2 h-[22rem]">
                     <ScrollArea className="h-full pr-3">
                         <TabsContent value="review">
                             {renderTenderList(
