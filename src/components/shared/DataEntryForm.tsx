@@ -69,6 +69,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as TableFooterComponent } from "@/components/ui/table";
 import { v4 as uuidv4 } from 'uuid';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const db = getFirestore(app);
@@ -268,6 +269,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
         <form
           onSubmit={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             form.handleSubmit(handleConfirmSubmit)(e);
           }}
         >
@@ -369,7 +371,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     
     const drillingPurposes: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
     const isDrillingPurpose = drillingPurposes.includes(watchedPurpose as SitePurpose);
-
     const isSchemePurpose = !isDrillingPurpose && watchedPurpose;
     const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(watchedPurpose as SitePurpose);
     const isHPSPurpose = ['HPS', 'HPR'].includes(watchedPurpose as SitePurpose);
@@ -446,6 +447,23 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                         </div>
                     </CardContent></Card>
                     
+                    {isDrillingPurpose && (
+                         <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField name="surveyRecommendedDiameter" control={control} render={({ field }) => <FormItem><FormLabel>Diameter (mm)</FormLabel><Select onValueChange={field.onChange} value={field.value || ""} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                                <FormField name="surveyRecommendedTD" control={control} render={({ field }) => <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                {watchedPurpose === 'BWC' && <FormField name="surveyRecommendedOB" control={control} render={({ field }) => <FormItem><FormLabel>OB (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
+                                {watchedPurpose === 'BWC' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
+                                {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedPlainPipe" control={control} render={({ field }) => <FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
+                                {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedSlottedPipe" control={control} render={({ field }) => <FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
+                                {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
+                                {watchedPurpose === 'FPW' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
+                                <FormField name="surveyLocation" control={control} render={({ field }) => <FormItem><FormLabel>Survey Location</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                            </div>
+                        </CardContent></Card>
+                    )}
+
                     {!isSupervisor && (
                     <Card><CardHeader><CardTitle>Work Implementation</CardTitle></CardHeader><CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -461,23 +479,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     </CardContent></Card>
                     )}
 
-                    {isDrillingPurpose ? (
-                        <>
-                        <Card><CardHeader><CardTitle>Survey Details (Recommended)</CardTitle></CardHeader><CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="surveyRecommendedDiameter" control={control} render={({ field }) => <FormItem><FormLabel>Diameter (mm)</FormLabel><Select onValueChange={field.onChange} value={field.value || ""} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
-                                <FormField name="surveyRecommendedTD" control={control} render={({ field }) => <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                {watchedPurpose === 'BWC' && <FormField name="surveyRecommendedOB" control={control} render={({ field }) => <FormItem><FormLabel>OB (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                {watchedPurpose === 'BWC' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedPlainPipe" control={control} render={({ field }) => <FormItem><FormLabel>Plain Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedSlottedPipe" control={control} render={({ field }) => <FormItem><FormLabel>Slotted Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                {watchedPurpose === 'FPW' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />}
-                                <FormField name="surveyLocation" control={control} render={({ field }) => <FormItem><FormLabel>Survey Location</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                                <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
-                            </div>
-                        </CardContent></Card>
-
+                    {isDrillingPurpose && (
                        <Card>
                             <CardHeader><CardTitle>Drilling Details (Actuals)</CardTitle></CardHeader><CardContent className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -498,10 +500,9 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                     <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                                 </div>
                             </CardContent></Card>
-                        </>
-                    ) : null}
+                    )}
 
-                    {isSchemePurpose ? (
+                    {isSchemePurpose && (
                         <Card><CardHeader><CardTitle>Scheme Details</CardTitle></CardHeader><CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {isMWSSSchemePurpose && <>
@@ -520,7 +521,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                             <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly && !isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                         </div>
                         </CardContent></Card>
-                    ) : null}
+                    )}
 
                     <Card>
                         <CardHeader><CardTitle>Work Status</CardTitle></CardHeader>
@@ -916,16 +917,38 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             Site #{index + 1}: <span className={headerColor}>{site.nameOfSite || "Unnamed Site"}</span> ({site.purpose || "No Purpose"})
                                         </div>
                                         <div className="flex items-center space-x-1 mr-2">
-                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isViewer || isSupervisor ? openDialog('viewSite', { index, ...site }) : openDialog('site', { index, ...site }); }}>
-                                                <Eye className="h-4 w-4"/>
-                                            </Button>
-                                            {!isViewer && (
-                                                <>
-                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopySite(index); }}><Copy className="h-4 w-4" /></Button>
-                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('reorderSite', { from: index }); }}><ArrowUpDown className="h-4 w-4" /></Button>
-                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
-                                                </>
-                                            )}
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isViewer || isSupervisor ? openDialog('viewSite', { index, ...site }) : openDialog('site', { index, ...site }); }}>
+                                                            <Eye className="h-4 w-4"/>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>{isViewer ? 'View' : 'View / Edit'}</p></TooltipContent>
+                                                </Tooltip>
+                                                {!isViewer && (
+                                                    <>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopySite(index); }}><Copy className="h-4 w-4" /></Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent><p>Copy Site</p></TooltipContent>
+                                                        </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('reorderSite', { from: index }); }}><ArrowUpDown className="h-4 w-4" /></Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent><p>Reorder Sites</p></TooltipContent>
+                                                        </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setItemToDelete({type: 'site', index}); }}><Trash2 className="h-4 w-4" /></Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent><p>Delete Site</p></TooltipContent>
+                                                        </Tooltip>
+                                                    </>
+                                                )}
+                                            </TooltipProvider>
                                         </div>
                                     </div>
                                 </AccordionTrigger>
