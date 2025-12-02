@@ -1,4 +1,3 @@
-
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
@@ -93,7 +92,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" />Birthday Updates</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4 pt-0 flex-1 min-h-0">
+      <CardContent className="flex-1 flex flex-col gap-4 pt-0 min-h-0">
         <div className={cn("border rounded-lg p-3 bg-background flex flex-col")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.todaysBirthdays.length})</h3>
            <div className={cn("pr-3", enableTodayScrolling ? "h-28 marquee-container-birthdays" : "h-auto")}>
@@ -133,9 +132,9 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
            </div>
         </div>
         
-        <div className={cn("border rounded-lg p-3 bg-background flex flex-col")}>
+        <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 min-h-0")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
-           <ScrollArea className="h-[200px] pr-3">
+           <ScrollArea className="flex-1 pr-3 -mr-3">
            <div className={cn("space-y-2", enableUpcomingScrolling && "marquee-container-birthdays")}>
            {upcomingBirthdayList.length > 0 ? (
              <div className={cn("space-y-2", enableUpcomingScrolling && "marquee-content-birthdays")}>

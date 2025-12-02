@@ -125,7 +125,7 @@ export default function ETenderNoticeBoard() {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0 p-4">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-          <Tabs defaultValue="review" className="flex flex-col h-full">
+          <Tabs defaultValue="review" className="flex-1 flex flex-col">
             <TabsList className="grid grid-cols-2 gap-2 h-auto">
               {categories.map((cat) => {
                 const Icon = cat.icon;
@@ -133,7 +133,7 @@ export default function ETenderNoticeBoard() {
                   <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center gap-1 data-[state=active]:shadow-md">
                     <div className={cn("flex items-center gap-2 font-semibold text-xs text-center leading-tight whitespace-normal", cat.color)}>
                         <Icon className="h-4 w-4 shrink-0" />
-                        <span>{cat.label}</span>
+                        <span className="flex-1 whitespace-pre-wrap">{cat.label}</span>
                     </div>
                     <span className={cn("text-2xl font-bold", cat.color)}>({cat.data.length})</span>
                   </TabsTrigger>
@@ -143,7 +143,7 @@ export default function ETenderNoticeBoard() {
             <div className="flex-1 mt-4 min-h-0">
                 {categories.map((cat) => (
                     <TabsContent key={cat.type} value={cat.type} className="h-full m-0">
-                        <ScrollArea className="h-[22rem] pr-3">
+                        <ScrollArea className="h-full pr-3">
                            {renderTenderList(
                                 cat.data,
                                 (t) => t.eTenderNo || 'N/A',
