@@ -37,47 +37,52 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 };
 
 export default function ETenderNoticeBoard() {
-  const { tenders, isLoading } = useE_tenders();
+  const { tenders = [], isLoading } = useE_tenders();
   const [selectedTender, setSelectedTender] = useState<E_tender | null>(null);
 
   const categorizedTenders = useMemo(() => {
     const now = new Date();
-    let review: E_tender[] = [];
-    let toBeOpened: E_tender[] = [];
-    let pendingSelection: E_tender[] = [];
-    let pendingWorkOrder: E_tender[] = [];
-    
-    if (!tenders) {
-        return { review, toBeOpened, pendingSelection, pendingWorkOrder };
-    }
 
-    const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
+    // ensure tenders is always an array
+    const list = Array.isArray(tenders) ? tenders : [];
 
-    activeTenders.forEach(tender => {
-      // Time-sensitive Review category
-      const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
-      const openingDate = toDateOrNull(tender.dateTimeOfOpening);
-      if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
-        review.push(tender);
+    // Remove Cancelled / Retender
+    const active = list.filter(
+      t =>
+        t.presentStatus !== "Tender Cancelled" &&
+        t.presentStatus !== "Retender"
+    );
+
+    const review: E_tender[] = [];
+    const toBeOpened: E_tender[] = [];
+    const pendingSelection: E_tender[] = [];
+    const pendingWorkOrder: E_tender[] = [];
+
+    active.forEach(t => {
+      const receipt = toDateOrNull(t.dateTimeOfReceipt);
+      const opening = toDateOrNull(t.dateTimeOfOpening);
+
+      // 1️⃣ Tender Status Review
+      if (receipt && opening && now >= receipt && now < opening) {
+        review.push(t);
       }
 
-      // Prioritized action categories
-      if (!tender.dateOfOpeningBid) {
-        toBeOpened.push(tender);
-      } else if (!tender.selectionNoticeDate) {
-        pendingSelection.push(tender);
-      } else if (!tender.agreementDate || !tender.dateWorkOrder) {
-        pendingWorkOrder.push(tender);
+      // 2️⃣ To Be Opened (Tender Opening blank)
+      if (!t.dateOfOpeningBid) {
+        toBeOpened.push(t);
+      }
+
+      // 3️⃣ Pending Selection Notice (Selection Notice blank)
+      if (!t.selectionNoticeDate) {
+        pendingSelection.push(t);
+      }
+
+      // 4️⃣ Pending Work Order (Agreement or Work Order blank)
+      if (!t.agreementDate || !t.dateWorkOrder) {
+        pendingWorkOrder.push(t);
       }
     });
 
-    // De-duplication logic
-    const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
-    const selectionIds = new Set(pendingSelection.map(t => t.id));
-
-    pendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
-    toBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
-    
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
 
@@ -130,29 +135,29 @@ export default function ETenderNoticeBoard() {
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
            <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
-                <TooltipProvider>
-                    <TabsList className="grid grid-cols-2 h-auto gap-1">
-                        {tabTriggers.map(tab => {
-                            const Icon = iconMapping[tab.value];
-                            return (
-                                <Tooltip key={tab.value}>
+                <TabsList className="grid grid-cols-2 h-auto gap-1">
+                    {tabTriggers.map(tab => {
+                        const Icon = iconMapping[tab.value];
+                        return (
+                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-1 py-1.5 md:py-2 flex-1 transition-colors", tab.colorClass)}>
+                               <TooltipProvider>
+                                <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <TabsTrigger value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-1 py-1.5 md:py-2 flex-1 transition-colors", tab.colorClass)}>
-                                           <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                                <Icon className="h-3 w-3 hidden sm:inline-block" />
-                                                <span className="whitespace-normal break-words leading-tight text-center">{tab.label}</span>
-                                                <span className="font-bold">({tab.count})</span>
-                                           </div>
-                                        </TabsTrigger>
+                                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                            <Icon className="h-3 w-3 hidden sm:inline-block" />
+                                            <span className="whitespace-normal break-words leading-tight text-center">{tab.label}</span>
+                                            <span className="font-bold">({tab.count})</span>
+                                        </div>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        <p>{tab.label}</p>
+                                    <p>{tab.label}</p>
                                     </TooltipContent>
                                 </Tooltip>
-                            );
-                        })}
-                    </TabsList>
-                </TooltipProvider>
+                               </TooltipProvider>
+                            </TabsTrigger>
+                        );
+                    })}
+                </TabsList>
                 <div className="flex-1 min-h-0 mt-2">
                     <ScrollArea className="h-full pr-3">
                         <TabsContent value="review">
