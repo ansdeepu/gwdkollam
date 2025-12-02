@@ -123,7 +123,7 @@ export default function ETenderNoticeBoard() {
   ];
 
   return (
-    <Card className="shadow-lg h-[600px] flex flex-col">
+    <Card className="shadow-lg h-[450px] flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Hammer className="h-5 w-5 text-primary" />e-Tender Actions

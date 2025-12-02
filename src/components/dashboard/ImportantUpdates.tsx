@@ -76,7 +76,7 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
   const duplicatedAlerts = alerts.length > 5 ? [...alerts, ...alerts] : alerts;
 
   return (
-    <Card className="shadow-lg h-[600px] flex flex-col">
+    <Card className="shadow-lg h-[450px] flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-primary" />Pending Actions ({alerts.length})
