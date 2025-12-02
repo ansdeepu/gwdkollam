@@ -88,7 +88,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
 
 
   return (
-    <Card className="shadow-lg flex flex-col h-[250px]">
+    <Card className="shadow-lg flex flex-col h-[600px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" />Birthday Updates</CardTitle>
       </CardHeader>
