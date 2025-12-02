@@ -2,22 +2,21 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hammer, Clock, FolderOpen, Bell, FileSignature } from "lucide-react";
 import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
 import { toDateOrNull, formatDateSafe } from '../e-tender/utils';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '../ui/dialog';
 import { Button } from '../ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
 import { isValid, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
@@ -91,22 +90,21 @@ export default function ETenderNoticeBoard() {
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
 
-
   const handleTenderClick = (tender: E_tender) => {
     setSelectedTender(tender);
   };
 
   const renderTenderList = (tenderList: E_tender[], primaryText: (t: E_tender) => string, secondaryText?: (t: E_tender) => string) => (
-    <div className="space-y-2">
+    <div className="space-y-2 pt-2">
         {tenderList.length > 0 ? (
             tenderList.map(tender => (
                 <DialogTrigger key={tender.id} asChild>
                     <button
-                        className="w-full text-left p-2 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
+                        className="w-full text-left p-2 rounded-md bg-secondary/30 hover:bg-secondary/60 transition-colors"
                         onClick={() => handleTenderClick(tender)}
                     >
-                        <p className="text-sm font-semibold text-blue-800">{primaryText(tender)}</p>
-                        {secondaryText && <p className="text-xs text-blue-700">{secondaryText(tender)}</p>}
+                        <p className="text-sm font-semibold text-primary">{primaryText(tender)}</p>
+                        {secondaryText && <p className="text-xs text-muted-foreground">{secondaryText(tender)}</p>}
                     </button>
                 </DialogTrigger>
             ))
@@ -116,18 +114,11 @@ export default function ETenderNoticeBoard() {
     </div>
   );
   
-  const iconMapping: { [key: string]: React.ElementType } = {
-      review: Clock,
-      toBeOpened: FolderOpen,
-      pendingSelection: Bell,
-      pendingWorkOrder: FileSignature,
-  };
-  
-  const tabTriggers = [
-    { value: 'review', label: 'Review', count: categorizedTenders.review.length, colorClass: "data-[state=active]:bg-amber-100/60 data-[state=active]:text-amber-800" },
-    { value: 'toBeOpened', label: 'To Be Opened', count: categorizedTenders.toBeOpened.length, colorClass: "data-[state=active]:bg-sky-100/60 data-[state=active]:text-sky-800" },
-    { value: 'pendingSelection', label: 'Selection Notice Pending', count: categorizedTenders.pendingSelection.length, colorClass: "data-[state=active]:bg-indigo-100/60 data-[state=active]:text-indigo-800" },
-    { value: 'pendingWorkOrder', label: 'Work Order Pending', count: categorizedTenders.pendingWorkOrder.length, colorClass: "data-[state=active]:bg-emerald-100/60 data-[state=active]:text-emerald-800" },
+  const categories = [
+    { type: 'review', label: 'Tender Status Review', data: categorizedTenders.review, icon: Clock, color: "bg-amber-500/10 text-amber-800 border-amber-500/20" },
+    { type: 'toBeOpened', label: 'To Be Opened', data: categorizedTenders.toBeOpened, icon: FolderOpen, color: "bg-sky-500/10 text-sky-800 border-sky-500/20" },
+    { type: 'pendingSelection', label: 'Pending Selection Notice', data: categorizedTenders.pendingSelection, icon: Bell, color: "bg-indigo-500/10 text-indigo-800 border-indigo-500/20" },
+    { type: 'pendingWorkOrder', label: 'Pending Work Order', data: categorizedTenders.pendingWorkOrder, icon: FileSignature, color: "bg-emerald-500/10 text-emerald-800 border-emerald-500/20" },
   ];
 
   return (
@@ -137,48 +128,33 @@ export default function ETenderNoticeBoard() {
             <Hammer className="h-5 w-5 text-primary" />e-Tender Actions
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col min-h-0">
+      <CardContent className="flex-1 overflow-auto p-2">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-           <Tabs defaultValue="review" className="flex flex-col h-full">
-                <TabsList className="grid w-full grid-cols-4 h-auto">
-                    {tabTriggers.map(tab => {
-                        const Icon = iconMapping[tab.value];
-                        return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2.5 transition-colors justify-center w-full flex-col h-auto gap-1", tab.colorClass)}>
-                                <div className="flex items-center gap-2">
-                                  <Icon className="h-4 w-4" />
-                                  <span className="font-semibold hidden sm:inline">{tab.label}</span>
-                                </div>
-                                <span className="font-bold text-lg">({tab.count})</span>
-                            </TabsTrigger>
-                        );
-                    })}
-                </TabsList>
-                <div className="mt-4 flex-1 min-h-0">
-                    <ScrollArea className="h-full pr-3 h-[22rem]">
-                        <TabsContent value="review">
-                            {renderTenderList(
-                                categorizedTenders.review,
-                                (t) => t.eTenderNo || 'N/A',
-                                (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}`
-                            )}
-                        </TabsContent>
-                        <TabsContent value="toBeOpened">
-                             {renderTenderList(
-                                categorizedTenders.toBeOpened,
-                                (t) => t.eTenderNo || 'N/A',
-                                (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}`
-                            )}
-                        </TabsContent>
-                        <TabsContent value="pendingSelection">
-                            {renderTenderList(categorizedTenders.pendingSelection, (t) => t.eTenderNo || 'N/A')}
-                        </TabsContent>
-                        <TabsContent value="pendingWorkOrder">
-                            {renderTenderList(categorizedTenders.pendingWorkOrder, (t) => t.eTenderNo || 'N/A')}
-                        </TabsContent>
-                    </ScrollArea>
-                </div>
-            </Tabs>
+           <Accordion type="single" collapsible className="w-full space-y-2">
+             {categories.map((cat) => {
+               const Icon = cat.icon;
+               return (
+                <AccordionItem value={cat.type} key={cat.type} className={cn("border rounded-lg", cat.color)}>
+                  <AccordionTrigger className="px-4 py-3 text-base hover:no-underline">
+                     <div className="flex items-center gap-3">
+                        <Icon className="h-5 w-5" />
+                        <span className="font-semibold">{cat.label}</span>
+                        <span className="font-bold text-lg">({cat.data.length})</span>
+                     </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-4 pt-0">
+                    <div className="border-t border-current/20 pt-3">
+                        {renderTenderList(
+                            cat.data,
+                            (t) => t.eTenderNo || 'N/A',
+                            cat.type === 'review' ? (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}` : undefined
+                        )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+               )
+             })}
+           </Accordion>
 
           <DialogContent className="sm:max-w-xl p-0">
             <DialogHeader className="p-6 pb-4 border-b">
