@@ -252,6 +252,7 @@ export const SiteDetailSchema = z.object({
   zoneDetails: z.string().optional().nullable(),
   waterLevel: z.string().optional().nullable(),
   drillingRemarks: z.string().optional().nullable().default(""),
+  developingRemarks: z.string().optional().nullable().default(""), // Added this line
   pumpDetails: z.string().optional().nullable(),
   pumpingLineLength: z.string().optional().nullable(),
   deliveryLineLength: z.string().optional().nullable(),
