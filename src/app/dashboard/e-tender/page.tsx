@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -70,9 +69,9 @@ export default function ETenderListPage() {
     }, [setHeader]);
     
 
-    const processedTenders = useMemo(() => {
-      // Ensure allE_tenders is an array before mapping
-      return (allE_tenders || []).map(tender => {
+    const { filteredTenders, lastCreatedDate } = useMemo(() => {
+      const list = allE_tenders || [];
+      const processedTenders = list.map(tender => {
         const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
         const searchableContent = [
           tender.eTenderNo, `GKT/${tender.fileNo}/${tender.eTenderNo}`,
@@ -86,9 +85,7 @@ export default function ETenderListPage() {
           _searchableContent: searchableContent,
         };
       });
-    }, [allE_tenders]);
 
-    const { filteredTenders, lastCreatedDate } = useMemo(() => {
         let lastCreated: Date | null = null;
         if (processedTenders.length > 0) {
             lastCreated = processedTenders.reduce((latest, current) => {
@@ -127,7 +124,7 @@ export default function ETenderListPage() {
         });
 
         return { filteredTenders: filtered, lastCreatedDate: lastCreated };
-    }, [processedTenders, searchTerm, statusFilter]);
+    }, [allE_tenders, searchTerm, statusFilter]);
 
 
     const handleCreateNew = () => {
