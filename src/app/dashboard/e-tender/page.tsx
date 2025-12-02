@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { useDataStore } from '@/hooks/use-data-store';
 import { useE_tenders } from '@/hooks/useE_tenders';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const getStatusRowClass = (status?: E_tenderStatus): string => {
@@ -307,17 +308,20 @@ export default function ETenderListPage() {
                                                 </TableCell>
                                                 <TableCell className="text-center align-top">
                                                     <div className="flex items-center justify-center space-x-1">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}>
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}><Eye className="h-4 w-4" /></Button></TooltipTrigger>
+                                                            <TooltipContent><p>View / Edit Tender</p></TooltipContent>
+                                                        </Tooltip>
                                                         {user?.role === 'editor' && (
                                                             <>
-                                                                <Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}>
-                                                                    <Copy className="h-4 w-4" />
-                                                                </Button>
-                                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}>
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}><Copy className="h-4 w-4" /></Button></TooltipTrigger>
+                                                                    <TooltipContent><p>Copy Tender</p></TooltipContent>
+                                                                </Tooltip>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
+                                                                    <TooltipContent><p>Delete Tender</p></TooltipContent>
+                                                                </Tooltip>
                                                             </>
                                                         )}
                                                     </div>
