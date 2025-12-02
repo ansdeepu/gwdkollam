@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -82,18 +83,19 @@ export default function ETenderNoticeBoard() {
         pendingWorkOrder.push(t);
       }
     });
-
-    // De-duplication to ensure a tender appears only in the most advanced category
+    
+    // De-duplication to ensure a tender appears only in the most advanced category possible, preventing overlaps
     const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
     const selectionIds = new Set(pendingSelection.map(t => t.id));
-    const toBeOpenedIds = new Set(toBeOpened.map(t => t.id));
+    const openIds = new Set(toBeOpened.map(t => t.id));
 
+    // A tender pending a work order is no longer pending selection or opening
     const finalPendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
+    // A tender pending selection is no longer considered "to be opened"
     const finalToBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
-    
-  
+
     return { review, toBeOpened: finalToBeOpened, pendingSelection: finalPendingSelection, pendingWorkOrder };
-  }, [tenders]);
+}, [tenders]);
 
 
   const handleTenderClick = (tender: E_tender) => {
