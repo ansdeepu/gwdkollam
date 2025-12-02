@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAuth, updateUserLastActive } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
@@ -103,7 +104,14 @@ function HeaderContent() {
     <div className="flex flex-col w-full">
       <div className="flex items-center justify-between gap-4 px-6 pt-4 pb-2">
         <div className="flex items-center gap-4">
-          <SidebarTrigger />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SidebarTrigger />
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Toggle Sidebar (Ctrl+B)</p>
+            </TooltipContent>
+          </Tooltip>
           <div className="flex-1">
             <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
             {description && <p className="text-sm text-muted-foreground">{description}</p>}
@@ -250,7 +258,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <PageNavigationProvider>
       <PageHeaderProvider>
         <DataStoreProvider>
-          <InnerDashboardLayout>{children}</InnerDashboardLayout>
+          <TooltipProvider>
+            <InnerDashboardLayout>{children}</InnerDashboardLayout>
+          </TooltipProvider>
         </DataStoreProvider>
       </PageHeaderProvider>
     </PageNavigationProvider>

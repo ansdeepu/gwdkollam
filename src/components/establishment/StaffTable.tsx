@@ -153,7 +153,7 @@ export default function StaffTable({
                                <Eye className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent><p>{isViewer ? "View Details" : "Edit Staff"}</p></TooltipContent>
+                          <TooltipContent><p>{isViewer ? "View Details" : "View / Edit Staff"}</p></TooltipContent>
                         </Tooltip>
                         {!isViewer && onDelete && (
                           <Tooltip>
