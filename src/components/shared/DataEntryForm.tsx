@@ -467,17 +467,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                         </CardContent></Card>
                     )}
 
-                     {isDevelopingPurpose && (
-                        <Card><CardHeader><CardTitle>Developing Details</CardTitle></CardHeader><CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
-                                <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
-                                <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
-                                <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
-                            </div>
-                        </CardContent></Card>
-                    )}
-
                     {!isSupervisor && (
                     <Card><CardHeader><CardTitle>Work Implementation</CardTitle></CardHeader><CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -491,6 +480,18 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                            <FormField control={form.control} name="workRemarks" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly} placeholder="Add any remarks for this site..."/></FormControl><FormMessage /></FormItem>)} />
                         </div>
                     </CardContent></Card>
+                    )}
+
+                     {isDevelopingPurpose && (
+                        <Card><CardHeader><CardTitle>Developing Details</CardTitle></CardHeader><CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <FormField name="diameter" control={control} render={({field}) => <FormItem><FormLabel>Actual Diameter</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isReadOnly}><FormControl><SelectTrigger><SelectValue placeholder="Select Diameter"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteDiameterOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>}/>
+                                <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isReadOnly} /></FormControl><FormMessage/></FormItem>} />
+                                <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
+                                <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isReadOnly}/></FormControl><FormMessage/></FormItem>} />
+                            </div>
+                             <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-4"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                        </CardContent></Card>
                     )}
 
                     {isDrillingPurpose && (
