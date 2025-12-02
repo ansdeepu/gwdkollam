@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -53,22 +52,29 @@ export default function ETenderNoticeBoard() {
     const pendingWorkOrder: E_tender[] = [];
 
     activeTenders.forEach(t => {
-      const receipt = toDateOrNull(t.dateTimeOfReceipt);
-      const opening = toDateOrNull(t.dateTimeOfOpening);
-      const isReviewable = receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening;
+        const receipt = toDateOrNull(t.dateTimeOfReceipt);
+        const opening = toDateOrNull(t.dateTimeOfOpening);
+        
+        // Tender Status Review
+        const isReviewable = receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening;
+        if (isReviewable) {
+            review.push(t);
+        }
 
-      if (isReviewable) {
-        review.push(t);
-      }
-      if (!t.dateOfOpeningBid) {
-        toBeOpened.push(t);
-      }
-      if (t.dateOfOpeningBid && !t.selectionNoticeDate) {
-        pendingSelection.push(t);
-      }
-      if (t.selectionNoticeDate && (!t.agreementDate || !t.dateWorkOrder)) {
-        pendingWorkOrder.push(t);
-      }
+        // To Be Opened (No bid opening date)
+        if (!t.dateOfOpeningBid) {
+            toBeOpened.push(t);
+        }
+        
+        // Pending Selection Notice (Has bid opening date but no selection notice date)
+        if (t.dateOfOpeningBid && !t.selectionNoticeDate) {
+            pendingSelection.push(t);
+        }
+
+        // Pending Work Order (Has selection notice but no agreement or work order date)
+        if (t.selectionNoticeDate && (!t.agreementDate || !t.dateWorkOrder)) {
+            pendingWorkOrder.push(t);
+        }
     });
 
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
@@ -123,18 +129,20 @@ export default function ETenderNoticeBoard() {
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
            <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
-                <TabsList className="grid grid-cols-2 h-auto gap-1">
+                <TabsList className="grid grid-cols-1 h-auto gap-1">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-1 py-1.5 md:py-2 flex-1 transition-colors", tab.colorClass)}>
+                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2 flex-1 transition-colors justify-start", tab.colorClass)}>
                                <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                            <Icon className="h-3 w-3 hidden sm:inline-block" />
-                                            <span className="whitespace-normal break-words leading-tight text-center">{tab.label}</span>
-                                            <span className="font-bold">({tab.count})</span>
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-2">
+                                                <Icon className="h-4 w-4" />
+                                                <span className="font-semibold">{tab.label}</span>
+                                            </div>
+                                            <span className="font-bold text-lg">({tab.count})</span>
                                         </div>
                                     </TooltipTrigger>
                                     <TooltipContent>
