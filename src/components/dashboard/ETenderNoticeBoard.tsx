@@ -46,6 +46,17 @@ export default function ETenderNoticeBoard() {
 
     const activeTenders = list.filter(t => t.presentStatus !== "Tender Cancelled" && t.presentStatus !== "Retender");
 
+    const sortByTenderNoDesc = (a: E_tender, b: E_tender) => {
+        const getTenderNumber = (tenderNo: string | undefined | null): number => {
+            if (!tenderNo) return 0;
+            const match = tenderNo.match(/T-(\d+)/);
+            return match ? parseInt(match[1], 10) : 0;
+        };
+        const numA = getTenderNumber(a.eTenderNo);
+        const numB = getTenderNumber(b.eTenderNo);
+        return numB - numA;
+    };
+
     const review: E_tender[] = [];
     const toBeOpened: E_tender[] = [];
     const pendingSelection: E_tender[] = [];
@@ -72,6 +83,11 @@ export default function ETenderNoticeBoard() {
             pendingWorkOrder.push(t);
         }
     });
+
+    review.sort(sortByTenderNoDesc);
+    toBeOpened.sort(sortByTenderNoDesc);
+    pendingSelection.sort(sortByTenderNoDesc);
+    pendingWorkOrder.sort(sortByTenderNoDesc);
 
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
@@ -125,7 +141,7 @@ export default function ETenderNoticeBoard() {
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
            <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
-                <TabsList className="grid grid-cols-1 h-auto gap-1">
+                <TabsList className="grid grid-cols-1 sm:grid-cols-1 h-auto gap-1 w-full sm:w-auto">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
