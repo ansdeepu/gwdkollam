@@ -131,11 +131,11 @@ export default function ETenderNoticeBoard() {
                 const Icon = cat.icon;
                 return (
                   <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center gap-1 data-[state=active]:shadow-md">
-                      <div className={cn("flex items-center gap-2 font-semibold", cat.color)}>
-                        <Icon className="h-4 w-4" />
-                        <span className="text-sm">{cat.label}</span>
-                      </div>
-                      <span className={cn("text-2xl font-bold", cat.color)}>({cat.data.length})</span>
+                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center leading-tight whitespace-normal", cat.color)}>
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span>{cat.label}</span>
+                    </div>
+                    <span className={cn("text-2xl font-bold", cat.color)}>({cat.data.length})</span>
                   </TabsTrigger>
                 );
               })}
