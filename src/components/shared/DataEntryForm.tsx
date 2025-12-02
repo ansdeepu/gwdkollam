@@ -771,8 +771,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     const handleDialogConfirm = async (data: any) => {
         const { type, data: originalData } = dialogState;
         if (!type) return;
-    
-        // Update form locally first
+
         if (type === 'application') {
             setValue("fileNo", data.fileNo);
             setValue("applicantName", data.applicantName);
@@ -793,10 +792,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             moveSite(data.from, data.to);
         }
     
-        // Close the dialog
         closeDialog();
     
-        // Now, perform the background save if applicable
         if (isEditor && fileIdToEdit) {
             try {
                 await updateFileEntry(fileIdToEdit, getValues());
@@ -811,12 +808,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                     variant: "destructive",
                 });
             }
-        } else if (!isSupervisor) {
-            // For new entries or non-supervisor edits without a fileId yet
-            toast({
-                title: "Saved Locally",
-                description: "Entry updated. Click 'Save File' to make it permanent."
-            });
         }
     };
 
