@@ -10,7 +10,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
-import { isValid } from 'date-fns';
+import { isValid, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -66,7 +66,7 @@ export default function ETenderNoticeBoard() {
         const receipt = toDateOrNull(t.dateTimeOfReceipt);
         const opening = toDateOrNull(t.dateTimeOfOpening);
         
-        if (receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening) {
+        if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isAfter(opening, now)) {
             review.push(t);
         }
 
@@ -124,10 +124,10 @@ export default function ETenderNoticeBoard() {
   };
   
   const tabTriggers = [
-    { value: 'review', label: 'Review', count: categorizedTenders.review.length, colorClass: "bg-amber-100/60 text-amber-800 data-[state=active]:bg-amber-500 data-[state=active]:text-white" },
-    { value: 'toBeOpened', label: 'To Be Opened', count: categorizedTenders.toBeOpened.length, colorClass: "bg-sky-100/60 text-sky-800 data-[state=active]:bg-sky-500 data-[state=active]:text-white" },
-    { value: 'pendingSelection', label: 'Selection Notice Pending', count: categorizedTenders.pendingSelection.length, colorClass: "bg-indigo-100/60 text-indigo-800 data-[state=active]:bg-indigo-500 data-[state=active]:text-white" },
-    { value: 'pendingWorkOrder', label: 'Work Order Pending', count: categorizedTenders.pendingWorkOrder.length, colorClass: "bg-emerald-100/60 text-emerald-800 data-[state=active]:bg-emerald-500 data-[state=active]:text-white" },
+    { value: 'review', label: 'Review', count: categorizedTenders.review.length, colorClass: "data-[state=active]:bg-amber-100/60 data-[state=active]:text-amber-800" },
+    { value: 'toBeOpened', label: 'To Be Opened', count: categorizedTenders.toBeOpened.length, colorClass: "data-[state=active]:bg-sky-100/60 data-[state=active]:text-sky-800" },
+    { value: 'pendingSelection', label: 'Selection Notice Pending', count: categorizedTenders.pendingSelection.length, colorClass: "data-[state=active]:bg-indigo-100/60 data-[state=active]:text-indigo-800" },
+    { value: 'pendingWorkOrder', label: 'Work Order Pending', count: categorizedTenders.pendingWorkOrder.length, colorClass: "data-[state=active]:bg-emerald-100/60 data-[state=active]:text-emerald-800" },
   ];
 
   return (
@@ -139,33 +139,22 @@ export default function ETenderNoticeBoard() {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-           <Tabs defaultValue="review" className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0">
-                <TabsList className="md:col-span-1 flex flex-col h-auto gap-1 bg-transparent p-0">
+           <Tabs defaultValue="review" className="flex flex-col h-full">
+                <TabsList className="grid w-full grid-cols-4 h-auto">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2 transition-colors justify-start w-full", tab.colorClass)}>
-                               <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="flex items-center justify-between w-full">
-                                            <div className="flex items-center gap-2">
-                                                <Icon className="h-4 w-4" />
-                                                <span className="font-semibold">{tab.label}</span>
-                                            </div>
-                                            <span className="font-bold text-lg">({tab.count})</span>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                    <p>{tab.label}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                               </TooltipProvider>
+                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2.5 transition-colors justify-center w-full flex-col h-auto gap-1", tab.colorClass)}>
+                                <div className="flex items-center gap-2">
+                                  <Icon className="h-4 w-4" />
+                                  <span className="font-semibold hidden sm:inline">{tab.label}</span>
+                                </div>
+                                <span className="font-bold text-lg">({tab.count})</span>
                             </TabsTrigger>
                         );
                     })}
                 </TabsList>
-                <div className="md:col-span-2 min-h-0 border-l pl-4">
+                <div className="mt-4 flex-1 min-h-0">
                     <ScrollArea className="h-full pr-3 h-[22rem]">
                         <TabsContent value="review">
                             {renderTenderList(
