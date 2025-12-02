@@ -53,39 +53,25 @@ export default function ETenderNoticeBoard() {
     const pendingWorkOrder: E_tender[] = [];
 
     activeTenders.forEach(t => {
-        const receipt = toDateOrNull(t.dateTimeOfReceipt);
-        const opening = toDateOrNull(t.dateTimeOfOpening);
+      const receipt = toDateOrNull(t.dateTimeOfReceipt);
+      const opening = toDateOrNull(t.dateTimeOfOpening);
+      const isReviewable = receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening;
 
-        // 1. Tender Status Review
-        if (receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening) {
-            review.push(t);
-        }
-
-        // 2. To Be Opened
-        if (!t.dateOfOpeningBid) {
-            toBeOpened.push(t);
-        }
-
-        // 3. Pending Selection Notice
-        if (!t.selectionNoticeDate) {
-            pendingSelection.push(t);
-        }
-
-        // 4. Pending Work Order
-        if (!t.agreementDate || !t.dateWorkOrder) {
-            pendingWorkOrder.push(t);
-        }
+      if (isReviewable) {
+        review.push(t);
+      }
+      if (!t.dateOfOpeningBid) {
+        toBeOpened.push(t);
+      }
+      if (t.dateOfOpeningBid && !t.selectionNoticeDate) {
+        pendingSelection.push(t);
+      }
+      if (t.selectionNoticeDate && (!t.agreementDate || !t.dateWorkOrder)) {
+        pendingWorkOrder.push(t);
+      }
     });
 
-    const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
-    const selectionIds = new Set(pendingSelection.map(t => t.id));
-    const openIds = new Set(toBeOpened.map(t => t.id));
-    
-    // De-duplicate: A tender in a later stage shouldn't be in an earlier one.
-    const finalToBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
-    const finalPendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
-
-    return { review, toBeOpened: finalToBeOpened, pendingSelection: finalPendingSelection, pendingWorkOrder };
+    return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
 
 
