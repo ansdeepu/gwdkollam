@@ -132,12 +132,12 @@ export default function ETenderNoticeBoard() {
       <CardContent className="flex-1 flex flex-col min-h-0 p-4">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
           <Tabs defaultValue="review" className="flex-1 flex flex-col">
-            <TabsList className="grid grid-cols-2 gap-2 h-auto">
+             <TabsList className="grid grid-cols-2 gap-2 h-auto">
               {categories.map((cat) => {
                 const Icon = cat.icon;
                 return (
                   <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center gap-1 data-[state=active]:shadow-md">
-                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center leading-tight whitespace-pre-wrap", cat.color)}>
+                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center leading-tight", cat.color, "whitespace-pre-wrap")}>
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="flex-1">{cat.label}</span>
                     </div>
