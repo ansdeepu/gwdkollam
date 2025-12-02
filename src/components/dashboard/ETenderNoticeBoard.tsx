@@ -40,7 +40,7 @@ export default function ETenderNoticeBoard() {
     let pendingSelection: E_tender[] = [];
     let pendingWorkOrder: E_tender[] = [];
 
-    const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
+    const activeTenders = (tenders || []).filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
       // Time-sensitive Review category
