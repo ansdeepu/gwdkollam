@@ -55,23 +55,19 @@ export default function ETenderNoticeBoard() {
         const receipt = toDateOrNull(t.dateTimeOfReceipt);
         const opening = toDateOrNull(t.dateTimeOfOpening);
         
-        // Tender Status Review
         const isReviewable = receipt && opening && isValid(receipt) && isValid(opening) && now >= receipt && now < opening;
         if (isReviewable) {
             review.push(t);
         }
 
-        // To Be Opened (No bid opening date)
         if (!t.dateOfOpeningBid) {
             toBeOpened.push(t);
         }
         
-        // Pending Selection Notice (Has bid opening date but no selection notice date)
         if (t.dateOfOpeningBid && !t.selectionNoticeDate) {
             pendingSelection.push(t);
         }
 
-        // Pending Work Order (Has selection notice but no agreement or work order date)
         if (t.selectionNoticeDate && (!t.agreementDate || !t.dateWorkOrder)) {
             pendingWorkOrder.push(t);
         }
@@ -133,7 +129,7 @@ export default function ETenderNoticeBoard() {
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2 flex-1 transition-colors justify-start", tab.colorClass)}>
+                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-2 py-2 transition-colors justify-start", tab.colorClass)}>
                                <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
