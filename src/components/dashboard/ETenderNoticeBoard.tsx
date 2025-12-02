@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -42,7 +43,7 @@ export default function ETenderNoticeBoard() {
 
   const categorizedTenders = useMemo(() => {
     const now = new Date();
-    let review: E_tender[] = [];
+    const review: E_tender[] = [];
     let toBeOpened: E_tender[] = [];
     let pendingSelection: E_tender[] = [];
     let pendingWorkOrder: E_tender[] = [];
@@ -54,30 +55,27 @@ export default function ETenderNoticeBoard() {
     const activeTenders = tenders.filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
-      // Time-sensitive Review category
-      const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
-      const openingDate = toDateOrNull(tender.dateTimeOfOpening);
-      if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
-        review.push(tender);
-      }
-
-      // Prioritized action categories
-      if (!tender.dateOfOpeningBid) {
-        toBeOpened.push(tender);
-      } else if (!tender.selectionNoticeDate) {
-        pendingSelection.push(tender);
-      } else if (!tender.agreementDate || !tender.dateWorkOrder) {
-        pendingWorkOrder.push(tender);
-      }
+        // Prioritized action categories (a tender belongs to only one of these)
+        if (!tender.agreementDate || !tender.dateWorkOrder) {
+            if (!tender.selectionNoticeDate) {
+                if (!tender.dateOfOpeningBid) {
+                    toBeOpened.push(tender);
+                } else {
+                    pendingSelection.push(tender);
+                }
+            } else {
+                pendingWorkOrder.push(tender);
+            }
+        }
+        
+        // Separately, check if it's in the review period
+        const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
+        const openingDate = toDateOrNull(tender.dateTimeOfOpening);
+        if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
+            review.push(tender);
+        }
     });
 
-    // De-duplication logic
-    const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
-    const selectionIds = new Set(pendingSelection.map(t => t.id));
-
-    pendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
-    toBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
-    
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
 
