@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
 import { isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (value === null || value === undefined || value === '') return null;
@@ -39,18 +41,18 @@ export default function ETenderNoticeBoard() {
     let toBeOpened: E_tender[] = [];
     let pendingSelection: E_tender[] = [];
     let pendingWorkOrder: E_tender[] = [];
-
+    
     const activeTenders = (tenders || []).filter(t => t.presentStatus !== 'Tender Cancelled' && t.presentStatus !== 'Retender');
 
     activeTenders.forEach(tender => {
-      // Time-sensitive Review category
+      // Time-sensitive Review category (can overlap with others)
       const receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
       const openingDate = toDateOrNull(tender.dateTimeOfOpening);
       if (receiptDate && openingDate && now > receiptDate && now < openingDate) {
         review.push(tender);
       }
 
-      // Prioritized action categories
+      // Prioritized action categories (mutually exclusive)
       if (!tender.dateOfOpeningBid) {
         toBeOpened.push(tender);
       } else if (!tender.selectionNoticeDate) {
@@ -60,12 +62,12 @@ export default function ETenderNoticeBoard() {
       }
     });
 
-    // De-duplication logic
+    // De-duplication logic for action-based categories
     const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
-    const selectionIds = new Set(pendingSelection.map(t => t.id));
-    const toBeOpenedIds = new Set(toBeOpened.map(t => t.id));
-
+    
     pendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
+    const selectionIds = new Set(pendingSelection.map(t => t.id));
+
     toBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
     
     return { review, toBeOpened, pendingSelection, pendingWorkOrder };
@@ -119,18 +121,26 @@ export default function ETenderNoticeBoard() {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
+          <TooltipProvider>
            <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
                 <TabsList className="grid grid-cols-2 h-auto gap-1">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
-                            <TabsTrigger key={tab.value} value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-1 py-1.5 md:py-2 flex-1 transition-colors", tab.colorClass)}>
-                               <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                    <Icon className="h-3 w-3 hidden sm:inline-block" />
-                                    <span className="whitespace-normal break-words leading-tight text-center">{tab.label}</span>
-                                    <span className="font-bold">({tab.count})</span>
-                               </div>
-                            </TabsTrigger>
+                            <Tooltip key={tab.value}>
+                                <TooltipTrigger asChild>
+                                    <TabsTrigger value={tab.value} disabled={tab.count === 0} className={cn("text-xs px-1 py-1.5 md:py-2 flex-1 transition-colors", tab.colorClass)}>
+                                       <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                            <Icon className="h-3 w-3 hidden sm:inline-block" />
+                                            <span className="whitespace-normal break-words leading-tight text-center">{tab.label}</span>
+                                            <span className="font-bold">({tab.count})</span>
+                                       </div>
+                                    </TabsTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{tab.label}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         );
                     })}
                 </TabsList>
@@ -159,6 +169,7 @@ export default function ETenderNoticeBoard() {
                     </ScrollArea>
                 </div>
             </Tabs>
+          </TooltipProvider>
 
           <DialogContent className="sm:max-w-xl p-0">
             <DialogHeader className="p-6 pb-4 border-b">
