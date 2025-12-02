@@ -139,8 +139,8 @@ export default function ETenderNoticeBoard() {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-           <Tabs defaultValue="review" className="flex-1 grid grid-cols-3 gap-4 min-h-0">
-                <TabsList className="col-span-1 flex flex-col h-auto gap-1 bg-transparent p-0">
+           <Tabs defaultValue="review" className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0">
+                <TabsList className="md:col-span-1 flex flex-col h-auto gap-1 bg-transparent p-0">
                     {tabTriggers.map(tab => {
                         const Icon = iconMapping[tab.value];
                         return (
@@ -165,7 +165,7 @@ export default function ETenderNoticeBoard() {
                         );
                     })}
                 </TabsList>
-                <div className="col-span-2 min-h-0">
+                <div className="md:col-span-2 min-h-0 border-l pl-4">
                     <ScrollArea className="h-full pr-3 h-[22rem]">
                         <TabsContent value="review">
                             {renderTenderList(
