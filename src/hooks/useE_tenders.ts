@@ -1,3 +1,4 @@
+
 // src/hooks/useE_tenders.ts
 "use client";
 
@@ -75,5 +76,5 @@ export function useE_tenders() {
         }
     }, []);
 
-    return { tenders: allE_tenders, isLoading: dataStoreLoading, addTender, updateTender, deleteTender, getTender, refetchE_tenders };
+    return { tenders: allE_tenders, isLoading: dataStoreLoading, addTender, updateTender, deleteTender, getTender };
 }
