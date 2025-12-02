@@ -123,30 +123,30 @@ export default function ETenderNoticeBoard() {
   ];
 
   return (
-    <Card className="shadow-lg h-full flex flex-col">
+    <Card className="shadow-lg h-[250px] flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Hammer className="h-5 w-5 text-primary" />e-Tender Actions
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col min-h-0 p-4">
+      <CardContent className="flex-1 flex flex-col min-h-0 p-4 pt-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-          <Tabs defaultValue="review" className="flex-1 flex flex-col">
+          <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
              <TabsList className="grid grid-cols-2 gap-2 h-auto">
               {categories.map((cat) => {
                 const Icon = cat.icon;
                 return (
-                  <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center gap-1 data-[state=active]:shadow-md">
-                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center leading-tight", cat.color, "whitespace-pre-wrap")}>
+                  <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center justify-center gap-1 data-[state=active]:shadow-md leading-tight whitespace-pre-wrap">
+                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center", cat.color)}>
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="flex-1">{cat.label}</span>
                     </div>
-                    <span className={cn("text-2xl font-bold", cat.color)}>({cat.data.length})</span>
+                    <span className={cn("text-xl font-bold", cat.color)}>({cat.data.length})</span>
                   </TabsTrigger>
                 );
               })}
             </TabsList>
-            <div className="flex-1 mt-4 min-h-0">
+            <div className="flex-1 mt-2 min-h-0">
                 {categories.map((cat) => (
                     <TabsContent key={cat.type} value={cat.type} className="h-full m-0">
                         <ScrollArea className="h-full pr-3">
