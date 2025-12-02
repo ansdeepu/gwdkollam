@@ -42,48 +42,57 @@ export default function ETenderNoticeBoard() {
 
   const categorizedTenders = useMemo(() => {
     const now = new Date();
-
+  
     // ensure tenders is always an array
     const list = Array.isArray(tenders) ? tenders : [];
-
+  
     // Remove Cancelled / Retender
-    const active = list.filter(
+    const activeTenders = list.filter(
       t =>
         t.presentStatus !== "Tender Cancelled" &&
         t.presentStatus !== "Retender"
     );
-
+  
     const review: E_tender[] = [];
     const toBeOpened: E_tender[] = [];
     const pendingSelection: E_tender[] = [];
     const pendingWorkOrder: E_tender[] = [];
-
-    active.forEach(t => {
+  
+    activeTenders.forEach(t => {
       const receipt = toDateOrNull(t.dateTimeOfReceipt);
       const opening = toDateOrNull(t.dateTimeOfOpening);
-
+  
       // 1️⃣ Tender Status Review
       if (receipt && opening && now >= receipt && now < opening) {
         review.push(t);
       }
-
+  
       // 2️⃣ To Be Opened (Tender Opening blank)
       if (!t.dateOfOpeningBid) {
         toBeOpened.push(t);
       }
-
+  
       // 3️⃣ Pending Selection Notice (Selection Notice blank)
       if (!t.selectionNoticeDate) {
         pendingSelection.push(t);
       }
-
+  
       // 4️⃣ Pending Work Order (Agreement or Work Order blank)
       if (!t.agreementDate || !t.dateWorkOrder) {
         pendingWorkOrder.push(t);
       }
     });
 
-    return { review, toBeOpened, pendingSelection, pendingWorkOrder };
+    // De-duplication to ensure a tender appears only in the most advanced category
+    const workOrderIds = new Set(pendingWorkOrder.map(t => t.id));
+    const selectionIds = new Set(pendingSelection.map(t => t.id));
+    const toBeOpenedIds = new Set(toBeOpened.map(t => t.id));
+
+    const finalPendingSelection = pendingSelection.filter(t => !workOrderIds.has(t.id));
+    const finalToBeOpened = toBeOpened.filter(t => !workOrderIds.has(t.id) && !selectionIds.has(t.id));
+    
+  
+    return { review, toBeOpened: finalToBeOpened, pendingSelection: finalPendingSelection, pendingWorkOrder };
   }, [tenders]);
 
 
