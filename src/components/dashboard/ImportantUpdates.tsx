@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ImportantUpdates.tsx
 "use client";
 
@@ -73,6 +72,8 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
 
     return newAlerts;
   }, [allFileEntries, rejectedUpdates, user]);
+  
+  const duplicatedAlerts = alerts.length > 5 ? [...alerts, ...alerts] : alerts;
 
   return (
     <Card className="shadow-lg h-full flex flex-col">
@@ -82,12 +83,11 @@ export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesPro
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
-         <div className="h-[22rem] marquee-container-updates pr-3">
-            <div className="marquee-content-updates space-y-2">
-              {alerts.length > 0 ? (
+         <div className={cn("h-full", alerts.length > 5 && "marquee-container-updates")}>
+            <div className={cn("space-y-2", alerts.length > 5 && "marquee-content-updates")}>
+              {duplicatedAlerts.length > 0 ? (
                 <>
-                  {/* Duplicate content for seamless scrolling */}
-                  {[...alerts, ...alerts].map((alert, index) => (
+                  {duplicatedAlerts.map((alert, index) => (
                     <div key={`${alert.key}-${index}`} className={cn("p-2 rounded-md", alert.type === 'rejection' ? 'bg-red-500/10' : 'bg-amber-500/10')}>
                       <p className={cn("font-semibold text-sm flex items-center gap-1.5", alert.type === 'rejection' ? 'text-red-700' : 'text-amber-700')}>
                          {alert.type === 'rejection' && <MessageSquareWarning className="h-4 w-4" />} {alert.title}

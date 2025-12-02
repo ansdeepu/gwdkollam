@@ -9,7 +9,7 @@ import { toDateOrNull, formatDateSafe } from '../e-tender/utils';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
-import { isValid, isAfter } from 'date-fns';
+import { isValid, isAfter, isBefore } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -60,18 +60,22 @@ export default function ETenderNoticeBoard() {
         const receipt = toDateOrNull(t.dateTimeOfReceipt);
         const opening = toDateOrNull(t.dateTimeOfOpening);
         
-        if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isAfter(opening, now)) {
+        // Review: after receipt date, but before opening date
+        if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isBefore(now, opening)) {
             review.push(t);
         }
 
-        if (!t.dateOfOpeningBid) {
+        // To be opened: After opening date, but bid hasn't been officially opened
+        if (opening && isValid(opening) && isAfter(now, opening) && !t.dateOfOpeningBid) {
             toBeOpened.push(t);
         }
         
+        // Pending Selection: Bid opened, but no selection notice yet
         if (t.dateOfOpeningBid && !t.selectionNoticeDate) {
             pendingSelection.push(t);
         }
 
+        // Pending Work Order: Selection notice issued, but no agreement/work order yet
         if (t.selectionNoticeDate && (!t.agreementDate || !t.dateWorkOrder)) {
             pendingWorkOrder.push(t);
         }
@@ -104,7 +108,9 @@ export default function ETenderNoticeBoard() {
                 </DialogTrigger>
             ))
         ) : (
-            <p className="text-sm text-muted-foreground italic text-center py-4">No tenders in this category.</p>
+            <div className="h-full flex items-center justify-center">
+                <p className="text-sm text-muted-foreground italic text-center py-4">No tenders in this category.</p>
+            </div>
         )}
     </div>
   );
@@ -131,9 +137,9 @@ export default function ETenderNoticeBoard() {
                 const Icon = cat.icon;
                 return (
                   <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center gap-1 data-[state=active]:shadow-md">
-                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center leading-tight whitespace-normal", cat.color)}>
+                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center leading-tight whitespace-pre-wrap", cat.color)}>
                         <Icon className="h-4 w-4 shrink-0" />
-                        <span className="flex-1 whitespace-pre-wrap">{cat.label}</span>
+                        <span className="flex-1">{cat.label}</span>
                     </div>
                     <span className={cn("text-2xl font-bold", cat.color)}>({cat.data.length})</span>
                   </TabsTrigger>
