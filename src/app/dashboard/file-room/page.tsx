@@ -9,13 +9,13 @@ import { Search, FilePlus2, Clock } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData, ApplicationType } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
+import { useDataStore } from '@/hooks/use-data-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +53,7 @@ export default function FileManagerPage() {
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { fileEntries } = useFileEntries(); 
+  const { allFileEntries } = useDataStore(); 
   const router = useRouter();
   const { setIsNavigating } = usePageNavigation();
   
@@ -64,7 +64,7 @@ export default function FileManagerPage() {
 
     if (user?.role === 'supervisor') {
       // For supervisors, show files assigned to them but EXCLUDE private works.
-      entries = fileEntries
+      entries = allFileEntries
         .filter(entry => !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
@@ -73,7 +73,7 @@ export default function FileManagerPage() {
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     } else {
       // For other roles, filter out private works and files that are exclusively for ARS.
-      entries = fileEntries
+      entries = allFileEntries
         .filter(entry => {
           // 1. Exclude all private application types
           if (entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
@@ -113,7 +113,7 @@ export default function FileManagerPage() {
     }, null as Date | null);
     
     return { depositWorkEntries: sortedEntries, lastCreatedDate: lastCreated };
-  }, [fileEntries, user?.role, user?.uid]);
+  }, [allFileEntries, user?.role, user?.uid]);
 
 
   const handleAddNewClick = () => {

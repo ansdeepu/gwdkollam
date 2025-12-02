@@ -4,14 +4,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useE_tenders, type E_tender } from '@/hooks/useE_tenders';
+import { type E_tender } from '@/hooks/useE_tenders';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Loader2, PlusCircle, Search, Trash2, Eye, UserPlus, Users, Copy, XCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDateSafe, getStatusBadgeClass } from '@/components/e-tender/utils';
+import { formatDateSafe, getStatusBadgeClass, toDateOrNull } from '@/components/e-tender/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/hooks/useAuth';
@@ -19,9 +19,10 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { E_tenderStatus } from '@/lib/schemas/eTenderSchema';
 import { eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
-import { toDateOrNull } from '@/components/e-tender/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
+import { useDataStore } from '@/hooks/use-data-store';
+import { useE_tenders } from '@/hooks/useE_tenders';
 
 
 const getStatusRowClass = (status?: E_tenderStatus): string => {
@@ -50,7 +51,8 @@ const getStatusRowClass = (status?: E_tenderStatus): string => {
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
     const router = useRouter();
-    const { tenders, isLoading, deleteTender, addTender } = useE_tenders();
+    const { allE_tenders, isLoading } = useDataStore();
+    const { deleteTender, addTender } = useE_tenders();
     const { toast } = useToast();
     const { user } = useAuth();
     
@@ -68,7 +70,7 @@ export default function ETenderListPage() {
     
 
     const processedTenders = useMemo(() => {
-      return tenders.map(tender => {
+      return allE_tenders.map(tender => {
         const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
         const searchableContent = [
           tender.eTenderNo, `GKT/${tender.fileNo}/${tender.eTenderNo}`,
@@ -82,7 +84,7 @@ export default function ETenderListPage() {
           _searchableContent: searchableContent,
         };
       });
-    }, [tenders]);
+    }, [allE_tenders]);
 
     const { filteredTenders, lastCreatedDate } = useMemo(() => {
         let lastCreated: Date | null = null;

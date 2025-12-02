@@ -145,10 +145,6 @@ export function useArsEntries() {
     refetchArsEntries(); // Trigger refetch
   }, [user, toast, refetchArsEntries]);
   
-  const refreshArsEntries = useCallback(() => {
-    refetchArsEntries();
-  }, [refetchArsEntries]);
-
   return { 
     arsEntries, 
     isLoading, 
@@ -157,6 +153,6 @@ export function useArsEntries() {
     deleteArsEntry, 
     getArsEntryById,
     clearAllArsData,
-    refreshArsEntries 
+    refreshArsEntries: refetchArsEntries 
   };
 }

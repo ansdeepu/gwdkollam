@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useArsEntries, type ArsEntry } from "@/hooks/useArsEntries";
+import { type ArsEntry } from "@/hooks/useArsEntries";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { arsTypeOfSchemeOptions, constituencyOptions } from "@/lib/schemas";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDataStore } from '@/hooks/use-data-store';
 
 
 export const dynamic = 'force-dynamic';
@@ -83,8 +84,8 @@ export default function ArsPage() {
   useEffect(() => {
     setHeader('Artificial Recharge Schemes (ARS)', 'A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.');
   }, [setHeader]);
-
-  const { arsEntries, isLoading: entriesLoading, refreshArsEntries, deleteArsEntry, clearAllArsData, addArsEntry } = useArsEntries();
+  
+  const { allArsEntries, isLoading: entriesLoading, refetchArsEntries, deleteArsEntry, clearAllArsData, addArsEntry } = useDataStore();
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
@@ -134,7 +135,7 @@ export default function ArsPage() {
   };
 
   const { filteredSites, lastCreatedDate } = useMemo(() => {
-    let sites = [...arsEntries];
+    let sites = [...allArsEntries];
 
     if (isSupervisor) {
       sites = sites.filter(site => 
@@ -212,7 +213,7 @@ export default function ArsPage() {
     }, null as Date | null);
 
     return { filteredSites: sites, lastCreatedDate: lastCreated };
-  }, [arsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter, constituencyFilter]);
+  }, [allArsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter, constituencyFilter]);
 
   useEffect(() => {
     const pageFromUrl = searchParams.get('page');
@@ -246,7 +247,7 @@ export default function ArsPage() {
     try {
       await deleteArsEntry(deletingSite.id);
       toast({ title: "ARS Site Deleted", description: `Site "${deletingSite.nameOfSite}" has been removed.` });
-      refreshArsEntries();
+      refetchArsEntries();
     } catch (error: any) {
       toast({ title: "Deletion Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -260,7 +261,7 @@ export default function ArsPage() {
     try {
         await clearAllArsData();
         toast({ title: "All ARS Data Cleared", description: "All ARS sites have been removed from the database."});
-        refreshArsEntries();
+        refetchArsEntries();
     } catch (error: any) {
         toast({ title: "Clearing Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -488,7 +489,7 @@ export default function ArsPage() {
         }
         
         toast({ title: "Import Complete", description: `${successCount} sites imported successfully. ${errorCount} rows failed.` });
-        refreshArsEntries();
+        refetchArsEntries();
       } catch (error: any) {
         toast({ title: "Import Failed", description: error.message, variant: "destructive" });
       } finally {
@@ -541,7 +542,7 @@ export default function ArsPage() {
                           {isUploading ? 'Importing...' : 'Import Excel'}
                       </Button> 
                       <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Template </Button> 
-                      <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsEntries.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
+                      <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || allArsEntries.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
                   </> )}
                 </div>
             </div>
@@ -589,7 +590,7 @@ export default function ArsPage() {
                   <p className="text-xs text-muted-foreground">Filter by completion date, scheme, and/or constituency</p>
                    <div className="flex items-center gap-4">
                         <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                            Total Sites: <span className="font-bold text-primary">{arsEntries.length}</span>
+                            Total Sites: <span className="font-bold text-primary">{allArsEntries.length}</span>
                         </div>
                         {lastCreatedDate && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">

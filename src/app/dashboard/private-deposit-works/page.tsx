@@ -9,13 +9,13 @@ import { Search, FilePlus2, Clock } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useFileEntries } from '@/hooks/useFileEntries';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData, ApplicationType } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
+import { useDataStore } from '@/hooks/use-data-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +52,7 @@ export default function PrivateDepositWorksPage() {
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { fileEntries } = useFileEntries(); 
+  const { allFileEntries } = useDataStore(); 
   const router = useRouter();
   const { setIsNavigating } = usePageNavigation();
   
@@ -63,7 +63,7 @@ export default function PrivateDepositWorksPage() {
 
     if (user?.role === 'supervisor') {
       // For supervisors, show all files where they are assigned to at least one site and the application type is private.
-      entries = fileEntries
+      entries = allFileEntries
         .filter(entry => !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
         .map(entry => {
           const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
@@ -72,7 +72,7 @@ export default function PrivateDepositWorksPage() {
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     } else {
       // For other roles, filter for private application types.
-      entries = fileEntries.filter(entry => 
+      entries = allFileEntries.filter(entry => 
         !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
       );
     }
@@ -103,7 +103,7 @@ export default function PrivateDepositWorksPage() {
     }, null as Date | null);
     
     return { privateDepositWorkEntries: sortedEntries, lastCreatedDate: lastCreated };
-  }, [fileEntries, user?.role, user?.uid]);
+  }, [allFileEntries, user?.role, user?.uid]);
 
 
   const handleAddNewClick = () => {

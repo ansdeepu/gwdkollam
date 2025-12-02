@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useAgencyApplications, type AgencyApplication, type RigRegistration as RigRegistrationType, type OwnerInfo } from "@/hooks/useAgencyApplications";
+import { type AgencyApplication, type RigRegistration as RigRegistrationType, type OwnerInfo } from "@/hooks/useAgencyApplications";
 import { useForm, useFieldArray, FormProvider, useWatch, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AgencyApplicationSchema, rigTypeOptions, RigRegistrationSchema, RigRenewalSchema, type RigRenewal as RigRenewalFormData, applicationFeeTypes, ApplicationFeeSchema, ApplicationFeeType, type ApplicationFee, OwnerInfoSchema, type RigType } from "@/lib/schemas";
@@ -35,6 +35,8 @@ import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
 import ExcelJS from "exceljs";
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useDataStore } from '@/hooks/use-data-store';
+import { useAgencyApplications } from '@/hooks/useAgencyApplications';
 
 
 export const dynamic = 'force-dynamic';
@@ -518,7 +520,7 @@ const RigAccordionItem = ({
 
 export default function AgencyRegistrationPage() {
   const { setHeader } = usePageHeader();
-  const { applications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useAgencyApplications();
+  const { allAgencyApplications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useDataStore();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { setIsNavigating } = usePageNavigation();
@@ -570,7 +572,7 @@ export default function AgencyRegistrationPage() {
     } else {
       setHeader('Rig Registration', 'Manage agency and rig registrations.');
     }
-  }, [selectedApplicationId, isViewing, setHeader, applications]);
+  }, [selectedApplicationId, isViewing, setHeader, allAgencyApplications]);
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
   const createDefaultFee = (): ApplicationFee => ({ id: uuidv4() });
@@ -613,7 +615,7 @@ export default function AgencyRegistrationPage() {
             });
             setIsNavigating(false);
         } else {
-            const app = applications.find((a: AgencyApplication) => a.id === selectedApplicationId);
+            const app = allAgencyApplications.find((a: AgencyApplication) => a.id === selectedApplicationId);
             if (app) {
                  const processedApp = processDataForForm(app);
                  form.reset(processedApp);
@@ -625,7 +627,7 @@ export default function AgencyRegistrationPage() {
     } else {
         form.reset({ owner: createDefaultOwner(), partners: [], applicationFees: [], rigs: [], history: [], remarks: '' });
     }
-  }, [selectedApplicationId, applications, form, setIsNavigating]);
+  }, [selectedApplicationId, allAgencyApplications, form, setIsNavigating]);
   
     const generateHistoryEntry = (rig: RigRegistrationType): string | null => {
         const logParts: string[] = [];
@@ -704,7 +706,7 @@ export default function AgencyRegistrationPage() {
         const dataForSave = processDataForSaving(data);
 
         if (selectedApplicationId && selectedApplicationId !== 'new') {
-            const originalApp = applications.find(a => a.id === selectedApplicationId);
+            const originalApp = allAgencyApplications.find(a => a.id === selectedApplicationId);
             if (originalApp) {
                  const mergedRigs = (dataForSave.rigs || []).map((updatedRig: RigRegistrationType) => {
                     const originalRig = (originalApp.rigs || []).find(r => r.id === updatedRig.id);
@@ -777,7 +779,7 @@ export default function AgencyRegistrationPage() {
   };
 
   const { filteredApplications, lastCreatedDate } = useMemo(() => {
-    let sortedApps = [...applications].sort((a, b) => {
+    let sortedApps = [...allAgencyApplications].sort((a, b) => {
         const dateA = toDateOrNull((a as any).createdAt)?.getTime() ?? 0;
         const dateB = toDateOrNull((b as any).createdAt)?.getTime() ?? 0;
         return dateB - dateA; // Sort descending for newest first
@@ -824,7 +826,7 @@ export default function AgencyRegistrationPage() {
     }, null as Date | null);
 
     return { filteredApplications: filtered, lastCreatedDate: lastCreated };
-  }, [applications, searchTerm]);
+  }, [allAgencyApplications, searchTerm]);
 
   const completedApplications = useMemo(() => {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Active');
@@ -1687,7 +1689,7 @@ export default function AgencyRegistrationPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will permanently delete the registration for <strong>{applications.find((a: AgencyApplication) => a.id === deletingApplicationId)?.agencyName}</strong>. This action cannot be undone.
+              This action will permanently delete the registration for <strong>{allAgencyApplications.find((a: AgencyApplication) => a.id === deletingApplicationId)?.agencyName}</strong>. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
