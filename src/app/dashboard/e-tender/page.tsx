@@ -52,7 +52,7 @@ const getStatusRowClass = (status?: E_tenderStatus): string => {
 export default function ETenderListPage() {
     const { setHeader } = usePageHeader();
     const router = useRouter();
-    const { allE_tenders, isLoading } = useDataStore();
+    const { allE_tenders, isLoading } = useDataStore(); // Use data from the central store
     const { deleteTender, addTender } = useE_tenders();
     const { toast } = useToast();
     const { user } = useAuth();
@@ -71,6 +71,7 @@ export default function ETenderListPage() {
     
 
     const processedTenders = useMemo(() => {
+      // Ensure allE_tenders is an array before mapping
       return (allE_tenders || []).map(tender => {
         const bidderNames = (tender.bidders || []).map(b => b.name).filter(Boolean).join(' ').toLowerCase();
         const searchableContent = [

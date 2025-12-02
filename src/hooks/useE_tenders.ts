@@ -3,19 +3,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { E_tenderFormData } from '@/lib/schemas/eTenderSchema';
 import { toast } from './use-toast';
 import { useDataStore } from './use-data-store';
-import type { E_tender } from './useE_tenders'; // Make sure the type is exported
-
-export type { E_tender };
 
 const db = getFirestore(app);
 const TENDERS_COLLECTION = 'eTenders';
 
+export type E_tender = E_tenderFormData & {
+  id: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
 export function useE_tenders() {
     const { user } = useAuth();
@@ -53,8 +55,19 @@ export function useE_tenders() {
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                // We trust the processDoc in the data store has already handled timestamps
-                return { ...data, id: docSnap.id } as E_tender;
+                const processDoc = (docData: DocumentData) => {
+                    const processed: {[key: string]: any} = {};
+                    for(const key in docData) {
+                        const value = docData[key];
+                        if (value instanceof Timestamp) {
+                            processed[key] = value.toDate();
+                        } else {
+                            processed[key] = value;
+                        }
+                    }
+                    return processed;
+                }
+                return { ...processDoc(data), id: docSnap.id } as E_tender;
             }
             return null;
         } catch (error) {
