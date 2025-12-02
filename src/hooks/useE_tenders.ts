@@ -1,8 +1,7 @@
-
 // src/hooks/useE_tenders.ts
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
@@ -76,5 +75,5 @@ export function useE_tenders() {
         }
     }, []);
 
-    return { tenders: allE_tenders, isLoading: dataStoreLoading, addTender, updateTender, deleteTender, getTender };
+    return { tenders: allE_tenders, isLoading: dataStoreLoading, addTender, updateTender, deleteTender, getTender, refetchE_tenders };
 }
