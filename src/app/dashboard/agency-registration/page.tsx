@@ -1444,51 +1444,54 @@ export default function AgencyRegistrationPage() {
             </form>
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Add Agency Registration</DialogTitle>
-                    </DialogHeader>
-                    <AgencyRegistrationDialogContent
-                        initialData={dialogState.data?.regData}
-                        onConfirm={handleConfirmAgencyReg}
-                        onCancel={closeDialog}
-                    />
+                  <AgencyRegistrationDialogContent
+                      initialData={dialogState.data?.regData}
+                      onConfirm={handleConfirmAgencyReg}
+                      onCancel={closeDialog}
+                  />
                 </DialogContent>
             </Dialog>
              <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
-                    <DialogHeader>
+                  <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                         <DialogDescription>Enter renewal details for the rig.</DialogDescription>
                     </DialogHeader>
+                  <div className="p-6">
                     <RenewalDialogContent
                         initialData={dialogState.data?.renewal ?? { renewalDate: format(new Date(), 'yyyy-MM-dd') }}
                         onConfirm={handleConfirmRenewal}
                         onCancel={closeDialog}
                     />
+                  </div>
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
-                    <DialogHeader>
+                  <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'addFee' ? 'Add Application Fee' : 'Edit Application Fee'}</DialogTitle>
                     </DialogHeader>
+                  <div className="p-6">
                     <ApplicationFeeDialogContent
                         initialData={dialogState.type === 'editFee' ? dialogState.data?.fee : createDefaultFee()}
                         onConfirm={handleConfirmFeeChange}
                         onCancel={closeDialog}
                     />
+                  </div>
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
-                    <DialogHeader>
+                  <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'addPartner' ? 'Add New Partner' : 'Edit Partner'}</DialogTitle>
                     </DialogHeader>
+                  <div className="p-6">
                     <PartnerDialogContent
                         initialData={dialogState.type === 'editPartner' ? dialogState.data?.partner : createDefaultOwner()}
                         onConfirm={handleConfirmPartner}
                         onCancel={closeDialog}
                     />
+                  </div>
                 </DialogContent>
             </Dialog>
             <AlertDialog open={deletingPartnerIndex !== null} onOpenChange={() => setDeletingPartnerIndex(null)}>
@@ -1574,21 +1577,13 @@ export default function AgencyRegistrationPage() {
             </AlertDialog>
              <Dialog open={dialogState.type === 'editRigDetails' || dialogState.type === 'addRig'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
                 <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl">
-                    <DialogHeader>
-                        <DialogTitle>{dialogState.type === 'addRig' ? 'Add New Rig' : 'Edit Rig Details'}</DialogTitle>
-                        <DialogDescription>
-                            {dialogState.type === 'addRig' ? 'Enter the details for the new rig.' : 'Modify the registration and optional details for this rig.'}
-                        </DialogDescription>
-                    </DialogHeader>
-                    {(dialogState.type === 'editRigDetails' || dialogState.type === 'addRig') && (
-                        <RigDetailsDialog
-                            form={form}
-                            rigIndex={dialogState.data.rigIndex}
-                            onConfirm={handleConfirmRigDetails}
-                            onCancel={closeDialog}
-                            isAdding={dialogState.type === 'addRig'}
-                        />
-                    )}
+                  <RigDetailsDialog
+                      form={form}
+                      rigIndex={dialogState.data.rigIndex}
+                      onConfirm={handleConfirmRigDetails}
+                      onCancel={closeDialog}
+                      isAdding={dialogState.type === 'addRig'}
+                  />
                 </DialogContent>
             </Dialog>
         </FormProvider>
@@ -1717,9 +1712,12 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
     });
 
     return (
-      <>
-        <ScrollArea className="max-h-[60vh] p-1">
-          <div className="space-y-6 p-4">
+      <div className="flex flex-col h-full">
+        <DialogHeader className="p-6 pb-0">
+            <DialogTitle>Add Agency Registration</DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-6">
             <div className="space-y-4 rounded-lg border p-4">
                 <div className="grid grid-cols-3 gap-4 items-end">
                     <div className="col-span-2 space-y-2">
@@ -1768,12 +1766,12 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                     </div>
             </div>
           </div>
-        </ScrollArea>
-        <DialogFooter className="mt-4">
+        </div>
+        <DialogFooter className="mt-4 p-6 pt-0">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
           <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
         </DialogFooter>
-      </>
+      </div>
     );
 }
 
@@ -1939,8 +1937,15 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel, isAdding }: { f
     };
 
     return (
-        <ScrollArea className="max-h-[70vh] pr-4">
-            <div className="space-y-6 py-4">
+      <div className="flex flex-col h-full">
+        <DialogHeader className="p-6 pb-0">
+            <DialogTitle>{isAdding ? 'Add New Rig' : 'Edit Rig Details'}</DialogTitle>
+            <DialogDescription>
+                {isAdding ? 'Enter the details for the new rig.' : 'Modify the registration and optional details for this rig.'}
+            </DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-6">
                 <Card>
                     <CardHeader><CardTitle>Registration Details</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
@@ -1981,11 +1986,12 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel, isAdding }: { f
                     </CardContent>
                 </Card>
             </div>
-             <DialogFooter className="mt-6">
-                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-                <Button type="button" onClick={handleConfirm}>{isAdding ? 'Add Rig' : 'Save Details'}</Button>
-            </DialogFooter>
-        </ScrollArea>
+        </div>
+         <DialogFooter className="mt-6 p-6 pt-0">
+            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+            <Button type="button" onClick={handleConfirm}>{isAdding ? 'Add Rig' : 'Save Details'}</Button>
+        </DialogFooter>
+      </div>
     );
 }
 
@@ -2084,3 +2090,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     
 
+
+    
