@@ -1443,7 +1443,7 @@ export default function AgencyRegistrationPage() {
                 </Card>
             </form>
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Add Agency Registration</DialogTitle>
                     </DialogHeader>
@@ -1455,7 +1455,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
              <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                         <DialogDescription>Enter renewal details for the rig.</DialogDescription>
@@ -1468,7 +1468,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>{dialogState.type === 'addFee' ? 'Add Application Fee' : 'Edit Application Fee'}</DialogTitle>
                     </DialogHeader>
@@ -1480,7 +1480,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>{dialogState.type === 'addPartner' ? 'Add New Partner' : 'Edit Partner'}</DialogTitle>
                     </DialogHeader>
@@ -1492,7 +1492,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <AlertDialog open={deletingPartnerIndex !== null} onOpenChange={() => setDeletingPartnerIndex(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>This will remove this partner from the list. This action cannot be undone.</AlertDialogDescription>
@@ -1504,7 +1504,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={deletingFeeIndex !== null} onOpenChange={() => setDeletingFeeIndex(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>This will remove this application fee from the form. This action cannot be undone.</AlertDialogDescription>
@@ -1516,7 +1516,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={dialogState.type === 'cancel'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <AlertDialogContent>
+                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Cancel Rig Registration</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -1533,7 +1533,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
              <AlertDialog open={dialogState.type === 'deleteRig'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <AlertDialogContent>
+                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -1547,7 +1547,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={dialogState.type === 'activate'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <AlertDialogContent>
+                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Activate Rig</AlertDialogTitle>
                         <AlertDialogDescription>Are you sure you want to reactivate this rig?</AlertDialogDescription>
@@ -1559,7 +1559,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={!!deletingRenewal} onOpenChange={() => setDeletingRenewal(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -1573,7 +1573,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
              <Dialog open={dialogState.type === 'editRigDetails' || dialogState.type === 'addRig'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent className="max-w-4xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>{dialogState.type === 'addRig' ? 'Add New Rig' : 'Edit Rig Details'}</DialogTitle>
                         <DialogDescription>
@@ -1685,7 +1685,7 @@ export default function AgencyRegistrationPage() {
         </CardContent>
       </Card>
       <AlertDialog open={!!deletingApplicationId} onOpenChange={() => setDeletingApplicationId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2083,3 +2083,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
     
+

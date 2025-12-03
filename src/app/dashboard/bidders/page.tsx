@@ -203,7 +203,7 @@ export default function BiddersListPage() {
             </Card>
 
             <Dialog open={isNewBidderDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) { setIsNewBidderDialogOpen(false); setBidderToEdit(null); } }}>
-                <DialogContent className="max-w-2xl flex flex-col p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl flex flex-col p-0">
                     <NewBidderForm
                         onSubmit={handleAddOrEditBidderSubmit}
                         onCancel={() => { setIsNewBidderDialogOpen(false); setBidderToEdit(null); }}
@@ -225,7 +225,7 @@ export default function BiddersListPage() {
             </Dialog>
 
             <AlertDialog open={!!bidderToDelete} onOpenChange={() => setBidderToDelete(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>This will permanently delete the bidder <strong>{bidderToDelete?.name}</strong>. This cannot be undone.</AlertDialogDescription>
@@ -239,7 +239,7 @@ export default function BiddersListPage() {
             
             {bidderToReorder && (
               <Dialog open={!!bidderToReorder} onOpenChange={() => setBidderToReorder(null)}>
-                  <DialogContent className="sm:max-w-md">
+                  <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-md">
                       <DialogHeader className="p-6 pb-2">
                           <DialogTitle>Move Bidder</DialogTitle>
                           <DialogDescription>Move "{bidderToReorder?.name}" to a new position in the list.</DialogDescription>
@@ -270,3 +270,4 @@ export default function BiddersListPage() {
         </div>
     );
 }
+

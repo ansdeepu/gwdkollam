@@ -597,7 +597,7 @@ export default function ReportsPage() {
                   <PaginationControls 
                       currentPage={currentPage} 
                       totalPages={totalPages} 
-                      onPageChange={setCurrentPage} 
+                      onPageChange={handlePageChange} 
                   />
               )}
           </CardFooter>
@@ -605,7 +605,7 @@ export default function ReportsPage() {
 
       {/* View Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-4xl p-0 flex flex-col h-[90vh]">
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-4xl p-0 flex flex-col h-[90vh]">
           <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>File Details: {viewItem?.fileNo}</DialogTitle>
             <DialogDescription>
@@ -792,3 +792,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+

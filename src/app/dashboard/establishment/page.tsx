@@ -1,3 +1,4 @@
+
 // src/app/dashboard/establishment/page.tsx
 "use client";
 
@@ -350,7 +351,7 @@ export default function EstablishmentPage() {
               setIsFormOpen(true);
           }
       }}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh]">
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-3xl max-h-[90vh]">
           <DialogHeader className="p-6 pb-4">
             <DialogTitle>{editingStaff ? "Edit Staff Details" : "Add New Staff Member"}</DialogTitle>
             <DialogDescription>
@@ -370,7 +371,7 @@ export default function EstablishmentPage() {
       </Dialog>
 
       <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-        <DialogContent className="p-0 border-0 bg-transparent shadow-none w-auto max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw]">
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0 border-0 bg-transparent shadow-none w-auto max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw]">
           <div className="flex justify-center items-center max-h-[90vh] overflow-hidden">
             {imageForModal && <img src={imageForModal} alt="Staff photo enlarged" className="max-w-full max-h-full object-contain rounded-lg"/>}
           </div>
@@ -379,3 +380,4 @@ export default function EstablishmentPage() {
     </div>
   );
 }
+
