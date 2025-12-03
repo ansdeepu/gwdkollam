@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -9,7 +10,7 @@ export default {
   theme: {
     fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
-        serif: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.mono],
+        serif: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.serif],
         mono: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.mono],
     },
   	extend: {
@@ -96,3 +97,5 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
+      

@@ -699,7 +699,6 @@ export default function AgencyRegistrationPage() {
     };
 
   const onSubmit = async (data: AgencyApplication) => {
-    console.debug("onSubmit called, data snapshot:", data);
     setIsSubmitting(true);
     try {
         const finalStatus = data.agencyRegistrationNo ? 'Active' : 'Pending Verification';
@@ -1207,7 +1206,7 @@ export default function AgencyRegistrationPage() {
               onSubmit={form.handleSubmit(
                 onSubmit,
                 (errors) => {
-                  console.debug("Form validation errors:", errors);
+                  console.error("Form validation errors:", errors);
                   toast({ title: "Validation Error", description: "Please check highlighted fields.", variant: "destructive" });
                 }
               )}
@@ -1717,7 +1716,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                 <DialogTitle>Add Agency Registration</DialogTitle>
             </DialogHeader>
             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full px-6">
+                <ScrollArea className="h-full px-6 no-scrollbar">
                     <div className="space-y-6">
                         <div className="space-y-4 rounded-lg border p-4">
                             <div className="grid grid-cols-3 gap-4 items-end">
@@ -1792,7 +1791,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
     };
 
     return (
-        <>
+        <div className="p-6 pt-0">
             <div className="space-y-4 py-4">
                 <div className="space-y-2">
                     <Label>Type of Application</Label>
@@ -1818,7 +1817,7 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button type="button" onClick={handleConfirm}>Confirm</Button>
             </DialogFooter>
-        </>
+        </div>
     );
 }
 
@@ -1946,7 +1945,7 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel, isAdding }: { f
                 </DialogDescription>
             </DialogHeader>
             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full px-6 py-4">
+                <ScrollArea className="h-full px-6 py-4 no-scrollbar">
                     <div className="space-y-6">
                         <Card>
                             <CardHeader><CardTitle>Registration Details</CardTitle></CardHeader>
@@ -2099,3 +2098,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
     
+
+      

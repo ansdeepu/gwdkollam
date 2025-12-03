@@ -1,3 +1,4 @@
+
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -97,7 +98,7 @@ const OfficeAddressDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-3xl">
         <DialogHeader className="p-6 pb-4">
           <DialogTitle>{initialData ? 'Edit Office Address' : 'Add New Office Address'}</DialogTitle>
           <DialogDescription>Fill in the details for the office location.</DialogDescription>
@@ -478,7 +479,7 @@ export default function SettingsPage() {
       />
       
       <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>This will permanently delete ALL Local Self Governments from the database. This action cannot be undone and may affect existing records.</AlertDialogDescription>
@@ -493,7 +494,7 @@ export default function SettingsPage() {
       </AlertDialog>
 
       <Dialog open={isListDialogOpen} onOpenChange={setIsListDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-md">
           <DialogHeader className="p-6 pb-4">
             <DialogTitle>{listDialogContent.title}</DialogTitle>
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
@@ -523,3 +524,5 @@ export default function SettingsPage() {
     </>
   );
 }
+
+      

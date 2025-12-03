@@ -1079,14 +1079,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </Dialog>
 
         <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
-            <AlertDialogContent>
+            <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                 <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently remove the selected {itemToDelete?.type} entry from this file.</AlertDialogDescription></AlertDialogHeader>
                 <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteItem} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
 
         <AlertDialog open={siteToCopy !== null} onOpenChange={() => setSiteToCopy(null)}>
-          <AlertDialogContent>
+          <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Copy</AlertDialogTitle>
               <AlertDialogDescription>
@@ -1119,7 +1119,7 @@ const ReorderSiteDialog = ({ fromIndex, siteCount, onConfirm, onCancel }: { from
         }
     };
     return (
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
             <DialogHeader className="p-6 pb-4"><DialogTitle>Move Site</DialogTitle></DialogHeader>
             <div className="p-6 pt-0 space-y-4">
                 <Label>New Position (1 to {siteCount})</Label>
@@ -1132,3 +1132,5 @@ const ReorderSiteDialog = ({ fromIndex, siteCount, onConfirm, onCancel }: { from
         </DialogContent>
     );
 };
+
+      
