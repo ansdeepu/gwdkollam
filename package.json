@@ -67,6 +67,7 @@
     "eslint": "8.57.1",
     "eslint-config-next": "14.2.4",
     "postcss": "^8",
+    "rimraf": "^5.0.7",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   },
