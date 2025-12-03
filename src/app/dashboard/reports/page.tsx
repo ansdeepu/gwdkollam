@@ -369,6 +369,12 @@ export default function ReportsPage() {
   
   const totalPages = Math.ceil(filteredReportRows.length / ITEMS_PER_PAGE);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(page));
+    router.push(`/dashboard/reports?${params.toString()}`, { scroll: false });
+  };
 
   const handleResetFilters = () => {
     setStartDate("");
@@ -792,4 +798,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
