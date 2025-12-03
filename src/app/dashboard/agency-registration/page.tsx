@@ -520,7 +520,8 @@ const RigAccordionItem = ({
 
 export default function AgencyRegistrationPage() {
   const { setHeader } = usePageHeader();
-  const { allAgencyApplications, isLoading: applicationsLoading, addApplication, updateApplication, deleteApplication } = useDataStore();
+  const { allAgencyApplications, isLoading: applicationsLoading } = useDataStore();
+  const { addApplication, updateApplication, deleteApplication } = useAgencyApplications();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { setIsNavigating } = usePageNavigation();
@@ -1451,7 +1452,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
              <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
                   <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                         <DialogDescription>Enter renewal details for the rig.</DialogDescription>
@@ -1466,21 +1467,19 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
                   <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'addFee' ? 'Add Application Fee' : 'Edit Application Fee'}</DialogTitle>
                     </DialogHeader>
-                  <div className="p-6">
                     <ApplicationFeeDialogContent
                         initialData={dialogState.type === 'editFee' ? dialogState.data?.fee : createDefaultFee()}
                         onConfirm={handleConfirmFeeChange}
                         onCancel={closeDialog}
                     />
-                  </div>
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
                   <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'addPartner' ? 'Add New Partner' : 'Edit Partner'}</DialogTitle>
                     </DialogHeader>
@@ -2100,3 +2099,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
       
+
