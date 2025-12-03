@@ -1579,7 +1579,7 @@ export default function AgencyRegistrationPage() {
                 <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl">
                   <RigDetailsDialog
                       form={form}
-                      rigIndex={dialogState.data.rigIndex}
+                      rigIndex={dialogState.data?.rigIndex}
                       onConfirm={handleConfirmRigDetails}
                       onCancel={closeDialog}
                       isAdding={dialogState.type === 'addRig'}
@@ -1712,66 +1712,65 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
     });
 
     return (
-      <div className="flex flex-col h-full">
-        <DialogHeader className="p-6 pb-0">
-            <DialogTitle>Add Agency Registration</DialogTitle>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-6">
-            <div className="space-y-4 rounded-lg border p-4">
-                <div className="grid grid-cols-3 gap-4 items-end">
-                    <div className="col-span-2 space-y-2">
-                        <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
-                        <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
+        <div className="flex flex-col h-full">
+            <DialogHeader className="p-6 pb-4">
+                <DialogTitle>Add Agency Registration</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="flex-1 overflow-y-auto p-6 pt-0">
+                <div className="space-y-6">
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <div className="grid grid-cols-3 gap-4 items-end">
+                            <div className="col-span-2 space-y-2">
+                                <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
+                                <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
+                                <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
+                            </div>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
-                        <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <h4 className="font-medium text-primary">Registration Fee Details</h4>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
+                            <div className="space-y-2">
+                            <Label htmlFor="agencyRegistrationFee">Reg. Fee</Label>
+                            <Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ''} onChange={(e) => setData(d => ({ ...d, agencyRegistrationFee: e.target.value === '' ? undefined : +e.target.value }))} />
+                            </div>
+                            <div className="space-y-2">
+                            <Label htmlFor="agencyPaymentDate">Payment Date</Label>
+                            <Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={(e) => setData(d => ({ ...d, agencyPaymentDate: e.target.value }))} />
+                            </div>
+                            <div className="space-y-2">
+                            <Label htmlFor="agencyChallanNo">Challan No.</Label>
+                            <Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={(e) => setData(d => ({ ...d, agencyChallanNo: e.target.value }))} />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <h4 className="font-medium text-primary">Additional Registration Fee</h4>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
+                                <div className="space-y-2">
+                                <Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label>
+                                <Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ''} onChange={(e) => setData(d => ({ ...d, agencyAdditionalRegFee: e.target.value === '' ? undefined : +e.target.value }))} />
+                                </div>
+                                <div className="space-y-2">
+                                <Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label>
+                                <Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={(e) => setData(d => ({ ...d, agencyAdditionalPaymentDate: e.target.value }))} />
+                                </div>
+                                <div className="space-y-2">
+                                <Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label>
+                                <Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={(e) => setData(d => ({ ...d, agencyAdditionalChallanNo: e.target.value }))} />
+                                </div>
+                            </div>
                     </div>
                 </div>
-            </div>
-            
-            <div className="space-y-4 rounded-lg border p-4">
-                 <h4 className="font-medium text-primary">Registration Fee Details</h4>
-                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
-                    <div className="space-y-2">
-                      <Label htmlFor="agencyRegistrationFee">Reg. Fee</Label>
-                      <Input id="agencyRegistrationFee" type="number" value={data.agencyRegistrationFee ?? ''} onChange={(e) => setData(d => ({ ...d, agencyRegistrationFee: e.target.value === '' ? undefined : +e.target.value }))} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="agencyPaymentDate">Payment Date</Label>
-                      <Input id="agencyPaymentDate" type="date" value={data.agencyPaymentDate} onChange={(e) => setData(d => ({ ...d, agencyPaymentDate: e.target.value }))} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="agencyChallanNo">Challan No.</Label>
-                      <Input id="agencyChallanNo" value={data.agencyChallanNo} onChange={(e) => setData(d => ({ ...d, agencyChallanNo: e.target.value }))} />
-                    </div>
-                </div>
-            </div>
-            <div className="space-y-4 rounded-lg border p-4">
-                 <h4 className="font-medium text-primary">Additional Registration Fee</h4>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-4 border-t">
-                        <div className="space-y-2">
-                        <Label htmlFor="agencyAdditionalRegFee">Additional Reg. Fee</Label>
-                        <Input id="agencyAdditionalRegFee" type="number" value={data.agencyAdditionalRegFee ?? ''} onChange={(e) => setData(d => ({ ...d, agencyAdditionalRegFee: e.target.value === '' ? undefined : +e.target.value }))} />
-                        </div>
-                        <div className="space-y-2">
-                        <Label htmlFor="agencyAdditionalPaymentDate">Payment Date</Label>
-                        <Input id="agencyAdditionalPaymentDate" type="date" value={data.agencyAdditionalPaymentDate} onChange={(e) => setData(d => ({ ...d, agencyAdditionalPaymentDate: e.target.value }))} />
-                        </div>
-                        <div className="space-y-2">
-                        <Label htmlFor="agencyAdditionalChallanNo">Challan No.</Label>
-                        <Input id="agencyAdditionalChallanNo" value={data.agencyAdditionalChallanNo} onChange={(e) => setData(d => ({ ...d, agencyAdditionalChallanNo: e.target.value }))} />
-                        </div>
-                    </div>
-            </div>
-          </div>
+            </ScrollArea>
+            <DialogFooter className="mt-4 p-6 pt-0">
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
+            </DialogFooter>
         </div>
-        <DialogFooter className="mt-4 p-6 pt-0">
-          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
-        </DialogFooter>
-      </div>
     );
 }
 
@@ -1937,61 +1936,61 @@ function RigDetailsDialog({ form, rigIndex, onConfirm, onCancel, isAdding }: { f
     };
 
     return (
-      <div className="flex flex-col h-full">
-        <DialogHeader className="p-6 pb-0">
-            <DialogTitle>{isAdding ? 'Add New Rig' : 'Edit Rig Details'}</DialogTitle>
-            <DialogDescription>
-                {isAdding ? 'Enter the details for the new rig.' : 'Modify the registration and optional details for this rig.'}
-            </DialogDescription>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto p-6">
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader><CardTitle>Registration Details</CardTitle></CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <FormItem><FormLabel>Rig Reg. No.</FormLabel><Input value={localRigData.rigRegistrationNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, rigRegistrationNo: e.target.value }))} /></FormItem>
-                            <FormItem>
-                                <FormLabel>Type of Rig</FormLabel>
-                                <Select onValueChange={(value) => setLocalRigData(d => ({ ...d, typeOfRig: value as RigType }))} value={localRigData.typeOfRig}>
-                                    <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                                    <SelectContent>{rigTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                                </Select>
-                            </FormItem>
-                            <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.registrationDate)} onChange={e => setLocalRigData(d => ({ ...d, registrationDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
-                        </div>
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <FormItem><FormLabel>Reg. Fee</FormLabel><Input type="number" value={localRigData.registrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, registrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
-                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.paymentDate)} onChange={e => setLocalRigData(d => ({ ...d, paymentDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
-                            <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.challanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, challanNo: e.target.value }))} /></FormItem>
-                        </div>
-                        <Separator />
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <FormItem><FormLabel>Additional Reg. Fee</FormLabel><Input type="number" value={localRigData.additionalRegistrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalRegistrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
-                            <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.additionalPaymentDate)} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
-                            <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.additionalChallanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalChallanNo: e.target.value }))} /></FormItem>
-                        </div>
-                    </CardContent>
-                </Card>
-                
-                <Card>
-                    <CardHeader><CardTitle>Optional Details</CardTitle></CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-2"><h4 className="font-medium text-primary">Rig Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.rigVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.rigVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.rigVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.rigVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
-                        <div className="space-y-2"><h4 className="font-medium text-primary">Compressor Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.compressorVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.compressorVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.compressorVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.compressorVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
-                        <div className="space-y-2"><h4 className="font-medium text-primary">Supporting Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.supportingVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.supportingVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.supportingVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.supportingVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
-                        <div className="space-y-2"><h4 className="font-medium text-primary">Compressor Details</h4><div className="grid md:grid-cols-2 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.compressorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.compressorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, capacity: e.target.value}}))} /></FormItem></div></div>
-                        <div className="space-y-2"><h4 className="font-medium text-primary">Generator Details</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.generatorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.generatorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, capacity: e.target.value}}))} /></FormItem><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.generatorDetails?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.generatorDetails?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, engineNo: e.target.value}}))} /></FormItem></div></div>
-                        
-                    </CardContent>
-                </Card>
-            </div>
+        <div className="flex flex-col h-full">
+            <DialogHeader className="p-6 pb-0">
+                <DialogTitle>{isAdding ? 'Add New Rig' : 'Edit Rig Details'}</DialogTitle>
+                <DialogDescription>
+                    {isAdding ? 'Enter the details for the new rig.' : 'Modify the registration and optional details for this rig.'}
+                </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader><CardTitle>Registration Details</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <FormItem><FormLabel>Rig Reg. No.</FormLabel><Input value={localRigData.rigRegistrationNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, rigRegistrationNo: e.target.value }))} /></FormItem>
+                                <FormItem>
+                                    <FormLabel>Type of Rig</FormLabel>
+                                    <Select onValueChange={(value) => setLocalRigData(d => ({ ...d, typeOfRig: value as RigType }))} value={localRigData.typeOfRig}>
+                                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                                        <SelectContent>{rigTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                </FormItem>
+                                <FormItem><FormLabel>Last Reg/Renewal Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.registrationDate)} onChange={e => setLocalRigData(d => ({ ...d, registrationDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <FormItem><FormLabel>Reg. Fee</FormLabel><Input type="number" value={localRigData.registrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, registrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
+                                <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.paymentDate)} onChange={e => setLocalRigData(d => ({ ...d, paymentDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
+                                <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.challanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, challanNo: e.target.value }))} /></FormItem>
+                            </div>
+                            <Separator />
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <FormItem><FormLabel>Additional Reg. Fee</FormLabel><Input type="number" value={localRigData.additionalRegistrationFee ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalRegistrationFee: e.target.value === '' ? undefined : +e.target.value }))} /></FormItem>
+                                <FormItem><FormLabel>Payment Date</FormLabel><Input type="date" value={formatDateForInput(localRigData.additionalPaymentDate)} onChange={e => setLocalRigData(d => ({ ...d, additionalPaymentDate: e.target.value ? new Date(e.target.value) : null }))} /></FormItem>
+                                <FormItem><FormLabel>Challan No.</FormLabel><Input value={localRigData.additionalChallanNo ?? ""} onChange={e => setLocalRigData(d => ({ ...d, additionalChallanNo: e.target.value }))} /></FormItem>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    
+                    <Card>
+                        <CardHeader><CardTitle>Optional Details</CardTitle></CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2"><h4 className="font-medium text-primary">Rig Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.rigVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.rigVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.rigVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.rigVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, rigVehicle: {...d.rigVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
+                            <div className="space-y-2"><h4 className="font-medium text-primary">Compressor Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.compressorVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.compressorVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.compressorVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.compressorVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorVehicle: {...d.compressorVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
+                            <div className="space-y-2"><h4 className="font-medium text-primary">Supporting Vehicle</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.supportingVehicle?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Reg No</FormLabel><Input value={localRigData.supportingVehicle?.regNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, regNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Chassis No</FormLabel><Input value={localRigData.supportingVehicle?.chassisNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, chassisNo: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.supportingVehicle?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, supportingVehicle: {...d.supportingVehicle, engineNo: e.target.value}}))} /></FormItem></div></div>
+                            <div className="space-y-2"><h4 className="font-medium text-primary">Compressor Details</h4><div className="grid md:grid-cols-2 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.compressorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.compressorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, compressorDetails: {...d.compressorDetails, capacity: e.target.value}}))} /></FormItem></div></div>
+                            <div className="space-y-2"><h4 className="font-medium text-primary">Generator Details</h4><div className="grid md:grid-cols-4 gap-4"><FormItem><FormLabel>Model</FormLabel><Input value={localRigData.generatorDetails?.model ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, model: e.target.value}}))} /></FormItem><FormItem><FormLabel>Capacity</FormLabel><Input value={localRigData.generatorDetails?.capacity ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, capacity: e.target.value}}))} /></FormItem><FormItem><FormLabel>Type</FormLabel><Input value={localRigData.generatorDetails?.type ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, type: e.target.value}}))} /></FormItem><FormItem><FormLabel>Engine No</FormLabel><Input value={localRigData.generatorDetails?.engineNo ?? ""} onChange={e => setLocalRigData(d => ({...d, generatorDetails: {...d.generatorDetails, engineNo: e.target.value}}))} /></FormItem></div></div>
+                            
+                        </CardContent>
+                    </Card>
+                </div>
+            </ScrollArea>
+            <DialogFooter className="mt-6 p-6 pt-0">
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button type="button" onClick={handleConfirm}>{isAdding ? 'Add Rig' : 'Save Details'}</Button>
+            </DialogFooter>
         </div>
-         <DialogFooter className="mt-6 p-6 pt-0">
-            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button type="button" onClick={handleConfirm}>{isAdding ? 'Add Rig' : 'Save Details'}</Button>
-        </DialogFooter>
-      </div>
     );
 }
 
@@ -2090,5 +2089,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     
 
+
+    
 
     
