@@ -780,7 +780,17 @@ export default function AgencyRegistrationPage() {
 
   const { filteredApplications, lastCreatedDate } = useMemo(() => {
     let sortedApps = [...allAgencyApplications].sort((a, b) => {
-        // Natural sort for file numbers (e.g., A/1, A/2, A/10)
+        const dateA = toDateOrNull(a.agencyRegistrationDate);
+        const dateB = toDateOrNull(b.agencyRegistrationDate);
+
+        if (dateA && dateB) {
+            const timeDiff = dateA.getTime() - dateB.getTime();
+            if (timeDiff !== 0) return timeDiff;
+        }
+        if (dateA && !dateB) return -1;
+        if (!dateA && dateB) return 1;
+
+        // Fallback to file number if dates are the same or not present
         const fileNoA = a.fileNo || '';
         const fileNoB = b.fileNo || '';
         const partsA = fileNoA.split(/(\d+)/);
@@ -1488,10 +1498,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-6 pt-0">
-                  <DialogHeader className="p-6 pb-0">
-                        <DialogTitle>{dialogState.type === 'addFee' ? 'Add Application Fee' : 'Edit Application Fee'}</DialogTitle>
-                    </DialogHeader>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
                     <ApplicationFeeDialogContent
                         initialData={dialogState.type === 'editFee' ? dialogState.data?.fee : createDefaultFee()}
                         onConfirm={handleConfirmFeeChange}
@@ -1500,10 +1507,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-6">
-                  <DialogHeader className="pb-4">
-                        <DialogTitle>{dialogState.type === 'addPartner' ? 'Add New Partner' : 'Edit Partner'}</DialogTitle>
-                    </DialogHeader>
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
                     <PartnerDialogContent
                         initialData={dialogState.type === 'editPartner' ? dialogState.data?.partner : createDefaultOwner()}
                         onConfirm={handleConfirmPartner}
@@ -1809,7 +1813,10 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
     };
 
     return (
-        <div className="p-6 pt-0">
+        <div className="p-6">
+            <DialogHeader className="pb-4">
+                <DialogTitle>{initialData?.id ? 'Edit Application Fee' : 'Add Application Fee'}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4 py-4">
                 <div className="space-y-2">
                     <Label>Type of Application</Label>
@@ -2028,7 +2035,10 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleConfirm)} className="space-y-4 pt-4">
+            <form onSubmit={form.handleSubmit(handleConfirm)} className="p-6 space-y-4 pt-4">
+                <DialogHeader className="pb-4 -mx-6 -mt-6 p-6 mb-0 border-b">
+                    <DialogTitle>{initialData?.name ? 'Edit Partner' : 'Add New Partner'}</DialogTitle>
+                </DialogHeader>
                 <FormField name="name" control={form.control} render={({ field }) => (
                     <FormItem>
                         <FormLabel>Partner Name & Address</FormLabel>
@@ -2052,7 +2062,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
                         </FormItem>
                     )}/>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="-mb-6 -mx-6 p-6 mt-4 border-t">
                     <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                     <Button type="submit">Confirm</Button>
                 </DialogFooter>
@@ -2118,5 +2128,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
       
+
 
 
