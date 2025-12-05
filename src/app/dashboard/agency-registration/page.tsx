@@ -780,9 +780,30 @@ export default function AgencyRegistrationPage() {
 
   const { filteredApplications, lastCreatedDate } = useMemo(() => {
     let sortedApps = [...allAgencyApplications].sort((a, b) => {
-        const dateA = toDateOrNull((a as any).createdAt)?.getTime() ?? 0;
-        const dateB = toDateOrNull((b as any).createdAt)?.getTime() ?? 0;
-        return dateB - dateA; // Sort descending for newest first
+        // Natural sort for file numbers (e.g., A/1, A/2, A/10)
+        const fileNoA = a.fileNo || '';
+        const fileNoB = b.fileNo || '';
+        const partsA = fileNoA.split(/(\d+)/);
+        const partsB = fileNoB.split(/(\d+)/);
+    
+        for (let i = 0; i < Math.min(partsA.length, partsB.length); i++) {
+            const partA = partsA[i];
+            const partB = partsB[i];
+            
+            if (partA === partB) continue;
+
+            const isPartANumeric = !isNaN(Number(partA));
+            const isPartBNumeric = !isNaN(Number(partB));
+
+            if (isPartANumeric && isPartBNumeric) {
+                const numA = Number(partA);
+                const numB = Number(partB);
+                if (numA !== numB) return numA - numB;
+            } else {
+                return partA.localeCompare(partB);
+            }
+        }
+        return partsA.length - partsB.length;
     });
 
     const lowercasedFilter = searchTerm.toLowerCase();
@@ -1467,7 +1488,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-6 pt-0">
                   <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'addFee' ? 'Add Application Fee' : 'Edit Application Fee'}</DialogTitle>
                     </DialogHeader>
@@ -1479,17 +1500,15 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
-                  <DialogHeader className="p-6 pb-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-6">
+                  <DialogHeader className="pb-4">
                         <DialogTitle>{dialogState.type === 'addPartner' ? 'Add New Partner' : 'Edit Partner'}</DialogTitle>
                     </DialogHeader>
-                  <div className="p-6">
                     <PartnerDialogContent
                         initialData={dialogState.type === 'editPartner' ? dialogState.data?.partner : createDefaultOwner()}
                         onConfirm={handleConfirmPartner}
                         onCancel={closeDialog}
                     />
-                  </div>
                 </DialogContent>
             </Dialog>
             <AlertDialog open={deletingPartnerIndex !== null} onOpenChange={() => setDeletingPartnerIndex(null)}>
@@ -2099,4 +2118,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
       
+
 
