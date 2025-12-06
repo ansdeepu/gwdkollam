@@ -122,14 +122,15 @@ export default function DataEntryPage() {
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
   }, [workType, isApprovingUpdate, pageToReturnTo]);
 
-
   useEffect(() => {
     const loadAllData = async () => {
         setDataLoading(true);
         setErrorState(null);
 
-        // This effect should only run when user authentication is complete.
-        if (authIsLoading || !user) {
+        if (authIsLoading) return;
+        if (!user) {
+            setErrorState("You must be logged in to view this page.");
+            setDataLoading(false);
             return;
         }
 
@@ -137,22 +138,17 @@ export default function DataEntryPage() {
             const allUsersResult = (user.role === 'editor') ? await fetchAllUsers() : [];
 
             if (!fileIdToEdit) {
-                // This is for creating a new file.
                 setPageData({ initialData: getFormDefaults(), allUsers: allUsersResult });
                 return;
             }
 
-            // Fetch the main file entry.
             const originalEntry = await fetchEntryForEditing(fileIdToEdit);
+
             if (!originalEntry) {
                 setErrorState("Could not find the requested file. You may not have permission to view it.");
-                toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
-                // We show an error message and don't redirect immediately to allow the user to see the error.
-                // A timed redirect could be added here if desired.
                 return;
             }
-
-            // Check supervisor permissions
+            
             if (user.role === 'supervisor' && !originalEntry.assignedSupervisorUids?.includes(user.uid)) {
                 setErrorState("You do not have permission to view this file.");
                 return;
