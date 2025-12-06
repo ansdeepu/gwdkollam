@@ -51,7 +51,7 @@ const createDefaultRig = (): RigRegistrationType => ({
 
 const toDateOrNull = (value: any): Date | null => {
     if (value === null || value === undefined || value === '') return null;
-    if (value instanceof Date && !isNaN(value.getTime())) return value;
+    if (value instanceof Date && isValid(value)) return value;
 
     if (typeof value.seconds === 'number') {
         const d = new Date(value.seconds * 1000);
@@ -62,7 +62,7 @@ const toDateOrNull = (value: any): Date | null => {
         const trimmed = value.trim();
         if (trimmed === '') return null;
 
-        // Prioritize dd/MM/yyyy format
+        // Try dd/MM/yyyy format first
         let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
         if (isValid(parsedDate)) return parsedDate;
 
@@ -764,30 +764,27 @@ export default function AgencyRegistrationPage() {
         const sortedApps = [...allAgencyApplications].sort((a, b) => {
             const dateA = toDateOrNull(a.agencyRegistrationDate);
             const dateB = toDateOrNull(b.agencyRegistrationDate);
-
-            // Handle null/invalid dates by pushing them to the end
+        
             const isAValid = dateA && isValid(dateA);
             const isBValid = dateB && isValid(dateB);
-
-            if (isAValid && !isBValid) return -1; // a comes first
-            if (!isAValid && isBValid) return 1;  // b comes first
-
+        
+            if (isAValid && !isBValid) return -1;
+            if (!isAValid && isBValid) return 1;
+        
             if (isAValid && isBValid) {
                 const timeDiff = dateA.getTime() - dateB.getTime();
                 if (timeDiff !== 0) return timeDiff;
             }
-
-            // Secondary sort by extracted registration number if dates are the same or both are null/invalid
+        
             const numA = extractRegNo(a.agencyRegistrationNo);
             const numB = extractRegNo(b.agencyRegistrationNo);
-
+        
             if (numA !== Infinity || numB !== Infinity) {
                 if (numA === Infinity) return 1;
                 if (numB === Infinity) return -1;
                 if (numA !== numB) return numA - numB;
             }
-            
-            // Tertiary sort by full file number as a fallback
+        
             return (a.fileNo || '').localeCompare(b.fileNo || '', undefined, { numeric: true });
         });
 
@@ -2109,6 +2106,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
 
 
 
