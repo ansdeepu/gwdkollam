@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { format, addYears, isValid, parseISO, parse, toDate } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/componentsui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
@@ -71,22 +71,23 @@ const toDateOrNull = (value: any): Date | null => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (trimmed === '') return null;
+    
+    // Handle 'dd/MM/yyyy' first as it's a common input format
+    let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
+    if (isValid(parsedDate)) return parsedDate;
 
-    // ISO / RFC parsable
-    let parsedDate = parseISO(trimmed);
+    // Then try ISO / RFC parsable
+    parsedDate = parseISO(trimmed);
     if (isValid(parsedDate)) return parsedDate;
 
     // yyyy-MM-dd (common for <input type=date>)
     parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
     if (isValid(parsedDate)) return parsedDate;
-
-    // dd/MM/yyyy
-    parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
-    if (isValid(parsedDate)) return parsedDate;
   }
 
   return null;
 };
+
 
 const formatDateForInput = (d: Date | null | string | undefined) => {
     if (!d) return '';
@@ -764,35 +765,31 @@ export default function AgencyRegistrationPage() {
         if (dateA && dateB) {
             const timeDiff = dateA.getTime() - dateB.getTime();
             if (timeDiff !== 0) return timeDiff;
-        }
-        if (dateA && !dateB) return -1;
-        if (!dateA && dateB) return 1;
+        } else if (dateA) return -1;
+        else if (dateB) return 1;
 
-        // Fallback to file number if dates are the same or not present
-        const fileNoA = a.fileNo || '';
-        const fileNoB = b.fileNo || '';
-        
-        const partsA = fileNoA.split(/(\d+)/);
-        const partsB = fileNoB.split(/(\d+)/);
-    
-        for (let i = 0; i < Math.min(partsA.length, partsB.length); i++) {
-            const partA = partsA[i];
-            const partB = partsB[i];
-            
-            if (partA === partB) continue;
+        // Secondary Sort: Agency Registration No.
+        const regNoA = a.agencyRegistrationNo || '';
+        const regNoB = b.agencyRegistrationNo || '';
 
-            const isPartANumeric = !isNaN(Number(partA));
-            const isPartBNumeric = !isNaN(Number(partB));
+        if (regNoA && regNoB) {
+            const partsA = regNoA.split('/');
+            const partsB = regNoB.split('/');
 
-            if (isPartANumeric && isPartBNumeric) {
-                const numA = Number(partA);
-                const numB = Number(partB);
-                if (numA !== numB) return numA - numB;
-            } else {
-                return partA.localeCompare(partB);
+            // Assuming the number is the third part: "GWD/KLM/0204/..."
+            if (partsA.length > 2 && partsB.length > 2) {
+                const numA = parseInt(partsA[2], 10);
+                const numB = parseInt(partsB[2], 10);
+                if (!isNaN(numA) && !isNaN(numB) && numA !== numB) {
+                    return numA - numB;
+                }
             }
         }
-        return partsA.length - partsB.length;
+        
+        // Fallback to File No.
+        const fileNoA = a.fileNo || '';
+        const fileNoB = b.fileNo || '';
+        return fileNoA.localeCompare(fileNoB, undefined, { numeric: true, sensitivity: 'base' });
     });
 
     const lowercasedFilter = searchTerm.toLowerCase();
