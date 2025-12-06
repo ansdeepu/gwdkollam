@@ -126,100 +126,91 @@ export default function DataEntryPage() {
   useEffect(() => {
     let isMounted = true;
     const loadAllData = async () => {
-      if (!user) { // Wait for user profile to be available
-        if (!authIsLoading) { // If auth is done and still no user, stop loading.
-             setDataLoading(false);
-        }
+      if (!user) {
+        if (!authIsLoading) setDataLoading(false);
         return;
       }
-
+      
       setDataLoading(true);
-      
-      const entryPromise = fileIdToEdit ? fetchEntryForEditing(fileIdToEdit) : Promise.resolve(null);
-      const pendingUpdatePromise = approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null);
-      
+
       try {
-        let [originalEntry, pendingUpdate] = await Promise.all([entryPromise, pendingUpdatePromise]);
-        
-        let allUsersResult: UserProfile[] = [];
-        if (user.role === 'editor' || user.role === 'viewer' || user.role === 'supervisor') {
-          allUsersResult = await fetchAllUsers();
-        }
-
-        if (isMounted) {
-          let dataForForm: DataEntryFormData | null = null;
-          let permissionError = false;
-
-          if (originalEntry) {
-              if (user.role === 'supervisor' && !(originalEntry.assignedSupervisorUids?.includes(user.uid))) {
-                  permissionError = true;
-                  originalEntry = null; 
-              } else if (user.role === 'supervisor') {
-                  const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
-                  originalEntry.siteDetails?.forEach(site => {
-                      if (site.supervisorUid === user.uid) {
-                          site.isPending = hasActivePendingUpdate;
-                      }
+          if (!fileIdToEdit) {
+              // Creating a new file
+              const allUsersResult = (user.role === 'editor') ? await fetchAllUsers() : [];
+              if (isMounted) {
+                  setPageData({
+                      initialData: getFormDefaults(),
+                      allUsers: allUsersResult,
                   });
               }
+              return;
           }
 
-          if (!fileIdToEdit) { 
-              dataForForm = getFormDefaults();
-              setFileNoForHeader(null);
-          } else if (permissionError) {
-              toast({ title: "Permission Denied", description: `You do not have permission to view this file.`, variant: "destructive" });
-              setFileNoForHeader(null);
-              router.push('/dashboard'); // Redirect on permission error
-          } else if (!originalEntry) {
+          // Editing an existing file
+          const [originalEntry, pendingUpdate, allUsersResult] = await Promise.all([
+              fetchEntryForEditing(fileIdToEdit),
+              approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null),
+              (user.role === 'editor' || user.role === 'viewer' || user.role === 'supervisor') ? fetchAllUsers() : Promise.resolve([])
+          ]);
+          
+          if (!isMounted) return;
+
+          if (!originalEntry) {
               toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
-              setFileNoForHeader(null);
-              router.push('/dashboard'); // Redirect on not found
-          } else {
-            setFileNoForHeader(originalEntry.fileNo);
-            if (approveUpdateId && pendingUpdate && originalEntry) {
-              if (pendingUpdate.status !== 'pending') {
-                toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
-                dataForForm = originalEntry;
-              } else {
-                let mergedData = JSON.parse(JSON.stringify(originalEntry));
-                const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
-                
-                mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
-                  if (updatedSitesMap.has(originalSite.nameOfSite)) {
-                    const updatedSiteData = updatedSitesMap.get(originalSite.nameOfSite)!;
-                    return { ...originalSite, ...updatedSiteData };
-                  }
-                  return originalSite;
-                }) || [];
-                dataForForm = mergedData; 
-                toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
-              }
-            } else {
-              dataForForm = originalEntry;
-            }
+              router.push('/dashboard');
+              return;
           }
           
+          if (user.role === 'supervisor' && !originalEntry.assignedSupervisorUids?.includes(user.uid)) {
+              toast({ title: "Permission Denied", description: `You do not have permission to view this file.`, variant: "destructive" });
+              router.push('/dashboard');
+              return;
+          }
+
+          let dataForForm: DataEntryFormData = originalEntry;
+
+          if (approveUpdateId && pendingUpdate) {
+              if (pendingUpdate.status !== 'pending') {
+                  toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
+              } else {
+                  let mergedData = JSON.parse(JSON.stringify(originalEntry));
+                  const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
+                  
+                  mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
+                      return updatedSitesMap.get(originalSite.nameOfSite) || originalSite;
+                  }) || [];
+                  dataForForm = mergedData;
+                  toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
+              }
+          }
+
+          if (user.role === 'supervisor') {
+              const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
+              dataForForm.siteDetails?.forEach(site => {
+                  if (site.supervisorUid === user.uid) {
+                      site.isPending = hasActivePendingUpdate;
+                  }
+              });
+          }
+
+          setFileNoForHeader(dataForForm.fileNo);
           setPageData({
-            initialData: dataForForm ? processDataForForm(dataForForm) : getFormDefaults(),
-            allUsers: allUsersResult,
+              initialData: processDataForForm(dataForForm),
+              allUsers: allUsersResult,
           });
-        }
+
       } catch (error) {
-        console.error("Error loading data for form:", error);
-        toast({ title: "Error Loading Data", description: "Could not load all required data. Please try again.", variant: "destructive" });
-        if(isMounted) {
-           setPageData({
-            initialData: getFormDefaults(),
-            allUsers: [],
-          });
-        }
+          console.error("Error loading data for form:", error);
+          toast({ title: "Error Loading Data", description: "Could not load all required data.", variant: "destructive" });
+          if(isMounted) {
+             setPageData({ initialData: getFormDefaults(), allUsers: [] });
+          }
       } finally {
-        if(isMounted) setDataLoading(false);
+          if(isMounted) setDataLoading(false);
       }
     };
 
-    if (!authIsLoading) { // Run only after user auth state is resolved.
+    if (!authIsLoading) {
       loadAllData();
     }
     
@@ -244,7 +235,7 @@ export default function DataEntryPage() {
             } else if (fileNoForHeader) {
                 title = "Edit File Data";
                 description = `Editing details for File No: ${fileNoForHeader}. Please make your changes and submit.`;
-            } else {
+            } else if (fileIdToEdit) {
                  title = "Error Loading File";
                  description = "Could not find the requested file. It may have been deleted.";
             }
@@ -255,7 +246,7 @@ export default function DataEntryPage() {
            } else if (fileNoForHeader) {
              title = "Edit Assigned Site Details";
              description = `Editing assigned sites for File No: ${fileNoForHeader}. Submit your changes for approval.`;
-           } else {
+           } else if (fileIdToEdit) {
                title = "Error Loading File";
                description = "Could not find the requested file. You may not have permission to view it.";
            }
@@ -266,7 +257,7 @@ export default function DataEntryPage() {
             } else if (isCreatingNew) {
                  title = "Access Denied";
                  description = "You do not have permission to create new file entries. This action is restricted to Editors.";
-            } else {
+            } else if(fileIdToEdit) {
                  title = "Error Loading File";
                  description = "Could not find the requested file. It may have been deleted.";
             }
@@ -323,6 +314,18 @@ export default function DataEntryPage() {
       </div>
     );
   }
+  
+  if (!pageData && fileIdToEdit) {
+    // This state occurs if there was an error during data loading (e.g., file not found and redirected)
+    // The loading spinner provides a better UX than a brief flash of "Form data could not be loaded".
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Redirecting...</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-6">
@@ -356,3 +359,5 @@ export default function DataEntryPage() {
     </div>
   );
 }
+
+    
