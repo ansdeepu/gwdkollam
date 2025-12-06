@@ -126,7 +126,9 @@ export default function DataEntryPage() {
   useEffect(() => {
     let isMounted = true;
     const loadAllData = async () => {
+      // Do not proceed if the user object is not available yet.
       if (!user) {
+        // If auth is also done loading and there's still no user, it's an error state, but let the main checks handle it.
         if (!authIsLoading) setDataLoading(false);
         return;
       }
@@ -219,7 +221,7 @@ export default function DataEntryPage() {
 
   useEffect(() => {
     let title = "Loading...";
-    let description = "Please wait...";
+    let description = "Please wait while the page content is loading.";
     const isCreatingNew = !fileIdToEdit;
 
     if (!dataLoading) { // Only set header after data has loaded or failed
@@ -360,4 +362,3 @@ export default function DataEntryPage() {
   );
 }
 
-    
