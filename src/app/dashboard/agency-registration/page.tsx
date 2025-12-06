@@ -63,15 +63,15 @@ const toDateOrNull = (value: any): Date | null => {
     const trimmed = value.trim();
     if (trimmed === '') return null;
 
-    // Try dd/MM/yyyy format first
+    // First, try to parse dd/MM/yyyy format, which is common in manual entries.
     let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
     if (isValid(parsedDate)) return parsedDate;
 
-    // Then try yyyy-MM-dd format
+    // Then, try yyyy-MM-dd format from date pickers.
     parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
     if (isValid(parsedDate)) return parsedDate;
     
-    // Then try ISO / RFC parsable format
+    // Finally, try the more general ISO / RFC parsable format.
     parsedDate = parseISO(trimmed);
     if (isValid(parsedDate)) return parsedDate;
   }
@@ -788,18 +788,21 @@ export default function AgencyRegistrationPage() {
             const dateA = toDateOrNull(a.agencyRegistrationDate);
             const dateB = toDateOrNull(b.agencyRegistrationDate);
 
+            // Primary Sort: agencyRegistrationDate
             if (dateA && dateB) {
                 if (dateA.getTime() !== dateB.getTime()) {
                     return dateA.getTime() - dateB.getTime();
                 }
             } else if (dateA) {
-                return -1;
+                return -1; // Entries with dates come before those without
             } else if (dateB) {
                 return 1;
             }
 
+            // Secondary Sort: registration number
             const getRegNumber = (regNo: string | null | undefined): number | null => {
                 if (!regNo) return null;
+                // Regex to find numbers after a slash or in parentheses
                 const match = regNo.match(/(?:\/|KLM\/|GWD\/)(\d+)(?:\(N\)\/|\/)/);
                 return match && match[1] ? parseInt(match[1], 10) : null;
             };
@@ -811,8 +814,10 @@ export default function AgencyRegistrationPage() {
                 return numA - numB;
             }
 
+            // Tertiary Sort: fileNo as a fallback
             return (a.fileNo || '').localeCompare(b.fileNo || '');
         });
+
 
         const lastCreated = sortedApps.reduce((latest, entry) => {
             const createdAt = (entry as any).createdAt ? toDateOrNull((entry as any).createdAt) : null;
@@ -2098,6 +2103,8 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
 
+
+    
 
     
 
