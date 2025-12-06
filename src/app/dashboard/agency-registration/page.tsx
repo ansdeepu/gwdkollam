@@ -50,7 +50,7 @@ const createDefaultRig = (): RigRegistrationType => ({
 });
 
 const toDateOrNull = (value: any): Date | null => {
-    if (value === null || value === undefined || value === '') return null;
+    if (!value) return null;
     if (value instanceof Date && isValid(value)) return value;
 
     if (typeof value.seconds === 'number') {
@@ -781,6 +781,39 @@ export default function AgencyRegistrationPage() {
                 return searchableContent.includes(lowercasedFilter);
             })
             : sortedApps;
+            
+        // Sorting logic
+        filtered.sort((a, b) => {
+          const dateA = toDateOrNull(a.agencyRegistrationDate);
+          const dateB = toDateOrNull(b.agencyRegistrationDate);
+
+          if (dateA && dateB) {
+            if (dateA.getTime() !== dateB.getTime()) {
+              return dateA.getTime() - dateB.getTime();
+            }
+          } else if (dateA) {
+            return -1; // a has date, b doesn't, so a comes first
+          } else if (dateB) {
+            return 1; // b has date, a doesn't, so b comes first
+          }
+          
+          // Secondary sort: registration number
+          const numA = a.agencyRegistrationNo ? (a.agencyRegistrationNo.match(/GWD\/KLM\/(\d+)\/|GWD\/(\d+)\(N\)\//) || []).slice(1).find(n => n) : null;
+          const numB = b.agencyRegistrationNo ? (b.agencyRegistrationNo.match(/GWD\/KLM\/(\d+)\/|GWD\/(\d+)\(N\)\//) || []).slice(1).find(n => n) : null;
+          const intA = numA ? parseInt(numA, 10) : null;
+          const intB = numB ? parseInt(numB, 10) : null;
+          
+          if (intA !== null && intB !== null) {
+              if (intA !== intB) return intA - intB;
+          } else if (intA !== null) {
+              return -1;
+          } else if (intB !== null) {
+              return 1;
+          }
+
+          // Tertiary sort: file number
+          return (a.fileNo || '').localeCompare(b.fileNo || '');
+        });
 
         const lastCreated = sortedApps.reduce((latest, entry) => {
             const createdAt = (entry as any).createdAt ? toDateOrNull((entry as any).createdAt) : null;
@@ -2068,6 +2101,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
 
 
 
