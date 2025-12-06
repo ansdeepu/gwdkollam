@@ -145,13 +145,17 @@ export default function DataEntryPage() {
             const originalEntry = await fetchEntryForEditing(fileIdToEdit);
 
             if (!originalEntry) {
-                setErrorState("Could not find the requested file. You may not have permission to view it.");
+                setErrorState("Could not find the requested file. It may have been deleted or you may not have permission.");
                 return;
             }
             
-            if (user.role === 'supervisor' && !originalEntry.assignedSupervisorUids?.includes(user.uid)) {
-                setErrorState("You do not have permission to view this file.");
-                return;
+            // Supervisor Permission Check: must be assigned to at least one site within the file.
+            if (user.role === 'supervisor') {
+                const isAssigned = originalEntry.siteDetails?.some(site => site.supervisorUid === user.uid);
+                if (!isAssigned) {
+                    setErrorState("You do not have permission to view this file.");
+                    return;
+                }
             }
 
             let dataForForm: DataEntryFormData = originalEntry;
@@ -168,11 +172,13 @@ export default function DataEntryPage() {
                 }
             } else if (user.role === 'supervisor') {
                 const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
-                dataForForm.siteDetails?.forEach(site => {
-                    if (site.supervisorUid === user.uid) {
-                        site.isPending = hasActivePendingUpdate;
-                    }
-                });
+                if (hasActivePendingUpdate) {
+                    dataForForm.siteDetails?.forEach(site => {
+                        if (site.supervisorUid === user.uid) {
+                            site.isPending = true;
+                        }
+                    });
+                }
             }
 
             setFileNoForHeader(dataForForm.fileNo);
