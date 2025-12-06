@@ -115,7 +115,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
       }
     }), {} as Record<Constituency, { totalCount: number, totalExpenditure: number, allWorks: any[], byPurpose: ReturnType<typeof initialCounts> }>);
     
-    let totalWorks = 0;
+    let totalCategorizedWorks = 0;
 
     filteredWorks.forEach(work => {
         const constituency = work.constituency as Constituency | undefined;
@@ -132,7 +132,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
           currentData.totalCount++;
           currentData.totalExpenditure += expenditure;
           currentData.allWorks.push(work);
-          totalWorks++;
+          totalCategorizedWorks++;
           
           if (purpose) {
             const purposeKey = Object.keys(currentData.byPurpose).find(p => p === purpose);
@@ -145,7 +145,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         }
     });
 
-    return { constituencyData, totalWorks, displayPurposes: allDisplayPurposes };
+    return { constituencyData, totalCategorizedWorks, displayPurposes: allDisplayPurposes };
   }, [allWorks, dates]);
 
   const handleCellClick = (data: any[], title: string) => {
@@ -181,7 +181,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          Constituency-wise Works ({summaryData.totalWorks})
+          Constituency-wise Works ({summaryData.totalCategorizedWorks})
         </CardTitle>
         <CardDescription>
             Summary of all works. Deposit Works: <span className="font-semibold text-primary">{depositWorksCount}</span>, ARS: <span className="font-semibold text-primary">{arsWorksCount}</span>. Filter by completion date.
@@ -204,7 +204,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
-          {summaryData.totalWorks > 0 ? (
+          {summaryData.totalCategorizedWorks > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sortedConstituencies.map(constituency => {
                   const data = summaryData.constituencyData[constituency];
