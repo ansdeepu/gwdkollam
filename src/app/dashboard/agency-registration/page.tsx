@@ -203,7 +203,7 @@ const RegistrationTable = ({
   itemsPerPage: number,
   isPendingTable?: boolean,
 }) => (
-    <div className="max-h-[70vh] overflow-auto">
+    <div className="max-h-[70vh] overflow-auto no-scrollbar">
       <Table>
           <TableHeader className="bg-secondary sticky top-0">
               <TableRow>
@@ -756,83 +756,82 @@ export default function AgencyRegistrationPage() {
     openDialog('addRig', {});
   };
 
-  const { filteredApplications, lastCreatedDate } = useMemo(() => {
-    let sortedApps = [...allAgencyApplications].sort((a, b) => {
-        const dateA = toDateOrNull(a.agencyRegistrationDate);
-        const dateB = toDateOrNull(b.agencyRegistrationDate);
+    const { filteredApplications, lastCreatedDate } = useMemo(() => {
+        const extractRegNo = (regNo: string | undefined | null): number => {
+            if (!regNo) return Infinity;
+            // Format 1: GWD/KLM/0204/... -> 204
+            let match = regNo.match(/GWD\/KLM\/(\d+)/);
+            if (match) return parseInt(match[1], 10);
+            
+            // Format 2: GWD/008(N)/2024/KLM -> 8
+            match = regNo.match(/GWD\/(\d+)\(/);
+            if (match) return parseInt(match[1], 10);
+            
+            return Infinity; // Fallback for non-matching formats
+        };
 
-        if (dateA && dateB) {
-            const timeDiff = dateA.getTime() - dateB.getTime();
-            if (timeDiff !== 0) return timeDiff;
-        } else if (dateA) return -1;
-        else if (dateB) return 1;
+        const sortedApps = [...allAgencyApplications].sort((a, b) => {
+            const dateA = toDateOrNull(a.agencyRegistrationDate);
+            const dateB = toDateOrNull(b.agencyRegistrationDate);
 
-        // Secondary Sort: Agency Registration No.
-        const regNoA = a.agencyRegistrationNo || '';
-        const regNoB = b.agencyRegistrationNo || '';
+            // Primary sort by date
+            if (dateA && dateB) {
+                const timeDiff = dateA.getTime() - dateB.getTime();
+                if (timeDiff !== 0) return timeDiff;
+            } else if (dateA) return -1;
+            else if (dateB) return 1;
 
-        if (regNoA && regNoB) {
-            const partsA = regNoA.split('/');
-            const partsB = regNoB.split('/');
+            // Secondary sort by extracted registration number
+            const numA = extractRegNo(a.agencyRegistrationNo);
+            const numB = extractRegNo(b.agencyRegistrationNo);
+            if (numA !== numB) return numA - numB;
 
-            // Assuming the number is the third part: "GWD/KLM/0204/..."
-            if (partsA.length > 2 && partsB.length > 2) {
-                const numA = parseInt(partsA[2], 10);
-                const numB = parseInt(partsB[2], 10);
-                if (!isNaN(numA) && !isNaN(numB) && numA !== numB) {
-                    return numA - numB;
-                }
+            // Tertiary sort by full file number as a fallback
+            return (a.fileNo || '').localeCompare(b.fileNo || '', undefined, { numeric: true });
+        });
+
+        const lowercasedFilter = searchTerm.toLowerCase();
+
+        let filtered = lowercasedFilter
+            ? sortedApps.filter((app: AgencyApplication) => {
+                const searchableContent = [
+                    app.agencyName,
+                    app.fileNo,
+                    app.agencyRegistrationNo,
+                    app.agencyChallanNo,
+                    app.agencyAdditionalChallanNo,
+                    app.owner?.name,
+                    app.owner?.mobile,
+                    app.owner?.secondaryMobile,
+                    app.owner?.address,
+                    ...(app.partners || []).flatMap(p => [p.name, p.mobile, p.secondaryMobile, p.address]),
+                    ...(app.applicationFees || []).flatMap(fee => [fee.applicationFeeType, fee.applicationFeeChallanNo]),
+                    ...(app.rigs || []).flatMap(rig => [
+                        rig.rigRegistrationNo,
+                        rig.typeOfRig,
+                        rig.challanNo,
+                        rig.additionalChallanNo,
+                        rig.rigVehicle?.regNo,
+                        rig.compressorVehicle?.regNo,
+                        rig.supportingVehicle?.regNo,
+                        ...(rig.renewals || []).map(r => r.challanNo)
+                    ]),
+                ].filter(Boolean).map(String).join(' ').toLowerCase();
+
+                return searchableContent.includes(lowercasedFilter);
+            })
+            : sortedApps;
+
+        const lastCreated = sortedApps.reduce((latest, entry) => {
+            const createdAt = (entry as any).createdAt ? toDateOrNull((entry as any).createdAt) : null;
+            if (createdAt && (!latest || createdAt > latest)) {
+                return createdAt;
             }
-        }
-        
-        // Fallback to File No.
-        const fileNoA = a.fileNo || '';
-        const fileNoB = b.fileNo || '';
-        return fileNoA.localeCompare(fileNoB, undefined, { numeric: true, sensitivity: 'base' });
-    });
+            return latest;
+        }, null as Date | null);
 
-    const lowercasedFilter = searchTerm.toLowerCase();
-    
-    let filtered = lowercasedFilter
-      ? sortedApps.filter((app: AgencyApplication) => {
-          const searchableContent = [
-            app.agencyName,
-            app.fileNo,
-            app.agencyRegistrationNo,
-            app.agencyChallanNo,
-            app.agencyAdditionalChallanNo,
-            app.owner?.name,
-            app.owner?.mobile,
-            app.owner?.secondaryMobile,
-            app.owner?.address,
-            ...(app.partners || []).flatMap(p => [p.name, p.mobile, p.secondaryMobile, p.address]),
-            ...(app.applicationFees || []).flatMap(fee => [fee.applicationFeeType, fee.applicationFeeChallanNo]),
-            ...(app.rigs || []).flatMap(rig => [
-                rig.rigRegistrationNo,
-                rig.typeOfRig,
-                rig.challanNo,
-                rig.additionalChallanNo,
-                rig.rigVehicle?.regNo,
-                rig.compressorVehicle?.regNo,
-                rig.supportingVehicle?.regNo,
-                ...(rig.renewals || []).map(r => r.challanNo)
-            ]),
-          ].filter(Boolean).map(String).join(' ').toLowerCase();
-
-          return searchableContent.includes(lowercasedFilter);
-        })
-      : sortedApps;
-      
-    const lastCreated = sortedApps.reduce((latest, entry) => {
-        const createdAt = (entry as any).createdAt ? toDateOrNull((entry as any).createdAt) : null;
-        if (createdAt && (!latest || createdAt > latest)) {
-            return createdAt;
-        }
-        return latest;
-    }, null as Date | null);
-
-    return { filteredApplications: filtered, lastCreatedDate: lastCreated };
-  }, [allAgencyApplications, searchTerm]);
+        return { filteredApplications: filtered, lastCreatedDate: lastCreated };
+    }, [allAgencyApplications, searchTerm]);
 
   const completedApplications = useMemo(() => {
     return filteredApplications.filter((app: AgencyApplication) => app.status === 'Active');
@@ -1713,7 +1712,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                 <DialogTitle>Add Agency Registration</DialogTitle>
             </DialogHeader>
             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full px-6 no-scrollbar py-4">
+                <ScrollArea className="h-full px-6 py-4 no-scrollbar">
                     <div className="space-y-6">
                         <div className="space-y-4 rounded-lg border p-4">
                             <div className="grid grid-cols-3 gap-4 items-end">
