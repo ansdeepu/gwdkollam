@@ -1,4 +1,3 @@
-
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -35,8 +34,8 @@ import { usePageNavigation } from "@/hooks/usePageNavigation";
 import PaginationControls from "@/components/shared/PaginationControls";
 import ExcelJS from "exceljs";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useDataStore } from '@/hooks/use-data-store';
 import { useAgencyApplications } from '@/hooks/useAgencyApplications';
+import { useDataStore } from '@/hooks/use-data-store';
 
 
 export const dynamic = 'force-dynamic';
@@ -91,7 +90,7 @@ const toDateOrNull = (value: any): Date | null => {
 
 const formatDateForInput = (d: Date | null | string | undefined) => {
     if (!d) return '';
-    const date = typeof d === 'string' ? parseISO(d) : d;
+    const date = typeof d === 'string' ? toDateOrNull(d) : d;
     if (!date || !isValid(date)) return '';
     try {
         return format(date, 'yyyy-MM-dd');
@@ -1714,7 +1713,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                 <DialogTitle>Add Agency Registration</DialogTitle>
             </DialogHeader>
             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full px-6 no-scrollbar">
+                <ScrollArea className="h-full px-6 no-scrollbar py-4">
                     <div className="space-y-6">
                         <div className="space-y-4 rounded-lg border p-4">
                             <div className="grid grid-cols-3 gap-4 items-end">
