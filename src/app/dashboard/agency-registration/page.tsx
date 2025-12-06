@@ -531,19 +531,18 @@ export default function AgencyRegistrationPage() {
   const isSupervisor = user?.role === 'supervisor';
   const isViewer = user?.role === 'viewer';
   
-  const isViewing = isViewer || isSupervisor;
-  const isReadOnlyForForm = isViewing;
+  const isReadOnly = isViewer || isSupervisor;
   const canEdit = isEditor;
 
   useEffect(() => {
     if (selectedApplicationId) {
-      let title = isViewing ? `View Rig Registration` : `Edit Rig Registration`;
+      let title = isReadOnly ? `View Rig Registration` : `Edit Rig Registration`;
       if (selectedApplicationId === 'new') title = 'New Rig Registration';
       setHeader(title, 'Manage all details related to an agency and its rigs.');
     } else {
       setHeader('Rig Registration', 'Manage agency and rig registrations.');
     }
-  }, [selectedApplicationId, isViewing, setHeader, allAgencyApplications]);
+  }, [selectedApplicationId, isReadOnly, setHeader, allAgencyApplications]);
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
   const createDefaultFee = (): ApplicationFee => ({ id: uuidv4() });
@@ -1228,14 +1227,14 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-primary">1. Application Details</AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                      <div className="grid md:grid-cols-3 gap-4">
-                                        <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name &amp; Address</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="agencyName" render={({ field }) => <FormItem className="md:col-span-2"><FormLabel>Agency Name &amp; Address</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                     <Separator />
                                      <div className="space-y-2">
                                         <div className="flex justify-between items-center">
                                             <h4 className="font-medium">Owner Details</h4>
-                                            {!isReadOnlyForForm && (
+                                            {!isReadOnly && (
                                                 <Button type="button" variant="outline" size="sm" onClick={() => openDialog('addPartner', { index: 'new' })}><UserPlus className="mr-2 h-4 w-4"/> Add Partner</Button>
                                             )}
                                         </div>
@@ -1243,12 +1242,12 @@ export default function AgencyRegistrationPage() {
                                             <FormItem className="md:col-span-1">
                                                 <FormLabel>Name &amp; Address of Owner</FormLabel>
                                                 <FormControl>
-                                                <Textarea {...form.register("owner.name")} className="min-h-[40px]" readOnly={isReadOnlyForForm} />
+                                                <Textarea {...form.register("owner.name")} className="min-h-[40px]" readOnly={isReadOnly} />
                                                 </FormControl>
                                                 <FormMessage>{form.formState.errors.owner?.name?.message}</FormMessage>
                                             </FormItem>
-                                            <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnlyForForm} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.mobile" render={({ field }) => <FormItem><FormLabel>Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="owner.secondaryMobile" render={({ field }) => <FormItem><FormLabel>Secondary Mobile No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -1261,7 +1260,7 @@ export default function AgencyRegistrationPage() {
                                                             <p className="font-semibold">{field.name}</p>
                                                             <p className="text-sm text-muted-foreground">{field.mobile}</p>
                                                         </div>
-                                                        {!isReadOnlyForForm && (
+                                                        {!isReadOnly && (
                                                             <div className="flex items-center gap-1">
                                                                 <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editPartner', { index, partner: field })}><Edit className="h-4 w-4"/></Button>
                                                                 <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setDeletingPartnerIndex(index)}><Trash2 className="h-4 w-4"/></Button>
@@ -1283,7 +1282,7 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-primary">
                                     <div className="flex justify-between items-center w-full">
                                         <span>2. Application Fees</span>
-                                        {!isReadOnlyForForm && (
+                                        {!isReadOnly && (
                                             <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
                                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Application Fee
                                             </Button>
@@ -1298,7 +1297,7 @@ export default function AgencyRegistrationPage() {
                                                 <div className="font-bold text-sm text-muted-foreground">Sl. No. {index + 1}</div>
                                                 <h4 className="font-medium text-primary">{field.applicationFeeType || 'Not Set'}</h4>
                                              </div>
-                                            {!isReadOnlyForForm && (
+                                            {!isReadOnly && (
                                                 <div className="flex items-center gap-1">
                                                     <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
                                                         <Edit className="h-4 w-4" />
@@ -1329,7 +1328,7 @@ export default function AgencyRegistrationPage() {
                             <AccordionTrigger className="text-xl font-semibold text-primary">
                                 <div className="flex justify-between items-center w-full">
                                     <span>3. Agency Registration</span>
-                                    {!isReadOnlyForForm && (
+                                    {!isReadOnly && (
                                         <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('editAgencyReg', { regData: form.getValues() }) }}>
                                             <Edit className="mr-2 h-4 w-4" /> Add
                                         </Button>
@@ -1357,7 +1356,7 @@ export default function AgencyRegistrationPage() {
                                 <AccordionTrigger className="text-xl font-semibold text-primary">
                                     <div className="flex justify-between items-center w-full">
                                         <span>4. Rig Registration ({activeRigs.length} Active)</span>
-                                        {!isReadOnlyForForm && (
+                                        {!isReadOnly && (
                                             <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); handleAddRig(); }}>
                                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Rig
                                             </Button>
@@ -1372,7 +1371,7 @@ export default function AgencyRegistrationPage() {
                                         field={field}
                                         index={originalIndex}
                                         displayIndex={displayIndex}
-                                        isReadOnly={isReadOnlyForForm}
+                                        isReadOnly={isReadOnly}
                                         onRemove={isEditor ? removeRig : undefined}
                                         openDialog={openDialog}
                                         onEditRenewal={handleEditRenewal}
@@ -1381,7 +1380,7 @@ export default function AgencyRegistrationPage() {
                                     />
                                     ))}
                                 </Accordion>
-                                {!isReadOnlyForForm && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
+                                {!isReadOnly && isEditor && activeRigCount >= 3 && <p className="text-sm text-muted-foreground mt-4">A maximum of 3 active rigs are allowed.</p>}
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
@@ -1398,7 +1397,7 @@ export default function AgencyRegistrationPage() {
                                         field={field}
                                         index={originalIndex}
                                         displayIndex={displayIndex}
-                                        isReadOnly={isReadOnlyForForm}
+                                        isReadOnly={isReadOnly}
                                         onRemove={isEditor ? removeRig : undefined}
                                         openDialog={openDialog}
                                         onEditRenewal={handleEditRenewal}
@@ -1424,7 +1423,7 @@ export default function AgencyRegistrationPage() {
                                         <Textarea
                                             {...field}
                                             value={field.value ?? ""}
-                                            readOnly={isReadOnlyForForm}
+                                            readOnly={isReadOnly}
                                             placeholder="Add any final remarks for this agency registration..."
                                             rows={4}
                                         />
@@ -1436,7 +1435,7 @@ export default function AgencyRegistrationPage() {
 
 
                     </CardContent>
-                    {!isReadOnlyForForm && (
+                    {!isReadOnly && (
                       <CardFooter className="flex justify-end gap-2">
                           <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
                           <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : (selectedApplicationId === 'new' ? 'Save Registration' : 'Save Changes')}</Button>

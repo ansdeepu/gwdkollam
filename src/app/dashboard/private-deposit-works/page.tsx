@@ -15,11 +15,12 @@ import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
-import { useDataStore } from '@/hooks/use-data-store';
+import { useFileEntries } from '@/hooks/useFileEntries';
 
 export const dynamic = 'force-dynamic';
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
+const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
 
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
@@ -43,6 +44,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 export default function PrivateDepositWorksPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
+  const { fileEntries: allFileEntries } = useFileEntries();
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
@@ -52,7 +54,6 @@ export default function PrivateDepositWorksPage() {
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { allFileEntries } = useDataStore(); 
   const router = useRouter();
   const { setIsNavigating } = usePageNavigation();
   
@@ -61,17 +62,13 @@ export default function PrivateDepositWorksPage() {
   const { privateDepositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
     let entries: DataEntryFormData[];
 
+    // Supervisors only see their assigned ongoing works from the start.
     if (user?.role === 'supervisor') {
-      // For supervisors, show all files where they are assigned to at least one site and the application type is private.
-      entries = allFileEntries
-        .filter(entry => !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
-        .map(entry => {
-          const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
-          return { ...entry, siteDetails: assignedSites };
-        })
-        .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+      entries = allFileEntries.filter(entry => 
+        !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
+      );
     } else {
-      // For other roles, filter for private application types.
+      // For other roles, filter for private application types from the global list.
       entries = allFileEntries.filter(entry => 
         !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
       );

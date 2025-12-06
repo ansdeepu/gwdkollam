@@ -26,6 +26,8 @@ import { useDataStore } from './use-data-store'; // Import the new central store
 
 const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
+const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+
 
 export function useFileEntries() {
   const { user } = useAuth();
@@ -47,13 +49,12 @@ export function useFileEntries() {
       let entries = allFileEntries;
 
       if (user.role === 'supervisor') {
-        const visibleStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
         entries = allFileEntries
             .map(entry => {
                 const assignedSites = entry.siteDetails?.filter(site => 
                     site.supervisorUid === user.uid &&
                     site.workStatus &&
-                    visibleStatuses.includes(site.workStatus as SiteWorkStatus)
+                    ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
                 );
                 return { ...entry, siteDetails: assignedSites };
             })

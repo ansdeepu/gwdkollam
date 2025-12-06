@@ -15,6 +15,7 @@ import { useDataStore } from './use-data-store'; // Import the new central store
 const db = getFirestore(app);
 const ARS_COLLECTION = 'arsEntries';
 const PENDING_UPDATES_COLLECTION = 'pendingUpdates';
+const ONGOING_ARS_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
 
 // This is the shape of the data as it's stored and used in the app
 export type ArsEntry = ArsEntryFormData & {
@@ -43,11 +44,10 @@ export function useArsEntries() {
       let entries = allArsEntries;
 
       if (user.role === 'supervisor') {
-        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
         entries = allArsEntries.filter(entry => 
             entry.supervisorUid === user.uid && 
             entry.workStatus &&
-            ongoingStatuses.includes(entry.workStatus as SiteWorkStatus)
+            ONGOING_ARS_STATUSES.includes(entry.workStatus as SiteWorkStatus)
         );
         
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/page.tsx
 "use client";
 
@@ -271,68 +272,70 @@ export default function ETenderListPage() {
             <Card>
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Sl. No.</TableHead>
-                                    <TableHead>eTender Ref. No.</TableHead>
-                                    <TableHead>Name of Work</TableHead>
-                                    <TableHead>Last Date of Receipt</TableHead>
-                                    <TableHead>Date of Opening</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="w-[1%] text-center">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredTenders.length > 0 ? (
-                                    filteredTenders.map((tender, index) => {
-                                        return (
-                                            <TableRow key={tender.id} className={getStatusRowClass(tender.presentStatus)}>
-                                                <TableCell className="align-top">{index + 1}</TableCell>
-                                                <TableCell className="font-bold align-top">
-                                                    <div className="flex flex-col">
-                                                        <span className="whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
-                                                        <span className="text-xs font-normal">Dated: {formatDateSafe(tender.tenderDate)}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="whitespace-normal break-words align-top">{tender.nameOfWork}</TableCell>
-                                                <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
-                                                <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
-                                                <TableCell className="align-top">
-                                                    {tender.presentStatus && <Badge className={cn(getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
-                                                </TableCell>
-                                                <TableCell className="text-center align-top">
-                                                    <div className="flex items-center justify-center space-x-1">
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}><Eye className="h-4 w-4" /></Button></TooltipTrigger>
-                                                            <TooltipContent><p>View / Edit Tender</p></TooltipContent>
-                                                        </Tooltip>
-                                                        {user?.role === 'editor' && (
-                                                            <>
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}><Copy className="h-4 w-4" /></Button></TooltipTrigger>
-                                                                    <TooltipContent><p>Copy Tender</p></TooltipContent>
-                                                                </Tooltip>
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
-                                                                    <TooltipContent><p>Delete Tender</p></TooltipContent>
-                                                                </Tooltip>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )
-                                    })
-                                ) : (
+                        <TooltipProvider>
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center">
-                                            No tenders found.
-                                        </TableCell>
+                                        <TableHead>Sl. No.</TableHead>
+                                        <TableHead>eTender Ref. No.</TableHead>
+                                        <TableHead>Name of Work</TableHead>
+                                        <TableHead>Last Date of Receipt</TableHead>
+                                        <TableHead>Date of Opening</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="w-[1%] text-center">Actions</TableHead>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredTenders.length > 0 ? (
+                                        filteredTenders.map((tender, index) => {
+                                            return (
+                                                <TableRow key={tender.id} className={getStatusRowClass(tender.presentStatus)}>
+                                                    <TableCell className="align-top">{index + 1}</TableCell>
+                                                    <TableCell className="font-bold align-top">
+                                                        <div className="flex flex-col">
+                                                            <span className="whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
+                                                            <span className="text-xs font-normal">Dated: {formatDateSafe(tender.tenderDate)}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-normal break-words align-top">{tender.nameOfWork}</TableCell>
+                                                    <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
+                                                    <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
+                                                    <TableCell className="align-top">
+                                                        {tender.presentStatus && <Badge className={cn(getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
+                                                    </TableCell>
+                                                    <TableCell className="text-center align-top">
+                                                        <div className="flex items-center justify-center space-x-1">
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleViewAndEdit(tender.id)}><Eye className="h-4 w-4" /></Button></TooltipTrigger>
+                                                                <TooltipContent><p>View / Edit Tender</p></TooltipContent>
+                                                            </Tooltip>
+                                                            {user?.role === 'editor' && (
+                                                                <>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleCopyClick(tender)}><Copy className="h-4 w-4" /></Button></TooltipTrigger>
+                                                                        <TooltipContent><p>Copy Tender</p></TooltipContent>
+                                                                    </Tooltip>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteClick(tender)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
+                                                                        <TooltipContent><p>Delete Tender</p></TooltipContent>
+                                                                    </Tooltip>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="h-24 text-center">
+                                                No tenders found.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TooltipProvider>
                     </div>
                 </CardContent>
             </Card>

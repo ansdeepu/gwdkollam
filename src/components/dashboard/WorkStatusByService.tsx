@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Activity } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, UserRole } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
 
 const dashboardWorkStatusOrder: SiteWorkStatus[] = ["Under Process", "Addl. AS Awaited", "To be Refunded", "Awaiting Dept. Rig", "To be Tendered", "TS Pending", "Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
 const dashboardServiceOrder: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR"];
@@ -122,42 +123,44 @@ export default function WorkStatusByService({ allFileEntries, onOpenDialog, curr
         <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" />Work Status by Service</CardTitle>
         <CardDescription>Breakdown of application statuses across different service categories. Click on a number to see detailed reports.</CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        {workStatusByServiceData && workStatusByServiceData.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-semibold p-2">Work Category</TableHead>
-                {[...dashboardServiceOrder, 'Total'].map(service => (
-                  <TableHead key={service} className={cn("text-center font-semibold p-1", service === 'Total' && 'text-primary bg-primary/10')} dangerouslySetInnerHTML={{ __html: service === 'Total' ? service : (serviceHeaderLabels[service] || service) }} />
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {workStatusByServiceData.map((row) => {
-                const isTotalRow = row.statusCategory === "Total No. of Works/Files";
-                return (
-                <TableRow key={row.statusCategory} className={cn(isTotalRow && 'bg-primary/10 hover:bg-primary/20')}>
-                  <TableCell className={cn("font-medium p-2 whitespace-normal break-words", isTotalRow && 'text-primary font-bold')}>{row.statusCategory}</TableCell>
-                  {dashboardServiceOrder.map(service => (
-                    <TableCell key={service} className={cn("text-center p-2", isTotalRow && "font-bold")}>
-                      {(row as any)[service].count > 0 ? (
-                        <Button variant="link" className={cn("p-0 h-auto font-semibold", isTotalRow && 'font-bold text-primary')} onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
+      <CardContent>
+        <ScrollArea className="w-full h-[400px]">
+          {workStatusByServiceData && workStatusByServiceData.length > 0 ? (
+            <Table>
+              <TableHeader className="sticky top-0 bg-secondary z-10">
+                <TableRow>
+                  <TableHead className="font-semibold p-2">Work Category</TableHead>
+                  {[...dashboardServiceOrder, 'Total'].map(service => (
+                    <TableHead key={service} className={cn("text-center font-semibold p-1", service === 'Total' && 'text-primary bg-primary/10')} dangerouslySetInnerHTML={{ __html: service === 'Total' ? service : (serviceHeaderLabels[service] || service) }} />
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workStatusByServiceData.map((row) => {
+                  const isTotalRow = row.statusCategory === "Total No. of Works/Files";
+                  return (
+                  <TableRow key={row.statusCategory} className={cn(isTotalRow && 'bg-primary/10 hover:bg-primary/20')}>
+                    <TableCell className={cn("font-medium p-2 whitespace-normal break-words", isTotalRow && 'text-primary font-bold')}>{row.statusCategory}</TableCell>
+                    {dashboardServiceOrder.map(service => (
+                      <TableCell key={service} className={cn("text-center p-2", isTotalRow && "font-bold")}>
+                        {(row as any)[service].count > 0 ? (
+                          <Button variant="link" className={cn("p-0 h-auto font-semibold", isTotalRow && 'font-bold text-primary')} onClick={() => handleWorkStatusCellClick((row as any)[service].data, `${row.statusCategory} - ${service}`)}>{(row as any)[service].count}</Button>
+                        ) : (0)}
+                      </TableCell>
+                    ))}
+                    <TableCell className="text-center p-2 font-bold bg-primary/10 text-primary">
+                      {(row as any)['total'].count > 0 ? (
+                        <Button variant="link" className="p-0 h-auto font-bold text-primary" onClick={() => handleWorkStatusCellClick((row as any)['total'].data, `${row.statusCategory} - Total`)}>{(row as any)['total'].count}</Button>
                       ) : (0)}
                     </TableCell>
-                  ))}
-                  <TableCell className="text-center p-2 font-bold bg-primary/10 text-primary">
-                    {(row as any)['total'].count > 0 ? (
-                      <Button variant="link" className="p-0 h-auto font-bold text-primary" onClick={() => handleWorkStatusCellClick((row as any)['total'].data, `${row.statusCategory} - Total`)}>{(row as any)['total'].count}</Button>
-                    ) : (0)}
-                  </TableCell>
-                </TableRow>
-              )})}
-            </TableBody>
-          </Table>
-        ) : (
-          <p className="text-center text-muted-foreground py-4">No work status data available for services.</p>
-        )}
+                  </TableRow>
+                )})}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center text-muted-foreground py-4">No work status data available for services.</p>
+          )}
+        </ScrollArea>
       </CardContent>
     </Card>
   );

@@ -1,3 +1,4 @@
+
 // src/components/layout/AppNavMenu.tsx
 "use client";
 
@@ -32,7 +33,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/file-room', label: 'Deposit Works', icon: FolderOpen },
   { href: '/dashboard/private-deposit-works', label: 'Private Deposit Works', icon: Landmark },
   { href: '/dashboard/ars', label: 'ARS', icon: Waves },
-  { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList, roles: ['editor', 'viewer', 'supervisor'] },
+  { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList },
   { href: '/dashboard/e-tender', label: 'e-Tender', icon: Hammer, roles: ['editor', 'viewer'] },
   { href: '/dashboard/pending-updates', label: 'Pending Actions', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },

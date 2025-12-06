@@ -116,7 +116,7 @@ export default function FileManagerPage() {
                  <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
                 </div>
-                <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                 <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Total Sites: <span className="font-bold text-primary">{totalSites}</span>
                 </div>
                 {lastCreatedDate && (
