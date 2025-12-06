@@ -97,9 +97,11 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
       });
     }
+    
+    const arsGrouping: SitePurpose[] = ["ARS", "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds"];
+    const allDisplayPurposes = [...sitePurposeOptions.filter(p => !arsGrouping.includes(p)), "ARS"];
 
-    const allPurposes = [...sitePurposeOptions, "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds", "ARS"];
-    const initialCounts = () => allPurposes.reduce((acc, purpose) => ({
+    const initialCounts = () => allDisplayPurposes.reduce((acc, purpose) => ({
       ...acc, [purpose]: { count: 0, data: [], expenditure: 0 }
     }), {} as Record<string, { count: number; data: any[]; expenditure: number }>);
 
@@ -117,7 +119,11 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
 
     filteredWorks.forEach(work => {
         const constituency = work.constituency as Constituency | undefined;
-        const purpose = (work.purpose || 'N/A') as string;
+        let purpose = (work.purpose || 'N/A') as string;
+        
+        if (arsGrouping.includes(purpose as SitePurpose)) {
+            purpose = "ARS";
+        }
         
         if (constituency && constituencyOptions.includes(constituency)) {
           const currentData = constituencyData[constituency];
@@ -139,7 +145,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         }
     });
 
-    return { constituencyData, totalWorks };
+    return { constituencyData, totalWorks, displayPurposes: allDisplayPurposes };
   }, [allWorks, dates]);
 
   const handleCellClick = (data: any[], title: string) => {
@@ -219,7 +225,8 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
 
                       {hasPurposeData && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-x-4 gap-y-2 pt-3 border-t border-border/50">
-                          {Object.entries(data.byPurpose).map(([purpose, { count }]) => {
+                          {summaryData.displayPurposes.map(purpose => {
+                              const count = data.byPurpose[purpose]?.count || 0;
                               if (count === 0) return null;
                               return (
                                 <div key={purpose} className="flex items-center justify-between text-xs">
