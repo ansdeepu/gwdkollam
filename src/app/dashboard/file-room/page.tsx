@@ -59,7 +59,7 @@ export default function FileManagerPage() {
   
   const canCreate = user?.role === 'editor';
   
-  const { depositWorkEntries, lastCreatedDate } = useMemo(() => {
+  const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
@@ -72,23 +72,9 @@ export default function FileManagerPage() {
         })
         .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
     } else {
-      // For other roles, filter out private works and files that are exclusively for ARS.
+      // For other roles, filter out private works.
       entries = allFileEntries
-        .filter(entry => {
-          // 1. Exclude all private application types
-          if (entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
-            return false;
-          }
-          // 2. Exclude files where EVERY site is an ARS site.
-          // This keeps files with no sites yet, or files with a mix of sites.
-          if (entry.siteDetails && entry.siteDetails.length > 0) {
-              const allSitesAreArs = entry.siteDetails.every(site => site.purpose === 'ARS' || site.isArsImport);
-              if (allSitesAreArs) {
-                  return false;
-              }
-          }
-          return true; // Keep the entry if it's not private and not exclusively ARS
-        });
+        .filter(entry => !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType));
     }
 
     const sortedEntries = [...entries];
@@ -104,6 +90,8 @@ export default function FileManagerPage() {
       return dateB.getTime() - dateA.getTime();
     });
 
+    const totalSiteCount = sortedEntries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
+
     const lastCreated = sortedEntries.reduce((latest, entry) => {
         const createdAt = (entry as any).createdAt ? safeParseDate((entry as any).createdAt) : null;
         if (createdAt && (!latest || createdAt > latest)) {
@@ -112,7 +100,7 @@ export default function FileManagerPage() {
         return latest;
     }, null as Date | null);
     
-    return { depositWorkEntries: sortedEntries, lastCreatedDate: lastCreated };
+    return { depositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
   }, [allFileEntries, user?.role, user?.uid]);
 
 
@@ -139,6 +127,9 @@ export default function FileManagerPage() {
                <div className="flex items-center gap-4 w-full sm:w-auto">
                  <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Total Files: <span className="font-bold text-primary">{depositWorkEntries.length}</span>
+                </div>
+                <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Total Sites: <span className="font-bold text-primary">{totalSites}</span>
                 </div>
                 {lastCreatedDate && (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">

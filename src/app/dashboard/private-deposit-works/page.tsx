@@ -58,7 +58,7 @@ export default function PrivateDepositWorksPage() {
   
   const canCreate = user?.role === 'editor';
 
-  const { privateDepositWorkEntries, lastCreatedDate } = useMemo(() => {
+  const { privateDepositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
     let entries: DataEntryFormData[];
 
     if (user?.role === 'supervisor') {
@@ -94,6 +94,8 @@ export default function PrivateDepositWorksPage() {
       return dateB.getTime() - dateA.getTime();
     });
 
+    const totalSiteCount = sortedEntries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
+
     const lastCreated = sortedEntries.reduce((latest, entry) => {
         const createdAt = (entry as any).createdAt ? safeParseDate((entry as any).createdAt) : null;
         if (createdAt && (!latest || createdAt > latest)) {
@@ -102,7 +104,7 @@ export default function PrivateDepositWorksPage() {
         return latest;
     }, null as Date | null);
     
-    return { privateDepositWorkEntries: sortedEntries, lastCreatedDate: lastCreated };
+    return { privateDepositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
   }, [allFileEntries, user?.role, user?.uid]);
 
 
@@ -130,6 +132,9 @@ export default function PrivateDepositWorksPage() {
               <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                 Total Files: <span className="font-bold text-primary">{privateDepositWorkEntries.length}</span>
               </div>
+               <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Total Sites: <span className="font-bold text-primary">{totalSites}</span>
+                </div>
                {lastCreatedDate && (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
                         <Clock className="h-3.5 w-3.5"/>
