@@ -123,90 +123,76 @@ export default function DataEntryPage() {
   }, [workType, isApprovingUpdate, pageToReturnTo]);
 
 
-  const loadAllData = useCallback(async () => {
-    setDataLoading(true);
-    setErrorState(null);
+  useEffect(() => {
+    const loadAllData = async () => {
+        setDataLoading(true);
+        setErrorState(null);
 
-    // Wait for user authentication to complete
-    if (authIsLoading) return;
-    if (!user) {
-      setErrorState("User not authenticated.");
-      setDataLoading(false);
-      return;
-    }
+        // This effect should only run when user authentication is complete.
+        if (authIsLoading || !user) {
+            return;
+        }
 
-    try {
-        if (!fileIdToEdit) {
+        try {
             const allUsersResult = (user.role === 'editor') ? await fetchAllUsers() : [];
-            setPageData({
-                initialData: getFormDefaults(),
-                allUsers: allUsersResult,
-            });
-            setDataLoading(false);
-            return;
-        }
 
-        const originalEntry = await fetchEntryForEditing(fileIdToEdit);
-        if (!originalEntry) {
-            toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
-            router.push('/dashboard');
-            return;
-        }
+            if (!fileIdToEdit) {
+                // This is for creating a new file.
+                setPageData({ initialData: getFormDefaults(), allUsers: allUsersResult });
+                return;
+            }
 
-        if (user.role === 'supervisor' && !originalEntry.assignedSupervisorUids?.includes(user.uid)) {
-            toast({ title: "Permission Denied", description: `You do not have permission to view this file.`, variant: "destructive" });
-            router.push('/dashboard');
-            return;
-        }
+            // Fetch the main file entry.
+            const originalEntry = await fetchEntryForEditing(fileIdToEdit);
+            if (!originalEntry) {
+                setErrorState("Could not find the requested file. You may not have permission to view it.");
+                toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
+                // We show an error message and don't redirect immediately to allow the user to see the error.
+                // A timed redirect could be added here if desired.
+                return;
+            }
 
-        let dataForForm: DataEntryFormData = originalEntry;
-        const allUsersResult = await fetchAllUsers();
+            // Check supervisor permissions
+            if (user.role === 'supervisor' && !originalEntry.assignedSupervisorUids?.includes(user.uid)) {
+                setErrorState("You do not have permission to view this file.");
+                return;
+            }
 
-        if (approveUpdateId) {
-            const pendingUpdate = await getPendingUpdateById(approveUpdateId);
-            if (pendingUpdate) {
-                 if (pendingUpdate.status !== 'pending') {
-                    toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
-                } else {
+            let dataForForm: DataEntryFormData = originalEntry;
+
+            if (isApprovingUpdate && approveUpdateId) {
+                const pendingUpdate = await getPendingUpdateById(approveUpdateId);
+                if (pendingUpdate) {
                     let mergedData = JSON.parse(JSON.stringify(originalEntry));
                     const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
                     
-                    mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
-                        return updatedSitesMap.get(originalSite.nameOfSite) || originalSite;
-                    }) || [];
+                    mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => updatedSitesMap.get(originalSite.nameOfSite) || originalSite) || [];
                     dataForForm = mergedData;
                     toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
                 }
+            } else if (user.role === 'supervisor') {
+                const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
+                dataForForm.siteDetails?.forEach(site => {
+                    if (site.supervisorUid === user.uid) {
+                        site.isPending = hasActivePendingUpdate;
+                    }
+                });
             }
-        }
-        
-        if (user.role === 'supervisor') {
-            const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
-            dataForForm.siteDetails?.forEach(site => {
-                if (site.supervisorUid === user.uid) {
-                    site.isPending = hasActivePendingUpdate;
-                }
-            });
-        }
-        
-        setFileNoForHeader(dataForForm.fileNo);
-        setPageData({
-            initialData: processDataForForm(dataForForm),
-            allUsers: allUsersResult,
-        });
 
-    } catch (error) {
-        console.error("Error loading data for form:", error);
-        setErrorState("Could not load all required data.");
-        toast({ title: "Error Loading Data", description: "An unexpected error occurred.", variant: "destructive" });
-    } finally {
-        setDataLoading(false);
-    }
-  }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchEntryForEditing, getPendingUpdateById, fetchAllUsers, hasPendingUpdateForFile, router, toast]);
+            setFileNoForHeader(dataForForm.fileNo);
+            setPageData({ initialData: processDataForForm(dataForForm), allUsers: allUsersResult });
 
-  useEffect(() => {
+        } catch (error) {
+            console.error("Error loading data for form:", error);
+            setErrorState("Could not load all required data.");
+            toast({ title: "Error Loading Data", description: "An unexpected error occurred.", variant: "destructive" });
+        } finally {
+            setDataLoading(false);
+        }
+    };
+    
     loadAllData();
-  }, [loadAllData]);
+  }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchAllUsers, fetchEntryForEditing, getPendingUpdateById, hasPendingUpdateForFile, toast, isApprovingUpdate]);
 
   useEffect(() => {
     let title = "Loading...";
@@ -215,7 +201,7 @@ export default function DataEntryPage() {
 
     if (!dataLoading) {
         if (errorState) {
-            title = "Error";
+            title = "Error Loading File";
             description = errorState;
         } else if (user?.role === 'editor') {
             if (isCreatingNew) {
@@ -283,10 +269,9 @@ export default function DataEntryPage() {
     return activeSupervisors.sort((a, b) => a.name.localeCompare(b.name));
   }, [pageData, staffMembers, user, staffIsLoading]);
   
-  const isLoading = authIsLoading || staffIsLoading || dataLoading;
+  const isLoading = authIsLoading || dataLoading;
   
   const isDeniedAccess = !isLoading && ((user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit) || !user);
-
 
   if (isLoading) {
     return (
@@ -294,6 +279,20 @@ export default function DataEntryPage() {
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="ml-3 text-muted-foreground">Loading file data...</p>
       </div>
+    );
+  }
+
+  if (errorState) {
+    return (
+        <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+            <div className="space-y-6 p-6 text-center">
+                <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Error Loading File</h1>
+                <p className="text-muted-foreground">{errorState}</p>
+                 <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
+            </div>
+             {isApprovingUpdate && <p className="text-sm text-muted-foreground animate-pulse">Redirecting...</p>}
+        </div>
     );
   }
   
@@ -310,12 +309,10 @@ export default function DataEntryPage() {
   }
   
   if (!pageData && fileIdToEdit) {
-    // This state occurs if there was an error during data loading (e.g., file not found and redirected)
-    // The loading spinner provides a better UX than a brief flash of "Form data could not be loaded".
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-3 text-muted-foreground">Redirecting...</p>
+        <p className="ml-3 text-muted-foreground">Finalizing...</p>
       </div>
     );
   }
