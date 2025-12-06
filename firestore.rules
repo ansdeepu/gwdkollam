@@ -49,31 +49,31 @@ service cloud.firestore {
     // === Main File Entries (Deposit Works) ===
     match /fileEntries/{docId} {
       // Read access: Editors/Viewers can get any document. Supervisors can only get documents they are assigned to.
-      // This is now corrected to properly check the resource.data.
       allow get: if canReadCollection() || (isSupervisor() && resource.data.assignedSupervisorUids.hasAny([request.auth.uid]));
       
       // List access: This remains permissive for supervisors as client-side queries handle filtering.
       allow list: if canReadCollection() || isSupervisor();
       
-      // Write access: Only editors can create, update, or delete file entries directly.
-      // Supervisors must use the pendingUpdates collection.
-      allow create, update, delete: if canWriteCollection();
+      // Write access: Only editors can create or delete file entries directly.
+      // Updates must go through the pendingUpdates collection for both supervisors and editors to ensure a consistent workflow.
+      allow create, delete: if canWriteCollection();
+      allow update: if false; // All updates must go through the pending updates workflow.
     }
 
     // === ARS Entries ===
     match /arsEntries/{docId} {
       allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
-      allow list: if canReadCollection() || isSupervisor(); // See comment for fileEntries list rule.
+      allow list: if canReadCollection() || isSupervisor();
       allow create, update, delete: if canWriteCollection();
     }
     
     // === Pending Updates from Supervisors ===
     match /pendingUpdates/{docId} {
-      // Supervisors can create updates. They can also read and delete updates they have submitted.
+      // Supervisors and Editors can create updates. Supervisors can also read and delete updates they have submitted.
       allow create: if isSupervisor() || isEditor();
       allow read, delete: if (isSupervisor() && request.auth.uid == resource.data.submittedByUid) || isEditor();
       
-      // Only editors can approve/reject by updating the status.
+      // Only editors can approve/reject by updating the status or the main document.
       allow update: if isEditor();
     }
 
