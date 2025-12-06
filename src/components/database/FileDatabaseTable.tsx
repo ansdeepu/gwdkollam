@@ -319,7 +319,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   <TableHead className="w-[15%] px-2 py-3 text-sm">Site Name(s)</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">Purpose(s)</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">Date of Remittance</TableHead>
-                  <TableHead className="w-[10%] px-2 py-3 text-sm">File Status</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3 text-sm">Site Status</TableHead>
                   <TableHead className="text-center w-[15%] px-2 py-3 text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -357,8 +357,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                         ? format(new Date(entry.remittanceDetails[0].dateOfRemittance), "dd/MM/yyyy") 
                         : "N/A"}
                     </TableCell>
-                    <TableCell className={cn("font-semibold w-[10%] px-2 py-2 text-sm", entry.fileStatus === 'File Closed' ? 'text-red-600' : 'text-green-600')}>
-                      {entry.fileStatus}
+                    <TableCell className="font-semibold w-[10%] px-2 py-2 text-sm">
+                        {entry.siteDetails?.map(s => s.workStatus).join(', ') || entry.fileStatus}
                     </TableCell>
                     <TableCell className="text-right w-[15%] px-2 py-2">
                       <div className="flex items-center justify-end space-x-1">
