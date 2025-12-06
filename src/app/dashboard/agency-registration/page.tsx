@@ -52,11 +52,8 @@ const createDefaultRig = (): RigRegistrationType => ({
 
 const toDateOrNull = (value: any): Date | null => {
   if (value === null || value === undefined || value === '') return null;
-
-  // Already a valid Date
   if (value instanceof Date && !isNaN(value.getTime())) return value;
 
-  // Firestore-like Timestamp ({ seconds, nanoseconds })
   if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
     try {
       const ms = value.seconds * 1000 + (value.nanoseconds ? Math.round(value.nanoseconds / 1e6) : 0);
@@ -65,46 +62,27 @@ const toDateOrNull = (value: any): Date | null => {
     } catch { /* fallthrough */ }
   }
 
-  // Numeric epoch (seconds or milliseconds)
   if (typeof value === 'number' && isFinite(value)) {
-    // Heuristic: if < 1e12 treat as seconds
     const ms = value < 1e12 ? value * 1000 : value;
     const d = new Date(ms);
     if (!isNaN(d.getTime())) return d;
   }
 
-  // String parsing: try ISO first, then common patterns
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (trimmed === '') return null;
 
     // ISO / RFC parsable
-    const iso = Date.parse(trimmed);
-    if (!isNaN(iso)) return new Date(iso);
+    let parsedDate = parseISO(trimmed);
+    if (isValid(parsedDate)) return parsedDate;
 
     // yyyy-MM-dd (common for <input type=date>)
-    const ymd = /^(\d{4})-(\d{2})-(\d{2})$/;
-    const ymdMatch = trimmed.match(ymd);
-    if (ymdMatch) {
-      const [_, y, m, d] = ymdMatch;
-      const dt = new Date(Number(y), Number(m) - 1, Number(d));
-      if (!isNaN(dt.getTime())) return dt;
-    }
+    parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
+    if (isValid(parsedDate)) return parsedDate;
 
     // dd/MM/yyyy
-    const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-    const dmyMatch = trimmed.match(dmy);
-    if (dmyMatch) {
-      const [_, dd, mm, yyyy] = dmyMatch;
-      const dt = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-      if (!isNaN(dt.getTime())) return dt;
-    }
-
-    // fallback: attempt Date constructor
-    try {
-      const fallback = new Date(trimmed);
-      if (!isNaN(fallback.getTime())) return fallback;
-    } catch { /* ignore */ }
+    parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
+    if (isValid(parsedDate)) return parsedDate;
   }
 
   return null;
@@ -793,6 +771,7 @@ export default function AgencyRegistrationPage() {
         // Fallback to file number if dates are the same or not present
         const fileNoA = a.fileNo || '';
         const fileNoB = b.fileNo || '';
+        
         const partsA = fileNoA.split(/(\d+)/);
         const partsB = fileNoB.split(/(\d+)/);
     
@@ -2131,3 +2110,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
 
+
+
+    
