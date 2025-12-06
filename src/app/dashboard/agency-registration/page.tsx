@@ -748,46 +748,8 @@ export default function AgencyRegistrationPage() {
   };
 
     const { filteredApplications, lastCreatedDate } = useMemo(() => {
-        const extractRegNo = (regNo: string | undefined | null): number => {
-            if (!regNo) return Infinity;
-            // Format 1: GWD/KLM/0204/... -> 204
-            let match = regNo.match(/GWD\/KLM\/(\d+)/);
-            if (match) return parseInt(match[1], 10);
-            
-            // Format 2: GWD/008(N)/2024/KLM -> 8
-            match = regNo.match(/GWD\/(\d+)\(/);
-            if (match) return parseInt(match[1], 10);
-            
-            return Infinity; // Fallback for non-matching formats
-        };
-
-        const sortedApps = [...allAgencyApplications].sort((a, b) => {
-            const dateA = toDateOrNull(a.agencyRegistrationDate);
-            const dateB = toDateOrNull(b.agencyRegistrationDate);
+        let sortedApps = [...allAgencyApplications];
         
-            const isAValid = dateA && isValid(dateA);
-            const isBValid = dateB && isValid(dateB);
-        
-            if (isAValid && !isBValid) return -1;
-            if (!isAValid && isBValid) return 1;
-        
-            if (isAValid && isBValid) {
-                const timeDiff = dateA.getTime() - dateB.getTime();
-                if (timeDiff !== 0) return timeDiff;
-            }
-        
-            const numA = extractRegNo(a.agencyRegistrationNo);
-            const numB = extractRegNo(b.agencyRegistrationNo);
-        
-            if (numA !== Infinity || numB !== Infinity) {
-                if (numA === Infinity) return 1;
-                if (numB === Infinity) return -1;
-                if (numA !== numB) return numA - numB;
-            }
-        
-            return (a.fileNo || '').localeCompare(b.fileNo || '', undefined, { numeric: true });
-        });
-
         const lowercasedFilter = searchTerm.toLowerCase();
 
         let filtered = lowercasedFilter
@@ -2106,6 +2068,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
 
 
 
