@@ -771,20 +771,25 @@ export default function AgencyRegistrationPage() {
         };
 
         const sortedApps = [...allAgencyApplications].sort((a, b) => {
-            const dateA = toDateOrNull(a.agencyRegistrationDate);
-            const dateB = toDateOrNull(b.agencyRegistrationDate);
+            const dateA = a.agencyRegistrationDate ? toDateOrNull(a.agencyRegistrationDate) : (a.rigs?.[0] ? toDateOrNull(a.rigs[0].registrationDate) : null);
+            const dateB = b.agencyRegistrationDate ? toDateOrNull(b.agencyRegistrationDate) : (b.rigs?.[0] ? toDateOrNull(b.rigs[0].registrationDate) : null);
 
-            // Primary sort by date
+            // Handle cases where dates might be null or invalid
             if (dateA && dateB) {
                 const timeDiff = dateA.getTime() - dateB.getTime();
                 if (timeDiff !== 0) return timeDiff;
-            } else if (dateA) return -1;
-            else if (dateB) return 1;
+            } else if (dateA) {
+                return -1; // a comes first if b has no date
+            } else if (dateB) {
+                return 1; // b comes first if a has no date
+            }
 
-            // Secondary sort by extracted registration number
+            // Secondary sort by extracted registration number if dates are the same or both are null
             const numA = extractRegNo(a.agencyRegistrationNo);
             const numB = extractRegNo(b.agencyRegistrationNo);
-            if (numA !== numB) return numA - numB;
+            if (numA !== Infinity && numB !== Infinity && numA !== numB) {
+                return numA - numB;
+            }
 
             // Tertiary sort by full file number as a fallback
             return (a.fileNo || '').localeCompare(b.fileNo || '', undefined, { numeric: true });
