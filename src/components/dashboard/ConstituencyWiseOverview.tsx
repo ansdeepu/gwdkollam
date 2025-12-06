@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ConstituencyWiseOverview.tsx
 "use client";
 
@@ -86,7 +85,7 @@ const getColorClass = (name: string): string => {
 
 export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, arsWorksCount, onOpenDialog, dates, onSetDates }: ConstituencyWiseOverviewProps) {
 
-  const summaryData = React.useMemo(() => {
+  const { summaryData, totalCompletedCount } = React.useMemo(() => {
     const sDate = dates.start ? startOfDay(dates.start) : null;
     const eDate = dates.end ? endOfDay(dates.end) : null;
     const isDateFilterActive = sDate && eDate;
@@ -99,6 +98,8 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
       });
     }
+    
+    const totalCompletedCount = filteredWorks.filter(w => w.workStatus && FINAL_WORK_STATUSES.includes(w.workStatus as SiteWorkStatus)).length;
     
     const arsGrouping: SitePurpose[] = ["ARS", "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds"];
     const allDisplayPurposes = [...sitePurposeOptions.filter(p => !arsGrouping.includes(p)), "ARS"];
@@ -154,7 +155,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         }
     });
 
-    return { constituencyData, totalCategorizedWorks, displayPurposes: allDisplayPurposes };
+    return { summaryData: { constituencyData, totalCategorizedWorks, displayPurposes: allDisplayPurposes }, totalCompletedCount };
   }, [allWorks, dates]);
 
   const handleCellClick = (data: any[], title: string) => {
@@ -192,8 +193,8 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
           <MapPin className="h-5 w-5 text-primary" />
           Constituency-wise Works ({allWorks.length})
         </CardTitle>
-        <CardDescription>
-            Summary of all works. Deposit Works: <span className="font-semibold text-primary">{depositWorksCount}</span>, ARS: <span className="font-semibold text-primary">{arsWorksCount}</span>. Filter by completion date.
+         <CardDescription>
+          Summary of all works. Deposit Works: <span className="font-semibold text-primary">{depositWorksCount}</span>, ARS: <span className="font-semibold text-primary">{arsWorksCount}</span>. Total Completed: <span className="font-semibold text-green-600">{totalCompletedCount}</span>. Filter by completion date.
         </CardDescription>
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
             <Input
