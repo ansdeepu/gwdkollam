@@ -6,8 +6,8 @@ import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, XCircle } from "lucide-react";
-import type { DataEntryFormData, SitePurpose, Constituency, SiteDetailFormData } from '@/lib/schemas';
+import { MapPin, XCircle, CheckCircle } from "lucide-react";
+import type { DataEntryFormData, SitePurpose, Constituency, SiteDetailFormData, SiteWorkStatus } from '@/lib/schemas';
 import { constituencyOptions, sitePurposeOptions } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
 import { format, parse, startOfDay, endOfDay, isWithinInterval, isValid } from 'date-fns';
@@ -55,6 +55,8 @@ const hashCode = (str: string): number => {
     }
     return hash;
 };
+
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed', "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
 
 const colorClasses = [
     "bg-sky-500/10 border-sky-500/20",
@@ -110,16 +112,19 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
       [constituency]: {
         totalCount: 0,
         totalExpenditure: 0,
+        completedCount: 0,
         allWorks: [] as any[],
+        completedWorks: [] as any[],
         byPurpose: initialCounts(),
       }
-    }), {} as Record<Constituency, { totalCount: number, totalExpenditure: number, allWorks: any[], byPurpose: ReturnType<typeof initialCounts> }>);
+    }), {} as Record<Constituency, { totalCount: number, totalExpenditure: number, completedCount: number, allWorks: any[], completedWorks: any[], byPurpose: ReturnType<typeof initialCounts> }>);
     
     let totalCategorizedWorks = 0;
 
     filteredWorks.forEach(work => {
         const constituency = work.constituency as Constituency | undefined;
         let purpose = (work.purpose || 'N/A') as string;
+        const isCompleted = work.workStatus && FINAL_WORK_STATUSES.includes(work.workStatus as SiteWorkStatus);
         
         if (arsGrouping.includes(purpose as SitePurpose)) {
             purpose = "ARS";
@@ -132,6 +137,10 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
           currentData.totalCount++;
           currentData.totalExpenditure += expenditure;
           currentData.allWorks.push(work);
+          if (isCompleted) {
+              currentData.completedCount++;
+              currentData.completedWorks.push(work);
+          }
           totalCategorizedWorks++;
           
           if (purpose) {
@@ -181,7 +190,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          Constituency-wise Works ({summaryData.totalCategorizedWorks})
+          Constituency-wise Works ({allWorks.length})
         </CardTitle>
         <CardDescription>
             Summary of all works. Deposit Works: <span className="font-semibold text-primary">{depositWorksCount}</span>, ARS: <span className="font-semibold text-primary">{arsWorksCount}</span>. Filter by completion date.
@@ -224,19 +233,24 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
                       </div>
 
                       {hasPurposeData && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-x-4 gap-y-2 pt-3 border-t border-border/50">
-                          {summaryData.displayPurposes.map(purpose => {
-                              const count = data.byPurpose[purpose]?.count || 0;
-                              if (count === 0) return null;
-                              return (
-                                <div key={purpose} className="flex items-center justify-between text-xs">
-                                  <span className="text-muted-foreground">{purpose}</span>
-                                  <Button variant="link" className="p-0 h-auto text-xs font-semibold" onClick={() => handleCellClick(data.byPurpose[purpose].data, `Works for '${purpose}' in ${constituency}`)} disabled={count === 0}>
-                                    {count}
-                                  </Button>
-                                </div>
-                              )
-                          })}
+                        <div className="space-y-3 pt-3 border-t border-border/50">
+                          <Button variant="link" className="p-0 h-auto text-sm font-semibold text-green-600 flex items-center gap-1.5" onClick={() => handleCellClick(data.completedWorks, `Completed Works in ${constituency}`)} disabled={data.completedCount === 0}>
+                            <CheckCircle className="h-4 w-4"/> Completed: {data.completedCount}
+                          </Button>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-x-4 gap-y-2">
+                            {summaryData.displayPurposes.map(purpose => {
+                                const count = data.byPurpose[purpose]?.count || 0;
+                                if (count === 0) return null;
+                                return (
+                                  <div key={purpose} className="flex items-center justify-between text-xs">
+                                    <span className="text-muted-foreground">{purpose}</span>
+                                    <Button variant="link" className="p-0 h-auto text-xs font-semibold" onClick={() => handleCellClick(data.byPurpose[purpose].data, `Works for '${purpose}' in ${constituency}`)} disabled={count === 0}>
+                                      {count}
+                                    </Button>
+                                  </div>
+                                )
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
