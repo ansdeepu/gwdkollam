@@ -402,18 +402,13 @@ export default function ArsEntryPage() {
                                 <FormMessage/>
                             </FormItem>
                           )}/>
-                          <FormField name="constituency" control={form.control} render={({ field }) => {
-                                return (
-                                    <FormItem>
-                                        <FormLabel>Constituency (LAC)</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={isConstituencyDisabled}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select Constituency" /></SelectTrigger></FormControl>
-                                            <SelectContent>{constituencyOptionsForLsg.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                );
-                          }}/>
+                          <FormField name="constituency" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Constituency (LAC)</FormLabel>
+                                <Input value={field.value ?? "Auto-filled"} readOnly className="bg-muted/50" />
+                                <FormMessage />
+                            </FormItem>
+                          )}/>
                           <FormField name="latitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 8.8932" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('latitude')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="longitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 76.6141" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsNumberOfStructures" control={form.control} render={({ field }) => (<FormItem><FormLabel>Number of Structures</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsNumberOfStructures')}/></FormControl><FormMessage /></FormItem>)} />
@@ -509,5 +504,7 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
 
     
