@@ -116,7 +116,7 @@ export default function DataEntryPage() {
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
+    if (workType === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
@@ -124,15 +124,16 @@ export default function DataEntryPage() {
 
 
   const loadAllData = useCallback(async () => {
-    if (!user) {
-      if (!authIsLoading) {
-        setErrorState("User not authenticated.");
-      }
-      return;
-    }
-
     setDataLoading(true);
     setErrorState(null);
+
+    // Wait for user authentication to complete
+    if (authIsLoading) return;
+    if (!user) {
+      setErrorState("User not authenticated.");
+      setDataLoading(false);
+      return;
+    }
 
     try {
         if (!fileIdToEdit) {
@@ -141,6 +142,7 @@ export default function DataEntryPage() {
                 initialData: getFormDefaults(),
                 allUsers: allUsersResult,
             });
+            setDataLoading(false);
             return;
         }
 
@@ -203,10 +205,8 @@ export default function DataEntryPage() {
   }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchEntryForEditing, getPendingUpdateById, fetchAllUsers, hasPendingUpdateForFile, router, toast]);
 
   useEffect(() => {
-    if (!authIsLoading) {
-        loadAllData();
-    }
-  }, [authIsLoading, loadAllData]);
+    loadAllData();
+  }, [loadAllData]);
 
   useEffect(() => {
     let title = "Loading...";
@@ -353,3 +353,5 @@ export default function DataEntryPage() {
     </div>
   );
 }
+
+    
