@@ -140,7 +140,7 @@ export default function DashboardPage() {
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
     const { constituencyWorks, depositWorksCount, arsWorksCount } = useMemo(() => {
-        // Get all sites from public deposit works, regardless of status
+        // Get all sites from public deposit works, regardless of status.
         const publicDepositWorks = allFileEntries
             .filter(entry => 
                 !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
@@ -157,7 +157,7 @@ export default function DashboardPage() {
                 }))
             );
 
-        // Get all ARS works, regardless of status
+        // Get all ARS works from the dedicated ARS collection.
         const arsWorks = arsEntries.map(entry => ({
             nameOfSite: entry.nameOfSite,
             constituency: entry.constituency,
