@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ConstituencyWiseOverview.tsx
 "use client";
 
@@ -27,6 +28,7 @@ interface ConstituencyWiseOverviewProps {
   allWorks: CombinedWork[];
   depositWorksCount: number;
   arsWorksCount: number;
+  totalCompletedCount: number;
   onOpenDialog: (data: any[], title: string, columns: any[], type: 'detail') => void;
   dates: { start?: Date, end?: Date };
   onSetDates: (dates: { start?: Date, end?: Date }) => void;
@@ -83,9 +85,9 @@ const getColorClass = (name: string): string => {
     return colorClasses[index];
 };
 
-export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, arsWorksCount, onOpenDialog, dates, onSetDates }: ConstituencyWiseOverviewProps) {
+export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, arsWorksCount, totalCompletedCount, onOpenDialog, dates, onSetDates }: ConstituencyWiseOverviewProps) {
 
-  const { summaryData, totalCompletedCount } = React.useMemo(() => {
+  const { summaryData, totalCategorizedWorks } = React.useMemo(() => {
     const sDate = dates.start ? startOfDay(dates.start) : null;
     const eDate = dates.end ? endOfDay(dates.end) : null;
     const isDateFilterActive = sDate && eDate;
@@ -98,8 +100,6 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         return completionDate && isValid(completionDate) && isWithinInterval(completionDate, { start: sDate, end: eDate });
       });
     }
-    
-    const totalCompletedCount = filteredWorks.filter(w => w.workStatus && FINAL_WORK_STATUSES.includes(w.workStatus as SiteWorkStatus)).length;
     
     const arsGrouping: SitePurpose[] = ["ARS", "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds"];
     const allDisplayPurposes = [...sitePurposeOptions.filter(p => !arsGrouping.includes(p)), "ARS"];
@@ -155,7 +155,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         }
     });
 
-    return { summaryData: { constituencyData, totalCategorizedWorks, displayPurposes: allDisplayPurposes }, totalCompletedCount };
+    return { summaryData: { constituencyData, displayPurposes: allDisplayPurposes }, totalCategorizedWorks };
   }, [allWorks, dates]);
 
   const handleCellClick = (data: any[], title: string) => {
@@ -214,7 +214,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
-          {summaryData.totalCategorizedWorks > 0 ? (
+          {totalCategorizedWorks > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sortedConstituencies.map(constituency => {
                   const data = summaryData.constituencyData[constituency];

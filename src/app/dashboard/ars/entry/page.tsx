@@ -405,7 +405,19 @@ export default function ArsEntryPage() {
                           <FormField name="constituency" control={form.control} render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Constituency (LAC)</FormLabel>
-                                <Input value={field.value ?? "Auto-filled"} readOnly className="bg-muted/50" />
+                                <Select onValueChange={field.onChange} value={field.value} disabled={isConstituencyDisabled}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Constituency" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>
+                                            -- Clear Selection --
+                                        </SelectItem>
+                                        {constituencyOptionsForLsg.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                           )}/>

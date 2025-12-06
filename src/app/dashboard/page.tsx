@@ -111,19 +111,10 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || isReportLoading || staffLoading || !currentUser) return null;
     
-    let relevantEntries = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
+    // For supervisors, filteredFileEntries is already scoped down. For others, use allFileEntries.
+    const relevantEntries = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
     
-    // For supervisors, further filter to only include sites with specific ongoing statuses for relevant dashboard cards
-    if (currentUser.role === 'supervisor') {
-        const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
-        relevantEntries = relevantEntries.map(entry => {
-            const ongoingSites = entry.siteDetails?.filter(site => {
-                return site.supervisorUid === currentUser.uid && site.workStatus && ongoingStatuses.includes(site.workStatus as SiteWorkStatus);
-            });
-            return { ...entry, siteDetails: ongoingSites };
-        }).filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
-    }
-    
+    // The supervisor's view is now correctly pre-filtered by the hook, so no extra filtering is needed here.
     const nonArsEntries = relevantEntries
         .map(entry => ({
             ...entry,
@@ -133,13 +124,14 @@ export default function DashboardPage() {
 
     return {
         nonArsEntries: nonArsEntries,
-        allFileEntriesForSupervisor: relevantEntries,
-        allFileEntries: allFileEntries, // Keep the full list for admin/viewer overviews
+        // allFileEntriesForSupervisor is now just filteredFileEntries, which is already correctly scoped
+        allFileEntriesForSupervisor: filteredFileEntries, 
+        allFileEntries: allFileEntries,
         staffMembers: staffMembers
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
-    const { constituencyWorks, depositWorksCount, arsWorksCount } = useMemo(() => {
+    const { constituencyWorks, depositWorksCount, arsWorksCount, totalCompletedCount } = useMemo(() => {
         // Get all sites from public deposit works, regardless of status.
         const publicDepositWorks = allFileEntries
             .filter(entry => 
@@ -154,6 +146,7 @@ export default function DashboardPage() {
                     purpose: site.purpose || 'N/A',
                     dateOfCompletion: site.dateOfCompletion,
                     totalExpenditure: site.totalExpenditure || 0,
+                    workStatus: site.workStatus
                 }))
             );
 
@@ -169,10 +162,14 @@ export default function DashboardPage() {
             totalExpenditure: entry.totalExpenditure || 0,
         }));
         
+        const allWorks = [...publicDepositWorks, ...arsWorks];
+        const completedCount = allWorks.filter(w => w.workStatus && COMPLETED_WORK_STATUSES.includes(w.workStatus as SiteWorkStatus)).length;
+
         return {
-            constituencyWorks: [...publicDepositWorks, ...arsWorks],
+            constituencyWorks: allWorks,
             depositWorksCount: publicDepositWorks.length,
             arsWorksCount: arsWorks.length,
+            totalCompletedCount: completedCount
         };
   }, [allFileEntries, arsEntries]);
 
@@ -226,6 +223,7 @@ export default function DashboardPage() {
             allWorks={constituencyWorks}
             depositWorksCount={depositWorksCount}
             arsWorksCount={arsWorksCount}
+            totalCompletedCount={totalCompletedCount}
             onOpenDialog={handleOpenDialog}
             dates={constituencyDates}
             onSetDates={setConstituencyDates}
