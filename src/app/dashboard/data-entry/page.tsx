@@ -9,7 +9,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import type { DataEntryFormData, StaffMember, UserRole } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
@@ -106,126 +106,118 @@ export default function DataEntryPage() {
   const { getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
   const { toast } = useToast();
   const { setHeader } = usePageHeader();
-  const { allFileEntries, isLoading: allFileEntriesLoading } = useDataStore();
-
+  
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [errorState, setErrorState] = useState<string | null>(null);
   const [fileNoForHeader, setFileNoForHeader] = useState<string | null>(null);
   
   const isApprovingUpdate = !!(user?.role === 'editor' && approveUpdateId);
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workType === 'private') base = '/dashboard/private-deposit-works';
+    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
   }, [workType, isApprovingUpdate, pageToReturnTo]);
 
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadAllData = async () => {
-      // Do not proceed if the user object is not available yet.
-      if (!user) {
-        // If auth is also done loading and there's still no user, it's an error state, but let the main checks handle it.
-        if (!authIsLoading) setDataLoading(false);
-        return;
+  const loadAllData = useCallback(async () => {
+    if (!user) {
+      if (!authIsLoading) {
+        setErrorState("User not authenticated.");
       }
-      
-      setDataLoading(true);
-
-      try {
-          if (!fileIdToEdit) {
-              // Creating a new file
-              const allUsersResult = (user.role === 'editor') ? await fetchAllUsers() : [];
-              if (isMounted) {
-                  setPageData({
-                      initialData: getFormDefaults(),
-                      allUsers: allUsersResult,
-                  });
-              }
-              return;
-          }
-
-          // Editing an existing file
-          const [originalEntry, pendingUpdate, allUsersResult] = await Promise.all([
-              fetchEntryForEditing(fileIdToEdit),
-              approveUpdateId ? getPendingUpdateById(approveUpdateId) : Promise.resolve(null),
-              (user.role === 'editor' || user.role === 'viewer' || user.role === 'supervisor') ? fetchAllUsers() : Promise.resolve([])
-          ]);
-          
-          if (!isMounted) return;
-
-          if (!originalEntry) {
-              toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
-              router.push('/dashboard');
-              return;
-          }
-          
-          if (user.role === 'supervisor' && !originalEntry.assignedSupervisorUids?.includes(user.uid)) {
-              toast({ title: "Permission Denied", description: `You do not have permission to view this file.`, variant: "destructive" });
-              router.push('/dashboard');
-              return;
-          }
-
-          let dataForForm: DataEntryFormData = originalEntry;
-
-          if (approveUpdateId && pendingUpdate) {
-              if (pendingUpdate.status !== 'pending') {
-                  toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
-              } else {
-                  let mergedData = JSON.parse(JSON.stringify(originalEntry));
-                  const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
-                  
-                  mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
-                      return updatedSitesMap.get(originalSite.nameOfSite) || originalSite;
-                  }) || [];
-                  dataForForm = mergedData;
-                  toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
-              }
-          }
-
-          if (user.role === 'supervisor') {
-              const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
-              dataForForm.siteDetails?.forEach(site => {
-                  if (site.supervisorUid === user.uid) {
-                      site.isPending = hasActivePendingUpdate;
-                  }
-              });
-          }
-
-          setFileNoForHeader(dataForForm.fileNo);
-          setPageData({
-              initialData: processDataForForm(dataForForm),
-              allUsers: allUsersResult,
-          });
-
-      } catch (error) {
-          console.error("Error loading data for form:", error);
-          toast({ title: "Error Loading Data", description: "Could not load all required data.", variant: "destructive" });
-          if(isMounted) {
-             setPageData({ initialData: getFormDefaults(), allUsers: [] });
-          }
-      } finally {
-          if(isMounted) setDataLoading(false);
-      }
-    };
-
-    if (!authIsLoading) {
-      loadAllData();
+      return;
     }
-    
-    return () => { isMounted = false; };
-  }, [fileIdToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, hasPendingUpdateForFile, fetchAllUsers, toast, router]);
+
+    setDataLoading(true);
+    setErrorState(null);
+
+    try {
+        if (!fileIdToEdit) {
+            const allUsersResult = (user.role === 'editor') ? await fetchAllUsers() : [];
+            setPageData({
+                initialData: getFormDefaults(),
+                allUsers: allUsersResult,
+            });
+            return;
+        }
+
+        const originalEntry = await fetchEntryForEditing(fileIdToEdit);
+        if (!originalEntry) {
+            toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
+            router.push('/dashboard');
+            return;
+        }
+
+        if (user.role === 'supervisor' && !originalEntry.assignedSupervisorUids?.includes(user.uid)) {
+            toast({ title: "Permission Denied", description: `You do not have permission to view this file.`, variant: "destructive" });
+            router.push('/dashboard');
+            return;
+        }
+
+        let dataForForm: DataEntryFormData = originalEntry;
+        const allUsersResult = await fetchAllUsers();
+
+        if (approveUpdateId) {
+            const pendingUpdate = await getPendingUpdateById(approveUpdateId);
+            if (pendingUpdate) {
+                 if (pendingUpdate.status !== 'pending') {
+                    toast({ title: "Update No Longer Pending", description: "This update has already been reviewed.", variant: "default" });
+                } else {
+                    let mergedData = JSON.parse(JSON.stringify(originalEntry));
+                    const updatedSitesMap = new Map(pendingUpdate.updatedSiteDetails.map(site => [site.nameOfSite, site]));
+                    
+                    mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => {
+                        return updatedSitesMap.get(originalSite.nameOfSite) || originalSite;
+                    }) || [];
+                    dataForForm = mergedData;
+                    toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
+                }
+            }
+        }
+        
+        if (user.role === 'supervisor') {
+            const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
+            dataForForm.siteDetails?.forEach(site => {
+                if (site.supervisorUid === user.uid) {
+                    site.isPending = hasActivePendingUpdate;
+                }
+            });
+        }
+        
+        setFileNoForHeader(dataForForm.fileNo);
+        setPageData({
+            initialData: processDataForForm(dataForForm),
+            allUsers: allUsersResult,
+        });
+
+    } catch (error) {
+        console.error("Error loading data for form:", error);
+        setErrorState("Could not load all required data.");
+        toast({ title: "Error Loading Data", description: "An unexpected error occurred.", variant: "destructive" });
+    } finally {
+        setDataLoading(false);
+    }
+  }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchEntryForEditing, getPendingUpdateById, fetchAllUsers, hasPendingUpdateForFile, router, toast]);
+
+  useEffect(() => {
+    if (!authIsLoading) {
+        loadAllData();
+    }
+  }, [authIsLoading, loadAllData]);
 
   useEffect(() => {
     let title = "Loading...";
     let description = "Please wait while the page content is loading.";
     const isCreatingNew = !fileIdToEdit;
 
-    if (!dataLoading) { // Only set header after data has loaded or failed
-        if (user?.role === 'editor') {
+    if (!dataLoading) {
+        if (errorState) {
+            title = "Error";
+            description = errorState;
+        } else if (user?.role === 'editor') {
             if (isCreatingNew) {
                 title = workType === 'private'
                     ? "New File Data Entry - Private Deposit"
@@ -267,7 +259,7 @@ export default function DataEntryPage() {
     }
     
     setHeader(title, description);
-  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType, dataLoading]);
+  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType, dataLoading, errorState]);
 
 
   const supervisorList = useMemo(() => {
@@ -291,9 +283,9 @@ export default function DataEntryPage() {
     return activeSupervisors.sort((a, b) => a.name.localeCompare(b.name));
   }, [pageData, staffMembers, user]);
   
-  const isLoading = authIsLoading || staffIsLoading || allFileEntriesLoading || dataLoading;
+  const isLoading = authIsLoading || staffIsLoading || dataLoading;
   
-  const isDeniedAccess = (user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit);
+  const isDeniedAccess = !isLoading && ((user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit) || !user);
 
 
   if (isLoading) {
@@ -361,4 +353,3 @@ export default function DataEntryPage() {
     </div>
   );
 }
-
