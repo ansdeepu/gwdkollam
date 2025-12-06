@@ -55,7 +55,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 const ITEMS_PER_PAGE = 50;
-const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
+const FINAL_WORK_STATUSES: SiteWorkStatus[] = ["Work Failed", "Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
 const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
 
 
@@ -319,7 +319,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   <TableHead className="w-[15%] px-2 py-3 text-sm">Site Name(s)</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">Purpose(s)</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">Date of Remittance</TableHead>
-                  <TableHead className="w-[10%] px-2 py-3 text-sm">Site Status</TableHead>
+                  <TableHead className="w-[10%] px-2 py-3 text-sm">Site Work Status</TableHead>
                   <TableHead className="text-center w-[15%] px-2 py-3 text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>

@@ -48,7 +48,6 @@ export function useFileEntries() {
 
       if (user.role === 'supervisor') {
         const visibleStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
-        // For supervisors, show files where they are assigned to at least one site with a visible status.
         entries = allFileEntries
             .map(entry => {
                 const assignedSites = entry.siteDetails?.filter(site => 

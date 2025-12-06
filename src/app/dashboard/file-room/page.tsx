@@ -15,7 +15,7 @@ import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
-import { useDataStore } from '@/hooks/use-data-store';
+import { useFileEntries } from '@/hooks/useFileEntries'; // Correctly import useFileEntries
 
 export const dynamic = 'force-dynamic';
 
@@ -47,35 +47,23 @@ export default function FileManagerPage() {
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
-      ? 'List of all sites assigned to you, including ongoing and completed works.'
+      ? 'List of all sites assigned to you with an ongoing work status.'
       : 'List of all public and government deposit works in the system, sorted by most recent remittance.';
     setHeader('Deposit Works', description);
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { allFileEntries } = useDataStore(); 
+  const { fileEntries } = useFileEntries(); // Use the filtered entries from the hook
   const router = useRouter();
   const { setIsNavigating } = usePageNavigation();
   
   const canCreate = user?.role === 'editor';
   
   const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    let entries: DataEntryFormData[];
-
-    if (user?.role === 'supervisor') {
-      // For supervisors, show files assigned to them but EXCLUDE private works.
-      entries = allFileEntries
-        .filter(entry => !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
-        .map(entry => {
-          const assignedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
-          return { ...entry, siteDetails: assignedSites };
-        })
-        .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
-    } else {
-      // For other roles, filter out private works.
-      entries = allFileEntries
-        .filter(entry => !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType));
-    }
+    // fileEntries from the hook is already filtered for supervisors
+    const entries: DataEntryFormData[] = fileEntries.filter(entry => 
+      !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
+    );
 
     const sortedEntries = [...entries];
 
@@ -101,7 +89,7 @@ export default function FileManagerPage() {
     }, null as Date | null);
     
     return { depositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [allFileEntries, user?.role, user?.uid]);
+  }, [fileEntries]);
 
 
   const handleAddNewClick = () => {
