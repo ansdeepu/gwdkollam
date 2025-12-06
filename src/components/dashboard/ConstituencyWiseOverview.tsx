@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ConstituencyWiseOverview.tsx
 "use client";
 
@@ -25,6 +26,8 @@ interface CombinedWork {
 
 interface ConstituencyWiseOverviewProps {
   allWorks: CombinedWork[];
+  depositWorksCount: number;
+  arsWorksCount: number;
   onOpenDialog: (data: any[], title: string, columns: any[], type: 'detail') => void;
   dates: { start?: Date, end?: Date };
   onSetDates: (dates: { start?: Date, end?: Date }) => void;
@@ -79,7 +82,7 @@ const getColorClass = (name: string): string => {
     return colorClasses[index];
 };
 
-export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates, onSetDates }: ConstituencyWiseOverviewProps) {
+export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, arsWorksCount, onOpenDialog, dates, onSetDates }: ConstituencyWiseOverviewProps) {
 
   const summaryData = React.useMemo(() => {
     const sDate = dates.start ? startOfDay(dates.start) : null;
@@ -175,7 +178,7 @@ export default function ConstituencyWiseOverview({ allWorks, onOpenDialog, dates
           Constituency-wise Works ({summaryData.totalWorks})
         </CardTitle>
         <CardDescription>
-          Summary of public deposit works and ARS projects by constituency. Filter by completion date.
+            Summary of all works. Deposit Works: <span className="font-semibold text-primary">{depositWorksCount}</span>, ARS: <span className="font-semibold text-primary">{arsWorksCount}</span>. Filter by completion date.
         </CardDescription>
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
             <Input

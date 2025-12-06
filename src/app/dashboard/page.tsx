@@ -139,7 +139,7 @@ export default function DashboardPage() {
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
-    const constituencyWorks = useMemo(() => {
+    const { constituencyWorks, depositWorksCount, arsWorksCount } = useMemo(() => {
         // Get all sites from public deposit works, regardless of status
         const publicDepositWorks = allFileEntries
             .filter(entry => 
@@ -168,8 +168,12 @@ export default function DashboardPage() {
             dateOfCompletion: entry.dateOfCompletion,
             totalExpenditure: entry.totalExpenditure || 0,
         }));
-
-        return [...publicDepositWorks, ...arsWorks];
+        
+        return {
+            constituencyWorks: [...publicDepositWorks, ...arsWorks],
+            depositWorksCount: publicDepositWorks.length,
+            arsWorksCount: arsWorks.length,
+        };
   }, [allFileEntries, arsEntries]);
 
 
@@ -220,6 +224,8 @@ export default function DashboardPage() {
         <div id="constituency">
           <ConstituencyWiseOverview
             allWorks={constituencyWorks}
+            depositWorksCount={depositWorksCount}
+            arsWorksCount={arsWorksCount}
             onOpenDialog={handleOpenDialog}
             dates={constituencyDates}
             onSetDates={setConstituencyDates}
