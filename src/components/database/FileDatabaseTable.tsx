@@ -358,7 +358,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                         : "N/A"}
                     </TableCell>
                     <TableCell className="font-semibold w-[10%] px-2 py-2 text-sm">
-                        {entry.siteDetails?.map(s => s.workStatus).join(', ') || entry.fileStatus}
+                        {entry.siteDetails?.map(s => s.workStatus).filter(Boolean).join(', ') || entry.fileStatus}
                     </TableCell>
                     <TableCell className="text-right w-[15%] px-2 py-2">
                       <div className="flex items-center justify-end space-x-1">

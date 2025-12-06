@@ -60,10 +60,13 @@ export default function FileManagerPage() {
   const canCreate = user?.role === 'editor';
   
   const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    // fileEntries from the hook is already filtered for supervisors
-    const entries: DataEntryFormData[] = fileEntries.filter(entry => 
-      !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
-    );
+    // For supervisors, fileEntries is already correctly filtered by the hook.
+    // For others, we filter out private works.
+    const entries: DataEntryFormData[] = user?.role === 'supervisor'
+      ? fileEntries
+      : fileEntries.filter(entry => 
+          !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
+        );
 
     const sortedEntries = [...entries];
 
@@ -89,7 +92,7 @@ export default function FileManagerPage() {
     }, null as Date | null);
     
     return { depositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [fileEntries]);
+  }, [fileEntries, user?.role]);
 
 
   const handleAddNewClick = () => {

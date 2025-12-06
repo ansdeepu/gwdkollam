@@ -48,37 +48,38 @@ export function useFileEntries() {
       setIsLoading(true);
       let entries = allFileEntries;
 
-      if (user.role === 'supervisor') {
-        entries = allFileEntries
+      if (user.role === 'supervisor' && user.uid) {
+        // 1. Filter files to only those where the supervisor has at least one ONGOING site.
+        const supervisorFiles = allFileEntries
             .map(entry => {
-                const assignedSites = entry.siteDetails?.filter(site => 
+                const assignedOngoingSites = entry.siteDetails?.filter(site => 
                     site.supervisorUid === user.uid &&
                     site.workStatus &&
                     ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
                 );
-                return { ...entry, siteDetails: assignedSites };
+
+                if (assignedOngoingSites && assignedOngoingSites.length > 0) {
+                  // Return the file, but only with the sites relevant to the supervisor's current view (ongoing)
+                  return { ...entry, siteDetails: assignedOngoingSites };
+                }
+                return null; // This file is not relevant to the supervisor's "ongoing" list
             })
-            .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
-        
+            .filter((entry): entry is DataEntryFormData => entry !== null);
+            
+        // 2. Check for pending updates to apply the 'isPending' flag
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
           pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
         );
         
-        if (pendingFileNumbers.size > 0) {
-          entries = entries.map(entry => {
+        entries = supervisorFiles.map(entry => {
             const isFilePending = pendingFileNumbers.has(entry.fileNo);
             if (!isFilePending) return entry;
-
-            const updatedSiteDetails = entry.siteDetails?.map(site => {
-              if (site.supervisorUid === user.uid) {
-                return { ...site, isPending: true };
-              }
-              return site;
-            });
+            
+            // Mark all sites in this file as pending for this supervisor's view
+            const updatedSiteDetails = entry.siteDetails?.map(site => ({ ...site, isPending: true }));
             return { ...entry, siteDetails: updatedSiteDetails };
-          });
-        }
+        });
       }
       
       setFileEntries(entries);
