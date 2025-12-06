@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid, parse, format, parseISO } from 'date-fns';
 import { usePageHeader } from "@/hooks/usePageHeader";
+import { useDataStore } from "@/hooks/use-data-store";
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +106,7 @@ export default function DataEntryPage() {
   const { getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
   const { toast } = useToast();
   const { setHeader } = usePageHeader();
+  const { allFileEntries, isLoading: allFileEntriesLoading } = useDataStore();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
@@ -114,17 +116,23 @@ export default function DataEntryPage() {
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workType === 'private') base = '/dashboard/private-deposit-works';
+    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workType, isApprovingUpdate, pageToReturnTo]);
+  }, [workTypeContext, isApprovingUpdate, pageToReturnTo]);
 
 
   useEffect(() => {
     let isMounted = true;
     const loadAllData = async () => {
-      if (!user) return; // Wait for user profile
+      if (!user) { // Wait for user profile to be available
+        if (!authIsLoading) { // If auth is done and still no user, stop loading.
+             setDataLoading(false);
+        }
+        return;
+      }
+
       setDataLoading(true);
       
       const entryPromise = fileIdToEdit ? fetchEntryForEditing(fileIdToEdit) : Promise.resolve(null);
@@ -162,9 +170,11 @@ export default function DataEntryPage() {
           } else if (permissionError) {
               toast({ title: "Permission Denied", description: `You do not have permission to view this file.`, variant: "destructive" });
               setFileNoForHeader(null);
+              router.push('/dashboard'); // Redirect on permission error
           } else if (!originalEntry) {
               toast({ title: "Error", description: `File not found. It may have been deleted.`, variant: "destructive" });
               setFileNoForHeader(null);
+              router.push('/dashboard'); // Redirect on not found
           } else {
             setFileNoForHeader(originalEntry.fileNo);
             if (approveUpdateId && pendingUpdate && originalEntry) {
@@ -209,46 +219,62 @@ export default function DataEntryPage() {
       }
     };
 
-    if (!authIsLoading && user) {
+    if (!authIsLoading) { // Run only after user auth state is resolved.
       loadAllData();
     }
     
     return () => { isMounted = false; };
-  }, [fileIdToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, hasPendingUpdateForFile, fetchAllUsers, toast]);
+  }, [fileIdToEdit, approveUpdateId, authIsLoading, user, fetchEntryForEditing, getPendingUpdateById, hasPendingUpdateForFile, fetchAllUsers, toast, router]);
 
   useEffect(() => {
-    let title = "View File Data";
-    let description = fileNoForHeader ? `Viewing details for File No: ${fileNoForHeader}. You are in read-only mode.` : `You are in read-only mode.`;
+    let title = "Loading...";
+    let description = "Please wait...";
     const isCreatingNew = !fileIdToEdit;
 
-    if (user?.role === 'editor') {
-        if (isCreatingNew) {
-            title = workType === 'private'
-                ? "New File Data Entry - Private Deposit"
-                : "New File Data Entry - Deposit Work";
-            description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
-        } else if (approveUpdateId) {
-            title = "Approve Pending Updates";
-            description = `Reviewing and approving updates for File No: ${fileNoForHeader}. Click "Save Changes" to finalize.`;
-        } else {
-            title = "Edit File Data";
-            description = `Editing details for File No: ${fileNoForHeader}. Please make your changes and submit.`;
+    if (!dataLoading) { // Only set header after data has loaded or failed
+        if (user?.role === 'editor') {
+            if (isCreatingNew) {
+                title = workType === 'private'
+                    ? "New File Data Entry - Private Deposit"
+                    : "New File Data Entry - Deposit Work";
+                description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
+            } else if (approveUpdateId) {
+                title = "Approve Pending Updates";
+                description = `Reviewing and approving updates for File No: ${fileNoForHeader}. Click "Save Changes" to finalize.`;
+            } else if (fileNoForHeader) {
+                title = "Edit File Data";
+                description = `Editing details for File No: ${fileNoForHeader}. Please make your changes and submit.`;
+            } else {
+                 title = "Error Loading File";
+                 description = "Could not find the requested file. It may have been deleted.";
+            }
+        } else if (user?.role === 'supervisor') {
+           if (isCreatingNew) {
+             title = "Access Denied";
+             description = "Supervisors cannot create new files.";
+           } else if (fileNoForHeader) {
+             title = "Edit Assigned Site Details";
+             description = `Editing assigned sites for File No: ${fileNoForHeader}. Submit your changes for approval.`;
+           } else {
+               title = "Error Loading File";
+               description = "Could not find the requested file. You may not have permission to view it.";
+           }
+        } else if (user?.role === 'viewer') {
+            if (fileNoForHeader) {
+                title = "View File Data";
+                description = `Viewing details for File No: ${fileNoForHeader}. You are in read-only mode.`;
+            } else if (isCreatingNew) {
+                 title = "Access Denied";
+                 description = "You do not have permission to create new file entries. This action is restricted to Editors.";
+            } else {
+                 title = "Error Loading File";
+                 description = "Could not find the requested file. It may have been deleted.";
+            }
         }
-    } else if (user?.role === 'supervisor') {
-       if (isCreatingNew) {
-         title = "Access Denied";
-         description = "Supervisors cannot create new files.";
-       } else {
-         title = "Edit Assigned Site Details";
-         description = `Editing assigned sites for File No: ${fileNoForHeader}. Submit your changes for approval.`;
-       }
-    } else if (isCreatingNew) {
-      title = "Access Denied";
-      description = "You do not have permission to create new file entries. This action is restricted to Editors.";
     }
-
-    setHeader(title, description); // Update the main header
-  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType]);
+    
+    setHeader(title, description);
+  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType, dataLoading]);
 
 
   const supervisorList = useMemo(() => {
@@ -272,7 +298,7 @@ export default function DataEntryPage() {
     return activeSupervisors.sort((a, b) => a.name.localeCompare(b.name));
   }, [pageData, staffMembers, user]);
   
-  const isLoading = authIsLoading || staffIsLoading || dataLoading;
+  const isLoading = authIsLoading || staffIsLoading || allFileEntriesLoading || dataLoading;
   
   const workTypeContext = searchParams.get('workType') as 'public' | 'private' | null;
   const isDeniedAccess = (user?.role === 'viewer' && !fileIdToEdit) || (user?.role === 'supervisor' && !fileIdToEdit);
