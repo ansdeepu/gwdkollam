@@ -23,7 +23,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { format, addYears, isValid, parseISO, parse, toDate } from 'date-fns';
+import { format, addYears, isValid, parseISO, parse } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -50,41 +50,32 @@ const createDefaultRig = (): RigRegistrationType => ({
 });
 
 const toDateOrNull = (value: any): Date | null => {
-  if (value === null || value === undefined || value === '') return null;
-  if (value instanceof Date && !isNaN(value.getTime())) return value;
+    if (value === null || value === undefined || value === '') return null;
+    if (value instanceof Date && !isNaN(value.getTime())) return value;
 
-  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
-    try {
-      const ms = value.seconds * 1000 + (value.nanoseconds ? Math.round(value.nanoseconds / 1e6) : 0);
-      const d = new Date(ms);
-      if (!isNaN(d.getTime())) return d;
-    } catch { /* fallthrough */ }
-  }
-  
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed === '') return null;
+    if (typeof value.seconds === 'number') {
+        const d = new Date(value.seconds * 1000);
+        if (isValid(d)) return d;
+    }
     
-    // Handle 'dd/MM/yyyy' first as it's a common input format
-    let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
-    if (isValid(parsedDate)) return parsedDate;
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') return null;
 
-    // Then try ISO / RFC parsable
-    parsedDate = parseISO(trimmed);
-    if (isValid(parsedDate)) return parsedDate;
+        // Prioritize dd/MM/yyyy format
+        let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
+        if (isValid(parsedDate)) return parsedDate;
 
-    // yyyy-MM-dd (common for <input type=date>)
-    parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
-    if (isValid(parsedDate)) return parsedDate;
-  }
-  
-  if (typeof value === 'number' && isFinite(value)) {
-    const ms = value < 1e12 ? value * 1000 : value;
-    const d = new Date(ms);
-    if (!isNaN(d.getTime())) return d;
-  }
+        // Then try ISO / RFC parsable format
+        parsedDate = parseISO(trimmed);
+        if (isValid(parsedDate)) return parsedDate;
 
-  return null;
+        // Then yyyy-MM-dd format
+        parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
+        if (isValid(parsedDate)) return parsedDate;
+    }
+    
+    return null;
 };
 
 
@@ -2118,6 +2109,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
 
 
 
