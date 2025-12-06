@@ -60,13 +60,7 @@ const toDateOrNull = (value: any): Date | null => {
       if (!isNaN(d.getTime())) return d;
     } catch { /* fallthrough */ }
   }
-
-  if (typeof value === 'number' && isFinite(value)) {
-    const ms = value < 1e12 ? value * 1000 : value;
-    const d = new Date(ms);
-    if (!isNaN(d.getTime())) return d;
-  }
-
+  
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (trimmed === '') return null;
@@ -82,6 +76,12 @@ const toDateOrNull = (value: any): Date | null => {
     // yyyy-MM-dd (common for <input type=date>)
     parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
     if (isValid(parsedDate)) return parsedDate;
+  }
+  
+  if (typeof value === 'number' && isFinite(value)) {
+    const ms = value < 1e12 ? value * 1000 : value;
+    const d = new Date(ms);
+    if (!isNaN(d.getTime())) return d;
   }
 
   return null;
@@ -774,18 +774,22 @@ export default function AgencyRegistrationPage() {
             const dateA = toDateOrNull(a.agencyRegistrationDate);
             const dateB = toDateOrNull(b.agencyRegistrationDate);
 
-            if (dateA && dateB) {
+            // Handle null/invalid dates by pushing them to the end
+            const isAValid = dateA && isValid(dateA);
+            const isBValid = dateB && isValid(dateB);
+
+            if (isAValid && !isBValid) return -1; // a comes first
+            if (!isAValid && isBValid) return 1;  // b comes first
+
+            if (isAValid && isBValid) {
                 const timeDiff = dateA.getTime() - dateB.getTime();
                 if (timeDiff !== 0) return timeDiff;
-            } else if (dateA) {
-                return -1; // a comes first if b has no date
-            } else if (dateB) {
-                return 1; // b comes first if a has no date
             }
 
-            // Secondary sort by extracted registration number if dates are the same or both are null
+            // Secondary sort by extracted registration number if dates are the same or both are null/invalid
             const numA = extractRegNo(a.agencyRegistrationNo);
             const numB = extractRegNo(b.agencyRegistrationNo);
+
             if (numA !== Infinity || numB !== Infinity) {
                 if (numA === Infinity) return 1;
                 if (numB === Infinity) return -1;
@@ -2114,4 +2118,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
 
