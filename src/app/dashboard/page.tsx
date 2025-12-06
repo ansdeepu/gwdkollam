@@ -44,6 +44,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
+const COMPLETED_WORK_STATUSES: SiteWorkStatus[] = ["Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
 
 export default function DashboardPage() {
   const { setHeader } = usePageHeader();
@@ -139,27 +140,37 @@ export default function DashboardPage() {
 
     const constituencyWorks = useMemo(() => {
         const publicDepositWorks = allFileEntries
-            .filter(entry => entry.applicationType && !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType))
-            .flatMap(entry => (entry.siteDetails || []).map(site => ({
-                ...site,
-                fileNo: entry.fileNo,
-                applicantName: entry.applicantName,
-                constituency: site.constituency,
-                purpose: site.purpose || 'N/A',
-                dateOfCompletion: site.dateOfCompletion,
-                totalExpenditure: site.totalExpenditure || 0,
-            })));
+            .filter(entry => 
+                entry.applicationType && 
+                !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType) &&
+                entry.siteDetails?.some(site => site.workStatus && COMPLETED_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus))
+            )
+            .flatMap(entry => 
+                (entry.siteDetails || [])
+                .filter(site => site.workStatus && COMPLETED_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus))
+                .map(site => ({
+                    ...site,
+                    fileNo: entry.fileNo,
+                    applicantName: entry.applicantName,
+                    constituency: site.constituency,
+                    purpose: site.purpose || 'N/A',
+                    dateOfCompletion: site.dateOfCompletion,
+                    totalExpenditure: site.totalExpenditure || 0,
+                }))
+            );
 
-        const arsWorks = arsEntries.map(entry => ({
-            nameOfSite: entry.nameOfSite,
-            constituency: entry.constituency,
-            purpose: entry.arsTypeOfScheme || 'ARS', // Normalize purpose for the card
-            fileNo: entry.fileNo,
-            applicantName: 'ARS Scheme',
-            workStatus: entry.workStatus,
-            dateOfCompletion: entry.dateOfCompletion,
-            totalExpenditure: entry.totalExpenditure || 0,
-        }));
+        const arsWorks = arsEntries
+            .filter(entry => entry.workStatus && COMPLETED_WORK_STATUSES.includes(entry.workStatus as SiteWorkStatus))
+            .map(entry => ({
+                nameOfSite: entry.nameOfSite,
+                constituency: entry.constituency,
+                purpose: entry.arsTypeOfScheme || 'ARS', // Normalize purpose for the card
+                fileNo: entry.fileNo,
+                applicantName: 'ARS Scheme',
+                workStatus: entry.workStatus,
+                dateOfCompletion: entry.dateOfCompletion,
+                totalExpenditure: entry.totalExpenditure || 0,
+            }));
 
         return [...publicDepositWorks, ...arsWorks];
   }, [allFileEntries, arsEntries]);
