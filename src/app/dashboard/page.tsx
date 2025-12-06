@@ -139,16 +139,14 @@ export default function DashboardPage() {
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
     const constituencyWorks = useMemo(() => {
+        // Get all sites from public deposit works, regardless of status
         const publicDepositWorks = allFileEntries
             .filter(entry => 
                 entry.applicationType && 
-                !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType) &&
-                entry.siteDetails?.some(site => site.workStatus && COMPLETED_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus))
+                !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
             )
             .flatMap(entry => 
-                (entry.siteDetails || [])
-                .filter(site => site.workStatus && COMPLETED_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus))
-                .map(site => ({
+                (entry.siteDetails || []).map(site => ({
                     ...site,
                     fileNo: entry.fileNo,
                     applicantName: entry.applicantName,
@@ -159,18 +157,17 @@ export default function DashboardPage() {
                 }))
             );
 
-        const arsWorks = arsEntries
-            .filter(entry => entry.workStatus && COMPLETED_WORK_STATUSES.includes(entry.workStatus as SiteWorkStatus))
-            .map(entry => ({
-                nameOfSite: entry.nameOfSite,
-                constituency: entry.constituency,
-                purpose: entry.arsTypeOfScheme || 'ARS', // Normalize purpose for the card
-                fileNo: entry.fileNo,
-                applicantName: 'ARS Scheme',
-                workStatus: entry.workStatus,
-                dateOfCompletion: entry.dateOfCompletion,
-                totalExpenditure: entry.totalExpenditure || 0,
-            }));
+        // Get all ARS works, regardless of status
+        const arsWorks = arsEntries.map(entry => ({
+            nameOfSite: entry.nameOfSite,
+            constituency: entry.constituency,
+            purpose: entry.arsTypeOfScheme || 'ARS',
+            fileNo: entry.fileNo,
+            applicantName: 'ARS Scheme',
+            workStatus: entry.workStatus,
+            dateOfCompletion: entry.dateOfCompletion,
+            totalExpenditure: entry.totalExpenditure || 0,
+        }));
 
         return [...publicDepositWorks, ...arsWorks];
   }, [allFileEntries, arsEntries]);
