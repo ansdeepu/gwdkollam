@@ -771,10 +771,9 @@ export default function AgencyRegistrationPage() {
         };
 
         const sortedApps = [...allAgencyApplications].sort((a, b) => {
-            const dateA = a.agencyRegistrationDate ? toDateOrNull(a.agencyRegistrationDate) : (a.rigs?.[0] ? toDateOrNull(a.rigs[0].registrationDate) : null);
-            const dateB = b.agencyRegistrationDate ? toDateOrNull(b.agencyRegistrationDate) : (b.rigs?.[0] ? toDateOrNull(b.rigs[0].registrationDate) : null);
+            const dateA = toDateOrNull(a.agencyRegistrationDate);
+            const dateB = toDateOrNull(b.agencyRegistrationDate);
 
-            // Handle cases where dates might be null or invalid
             if (dateA && dateB) {
                 const timeDiff = dateA.getTime() - dateB.getTime();
                 if (timeDiff !== 0) return timeDiff;
@@ -787,10 +786,12 @@ export default function AgencyRegistrationPage() {
             // Secondary sort by extracted registration number if dates are the same or both are null
             const numA = extractRegNo(a.agencyRegistrationNo);
             const numB = extractRegNo(b.agencyRegistrationNo);
-            if (numA !== Infinity && numB !== Infinity && numA !== numB) {
-                return numA - numB;
+            if (numA !== Infinity || numB !== Infinity) {
+                if (numA === Infinity) return 1;
+                if (numB === Infinity) return -1;
+                if (numA !== numB) return numA - numB;
             }
-
+            
             // Tertiary sort by full file number as a fallback
             return (a.fileNo || '').localeCompare(b.fileNo || '', undefined, { numeric: true });
         });
@@ -2113,3 +2114,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
     
+
