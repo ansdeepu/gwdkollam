@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { format, addYears, isValid, parseISO, parse, toDate } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/componentsui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { usePageHeader } from "@/hooks/usePageHeader";
@@ -499,8 +499,8 @@ const RigAccordionItem = ({
 
 export default function AgencyRegistrationPage() {
   const { setHeader } = usePageHeader();
-  const { allAgencyApplications, isLoading: applicationsLoading } = useDataStore();
   const { addApplication, updateApplication, deleteApplication } = useAgencyApplications();
+  const { allAgencyApplications, isLoading: applicationsLoading } = useDataStore();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { setIsNavigating } = usePageNavigation();
