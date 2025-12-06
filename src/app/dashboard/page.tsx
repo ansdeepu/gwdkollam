@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client"; 
 
@@ -142,8 +143,7 @@ export default function DashboardPage() {
         // Get all sites from public deposit works, regardless of status
         const publicDepositWorks = allFileEntries
             .filter(entry => 
-                entry.applicationType && 
-                !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
+                !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
             )
             .flatMap(entry => 
                 (entry.siteDetails || []).map(site => ({
