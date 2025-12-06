@@ -263,7 +263,7 @@ export default function DataEntryPage() {
 
 
   const supervisorList = useMemo(() => {
-    if (!user || !pageData || staffMembers.length === 0) return [];
+    if (!user || !pageData || staffIsLoading) return [];
     
     const activeSupervisors = pageData.allUsers
       .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
@@ -281,7 +281,7 @@ export default function DataEntryPage() {
       .filter((s): s is (StaffMember & { uid: string; name: string }) => s !== null);
 
     return activeSupervisors.sort((a, b) => a.name.localeCompare(b.name));
-  }, [pageData, staffMembers, user]);
+  }, [pageData, staffMembers, user, staffIsLoading]);
   
   const isLoading = authIsLoading || staffIsLoading || dataLoading;
   
@@ -353,5 +353,3 @@ export default function DataEntryPage() {
     </div>
   );
 }
-
-    
