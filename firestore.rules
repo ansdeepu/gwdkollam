@@ -104,7 +104,8 @@ service cloud.firestore {
     
     // === Bidders ===
     match /bidders/{docId} {
-      allow read, write: if isEditor();
+      allow read: if isApproved();
+      allow write: if isEditor();
     }
 
     // === App Settings (Dropdowns, etc.) ===
