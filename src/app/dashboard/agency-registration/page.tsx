@@ -1,3 +1,4 @@
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -50,32 +51,32 @@ const createDefaultRig = (): RigRegistrationType => ({
 });
 
 const toDateOrNull = (value: any): Date | null => {
-    if (!value) return null;
-    if (value instanceof Date && isValid(value)) return value;
+  if (!value) return null;
+  if (value instanceof Date && isValid(value)) return value;
 
-    if (typeof value.seconds === 'number') {
-        const d = new Date(value.seconds * 1000);
-        if (isValid(d)) return d;
-    }
+  if (typeof value.seconds === 'number') {
+    const d = new Date(value.seconds * 1000);
+    if (isValid(d)) return d;
+  }
+  
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+
+    // Try dd/MM/yyyy format first
+    let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
+    if (isValid(parsedDate)) return parsedDate;
+
+    // Then try yyyy-MM-dd format
+    parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
+    if (isValid(parsedDate)) return parsedDate;
     
-    if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed === '') return null;
-
-        // Try dd/MM/yyyy format first
-        let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
-        if (isValid(parsedDate)) return parsedDate;
-
-        // Then try ISO / RFC parsable format
-        parsedDate = parseISO(trimmed);
-        if (isValid(parsedDate)) return parsedDate;
-
-        // Then yyyy-MM-dd format
-        parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
-        if (isValid(parsedDate)) return parsedDate;
-    }
-    
-    return null;
+    // Then try ISO / RFC parsable format
+    parsedDate = parseISO(trimmed);
+    if (isValid(parsedDate)) return parsedDate;
+  }
+  
+  return null;
 };
 
 
@@ -784,35 +785,33 @@ export default function AgencyRegistrationPage() {
             
         // Sorting logic
         filtered.sort((a, b) => {
-          const dateA = toDateOrNull(a.agencyRegistrationDate);
-          const dateB = toDateOrNull(b.agencyRegistrationDate);
+            const dateA = toDateOrNull(a.agencyRegistrationDate);
+            const dateB = toDateOrNull(b.agencyRegistrationDate);
 
-          if (dateA && dateB) {
-            if (dateA.getTime() !== dateB.getTime()) {
-              return dateA.getTime() - dateB.getTime();
+            if (dateA && dateB) {
+                if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA.getTime() - dateB.getTime();
+                }
+            } else if (dateA) {
+                return -1;
+            } else if (dateB) {
+                return 1;
             }
-          } else if (dateA) {
-            return -1; // a has date, b doesn't, so a comes first
-          } else if (dateB) {
-            return 1; // b has date, a doesn't, so b comes first
-          }
-          
-          // Secondary sort: registration number
-          const numA = a.agencyRegistrationNo ? (a.agencyRegistrationNo.match(/GWD\/KLM\/(\d+)\/|GWD\/(\d+)\(N\)\//) || []).slice(1).find(n => n) : null;
-          const numB = b.agencyRegistrationNo ? (b.agencyRegistrationNo.match(/GWD\/KLM\/(\d+)\/|GWD\/(\d+)\(N\)\//) || []).slice(1).find(n => n) : null;
-          const intA = numA ? parseInt(numA, 10) : null;
-          const intB = numB ? parseInt(numB, 10) : null;
-          
-          if (intA !== null && intB !== null) {
-              if (intA !== intB) return intA - intB;
-          } else if (intA !== null) {
-              return -1;
-          } else if (intB !== null) {
-              return 1;
-          }
 
-          // Tertiary sort: file number
-          return (a.fileNo || '').localeCompare(b.fileNo || '');
+            const getRegNumber = (regNo: string | null | undefined): number | null => {
+                if (!regNo) return null;
+                const match = regNo.match(/(?:\/|KLM\/|GWD\/)(\d+)(?:\(N\)\/|\/)/);
+                return match && match[1] ? parseInt(match[1], 10) : null;
+            };
+
+            const numA = getRegNumber(a.agencyRegistrationNo);
+            const numB = getRegNumber(b.agencyRegistrationNo);
+
+            if (numA !== null && numB !== null && numA !== numB) {
+                return numA - numB;
+            }
+
+            return (a.fileNo || '').localeCompare(b.fileNo || '');
         });
 
         const lastCreated = sortedApps.reduce((latest, entry) => {
@@ -2102,9 +2101,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     
 
-
-
-
-
-
-
+    
