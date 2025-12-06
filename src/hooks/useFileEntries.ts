@@ -26,7 +26,18 @@ import { useDataStore } from './use-data-store'; // Import the new central store
 
 const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
-const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+
+// This list defines which statuses are considered "active" or relevant for a supervisor's main view.
+// It includes ongoing work as well as terminal statuses like 'failed' and 'completed'.
+// It excludes administrative statuses that happen after the site work is fully done.
+const SUPERVISOR_VISIBLE_STATUSES: SiteWorkStatus[] = [
+    "Work Order Issued",
+    "Work in Progress",
+    "Work Initiated",
+    "Awaiting Dept. Rig",
+    "Work Failed",
+    "Work Completed"
+];
 
 
 export function useFileEntries() {
@@ -49,9 +60,24 @@ export function useFileEntries() {
       let entries: DataEntryFormData[];
 
       if (user.role === 'supervisor' && user.uid) {
-        // For supervisors, filter the entries from the central store.
-        entries = allFileEntries.filter(entry => entry.assignedSupervisorUids?.includes(user.uid));
-        
+        // For supervisors, filter entries from the central store.
+        entries = allFileEntries
+          .map(entry => {
+            // Filter sites within each entry first
+            const supervisedSites = entry.siteDetails?.filter(site =>
+              site.supervisorUid === user.uid &&
+              site.workStatus &&
+              SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
+            );
+
+            // If the supervisor has any relevant sites in this file, return the file with ONLY those sites.
+            if (supervisedSites && supervisedSites.length > 0) {
+              return { ...entry, siteDetails: supervisedSites };
+            }
+            return null; // This file is not relevant to the supervisor
+          })
+          .filter((entry): entry is DataEntryFormData => entry !== null); // Remove null entries
+
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
           pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
