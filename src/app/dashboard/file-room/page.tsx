@@ -60,24 +60,28 @@ export default function FileManagerPage() {
   const canCreate = user?.role === 'editor';
   
   const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    // For supervisors, fileEntries is already correctly filtered by the hook.
-    // For others, we filter out private works.
+    // For supervisors, fileEntries is already correctly pre-filtered by the hook.
+    // For others, we need to filter out private works from the globally-scoped data passed to the component.
     const entries: DataEntryFormData[] = user?.role === 'supervisor'
-      ? fileEntries
+      ? fileEntries // This is already the correct, supervisor-specific, filtered list
       : fileEntries.filter(entry => 
           !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
         );
 
     const sortedEntries = [...entries];
 
+    // Sort all entries by the first remittance date, newest first.
     sortedEntries.sort((a, b) => {
       const dateAValue = a.remittanceDetails?.[0]?.dateOfRemittance;
       const dateBValue = b.remittanceDetails?.[0]?.dateOfRemittance;
+
       const dateA = safeParseDate(dateAValue);
       const dateB = safeParseDate(dateBValue);
+      
       if (!dateA && !dateB) return 0;
       if (!dateA) return 1; 
       if (!dateB) return -1;
+      
       return dateB.getTime() - dateA.getTime();
     });
 

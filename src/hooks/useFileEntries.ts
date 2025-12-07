@@ -28,7 +28,8 @@ const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
 // This list defines which statuses are considered "active" or relevant for a supervisor's main view.
-const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+const SUPERVISOR_VISIBLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig", "Work Failed", "Work Completed"];
+
 
 export function useFileEntries() {
   const { user } = useAuth();
@@ -53,19 +54,19 @@ export function useFileEntries() {
         // For supervisors, filter entries from the central store.
         entries = allFileEntries
           .map(entry => {
-            // Filter sites within each entry first to find ONLY ongoing, assigned sites.
-            const supervisedOngoingSites = entry.siteDetails?.filter(site =>
+            // Filter sites within each entry to find ONLY sites assigned to the supervisor.
+            const supervisedSites = entry.siteDetails?.filter(site =>
               site.supervisorUid === user.uid &&
               site.workStatus &&
-              ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
+              SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
             );
 
-            // If the supervisor has any relevant ongoing sites in this file,
+            // If the supervisor has any relevant sites in this file,
             // return the file with ONLY those specific sites.
-            if (supervisedOngoingSites && supervisedOngoingSites.length > 0) {
-              return { ...entry, siteDetails: supervisedOngoingSites };
+            if (supervisedSites && supervisedSites.length > 0) {
+              return { ...entry, siteDetails: supervisedSites };
             }
-            return null; // This file is not relevant to the supervisor's active work list.
+            return null; // This file is not relevant to the supervisor.
           })
           .filter((entry): entry is DataEntryFormData => entry !== null); // Remove null entries
 
