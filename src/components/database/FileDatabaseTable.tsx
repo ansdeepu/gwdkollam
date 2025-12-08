@@ -328,7 +328,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   const canSupervisorEdit = user?.role === 'supervisor' && (entry.siteDetails || []).length > 0;
                   const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !canSupervisorEdit);
                   
-                  const activeSites = (entry.siteDetails || []).filter(site => ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus));
+                  // This is the corrected logic: use siteDetails directly as it's pre-filtered by the hook
+                  const activeSites = entry.siteDetails || [];
 
                   return (
                   <TableRow key={entry.id}>
