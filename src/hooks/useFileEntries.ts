@@ -40,7 +40,7 @@ export function useFileEntries() {
   const { getPendingUpdatesForFile } = usePendingUpdates();
   const [pendingUpdatesMap, setPendingUpdatesMap] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
+   useEffect(() => {
     if (user?.role === 'supervisor' && user.uid) {
         getPendingUpdatesForFile(null, user.uid).then(updates => {
             const map: Record<string, boolean> = {};
@@ -65,26 +65,9 @@ export function useFileEntries() {
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
-        const supervisorEntries = allFileEntries.filter(entry => {
-            if (!entry.assignedSupervisorUids?.includes(user.uid)) {
-                return false;
-            }
-            
-            const hasVisibleSite = entry.siteDetails?.some(site => {
-                if (site.supervisorUid !== user.uid) return false;
-                const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
-                if (isOngoing) return true;
-                
-                // If not ongoing, check if it's completed/failed but has a pending update from this user
-                const hasPending = pendingUpdatesMap[entry.fileNo];
-                const isCompletedOrFailedWithPendingUpdate = 
-                    (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && hasPending;
-
-                return isCompletedOrFailedWithPendingUpdate;
-            });
-
-            return hasVisibleSite;
-        });
+        const supervisorEntries = allFileEntries.filter(entry => 
+          entry.siteDetails?.some(site => site.supervisorUid === user.uid)
+        );
         setFileEntries(supervisorEntries);
       } else {
         setFileEntries(allFileEntries);

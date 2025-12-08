@@ -711,7 +711,17 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setValue("totalRemittance", totalRemittance);
     setValue("totalPaymentAllEntries", totalPayment);
     setValue("overallBalance", totalRemittance - totalPayment);
-  }, [watchedRemittanceDetails, watchedPaymentDetails, setValue]);
+    
+    // Update file-level assignedSupervisorUids
+    const supervisorUids = new Set<string>();
+    watchedSiteDetails?.forEach(site => {
+        if (site.supervisorUid) {
+            supervisorUids.add(site.supervisorUid);
+        }
+    });
+    setValue("assignedSupervisorUids", Array.from(supervisorUids));
+
+  }, [watchedRemittanceDetails, watchedPaymentDetails, watchedSiteDetails, setValue]);
 
   const totalEstimate = useMemo(() => {
     return watchedSiteDetails?.reduce((sum, site) => sum + (Number(site.estimateAmount) || 0), 0) || 0;
