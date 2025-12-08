@@ -39,7 +39,6 @@ export function useArsEntries() {
         setIsLoading(dataStoreLoading);
         return;
       }
-
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
@@ -47,17 +46,15 @@ export function useArsEntries() {
         const pendingArsIds = new Set(pendingUpdates.filter(p => p.isArsUpdate).map(p => p.arsId));
         
         const supervisorEntries = allArsEntries.filter(entry => {
-            const isAssigned = entry.supervisorUid === user.uid;
-            const hasPendingUpdate = pendingArsIds.has(entry.id);
-            // An ARS entry is relevant to a supervisor if it's assigned to them OR if they have a pending update for it.
-            return isAssigned || hasPendingUpdate;
+          const isAssigned = entry.supervisorUid === user.uid;
+          const hasPendingUpdate = pendingArsIds.has(entry.id);
+          return isAssigned || hasPendingUpdate;
         });
         setArsEntries(supervisorEntries);
       } else {
         // For editor/viewer, show all entries
         setArsEntries(allArsEntries);
       }
-
       setIsLoading(false);
     };
 
