@@ -58,24 +58,15 @@ export function useFileEntries() {
 
         entries = allFileEntries
           .map(entry => {
-            const supervisedSites = (entry.siteDetails || []).filter(
+            const isAssigned = (entry.siteDetails || []).some(
               site => site.supervisorUid === user.uid
             );
 
-            if (supervisedSites.length > 0) {
-              const visibleSites = supervisedSites.filter(site =>
-                site.workStatus &&
-                SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
-              );
-
-              // Only include the file in the "Deposit Works" list if it has at least one ONGOING site.
-              if (visibleSites.length > 0) {
-                return {
-                  ...entry,
-                  siteDetails: visibleSites, // Show only the ongoing sites in the list view
-                  isPending: pendingFileNumbers.has(entry.fileNo),
-                };
-              }
+            if (isAssigned) {
+              return {
+                ...entry,
+                isPending: pendingFileNumbers.has(entry.fileNo),
+              };
             }
             return null;
           })

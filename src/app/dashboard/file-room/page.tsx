@@ -62,14 +62,24 @@ export default function FileManagerPage() {
   const canCreate = user?.role === 'editor';
   
   const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    const nonPrivateEntries = fileEntries.filter(entry => 
+    let entries = fileEntries.filter(entry => 
         !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
     );
 
-    const sortedEntries = [...nonPrivateEntries];
-
+    if (user?.role === 'supervisor' && user.uid) {
+        entries = entries.map(entry => {
+            const ongoingSites = (entry.siteDetails || []).filter(site =>
+                site.workStatus && ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
+            );
+            if (ongoingSites.length > 0) {
+                return { ...entry, siteDetails: ongoingSites };
+            }
+            return null;
+        }).filter((entry): entry is DataEntryFormData => entry !== null);
+    }
+    
     // Sort all entries by the first remittance date, newest first.
-    sortedEntries.sort((a, b) => {
+    entries.sort((a, b) => {
       const dateAValue = a.remittanceDetails?.[0]?.dateOfRemittance;
       const dateBValue = b.remittanceDetails?.[0]?.dateOfRemittance;
 
@@ -80,12 +90,12 @@ export default function FileManagerPage() {
       if (!dateA) return 1; 
       if (!dateB) return -1;
       
-      return dateB.getTime() - dateA.getTime();
+      return dateB.getTime() - a.getTime();
     });
 
-    const totalSiteCount = sortedEntries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
+    const totalSiteCount = entries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
 
-    const lastCreated = sortedEntries.reduce((latest, entry) => {
+    const lastCreated = entries.reduce((latest, entry) => {
         const createdAt = (entry as any).createdAt ? safeParseDate((entry as any).createdAt) : null;
         if (createdAt && (!latest || createdAt > latest)) {
             return createdAt;
@@ -93,8 +103,8 @@ export default function FileManagerPage() {
         return latest;
     }, null as Date | null);
     
-    return { depositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [fileEntries]);
+    return { depositWorkEntries: entries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
+  }, [fileEntries, user]);
 
 
   const handleAddNewClick = () => {
