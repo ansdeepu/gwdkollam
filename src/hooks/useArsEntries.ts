@@ -38,30 +38,35 @@ export function useArsEntries() {
       setIsLoading(dataStoreLoading);
       return;
     }
-
+  
     // This function will be called both on initial load and when updates change
     const processEntries = (pendingUpdates: any[]) => {
       let finalEntries = allArsEntries;
-
+  
       if (user.role === 'supervisor' && user.uid) {
         const pendingArsIds = new Set(pendingUpdates.filter(u => u.arsId).map(u => u.arsId));
         
         finalEntries = allArsEntries.filter(entry => {
           const isAssigned = entry.supervisorUid === user.uid;
           const hasPendingUpdate = pendingArsIds.has(entry.id);
-          return isAssigned || hasPendingUpdate;
+          const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+  
+          return (isAssigned && isOngoing) || hasPendingUpdate;
         });
       }
       
       setArsEntries(finalEntries);
       setIsLoading(false);
     };
-
+  
     // Subscribe to real-time updates and re-process when they change
     const unsubscribe = subscribeToPendingUpdates((updates) => {
         processEntries(updates);
     });
-
+  
+    // Initial processing in case there are no pending updates to trigger the first call
+    processEntries([]);
+  
     return () => unsubscribe();
   }, [user, allArsEntries, dataStoreLoading, subscribeToPendingUpdates]);
 
