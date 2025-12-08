@@ -1,4 +1,3 @@
-
 // src/components/admin/PendingUpdatesTable.tsx
 "use client";
 
@@ -20,7 +19,7 @@ import type { SiteDetailFormData, ArsEntryFormData, DataEntryFormData } from '@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
@@ -383,15 +382,24 @@ export default function PendingUpdatesTable() {
       </AlertDialog>
 
       <Dialog open={!!changesToView} onOpenChange={() => setChangesToView(null)}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{changesToView?.title}</DialogTitle><DialogDescription>Review the changes submitted by the supervisor.</DialogDescription></DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <Table>
-              <TableHeader><TableRow><TableHead className="w-[30%]">Field</TableHead><TableHead className="w-[35%]">Original Value</TableHead><TableHead className="w-[35%]">New Value</TableHead></TableRow></TableHeader>
-              <TableBody>{changesToView?.changes.map((change, index) => (<TableRow key={index}><TableCell className="font-medium text-xs">{change.field}</TableCell><TableCell className="text-xs text-muted-foreground line-through">{change.oldValue}</TableCell><TableCell className="text-xs font-semibold text-primary">{change.newValue}</TableCell></TableRow>))}</TableBody>
-            </Table>
-          </ScrollArea>
-          <DialogFooter><DialogClose asChild><Button>Close</Button></DialogClose></DialogFooter>
+        <DialogContent className="sm:max-w-2xl p-0">
+          <DialogHeader className="p-6 pb-4 border-b">
+            <DialogTitle>{changesToView?.title}</DialogTitle>
+            <DialogDescription>Review the changes submitted by the supervisor.</DialogDescription>
+          </DialogHeader>
+          <div className="p-6">
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <Table>
+                <TableHeader><TableRow><TableHead className="w-[30%]">Field</TableHead><TableHead className="w-[35%]">Original Value</TableHead><TableHead className="w-[35%]">New Value</TableHead></TableRow></TableHeader>
+                <TableBody>{changesToView?.changes.map((change, index) => (<TableRow key={index}><TableCell className="font-medium text-xs">{change.field}</TableCell><TableCell className="text-xs text-muted-foreground line-through">{change.oldValue}</TableCell><TableCell className="text-xs font-semibold text-primary">{change.newValue}</TableCell></TableRow>))}</TableBody>
+              </Table>
+            </ScrollArea>
+          </div>
+          <DialogFooter className="p-6 pt-4 border-t">
+            <DialogClose asChild>
+              <Button>Close</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </TooltipProvider>
