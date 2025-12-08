@@ -49,40 +49,9 @@ export function useFileEntries() {
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingFileNos = new Set(pendingUpdates.filter(p => p.status === 'pending').map(p => p.fileNo));
-
-        const supervisorEntries = allFileEntries
-          .filter(entry => 
+        const supervisorEntries = allFileEntries.filter(entry => 
             entry.assignedSupervisorUids && entry.assignedSupervisorUids.includes(user.uid)
-          )
-          .map(entry => {
-            const visibleSites = (entry.siteDetails || []).filter(site => {
-              if (site.supervisorUid !== user.uid) return false;
-
-              // Show if status is ongoing
-              const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
-              if (isOngoing) {
-                return true;
-              }
-
-              // Show if status is completed/failed AND has a pending update for the file
-              const isCompletedOrFailed = site.workStatus && (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed');
-              if (isCompletedOrFailed && pendingFileNos.has(entry.fileNo)) {
-                return true;
-              }
-
-              return false;
-            });
-            
-            return {
-              ...entry,
-              siteDetails: visibleSites,
-            };
-          })
-          // Finally, only include files that still have visible sites for the supervisor
-          .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
-        
+        );
         setFileEntries(supervisorEntries);
       } else {
         // For editors and viewers, show all entries
@@ -95,7 +64,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
+  }, [user, allFileEntries, dataStoreLoading]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");

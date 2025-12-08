@@ -41,6 +41,7 @@ import { useAuth } from "@/hooks/useAuth";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from 'uuid';
+import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -87,7 +88,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const { isLoading: entriesLoadingHook, deleteFileEntry, addFileEntry } = useFileEntries(); 
-  const { user, isLoading: authIsLoading } = useAuth(); 
+  const { user, isLoading: authIsLoading } = useAuth();
+  const { getPendingUpdatesForFile } = usePendingUpdates();
 
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
   const [itemToCopy, setItemToCopy] = useState<DataEntryFormData | null>(null);
@@ -95,10 +97,25 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const [isCopying, setIsCopying] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
+  const [pendingUpdatesMap, setPendingUpdatesMap] = useState<Record<string, boolean>>({});
 
   const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
   const canDelete = user?.role === 'editor';
   const canCopy = user?.role === 'editor';
+
+  useEffect(() => {
+    if (user?.role === 'supervisor' && user.uid) {
+        getPendingUpdatesForFile(null, user.uid).then(updates => {
+            const map: Record<string, boolean> = {};
+            updates.forEach(u => {
+                if(u.fileNo && u.status === 'pending') {
+                    map[u.fileNo] = true;
+                }
+            });
+            setPendingUpdatesMap(map);
+        });
+    }
+  }, [user, fileEntries, getPendingUpdatesForFile]);
 
   useEffect(() => {
     const pageFromUrl = searchParams.get('page');
@@ -304,8 +321,18 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
               </TableHeader>
               <TableBody>
                 {paginatedEntries.map((entry, index) => {
-                  const sitesToDisplay = entry.siteDetails || [];
-
+                  let sitesToDisplay: SiteDetailFormData[] = entry.siteDetails || [];
+                  
+                  if (user?.role === 'supervisor') {
+                      const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+                      const isFilePending = pendingUpdatesMap[entry.fileNo];
+                      sitesToDisplay = sitesToDisplay.filter(site => {
+                          const isOngoing = site.workStatus && ongoingStatuses.includes(site.workStatus as SiteWorkStatus);
+                          const isCompletedAndPending = isFilePending && site.workStatus && ['Work Completed', 'Work Failed'].includes(site.workStatus as SiteWorkStatus);
+                          return isOngoing || isCompletedAndPending;
+                      });
+                  }
+                  
                   return (
                   <TableRow key={entry.id}>
                     <TableCell className="w-[5%] px-2 py-2 text-sm text-center">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
@@ -317,10 +344,9 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                             <span key={idx} className={cn("font-semibold", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
                               {site.nameOfSite}{idx < sitesToDisplay.length - 1 ? ', ' : ''}
                             </span>
-                          )
-                        )
+                          ))
                       ) : (
-                        <span className="text-muted-foreground italic">No sites assigned</span>
+                        <span className="text-muted-foreground italic">No active sites for this supervisor</span>
                       )}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
