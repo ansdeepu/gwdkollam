@@ -184,6 +184,7 @@ export default function FileManagerPage() {
       <FileDatabaseTable 
         fileEntries={filteredEntries} 
         isLoading={isLoading}
+        searchActive={!!searchTerm}
       />
     </div>
   );

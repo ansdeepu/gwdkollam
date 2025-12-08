@@ -81,9 +81,10 @@ const getStatusColorClass = (status: SiteWorkStatus | undefined): string => {
 interface FileDatabaseTableProps {
   fileEntries: DataEntryFormData[];
   isLoading: boolean;
+  searchActive: boolean;
 }
 
-export default function FileDatabaseTable({ fileEntries, isLoading }: FileDatabaseTableProps) {
+export default function FileDatabaseTable({ fileEntries, isLoading, searchActive }: FileDatabaseTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -124,6 +125,10 @@ export default function FileDatabaseTable({ fileEntries, isLoading }: FileDataba
       setCurrentPage(pageNum);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [fileEntries]);
 
   const paginatedEntries = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -233,9 +238,9 @@ export default function FileDatabaseTable({ fileEntries, isLoading }: FileDataba
           />
           <h3 className="text-xl font-semibold text-foreground">No Files Found</h3>
           <p className="text-muted-foreground">
-            {searchTerm
-              ? "No files match your search."
-              : "There are no file entries recorded yet. Start by adding new file data."
+            {searchActive
+              ? "No files match your search criteria."
+              : "There are no file entries recorded yet."
             }
           </p>
         </CardContent>
@@ -281,14 +286,11 @@ export default function FileDatabaseTable({ fileEntries, isLoading }: FileDataba
                   let sitesToDisplay: SiteDetailFormData[] = entry.siteDetails || [];
                   
                   if (user?.role === 'supervisor') {
-                      const isFilePending = pendingUpdatesMap[entry.fileNo];
                       sitesToDisplay = sitesToDisplay.filter(site => {
                           if (site.supervisorUid !== user.uid) return false;
                           const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
                           if (isOngoing) return true;
-                          const isCompletedAndPending = (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && isFilePending;
-                          if (isCompletedAndPending) return true;
-                          return false;
+                          return false; // Only show ongoing sites for supervisor in this table view
                       });
                   }
                   

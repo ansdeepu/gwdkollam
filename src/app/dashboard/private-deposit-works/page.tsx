@@ -186,6 +186,7 @@ export default function PrivateDepositWorksPage() {
       <FileDatabaseTable 
         fileEntries={filteredEntries} 
         isLoading={isLoading}
+        searchActive={!!searchTerm}
       />
     </div>
   );
