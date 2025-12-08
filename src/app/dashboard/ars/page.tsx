@@ -32,7 +32,6 @@ import { useDataStore } from '@/hooks/use-data-store';
 export const dynamic = 'force-dynamic';
 
 const ITEMS_PER_PAGE = 50;
-const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -90,7 +89,6 @@ export default function ArsPage() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const canEdit = user?.role === 'editor';
-  const isSupervisor = user?.role === 'supervisor';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -121,10 +119,6 @@ export default function ArsPage() {
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   
   const handleAddNewClick = () => {
-    if (isSupervisor) {
-        toast({ title: "Action Not Allowed", description: "Supervisors cannot create new ARS entries.", variant: "destructive" });
-        return;
-    }
     setIsNavigating(true);
     router.push('/dashboard/ars/entry');
   };
@@ -136,13 +130,6 @@ export default function ArsPage() {
 
   const { filteredSites, lastCreatedDate } = useMemo(() => {
     let sites = [...allArsEntries];
-
-    if (isSupervisor) {
-      sites = sites.filter(site => 
-        site.supervisorUid === user.uid && 
-        (site.workStatus === "Work Order Issued" || site.workStatus === "Work in Progress")
-      );
-    }
     
     if (schemeTypeFilter !== 'all') {
       sites = sites.filter(site => site.arsTypeOfScheme === schemeTypeFilter);
@@ -213,7 +200,7 @@ export default function ArsPage() {
     }, null as Date | null);
 
     return { filteredSites: sites, lastCreatedDate: lastCreated };
-  }, [allArsEntries, searchTerm, startDate, endDate, user, isSupervisor, schemeTypeFilter, constituencyFilter]);
+  }, [allArsEntries, searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter]);
 
   useEffect(() => {
     const pageFromUrl = searchParams.get('page');
@@ -507,18 +494,6 @@ export default function ArsPage() {
     );
   }
 
-  if (user?.role === 'supervisor' && filteredSites.length === 0) {
-    return (
-        <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
-            <div className="space-y-6 p-6 text-center">
-                <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">No Active ARS Sites</h1>
-                <p className="text-muted-foreground">You do not have any ARS sites with an "Ongoing" or "Work Order Issued" status.</p>
-            </div>
-        </div>
-    );
-  }
-
   const startEntryNum = (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, filteredSites.length);
 
@@ -533,7 +508,7 @@ export default function ArsPage() {
                     <Input type="search" placeholder="Search across all fields..." className="w-full rounded-lg bg-background pl-10 shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 order-1 sm:order-2">
-                  {(canEdit || isSupervisor) && <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>}
+                  {(canEdit) && <Button size="sm" onClick={handleAddNewClick}> <PlusCircle className="mr-2 h-4 w-4" /> Add New ARS </Button>}
                   <Button variant="outline" onClick={handleExportExcel} size="sm"> <FileDown className="mr-2 h-4 w-4" /> Export Excel </Button>
                   {canEdit && ( <> 
                       <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".xlsx, .xls" /> 
@@ -628,8 +603,6 @@ export default function ArsPage() {
                         <TableBody>
                             {paginatedSites.length > 0 ? (
                                 paginatedSites.map((site, index) => {
-                                    const isSitePendingForSupervisor = isSupervisor && site.isPending;
-                                    const isEditDisabled = isSitePendingForSupervisor || (isSupervisor && site.supervisorUid !== user?.uid);
                                     const isCompleted = !!site.dateOfCompletion;
                                     
                                     return (
@@ -773,4 +746,3 @@ export default function ArsPage() {
     </div>
   );
 }
-

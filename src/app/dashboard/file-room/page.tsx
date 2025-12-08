@@ -21,8 +21,6 @@ import { useDataStore } from '@/hooks/use-data-store';
 export const dynamic = 'force-dynamic';
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
-const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
-
 
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
@@ -49,9 +47,7 @@ export default function FileManagerPage() {
   const { fileEntries, isLoading } = useFileEntries(); // Use the hook which handles filtering
   
   useEffect(() => {
-    const description = user?.role === 'supervisor'
-      ? 'List of all sites assigned to you with an ongoing work status.'
-      : 'List of all public and government deposit works in the system, sorted by most recent remittance.';
+    const description = 'List of all public and government deposit works in the system, sorted by most recent remittance.';
     setHeader('Deposit Works', description);
   }, [setHeader, user]);
 
@@ -92,7 +88,7 @@ export default function FileManagerPage() {
     }, null as Date | null);
     
     return { depositWorkEntries: entries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [fileEntries, user]);
+  }, [fileEntries]);
 
 
   const handleAddNewClick = () => {

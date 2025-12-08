@@ -35,20 +35,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useAuth } from "@/hooks/useAuth";
-import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from 'uuid';
@@ -99,14 +88,12 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const { toast } = useToast();
   const { isLoading: entriesLoadingHook, deleteFileEntry, addFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth(); 
-  const { getPendingUpdatesForFile } = usePendingUpdates();
 
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
   const [itemToCopy, setItemToCopy] = useState<DataEntryFormData | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   
-  const [pendingFileNos, setPendingFileNos] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
   const canEdit = user?.role === 'editor' || user?.role === 'supervisor';
@@ -120,21 +107,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
       setCurrentPage(pageNum);
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    async function checkPendingStatus() {
-      if (user?.role === 'supervisor' && user.uid) {
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingNos = new Set(
-          pendingUpdates
-            .filter(u => u.status === 'pending')
-            .map(u => u.fileNo)
-        );
-        setPendingFileNos(pendingNos);
-      }
-    }
-    checkPendingStatus();
-  }, [fileEntries, user, getPendingUpdatesForFile]);
 
   const filteredEntries = useMemo(() => {
     let entries = fileEntries;
@@ -292,8 +264,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
           <p className="text-muted-foreground">
             {searchTerm
               ? "No files match your search."
-              : user?.role === 'supervisor' 
-              ? "You have no active files assigned to you."
               : "There are no file entries recorded yet. Start by adding new file data."
             }
           </p>
@@ -334,10 +304,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
               </TableHeader>
               <TableBody>
                 {paginatedEntries.map((entry, index) => {
-                  const isFilePendingForSupervisor = user?.role === 'supervisor' && pendingFileNos.has(entry.fileNo);
-                  const canSupervisorEdit = user?.role === 'supervisor' && (entry.siteDetails || []).length > 0;
-                  const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !canSupervisorEdit);
-                  
                   const sitesToDisplay = entry.siteDetails || [];
 
                   return (

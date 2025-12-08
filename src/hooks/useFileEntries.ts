@@ -27,14 +27,10 @@ import { useDataStore } from './use-data-store'; // Import the new central store
 const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
-// This list defines which statuses are considered "active" or relevant for a supervisor's main view.
-const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
-
 
 export function useFileEntries() {
   const { user } = useAuth();
   const { allFileEntries, isLoading: dataStoreLoading, refetchFileEntries } = useDataStore(); // Use the central store
-  const { getPendingUpdatesForFile } = usePendingUpdates();
   const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -47,57 +43,14 @@ export function useFileEntries() {
         return;
       }
       setIsLoading(true);
-
-      let entries: DataEntryFormData[];
-
-      if (user.role === 'supervisor' && user.uid) {
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingFileNumbers = new Set(
-            pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
-        );
-
-        entries = allFileEntries
-          .map(entry => {
-            // A supervisor must be assigned to at least one site in the file.
-            const isAssignedToFile = (entry.assignedSupervisorUids || []).includes(user.uid!);
-            if (!isAssignedToFile) {
-                return null;
-            }
-
-            // The file is assigned. Now, determine which of its sites are visible in the LIST view.
-            const visibleSites = (entry.siteDetails || []).filter(site => {
-                const isAssignedToSite = site.supervisorUid === user.uid;
-                if (!isAssignedToSite) return false;
-
-                const isOngoing = SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
-                const isPendingCompletion = (site.workStatus === 'Work Failed' || site.workStatus === 'Work Completed') && pendingFileNumbers.has(entry.fileNo);
-                
-                return isOngoing || isPendingCompletion;
-            });
-            
-            // The file should be shown if the supervisor is assigned, regardless of whether there are "active" sites for the list view.
-            // We just replace the siteDetails with the ones relevant for the list view.
-            return {
-              ...entry,
-              siteDetails: visibleSites, // This might be an empty array, which is fine for the list view.
-              isPending: pendingFileNumbers.has(entry.fileNo),
-            };
-          })
-          .filter((entry): entry is DataEntryFormData => entry !== null);
-
-      } else {
-        // For editors and viewers, use the complete list.
-        entries = allFileEntries;
-      }
-      
-      setFileEntries(entries);
+      setFileEntries(allFileEntries);
       setIsLoading(false);
     };
 
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
+  }, [user, allFileEntries, dataStoreLoading]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
@@ -181,31 +134,12 @@ export function useFileEntries() {
       }
       
       let entry = { id: docSnap.id, ...(docSnap.data()) } as DataEntryFormData;
-
-      // For supervisors, we filter the siteDetails to ONLY what they are assigned to,
-      // but we do NOT filter by status on the edit page.
-      if (user && user.role === 'supervisor' && user.uid) {
-         const supervisedSites = (entry.siteDetails || []).filter(site => site.supervisorUid === user.uid);
-         
-         if (supervisedSites.length === 0) {
-             console.warn(`[fetchEntryForEditing] Supervisor ${user.uid} has no assigned sites in file ${docId}. Denying access.`);
-             return null; // No assigned sites in this file for this supervisor
-         }
-
-         const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo, user.uid);
-         const isFilePending = pendingUpdates.some(u => u.status === 'pending');
-         
-         // On the edit page, we return ALL supervised sites, just with a pending flag.
-         const sitesWithPendingStatus = supervisedSites.map(site => ({...site, isPending: isFilePending}));
-         
-         entry = { ...entry, siteDetails: sitesWithPendingStatus };
-      }
       return entry;
     } catch (error) {
       console.error(`[fetchEntryForEditing] Error fetching docId ${docId}:`, error);
       return null;
     }
-  }, [user, getPendingUpdatesForFile]);
+  }, []);
 
   return { 
       fileEntries, 

@@ -15,7 +15,6 @@ import { useDataStore } from './use-data-store'; // Import the new central store
 const db = getFirestore(app);
 const ARS_COLLECTION = 'arsEntries';
 const PENDING_UPDATES_COLLECTION = 'pendingUpdates';
-const ONGOING_ARS_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
 
 // This is the shape of the data as it's stored and used in the app
 export type ArsEntry = ArsEntryFormData & {
@@ -41,31 +40,7 @@ export function useArsEntries() {
       }
 
       setIsLoading(true);
-      let entries = allArsEntries;
-
-      if (user.role === 'supervisor' && user.uid) {
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingArsIds = new Set(
-          pendingUpdates
-            .filter(u => u.isArsUpdate && u.status === 'pending')
-            .map(u => u.arsId)
-        );
-
-        entries = allArsEntries.filter(entry => {
-            if (entry.supervisorUid !== user.uid) return false;
-            
-            const isOngoing = entry.workStatus && ONGOING_ARS_STATUSES.includes(entry.workStatus as SiteWorkStatus);
-            // A site is also visible if its completion is pending review
-            const isPendingCompletion = entry.workStatus && ['Work Completed', 'Work Failed'].includes(entry.workStatus as SiteWorkStatus) && pendingArsIds.has(entry.id);
-            
-            return isOngoing || isPendingCompletion;
-        }).map(entry => ({
-            ...entry,
-            isPending: pendingArsIds.has(entry.id),
-        }));
-      }
-
-      setArsEntries(entries);
+      setArsEntries(allArsEntries);
       setIsLoading(false);
     };
 
