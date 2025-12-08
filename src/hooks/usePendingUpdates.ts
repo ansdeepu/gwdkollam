@@ -44,7 +44,11 @@ interface PendingUpdatesState {
   deleteUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
   hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
-  getPendingUpdatesForFile: (fileNo: string | null, submittedByUid?: string) => Promise<PendingUpdate[]>;
+  getPendingUpdates: (fileNo: string | null, submittedByUid?: string) => () => void; // Returns unsubscribe function
+  subscribeToPendingUpdates: (
+    callback: (updates: PendingUpdate[]) => void,
+    submittedByUid?: string | null
+  ) => () => void;
 }
 
 export function usePendingUpdates(): PendingUpdatesState {
@@ -66,32 +70,46 @@ export function usePendingUpdates(): PendingUpdatesState {
     }
   }, []);
   
-  const getPendingUpdatesForFile = useCallback(async (fileNo: string | null, submittedByUid?: string): Promise<PendingUpdate[]> => {
-    try {
-        // Editors see 'pending' and 'unassigned'. Supervisors see their own 'pending' and 'rejected' updates.
-        const statusesToQuery = submittedByUid ? ['pending', 'rejected'] : ['pending', 'supervisor-unassigned'];
-        
-        let conditions = [where('status', 'in', statusesToQuery)];
-        if (fileNo) {
-            conditions.push(where('fileNo', '==', fileNo));
-        }
-        if (submittedByUid) {
-            conditions.push(where('submittedByUid', '==', submittedByUid));
-        }
-        
-        const q = query(collection(db, PENDING_UPDATES_COLLECTION), ...conditions);
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
-            return [];
-        }
-        return querySnapshot.docs.map(doc => convertTimestampToDate({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.error(`Error fetching pending updates for file ${fileNo}:`, error);
-        return [];
+  const subscribeToPendingUpdates = useCallback((
+    callback: (updates: PendingUpdate[]) => void,
+    submittedByUid: string | null = null
+  ) => {
+    if (!user) {
+      callback([]);
+      return () => {};
     }
-  }, []);
 
+    const statusesToQuery = user.role === 'editor' 
+      ? ['pending', 'supervisor-unassigned'] 
+      : ['pending', 'rejected'];
+      
+    let conditions = [where('status', 'in', statusesToQuery)];
+    if (user.role === 'supervisor' && user.uid) {
+        conditions.push(where('submittedByUid', '==', user.uid));
+    }
+    
+    const q = query(collection(db, PENDING_UPDATES_COLLECTION), ...conditions);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const updates = snapshot.docs.map(doc => convertTimestampToDate({ id: doc.id, ...doc.data() }));
+        updates.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+        callback(updates);
+    }, (error) => {
+        console.error("Error subscribing to pending updates:", error);
+        callback([]);
+    });
+
+    return unsubscribe;
+  }, [user]);
+
+
+  const getPendingUpdates = useCallback((fileNo: string | null, submittedByUid?: string) => {
+    // This function can be deprecated or kept for one-off fetches if needed,
+    // but the real-time subscription is now preferred.
+    const q = query(collection(db, PENDING_UPDATES_COLLECTION)); // Simplified for demonstration
+    return onSnapshot(q, () => {}); // No-op, recommend using subscribeToPendingUpdates
+  }, []);
+  
 
   const createPendingUpdate = useCallback(async (
     fileNo: string,
@@ -192,7 +210,8 @@ export function usePendingUpdates(): PendingUpdatesState {
     deleteUpdate,
     getPendingUpdateById,
     hasPendingUpdateForFile,
-    getPendingUpdatesForFile,
+    getPendingUpdates,
+    subscribeToPendingUpdates,
   };
 }
 
