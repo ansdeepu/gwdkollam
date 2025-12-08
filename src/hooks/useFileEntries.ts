@@ -61,7 +61,8 @@ export function useFileEntries() {
               if (site.supervisorUid !== user.uid) return false;
 
               // Show if status is ongoing
-              if (site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)) {
+              const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
+              if (isOngoing) {
                 return true;
               }
 
