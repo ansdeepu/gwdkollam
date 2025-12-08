@@ -35,7 +35,7 @@ const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
 const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed"];
-const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
+const SUPERVISOR_EDITABLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Tendered", "Selection Notice Issued"];
 
 
 const toDateOrNull = (value: any): Date | null => {
@@ -272,11 +272,15 @@ export default function ArsEntryPage() {
             
              if (isSupervisor && user) {
                 const hasPending = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
-                const isOngoing = originalEntry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(originalEntry.workStatus as SiteWorkStatus);
-                if (hasPending || !isOngoing) {
+                const isEditableStatus = originalEntry.workStatus && SUPERVISOR_EDITABLE_STATUSES.includes(originalEntry.workStatus as SiteWorkStatus);
+                
+                if (hasPending || !isEditableStatus) {
                     setIsFormDisabledForSupervisor(true);
-                    if (hasPending) toast({ title: "Edits Locked", description: "This site has a pending update and cannot be edited until reviewed.", duration: 6000 });
-                    else if (!isOngoing) toast({ title: "Edits Locked", description: "This site is no longer in an ongoing status and cannot be edited.", duration: 6000, variant: 'destructive' });
+                    if (hasPending) {
+                        toast({ title: "Edits Locked", description: "This site has a pending update and cannot be edited until reviewed.", duration: 6000 });
+                    } else if (!isEditableStatus) {
+                        toast({ title: "Edits Locked", description: "This site is no longer in an editable status.", duration: 6000, variant: 'destructive' });
+                    }
                 }
             }
 
@@ -516,7 +520,3 @@ export default function ArsEntryPage() {
         </div>
     );
 }
-
-    
-
-    
