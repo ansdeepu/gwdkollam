@@ -16,10 +16,13 @@ import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 import { useFileEntries } from '@/hooks/useFileEntries'; // Correctly import useFileEntries
+import { useDataStore } from '@/hooks/use-data-store';
 
 export const dynamic = 'force-dynamic';
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
+const ONGOING_WORK_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+
 
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
@@ -44,6 +47,7 @@ export default function FileManagerPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
   const searchParams = useSearchParams();
+  const { allFileEntries } = useDataStore();
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
@@ -53,21 +57,40 @@ export default function FileManagerPage() {
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { fileEntries } = useFileEntries(); // Use the filtered entries from the hook
   const router = useRouter();
   const { setIsNavigating } = usePageNavigation();
   
   const canCreate = user?.role === 'editor';
   
   const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    // For supervisors, fileEntries is already correctly pre-filtered by the hook.
-    // For others, we need to filter out private works from the globally-scoped data passed to the component.
-    const entries: DataEntryFormData[] = user?.role === 'supervisor'
-      ? fileEntries // This is already the correct, supervisor-specific, filtered list
-      : fileEntries.filter(entry => 
-          !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
-        );
+    let entries: DataEntryFormData[] = [];
 
+    if (user?.role === 'supervisor' && user.uid) {
+        // Filter from the global store to find all files the supervisor is assigned to.
+        entries = allFileEntries.map(entry => {
+            if (!entry.applicationType || PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
+              return null; // Skip private works
+            }
+
+            const supervisedOngoingSites = (entry.siteDetails || []).filter(site =>
+                site.supervisorUid === user.uid &&
+                site.workStatus &&
+                ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
+            );
+            
+            if (supervisedOngoingSites.length > 0) {
+              return { ...entry, siteDetails: supervisedOngoingSites };
+            }
+            return null;
+        }).filter((e): e is DataEntryFormData => e !== null);
+
+    } else {
+        // For editors/viewers, show all non-private works.
+        entries = allFileEntries.filter(entry => 
+            !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
+        );
+    }
+    
     const sortedEntries = [...entries];
 
     // Sort all entries by the first remittance date, newest first.
@@ -96,7 +119,7 @@ export default function FileManagerPage() {
     }, null as Date | null);
     
     return { depositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [fileEntries, user?.role]);
+  }, [allFileEntries, user?.role, user?.uid]);
 
 
   const handleAddNewClick = () => {

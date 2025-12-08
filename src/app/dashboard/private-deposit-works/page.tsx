@@ -16,6 +16,7 @@ import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 import { useFileEntries } from '@/hooks/useFileEntries';
+import { useDataStore } from '@/hooks/use-data-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +45,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 export default function PrivateDepositWorksPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
-  const { fileEntries: allFileEntries } = useFileEntries();
+  const { allFileEntries } = useDataStore();
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
@@ -62,11 +63,25 @@ export default function PrivateDepositWorksPage() {
   const { privateDepositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
     let entries: DataEntryFormData[];
 
-    // Supervisors only see their assigned ongoing works from the start.
     if (user?.role === 'supervisor') {
-      entries = allFileEntries.filter(entry => 
-        !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
-      );
+      // Supervisors only see files where they have at least one ONGOING private site.
+      entries = allFileEntries.map(entry => {
+        if (!entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
+          return null;
+        }
+
+        const supervisedOngoingSites = (entry.siteDetails || []).filter(site =>
+          site.supervisorUid === user.uid &&
+          site.workStatus &&
+          ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
+        );
+        
+        if (supervisedOngoingSites.length > 0) {
+          return { ...entry, siteDetails: supervisedOngoingSites };
+        }
+        return null;
+      }).filter((e): e is DataEntryFormData => e !== null);
+
     } else {
       // For other roles, filter for private application types from the global list.
       entries = allFileEntries.filter(entry => 

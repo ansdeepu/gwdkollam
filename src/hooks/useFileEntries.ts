@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -50,20 +51,30 @@ export function useFileEntries() {
       let entries: DataEntryFormData[];
 
       if (user.role === 'supervisor' && user.uid) {
-        // Data is already pre-filtered by the data store.
-        // We just need to filter for the "Deposit Works" page display.
-        entries = allFileEntries.map(entry => {
-          const supervisedOngoingSites = (entry.siteDetails || []).filter(site =>
-            site.supervisorUid === user.uid &&
-            site.workStatus &&
-            SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
-          );
-
-          if (supervisedOngoingSites.length > 0) {
-            return { ...entry, siteDetails: supervisedOngoingSites };
-          }
-          return null;
-        }).filter((entry): entry is DataEntryFormData => entry !== null);
+        entries = allFileEntries
+          .map(entry => {
+            const supervisedSites = (entry.siteDetails || []).filter(
+              site => site.supervisorUid === user.uid
+            );
+      
+            if (supervisedSites.length > 0) {
+              const visibleSites = supervisedSites.filter(site =>
+                site.workStatus &&
+                SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
+              );
+      
+              // For the main list view, we only want to show files with active work.
+              // We return a modified entry that ONLY contains these visible sites.
+              if (visibleSites.length > 0) {
+                 return {
+                    ...entry,
+                    siteDetails: visibleSites
+                };
+              }
+            }
+            return null;
+          })
+          .filter((entry): entry is DataEntryFormData => entry !== null);
       
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
