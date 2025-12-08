@@ -68,7 +68,10 @@ export function usePendingUpdates(): PendingUpdatesState {
   
   const getPendingUpdatesForFile = useCallback(async (fileNo: string | null, submittedByUid?: string): Promise<PendingUpdate[]> => {
     try {
-        let conditions = [where('status', 'in', ['pending', 'supervisor-unassigned', 'rejected'])];
+        // Editors see 'pending' and 'unassigned'. Supervisors see their own 'pending' and 'rejected' updates.
+        const statusesToQuery = submittedByUid ? ['pending', 'rejected'] : ['pending', 'supervisor-unassigned'];
+        
+        let conditions = [where('status', 'in', statusesToQuery)];
         if (fileNo) {
             conditions.push(where('fileNo', '==', fileNo));
         }
