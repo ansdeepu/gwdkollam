@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
 
 export function useArsEntries() {
   const { user } = useAuth();
@@ -41,7 +41,7 @@ export function useArsEntries() {
   
     // This function will be called both on initial load and when updates change
     const processEntries = (pendingUpdates: any[]) => {
-      let finalEntries = allArsEntries;
+      let finalEntries;
   
       if (user.role === 'supervisor' && user.uid) {
         const pendingArsIds = new Set(pendingUpdates.filter(u => u.arsId).map(u => u.arsId));
@@ -51,8 +51,11 @@ export function useArsEntries() {
           const hasPendingUpdate = pendingArsIds.has(entry.id);
           const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
   
+          // Show if assigned AND ongoing, OR if there's a pending update from the supervisor
           return (isAssigned && isOngoing) || hasPendingUpdate;
         });
+      } else {
+        finalEntries = allArsEntries;
       }
       
       setArsEntries(finalEntries);
@@ -64,7 +67,7 @@ export function useArsEntries() {
         processEntries(updates);
     });
   
-    // Initial processing in case there are no pending updates to trigger the first call
+    // Initial processing with an empty updates array to filter the initial data load
     processEntries([]);
   
     return () => unsubscribe();
