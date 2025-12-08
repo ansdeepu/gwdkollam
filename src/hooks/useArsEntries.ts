@@ -53,12 +53,11 @@ export function useArsEntries() {
             const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
             if (isOngoing) return true;
 
-            const isCompletedOrFailed = entry.workStatus && (entry.workStatus === 'Work Completed' || entry.workStatus === 'Work Failed');
-            if (isCompletedOrFailed && pendingArsIds.has(entry.id)) {
-                return true;
-            }
+            const isCompletedOrFailedWithPendingUpdate = 
+                (entry.workStatus === 'Work Completed' || entry.workStatus === 'Work Failed') && 
+                pendingArsIds.has(entry.id);
 
-            return false;
+            return isCompletedOrFailedWithPendingUpdate;
         });
         setArsEntries(supervisorEntries);
       } else {

@@ -53,22 +53,28 @@ export function useFileEntries() {
         const pendingFileNos = new Set(pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo));
 
         const supervisorEntries = allFileEntries.filter(entry => {
+            // A file is relevant to a supervisor if they are assigned to it.
             if (!entry.assignedSupervisorUids?.includes(user.uid)) {
                 return false;
             }
-            // The file is a candidate. Now check if it has at least one relevant site.
-            const hasRelevantSite = entry.siteDetails?.some(site => {
+            
+            // And if it contains at least one site they should see.
+            const hasVisibleSite = entry.siteDetails?.some(site => {
                 if (site.supervisorUid !== user.uid) return false;
 
+                // Condition 1: Site has an ongoing status.
                 const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
                 if (isOngoing) return true;
 
-                const isCompletedAndPending = (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && pendingFileNos.has(entry.fileNo);
-                if (isCompletedAndPending) return true;
+                // Condition 2: Site is marked 'Completed' or 'Failed' AND has a pending update from the current supervisor.
+                const isCompletedOrFailedWithPendingUpdate = 
+                    (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && 
+                    pendingFileNos.has(entry.fileNo);
 
-                return false;
+                return isCompletedOrFailedWithPendingUpdate;
             });
-            return hasRelevantSite;
+
+            return hasVisibleSite;
         });
         setFileEntries(supervisorEntries);
       } else {
