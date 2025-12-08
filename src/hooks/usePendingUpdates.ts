@@ -1,3 +1,4 @@
+
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -43,6 +44,7 @@ interface PendingUpdatesState {
   deleteUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
   hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
+  getPendingUpdates: (fileNo: string | null, submittedByUid?: string) => Promise<PendingUpdate[]>;
   subscribeToPendingUpdates: (
     callback: (updates: PendingUpdate[]) => void
   ) => () => void;
@@ -50,6 +52,16 @@ interface PendingUpdatesState {
 
 export function usePendingUpdates(): PendingUpdatesState {
   const { user } = useAuth();
+  
+  const getPendingUpdates = useCallback(async (fileNo: string | null, submittedByUid?: string): Promise<PendingUpdate[]> => {
+    let conditions = [];
+    if (fileNo) conditions.push(where('fileNo', '==', fileNo));
+    if (submittedByUid) conditions.push(where('submittedByUid', '==', submittedByUid));
+    
+    const q = query(collection(db, PENDING_UPDATES_COLLECTION), ...conditions);
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => convertTimestampToDate({ id: doc.id, ...doc.data() }));
+  }, []);
   
   const hasPendingUpdateForFile = useCallback(async (fileNo: string, submittedByUid: string): Promise<boolean> => {
     try {
@@ -198,6 +210,7 @@ export function usePendingUpdates(): PendingUpdatesState {
     deleteUpdate,
     getPendingUpdateById,
     hasPendingUpdateForFile,
+    getPendingUpdates,
     subscribeToPendingUpdates,
   };
 }
