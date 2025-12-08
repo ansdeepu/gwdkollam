@@ -75,7 +75,7 @@ export default function FileManagerPage() {
       const dateB = safeParseDate(dateBValue);
       
       if (!dateA && !dateB) return 0;
-      if (!dateA) return 1; 
+      if (!dateA) return 1;
       if (!dateB) return -1;
       
       return dateB.getTime() - dateA.getTime();
@@ -137,7 +137,7 @@ export default function FileManagerPage() {
             </div>
              <div className="flex justify-end items-center gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
                 <span className="font-semibold">Site Name Color Legend:</span>
-                <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-600"></div><span>Ongoing</span></div>
+                <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-600"></div><span>Active / Ongoing</span></div>
                 <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-600"></div><span>To be Refunded</span></div>
                 <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-600"></div><span>Completed / Failed</span></div>
             </div>
