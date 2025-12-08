@@ -46,7 +46,7 @@ export function useArsEntries() {
   
     // Apply strict supervisor filter
     if (user.role === "supervisor") {
-      finalEntries = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
+      finalEntries = allArsEntries.filter(entry => !!entry.supervisorUid && entry.supervisorUid === user.uid);
     }
   
     setArsEntries(finalEntries);
