@@ -54,22 +54,35 @@ export function useFileEntries() {
         // For supervisors, filter entries from the central store.
         entries = allFileEntries
           .map(entry => {
-            // Filter sites within each entry to find ONLY sites assigned to the supervisor
-            // that are also in an ongoing state.
+            // Find all sites supervised by the current user in this file.
             const supervisedSites = (entry.siteDetails || []).filter(site =>
-              site.supervisorUid === user.uid &&
+              site.supervisorUid === user.uid
+            );
+
+            // If the supervisor is not assigned to any site in this file, ignore the file.
+            if (supervisedSites.length === 0) {
+              return null;
+            }
+
+            // From the supervised sites, find the ones with a visible status for the dashboard list.
+            const visibleSites = supervisedSites.filter(site =>
               site.workStatus &&
               SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
             );
-
-            // If the supervisor has any relevant sites in this file,
-            // return the file with ONLY those specific sites.
-            if (supervisedSites.length > 0) {
-              return { ...entry, siteDetails: supervisedSites };
+            
+            // If there are any visible (ongoing) sites, return the file entry
+            // with its siteDetails filtered to *only* those visible sites.
+            // This populates the main "Deposit Works" list correctly.
+            if (visibleSites.length > 0) {
+              return { ...entry, siteDetails: visibleSites };
             }
-            return null; // This file is not relevant to the supervisor.
+            
+            // If there are NO ongoing sites, but the supervisor is assigned to other sites (e.g., completed),
+            // we return null so it doesn't show up in their main list. The user can still access the file
+            // via other means if necessary, as the core data fetching by ID is not affected by this display-level filter.
+            return null;
           })
-          .filter((entry): entry is DataEntryFormData => entry !== null); // Remove null entries
+          .filter((entry): entry is DataEntryFormData => entry !== null); // Remove null entries (files not relevant to the supervisor's main list)
 
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
