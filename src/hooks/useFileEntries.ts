@@ -62,6 +62,7 @@ export function useFileEntries() {
                   if (site.supervisorUid !== user.uid) return false;
 
                   const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                  // A site is also visible if its completion is pending review
                   const isPendingCompletion = site.workStatus && ['Work Completed', 'Work Failed'].includes(site.workStatus as SiteWorkStatus) && pendingFileNumbers.has(entry.fileNo);
                   
                   return isOngoing || isPendingCompletion;
