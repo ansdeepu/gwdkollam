@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+const SUPERVISOR_EDITABLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Tendered", "Selection Notice Issued"];
 
 const processArsDoc = (docSnap: DocumentData): ArsEntry => {
     const data = docSnap.data();
@@ -56,28 +56,17 @@ export function useArsEntries() {
     
     setIsLoading(true);
 
-    const getSupervisorFilteredEntries = async () => {
-        if (user.role === 'supervisor' && user.uid) {
-            const pending = await getPendingUpdates(null, user.uid);
-            const pendingFileNos = new Set(pending.filter(p => p.isArsUpdate).map(p => p.fileNo));
+    if (user.role === 'supervisor') {
+        const supervisorEntries = allArsEntries.filter(entry => 
+            entry.supervisorUid === user.uid
+        );
+        setArsEntries(supervisorEntries);
+    } else {
+        setArsEntries(allArsEntries);
+    }
+    setIsLoading(false);
 
-            const filtered = allArsEntries.filter(entry => {
-                const isAssigned = !!entry.supervisorUid && entry.supervisorUid === user.uid;
-                const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
-                const hasPending = pendingFileNos.has(entry.fileNo);
-
-                return (isAssigned && isOngoing) || hasPending;
-            });
-            setArsEntries(filtered);
-        } else {
-            setArsEntries(allArsEntries);
-        }
-        setIsLoading(false);
-    };
-
-    getSupervisorFilteredEntries();
-
-  }, [user, allArsEntries, dataStoreLoading, getPendingUpdates]);
+  }, [user, allArsEntries, dataStoreLoading]);
 
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
