@@ -49,9 +49,10 @@ export function useArsEntries() {
         
         const supervisorEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
+            const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
             const hasPendingUpdate = pendingArsIds.has(entry.id);
-            // An ARS entry is relevant to a supervisor if it's assigned to them OR if they have a pending update for it.
-            return isAssigned || hasPendingUpdate;
+            // An ARS entry is relevant to a supervisor if it's assigned to them AND it's ongoing, OR if they have a pending update for it.
+            return (isAssigned && isOngoing) || hasPendingUpdate;
         });
         setArsEntries(supervisorEntries);
       } else {
