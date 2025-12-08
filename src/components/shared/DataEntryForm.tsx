@@ -939,15 +939,15 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }); }}>
+                                                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isSupervisor ? openDialog('site', { index, ...site }) : openDialog('viewSite', { index, ...site }); }}>
                                                             <Eye className="h-4 w-4"/>
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent><p>View Details</p></TooltipContent>
+                                                    <TooltipContent><p>{isSupervisor ? 'View / Edit' : 'View Details'}</p></TooltipContent>
                                                 </Tooltip>
                                                 {!isViewer && !isFormDisabled && (
                                                     <>
-                                                        {isSupervisor && (
+                                                        {!isSupervisor && (
                                                           <Tooltip>
                                                             <TooltipTrigger asChild>
                                                               <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}>
