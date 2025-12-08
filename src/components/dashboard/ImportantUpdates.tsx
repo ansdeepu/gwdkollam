@@ -23,17 +23,17 @@ interface AlertItem {
 
 export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesProps) {
   const { user } = useAuth();
-  const { getPendingUpdatesForFile } = usePendingUpdates();
+  const { getPendingUpdates } = usePendingUpdates();
   const [rejectedUpdates, setRejectedUpdates] = useState<PendingUpdate[]>([]);
 
   useEffect(() => {
     if (user?.role === 'supervisor' && user.uid) {
-      getPendingUpdatesForFile(null, user.uid).then(updates => {
+      getPendingUpdates(null, user.uid).then(updates => {
         const rejected = updates.filter(u => u.status === 'rejected');
         setRejectedUpdates(rejected);
       });
     }
-  }, [user, getPendingUpdatesForFile]);
+  }, [user, getPendingUpdates]);
 
   const alerts = useMemo(() => {
     const newAlerts: AlertItem[] = [];
