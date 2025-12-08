@@ -67,13 +67,17 @@ const safeParseDate = (dateValue: any): Date | null => {
 // New helper function for color coding
 const getStatusColorClass = (status: SiteWorkStatus | undefined): string => {
     if (!status) return 'text-muted-foreground';
-    if (status === 'Work Failed' || status === 'WorkCompleted' || status === 'Bill Prepared' || status === 'Payment Completed' || status === 'Utilization Certificate Issued') {
+    
+    const completedOrFailed: SiteWorkStatus[] = ["Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued", "Work Failed"];
+    if (completedOrFailed.includes(status)) {
         return 'text-red-600';
     }
+    
     if (status === 'To be Refunded') {
         return 'text-yellow-600';
     }
-    // For all other statuses, including ongoing ones
+    
+    // For all other statuses, including ongoing ones like 'Work in Progress', 'Work Order Issued' etc.
     return 'text-green-600';
 };
 
@@ -239,8 +243,8 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
           <h3 className="text-xl font-semibold text-foreground">No Files Found</h3>
           <p className="text-muted-foreground">
             {searchActive
-              ? "No files match your search criteria."
-              : "There are no file entries recorded yet."
+              ? "No files match your search."
+              : "There are no file entries recorded yet. Start by adding new file data."
             }
           </p>
         </CardContent>

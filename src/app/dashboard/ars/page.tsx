@@ -56,6 +56,23 @@ const formatDateSafe = (dateInput: any): string => {
   return date ? format(date, 'dd/MM/yyyy') : '';
 };
 
+// New helper function for color coding
+const getStatusColorClass = (status: SiteWorkStatus | undefined | null): string => {
+    if (!status) return 'text-muted-foreground';
+    
+    const completedOrFailed: SiteWorkStatus[] = ["Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued", "Work Failed"];
+    if (completedOrFailed.includes(status as SiteWorkStatus)) {
+        return 'text-red-600';
+    }
+    
+    if (status === 'To be Refunded') {
+        return 'text-yellow-600';
+    }
+    
+    // For all other statuses, including ongoing ones
+    return 'text-green-600';
+};
+
 
 // Helper component for the view dialog
 const DetailRow = ({ label, value }: { label: string; value: any }) => {
@@ -603,13 +620,11 @@ export default function ArsPage() {
                         <TableBody>
                             {paginatedSites.length > 0 ? (
                                 paginatedSites.map((site, index) => {
-                                    const isCompleted = !!site.dateOfCompletion;
-                                    
                                     return (
                                         <TableRow key={site.id}>
                                             <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                             <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                            <TableCell className={cn("font-medium whitespace-normal break-words", isCompleted ? 'text-destructive' : 'text-green-600')}>
+                                            <TableCell className={cn("font-medium whitespace-normal break-words", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
                                               {site.nameOfSite}
                                             </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
