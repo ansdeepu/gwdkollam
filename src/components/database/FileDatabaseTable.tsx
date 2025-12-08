@@ -320,7 +320,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                           )
                         )
                       ) : (
-                        <span className="text-muted-foreground italic">No active sites</span>
+                        <span className="text-muted-foreground italic">No sites assigned</span>
                       )}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">

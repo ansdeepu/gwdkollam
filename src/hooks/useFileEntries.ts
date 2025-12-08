@@ -79,7 +79,9 @@ export function useFileEntries() {
               ...entry,
               siteDetails: visibleSites,
             };
-          });
+          })
+          // Finally, only include files that still have visible sites for the supervisor
+          .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
         
         setFileEntries(supervisorEntries);
       } else {
