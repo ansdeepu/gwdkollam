@@ -627,7 +627,9 @@ export default function ArsPage() {
                                             <TableCell className={cn("font-medium whitespace-normal break-words", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
                                               {site.nameOfSite}
                                             </TableCell>
-                                            <TableCell className="whitespace-normal break-words">{site.arsTypeOfScheme || 'N/A'}</TableCell>
+                                            <TableCell className={cn("whitespace-normal break-words", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
+                                              {site.arsTypeOfScheme || 'N/A'}
+                                            </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.localSelfGovt || 'N/A'}</TableCell>
                                             <TableCell>{site.workStatus ?? 'N/A'}</TableCell>
                                             <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>

@@ -294,7 +294,12 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
                           if (site.supervisorUid !== user.uid) return false;
                           const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
                           if (isOngoing) return true;
-                          return false; // Only show ongoing sites for supervisor in this table view
+                          
+                          // Also show if the file has a pending update from this supervisor
+                          if(pendingUpdatesMap[entry.fileNo]) {
+                              return true;
+                          }
+                          return false; 
                       });
                   }
                   
@@ -316,7 +321,11 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
                       {sitesToDisplay.length > 0
-                        ? sitesToDisplay.map(site => site.purpose).filter(Boolean).join(', ')
+                        ? sitesToDisplay.map((site, idx) => (
+                            <span key={idx} className={cn(getStatusColorClass(site.workStatus as SiteWorkStatus))}>
+                                {site.purpose || 'N/A'}{idx < sitesToDisplay.length - 1 ? ', ' : ''}
+                            </span>
+                        ))
                         : "N/A"}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
