@@ -63,16 +63,16 @@ export function useFileEntries() {
 
             if (supervisedSites.length === 0) return null;
 
-            // For the dashboard list view, we only want to show sites with an active status.
-            const activeSitesForDisplay = supervisedSites.filter(site =>
+            // Filter only for dashboard display
+            const activeSites = supervisedSites.filter(site =>
               site.workStatus &&
               SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
             );
-            
-            // The file should always be in the dataset, but the siteDetails for the UI should be filtered.
+
             return {
               ...entry,
-              siteDetails: activeSitesForDisplay,
+              // For dashboard list: show only active sites, but if none are active, show all supervised sites to ensure file is visible
+              siteDetails: activeSites.length > 0 ? activeSites : supervisedSites,
               isPending: pendingFileNumbers.has(entry.fileNo),
             };
           })

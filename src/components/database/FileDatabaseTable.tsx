@@ -328,7 +328,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   const canSupervisorEdit = user?.role === 'supervisor' && (entry.siteDetails || []).length > 0;
                   const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !canSupervisorEdit);
                   
-                  const hasActiveSites = entry.siteDetails && entry.siteDetails.length > 0;
+                  const activeSites = (entry.siteDetails || []).filter(site => ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus));
 
                   return (
                   <TableRow key={entry.id}>
@@ -336,22 +336,20 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     <TableCell className="font-medium w-[10%] px-2 py-2 text-sm">{entry.fileNo}</TableCell>
                     <TableCell className="w-[15%] px-2 py-2 text-sm">{entry.applicantName}</TableCell>
                     <TableCell className="w-[25%] px-2 py-2 text-sm">
-                      {hasActiveSites ? (
-                        entry.siteDetails!.map((site, idx) => {
-                          const isFinal = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
-                          return (
-                            <span key={idx} className={cn("font-semibold", isFinal ? 'text-red-600' : 'text-green-600')}>
-                              {site.nameOfSite}{idx < entry.siteDetails!.length - 1 ? ', ' : ''}
+                      {activeSites.length > 0 ? (
+                        activeSites.map((site, idx) => (
+                            <span key={idx} className="font-semibold text-green-600">
+                              {site.nameOfSite}{idx < activeSites.length - 1 ? ', ' : ''}
                             </span>
-                          );
-                        })
+                          )
+                        )
                       ) : (
                         <span className="text-muted-foreground italic">No active sites</span>
                       )}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
-                      {hasActiveSites
-                        ? entry.siteDetails!.map(site => site.purpose).filter(Boolean).join(', ')
+                      {activeSites.length > 0
+                        ? activeSites.map(site => site.purpose).filter(Boolean).join(', ')
                         : "N/A"}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">

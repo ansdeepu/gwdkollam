@@ -65,20 +65,6 @@ export default function FileManagerPage() {
     let entries = fileEntries.filter(entry => 
         !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
     );
-
-    if (user?.role === 'supervisor' && user.uid) {
-        entries = entries.map(entry => {
-            const ongoingSites = (entry.siteDetails || []).filter(site =>
-                site.supervisorUid === user.uid &&
-                site.workStatus &&
-                ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
-            );
-            if (ongoingSites.length > 0) {
-                return { ...entry, siteDetails: ongoingSites };
-            }
-            return null;
-        }).filter((entry): entry is DataEntryFormData => entry !== null);
-    }
     
     // Sort all entries by the first remittance date, newest first.
     entries.sort((a, b) => {
