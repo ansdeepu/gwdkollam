@@ -824,65 +824,68 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setSiteToCopy(null);
   };
   
-    const handleDialogConfirm = async (data: any) => {
-        const { type, data: originalData } = dialogState;
-        if (!type) return;
-
-        let requiresTotalRecalc = false;
-
-        if (type === 'application') {
-            setValue("fileNo", data.fileNo);
-            setValue("applicantName", data.applicantName);
-            setValue("phoneNo", data.phoneNo);
-            setValue("secondaryMobileNo", data.secondaryMobileNo);
-            setValue("applicationType", data.applicationType);
-        } else if (type === 'remittance') {
-            if (originalData.index !== undefined) updateRemittance(originalData.index, data);
-            else appendRemittance(data);
-            requiresTotalRecalc = true;
-        } else if (type === 'payment') {
-            const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
-            if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
-            else appendPayment(paymentData);
-            requiresTotalRecalc = true;
-        } else if (type === 'site') {
-            if (originalData.index !== undefined) updateSite(originalData.index, data);
-            else appendSite(data);
-        } else if (type === 'reorderSite') {
-            moveSite(data.from, data.to);
-        }
-    
-        closeDialog();
-
-        if (requiresTotalRecalc) {
-            // Manually trigger a recalculation of totals right away
-            const currentRemittances = getValues('remittanceDetails');
-            const totalRemittance = currentRemittances?.reduce((sum, item) => sum + (Number(item.amountRemitted) || 0), 0) || 0;
-            
-            const currentPayments = getValues('paymentDetails');
-            const totalPayment = currentPayments?.reduce((sum, item) => sum + calculatePaymentEntryTotalGlobal(item), 0) || 0;
-
-            setValue("totalRemittance", totalRemittance, { shouldDirty: true });
-            setValue("totalPaymentAllEntries", totalPayment, { shouldDirty: true });
-            setValue("overallBalance", totalRemittance - totalPayment, { shouldDirty: true });
-        }
-    
-        if (isEditor && fileIdToEdit) {
-            try {
-                await updateFileEntry(fileIdToEdit, getValues());
-                toast({
-                    title: "Saved",
-                    description: "Changes have been saved permanently.",
-                });
-            } catch (error: any) {
-                toast({
-                    title: "Auto-save Failed",
-                    description: error.message,
-                    variant: "destructive",
-                });
-            }
-        }
-    };
+  const handleDialogConfirm = async (data: any) => {
+      const { type, data: originalData } = dialogState;
+      if (!type) return;
+  
+      if (type === 'application') {
+          setValue("fileNo", data.fileNo, { shouldDirty: true });
+          setValue("applicantName", data.applicantName, { shouldDirty: true });
+          setValue("phoneNo", data.phoneNo, { shouldDirty: true });
+          setValue("secondaryMobileNo", data.secondaryMobileNo, { shouldDirty: true });
+          setValue("applicationType", data.applicationType, { shouldDirty: true });
+      } else if (type === 'remittance') {
+          if (originalData.index !== undefined) {
+              updateRemittance(originalData.index, data);
+          } else {
+              appendRemittance(data);
+          }
+      } else if (type === 'payment') {
+          const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+          if (originalData.index !== undefined) {
+              updatePayment(originalData.index, paymentData);
+          } else {
+              appendPayment(paymentData);
+          }
+      } else if (type === 'site') {
+          if (originalData.index !== undefined) {
+              updateSite(originalData.index, data);
+          } else {
+              appendSite(data);
+          }
+      } else if (type === 'reorderSite') {
+          moveSite(data.from, data.to);
+      }
+  
+      // Instant UI update for totals
+      const currentRemittances = getValues('remittanceDetails');
+      const totalRemittance = currentRemittances?.reduce((sum, item) => sum + (Number(item.amountRemitted) || 0), 0) || 0;
+      
+      const currentPayments = getValues('paymentDetails');
+      const totalPayment = currentPayments?.reduce((sum, item) => sum + calculatePaymentEntryTotalGlobal(item), 0) || 0;
+  
+      setValue("totalRemittance", totalRemittance, { shouldDirty: true, shouldValidate: true });
+      setValue("totalPaymentAllEntries", totalPayment, { shouldDirty: true, shouldValidate: true });
+      setValue("overallBalance", totalRemittance - totalPayment, { shouldDirty: true, shouldValidate: true });
+  
+      closeDialog();
+  
+      if (isEditor && fileIdToEdit) {
+          try {
+              await updateFileEntry(fileIdToEdit, getValues());
+              toast({
+                  title: "Saved",
+                  description: "Changes have been saved permanently.",
+              });
+          } catch (error: any) {
+              toast({
+                  title: "Auto-save Failed",
+                  description: error.message,
+                  variant: "destructive",
+              });
+          }
+      }
+  };
 
 
   const handleDeleteItem = async () => {
