@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit3, Trash2, Loader2, Clock, Copy } from "lucide-react";
-import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus, PendingUpdate } from "@/lib/schemas";
+import type { DataEntryFormData, SitePurpose, ApplicationType, SiteWorkStatus, PendingUpdate, SiteDetailFormData } from "@/lib/schemas";
 import { applicationTypeDisplayMap } from "@/lib/schemas";
 import { format, isValid, parseISO } from "date-fns";
 import Image from "next/image";
@@ -76,6 +75,20 @@ const safeParseDate = (dateValue: any): Date | null => {
   }
   return null;
 };
+
+// New helper function for color coding
+const getStatusColorClass = (status: SiteWorkStatus | undefined): string => {
+    if (!status) return 'text-muted-foreground'; // Default color for undefined status
+    if (status === 'Work Failed' || status === 'Work Completed') {
+        return 'text-red-600';
+    }
+    if (status === 'To be Refunded') {
+        return 'text-yellow-600';
+    }
+    // For all other statuses, including ongoing ones
+    return 'text-green-600';
+};
+
 
 interface FileDatabaseTableProps {
   searchTerm?: string;
@@ -329,7 +342,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   const canSupervisorEdit = user?.role === 'supervisor' && (entry.siteDetails || []).length > 0;
                   const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !canSupervisorEdit);
                   
-                  const activeSites = entry.siteDetails || [];
+                  const sitesToDisplay = entry.siteDetails || [];
 
                   return (
                   <TableRow key={entry.id}>
@@ -337,10 +350,10 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     <TableCell className="font-medium w-[10%] px-2 py-2 text-sm">{entry.fileNo}</TableCell>
                     <TableCell className="w-[15%] px-2 py-2 text-sm">{entry.applicantName}</TableCell>
                     <TableCell className="w-[25%] px-2 py-2 text-sm">
-                      {activeSites.length > 0 ? (
-                        activeSites.map((site, idx) => (
-                            <span key={idx} className="font-semibold text-green-600">
-                              {site.nameOfSite}{idx < activeSites.length - 1 ? ', ' : ''}
+                      {sitesToDisplay.length > 0 ? (
+                        sitesToDisplay.map((site, idx) => (
+                            <span key={idx} className={cn("font-semibold", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
+                              {site.nameOfSite}{idx < sitesToDisplay.length - 1 ? ', ' : ''}
                             </span>
                           )
                         )
@@ -349,8 +362,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                       )}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
-                      {activeSites.length > 0
-                        ? activeSites.map(site => site.purpose).filter(Boolean).join(', ')
+                      {sitesToDisplay.length > 0
+                        ? sitesToDisplay.map(site => site.purpose).filter(Boolean).join(', ')
                         : "N/A"}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
