@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -64,7 +63,7 @@ export function useFileEntries() {
 
             if (supervisedSites.length === 0) return null;
 
-            // Filter for dashboard display only
+            // Filter only for dashboard display
             const activeSites = supervisedSites.filter(site =>
               site.workStatus &&
               SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
@@ -72,8 +71,9 @@ export function useFileEntries() {
 
             return {
               ...entry,
-              // For dashboard list: show only active sites if they exist, otherwise show all their supervised sites
-              siteDetails: activeSites.length > 0 ? activeSites : supervisedSites,
+              // For dashboard list: show only active sites.
+              // The fetchEntryForEditing will get ALL supervised sites regardless of status.
+              siteDetails: activeSites,
               isPending: pendingFileNumbers.has(entry.fileNo),
             };
           })
