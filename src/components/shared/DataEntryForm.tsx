@@ -490,7 +490,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         render={({ field }) => (
                                         <FormItem>
                                         <FormLabel>Supervisor</FormLabel>
-                                            {isFieldReadOnly(false) ? (
+                                            {isFieldReadOnly(true) ? (
                                                 <Input
                                                     readOnly
                                                     value={getValues('supervisorName') || "Not Assigned"}
@@ -785,7 +785,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
               await createPendingUpdate(data.fileNo, data.siteDetails!, user, {});
               toast({ title: "Update Submitted", description: "Your changes have been submitted for approval." });
           } else if (fileIdToEdit) {
-              await updateFileEntry(fileIdToEdit, data);
+              await updateFileEntry(fileIdToEdit, data, approveUpdateId || undefined);
               toast({ title: "File Updated", description: `File No. ${data.fileNo} has been successfully updated.` });
           } else {
               await addFileEntry(data);
@@ -824,68 +824,40 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     setSiteToCopy(null);
   };
   
-  const handleDialogConfirm = async (data: any) => {
-      const { type, data: originalData } = dialogState;
-      if (!type) return;
-  
-      if (type === 'application') {
-          setValue("fileNo", data.fileNo, { shouldDirty: true });
-          setValue("applicantName", data.applicantName, { shouldDirty: true });
-          setValue("phoneNo", data.phoneNo, { shouldDirty: true });
-          setValue("secondaryMobileNo", data.secondaryMobileNo, { shouldDirty: true });
-          setValue("applicationType", data.applicationType, { shouldDirty: true });
-      } else if (type === 'remittance') {
-          if (originalData.index !== undefined) {
-              updateRemittance(originalData.index, data);
-          } else {
-              appendRemittance(data);
-          }
-      } else if (type === 'payment') {
-          const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
-          if (originalData.index !== undefined) {
-              updatePayment(originalData.index, paymentData);
-          } else {
-              appendPayment(paymentData);
-          }
-      } else if (type === 'site') {
-          if (originalData.index !== undefined) {
-              updateSite(originalData.index, data);
-          } else {
-              appendSite(data);
-          }
-      } else if (type === 'reorderSite') {
-          moveSite(data.from, data.to);
-      }
-  
-      // Instant UI update for totals
-      const currentRemittances = getValues('remittanceDetails');
-      const totalRemittance = currentRemittances?.reduce((sum, item) => sum + (Number(item.amountRemitted) || 0), 0) || 0;
-      
-      const currentPayments = getValues('paymentDetails');
-      const totalPayment = currentPayments?.reduce((sum, item) => sum + calculatePaymentEntryTotalGlobal(item), 0) || 0;
-  
-      setValue("totalRemittance", totalRemittance, { shouldDirty: true, shouldValidate: true });
-      setValue("totalPaymentAllEntries", totalPayment, { shouldDirty: true, shouldValidate: true });
-      setValue("overallBalance", totalRemittance - totalPayment, { shouldDirty: true, shouldValidate: true });
-  
-      closeDialog();
-  
-      if (isEditor && fileIdToEdit) {
-          try {
-              await updateFileEntry(fileIdToEdit, getValues());
-              toast({
-                  title: "Saved",
-                  description: "Changes have been saved permanently.",
-              });
-          } catch (error: any) {
-              toast({
-                  title: "Auto-save Failed",
-                  description: error.message,
-                  variant: "destructive",
-              });
-          }
-      }
-  };
+  const handleDialogConfirm = (data: any) => {
+    const { type, data: originalData } = dialogState;
+    if (!type) return;
+
+    if (type === 'application') {
+        setValue("fileNo", data.fileNo, { shouldDirty: true });
+        setValue("applicantName", data.applicantName, { shouldDirty: true });
+        setValue("phoneNo", data.phoneNo, { shouldDirty: true });
+        setValue("secondaryMobileNo", data.secondaryMobileNo, { shouldDirty: true });
+        setValue("applicationType", data.applicationType, { shouldDirty: true });
+    } else if (type === 'remittance') {
+        if (originalData.index !== undefined) {
+            updateRemittance(originalData.index, data);
+        } else {
+            appendRemittance(data);
+        }
+    } else if (type === 'payment') {
+        const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
+        if (originalData.index !== undefined) {
+            updatePayment(originalData.index, paymentData);
+        } else {
+            appendPayment(paymentData);
+        }
+    } else if (type === 'site') {
+        if (originalData.index !== undefined) {
+            updateSite(originalData.index, data);
+        } else {
+            appendSite(data);
+        }
+    } else if (type === 'reorderSite') {
+        moveSite(data.from, data.to);
+    }
+    closeDialog();
+};
 
 
   const handleDeleteItem = async () => {
