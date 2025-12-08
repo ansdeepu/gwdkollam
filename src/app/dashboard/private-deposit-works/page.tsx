@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import type { SiteWorkStatus, DataEntryFormData, ApplicationType } from '@/lib/schemas';
+import { applicationTypeDisplayMap } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
@@ -44,7 +45,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 export default function PrivateDepositWorksPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
-  const { fileEntries } = useFileEntries(); // Use the hook which handles filtering
+  const { fileEntries, isLoading } = useFileEntries(); // Use the hook which handles filtering
   
   useEffect(() => {
     const description = 'List of all deposit works funded by private individuals or institutions.';
@@ -91,6 +92,46 @@ export default function PrivateDepositWorksPage() {
     
     return { privateDepositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
   }, [fileEntries]);
+  
+  const filteredEntries = useMemo(() => {
+    if (!searchTerm) {
+      return privateDepositWorkEntries;
+    }
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return privateDepositWorkEntries.filter(entry => {
+        const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
+        const searchableContent = [
+            entry.fileNo, entry.applicantName, entry.phoneNo, entry.secondaryMobileNo, appTypeDisplay, entry.fileStatus, entry.remarks, entry.constituency,
+            entry.estimateAmount, entry.totalRemittance, entry.totalPaymentAllEntries, entry.overallBalance,
+            ...(entry.siteDetails || []).flatMap(site => [
+                site.nameOfSite, site.purpose, site.workStatus, site.contractorName,
+                site.supervisorName, site.tenderNo, site.drillingRemarks,
+                site.workRemarks, site.surveyRemarks, site.surveyLocation,
+                site.pumpDetails, site.latitude, site.longitude, site.estimateAmount,
+                site.remittedAmount, site.siteConditions, site.accessibleRig,
+                site.tsAmount, site.diameter, site.totalDepth, site.casingPipeUsed,
+                site.outerCasingPipe, site.innerCasingPipe, site.yieldDischarge,
+                site.zoneDetails, site.waterLevel, site.waterTankCapacity,
+                site.noOfTapConnections, site.noOfBeneficiary, site.typeOfRig,
+                site.totalExpenditure, site.surveyOB, site.surveyPlainPipe,
+                site.surveySlottedPipe, site.surveyRecommendedDiameter,
+                site.surveyRecommendedTD, site.surveyRecommendedOB,
+                site.surveyRecommendedCasingPipe, site.surveyRecommendedPlainPipe,
+                site.surveyRecommendedSlottedPipe, site.surveyRecommendedMsCasingPipe,
+                site.arsNumberOfStructures, site.arsStorageCapacity, site.arsNumberOfFillings,
+                site.constituency, site.localSelfGovt, site.pumpingLineLength, site.deliveryLineLength,
+                site.pilotDrillingDepth,
+            ]),
+            ...(entry.remittanceDetails || []).flatMap(rd => [ rd.amountRemitted, rd.remittedAccount, rd.remittanceRemarks, rd.dateOfRemittance ? format(new Date(rd.dateOfRemittance), "dd/MM/yyyy") : '']),
+            ...(entry.paymentDetails || []).flatMap(pd => [ pd.paymentAccount, pd.revenueHead, pd.contractorsPayment, pd.gst, pd.incomeTax, pd.kbcwb, pd.refundToParty, pd.totalPaymentPerEntry, pd.paymentRemarks, pd.dateOfPayment ? format(new Date(pd.dateOfPayment), "dd/MM/yyyy") : '' ]),
+        ]
+        .filter(val => val !== null && val !== undefined)
+        .map(val => String(val).toLowerCase())
+        .join(' || '); 
+
+        return searchableContent.includes(lowerSearchTerm);
+    });
+  }, [privateDepositWorkEntries, searchTerm]);
 
 
   const handleAddNewClick = () => {
@@ -115,7 +156,7 @@ export default function PrivateDepositWorksPage() {
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                Total Files: <span className="font-bold text-primary">{privateDepositWorkEntries.length}</span>
+                Total Files: <span className="font-bold text-primary">{filteredEntries.length}</span>
               </div>
                <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Total Sites: <span className="font-bold text-primary">{totalSites}</span>
@@ -143,8 +184,8 @@ export default function PrivateDepositWorksPage() {
       </Card>
       
       <FileDatabaseTable 
-        searchTerm={searchTerm} 
-        fileEntries={privateDepositWorkEntries} 
+        fileEntries={filteredEntries} 
+        isLoading={isLoading}
       />
     </div>
   );

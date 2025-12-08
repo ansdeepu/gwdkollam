@@ -79,15 +79,15 @@ const getStatusColorClass = (status: SiteWorkStatus | undefined): string => {
 
 
 interface FileDatabaseTableProps {
-  searchTerm?: string;
   fileEntries: DataEntryFormData[];
+  isLoading: boolean;
 }
 
-export default function FileDatabaseTable({ searchTerm = "", fileEntries }: FileDatabaseTableProps) {
+export default function FileDatabaseTable({ fileEntries, isLoading }: FileDatabaseTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { isLoading: entriesLoadingHook, deleteFileEntry, addFileEntry } = useFileEntries(); 
+  const { deleteFileEntry, addFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth();
   const { getPendingUpdatesForFile } = usePendingUpdates();
 
@@ -125,60 +125,14 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     }
   }, [searchParams]);
 
-  const filteredEntries = useMemo(() => {
-    let entries = fileEntries;
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    if (!lowerSearchTerm) {
-      return entries;
-    }
-
-    return entries.filter(entry => {
-        const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
-        
-        const searchableContent = [
-            entry.fileNo, entry.applicantName, entry.phoneNo, entry.secondaryMobileNo, appTypeDisplay, entry.fileStatus, entry.remarks, entry.constituency,
-            entry.estimateAmount, entry.totalRemittance, entry.totalPaymentAllEntries, entry.overallBalance,
-            ...(entry.siteDetails || []).flatMap(site => [
-                site.nameOfSite, site.purpose, site.workStatus, site.contractorName,
-                site.supervisorName, site.tenderNo, site.drillingRemarks,
-                site.workRemarks, site.surveyRemarks, site.surveyLocation,
-                site.pumpDetails, site.latitude, site.longitude, site.estimateAmount,
-                site.remittedAmount, site.siteConditions, site.accessibleRig,
-                site.tsAmount, site.diameter, site.totalDepth, site.casingPipeUsed,
-                site.outerCasingPipe, site.innerCasingPipe, site.yieldDischarge,
-                site.zoneDetails, site.waterLevel, site.waterTankCapacity,
-                site.noOfTapConnections, site.noOfBeneficiary, site.typeOfRig,
-                site.totalExpenditure, site.surveyOB, site.surveyPlainPipe,
-                site.surveySlottedPipe, site.surveyRecommendedDiameter,
-                site.surveyRecommendedTD, site.surveyRecommendedOB,
-                site.surveyRecommendedCasingPipe, site.surveyRecommendedPlainPipe,
-                site.surveyRecommendedSlottedPipe, site.surveyRecommendedMsCasingPipe,
-                site.arsNumberOfStructures, site.arsStorageCapacity, site.arsNumberOfFillings,
-                site.constituency, site.localSelfGovt, site.pumpingLineLength, site.deliveryLineLength,
-                site.pilotDrillingDepth,
-            ]),
-            ...(entry.remittanceDetails || []).flatMap(rd => [ rd.amountRemitted, rd.remittedAccount, rd.remittanceRemarks, rd.dateOfRemittance ? format(new Date(rd.dateOfRemittance), "dd/MM/yyyy") : '']),
-            ...(entry.paymentDetails || []).flatMap(pd => [ pd.paymentAccount, pd.revenueHead, pd.contractorsPayment, pd.gst, pd.incomeTax, pd.kbcwb, pd.refundToParty, pd.totalPaymentPerEntry, pd.paymentRemarks, pd.dateOfPayment ? format(new Date(pd.dateOfPayment), "dd/MM/yyyy") : '' ]),
-        ]
-        .filter(val => val !== null && val !== undefined)
-        .map(val => String(val).toLowerCase())
-        .join(' || '); 
-
-        return searchableContent.includes(lowerSearchTerm);
-    });
-  }, [fileEntries, searchTerm]);
-
-
-  const displayedEntries = filteredEntries;
-
   const paginatedEntries = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    return displayedEntries.slice(startIndex, endIndex);
-  }, [displayedEntries, currentPage]);
+    return fileEntries.slice(startIndex, endIndex);
+  }, [fileEntries, currentPage]);
 
 
-  const totalPages = Math.ceil(displayedEntries.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(fileEntries.length / ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -256,7 +210,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
       }
   };
 
-  if (entriesLoadingHook || authIsLoading) {
+  if (isLoading || authIsLoading) {
     return (
       <div className="flex items-center justify-center py-10">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -265,7 +219,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     );
   }
 
-  if (!displayedEntries || displayedEntries.length === 0) {
+  if (!paginatedEntries || paginatedEntries.length === 0) {
     return (
       <Card className="shadow-lg">
         <CardContent className="flex flex-col items-center justify-center py-10 text-center">
@@ -290,9 +244,9 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   }
 
   const startEntryNum = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, displayedEntries.length);
+  const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, fileEntries.length);
 
-  const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+  const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
 
 
   return (
@@ -413,7 +367,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
         </CardContent>
         <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-              Showing <strong>{displayedEntries.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{displayedEntries.length}</strong> files.
+              Showing <strong>{fileEntries.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{fileEntries.length}</strong> files.
           </p>
           {totalPages > 1 && (
             <PaginationControls
