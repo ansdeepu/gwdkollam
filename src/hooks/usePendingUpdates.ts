@@ -1,4 +1,3 @@
-
 // src/hooks/usePendingUpdates.ts
 "use client";
 
@@ -44,10 +43,8 @@ interface PendingUpdatesState {
   deleteUpdate: (updateId: string) => Promise<void>;
   getPendingUpdateById: (updateId: string) => Promise<PendingUpdate | null>;
   hasPendingUpdateForFile: (fileNo: string, submittedByUid: string) => Promise<boolean>;
-  getPendingUpdates: (fileNo: string | null, submittedByUid?: string) => Promise<PendingUpdate[]>; 
   subscribeToPendingUpdates: (
-    callback: (updates: PendingUpdate[]) => void,
-    submittedByUid?: string | null
+    callback: (updates: PendingUpdate[]) => void
   ) => () => void;
 }
 
@@ -69,35 +66,9 @@ export function usePendingUpdates(): PendingUpdatesState {
       return false; 
     }
   }, []);
-
-  const getPendingUpdates = useCallback(async (fileNo: string | null, submittedByUid?: string): Promise<PendingUpdate[]> => {
-    if (!user) return [];
-  
-    const conditions = [];
-    if (fileNo) {
-      conditions.push(where('fileNo', '==', fileNo));
-    }
-    if (submittedByUid) {
-      conditions.push(where('submittedByUid', '==', submittedByUid));
-    }
-  
-    const q = query(collection(db, PENDING_UPDATES_COLLECTION), ...conditions);
-    
-    try {
-      const snapshot = await getDocs(q);
-      const updates = snapshot.docs.map(doc => convertTimestampToDate({ id: doc.id, ...doc.data() }));
-      updates.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
-      return updates;
-    } catch (error) {
-      console.error("Error getting pending updates:", error);
-      return [];
-    }
-  }, [user]);
-
   
   const subscribeToPendingUpdates = useCallback((
-    callback: (updates: PendingUpdate[]) => void,
-    submittedByUid: string | null = null
+    callback: (updates: PendingUpdate[]) => void
   ) => {
     if (!user) {
       callback([]);
@@ -227,7 +198,6 @@ export function usePendingUpdates(): PendingUpdatesState {
     deleteUpdate,
     getPendingUpdateById,
     hasPendingUpdateForFile,
-    getPendingUpdates,
     subscribeToPendingUpdates,
   };
 }

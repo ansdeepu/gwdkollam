@@ -1,4 +1,3 @@
-
 // src/app/dashboard/pending-updates/page.tsx
 "use client";
 
@@ -220,9 +219,8 @@ export default function PendingUpdatesTable() {
   }, [subscribeToPendingUpdates]);
 
   const { depositWorkUpdates, arsUpdates } = useMemo(() => {
-    const filteredUpdates = pendingUpdates.filter(u => u.status === 'pending' || u.status === 'supervisor-unassigned');
-    const depositWorkUpdates = filteredUpdates.filter(u => !u.isArsUpdate);
-    const arsUpdates = filteredUpdates.filter(u => u.isArsUpdate);
+    const depositWorkUpdates = pendingUpdates.filter(u => !u.isArsUpdate);
+    const arsUpdates = pendingUpdates.filter(u => u.isArsUpdate);
     return { depositWorkUpdates, arsUpdates };
   }, [pendingUpdates]);
 

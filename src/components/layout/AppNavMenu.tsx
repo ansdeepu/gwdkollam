@@ -48,21 +48,20 @@ export const allNavItems: NavItem[] = [
 export default function AppNavMenu() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { getPendingUpdates } = usePendingUpdates();
+  const { subscribeToPendingUpdates } = usePendingUpdates();
   const { setIsNavigating } = usePageNavigation();
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    const fetchPendingCount = async () => {
-        if (user?.role === 'editor') {
-            const updates = await getPendingUpdates(null);
-            setPendingCount(updates.length);
-        }
-    };
-    fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 30000); 
-    return () => clearInterval(interval);
-  }, [user, getPendingUpdates]);
+    if (user?.role !== 'editor') {
+        setPendingCount(0);
+        return;
+    }
+    const unsubscribe = subscribeToPendingUpdates((updates) => {
+        setPendingCount(updates.length);
+    });
+    return () => unsubscribe();
+  }, [user, subscribeToPendingUpdates]);
 
 
   const accessibleNavItems = allNavItems.filter(item => {
