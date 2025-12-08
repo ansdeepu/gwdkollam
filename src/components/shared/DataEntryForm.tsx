@@ -1,3 +1,4 @@
+
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -868,7 +869,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                  <div>
                     <CardTitle className="text-xl">1. Application Details</CardTitle>
                  </div>
-                {!isViewer && !isFormDisabled && <Button type="button" onClick={() => openDialog('application', getValues())}><Edit className="h-4 w-4 mr-2" />Edit</Button>}
+                {isEditor && !isFormDisabled && <Button type="button" onClick={() => openDialog('application', getValues())}><Edit className="h-4 w-4 mr-2" />Edit</Button>}
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -884,12 +885,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">2. Remittance Details</CardTitle></div>
-                {!isViewer && !isFormDisabled && <Button type="button" onClick={() => openDialog('remittance', createDefaultRemittanceDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
+                {isEditor && !isFormDisabled && <Button type="button" onClick={() => openDialog('remittance', createDefaultRemittanceDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
                 <div className="relative max-h-[400px] overflow-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{!isViewer && !isFormDisabled && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{isEditor && !isFormDisabled && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                         <TableBody>
                             {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
                                 <TableRow key={item.id}>
@@ -897,11 +898,11 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                     <TableCell>{(Number(item.amountRemitted) || 0).toLocaleString('en-IN')}</TableCell>
                                     <TableCell>{item.remittedAccount}</TableCell>
                                     <TableCell>{item.remittanceRemarks}</TableCell>
-                                    {!isViewer && !isFormDisabled && <TableCell><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', { index, ...item })}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'remittance', index})}><Trash2 className="h-4 w-4"/></Button></div></TableCell>}
+                                    {isEditor && !isFormDisabled && <TableCell><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', { index, ...item })}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'remittance', index})}><Trash2 className="h-4 w-4"/></Button></div></TableCell>}
                                 </TableRow>
-                            )) : <TableRow><TableCell colSpan={!isViewer && !isFormDisabled ? 5 : 4} className="text-center h-24">No remittance details added.</TableCell></TableRow>}
+                            )) : <TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 5 : 4} className="text-center h-24">No remittance details added.</TableCell></TableRow>}
                         </TableBody>
-                        <TableFooterComponent><TableRow><TableCell colSpan={!isViewer && !isFormDisabled ? 4 : 3} className="text-right font-bold">Total Remittance</TableCell><TableCell className="font-bold">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
+                        <TableFooterComponent><TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 4 : 3} className="text-right font-bold">Total Remittance</TableCell><TableCell className="font-bold">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
                     </Table>
                 </div>
             </CardContent>
@@ -910,7 +911,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">3. Site Details</CardTitle></div>
-                {!isViewer && !isFormDisabled && <Button type="button" onClick={() => openDialog('site', {})}><PlusCircle className="h-4 w-4 mr-2" />Add Site</Button>}
+                {isEditor && !isFormDisabled && <Button type="button" onClick={() => openDialog('site', {})}><PlusCircle className="h-4 w-4 mr-2" />Add Site</Button>}
             </CardHeader>
             <CardContent>
                 <Accordion type="single" collapsible className="w-full space-y-2" value={activeAccordionItem} onValueChange={setActiveAccordionItem}>
@@ -945,18 +946,16 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                                     </TooltipTrigger>
                                                     <TooltipContent><p>{isSupervisor ? 'View / Edit' : 'View Details'}</p></TooltipContent>
                                                 </Tooltip>
-                                                {!isViewer && !isFormDisabled && (
+                                                {!isViewer && !isFormDisabled && !isSupervisor && (
                                                     <>
-                                                        {!isSupervisor && (
-                                                          <Tooltip>
+                                                        <Tooltip>
                                                             <TooltipTrigger asChild>
                                                               <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}>
                                                                 <Edit className="h-4 w-4 text-blue-600"/>
                                                               </Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent><p>Edit Site</p></TooltipContent>
-                                                          </Tooltip>
-                                                        )}
+                                                        </Tooltip>
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
                                                                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopySite(index); }}><Copy className="h-4 w-4" /></Button>
@@ -1006,12 +1005,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
                 <div><CardTitle className="text-xl">4. Payment Details</CardTitle></div>
-                 {!isViewer && !isFormDisabled && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
+                 {isEditor && !isFormDisabled && <Button type="button" onClick={() => openDialog('payment', createDefaultPaymentDetail())}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
                  <div className="relative max-h-[400px] overflow-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead className="p-2 text-sm">Date</TableHead><TableHead className="p-2 text-sm">Acct.</TableHead><TableHead className="p-2 text-right text-sm">Revenue</TableHead><TableHead className="p-2 text-right text-sm">Contractor</TableHead><TableHead className="p-2 text-right text-sm">GST</TableHead><TableHead className="p-2 text-right text-sm">IT</TableHead><TableHead className="p-2 text-right text-sm">KBCWB</TableHead><TableHead className="p-2 text-right text-sm">Refund</TableHead><TableHead className="p-2 text-right font-semibold text-sm">Total</TableHead>{!isViewer && !isFormDisabled && <TableHead className="p-2">Actions</TableHead>}</TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead className="p-2 text-sm">Date</TableHead><TableHead className="p-2 text-sm">Acct.</TableHead><TableHead className="p-2 text-right text-sm">Revenue</TableHead><TableHead className="p-2 text-right text-sm">Contractor</TableHead><TableHead className="p-2 text-right text-sm">GST</TableHead><TableHead className="p-2 text-right text-sm">IT</TableHead><TableHead className="p-2 text-right text-sm">KBCWB</TableHead><TableHead className="p-2 text-right text-sm">Refund</TableHead><TableHead className="p-2 text-right font-semibold text-sm">Total</TableHead>{isEditor && !isFormDisabled && <TableHead className="p-2">Actions</TableHead>}</TableRow></TableHeader>
                         <TableBody>
                             {paymentFields.length > 0 ? paymentFields.map((item, index) => (
                                 <TableRow key={item.id}>
@@ -1024,9 +1023,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                     <TableCell className="p-2 text-right text-sm">{(Number(item.kbcwb) || 0).toLocaleString('en-IN')}</TableCell>
                                     <TableCell className="p-2 text-right text-sm">{(Number(item.refundToParty) || 0).toLocaleString('en-IN')}</TableCell>
                                     <TableCell className="p-2 text-right text-sm font-semibold">{(Number(item.totalPaymentPerEntry) || 0).toLocaleString('en-IN')}</TableCell>
-                                    {!isViewer && !isFormDisabled && <TableCell className="p-1"><div className="flex"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-3 w-3"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-3 w-3"/></Button></div></TableCell>}
+                                    {isEditor && !isFormDisabled && <TableCell className="p-1"><div className="flex"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('payment', { index, ...item })}><Edit className="h-3 w-3"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'payment', index})}><Trash2 className="h-3 w-3"/></Button></div></TableCell>}
                                 </TableRow>
-                            )) : <TableRow><TableCell colSpan={!isViewer && !isFormDisabled ? 10 : 9} className="text-center h-24">No payment details added yet.</TableCell></TableRow>}
+                            )) : <TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 10 : 9} className="text-center h-24">No payment details added yet.</TableCell></TableRow>}
                         </TableBody>
                     </Table>
                 </div>
@@ -1054,8 +1053,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                      </dl>
                 </div>
                  <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
-                    <FormField control={control} name="fileStatus" render={({ field }) => <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isViewer || isFormDisabled}><FormControl><SelectTrigger><SelectValue placeholder="Select final file status" /></SelectTrigger></FormControl><SelectContent className="max-h-80">{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
-                    <FormField control={control} name="remarks" render={({ field }) => <FormItem><FormLabel>Final Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any final remarks for this file..." readOnly={isViewer || isFormDisabled} /></FormControl><FormMessage /></FormItem>} />
+                    <FormField control={control} name="fileStatus" render={({ field }) => <FormItem><FormLabel>File Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isViewer || isFormDisabled || isSupervisor}><FormControl><SelectTrigger><SelectValue placeholder="Select final file status" /></SelectTrigger></FormControl><SelectContent className="max-h-80">{fileStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
+                    <FormField control={control} name="remarks" render={({ field }) => <FormItem><FormLabel>Final Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any final remarks for this file..." readOnly={isViewer || isFormDisabled || isSupervisor} /></FormControl><FormMessage /></FormItem>} />
                 </div>
             </CardContent>
         </Card>
