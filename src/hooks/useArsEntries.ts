@@ -35,9 +35,8 @@ export function useArsEntries() {
 
   useEffect(() => {
     const processEntries = async () => {
-      if (!user) {
-        setArsEntries([]);
-        setIsLoading(false);
+      if (!user || dataStoreLoading) {
+        setIsLoading(dataStoreLoading);
         return;
       }
 
@@ -45,26 +44,24 @@ export function useArsEntries() {
 
       if (user.role === 'supervisor' && user.uid) {
         const pendingUpdates = await getPendingUpdates(null, user.uid);
-        const pendingArsIds = new Set(pendingUpdates.filter(p => p.status === 'pending' && p.isArsUpdate).map(p => p.arsId));
+        const pendingArsIds = new Set(pendingUpdates.filter(p => p.isArsUpdate).map(p => p.arsId));
         
         const supervisorEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
-            const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
             const hasPendingUpdate = pendingArsIds.has(entry.id);
-            // An ARS entry is relevant to a supervisor if it's assigned to them AND it's ongoing, OR if they have a pending update for it.
-            return (isAssigned && isOngoing) || hasPendingUpdate;
+            // An ARS entry is relevant to a supervisor if it's assigned to them OR if they have a pending update for it.
+            return isAssigned || hasPendingUpdate;
         });
         setArsEntries(supervisorEntries);
       } else {
+        // For editor/viewer, show all entries
         setArsEntries(allArsEntries);
       }
 
       setIsLoading(false);
     };
 
-    if (!dataStoreLoading) {
-      processEntries();
-    }
+    processEntries();
   }, [user, allArsEntries, dataStoreLoading, getPendingUpdates]);
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
