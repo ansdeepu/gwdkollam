@@ -80,7 +80,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 // New helper function for color coding
 const getStatusColorClass = (status: SiteWorkStatus | undefined): string => {
     if (!status) return 'text-muted-foreground';
-    if (status === 'Work Failed' || status === 'Work Completed') {
+    if (status === 'Work Failed' || status === 'Work Completed' || status === 'Bill Prepared' || status === 'Payment Completed' || status === 'Utilization Certificate Issued') {
         return 'text-red-600';
     }
     if (status === 'To be Refunded') {
