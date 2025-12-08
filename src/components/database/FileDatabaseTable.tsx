@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -79,7 +78,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 
 // New helper function for color coding
 const getStatusColorClass = (status: SiteWorkStatus | undefined): string => {
-    if (!status) return 'text-muted-foreground'; // Default color for undefined status
+    if (!status) return 'text-muted-foreground';
     if (status === 'Work Failed' || status === 'Work Completed') {
         return 'text-red-600';
     }
