@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -57,26 +58,41 @@ export function useFileEntries() {
 
         entries = allFileEntries
           .map(entry => {
+            // A supervisor must be assigned to at least one site in the file.
+            const isAssignedToFile = (entry.assignedSupervisorUids || []).includes(user.uid!);
+            if (!isAssignedToFile) {
+                return null;
+            }
+
+            // For the dashboard list, we only want to show sites that are currently ongoing.
             const supervisedSites = (entry.siteDetails || []).filter(
               site => site.supervisorUid === user.uid
             );
 
-            if (supervisedSites.length === 0) return null;
+            // Determine if any of the supervisor's sites are in a state that should make the file visible.
+            const hasVisibleSite = supervisedSites.some(site => {
+                const isOngoing = SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                const isPendingCompletion = (site.workStatus === 'Work Failed' || site.workStatus === 'Work Completed') && pendingFileNumbers.has(entry.fileNo);
+                return isOngoing || isPendingCompletion;
+            });
 
-            // This is the dashboard/list view. It should show the file, but only display the *active* sites within it.
-            const activeSitesForDisplay = supervisedSites.filter(site =>
-                SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)
-            );
+            // If the supervisor has no sites in a visible state in this file, don't show the file.
+            if (!hasVisibleSite) {
+                return null;
+            }
 
+            // Return the entry, but replace siteDetails with only the ones relevant for the list view
             return {
               ...entry,
-              // For the list view, we replace the siteDetails with ONLY the active ones.
-              // The full list will be fetched on the edit page.
-              siteDetails: activeSitesForDisplay,
+              siteDetails: supervisedSites.filter(site => {
+                  const isOngoing = SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                  const isPendingCompletion = (site.workStatus === 'Work Failed' || site.workStatus === 'Work Completed') && pendingFileNumbers.has(entry.fileNo);
+                  return isOngoing || isPendingCompletion;
+              }),
               isPending: pendingFileNumbers.has(entry.fileNo),
             };
           })
-          .filter((entry): entry is DataEntryFormData => entry !== null);
+          .filter((entry): entry is DataEntryFormData => entry !== null && entry.siteDetails!.length > 0);
 
       } else {
         // For editors and viewers, use the complete list.
