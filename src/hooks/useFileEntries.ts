@@ -28,7 +28,7 @@ const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
 // This list defines which statuses are considered "active" or relevant for a supervisor's main view.
-const SUPERVISOR_VISIBLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig", "Work Failed", "Work Completed"];
+const SUPERVISOR_VISIBLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
 
 
 export function useFileEntries() {
