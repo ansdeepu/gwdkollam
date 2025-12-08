@@ -484,7 +484,37 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                    <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="tenderNo" control={control} render={({ field }) => <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
                                    <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
-                                   <FormField name="supervisorUid" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><Select onValueChange={(uid) => { const staff = supervisorList.find((s) => s.uid === uid); field.onChange(uid === '_clear_' ? undefined : uid); setValue("supervisorName", staff?.name || ""); setValue("supervisorDesignation", staff?.designation || undefined); }} value={field.value || ""} disabled={isFieldReadOnly(false)}><FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue("supervisorName", ""); setValue("supervisorDesignation", undefined);}}>-- Clear Selection --</SelectItem>{supervisorList.map((s) => (<SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)}/>
+                                   <FormField
+                                        name="supervisorUid"
+                                        control={form.control}
+                                        render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>Supervisor</FormLabel>
+                                            {isFieldReadOnly(false) ? (
+                                                <Input
+                                                    readOnly
+                                                    value={getValues('supervisorName') || "Not Assigned"}
+                                                    className="bg-muted/50"
+                                                />
+                                            ) : (
+                                                <Select
+                                                    onValueChange={(uid) => {
+                                                        const staff = supervisorList.find((s) => s.uid === uid);
+                                                        field.onChange(uid === '_clear_' ? undefined : uid);
+                                                        setValue("supervisorName", staff?.name || "");
+                                                        setValue("supervisorDesignation", staff?.designation || undefined);
+                                                    }}
+                                                    value={field.value || ""}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue("supervisorName", ""); setValue("supervisorDesignation", undefined); }}>-- Clear Selection --</SelectItem>
+                                                    {supervisorList.map((s) => (<SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>))}
+                                                </SelectContent>
+                                                </Select>
+                                            )}
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}/>
                                 </div>
                             </CardContent></Card>
                             
@@ -707,8 +737,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
   useEffect(() => {
     const totalRemittance = watchedRemittanceDetails?.reduce((sum, item) => sum + (Number(item.amountRemitted) || 0), 0) || 0;
-    const totalPayment = watchedPaymentDetails?.reduce((sum, item) => sum + calculatePaymentEntryTotalGlobal(item), 0) || 0;
     setValue("totalRemittance", totalRemittance);
+    
+    const totalPayment = watchedPaymentDetails?.reduce((sum, item) => sum + calculatePaymentEntryTotalGlobal(item), 0) || 0;
     setValue("totalPaymentAllEntries", totalPayment);
     setValue("overallBalance", totalRemittance - totalPayment);
     
