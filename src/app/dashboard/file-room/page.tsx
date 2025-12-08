@@ -78,7 +78,7 @@ export default function FileManagerPage() {
       if (!dateA) return 1; 
       if (!dateB) return -1;
       
-      return dateB.getTime() - a.getTime();
+      return dateB.getTime() - dateA.getTime();
     });
 
     const totalSiteCount = entries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
