@@ -1,4 +1,3 @@
-
 // src/components/layout/AppNavMenu.tsx
 "use client";
 
@@ -49,21 +48,21 @@ export const allNavItems: NavItem[] = [
 export default function AppNavMenu() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { getPendingUpdatesForFile } = usePendingUpdates();
+  const { getPendingUpdates } = usePendingUpdates();
   const { setIsNavigating } = usePageNavigation();
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const fetchPendingCount = async () => {
         if (user?.role === 'editor') {
-            const updates = await getPendingUpdatesForFile(null);
+            const updates = await getPendingUpdates(null);
             setPendingCount(updates.length);
         }
     };
     fetchPendingCount();
     const interval = setInterval(fetchPendingCount, 30000); 
     return () => clearInterval(interval);
-  }, [user, getPendingUpdatesForFile]);
+  }, [user, getPendingUpdates]);
 
 
   const accessibleNavItems = allNavItems.filter(item => {
