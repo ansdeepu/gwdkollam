@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { usePageHeader } from '@/hooks/usePageHeader';
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
@@ -187,6 +188,7 @@ const UpdateTable = ({
 
 
 export default function PendingUpdatesTable() {
+  const { setHeader } = usePageHeader();
   const { rejectUpdate, deleteUpdate, subscribeToPendingUpdates } = usePendingUpdates();
   const { fileEntries, isLoading: filesLoading } = useFileEntries();
   const { arsEntries, isLoading: arsLoading } = useArsEntries();
@@ -205,6 +207,10 @@ export default function PendingUpdatesTable() {
   const [changesToView, setChangesToView] = useState<{ title: string; changes: { field: string; oldValue: string; newValue: string }[] } | null>(null);
 
   useEffect(() => {
+    setHeader('Pending Actions', 'Review and approve or reject updates submitted by supervisors.');
+  }, [setHeader]);
+
+  useEffect(() => {
     setIsLoading(true);
     const unsubscribe = subscribeToPendingUpdates((updates) => {
       setPendingUpdates(updates);
@@ -214,8 +220,9 @@ export default function PendingUpdatesTable() {
   }, [subscribeToPendingUpdates]);
 
   const { depositWorkUpdates, arsUpdates } = useMemo(() => {
-    const depositWorkUpdates = pendingUpdates.filter(u => !u.isArsUpdate);
-    const arsUpdates = pendingUpdates.filter(u => u.isArsUpdate);
+    const filteredUpdates = pendingUpdates.filter(u => u.status === 'pending' || u.status === 'supervisor-unassigned');
+    const depositWorkUpdates = filteredUpdates.filter(u => !u.isArsUpdate);
+    const arsUpdates = filteredUpdates.filter(u => u.isArsUpdate);
     return { depositWorkUpdates, arsUpdates };
   }, [pendingUpdates]);
 
