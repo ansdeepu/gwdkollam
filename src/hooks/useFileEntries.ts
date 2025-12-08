@@ -54,8 +54,9 @@ export function useFileEntries() {
         // For supervisors, filter entries from the central store.
         entries = allFileEntries
           .map(entry => {
-            // Filter sites within each entry to find ONLY sites assigned to the supervisor.
-            const supervisedSites = entry.siteDetails?.filter(site =>
+            // Filter sites within each entry to find ONLY sites assigned to the supervisor
+            // that are also in an ongoing state.
+            const supervisedSites = (entry.siteDetails || []).filter(site =>
               site.supervisorUid === user.uid &&
               site.workStatus &&
               SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
@@ -63,7 +64,7 @@ export function useFileEntries() {
 
             // If the supervisor has any relevant sites in this file,
             // return the file with ONLY those specific sites.
-            if (supervisedSites && supervisedSites.length > 0) {
+            if (supervisedSites.length > 0) {
               return { ...entry, siteDetails: supervisedSites };
             }
             return null; // This file is not relevant to the supervisor.
@@ -180,9 +181,9 @@ export function useFileEntries() {
       // For supervisors, we still need to attach the pending status for the UI
       // AND crucially, we filter the siteDetails to ONLY what they are assigned to.
       if (user && user.role === 'supervisor' && user.uid) {
-         const supervisedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
+         const supervisedSites = (entry.siteDetails || []).filter(site => site.supervisorUid === user.uid);
          
-         if (!supervisedSites || supervisedSites.length === 0) {
+         if (supervisedSites.length === 0) {
              console.warn(`[fetchEntryForEditing] Supervisor ${user.uid} has no assigned sites in file ${docId}. Denying access.`);
              return null; // No assigned sites in this file for this supervisor
          }
