@@ -66,7 +66,7 @@ export default function FileManagerPage() {
     let entries: DataEntryFormData[] = [];
 
     if (user?.role === 'supervisor' && user.uid) {
-        // Filter from the global store to find all files the supervisor is assigned to.
+        // Filter from the global store to find all files with at least one ongoing site for the supervisor.
         entries = allFileEntries.map(entry => {
             if (!entry.applicationType || PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
               return null; // Skip private works
@@ -78,6 +78,8 @@ export default function FileManagerPage() {
                 ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
             );
             
+            // Only include the file if there's at least one ongoing site for this supervisor.
+            // Return the entry with its siteDetails filtered to ONLY those sites.
             if (supervisedOngoingSites.length > 0) {
               return { ...entry, siteDetails: supervisedOngoingSites };
             }
