@@ -1,3 +1,4 @@
+
 // src/components/dashboard/WorkProgress.tsx
 "use client";
 
@@ -43,7 +44,7 @@ export default function WorkProgress({ allFileEntries, onOpenDialog, currentUser
     const startOfMonthDate = startOfMonth(workReportMonth);
     const endOfMonthDate = endOfMonth(workReportMonth);
 
-    const ongoingWorkStatuses: SiteWorkStatus[] = ["Work in Progress", "Work Order Issued", "Work Initiated", "Awaiting Dept. Rig"];
+    const ongoingWorkStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
     const completedWorkStatuses: SiteWorkStatus[] = ["Work Failed", "Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
     
     const isSupervisor = currentUser?.role === 'supervisor';

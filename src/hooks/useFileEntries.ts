@@ -49,7 +49,6 @@ export function useFileEntries() {
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
-        // Fetch all pending updates for this supervisor in one go.
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNos = new Set(pendingUpdates.filter(p => p.status === 'pending').map(p => p.fileNo));
 
@@ -58,18 +57,26 @@ export function useFileEntries() {
             entry.assignedSupervisorUids && entry.assignedSupervisorUids.includes(user.uid)
           )
           .map(entry => {
-            // Determine which sites are "active" from the supervisor's perspective for the list view
-            const activeSites = (entry.siteDetails || []).filter(site => {
+            const visibleSites = (entry.siteDetails || []).filter(site => {
               if (site.supervisorUid !== user.uid) return false;
+
+              // Show if status is ongoing
               if (site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)) {
                 return true;
               }
+
+              // Show if status is completed/failed AND has a pending update for the file
+              const isCompletedOrFailed = site.workStatus && (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed');
+              if (isCompletedOrFailed && pendingFileNos.has(entry.fileNo)) {
+                return true;
+              }
+
               return false;
             });
             
             return {
               ...entry,
-              siteDetails: activeSites, // Only show active sites in the list view
+              siteDetails: visibleSites,
             };
           });
         

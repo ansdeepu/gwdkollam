@@ -53,8 +53,8 @@ export function useArsEntries() {
             const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
             if (isOngoing) return true;
 
-            const isCompleted = entry.workStatus && (entry.workStatus === 'Work Completed' || entry.workStatus === 'Work Failed');
-            if (isCompleted && pendingArsIds.has(entry.id)) {
+            const isCompletedOrFailed = entry.workStatus && (entry.workStatus === 'Work Completed' || entry.workStatus === 'Work Failed');
+            if (isCompletedOrFailed && pendingArsIds.has(entry.id)) {
                 return true;
             }
 
