@@ -797,6 +797,8 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         const { type, data: originalData } = dialogState;
         if (!type) return;
 
+        let requiresTotalRecalc = false;
+
         if (type === 'application') {
             setValue("fileNo", data.fileNo);
             setValue("applicantName", data.applicantName);
@@ -806,10 +808,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         } else if (type === 'remittance') {
             if (originalData.index !== undefined) updateRemittance(originalData.index, data);
             else appendRemittance(data);
+            requiresTotalRecalc = true;
         } else if (type === 'payment') {
             const paymentData = { ...data, totalPaymentPerEntry: calculatePaymentEntryTotalGlobal(data) };
             if (originalData.index !== undefined) updatePayment(originalData.index, paymentData);
             else appendPayment(paymentData);
+            requiresTotalRecalc = true;
         } else if (type === 'site') {
             if (originalData.index !== undefined) updateSite(originalData.index, data);
             else appendSite(data);
@@ -818,6 +822,19 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         }
     
         closeDialog();
+
+        if (requiresTotalRecalc) {
+            // Manually trigger a recalculation of totals right away
+            const currentRemittances = getValues('remittanceDetails');
+            const totalRemittance = currentRemittances?.reduce((sum, item) => sum + (Number(item.amountRemitted) || 0), 0) || 0;
+            
+            const currentPayments = getValues('paymentDetails');
+            const totalPayment = currentPayments?.reduce((sum, item) => sum + calculatePaymentEntryTotalGlobal(item), 0) || 0;
+
+            setValue("totalRemittance", totalRemittance, { shouldDirty: true });
+            setValue("totalPaymentAllEntries", totalPayment, { shouldDirty: true });
+            setValue("overallBalance", totalRemittance - totalPayment, { shouldDirty: true });
+        }
     
         if (isEditor && fileIdToEdit) {
             try {
