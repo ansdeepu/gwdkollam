@@ -71,11 +71,21 @@ export default function FileManagerPage() {
       const dateA = safeParseDate(dateAValue);
       const dateB = safeParseDate(dateBValue);
       
-      if (!dateA && !dateB) return 0;
+      if (dateA && dateB) {
+        return dateB.getTime() - dateA.getTime();
+      }
+      if (!dateA && !dateB) {
+        const createdAtA = safeParseDate(a.createdAt);
+        const createdAtB = safeParseDate(b.createdAt);
+        if (createdAtA && createdAtB) {
+          return createdAtB.getTime() - createdAtA.getTime();
+        }
+        return 0;
+      }
       if (!dateA) return 1;
       if (!dateB) return -1;
       
-      return dateB.getTime() - a.createdAt!.getTime(); // Fallback to creation time
+      return 0;
     });
 
     const totalSiteCount = entries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
