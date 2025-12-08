@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -66,7 +65,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 // New helper function for color coding
 const getStatusColorClass = (status: SiteWorkStatus | undefined): string => {
     if (!status) return 'text-muted-foreground';
-    if (status === 'Work Failed' || status === 'Work Completed' || status === 'Bill Prepared' || status === 'Payment Completed' || status === 'Utilization Certificate Issued') {
+    if (status === 'Work Failed' || status === 'WorkCompleted' || status === 'Bill Prepared' || status === 'Payment Completed' || status === 'Utilization Certificate Issued') {
         return 'text-red-600';
     }
     if (status === 'To be Refunded') {
@@ -312,7 +311,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                     <TableCell className="font-medium w-[10%] px-2 py-2 text-sm">{entry.fileNo}</TableCell>
                     <TableCell className="w-[15%] px-2 py-2 text-sm">{entry.applicantName}</TableCell>
                     <TableCell className="w-[25%] px-2 py-2 text-sm">
-                      {sitesToDisplay.length > 0 ? (
+                       {sitesToDisplay.length > 0 ? (
                         sitesToDisplay.map((site, idx) => (
                             <span key={idx} className={cn("font-semibold", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
                               {site.nameOfSite}{idx < sitesToDisplay.length - 1 ? ', ' : ''}

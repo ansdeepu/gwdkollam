@@ -24,6 +24,8 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
+
 export function useArsEntries() {
   const { user } = useAuth();
   const { allArsEntries, isLoading: dataStoreLoading, refetchArsEntries } = useDataStore(); // Use the central store
@@ -40,7 +42,29 @@ export function useArsEntries() {
       }
 
       setIsLoading(true);
-      setArsEntries(allArsEntries);
+
+      if (user.role === 'supervisor' && user.uid) {
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingArsIds = new Set(pendingUpdates.filter(p => p.status === 'pending' && p.isArsUpdate).map(p => p.arsId));
+        
+        const supervisorEntries = allArsEntries.filter(entry => {
+            if(entry.supervisorUid !== user.uid) return false;
+
+            const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+            if (isOngoing) return true;
+
+            const isCompleted = entry.workStatus && (entry.workStatus === 'Work Completed' || entry.workStatus === 'Work Failed');
+            if (isCompleted && pendingArsIds.has(entry.id)) {
+                return true;
+            }
+
+            return false;
+        });
+        setArsEntries(supervisorEntries);
+      } else {
+        setArsEntries(allArsEntries);
+      }
+
       setIsLoading(false);
     };
 

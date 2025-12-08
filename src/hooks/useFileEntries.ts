@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -27,6 +26,9 @@ import { useDataStore } from './use-data-store'; // Import the new central store
 const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
+// Statuses that are considered "ongoing" for a supervisor
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+
 
 export function useFileEntries() {
   const { user } = useAuth();
@@ -34,6 +36,7 @@ export function useFileEntries() {
   const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { getPendingUpdatesForFile } = usePendingUpdates();
 
   useEffect(() => {
     const processEntries = async () => {
@@ -43,14 +46,57 @@ export function useFileEntries() {
         return;
       }
       setIsLoading(true);
-      setFileEntries(allFileEntries);
+
+      if (user.role === 'supervisor' && user.uid) {
+        // Fetch all pending updates for this supervisor in one go.
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingFileNos = new Set(pendingUpdates.filter(p => p.status === 'pending').map(p => p.fileNo));
+
+        const supervisorEntries = allFileEntries
+          .filter(entry => 
+            entry.assignedSupervisorUids && entry.assignedSupervisorUids.includes(user.uid)
+          )
+          .map(entry => {
+            const isFilePending = pendingFileNos.has(entry.fileNo);
+            
+            const visibleSites = (entry.siteDetails || []).filter(site => {
+              if (site.supervisorUid !== user.uid) return false;
+
+              // If the work is ongoing, show it.
+              if (site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)) {
+                return true;
+              }
+
+              // If work is completed or failed, show it ONLY if there's a pending update for the file.
+              if (site.workStatus && (site.workStatus === 'Work Failed' || site.workStatus === 'Work Completed')) {
+                return isFilePending;
+              }
+
+              return false;
+            });
+
+            // Return a new entry object with only the visible sites for the list view
+            return {
+              ...entry,
+              siteDetails: visibleSites,
+            };
+          })
+          // Only include files that still have visible sites for the supervisor
+          .filter(entry => entry.siteDetails.length > 0);
+
+        setFileEntries(supervisorEntries);
+      } else {
+        // For editors and viewers, show all entries
+        setFileEntries(allFileEntries);
+      }
+
       setIsLoading(false);
     };
 
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading]);
+  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
