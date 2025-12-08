@@ -315,7 +315,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   <TableHead className="w-[5%] px-2 py-3 text-sm">Sl. No.</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">File No.</TableHead>
                   <TableHead className="w-[15%] px-2 py-3 text-sm">Applicant Name</TableHead>
-                  <TableHead className="w-[25%] px-2 py-3 text-sm">Ongoing Site(s)</TableHead>
+                  <TableHead className="w-[25%] px-2 py-3 text-sm">Site Name(s)</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">Purpose(s)</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">Remittance</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">File Status</TableHead>
@@ -328,7 +328,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   const canSupervisorEdit = user?.role === 'supervisor' && (entry.siteDetails || []).length > 0;
                   const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !canSupervisorEdit);
                   
-                  // This is the corrected logic: use siteDetails directly as it's pre-filtered by the hook
                   const activeSites = entry.siteDetails || [];
 
                   return (
