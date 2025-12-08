@@ -178,13 +178,21 @@ export function useFileEntries() {
       let entry = { id: docSnap.id, ...(docSnap.data()) } as DataEntryFormData;
 
       // For supervisors, we still need to attach the pending status for the UI
+      // AND crucially, we filter the siteDetails to ONLY what they are assigned to.
       if (user && user.role === 'supervisor' && user.uid) {
+         const supervisedSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid);
+         
+         if (!supervisedSites || supervisedSites.length === 0) {
+             console.warn(`[fetchEntryForEditing] Supervisor ${user.uid} has no assigned sites in file ${docId}. Denying access.`);
+             return null; // No assigned sites in this file for this supervisor
+         }
+
          const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo, user.uid);
          const isFilePending = pendingUpdates.some(u => u.status === 'pending');
-         if (isFilePending) {
-             const updatedSiteDetails = entry.siteDetails?.map(site => ({...site, isPending: true}));
-             entry = { ...entry, siteDetails: updatedSiteDetails };
-         }
+         
+         const sitesWithPendingStatus = supervisedSites.map(site => ({...site, isPending: isFilePending}));
+         
+         entry = { ...entry, siteDetails: sitesWithPendingStatus };
       }
       return entry;
     } catch (error) {
