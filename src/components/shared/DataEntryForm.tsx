@@ -522,7 +522,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                             <FormField name="zoneDetails" control={control} render={({ field }) => <FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
-                                            <FormField name="typeOfRig" control={control} render={({field})=> <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(false)}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
+                                            <FormField name="typeOfRig" control={control} render={({field})=> <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(true)}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
                                             <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </CardContent></Card>
@@ -854,6 +854,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const closeDialog = () => setDialogState({ type: null, data: null, isView: false });
   const applicationTypeOptionsForForm = workTypeContext === 'private' ? PRIVATE_APPLICATION_TYPES : PUBLIC_APPLICATION_TYPES;
 
+  const handleEyeIconClick = (site: SiteDetailFormData, index: number) => {
+    if (isEditor || isSupervisor) {
+      openDialog('site', { index, ...site });
+    } else {
+      openDialog('viewSite', { index, ...site });
+    }
+  };
+
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
@@ -934,22 +942,12 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }); }}>
+                                                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEyeIconClick(site, index); }}>
                                                             <Eye className="h-4 w-4"/>
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent><p>View Details</p></TooltipContent>
+                                                    <TooltipContent><p>{isEditor ? "Edit Site Details" : isSupervisor ? "Edit Site Details" : "View Site Details"}</p></TooltipContent>
                                                 </Tooltip>
-                                                {(isEditor || isSupervisor) && !isFormDisabled && (
-                                                     <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}>
-                                                                <Edit className="h-4 w-4"/>
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent><p>Edit Site</p></TooltipContent>
-                                                    </Tooltip>
-                                                )}
                                                 {isEditor && !isFormDisabled && (
                                                     <>
                                                         <Tooltip>
