@@ -485,7 +485,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                    <FormField name="tenderNo" control={control} render={({ field }) => <FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
                                    <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
                                    <FormField name="supervisorUid" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><Select onValueChange={(uid) => { const staff = supervisorList.find((s) => s.uid === uid); field.onChange(uid === '_clear_' ? undefined : uid); setValue("supervisorName", staff?.name || ""); setValue("supervisorDesignation", staff?.designation || undefined); }} value={field.value || ""} disabled={isFieldReadOnly(false)}><FormControl><SelectTrigger><SelectValue placeholder="Select Supervisor" /></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue("supervisorName", ""); setValue("supervisorDesignation", undefined);}}>-- Clear Selection --</SelectItem>{supervisorList.map((s) => (<SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)}/>
-                                   <FormField control={form.control} name="workRemarks" render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} placeholder="Add any remarks for this site..."/></FormControl><FormMessage /></FormItem>)} />
                                 </div>
                             </CardContent></Card>
                             
@@ -556,7 +555,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(true)}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent className="max-h-80"><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : SITE_DIALOG_WORK_STATUS_OPTIONS).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                         <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date {isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />}
-                                        <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-3"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -935,13 +934,23 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); isSupervisor ? openDialog('site', { index, ...site }) : openDialog('viewSite', { index, ...site }); }}>
+                                                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('viewSite', { index, ...site }); }}>
                                                             <Eye className="h-4 w-4"/>
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent><p>{isSupervisor ? 'View / Edit' : 'View Details'}</p></TooltipContent>
+                                                    <TooltipContent><p>View Details</p></TooltipContent>
                                                 </Tooltip>
-                                                {!isViewer && !isFormDisabled && !isSupervisor && (
+                                                {(isEditor || isSupervisor) && !isFormDisabled && (
+                                                     <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDialog('site', { index, ...site }); }}>
+                                                                <Edit className="h-4 w-4"/>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>Edit Site</p></TooltipContent>
+                                                    </Tooltip>
+                                                )}
+                                                {isEditor && !isFormDisabled && (
                                                     <>
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
