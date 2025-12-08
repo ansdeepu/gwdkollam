@@ -1,4 +1,3 @@
-
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -46,52 +45,34 @@ export function useFileEntries() {
         setIsLoading(false);
         return;
       }
-
       setIsLoading(true);
+
       let entries: DataEntryFormData[];
 
       if (user.role === 'supervisor' && user.uid) {
-        // For supervisors, filter entries from the central store.
-        entries = allFileEntries
-          .map(entry => {
-            // Find all sites supervised by the current user in this file.
-            const supervisedSites = (entry.siteDetails || []).filter(site =>
-              site.supervisorUid === user.uid
-            );
+        // Data is already pre-filtered by the data store.
+        // We just need to filter for the "Deposit Works" page display.
+        entries = allFileEntries.map(entry => {
+          const supervisedOngoingSites = (entry.siteDetails || []).filter(site =>
+            site.supervisorUid === user.uid &&
+            site.workStatus &&
+            SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
+          );
 
-            // If the supervisor is not assigned to any site in this file, ignore the file.
-            if (supervisedSites.length === 0) {
-              return null;
-            }
-
-            // From the supervised sites, find the ones with a visible status for the dashboard list.
-            const visibleSites = supervisedSites.filter(site =>
-              site.workStatus &&
-              SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
-            );
-            
-            // If there are any visible (ongoing) sites, return the file entry
-            // with its siteDetails filtered to *only* those visible sites.
-            // This populates the main "Deposit Works" list correctly.
-            if (visibleSites.length > 0) {
-              return { ...entry, siteDetails: visibleSites };
-            }
-            
-            // If there are NO ongoing sites, but the supervisor is assigned to other sites (e.g., completed),
-            // we return null so it doesn't show up in their main list. The user can still access the file
-            // via other means if necessary, as the core data fetching by ID is not affected by this display-level filter.
-            return null;
-          })
-          .filter((entry): entry is DataEntryFormData => entry !== null); // Remove null entries (files not relevant to the supervisor's main list)
-
+          if (supervisedOngoingSites.length > 0) {
+            return { ...entry, siteDetails: supervisedOngoingSites };
+          }
+          return null;
+        }).filter((entry): entry is DataEntryFormData => entry !== null);
+      
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingFileNumbers = new Set(
           pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
         );
-        
+
         entries = entries.map(entry => ({
-            ...entry,
-            isPending: pendingFileNumbers.has(entry.fileNo),
+          ...entry,
+          isPending: pendingFileNumbers.has(entry.fileNo),
         }));
 
       } else {

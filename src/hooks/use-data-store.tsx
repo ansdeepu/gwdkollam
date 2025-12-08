@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
@@ -138,18 +138,32 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        const collections: Record<string, { setter: React.Dispatch<React.SetStateAction<any>>, loaderKey: keyof typeof loadingStates, q: any }> = {
-            fileEntries: { setter: setAllFileEntries, loaderKey: 'files', q: query(collection(db, 'fileEntries')) },
-            arsEntries: { setter: setAllArsEntries, loaderKey: 'ars', q: query(collection(db, 'arsEntries')) },
-            staffMembers: { setter: setAllStaffMembers, loaderKey: 'staff', q: query(collection(db, 'staffMembers')) },
-            agencyApplications: { setter: setAllAgencyApplications, loaderKey: 'agencies', q: query(collection(db, 'agencyApplications')) },
-            localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg', q: query(collection(db, 'localSelfGovernments')) },
-            rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates', q: query(collection(db, 'rateDescriptions')) },
-            bidders: { setter: setAllBidders, loaderKey: 'bidders', q: query(collection(db, 'bidders'), orderBy("order")) },
-            officeAddress: { setter: setOfficeAddress, loaderKey: 'officeAddress', q: query(collection(db, 'officeAddresses')) },
+        const getQueryForCollection = (collectionName: string) => {
+            if (collectionName === 'fileEntries' && user?.role === 'supervisor' && user.uid) {
+                return query(collection(db, 'fileEntries'), where('assignedSupervisorUids', 'array-contains', user.uid));
+            }
+            return query(collection(db, collectionName));
+        };
+        
+        const collections: Record<string, { setter: React.Dispatch<React.SetStateAction<any>>, loaderKey: keyof typeof loadingStates, collectionName: string }> = {
+            fileEntries: { setter: setAllFileEntries, loaderKey: 'files', collectionName: 'fileEntries' },
+            arsEntries: { setter: setAllArsEntries, loaderKey: 'ars', collectionName: 'arsEntries' },
+            staffMembers: { setter: setAllStaffMembers, loaderKey: 'staff', collectionName: 'staffMembers' },
+            agencyApplications: { setter: setAllAgencyApplications, loaderKey: 'agencies', collectionName: 'agencyApplications' },
+            localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg', collectionName: 'localSelfGovernments' },
+            rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates', collectionName: 'rateDescriptions' },
+            bidders: { setter: setAllBidders, loaderKey: 'bidders', collectionName: 'bidders' },
+            officeAddress: { setter: setOfficeAddress, loaderKey: 'officeAddress', collectionName: 'officeAddresses' },
         };
 
-        const unsubscribes = Object.entries(collections).map(([collectionName, { setter, loaderKey, q }]) => {
+        const unsubscribes = Object.entries(collections).map(([key, { setter, loaderKey, collectionName }]) => {
+            let q;
+            if(collectionName === 'bidders'){
+                 q = query(collection(db, collectionName), orderBy("order"));
+            } else {
+                 q = getQueryForCollection(collectionName);
+            }
+            
             return onSnapshot(
                 q,
                 (snapshot: QuerySnapshot<DocumentData>) => {
