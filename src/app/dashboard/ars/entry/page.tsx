@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -34,7 +33,6 @@ const db = getFirestore(app);
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
-const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed"];
 const SUPERVISOR_EDITABLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Tendered", "Selection Notice Issued"];
 
 
@@ -147,10 +145,8 @@ export default function ArsEntryPage() {
       if (isViewer) return true;
       if (isSupervisor) {
         if (!isEditing || isFormDisabledForSupervisor) return true;
-        const supervisorEditableFields: (keyof ArsEntryFormData)[] = [
-          'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
-        ];
-        return !supervisorEditableFields.includes(fieldName);
+        
+        return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
       }
       return true;
     };
@@ -364,6 +360,13 @@ export default function ArsEntryPage() {
     
     const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForLsg.length <= 1;
 
+    const supervisorWorkStatusOptions = isSupervisor
+        ? siteWorkStatusOptions.filter(status =>
+            SUPERVISOR_EDITABLE_STATUSES.includes(status as SiteWorkStatus) ||
+            ["Work Completed", "Work Failed"].includes(status)
+          )
+        : siteWorkStatusOptions;
+
     return (
         <div className="space-y-6">
             <Card className="shadow-lg">
@@ -466,7 +469,7 @@ export default function ArsEntryPage() {
                                     <Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly('workStatus')}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
                                         <SelectContent>
-                                            {(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : arsWorkStatusOptions).map(o => (
+                                            {supervisorWorkStatusOptions.map(o => (
                                                 <SelectItem key={o} value={o}>{o}</SelectItem>
                                             ))}
                                         </SelectContent>
@@ -511,7 +514,7 @@ export default function ArsEntryPage() {
                         </div>
                         <div className="flex justify-end pt-8 space-x-3">
                            <Button type="button" variant="outline" onClick={() => router.push(returnPath)} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
-                           {!(isViewer || (isSupervisor && !isEditing) || isFormDisabledForSupervisor) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
+                           {!(isViewer || isFormDisabled) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
                         </div>
                       </form>
                     </FormProvider>

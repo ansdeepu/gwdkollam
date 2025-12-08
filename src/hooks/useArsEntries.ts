@@ -1,4 +1,3 @@
-
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -49,24 +48,28 @@ export function useArsEntries() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Wait until both the user profile and the main data from the store are loaded.
     if (dataStoreLoading || !user) {
         setIsLoading(dataStoreLoading);
         return;
     }
-    
+
     setIsLoading(true);
+    
+    let finalEntries = allArsEntries;
 
-    if (user.role === 'supervisor') {
-        const supervisorEntries = allArsEntries.filter(entry => 
-            entry.supervisorUid === user.uid
+    // If the user is a supervisor, apply a strict filter.
+    if (user.role === "supervisor") {
+        finalEntries = allArsEntries.filter(entry => 
+            // The entry MUST have a supervisorUid that EXACTLY matches the current user's uid.
+            entry.supervisorUid && entry.supervisorUid === user.uid
         );
-        setArsEntries(supervisorEntries);
-    } else {
-        setArsEntries(allArsEntries);
     }
+    
+    // Set the (potentially filtered) list of entries.
+    setArsEntries(finalEntries);
     setIsLoading(false);
-
-  }, [user, allArsEntries, dataStoreLoading]);
+}, [user, allArsEntries, dataStoreLoading]); // Re-run this effect whenever user or data changes.
 
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
